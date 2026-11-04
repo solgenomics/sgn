@@ -46,6 +46,8 @@ $unigene
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
 use strict;
 use warnings;
@@ -76,7 +78,7 @@ if (defined $id) {
     
    foreach my $map (@mapped_member_ids) { 
        my $marker = CXGN::Marker->new($dbh, $map->{marker_id});
-       my $marker_name = 'Unknown';   ## Use unknown by default
+       my $marker_name = SGN::I18N::translate($c->i18n, "global.est.unknown", "Unknown", undef, {entities => '<>&'});   ## Use unknown by default
        if($marker) {
           $marker_name = $marker->name_that_marker();
        }
@@ -91,12 +93,12 @@ if (defined $id) {
 
    my $mapped_html;
    if (defined $mapped[0]) {
-       $mapped_html = columnar_table_html( headings => [ 'EST', 'Marker' ], data     => \@mapped );
+       $mapped_html = columnar_table_html( headings => [ 'EST', SGN::I18N::translate($c->i18n, "genotype.marker.marker", "Marker", undef, {entities => '<>&'}) ], data     => \@mapped );
    } else {
-       $mapped_html = qq|<span class="ghosted">No member sequence or clone is mapped.</span>|;
+       $mapped_html = (qq|<span class="ghosted">| . SGN::I18N::translate($c->i18n, "genotype.marker.no_member_sequence_or_clone_is_mapped", "No member sequence or clone is mapped.", undef, {entities => '<>&'}) . qq|</span>|);
    }
  
-   my $map_content = info_table_html( 'Unigene Mapped Marker Information'   => $mapped_html,
+   my $map_content = info_table_html( SGN::I18N::translate($c->i18n, "genotype.marker.unigene_mapped_marker_information", "Unigene Mapped Marker Information", undef, {entities => '<>&'})   => $mapped_html,
                                        __border               => 0,
                                        );
 
@@ -110,21 +112,21 @@ if (defined $id) {
    foreach my $cosii_marker (@cosii_data) { 
        my ($marker_id, $marker_name)= @{$cosii_marker};
        my $cosii_link = '<a href=/search/markers/markerinfo.pl?marker_id=' . $marker_id . '>' . $marker_name . '</a>';
-       $cosii_data_html .= "COSII marker $cosii_link was created with this unigene.<br />\n";
+       $cosii_data_html .= (SGN::I18N::translate($c->i18n, "genotype.marker.cosii_marker", "COSII marker", undef, {entities => '<>&'}) . " $cosii_link " . SGN::I18N::translate($c->i18n, "genotype.marker.was_created_with_this_unigene", "was created with this unigene.", undef, {entities => '<>&'}) . "<br />\n");
        $markers_count++;
    }
    unless (defined $cosii_data[0]) {
-       $cosii_data_html .= qq|<span class="ghosted">None cosii markers associated to this unigene.</span>|;
+       $cosii_data_html .= (qq|<span class="ghosted">| . SGN::I18N::translate($c->i18n, "genotype.marker.none_cosii_markers_associated_to_this_unigene", "None cosii markers associated to this unigene.", undef, {entities => '<>&'}) . qq|</span>|);
    }
  
-   my $cosii_info_link = '<a href="/markers/cosii_markers.pl">COSII Markers</a>';
-   my $cosii_content = info_table_html( "$cosii_info_link Information" => $cosii_data_html,
+   my $cosii_info_link = ('<a href="/markers/cosii_markers.pl">' . SGN::I18N::translate($c->i18n, "genotype.marker.cosii_markers", "COSII Markers", undef, {entities => '<>&'}) . '</a>');
+   my $cosii_content = info_table_html( SGN::I18N::translate($c->i18n, "genotype.marker.link_information", "%{link} Information", {link => ("" . $cosii_info_link)}) => $cosii_data_html,
 					__border                       => 0,
                                       );
    
    $map_content .= $cosii_content;
   
-   $markers_content = info_section_html( title        => "Markers Information (".$markers_count.")", 
+   $markers_content = info_section_html( title        => SGN::I18N::translate($c->i18n, "genotype.marker.markers_information_count", "Markers Information (%{count})", {count => ("" . $markers_count)}), anchor_title => "Markers Information (".$markers_count.")",
                                          contents     => $map_content,
 					 collapsible  => 1,
                                          collapsed    => 1 

@@ -2,36 +2,40 @@
 
 
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.LabelDesigner', 'CXGN.BreederSearch', 'bootstrap-select_min'] &>
-<& /page/page_title.mas, title=>"Label Designer" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("navigation.manage.labels", "Label Designer")) &>
 
-<div id="label_designer_warning" class="list-group-item-warning" style="padding:3px;"><center><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:20px;"></span>&nbsp;&nbsp;<b>Note:</b> Do not print the labels directly from the browser as the browser adds headers and footers that will distort the alignment of the labels. Instead, download the pdf file and print it from a PDF reader app.</center></div>
+<div id="label_designer_warning" class="list-group-item-warning" style="padding:3px;"><center><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:20px;"></span>&nbsp;&nbsp;<b><% $c->i18n->p("global.bulk.input.note_label", "Note:") |h %></b> <% $c->i18n->p("barcode.mason.do_not_print_the_labels_directly_from_the_browser_as", "Do not print the labels directly from the browser as the browser adds headers and footers that will distort the alignment of the labels. Instead, download the pdf file and print it from a PDF reader app.") |h %></center></div>
 <br /><br />
 <&| /util/workflow.mas , id=> "label_designer_workflow"&>
 
-    <&| /util/workflow.mas:step, title=>"Intro and Data Source" &>
+    <&| /util/workflow.mas:step, title=>$c->i18n->p("barcode.mason.intro_and_data_source", "Intro and Data Source") &>
 
         <& /tools/label_designer/select_datasource.mas &>
         <br/><br/>
         <div class="col-md-12 text-center">
-            <button id="select_datasource_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
+            <button id="select_datasource_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled><% $c->i18n->p("global.annotation_search_result.next", "Next") |h %></button>
         </div>
 
 
     </&>
-    <&| /util/workflow.mas:step, title=>"Set Page and Label Size" &>
+    <&| /util/workflow.mas:step, title=>$c->i18n->p("barcode.mason.set_page_and_label_size", "Set Page and Label Size") &>
         <& /tools/label_designer/select_layout.mas &>
         <div class="col-md-12 text-center">
-            <button id="select_layout_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
+            <button id="select_layout_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled><% $c->i18n->p("global.annotation_search_result.next", "Next") |h %></button>
         </div>
     </&>
-    <&| /util/workflow.mas:step, title=>"Design Your Label" &>
+    <&| /util/workflow.mas:step, title=>$c->i18n->p("barcode.mason.design_your_label", "Design Your Label") &>
         <& /tools/label_designer/design_label.mas &>
         <div class="col-md-12 text-center">
-            <button id="design_label_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
+            <button id="design_label_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled><% $c->i18n->p("global.annotation_search_result.next", "Next") |h %></button>
         </div>
     </&>
-    <&| /util/workflow.mas:step, title=>"More Options, Save, And Download" &>
+    <&| /util/workflow.mas:step, title=>$c->i18n->p("barcode.mason.more_options_save_and_download", "More Options, Save, And Download") &>
         <& /tools/label_designer/save_and_download.mas &>
       </&>
 </&>
 <& /tools/label_designer/label_designer_modals.mas &>
+
+<%once>
+use HTML::Entities ();
+</%once>

@@ -219,6 +219,17 @@ use Try::Tiny;
 use Module::Pluggable require => 1;
 use Data::Dumper;
 
+# Optional presentation translator; it never controls parsing or data cleaning.
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    trigger => sub {
+        my ($self, $translator) = @_;
+        die 'Presentation translator must implement p' if defined($translator) && !$translator->can('p');
+    },
+);
+
 # Path to the file that is being parsed
 has 'file' => (
   isa => "Str",
@@ -251,7 +262,7 @@ has column_aliases => (
 );
 
 # Array or Map of column arrays
-# If an array, the default demiliter will be used for each specified colum name
+# If an array, the default demiliter will be used for each specified column name
 # If a hash, they key is the column name and the value is the delimiter used to split the value
 has column_arrays => (
   isa => "ArrayRef[Str]|HashRef",
@@ -312,6 +323,7 @@ sub BUILDARGS {
 #
 sub parse {
   my $self = shift;
+  my $i18n = $self->i18n();
   my $file = $self->file();
   my $type = $self->type();
   my $required_columns = $self->required_columns();
@@ -330,7 +342,7 @@ sub parse {
   # Check if the file exists
   if ( !-e $file ) {
     return {
-      errors => [ "The file $file does not exist" ]
+      errors => [ ($i18n ? $i18n->p('file.parse.missing', 'The file %{file} does not exist', {file => $file}) : "The file $file does not exist") ]
     };
   }
 
@@ -351,7 +363,7 @@ sub parse {
     try {
       $parsed = $parser->parse($self);
     } catch {
-      $error = "Encountered error while reading and parsing file: $_";
+      $error = ($i18n ? $i18n->p('file.parse.read_failed', 'Encountered error while reading and parsing file: %{detail}', {detail => "$_"}) : "Encountered error while reading and parsing file: $_");
     };
     if ( $error ) {
       return {
@@ -374,7 +386,7 @@ sub parse {
     # Check for empty files with no data
     if ( scalar(@$columns) < 1 || scalar(@$data) < 1 ) {
       return {
-        errors => [ "The file has no data" ]
+        errors => [ ($i18n ? $i18n->p('file.parse.empty', 'The file has no data') : "The file has no data") ]
       };
     }
 
@@ -384,7 +396,7 @@ sub parse {
       # Check for missing required columns
       foreach my $req (@$required_columns) {
         if ( !grep( /^$req$/, @$columns ) ) {
-          push @{$parsed->{errors}}, "Required column $req is missing";
+          push @{$parsed->{errors}}, ($i18n ? $i18n->p('file.parse.required_column', 'Required column %{column} is missing', {column => $req}) : "Required column $req is missing");
         }
       }
 
@@ -416,7 +428,7 @@ sub parse {
           my $v = $d->{$c};
           my $r = $d->{_row};
           if ( !defined($v) || $v eq '' ) {
-            push @{$parsed->{errors}}, "Required column $c does not have a value in row $r";
+            push @{$parsed->{errors}}, ($i18n ? $i18n->p('file.parse.required_value', 'Required column %{column} does not have a value in row %{row}', {column => $c, row => $r}) : "Required column $c does not have a value in row $r");
           }
           elsif ( $unique_only_columns{$c} ) {
             if ( ref($v) eq 'ARRAY' ) {
@@ -455,7 +467,7 @@ sub parse {
         foreach my $v ( sort keys %{$seen->{$c}} ) {
           my @rows = sort keys %{$seen->{$c}->{$v}};
           if ( scalar @rows > 1 ) {
-            push @{$parsed->{errors}}, "Column $c requires unique values, but $v appears more than once in rows " . join(',', @rows);
+            push @{$parsed->{errors}}, ($i18n ? $i18n->p('file.parse.duplicate_value', 'Column %{column} requires unique values, but %{value} appears more than once in rows %{rows}', {column => $c, value => $v, rows => join(',', @rows)}) : "Column $c requires unique values, but $v appears more than once in rows " . join(',', @rows));
           }
         }
       }
@@ -471,7 +483,7 @@ sub parse {
   # No parser plugin found for file type
   else {
     return {
-      errors => [ "No appropriate file parsing plugin for file: $file, type: $type" ]
+      errors => [ ($i18n ? $i18n->p('file.parse.no_plugin', 'No appropriate file parsing plugin for file: %{file}, type: %{type}', {file => $file, type => $type}) : "No appropriate file parsing plugin for file: $file, type: $type") ]
     };
   }
 }

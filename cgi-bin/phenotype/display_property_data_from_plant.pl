@@ -3,12 +3,15 @@
 #Display all data values for a specified property and plant
 
 use strict;
+use SGN::I18N ();
+use HTML::Entities ();
 use CXGN::Page;
 use CXGN::DB::PhenoPopulation;
 use CGI;
 
 #get parameters from form on previous page
 use CatalystX::GlobalContext qw( $c );
+my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
 my %params = %{$c->req->params};
 my $pop_id = $params{pop_id};
 my $pop_name = $params{pop_name};
@@ -30,17 +33,9 @@ my $page = CXGN::Page->new('phenotype', 'Adri');
 
 print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 transitional//EN\" \"http://www.w3.org/tr/xhtml1/DTD/xhtml1-transitional.dtd\">";
 
-$page->header("Property Data From Plant");
+$page->header(SGN::I18N::translate($ui_i18n, "phenotype.root.property_data_from_plant", "Property Data From Plant", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }));
 
-print <<EOF
-
-<table summary="" width="100%" cellpadding="0" cellspacing="10" border="0">
-
-<tr><td colspan="5">
-<center><h3><u>Property Data From Plant</u></h3></center>
-</td></tr>
-
-EOF
+print ("\n<table summary=\"\" width=\"100%\" cellpadding=\"0\" cellspacing=\"10\" border=\"0\">\n\n<tr><td colspan=\"5\">\n<center><h3><u>" . SGN::I18N::translate($ui_i18n, "phenotype.root.property_data_from_plant", "Property Data From Plant", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</u></h3></center>\n</td></tr>\n\n");
 ;
 
 #if there is a property_id passed into this script
@@ -52,13 +47,13 @@ if ($plant_id && $prop_id && $prop_name) {
 
   #plant information
   print "<tr><td>\n";
-  print "<b><u>Plant Information</u></b>\n";
+  print ("<b><u>" . SGN::I18N::translate($ui_i18n, "phenotype.root.plant_information", "Plant Information", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</u></b>\n");
   print "<ul>\n";
-  print "<li>Population: <a href=\"http://localhost/phenotype/population.pl?pop_id=1\"><b>$pop_name</b></a></li>\n";
-  print "<li>Genotype Group: <a href =\"display_plants_from_genotype.pl?pop_id=$pop_id\&amp;pop_name=$pop_name\&amp;gen_id=$gen_id\"><b>$gen_name</b></a></li>\n";
-  print "<li>Plant Name: <b>$plant_name</b></li>\n";
-  print "<li>Location: <b> $institution $environment $year</b></li>\n";
-  print "<li>Property: <a href =\"display_plants_from_property.pl?pop_id=$pop_id\&amp;pop_name=$pop_name\&amp;prop_id=$prop_id\"><b>$prop_name</b></a> (<a href=\"http://localhost/phenotype/display_prop_list.pl\">Property Descriptions</a>)</li>\n";
+  print ("<li>" . SGN::I18N::translate($ui_i18n, "phenotype.root.population.8943544", "Population: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<a href=\"http://localhost/phenotype/population.pl?pop_id=1\"><b>$pop_name</b></a></li>\n");
+  print ("<li>" . SGN::I18N::translate($ui_i18n, "phenotype.root.genotype_group", "Genotype Group: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<a href =\"display_plants_from_genotype.pl?pop_id=$pop_id\&amp;pop_name=$pop_name\&amp;gen_id=$gen_id\"><b>$gen_name</b></a></li>\n");
+  print ("<li>" . SGN::I18N::translate($ui_i18n, "phenotype.root.plant_name", "Plant Name: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<b>$plant_name</b></li>\n");
+  print ("<li>" . SGN::I18N::translate($ui_i18n, "trial.details.location", "Location: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<b> $institution $environment $year</b></li>\n");
+  print ("<li>" . SGN::I18N::translate($ui_i18n, "phenotype.root.property.134eb43", "Property: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<a href =\"display_plants_from_property.pl?pop_id=$pop_id\&amp;pop_name=$pop_name\&amp;prop_id=$prop_id\"><b>$prop_name</b></a> (<a href=\"http://localhost/phenotype/display_prop_list.pl\">" . SGN::I18N::translate($ui_i18n, "phenotype.root.property_descriptions", "Property Descriptions", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</a>)</li>\n");
   print "</ul>\n";
   print "</td></tr>\n";
 
@@ -70,7 +65,7 @@ if ($plant_id && $prop_id && $prop_name) {
 
   # table for thumbnails
   print "<table summary=\"\">\n";
-  print "<tr><td><b><u>Thumbnail Images of Samples with the Selected Property Measured</u></b></td></tr>\n";
+  print ("<tr><td><b><u>" . SGN::I18N::translate($ui_i18n, "phenotype.root.thumbnail_images_of_samples_with_the_selected_property_measured", "Thumbnail Images of Samples with the Selected Property Measured", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</u></b></td></tr>\n");
 
   my %dp_info_by_image = CXGN::DB::PhenoPopulation::get_dp_image_from_plant_and_prop($plant_id, $prop_id);
   if (%dp_info_by_image) {
@@ -115,7 +110,7 @@ if ($plant_id && $prop_id && $prop_name) {
 	  print "ALL";
 	}
 	else {
-	  print "Sample $fullname";
+	  print ("" . SGN::I18N::translate($ui_i18n, "phenotype.root.sample.4c09be2", "Sample ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "$fullname" . "" . "");
 	}
 
       }
@@ -147,7 +142,7 @@ if ($plant_id && $prop_id && $prop_name) {
 
   #table for graph
   print "<table summary=\"\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">";
-  print "<tr><td align=\"center\"><b><u>Data</u></b></td></tr>";
+  print ("<tr><td align=\"center\"><b><u>" . SGN::I18N::translate($ui_i18n, "global.usage_policy.data", "Data", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</u></b></td></tr>");
   
   print "<tr><td>";
   print "<img src=\"/documents/img/dot_clear.gif\" alt=\"\" width=\"220\" height=\"1\" />";
@@ -156,7 +151,7 @@ if ($plant_id && $prop_id && $prop_name) {
   print "<tr><td>";
   print "<table summary=\"\" border=\"1\" width=\"100%\">";
   print "<tr>";
-  print "<td width=\"50%\"><center><b>Samples</b></center></td>";
+  print ("<td width=\"50%\"><center><b>" . SGN::I18N::translate($ui_i18n, "phenotype.samples", "Samples", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</b></center></td>");
   print "<td width=\"50%\"><center><b>";
 
   my $prev_page = "prop_data";
@@ -221,7 +216,7 @@ if ($plant_id && $prop_id && $prop_name) {
       $avg = sprintf ("%10.2f", $avg);
     }
     print "<tr>";
-    print "<td><center>Average of All Values</center></td>";
+    print ("<td><center>" . SGN::I18N::translate($ui_i18n, "phenotype.root.average_of_all_values", "Average of All Values", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</center></td>");
     print "<td><center>$avg</center></td>";
     print "</tr>";
   }
@@ -235,7 +230,7 @@ if ($plant_id && $prop_id && $prop_name) {
 #no specified, something wrong with the prev link or somebody playing with the link?
 else {
   print "<tr><td>";
-  print "ERROR:  plant and property has not yet been specified";
+  print ("" . SGN::I18N::translate($ui_i18n, "phenotype.root.error_plant_and_property_has_not_yet_been_specified", "ERROR:  plant and property has not yet been specified", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");
   print "</td></tr>";
 }
 

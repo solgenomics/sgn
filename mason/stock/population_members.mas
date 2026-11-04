@@ -1,5 +1,6 @@
 <%args>
 $stock_id
+$stock_uniquename => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Accessions' ] &>
@@ -9,31 +10,53 @@ $stock_id
     <table class="table table-hover table-bordered" id="population_members_table">
     </table>
 </div>
-
+<textarea id="populations_members_add_to_list_data_<% $stock_id %>" style="display:none" readonly></textarea>
+<div id="populations_members_add_to_list_menu_<% $stock_id %>"></div>
 
 <script>
 
 jQuery(document).ready(function(){
 
+    var populationMembersI18n = (window.SGN && window.SGN.i18n) || {
+        p: function (context, source, variables) {
+            return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+                return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+            });
+        }
+    };
+    function populationMemberHTML(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+        });
+    }
+    // The native search cache decodes entities once after its type formatter.
+    // Explicit string columns keep literal scientific tags out of the HTML formatter.
+    function populationMemberText(value, type) {
+        return type === 'display' || type === 'filter' ? populationMemberHTML(value) : value;
+    }
+
     var population_id = "<%$stock_id%>";
+    var population_name = <% $population_name_json %>;
     var table = jQuery(population_members_table).DataTable({
         ajax: '/ajax/manage_accessions/population_members/'+population_id,
         'autoWidth': false,
         destroy: true,
         columns: [
-            { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
-            { title: "Member Type", "data": "stock_type" },
-            { title: "Description", "data": "description" },
-            { title: "Synonyms", "data": "synonyms[, ]" },
-            { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
+            { title: populationMemberHTML(populationMembersI18n.p("population.members.member_name", "Member Name")), "data": null, type: 'string', "render": function ( data, type, row ) {
+                if (type === 'display') return "<a href='/stock/"+row.stock_id+"/view'>"+populationMemberHTML(row.name)+"</a>";
+                return type === 'filter' ? populationMemberHTML(row.name) : row.name;
+            } },
+            { title: populationMemberHTML(populationMembersI18n.p("population.members.member_type", "Member Type")), "data": "stock_type", type: 'string', render: populationMemberText },
+            { title: populationMemberHTML(populationMembersI18n.p("accessions.column.description", "Description")), "data": "description", type: 'string', render: populationMemberText },
+            { title: populationMemberHTML(populationMembersI18n.p("accessions.column.synonyms", "Synonyms")), "data": "synonyms[, ]", type: 'string', render: populationMemberText },
+            { title: populationMemberHTML(populationMembersI18n.p("population.members.remove_from_population", "Remove From Population")), "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
-            //console.log(json);
-            var html = "";
+            var names = "";
             for(var i=0; i<json.data.length; i++){
-                html += json.data[i].name+"\n";
+                names += json.data[i].name+"\n";
             }
-            jQuery("#populations_members_add_to_list_data_"+population_id).html(html);
+            jQuery("#populations_members_add_to_list_data_"+population_id).val(names);
             addToListMenu("populations_members_add_to_list_menu_"+population_id, "populations_members_add_to_list_data_"+population_id, {
                 selectText: true,
                 listType: 'accessions',
@@ -45,3 +68,10 @@ jQuery(document).ready(function(){
 });
 
 </script>
+
+<%init>
+use JSON::PP;
+my $population_name_json = JSON::PP->new->allow_nonref->encode(defined($stock_uniquename) ? $stock_uniquename : '');
+# Keep the raw scientific name while preventing script-element termination.
+$population_name_json =~ s/([<>&\x{2028}\x{2029}])/sprintf('\\u%04x', ord($1))/ge;
+</%init>

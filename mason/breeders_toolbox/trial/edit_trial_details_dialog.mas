@@ -22,22 +22,22 @@ $field_trial_is_planned_to_cross
 <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
         <div class="modal-header text-center">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="trialDetailsEditDialog">Edit Trial Details</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.details.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="trialDetailsEditDialog"><% $c->i18n->p('trial.details.edit', 'Edit Trial Details') |h %></h4>
         </div>
         <div class="modal-body" id="trial_details_edit_body">
             <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_name">Trial Name: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_name"><% $c->i18n->p('trial.details.name', 'Trial Name: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <input class="form-control col-sm-8" id="edit_trial_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_trial_name_status"/>
+                        <input class="form-control col-sm-8" id="edit_trial_name" title="name" type="text" value="<% $trial_name |h %>" aria-describedby="edit_trial_name_status"/>
                       </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_breeding_program">Breeding Program: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_breeding_program"><% $c->i18n->p('trial.details.program', 'Breeding Program: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_breeding_program" title="breeding_program" value="<%$breeding_program%>"></select>
@@ -45,7 +45,7 @@ $field_trial_is_planned_to_cross
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_location">Location: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_location"><% $c->i18n->p('trial.details.location', 'Location: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_location" title="location" value="<%$location%>"></select>
@@ -53,7 +53,7 @@ $field_trial_is_planned_to_cross
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_year">Year: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_year"><% $c->i18n->p('trial.details.year', 'Year: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_year" title="year" value="<%$year%>"></select>
@@ -61,7 +61,7 @@ $field_trial_is_planned_to_cross
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_type">Trial Type: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_type"><% $c->i18n->p('trial.details.type', 'Trial Type: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_type" title="type" value="<%$trial_type_id%>"></select>
@@ -69,44 +69,44 @@ $field_trial_is_planned_to_cross
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_planting_date">Planting Date: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_planting_date"><% $c->i18n->p('trial.details.planting_date', 'Planting Date: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button">Clear</button></span>
-                        <input class="form-control" id="edit_trial_planting_date" title="planting_date" type="text" value="<%$planting_date%>"/>
+                        <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button"><% $c->i18n->p('trial.details.clear', 'Clear') |h %></button></span>
+                        <input class="form-control" id="edit_trial_planting_date" title="planting_date" type="text" value="<% $planting_date |h %>"/>
                       </div>
                     </div>
                 </div>
 % if($show_transplanting_date == 1){
     <div class="form-group">
-        <label class="col-sm-3 control-label" for="edit_trial_transplanting_date">Transplanting Date: </label>
+        <label class="col-sm-3 control-label" for="edit_trial_transplanting_date"><% $c->i18n->p('trial.details.transplanting_date', 'Transplanting Date: ') |h %></label>
         <div class="col-sm-8">
             <div class="input-group">
-                <span class="input-group-btn"><button class="btn btn-default" id="clear_transplanting_date" type="button">Clear</button></span>
-                <input class="form-control" id="edit_trial_transplanting_date" title="transplanting_date" type="text" value="<%$transplanting_date%>"/>
+                <span class="input-group-btn"><button class="btn btn-default" id="clear_transplanting_date" type="button"><% $c->i18n->p('trial.details.clear', 'Clear') |h %></button></span>
+                <input class="form-control" id="edit_trial_transplanting_date" title="transplanting_date" type="text" value="<% $transplanting_date |h %>"/>
             </div>
         </div>
     </div>
 % }
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_harvest_date">Harvest Date: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_harvest_date"><% $c->i18n->p('trial.details.harvest_date', 'Harvest Date: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <span class="input-group-btn"><button class="btn btn-default" id="clear_harvest_date" type="button">Clear</button></span>
-                        <input class="form-control" id="edit_trial_harvest_date" title="harvest_date" type="text" value="<%$harvest_date%>"/>
+                        <span class="input-group-btn"><button class="btn btn-default" id="clear_harvest_date" type="button"><% $c->i18n->p('trial.details.clear', 'Clear') |h %></button></span>
+                        <input class="form-control" id="edit_trial_harvest_date" title="harvest_date" type="text" value="<% $harvest_date |h %>"/>
                       </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_description"><% $c->i18n->p('trial.details.description', 'Description: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5"><% $trial_description %></textarea>
+                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5"><% $trial_description |h %></textarea>
                       </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_field_size">Field Size (ha): </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_field_size"><% $c->i18n->p('trial.details.field_size', 'Field Size (ha): ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <input type="number" class="form-control" id="edit_trial_field_size" title="field_size" value="<% $field_size %>" >
@@ -114,7 +114,7 @@ $field_trial_is_planned_to_cross
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" >Plot Width (m): </label>
+                    <label class="col-sm-3 control-label" ><% $c->i18n->p('trial.details.plot_width', 'Plot Width (m): ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <input class="form-control col-sm-8" id="edit_trial_plot_width" title="plot_width" type="text" value="<%$plot_width%>" aria-describedby="edit_plot_width_status"/>
@@ -168,7 +168,7 @@ $field_trial_is_planned_to_cross
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" >Plot Length (m): </label>
+                    <label class="col-sm-3 control-label" ><% $c->i18n->p('trial.details.plot_length', 'Plot Length (m): ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                           <input class="form-control col-sm-8" id="edit_trial_plot_length" title="plot_length" type="text" value="<%$plot_length%>" aria-describedby="edit_plot_length_status"/>
@@ -223,23 +223,23 @@ $field_trial_is_planned_to_cross
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" >Trial Will Be Genotyped: </label>
+                    <label class="col-sm-3 control-label" ><% $c->i18n->p('trial.details.plan_to_genotype', 'Trial Will Be Genotyped: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                           <select class="form-control" id="edit_trial_plan_to_genotype" title="plan_to_genotype" value="<% $field_trial_is_planned_to_be_genotyped %>">
-                              <option value="no">No</option>
-                              <option value="yes">Yes</option>
+                              <option value="no"><% $c->i18n->p('trial.details.no', 'No') |h %></option>
+                              <option value="yes"><% $c->i18n->p('trial.details.yes', 'Yes') |h %></option>
                           </select>
                       </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" >Trial Will Be Crossed: </label>
+                    <label class="col-sm-3 control-label" ><% $c->i18n->p('trial.details.plan_to_cross', 'Trial Will Be Crossed: ') |h %></label>
                     <div class="col-sm-8">
                       <div class="input-group">
                           <select class="form-control" id="edit_trial_plan_to_cross" title="plan_to_cross" value="<% $field_trial_is_planned_to_cross %>">
-                              <option value="no">No</option>
-                              <option value="yes">Yes</option>
+                              <option value="no"><% $c->i18n->p('trial.details.no', 'No') |h %></option>
+                              <option value="yes"><% $c->i18n->p('trial.details.yes', 'Yes') |h %></option>
                           </select>
                       </div>
                     </div>
@@ -248,9 +248,9 @@ $field_trial_is_planned_to_cross
             </div>
         </div>
         <div class="modal-footer">
-            <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
-            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_trial_details_cancel_button">Cancel</button>
-            <button type="button" class="btn btn-primary" id="save_trial_details">Save Changes</button>
+            <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> <% $c->i18n->p('trial.details.pending', 'Indicates pending change') |h %></p>
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_trial_details_cancel_button"><% $c->i18n->p('trial.details.cancel', 'Cancel') |h %></button>
+            <button type="button" class="btn btn-primary" id="save_trial_details"><% $c->i18n->p('trial.details.save', 'Save Changes') |h %></button>
         </div>
     </div>
 </div>
@@ -260,14 +260,14 @@ $field_trial_is_planned_to_cross
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialDetailsSavedDialog">Details Saved</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.details.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialDetailsSavedDialog"><% $c->i18n->p('trial.details.saved', 'Details Saved') |h %></h4>
             </div>
             <div class="modal-body" id="trial_details_saved_body">
               <ul class="list-group" id="trial_details_saved_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="trial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="trial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.details.reload', 'Close & Reload') |h %></button>
             </div>
         </div>
     </div>
@@ -277,14 +277,14 @@ $field_trial_is_planned_to_cross
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialDetailsErrorDialog">Error Saving Trial Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.details.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialDetailsErrorDialog"><% $c->i18n->p('trial.details.error_title', 'Error Saving Trial Details') |h %></h4>
             </div>
             <div class="modal-body" id="trial_details_error_body">
               <ul class="list-group" id="trial_details_error_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.details.close', 'Close') |h %></button>
             </div>
         </div>
     </div>

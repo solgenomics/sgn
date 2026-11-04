@@ -12,7 +12,7 @@ solGS trials search results table.
 </div>
 
 <div id="trial_search_result_select" style="display:none;">
-  <input  class="button" type="button" id="select_trials_btn"  value="Select"/>
+  <input  class="button" type="button" id="select_trials_btn"  value="<% $c->i18n->p("global.select", "Select") |h %>"/>
 </div>
 
 

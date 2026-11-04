@@ -9,49 +9,49 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
-                <button type="reset" class="close" id="add_transactions_dismiss_button_1" name="add_transactions_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="addTransactions">Add New Transactions Using a List</h4></center>
+                <button type="reset" class="close" id="add_transactions_dismiss_button_1" name="add_transactions_dismiss_button" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addTransactions"><% $c->i18n->p('seedlots.ui.add_new_transactions_using_a_list', 'Add New Transactions Using a List') |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "add_transactions_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Seedlot Transactions" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.intro', 'Intro')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.seedlot_transactions', 'Seedlot Transactions')) &>
 
-                            <p>There are four different types of seedlot transactions: Transferring seeds from an existing seedlot to another existing seedlot, to a new seedlot, to a plot or to unspecified seedlot or plot. </p>
+                            <p><% $c->i18n->p('seedlots.ui.there_are_four_different_types_of_seedlot_transactions_transferr', 'There are four different types of seedlot transactions: Transferring seeds from an existing seedlot to another existing seedlot, to a new seedlot, to a plot or to unspecified seedlot or plot.') |h %> </p>
                             <ul>
-                                <li>You can use upload option for all transaction types</li>
-                                <li><b>Seedlot list option can be used only for transferring seeds from existing seedlots to unspecified seedlots/plots.</b></li>
+                                <li><% $c->i18n->p('seedlots.ui.you_can_use_upload_option_for_all_transaction_types', 'You can use upload option for all transaction types') |h %></li>
+                                <li><b><% $c->i18n->p('seedlots.ui.seedlot_list_option_can_be_used_only_for_transferring_seeds_from', 'Seedlot list option can be used only for transferring seeds from existing seedlots to unspecified seedlots/plots.') |h %></b></li>
                             </ul>
                             <hr>
 
                             <center>
-                                <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('seedlots.ui.go_to_next_step', 'Go to Next Step') |h %></button>
                             </center>
                         </&>
 
                         <form class="form-horizontal" role="form" name="add_new_transaction_form" id="add_new_transaction_form">
-                            <&| /util/workflow.mas:step, title=> "Add New Transactions" &>
-                                <& /page/page_title.mas, title=>"Enter information about the transactions" &>
-                                <center><label style="color:DarkOliveGreen" class="col-sm-12 control-label">Note: This option is for transferring seeds to unspecified seedlots/plots only</label></center>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.add_new_transactions', 'Add New Transactions')) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.enter_information_about_the_transactions', 'Enter information about the transactions')) &>
+                                <center><label style="color:DarkOliveGreen" class="col-sm-12 control-label"><% $c->i18n->p('seedlots.ui.note_this_option_is_for_transferring_seeds_to_unspecified_seedlo', 'Note: This option is for transferring seeds to unspecified seedlots/plots only') |h %></label></center>
                                 <br/>
                                 <br/>
                                 <div class="form-horizontal">
                                     <div class="form-group">
-                                        <label class="col-sm-4 control-label">Unit Type: </label>
+                                        <label class="col-sm-4 control-label"><% $c->i18n->p('seedlots.ui.unit_type', 'Unit Type:') |h %> </label>
                                         <div class="col-sm-8">
                                             <div class="input-group">
                                                 <select class="form-control" id="unit_type">
-                                                    <option value="">Please select a unit type </option>
-                                                    <option value="number_of_seeds">using number of seeds</option>
-                                                    <option value="weight_g">using weight (g)</option>
+                                                    <option value=""><% $c->i18n->p('seedlots.ui.please_select_a_unit_type', 'Please select a unit type') |h %> </option>
+                                                    <option value="number_of_seeds"><% $c->i18n->p('seedlots.ui.using_number_of_seeds', 'using number of seeds') |h %></option>
+                                                    <option value="weight_g"><% $c->i18n->p('seedlots.ui.using_weight_g', 'using weight (g)') |h %></option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="control-label col-sm-4">List of Seedlots:</label>
+                                        <label class="control-label col-sm-4"><% $c->i18n->p('seedlots.ui.list_of_seedlots', 'List of Seedlots:') |h %></label>
                                         <div class="col-sm-8" >
                                             <div class="input-group">
                                                 <select class="form-control" id="seedlot_list_select"></select>
@@ -64,17 +64,17 @@
                                 <br/>
                                 <div id="form_footer" style="display:none" >
                                     <center>
-                                        <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="new_transaction_submit" id="new_transaction_submit">Submit</button>
+                                        <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="new_transaction_submit" id="new_transaction_submit"><% $c->i18n->p('seedlots.ui.submit', 'Submit') |h %></button>
                                     </center>
                                 </div>
                             </&>
                         </form>
 
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your seedlot transactions were stored" &>
+                        <&| /util/workflow.mas:complete, title=> HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.complete', 'Complete')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.finished_your_seedlot_transactions_were_stored', 'Finished! Your seedlot transactions were stored')) &>
                             <p>
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                New seedlot transactions were added successfully
+                                <% $c->i18n->p('seedlots.ui.new_seedlot_transactions_were_added_successfully', 'New seedlot transactions were added successfully') |h %>
                             </p>
                             <br/>
                         </&>
@@ -82,7 +82,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="add_transactions_dismiss_button_2" name="add_transactions_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add_transactions_dismiss_button_2" name="add_transactions_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -92,19 +92,19 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="transactionsSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transactionsSavedDialog"><% $c->i18n->p('seedlots.ui.success', 'Success') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The seedlot transactions were saved successfully.
+                        <% $c->i18n->p('seedlots.ui.the_seedlot_transactions_were_saved_successfully', 'The seedlot transactions were saved successfully.') |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_transactions_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_transactions_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -112,11 +112,62 @@
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 
 jQuery(document).ready(function(){
 
     var lo = new CXGN.List();
-    jQuery('#seedlot_list_select').html(lo.listSelect('seedlot_list_select', ['seedlots'], 'Select a list of seedlots', undefined, undefined));
+    jQuery('#seedlot_list_select').html(lo.listSelect('seedlot_list_select', ['seedlots'], seedlotI18n.p("seedlots.ui.select_a_list_of_seedlots.bf701c0", "Select a list of seedlots"), undefined, undefined));
 
     jQuery("#add_transactions_using_list_link").click(function(){
         jQuery("#add_transactions_using_list_dialog").modal("show");
@@ -146,10 +197,10 @@ jQuery(document).ready(function(){
             var seedlot_validation = 1;
             seedlot_validation = lo.legacy_validate(seedlot_list_id, 'seedlots', true);
             if (seedlot_validation != 1) {
-                alert("This seedlot list did not pass validation. Names in the list must exist in the database and are not marked as discarded.");
+                alert(seedlotI18n.p("seedlots.ui.this_seedlot_list_did_not_pass_validation_names_in_the_list_must", "This seedlot list did not pass validation. Names in the list must exist in the database and are not marked as discarded."));
                 return;
             } else if (!unit_type) {
-                alert("Please select a unit type");
+                alert(seedlotI18n.p("seedlots.ui.please_select_a_unit_type", "Please select a unit type"));
                 return;
             } else if (unit_type && seedlot_list_id) {
                 transaction_form(unit_type, seedlot_list_id);
@@ -161,14 +212,14 @@ jQuery(document).ready(function(){
         var seedlot_list = lo.getList(seedlot_list_id);
 
         if (unit_type == 'number_of_seeds') {
-            var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Seedlot Name</th><th>Number of Seeds Taken</th><th>Reason</th></tr></thead><tbody>';
+            var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>' + seedlotHTML(seedlotI18n.p("seedlots.ui.seedlot_name.8bbaf6d", "Seedlot Name")) + '</th><th>' + seedlotHTML(seedlotI18n.p("seedlots.ui.number_of_seeds_taken", "Number of Seeds Taken")) + '</th><th>' + seedlotHTML(seedlotI18n.p("seedlots.ui.reason", "Reason")) + '</th></tr></thead><tbody>';
             for (var i=0; i<seedlot_list.length; i++){
-                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="number_of_seeds_info" id="number_of_seeds_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
+                html = html + '<tr><td>' + seedlotHTML(seedlot_list[i]) + '</td><td><input class="form-control"  name ="number_of_seeds_info" id="number_of_seeds_info_'+ i +'" value="" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.required", "Required")) + '"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.required", "Required")) + '"/></td></tr>';
             };
         } else if (unit_type == 'weight_g') {
-            var html = '<table class="table table-bordered" id="weight_info_table"><thead><tr><th>Seedlot Name</th><th>Weight (g) Taken</th><th>Reason</th></tr></thead><tbody>';
+            var html = '<table class="table table-bordered" id="weight_info_table"><thead><tr><th>' + seedlotHTML(seedlotI18n.p("seedlots.ui.seedlot_name.8bbaf6d", "Seedlot Name")) + '</th><th>' + seedlotHTML(seedlotI18n.p("seedlots.ui.weight_g_taken", "Weight (g) Taken")) + '</th><th>' + seedlotHTML(seedlotI18n.p("seedlots.ui.reason", "Reason")) + '</th></tr></thead><tbody>';
             for (var i=0; i<seedlot_list.length; i++){
-                html = html + '<tr><td>' + seedlot_list[i] + '</td><td><input class="form-control"  name ="weight_info" id="weight_info_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
+                html = html + '<tr><td>' + seedlotHTML(seedlot_list[i]) + '</td><td><input class="form-control"  name ="weight_info" id="weight_info_'+ i +'" value="" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.required", "Required")) + '"/></td><td><input class="form-control"  name ="transaction_description" id="transaction_description_'+ i +'" value="" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.required", "Required")) + '"/></td></tr>';
             };
         }
 
@@ -194,18 +245,18 @@ jQuery(document).ready(function(){
             var transaction_description = jQuery('#transaction_description_'+ i ).val();
             if (unit_type == 'number_of_seeds') {
                 if (number_of_seeds === '') {
-                    alert("please provide number of seeds taken from seedlot:" + seedlot_name);
+                    alert(seedlotI18n.p("seedlots.ui.please_provide_number_of_seeds_taken_from_seedlot_seedlot", "please provide number of seeds taken from seedlot:%{seedlot}", {seedlot: seedlot_name}));
                     return;
                 }
             } else if (unit_type == 'weight_g') {
                 if (weight_g === '') {
-                    alert("please provide weight(g) taken from seedlot:" + seedlot_name);
+                    alert(seedlotI18n.p("seedlots.ui.please_provide_column_taken_from_seedlot_seedlot", "please provide %{column} taken from seedlot:%{seedlot}", {column: "weight(g)", seedlot: seedlot_name}));
                     return;
                 }
             }
 
             if (transaction_description === '') {
-                alert("Please provide transaction description for seedlot:" + seedlot_name);
+                alert(seedlotI18n.p("seedlots.ui.please_provide_transaction_description_for_seedlot_seedlot", "Please provide transaction description for seedlot:%{seedlot}", {seedlot: seedlot_name}));
                 return;
             }
 
@@ -214,6 +265,7 @@ jQuery(document).ready(function(){
 
         jQuery.ajax({
             url: '/ajax/breeders/add_transactions_using_list',
+            headers: _sgnSeedlotLocaleHeaders('/ajax/breeders/add_transactions_using_list'),
             method: 'POST',
             data: {
                 'new_transaction_data': JSON.stringify(new_transaction_data),
@@ -235,7 +287,7 @@ jQuery(document).ready(function(){
             },
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred storing new transactions.');
+                alert(seedlotI18n.p("seedlots.ui.an_error_occurred_storing_new_transactions", "An error occurred storing new transactions."));
             },
         });
     });

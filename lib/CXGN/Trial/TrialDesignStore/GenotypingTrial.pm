@@ -1,5 +1,7 @@
 
 package CXGN::Trial::TrialDesignStore::GenotypingTrial;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use Moose;
 use Try::Tiny;
@@ -47,6 +49,7 @@ sub BUILD {
 
 sub validate_design {
     my $self = shift;
+    my SGN::I18N $genotypingtrial_validate_i18n = $self->i18n;
 
     print STDERR "validating design\n";
 
@@ -56,7 +59,7 @@ sub validate_design {
     my $error = '';
 
    if ($design_type ne 'genotyping_plate') {
-        $error .= "is_genotyping is true; however design_type not equal to 'genotyping_plate'";
+        $error .= ($genotypingtrial_validate_i18n ? $genotypingtrial_validate_i18n->p("trial.design_store.genotype_design", "is_genotyping is true; however design_type not equal to 'genotyping_plate'") : "is_genotyping is true; however design_type not equal to 'genotyping_plate'");
         return $error;
     }
 
@@ -72,7 +75,7 @@ sub validate_design {
     foreach my $stock (keys %design){
         foreach my $property (keys %{$design{$stock}}){
             if (!exists($allowed_properties{$property})) {
-                $error .= "Property: $property not allowed! ";
+                $error .= ($genotypingtrial_validate_i18n ? $genotypingtrial_validate_i18n->p("trial.design_store.property_not_allowed", "Property: %{property} not allowed! ", {property => "$property"}) : "Property: $property not allowed! ");
             }
             if ($property eq 'stock_name') {
                 my $stock_name = $design{$stock}->{$property};
@@ -88,10 +91,10 @@ sub validate_design {
     my @stock_names = keys %seen_stock_names;
     my @accession_names = keys %seen_accession_names;
     if(scalar(@stock_names)<1){
-        $error .= "You cannot create a trial with less than one genotyping sample.";
+        $error .= ($genotypingtrial_validate_i18n ? $genotypingtrial_validate_i18n->p("trial.design_store.no_genotyping_sample", "You cannot create a trial with less than one genotyping sample.") : "You cannot create a trial with less than one genotyping sample.");
     }
     if(scalar(@accession_names)<1){
-        $error .= "You cannot create a trial with less than one accession.";
+        $error .= ($genotypingtrial_validate_i18n ? $genotypingtrial_validate_i18n->p("trial.design_store.no_accession", "You cannot create a trial with less than one accession.") : "You cannot create a trial with less than one accession.");
     }
 
     print STDERR "Creating trial with accessions: ". Dumper(\@accession_names);
@@ -105,7 +108,7 @@ sub validate_design {
         uniquename=>{-in=>\@stock_names}
     });
     while (my $s = $stocks->next()) {
-        $error .= "Name $s->uniquename already exists in the database.";
+        $error .= ($genotypingtrial_validate_i18n ? $genotypingtrial_validate_i18n->p("trial.design_store.name_exists", "Name %{name} already exists in the database.", {name => "$s->uniquename"}) : "Name $s->uniquename already exists in the database.");
     }
 
     my @source_stock_types = ($accession_type_id, $plot_type_id, $subplot_type_id, $plant_type_id, $tissue_type_id);
@@ -121,7 +124,7 @@ sub validate_design {
     }
     foreach (@accession_names){
         if (!$found_data{$_}){
-            $error .= "The following name is not in the database: $_ .";
+            $error .= ($genotypingtrial_validate_i18n ? $genotypingtrial_validate_i18n->p("trial.design_store.missing_name_spaced", "The following name is not in the database: %{name} .", {name => "$_"}) : "The following name is not in the database: $_ .");
         }
     }
 

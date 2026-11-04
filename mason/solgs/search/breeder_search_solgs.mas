@@ -3,11 +3,11 @@
   <& /breeders_toolbox/breeder_search_page.mas &>
 </div>
 
-<button type="button" class="btn btn-success" id="go_back">Back</button>
+<button type="button" class="btn btn-success" id="go_back"><% $c->i18n->p("solgs.interface.back", "Back") |h %></button>
    
 <script>
 
-jQuery('#go_back').html(`Back to solGS`);
+jQuery('#go_back').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("solgs.interface.back_to_solgs", "Back to solGS") : `Back to solGS`));
 jQuery('#go_back').click( function(){
   window.location.href=  document.referrer;
   });

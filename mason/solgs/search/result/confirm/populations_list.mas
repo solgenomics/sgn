@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 a general format for projects details presentation.
@@ -16,13 +20,13 @@ $page_links => ''
 <%perl>
 
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
-my $marker_tip = tooltipped_text("Tip", "You can combine trials sharing the same color.");
+my $marker_tip = tooltipped_text($c->i18n->p("solgs.interface.tip", "Tip"), $c->i18n->p("solgs.interface.you_can_combine_trials_sharing_the_same_color", "You can combine trials sharing the same color."));
 
 </%perl>
 
 
 <& /page/columnar_table.mas,
-     headings    => ['', 'Projects', 'Description', 'Location', 'Year', $marker_tip ],
+     headings    => ['', HTML::Entities::encode_entities($c->i18n->p("global.toolbar.genomes.projects", "Projects")), HTML::Entities::encode_entities($c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description")), HTML::Entities::encode_entities($c->i18n->p("solgs.interface.location", "Location")), HTML::Entities::encode_entities($c->i18n->p("global.trial_table.year", "Year")), $marker_tip ],
      data        => $result,
     __alt_freq   => 2,
     __alt_width  => 1,

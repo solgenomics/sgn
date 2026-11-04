@@ -10,9 +10,10 @@ Takes no arguments.
 <%perl>
 
 use File::Spec;
+use HTML::Entities ();
 
 my $file;
-my $html = "(Potato genome information currently not available)";
+my $html = HTML::Entities::encode_entities($c->i18n->p('global.potato_genome_info.unavailable', '(%{crop} genome information currently not available)', {crop => 'Potato'}));
 
 eval { $file = File::Spec->catfile($c->get_conf('homepage_files_dir'), 'potato_genome_info.txt');
 $html = $m->file($file);

@@ -7,6 +7,7 @@ use Algorithm::Combinatorics qw /combinations/;
 use Array::Utils qw(:all);
 use Cache::File;
 use Carp qw/ carp confess croak /;
+use SGN::I18N ();
 use CXGN::Tools::Run;
 use File::Path qw /make_path/;
 use File::Spec;
@@ -130,6 +131,7 @@ sub prepare_data_for_trials : Path('/solgs/retrieve/populations/data') Args() {
 
 sub combined_trials_page : Path('/solgs/populations/combined') Args() {
     my ( $self, $c, $combo_pops_id, $gp, $protocol_id ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->stash->{combo_pops_id}   = $combo_pops_id;
@@ -150,9 +152,12 @@ sub combined_trials_page : Path('/solgs/populations/combined') Args() {
 
     if ( !$cached ) {
         my $msg =
-"Cached output for this training population  does not exist anymore.\n"
-          . "Please go to <a href=\"/solgs/search/\">the search page</a>"
-          . " and create the training population data.";
+            SGN::I18N::translate($ui_solgs_i18n, "solgs.server.cached_training_data_missing", "Cached output for this training population  does not exist anymore.\n")
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.please_go_to", "Please go to ")
+          . "<a href=\"/solgs/search/\">"
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.search_page_link", "the search page")
+          . "</a>"
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.create_training_population_data", " and create the training population data.");
 
         $c->controller('solGS::Utils')->generic_message( $c, $msg );
     }
@@ -172,6 +177,7 @@ sub models_combined_trials : Path('/solgs/models/combined/trials') Args() {
     my ( $self, $c, $combo_pops_id, $tr_txt, $traits_selection_id, $gp,
         $protocol_id )
       = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my $data_set_type = 'combined_populations';
 
@@ -213,8 +219,10 @@ sub models_combined_trials : Path('/solgs/models/combined/trials') Args() {
 
     if ( !@traits_ids ) {
         $c->stash->{message} =
-            "Cached output for this page does not exist anymore.\n"
-          . " Please go to $training_pop_page and run the analysis.";
+            SGN::I18N::translate($ui_solgs_i18n, "solgs.server.cached_page_output_missing", "Cached output for this page does not exist anymore.\n")
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.please_go_to_space", " Please go to ")
+          . $training_pop_page
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.run_analysis", " and run the analysis.");
 
         $c->stash->{template} = "/generic_message.mas";
     }
@@ -272,6 +280,7 @@ sub display_combined_pops_result : Path('/solgs/model/combined/trials/') Args()
 {
     my ( $self, $c, $combo_pops_id, $trait_key, $trait_id, $gp, $protocol_id )
       = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my $data_set_type = 'combined_populations';
 
@@ -299,10 +308,14 @@ sub display_combined_pops_result : Path('/solgs/model/combined/trials/') Args()
         my $training_pop_page =
           $c->controller('solGS::Path')->training_page_url($args);
         $training_pop_page =
-          qq | <a href="$training_pop_page">training population page </a>|;
+            qq | <a href="$training_pop_page">|
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.training_population_page_link", "training population page ")
+          . qq |</a>|;
 
-        my $msg = "Cached output for this model does not exist anymore.\n"
-          . " Please go to the $training_pop_page and run the analysis.";
+        my $msg = SGN::I18N::translate($ui_solgs_i18n, "solgs.server.cached_model_output_missing", "Cached output for this model does not exist anymore.\n")
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.please_go_to_the", " Please go to the ")
+          . $training_pop_page
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.run_analysis", " and run the analysis.");
 
         $c->controller('solGS::Utils')->generic_message( $c, $msg );
 
@@ -349,6 +362,7 @@ sub selection_combined_pops_trait : Path('/solgs/combined/model/') Args() {
         $sel_key,  $selection_pop_id, $trait_key,
         $trait_id, $gp,               $protocol_id
     ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my $data_set_type = 'combined_populations';
 
@@ -804,6 +818,7 @@ sub get_combined_pops_list {
 
 sub combined_pops_summary {
     my ( $self, $c ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my $combo_pops_id = $c->stash->{combo_pops_id};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};

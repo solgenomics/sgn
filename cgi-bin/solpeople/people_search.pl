@@ -8,6 +8,8 @@ use CatalystX::GlobalContext qw( $c );
 ######################################################################
 
 use strict;
+use SGN::I18N ();
+
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers
@@ -18,10 +20,12 @@ use CXGN::Searches::People;
 #################################################
 
 # Start a new SGN page.
-my $page = CXGN::Page->new( "SGN directory search results", "Evan" );
+    my SGN::I18N $ui_people_i18n = SGN::I18N::translate($c);
+
+my $page = CXGN::Page->new( SGN::I18N::translate($ui_people_i18n, 'community.people.sgn_directory_search_results', 'SGN directory search results', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }), "Evan" );
 $page->header();
 
-print page_title_html('Directory search results');
+print page_title_html(SGN::I18N::translate($ui_people_i18n, 'community.people.directory_search_results', 'Directory search results', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }));
 
 #create the search and query objects
 my $search = CXGN::Searches::People->new();
@@ -30,11 +34,11 @@ $search->page_size(20);    #results shown per page
 
 #get the parameters
 my %params = CGI->new->Vars
-  or $c->throw( message => 'No query parameters provided', is_error => 0 );
+  or $c->throw( message => SGN::I18N::translate($ui_people_i18n, 'community.people.no_query_parameters_provided', 'No query parameters provided', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }), is_error => 0 );
 $query->from_request( \%params );
 
 my $search_again_html = info_section_html(
-    title    => 'Search again',
+    title    => SGN::I18N::translate($ui_people_i18n, 'community.people.search_again', 'Search again', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
     contents => CXGN::Search::CannedForms::people_search_form( $page, $query )
 );
 
@@ -63,7 +67,7 @@ my $results_html = <<EOH;
 EOH
 
 $results_html .= columnar_table_html(
-    headings   => [ 'Name', 'E-mail', 'Organization', 'Country' ],
+    headings   => [ SGN::I18N::translate($ui_people_i18n, 'community.people.name', 'Name', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }), SGN::I18N::translate($ui_people_i18n, 'community.people.e_mail', 'E-mail', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }), SGN::I18N::translate($ui_people_i18n, 'community.people.organization', 'Organization', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }), SGN::I18N::translate($ui_people_i18n, 'community.people.country', 'Country', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }) ],
     data       => \@results,
     __alt_freq => 2
 );
@@ -75,17 +79,17 @@ EOH
 
 if (@results) {
     print info_section_html(
-        title => 'Results',
+        title => SGN::I18N::translate($ui_people_i18n, 'community.people.results', 'Results', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
         contents =>
             sprintf(
-                '<span class="paginate_summary">%s matches </span>',
+                SGN::I18N::translate($ui_people_i18n, 'community.people.directory_matches_format', '<span class="paginate_summary">%s matches </span>', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
                 $result->total_results()
                )
            .$results_html,
        );
 }
 else {
-    print '<h4>No matches found</h4>';
+    print SGN::I18N::translate($ui_people_i18n, 'community.people.no_directory_matches', '<h4>No matches found</h4>', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 });
 }
 
 print $search_again_html;

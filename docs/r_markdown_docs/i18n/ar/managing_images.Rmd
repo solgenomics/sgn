@@ -1,0 +1,57 @@
+# إدارة الصور {#managing-images}
+
+## تحميل ملفات الصور {#uploading-image-files}
+
+انقر “التنميط الظاهري” ضمن “إدارة”، ثم “تحميل الصور” لفتح نافذة الحوار هذه:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image_upload_dialog.png')
+```
+
+لتحميل الصور مباشرة، اختر تنسيق الملف "Images". يمكن تحميل صورة واحدة أو عدة صور محددة. يجب أن تكون الصور قد نُزّلت من تطبيق Fieldbook أو أن يتبع اسم الملف البنية التالية: observationUnitName وtraitname وnumber وtimestamp مفصولة بشرطات سفلية. ولا يجوز أن يحتوي الاسم على شرطات سفلية أخرى. مثال: 38873_branching_5_2025-07-28.jpg
+
+إذا التُقطت الصور باستخدام Fieldbook، فستحتوي بيانات EXIF على المواد والصفات المرتبطة بها. ستُعالج البيانات تلقائيًا عند التحميل وتُنشأ الروابط المناسبة.
+
+بعد اختيار الصور، انقر “تحقق” لفحص أسماء الملفات والبيانات الوصفية ومطابقتها بالمواد الموجودة في قاعدة البيانات.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/filename_verify_success.png')
+```
+
+إذا نجح التحقق، انقر “حفظ” لتخزين الصور في قاعدة البيانات.
+
+لتحميل صور مرتبطة ببيانات ظاهرية، اختر تنسيق "Images with Associated Phenotypes". يجب تحميل جدول القيم الظاهرية مع ملف zip للصور. يمكن أن يكون الجدول بصيغة .xls أو .xlsx، ويجب أن يتضمن العناوين التالية:
+
+observationUnitName \| observationVariableName \| value \| timestamp \| image_name \| person
+
+يجب أن يطابق عمود image_name أسماء ملفات الصور المرتبطة داخل ملف zip.
+
+## تحميل الصور مباشرة إلى المواد {#uploading-images-directly-to-stocks}
+
+في قسم الصور بصفحة تفاصيل المادة، يمكنك إضافة صورة مرتبطة بها بالنقر على “إضافة صورة”. وستُربط الصور المحملة عبر نافذة الحوار هذه بالمادة المناسبة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/stock_add_image.png')
+```
+
+## تحميل الصور من صفحات التجربة الحقلية وتحليل الصور {#uploading-images-from-the-field-trial-and-image-analysis-pages}
+
+يمكن أيضًا تحميل الصور من صفحة تفاصيل التجربة الحقلية. افتح الصفحة وانتقل إلى قسم “الصور”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_trial_images.png')
+```
+
+انقر “إضافة صورة جديدة” لفتح نافذة تحميل الصور، حيث يمكن تحميل الصور بالتنسيقات الموضحة سابقًا.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_new_image_trial.png')
+```
+
+لتحميل الصور من صفحة تحليل الصور، اختر “تحليل الصور” من قائمة “التحليل”، ثم انقر “تحميل صور جديدة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image_analysis_add_image.png')
+```
+
+ستُفتح نافذة تحميل الصور نفسها.

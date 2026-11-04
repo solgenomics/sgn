@@ -4,6 +4,8 @@ package CXGN::Trial::Folder;
 use CXGN::Chado::Cvterm;
 use CXGN::Location;
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
@@ -114,11 +116,12 @@ has 'additional_info' => (
 
 sub BUILD {
 	my $self = shift;
+    my SGN::I18N $ui_folder_build_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 
 	my $row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$self->folder_id() });
 
 	if (!$row) {
-		die "The specified folder with id ".$self->folder_id()." does not exist!";
+		die (SGN::I18N::translate($ui_folder_build_i18n, "trial.model.folder_missing", "The specified folder with id %{id} does not exist!", {id => "" . ($self->folder_id())}));
 	}
 
 	$self->name($row->name());
@@ -223,6 +226,7 @@ sub BUILD {
 
 sub create {
 	my $class = shift;
+    my SGN::I18N $ui_folder_create_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 	my $args = shift;
 	my $schema = $args->{bcs_schema};
 	my $folder_name = $args->{name};
@@ -241,7 +245,7 @@ sub create {
 	# check if name is already taken
 	my $check_rs = $schema->resultset('Project::Project')->search( { name => $folder_name } );
 	if ($check_rs->count() > 0) {
-		die "The name $folder_name cannot be used for a new folder because it already exists.";
+		die (SGN::I18N::translate($ui_folder_create_i18n, "trial.model.folder_name_used", "The name %{name} cannot be used for a new folder because it already exists.", {name => "$folder_name"}));
 	}
 
 	my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_folder', 'project_property');

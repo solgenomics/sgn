@@ -8,11 +8,11 @@ $trial_id
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Field trial source(s) of parents used in crossing", id => 'field_trial_sources_of_parent_section', is_subsection => 1, collapsible=>1, collapsed=>1 &>
+            <&| /page/info_section.mas, anchor_title => "Field trial source(s) of parents used in crossing", title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.field_trial_source_s_of_parents_used_in_crossing", "Field trial source(s) of parents used in crossing")), id => 'field_trial_sources_of_parent_section', is_subsection => 1, collapsible=>1, collapsed=>1 &>
                 <table class="table table-hover table-bordered" id="field_trial_sources_of_parents_table">
                     <thead>
                         <tr>
-                            <th>Field Trial</th>
+                            <th><% $c->i18n->p("cross.pages.field_trial", "Field Trial") |h %></th>
                         </tr>
                     </thead>
                 </table>
@@ -21,11 +21,11 @@ $trial_id
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Field trial(s) for evaluating crosses in this experiment", id => 'field_trials_for_evaluating_crosses_section', is_subsection => 1, collapsible=>1, collapsed=>1 &>
+            <&| /page/info_section.mas, anchor_title => "Field trial(s) for evaluating crosses in this experiment", title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.field_trial_s_for_evaluating_crosses_in_this_experiment", "Field trial(s) for evaluating crosses in this experiment")), id => 'field_trials_for_evaluating_crosses_section', is_subsection => 1, collapsible=>1, collapsed=>1 &>
                 <table class="table table-hover table-bordered" id="field_trials_for_evaluating_crosses_table">
                     <thead>
                         <tr>
-                            <th>Field Trial</th>
+                            <th><% $c->i18n->p("cross.pages.field_trial", "Field Trial") |h %></th>
                         </tr>
                     </thead>
                 </table>
@@ -62,3 +62,7 @@ jQuery(document).ready(function(){
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

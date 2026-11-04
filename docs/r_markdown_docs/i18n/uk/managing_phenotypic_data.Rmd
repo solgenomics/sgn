@@ -1,0 +1,63 @@
+# Керування фенотиповими даними {#managing-phenotypic-data}
+
+Щоб спростити завантаження фенотипових даних, сторінка “Керування фенотиповими даними” пропонує два способи: файл фенотипів Field Book у форматі бази даних і файл Excel (.xls або .xlsx). Щоб відкрити сторінку, виберіть “Фенотипування” в меню “Керування”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image178.png')
+```
+
+## Завантаження фенотипових даних Field Book {#uploading-fieldbook-phenotypes}
+
+### Експорт файла бази даних Field Book {#export-field-book-database-file}
+
+Завантаження фенотипових даних Field Book до бази даних потребує формату "Database". Якщо плануєте користуватися описаним нижче завантаженням Field Book, експортуйте дані саме в цьому форматі. Формат "Table", який також експортує Field Book, можна змінити для використання способу завантаження таблиці, описаного нижче.
+
+### Завантаження файла бази даних Field Book {#upload-field-book-database-file}
+
+Щоб завантажити файл Field Book Phenotype у форматі бази даних, натисніть посилання “Завантажити Fieldbook”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image185.png')
+```
+
+Посилання “Завантажити Fieldbook” на цій сторінці та “Завантажити” на сторінці “Інструменти Field Book” відкривають те саме діалогове вікно. Інструкції із завантаження фенотипових файлів наведено на сторінці \@ref(Using-Field-Book-with-BreedBase).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image112.png')
+```
+
+## Завантаження фенотипових даних із таблиці {#uploading-spreadsheet-phenotypes}
+
+Щоб завантажити файл фенотипів у форматі Excel (.xls або .xlsx), натисніть посилання “Завантажити таблицю”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image288.png')
+```
+
+Укажіть “Рівень даних” (ділянки або рослини) та виберіть файл Excel для завантаження.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image68.png')
+```
+
+### Створення файла таблиці {#generating-spreadsheet-file}
+
+Щоб переглянути відомості про формат файла, натисніть посилання “Формат таблиці”. Відкриється діалогове вікно.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/phenotype_spreadsheet_upload_help_dialog.png')
+```
+
+Натисніть “Створити таблицю для фенотипування”, щоб відкрити діалогове вікно. Укажіть потрібні дослід(и) та список ознак, а потім натисніть “Надіслати”. Файл xlsx завантажиться на комп’ютер, і ви зможете заповнити фенотипові дані.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/create_phenotype_spreadsheet_dialog.png')
+```
+
+### Завантаження файла таблиці {#uploading-spreadsheet-file}
+
+Щоб перевірити формат файла перед завантаженням, натисніть “Перевірити”. Система перевірить вміст і якість значень: визначення ознаки для категоріальних значень, мінімальні й максимальні значення та тип даних. Також буде перевірено, чи вже завантажено значення для цих одиниць спостереження й ознак. Якщо так, можна замінити наявні значення даними з файла. Кнопка “Зберегти” доступна лише для коректного файла.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/phenotype_spreadsheet_upload_dialog.png')
+```

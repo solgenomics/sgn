@@ -1,5 +1,8 @@
 package SGN::View::Feature;
+use SGN::I18N ();
+use HTML::Entities ();
 use strict;
+use CatalystX::GlobalContext '$c';
 use warnings;
 
 use base 'Exporter';
@@ -146,12 +149,14 @@ sub location_string {
 
 sub location_list_html {
     my ($feature, $featurelocs) = @_;
+    my SGN::I18N $feature_locations_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
+    my $none_caption = HTML::Entities::encode_entities($feature_locations_i18n ? $feature_locations_i18n->p("shared.feature.no_location", "none") : "none");
     my @coords = map { location_string_html($_) }
         (  #$featurelocs ? $featurelocs->all
           #             : $feature->featureloc_features->all );
 	  $featurelocs ? $featurelocs->search({locgroup => 0,},)->all
                        : $feature->featureloc_features->search({locgroup => 0,},)->all)
-        or return '<span class="ghosted">none</span>';
+        or return "<span class=\"ghosted\">$none_caption</span>";
     return @coords;
 }
 sub location_list {
@@ -166,6 +171,7 @@ sub location_list {
 
 sub related_stats {
     my ($features) = @_;
+    my SGN::I18N $feature_stats_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $stats = { };
     my $total = scalar @$features;
     for my $f (@$features) {
@@ -176,13 +182,15 @@ sub related_stats {
         push @$data, [ $stats->{$k}, $k ];
     }
     if( 1 < scalar keys %$stats ) {
-        push @$data, [ $total, "<b>Total</b>" ];
+        my $total_caption = HTML::Entities::encode_entities($feature_stats_i18n ? $feature_stats_i18n->p("global.page.columnar_table.total", "Total") : "Total");
+        push @$data, [ $total, "<b>$total_caption</b>" ];
     }
     return $data;
 }
 
 sub feature_table {
     my ( $features, $reference_sequence, $omit_columns ) = @_;
+    my SGN::I18N $feature_table_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 
     { no warnings 'uninitialized';
       $omit_columns ||= [];
@@ -224,9 +232,9 @@ sub feature_table {
             }
         }
         else {
-            my $nl = 'not located';
+            my $nl = HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.not_located", "not located") : "not located");
             if( $reference_sequence ) {
-                $nl .= " on ".encode_entities( $reference_sequence->name )
+                $nl .= HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.located_on", " on ") : " on ") . encode_entities( $reference_sequence->name )
             }
             push @data, [
                 organism_link( $f->organism ),
@@ -270,7 +278,18 @@ sub feature_table {
         }
     }
 
-    return ( headings => \@headings, data => \@data, __align => \@align, __alt_freq => 0 , __border => 1 );
+    # Canonical heading keys above still control omit_columns. Localize only final display.
+    my %heading_captions = (
+        "Organism" => HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.heading.organism", "Organism") : "Organism"),
+        "Type" => HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.heading.type", "Type") : "Type"),
+        "Name" => HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.heading.name", "Name") : "Name"),
+        "Location" => HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.heading.location", "Location") : "Location"),
+        "Length" => HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.heading.length", "Length") : "Length"),
+        "Strand" => HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.heading.strand", "Strand") : "Strand"),
+        "Phase" => HTML::Entities::encode_entities($feature_table_i18n ? $feature_table_i18n->p("shared.feature.heading.phase", "Phase") : "Phase")
+    );
+    my @display_headings = map { $heading_captions{$_} } @headings;
+    return ( headings => \@display_headings, data => \@data, __align => \@align, __alt_freq => 0 , __border => 1 );
 }
 
 # try to figure out the "length" of a feature, which will vary for different features

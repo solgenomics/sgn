@@ -3,6 +3,9 @@
 
 </%doc>
 
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 
 $type => undef
@@ -10,25 +13,24 @@ $type_id
 $refering_page => undef
 </%args>
 
-  <& /page/page_title.mas, title=>"Upload Image" &>
+  <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.image.upload_image", "Upload Image")) &>
 
-  <p class="boxbgcolor2">Note: By pressing the "Upload" button, you are considered to be the copyright owner of the image being uploaded and that you grant a non-exclusive license to display and use the image on webpages and materials related to this website.<br /></p>
+  <p class="boxbgcolor2"><% $c->i18n->p("community.image.note_by_pressing_the_upload_button_you_are_considered_to_be_the_copyright_owne", "Note: By pressing the \"Upload\" button, you are considered to be the copyright owner of the image being uploaded and that you grant a non-exclusive license to display and use the image on webpages and materials related to this website.") |h %><br /></p>
 
-        <p> Supported file formats include .jpg. .jpeg, .gif, .png, .pdf, .ps,
-	.eps <br></p>
+        <p> <% $c->i18n->p("community.image.supported_file_formats_include_jpg_jpeg_gif_png_pdf_ps_eps", "Supported file formats include .jpg. .jpeg, .gif, .png, .pdf, .ps,\n\t.eps") |h %> <br></p>
 	<form name="upload_image_form" action="/image/confirm" method="post" enctype="multipart/form-data" >
-	    Upload an image, and associated with object <b><% $type %></b> id <% $type_id %><br /><br />
-	    <input type="file" name="file" value="Choose image file" />
+	    <% $c->i18n->p("community.image.upload_an_image_and_associated_with_object", "Upload an image, and associated with object") |h %> <b><% $type %></b> id <% $type_id %><br /><br />
+	    <input type="file" name="file" value="<% $c->i18n->p("community.image.choose_image_file", "Choose image file") |h %>" />
 	    <input type="hidden" name="action" value="confirm" /><br /><br />
 	    <input type="hidden" name="type" value="<% $type %>" />
 	    <input type="hidden" name="type_id" value="<% $type_id %>" />
 	    <input type="hidden" name="refering_page" value="<% $refering_page %>" />
-	    <input id="upload_image_submit" class="btn btn-primary" type="submit" value="Upload" />
+	    <input id="upload_image_submit" class="btn btn-primary" type="submit" value="<% $c->i18n->p("community.image.upload", "Upload") |h %>" />
 	 </form>
 	 <br/>
 
 
-%   if ($refering_page) { print "<a class=\"footer\" href=\"$refering_page\"><button class=\"btn btn-default\">Go Back</button></a>"; }
+%   if ($refering_page) { my $back = HTML::Entities::encode_entities($c->i18n->p("community.image.go_back", "Go Back")); print "<a class=\"footer\" href=\"$refering_page\"><button class=\"btn btn-default\">$back</button></a>"; }
 
 
 

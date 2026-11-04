@@ -18,7 +18,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
       <form id="create-meeting-form">
         <div class="modal-header">
-          <h4 class="modal-title">New Decision Meeting</h4>
+          <h4 class="modal-title"><% $c->i18n->p("decision.root.new_decision_meeting", "New Decision Meeting") |h %></h4>
         </div>
 
         <div class="modal-body">
@@ -26,61 +26,61 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
           <!-- Fields expected by your JS -->
           <div class="form-group">
-            <label for="mtg_name">Meeting Name</label>
+            <label for="mtg_name"><% $c->i18n->p("decision.root.meeting_name", "Meeting Name") |h %></label>
             <input id="mtg_name" class="form-control" type="text">
           </div>
 
           <div class="form-group">
-			  <label for="mtg_program" class="control-label">Breeding Program</label>
+			  <label for="mtg_program" class="control-label"><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %></label>
 			  <select id="mtg_program" name="breeding_program" class="form-control">
-			    <option value="">— Select a program —</option>
+			    <option value=""><% $c->i18n->p("decision.root.select_a_program", "— Select a program —") |h %></option>
 			    <!-- options are populated via AJAX -->
 			  </select>
 		  </div>
 
 		   <div class="form-group">
-				<label for="mtg_location" class="control-label">Location</label>
+				<label for="mtg_location" class="control-label"><% $c->i18n->p("global.search.features.location", "Location") |h %></label>
 				<select id="mtg_location" name="location_id" class="form-control">
-					<option value="">— Select a location —</option>
+					<option value=""><% $c->i18n->p("decision.root.select_a_location", "— Select a location —") |h %></option>
 					<!-- options populated via AJAX -->
 				</select>
 			</div>
 
 
           <div class="form-group">
-            <label for="mtg_year">Year</label>
+            <label for="mtg_year"><% $c->i18n->p("accession.sequencing.table.year", "Year") |h %></label>
             <input id="mtg_year" class="form-control" type="number">
           </div>
 
           <div class="form-group">
-            <label for="mtg_date">Date (YYYY-MM-DD)</label>
+            <label for="mtg_date"><% $c->i18n->p("decision.root.date_yyyy_mm_dd", "Date (YYYY-MM-DD)") |h %></label>
             <input id="mtg_date"
                    class="form-control"
                    type="text"
-                   placeholder="YYYY-MM-DD"
+                   placeholder="<% $c->i18n->p("decision.root.yyyy_mm_dd", "YYYY-MM-DD") |h %>"
                    inputmode="numeric"
                    maxlength="10"
                    autocomplete="off"
                    data-date-format="yyyy-mm-dd"
                    aria-describedby="mtg_date_help">
-            <span id="mtg_date_help" class="help-block">Use year-month-day, for example 2026-08-04.</span>
+            <span id="mtg_date_help" class="help-block"><% $c->i18n->p("decision.root.use_year_month_day_for_example_2026_08_04", "Use year-month-day, for example 2026-08-04.") |h %></span>
           </div>
 
           <div class="form-group">
-            <label for="mtg_data">Description</label>
+            <label for="mtg_data"><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></label>
             <textarea id="mtg_data" class="form-control" rows="3"></textarea>
           </div>
            <div class="form-group" id="attendees_group">
             <label class="control-label" for="people_search">
-              Attendees
-              <span id="people_selected_count" class="label label-info" aria-live="polite">0 selected</span>
+              <% $c->i18n->p("decision.root.attendees", "Attendees") |h %>
+              <span id="people_selected_count" class="label label-info" aria-live="polite"><% $c->i18n->p("decision.root.0_selected", "0 selected") |h %></span>
             </label>
 
             <!-- single global search box -->
             <input type="search"
                    id="people_search"
                    class="form-control"
-                   placeholder="Search by first or last name…"
+                   placeholder="<% $c->i18n->p("decision.root.search_by_first_or_last_name", "Search by first or last name…") |h %>"
                    autocomplete="off"
                    style="max-width: 420px; margin-bottom: 8px;">
 
@@ -89,11 +89,11 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                 <thead>
                   <tr>
                     <th style="width:42px; text-align:center;">
-                      <input type="checkbox" id="people_select_all" aria-label="Select all"/>
+                      <input type="checkbox" id="people_select_all" aria-label="<% $c->i18n->p("trial.create.review.select_all", "Select all") |h %>"/>
                     </th>
-                    <th>First name</th>
-                    <th>Last name</th>
-                    <th>Contact Email</th>
+                    <th><% $c->i18n->p("decision.root.first_name", "First name") |h %></th>
+                    <th><% $c->i18n->p("decision.root.last_name", "Last name") |h %></th>
+                    <th><% $c->i18n->p("decision.root.contact_email", "Contact Email") |h %></th>
                   </tr>
                 </thead>
                 <tbody><!-- populated via JS --></tbody>
@@ -106,9 +106,9 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("auth.legacy.cancel", "Cancel") |h %></button>
 
-          <button id="create_meeting_save" type="submit" class="btn btn-success">Save Meeting</button>
+          <button id="create_meeting_save" type="submit" class="btn btn-success"><% $c->i18n->p("decision.root.save_meeting", "Save Meeting") |h %></button>
           
         </div>
       </form>

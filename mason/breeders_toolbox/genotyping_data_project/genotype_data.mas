@@ -2,22 +2,22 @@
 $trial_id
 </%args>
 
-<input type="checkbox" id="project_genotype_data_forbid_cache"> Refresh results
+<input type="checkbox" id="project_genotype_data_forbid_cache"> <% $c->i18n->p("genotype.plate.refresh_results", "Refresh results") |h %>
 <hr>
 
 <div style="overflow:scroll">
     <table id="genotyping_data_project_genotype_data" width="100%" class="table table-hover table-striped">
         <thead>
             <tr>
-                <th>Protocol</th>
-                <th>Sample Name</th>
-                <th>Sample Type</th>
-                <th>Accession Name</th>
-                <th>Synonyms</th>
-                <th>Description</th>
-                <th>Number of Marker Scores</th>
-                <th>IGD Number</th>
-                <th>Download</th>
+                <th><% $c->i18n->p("global.search_wizard.protocol", "Protocol") |h %></th>
+                <th><% $c->i18n->p("genotype.plate.sample_name", "Sample Name") |h %></th>
+                <th><% $c->i18n->p("genotype.plate.sample_type", "Sample Type") |h %></th>
+                <th><% $c->i18n->p("accession.related_stock.header.accession_name", "Accession Name") |h %></th>
+                <th><% $c->i18n->p("accession.stock.additional_info.synonyms", "Synonyms") |h %></th>
+                <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
+                <th><% $c->i18n->p("genotype.plate.number_of_marker_scores", "Number of Marker Scores") |h %></th>
+                <th><% $c->i18n->p("genotype.plate.igd_number", "IGD Number") |h %></th>
+                <th><% $c->i18n->p("global.est.download", "Download") |h %></th>
             </tr>
         </thead>
     </table>

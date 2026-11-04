@@ -19,7 +19,7 @@ my $hash = $urlencode{'#'};
 </%perl>
 
 <center>
-<h1>CASSAVABASE BARCODE TOOL</h1>
+<h1><% $c->i18n->p("barcode.mason.cassavabase_barcode_tool", "CASSAVABASE BARCODE TOOL") |h %></h1>
 
 Tool version: <% $tool_version %>
 <br />
@@ -35,7 +35,7 @@ Tool version: <% $tool_version %>
 % if ($cvterm_values eq "numeric") { 
 <center>
 <br />
-<div class="boxbgcolor7"><font size="3"><b>Note</b> Scan the main barcode below, then use the "keypad" to scan the digits to create the numeric value.<br /></font></div>
+<div class="boxbgcolor7"><font size="3"><b><% $c->i18n->p("phenotype.root.note", "Note") |h %></b> <% $c->i18n->p("barcode.mason.scan_the_main_barcode_below_then_use_the_keypad_to", "Scan the main barcode below, then use the \"keypad\" to scan the digits to create the numeric value.") |h %><br /></font></div>
 <img src="/barcode/code128png/<% $cvterm %><% $hash %>/<% $cvterm_name %>" />
 <br />
 <br />

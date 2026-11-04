@@ -1,0 +1,63 @@
+# Gestión de datos fenotípicos {#managing-phenotypic-data}
+
+Para facilitar la carga de datos fenotípicos, la página “Gestionar datos fenotípicos” ofrece dos opciones: un archivo Field Book Phenotype en formato de base de datos y un archivo Excel (.xls o .xlsx). Para abrirla, seleccione “Fenotipado” en el menú “Gestionar”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image178.png')
+```
+
+## Cargar fenotipos de Field Book {#uploading-fieldbook-phenotypes}
+
+### Exportar el archivo de base de datos de Field Book {#export-field-book-database-file}
+
+La carga de datos fenotípicos de Field Book requiere el formato "Database". Si va a usar la opción de carga de Field Book descrita a continuación, exporte los datos en ese formato. El formato "Table" que también exporta Field Book puede modificarse para usar la opción de carga de hoja de cálculo descrita más abajo.
+
+### Cargar el archivo de base de datos de Field Book {#upload-field-book-database-file}
+
+Para cargar un archivo Field Book Phenotype en formato de base de datos, pulse el enlace “Cargar Fieldbook”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image185.png')
+```
+
+Los enlaces “Cargar Fieldbook” de esta página y “Cargar” de “Herramientas de Field Book” abren el mismo diálogo. Siga las instrucciones para cargar archivos fenotípicos en la página \@ref(Using-Field-Book-with-BreedBase).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image112.png')
+```
+
+## Cargar fenotipos desde una hoja de cálculo {#uploading-spreadsheet-phenotypes}
+
+Para cargar un archivo de fenotipos en formato Excel (.xls o .xlsx), pulse el enlace “Cargar hoja de cálculo”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image288.png')
+```
+
+Especifique “Nivel de datos” (parcelas o plantas) y seleccione el archivo Excel que desea cargar.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image68.png')
+```
+
+### Generar una hoja de cálculo {#generating-spreadsheet-file}
+
+Para consultar el formato del archivo, pulse el enlace “Formato de hoja de cálculo”. Se abrirá el siguiente diálogo.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/phenotype_spreadsheet_upload_help_dialog.png')
+```
+
+Al pulsar “Crear hoja de fenotipado” se abrirá un diálogo para indicar los ensayos y la lista de rasgos. Pulse “Enviar” para descargar el archivo xlsx y rellenar los datos fenotípicos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/create_phenotype_spreadsheet_dialog.png')
+```
+
+### Cargar el archivo de hoja de cálculo {#uploading-spreadsheet-file}
+
+Para comprobar que el archivo tiene el formato correcto, pulse “Verificar”. Se revisará su contenido y la calidad de los valores: la definición de rasgos categóricos, los valores mínimo y máximo y el tipo de datos. También se comprobará si ya hay valores para las unidades de observación y los rasgos indicados. Si los hay, podrá reemplazarlos por los del archivo. Solo podrá pulsar “Guardar” si el archivo es válido.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/phenotype_spreadsheet_upload_dialog.png')
+```

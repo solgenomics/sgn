@@ -1,4 +1,6 @@
-
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 
 =head1 NAME
@@ -37,6 +39,8 @@ $marker_id => undef
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
 use CXGN::Marker;
 use SGN::Exception;
@@ -47,7 +51,7 @@ my $e = undef;
 
 if (!$marker_id) { 
   $c->throw(
-     public_message => 'marker_id must be provided as an argument for this page',
+     public_message => SGN::I18N::translate($c->i18n, "marker.detail.marker_id_required", "marker_id must be provided as an argument for this page"),
      is_client_error => 1,
   );
 }
@@ -55,7 +59,7 @@ if (!$marker_id) {
 my $marker = CXGN::Marker->new($dbh, $marker_id);
 
 if (!$marker) { 
-  $e = SGN::Exception->new(title=>"Marker detail page error: Marker with marker_id $marker_id does not exist in the database");
+  $e = SGN::Exception->new(title=>SGN::I18N::translate($c->i18n, "marker.detail.exception_missing_marker", "Marker detail page error: Marker with marker_id %{marker_id} does not exist in the database", {marker_id => ("" . $marker_id)}));
  $m->comp('/site/error/exception.mas', exception=>$e);
   return;
   
@@ -67,17 +71,17 @@ my $src_feature = "SL2.50";
 
 </%perl>
 
-<& /page/page_title.mas, title=> "SGN Marker $marker_name" &>
+<& /page/page_title.mas, title=> HTML::Entities::encode_entities(SGN::I18N::translate($c->i18n, "marker.detail.page_title", "SGN Marker %{marker_name}", {marker_name => ("" . $marker_name)})) &>
 
 <& /markers/basic_marker_info.mas, marker=>$marker, dbh=>$dbh &>
 
-<&| /page/info_section.mas, title=>"Synonyms", collapsible=>1 &>
+<&| /page/info_section.mas, anchor_title => "Synonyms", title=>HTML::Entities::encode_entities($c->i18n->p("accession.stock.additional_info.synonyms", "Synonyms")), collapsible=>1 &>
 % if (@other_names) { 
     <% join "<br />", @other_names %>
 % }
 </&>
 
-<&| /page/info_section.mas, title=>"Locus associations", collapsible=>1 &>
+<&| /page/info_section.mas, anchor_title => "Locus associations", title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.locus_associations", "Locus associations")), collapsible=>1 &>
 <& /markers/kfg.mas, marker=>$marker &>
 </&>
 
@@ -107,7 +111,7 @@ my $src_feature = "SL2.50";
 
 <& /markers/genotyped_markers.mas, marker_id=>$marker_id &>
 
-<&| /page/info_section.mas, title => "Genomic location of $marker_name", collapsible=>1 &>
+<&| /page/info_section.mas, anchor_title => "Genomic location of $marker_name", title => HTML::Entities::encode_entities(SGN::I18N::translate($c->i18n, "marker.detail.genomic_location_title", "Genomic location of %{marker_name}", {marker_name => ("" . $marker_name)})), collapsible=>1 &>
 <& /feature/jbrowse_exact_match.mas, feature=> $marker_name, src_feature=> $src_feature &>
 </&>
 

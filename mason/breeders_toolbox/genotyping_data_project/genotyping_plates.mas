@@ -6,12 +6,12 @@ $trial_id
     <table id="genotyping_plates_in_genotyping_project_table" width="100%" class="table table-hover table-striped">
         <thead>
             <tr>
-                <th>Plate Name</th>
-                <th>Description</th>
-                <th>Format</th>
-                <th>Sample Type</th>
-                <th>Number of Samples</th>
-                <th>Download</th>
+                <th><% $c->i18n->p("genotype.plate.plate_name", "Plate Name") |h %></th>
+                <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
+                <th><% $c->i18n->p("global.search_wizard.format", "Format") |h %></th>
+                <th><% $c->i18n->p("genotype.plate.sample_type", "Sample Type") |h %></th>
+                <th><% $c->i18n->p("genotype.plate.number_of_samples", "Number of Samples") |h %></th>
+                <th><% $c->i18n->p("global.est.download", "Download") |h %></th>
             </tr>
         </thead>
     </table>

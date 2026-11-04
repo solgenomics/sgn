@@ -16,6 +16,9 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetSimple;
 #)
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
@@ -36,6 +39,7 @@ sub name {
 }
 
 sub validate {
+    my SGN::I18N $ui_phenotypespreadsheetsimple_validate_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
@@ -76,14 +80,14 @@ sub validate {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header with at least observationunit_name and one trait, as well as one row of phenotypes
-        $parse_result{'error'} = "Spreadsheet is missing observationunit_name and at least one trait in header.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetsimple_validate_i18n, 'phenotype.upload.spreadsheet_is_missing_observationunit_name_and_at_least_one_trait_in_heade', 'Spreadsheet is missing observationunit_name and at least one trait in header.'));
         print STDERR "Spreadsheet is missing header\n";
         return \%parse_result;
     }
 
     # check if the first column is one of the supported variations of observationunit_name
     if ( !exists($oun_columns_map{$worksheet->get_cell(0,0)->value()}) ) {
-        $parse_result{'error'} = "First column must be one of: '" . join("', '", @oun_columns) . "'. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetsimple_validate_i18n, 'phenotype.upload.first_column_must_be_one_of_columns_it_may_help_to_recreate_your_spreadshee', 'First column must be one of: \'%{columns}\'. It may help to recreate your spreadsheet from the website.', {columns => join("', '", @oun_columns)}));
         print STDERR "Columns not correct\n";
         return \%parse_result;
     }
@@ -101,7 +105,7 @@ sub validate {
                 if ($timestamp_included) {
                     ($value, $timestamp) = split /,/, $value_string;
                     if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                        $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+                        $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetsimple_validate_i18n, 'phenotype.upload.timestamp_needs_to_be_of_form_yyyy_mm_dd_hh_mm_ss_0000_or_yyyy_mm_dd_hh_mm_.074cd0c', 'Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000'));
                         print STDERR "value: $timestamp\n";
                         return \%parse_result;
                     }

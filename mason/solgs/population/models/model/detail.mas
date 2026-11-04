@@ -38,13 +38,13 @@ $analysis_type => ''
 
 
 <& /page/page_title.mas,
-   title => "Model $trait_name ($trait_abbr)"
+   title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.model_trait_name_trait_abbr", "Model %{trait_name} (%{trait_abbr})", {trait_name => "" . ($trait_name // ""), trait_abbr => "" . ($trait_abbr // "")}))
 &>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Training population summary",
   collapsible => 1,
   collapsed   => 0,
-  title       => "Training population summary",
+  title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.training_population_summary", "Training population summary")),
   &>
 
  <& /solgs/population/summary.mas,
@@ -72,10 +72,10 @@ $analysis_type => ''
      &>
 </&>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Trait phenotype data",
     collapsible => 1,
     collapsed   => 0,
-  title       => "Trait phenotype data"
+  title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.trait_phenotype_data", "Trait phenotype data"))
 &>
 
 <& phenotype/trait_phenotype_data.mas,
@@ -133,11 +133,15 @@ $analysis_type => ''
 %}
 % else
 %{
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Data Accessibility",
   collapsible => 1,
   collapsed   => 0,
-  title       => "Data Accessibility",
+  title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.data_accessibility", "Data Accessibility")),
   &>
-<p>This is private data.</p>
+<p><% $c->i18n->p("solgs.interface.this_is_private_data", "This is private data.") |h %></p>
 </&>
 %}
+
+<%once>
+use HTML::Entities ();
+</%once>

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 </%args>
@@ -5,56 +9,56 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/documents/inc/datatables/custom_datatable_select_styles.css'] &>
 
-<& /page/page_title.mas, title => "Treatment Search" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.treatment_search", "Treatment Search")) &>
 
-    <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Search', title => HTML::Entities::encode_entities($c->i18n->p("global.search.advanced_search.search", 'Search')), collapsible=>1, collapsed=>0 &>
         <div id="treatment_search_form" class="form-horizontal well">
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Select Ontology Name(s): </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.select_ontology_name_s", "Select Ontology Name(s):") |h %> </label>
                 <div class="col-sm-9" >
                     <div id="treatment_search_ontology_select"></div>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Search Treatment Name: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.search_treatment_name", "Search Treatment Name:") |h %> </label>
                 <div class="col-sm-9" >
-                    <input type="text" class="form-control" id="treatment_search_name" placeholder="Search any treatment name or piece of name"/>
+                    <input type="text" class="form-control" id="treatment_search_name" placeholder="<% $c->i18n->p("transformation.root.search_any_treatment_name_or_piece_of_name", "Search any treatment name or piece of name") |h %>"/>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Search Treatment ID: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.search_treatment_id", "Search Treatment ID:") |h %> </label>
                 <div class="col-sm-9" >
-                    <input type="text" class="form-control" id="treatment_search_id" placeholder="Search any trait ID or part of an ID"/>
+                    <input type="text" class="form-control" id="treatment_search_id" placeholder="<% $c->i18n->p("phenotype.root.search_any_trait_id_or_part_of_an_id", "Search any trait ID or part of an ID") |h %>"/>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Search Treatment Synonym: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.search_treatment_synonym", "Search Treatment Synonym:") |h %> </label>
                 <div class="col-sm-9" >
-                    <input type="text" class="form-control" id="treatment_search_synonym" placeholder="Search any trait synonym or part of a synonym"/>
+                    <input type="text" class="form-control" id="treatment_search_synonym" placeholder="<% $c->i18n->p("phenotype.root.search_any_trait_synonym_or_part_of_a_synonym", "Search any trait synonym or part of a synonym") |h %>"/>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Search Definition: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.search_definition", "Search Definition:") |h %> </label>
                 <div class="col-sm-9" >
-                    <input type="text" class="form-control" id="treatment_search_definition" placeholder="Search any word or piece of definition"/>
+                    <input type="text" class="form-control" id="treatment_search_definition" placeholder="<% $c->i18n->p("phenotype.root.search_any_word_or_piece_of_definition", "Search any word or piece of definition") |h %>"/>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Subset Treatments: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.subset_treatments", "Subset Treatments:") |h %> </label>
                 <div class="col-sm-9" >
                     <div id="treatment_search_list_select">
-                        [LOADING...]
+                        <% $c->i18n->p("accession.files.loading_upper", "[LOADING...]") |h %>
                     </div>
                 </div>
             </div>
         </div>
 
         <center>
-            <button class="btn btn-primary" id="submit_treatment_search" />Search</button>
+            <button class="btn btn-primary" id="submit_treatment_search" /><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></button>
         </center>
     </&>
 
-    <&| /page/info_section.mas, title => 'Results', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Results', title => HTML::Entities::encode_entities($c->i18n->p("global.gem_experiment_search.results", 'Results')), collapsible=>1, collapsed=>0 &>
 
         <div class="well well-sm">
             <div class="panel panel-default">
@@ -63,18 +67,18 @@
                     <table id="treatment_search_results" width="100%" class="table table-hover table-striped">
                     <thead>
                       <tr>
-                        <th>Select</th>
-                        <th>Copy Name|ID</th>
-                        <th>Treatment ID</th>
-                        <th>Treatment Name</th>
-                        <th>Definition</th>
-                        <th>Treatment&nbsp;Usage</th>
+                        <th><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></th>
+                        <th><% $c->i18n->p("phenotype.root.copy_name_id", "Copy Name|ID") |h %></th>
+                        <th><% $c->i18n->p("transformation.root.treatment_id", "Treatment ID") |h %></th>
+                        <th><% $c->i18n->p("program.management_factor_details.name", "Treatment Name") |h %></th>
+                        <th><% $c->i18n->p("phenotype.definition", "Definition") |h %></th>
+                        <th><% $c->i18n->p("phenotype.treatment", "Treatment") |h %>&nbsp;<% $c->i18n->p("stock_search.section.usage", "Usage") |h %></th>
                       </tr>
                     </thead>
                     </table>
 
-                    <button type="button" class="selectAll-dt">Select All</button>
-                    <button type="button" class="deselectAll-dt">Deselect All</button>
+                    <button type="button" class="selectAll-dt"><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+                    <button type="button" class="deselectAll-dt"><% $c->i18n->p("phenotype.deselect_all", "Deselect All") |h %></button>
 
                 </div>
             </div>
@@ -82,9 +86,9 @@
             <div class="panel panel-default">
                 <div class="panel-body">
 
-                    <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the treatment names currently selected in the search results table to a new or exisiting list</i>'&>
+                    <&| /page/info_section.mas, anchor_title => 'Copy Selected Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("phenotype.copy_selected_results_to_a_list", 'Copy Selected Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.copy_the_treatment_names_currently_selected_in_the_search_results", "Copy the treatment names currently selected in the search results table to a new or existing list")) . "</i>")&>
                     <br>
-                    <p><em><span id="treatment_result_count">0</span> treatment(s) selected.</em></p>
+                    <p><em><span id="treatment_result_count">0</span> <% $c->i18n->p("transformation.root.treatment_s_selected", "treatment(s) selected.") |h %></em></p>
                     <div style="text-align:right" id="treatments_to_list_menu"></div>
                     <div id="treatment_result_names" style="display: none;"></div>
                     </&>
@@ -105,7 +109,7 @@ jQuery(document).ready(function () {
     jQuery('[data-toggle="tooltip"]').tooltip();
 
     var lo = new CXGN.List();
-    jQuery('#treatment_search_list_select').html(lo.listSelect('treatment_search_list_select', [ 'traits' ], 'Leave blank to see all treatments', undefined, undefined));
+    jQuery('#treatment_search_list_select').html(lo.listSelect('treatment_search_list_select', [ 'traits' ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.leave_blank_to_see_all_treatments", "Leave blank to see all treatments") : 'Leave blank to see all treatments'), undefined, undefined));
 
     jQuery(document).on('change', '#treatment_search_list_select', function(){
         _draw_treatment_search_result_table();
@@ -210,7 +214,7 @@ function parseArgs() {
 }
 
 /**
- * Copy the specifed treatment information to the user's clipboard
+ * Copy the specified treatment information to the user's clipboard
  * - name = treatment name
  * - accession = treatment accession term
  * - id = treatment cvterm id

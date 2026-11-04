@@ -164,11 +164,15 @@ sub resolve_javascript_classes :Private {
     my $module_deps = $self->get_js_module_dependencies($js_modules);
     push @{ $jsan_classes }, @{$module_deps->{legacy}};
 
-    my @jsan_deps = uniq @$jsan_classes; #< do not sort, load order might be important
-    for (@jsan_deps) {
-        s/\.js$//;
-        s!\.!/!g;
-    }
+    # Normalize aliases before deduplication so jquery and jquery.js are one
+    # dependency. Keep the first occurrence; prerequisite load order matters.
+    my @jsan_deps = map {
+        my $path = $_;
+        $path =~ s/\.js$//;
+        $path =~ s!\.!/!g;
+        $path;
+    } @$jsan_classes;
+    @jsan_deps = uniq @jsan_deps;
     # if prototype is present, move it to the front to prevent it
     # conflicting with jquery
     my $prototype_idx = first_index { /Prototype$/i } @jsan_deps;

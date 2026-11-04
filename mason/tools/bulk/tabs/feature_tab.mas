@@ -5,14 +5,14 @@ $prefill_ids => ''
 
 <form name="bulk_feature" action="/bulk/feature/submit/" method="post" enctype="multipart/form-data">
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
-Enter a list of feature identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_feature_identifier_or_upload_a_file_containing_one_identifer_s", "Enter a list of feature identifier or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):") |h %><br />
 <table summary="" width="100%" cellpadding="0"><tr><td>
 <textarea name="ids" rows="10" cols="30">
 <% $prefill_ids |h%>
 </textarea>
 </td>
 <td>
-<i>Example:</i>
+<i><% $c->i18n->p("lists_datasets.bulk.example", "Example:") |h %></i>
 <pre style="border: 1px solid gray; padding: 5px">
 SGN-E398616
 C06HBa0229B01.1
@@ -23,19 +23,19 @@ Solyc01g005080.2.1
 <br />
 <br />
 
-And/or upload list file: <br /><input type="file" name="feature_file" />
+<% $c->i18n->p("lists_datasets.bulk.and_or_upload_list_file", "And/or upload list file:") |h %> <br /><input type="file" name="feature_file" />
 <br />
 <br />
 
 </td>
 <td valign="top" bgcolor="#EEEEEE" width="320">
 
-<b>Download feature information</b>:<br />
+<b><% $c->i18n->p("lists_datasets.bulk.download_feature_information", "Download feature information") |h %></b>:<br />
 <div style="padding-left: 1em">
-    <input type="checkbox" name="feature_sequence" onchange="this.checked='checked'" checked="checked" /> feature sequence <br />
+    <input type="checkbox" name="feature_sequence" onchange="this.checked='checked'" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.feature_sequence", "feature sequence") |h %> <br />
 </div>
 </td>
 </tr></table>
 
-<input type="submit" value="Submit" /><br />
+<input type="submit" value="<% $c->i18n->p("lists_datasets.bulk.submit", "Submit") |h %>" /><br />
 </form>

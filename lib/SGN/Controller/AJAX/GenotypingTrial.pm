@@ -3,6 +3,8 @@ package SGN::Controller::AJAX::GenotypingTrial;
 
 use Moose;
 use JSON;
+use JSON::MaybeXS ();
+use Encode qw(encode_utf8);
 use Data::Dumper;
 use CXGN::Trial::TrialDesign;
 use Try::Tiny;
@@ -20,7 +22,13 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
+    map       => {
+        'application/json' => 'JSON',
+        'text/html' => ['Callback', {
+            serialize => \&_sgn_genotype_iframe_json,
+            deserialize => \&_sgn_genotype_iframe_decode,
+        }],
+    },
 );
 
 sub generate_genotype_trial : Path('/ajax/breeders/generategenotypetrial') ActionClass('REST') {}
@@ -29,17 +37,17 @@ sub generate_genotype_trial_POST : Args(0) {
     my $c = shift;
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping plate.' };
+        $c->stash->{rest} = { error => $c->i18n->p('genotype.plate.server.create_privileges', 'You do not have the required privileges to create a genotyping plate.') };
         $c->detach();
     }
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-    my $plate_info = decode_json $c->req->param("plate_data");
+    my $plate_info = decode_json encode_utf8($c->req->param("plate_data"));
     #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{genotyping_project_id} || !$plate_info->{name} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
+        $c->stash->{rest} = { error => $c->i18n->p('genotype.plate.server.parameters_required', 'Please provide all parameters in the plate information section') };
         $c->detach();
     }
 
@@ -48,11 +56,11 @@ sub generate_genotype_trial_POST : Args(0) {
     my $genotyping_facility = $trial->get_genotyping_facility();
 
     if ( $genotyping_facility eq 'igd' && $plate_info->{genotyping_facility_submit} eq 'yes' && $plate_info->{blank_well} eq ''){
-        $c->stash->{rest} = { error => "To submit to Cornell IGD you need to provide the blank well!" };
+        $c->stash->{rest} = { error => $c->i18n->p('genotype.plate.server.igd_blank_required', 'To submit to %{facility} you need to provide the blank well!', { 'facility' => 'Cornell IGD' }) };
         $c->detach();
     }
 
-    my $td = CXGN::Trial::TrialDesign->new( { schema => $schema });
+    my $td = CXGN::Trial::TrialDesign->new( { schema => $schema, i18n => $c->i18n });
 
     $td->set_stock_list($plate_info->{elements});
     $td->set_block_size($plate_info->{plate_format});
@@ -65,8 +73,9 @@ sub generate_genotype_trial_POST : Args(0) {
     };
 
     if ($@) {
-        $c->stash->{rest} = { error => "Design failed. Error: $@" };
-        print STDERR "Design failed because of $@\n";
+        my $design_error = $@;
+        $c->stash->{rest} = { error => $c->i18n->p('genotype.plate.server.design_failed', 'Design failed. Error: %{error}', { 'error' => "$design_error" }) };
+        print STDERR "Design failed because of $design_error\n";
         $c->detach();
     }
 
@@ -115,23 +124,23 @@ sub parse_genotype_trial_file_POST : Args(0) {
 
 
     if ($upload_xls && $upload_coordinate){
-        $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.xls_coordinate_conflict', 'Do not upload both %{xls} and %{coordinate} file at the same time!', { 'xls' => 'XLS', 'coordinate' => 'Coordinate' }) };
         return;
     }
     if ($upload_xls && $upload_coordinate_custom){
-        $c->stash->{rest} = {error => "Do not upload both XLS and Custom Coordinate file at the same time!" };
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.xls_custom_conflict', 'Do not upload both %{xls} and %{custom} file at the same time!', { 'xls' => 'XLS', 'custom' => 'Custom Coordinate' }) };
         return;
     }
     if ($upload_coordinate && $upload_coordinate_custom){
-        $c->stash->{rest} = {error => "Do not upload both Coordinate file and Custom Coordinate file at the same time!" };
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.coordinate_custom_conflict', 'Do not upload both %{coordinate} file and %{custom} file at the same time!', { 'coordinate' => 'Coordinate', 'custom' => 'Custom Coordinate' }) };
         return;
     }
     if (!$upload_xls && !$upload_coordinate && !$upload_coordinate_custom){
-        $c->stash->{rest} = {error => "You must upload a genotyping plate file!" };
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.file_required', 'You must upload a genotyping plate file!') };
         return;
     }
     if (!$genotyping_plate_name){
-        $c->stash->{rest} = {error => 'Genotyping plate id must be given!'};
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.id_required', 'Genotyping plate id must be given!')};
         return;
     }
     my $parser;
@@ -166,7 +175,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
 
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
         print STDERR "File name must not have spaces or slashes.\n";
-        $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.invalid_filename', 'Uploaded file name must not contain spaces or slashes.') };
         return;
     }
 
@@ -179,7 +188,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping plate!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('genotype.plate.server.session_login_required', 'You must be logged in to upload genotyping plate!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -188,7 +197,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping plate!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('genotype.plate.server.login_required', 'You must be logged in to upload a genotyping plate!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -197,7 +206,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('genotype.plate.server.upload_privileges', 'You have insufficient privileges to upload a genotyping plate.') };
         $c->detach();
     }
 
@@ -214,7 +223,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.archive_failed', 'Could not save file %{filename} in archive', { 'filename' => $upload_original_name }),};
         return;
     }
     unlink $upload_tempfile;
@@ -225,7 +234,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     );
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, facility_identifiers_included => $include_facility_identifiers);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, facility_identifiers_included => $include_facility_identifiers, i18n => $c->i18n);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse(\%parse_args);
 
@@ -233,7 +242,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         my $return_error = '';
 
         if (! $parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
+            $return_error = $c->i18n->p('genotype.plate.server.parsing_errors_unavailable', 'Could not get parsing errors');
             $c->stash->{rest} = {error_string => $return_error,};
         }
         else {
@@ -289,7 +298,7 @@ sub store_genotype_trial_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping plate!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('genotype.plate.server.session_login_required', 'You must be logged in to upload genotyping plate!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -298,7 +307,7 @@ sub store_genotype_trial_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping plate!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('genotype.plate.server.login_required', 'You must be logged in to upload a genotyping plate!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -307,16 +316,16 @@ sub store_genotype_trial_POST : Args(0) {
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('genotype.plate.server.upload_privileges', 'You have insufficient privileges to upload a genotyping plate.') };
         $c->detach();
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
-    my $plate_info = decode_json $c->req->param("plate_data");
+    my $plate_info = decode_json encode_utf8($c->req->param("plate_data"));
 #    print STDERR "PLATE INFO =".Dumper($plate_info)."\n";
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{genotyping_project_id} || !$plate_info->{name} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
+        $c->stash->{rest} = { error => $c->i18n->p('genotype.plate.server.parameters_required', 'Please provide all parameters in the plate information section') };
         $c->detach();
     }
 
@@ -397,7 +406,7 @@ sub store_genotype_trial_POST : Args(0) {
         $schema->txn_do($coderef);
     } catch {
         print STDERR "Transaction Error: $_\n";
-        $c->stash->{rest} = {error => "Error saving genotyping plate in the database: $_"};
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.save_failed', 'Error saving genotyping plate in the database: %{error}', { 'error' => "$_" })};
         $c->detach;
     };
 
@@ -406,7 +415,7 @@ sub store_genotype_trial_POST : Args(0) {
         $error = $message->{'error'};
     }
     if ($error){
-        $c->stash->{rest} = {error => "Error saving genotyping plate in the database: $error"};
+        $c->stash->{rest} = {error => $c->i18n->p('genotype.plate.server.save_failed', 'Error saving genotyping plate in the database: %{error}', { 'error' => "$error" })};
         $c->detach;
     }
     #print STDERR Dumper(%message);
@@ -447,7 +456,7 @@ sub store_genotype_trial_POST : Args(0) {
     };
 
     $c->stash->{rest} = {
-        message => "Successfully stored the genotyping plate.",
+        message => $c->i18n->p('genotype.plate.server.stored', 'Successfully stored the genotyping plate.'),
         trial_id => $message->{trial_id},
         plate_data => $brapi_plate_data
     };
@@ -706,12 +715,12 @@ sub plate_genotyping_data_delete_GET : Args(0) {
     }
 
     if ($user_role ne 'curator') {
-        $c->stash->{rest} = { error => 'Must have correct permissions to delete genotyping data! Please contact us.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($c->i18n, "genotype.validation.delete_permission_required", "Must have correct permissions to delete genotyping data! Please contact us.") };
         $c->detach();
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
-    my $genotyping_data = CXGN::Genotype::Delete->new( { bcs_schema => $schema, genotyping_plate_id => $genotyping_plate_id });
+    my $genotyping_data = CXGN::Genotype::Delete->new( { i18n => $c->i18n, bcs_schema => $schema, genotyping_plate_id => $genotyping_plate_id });
     my $response = $genotyping_data->delete_genotype_data();
 
     my $empty_protocol_name;
@@ -745,6 +754,35 @@ sub plate_genotyping_data_delete_GET : Args(0) {
 
 }
 
+
+# Catalyst encodes text/html again after serialization. ASCII JSON escapes keep
+# Unicode values intact, and HTML delimiters must survive the iframe DOM parser.
+# The application/json API and scientific input/output values stay unchanged.
+sub _sgn_genotype_iframe_json {
+    my ($entity, $controller, $c) = @_;
+    my $json = JSON::MaybeXS::JSON()->new->utf8->convert_blessed;
+    if (my $options = $controller->{json_options_encode}) {
+        foreach my $option (keys %$options) {
+            $json->$option($options->{$option});
+        }
+    }
+    $json->ascii(1);
+    my $output = $json->encode($entity);
+    $output =~ s/([<>&])/sprintf('\\u%04x', ord($1))/ge;
+    return $output;
+}
+
+# Preserve the original text/html JSON request decoder and its options.
+sub _sgn_genotype_iframe_decode {
+    my ($body, $controller, $c) = @_;
+    my $json = JSON::MaybeXS::JSON()->new->utf8;
+    if (my $options = $controller->{json_options}) {
+        foreach my $option (keys %$options) {
+            $json->$option($options->{$option});
+        }
+    }
+    return $json->decode($body);
+}
 
 
 1;

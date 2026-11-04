@@ -7,6 +7,9 @@ CXGN::TrackingActivity::AddActivityProject - a module for adding activity projec
 
 package CXGN::TrackingActivity::AddActivityProject;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
@@ -100,16 +103,17 @@ sub existing_project_name {
 
 sub save_activity_project {
     my $self = shift;
+    my SGN::I18N $ui_save_activity_project_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_bcs_schema();
 
     if ($self->existing_project_name()){
         print STDERR "Can't create activity project: Project name already exists\n";
-        return {error => "Tracking activity project not saved: Project name already exists"};
+        return {error => (SGN::I18N::translate($ui_save_activity_project_i18n, 'transformation.tracking_activity_project_not_saved_project_name_already_exists', 'Tracking activity project not saved: Project name already exists'))};
     }
 
     if (!$self->get_breeding_program_id()){
         print STDERR "Can't create activity project: Breeding program does not exist\n";
-        return {error => "Tracking activity project not saved: Breeding program does not exist"};
+        return {error => (SGN::I18N::translate($ui_save_activity_project_i18n, 'transformation.tracking_activity_project_not_saved_breeding_program_does_not_exist', 'Tracking activity project not saved: Breeding program does not exist'))};
     }
 
     my $parent_folder_id;

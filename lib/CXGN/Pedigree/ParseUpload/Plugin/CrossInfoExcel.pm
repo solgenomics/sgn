@@ -1,6 +1,7 @@
 package CXGN::Pedigree::ParseUpload::Plugin::CrossInfoExcel;
 
 use Moose::Role;
+use SGN::I18N ();
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -10,6 +11,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_crossinfoexcel_i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $cross_properties = $self->get_cross_properties();
@@ -41,7 +43,7 @@ sub _validate_with_plugin {
 
     $worksheet = ($excel_obj->worksheets())[0]; #support only one worksheet
     if (!$worksheet){
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "accession.catalog.error_1", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -50,7 +52,7 @@ sub _validate_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of progeny
-        push @error_messages, "Spreadsheet is missing header or no cross info data";
+        push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "cross.spreadsheet_is_missing_header_or_no_cross_info_data", "Spreadsheet is missing header or no cross info data"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -65,7 +67,7 @@ sub _validate_with_plugin {
     }
 
     if (!$cross_name_head || $cross_name_head ne 'cross_unique_id' ) {
-        push @error_messages, "Cell A1: cross_unique_id is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "cross.cell_a1_cross_unique_id_is_missing_from_the_header", "Cell A1: cross_unique_id is missing from the header"));
     }
 
     my %valid_properties;
@@ -79,7 +81,7 @@ sub _validate_with_plugin {
         $header_string =~ s/^\s+|\s+$//g;
 
         if (!$valid_properties{$header_string}){
-            push @error_messages, "Invalid info type: $header_string";
+            push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "cross.invalid_info_type_header_string", "Invalid info type: %{header_string}", {header_string => "" . ($header_string)}));
         }
     }
 
@@ -94,9 +96,9 @@ sub _validate_with_plugin {
         }
 
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell A$row_name: cross unique id missing";
+            push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "cross.cell_a_row_name_cross_unique_id_missing", "Cell A%{row_name}: cross unique id missing", {row_name => "" . ($row_name)}));
         } elsif ($seen_cross_names{$cross_name}) {
-            push @error_messages, "Duplicate cross unique id at cell A$row_name".": $cross_name";
+            push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "cross.duplicate_cross_unique_id_at_cell_a_row_name_cross_name", "Duplicate cross unique id at cell A%{row_name}: %{cross_name}", {row_name => "" . ($row_name), cross_name => "" . ($cross_name)}));
         } else {
             $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
@@ -107,10 +109,10 @@ sub _validate_with_plugin {
                 my $info_value = $worksheet->get_cell($row,$column)->value();
                 my $info_type = $worksheet->get_cell(0,$column)->value();
                 if ( ($info_type =~ m/days/  || $info_type =~ m/number/) && !($info_value =~ /^\d+?$/) ) {
-                    push @error_messages, "Cell $info_type:$row_name: is not a positive integer: $info_value";
+                    push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "cross.cell_info_type_row_name_is_not_a_positive_integer_info_value", "Cell %{info_type}:%{row_name}: is not a positive integer: %{info_value}", {info_type => "" . ($info_type), row_name => "" . ($row_name), info_value => "" . ($info_value)}));
                 }
                 elsif ( $info_type =~ m/date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
-                    push @error_messages, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
+                    push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "cross.cell_info_type_row_name_is_not_a_valid_date_info_value_dates_need_to_be_of_form_yyyy_mm_dd", "Cell %{info_type}:%{row_name}: is not a valid date: %{info_value}. Dates need to be of form YYYY/MM/DD", {info_type => "" . ($info_type), row_name => "" . ($row_name), info_value => "" . ($info_value)}));
                 }
             }
         }
@@ -121,7 +123,7 @@ sub _validate_with_plugin {
     my @crosses_missing = @{$cross_validator->validate($schema,'crosses',\@crosses)->{'missing'}};
 
     if (scalar(@crosses_missing) > 0){
-        push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
+        push @error_messages, (SGN::I18N::translate($ui_crossinfoexcel_i18n, "cross.the_following_cross_unique_ids_are_not_in_the_database_as_uniquenames_or_synonyms_value0", "The following cross unique ids are not in the database as uniquenames or synonyms: %{value0}", {value0 => "" . (join(',',@crosses_missing))}));
         $errors{'missing_crosses'} = \@crosses_missing;
     }
 

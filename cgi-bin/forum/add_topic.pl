@@ -34,6 +34,48 @@ Lukas Mueller (lam87@cornell.edu)
 =cut
 
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+my SGN::I18N $ui_forum_i18n = SGN::I18N::translate($c);
+my %ui_forum = (
+    'community.forum.topic_review_step' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_review_step', 'Review topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_store_step' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_store_step', 'Store topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'auth.legacy.cancel' => SGN::I18N::translate($ui_forum_i18n, 'auth.legacy.cancel', 'Cancel', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.back_to_forum' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.back_to_forum', 'Back to forum', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.back_to_topics' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.back_to_topics', 'back to topics', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.back_to_topics_capitalized' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.back_to_topics_capitalized', 'Back to topics', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.confirm_delete_topic' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.confirm_delete_topic', 'delete topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.delete_topic_prompt' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.delete_topic_prompt', 'Delete the following topic, including', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.delete_topic_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.delete_topic_title', 'Delete your topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.edit_topic' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.edit_topic', 'Edit Topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.html_links_supported' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.html_links_supported', 'HTML tags are not supported. You can add links to your post by using square brackets as follows:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.latest_bottom' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.latest_bottom', 'Latest post shown at the bottom.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.latest_entry_bottom' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.latest_entry_bottom', 'Latest entry at the bottom', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.latest_entry_top' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.latest_entry_top', 'Latest entry at the top', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.latest_top' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.latest_top', 'Latest post shown at the top.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.new_topic_page_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.new_topic_page_title', 'New topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.other_configurations' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.other_configurations', 'Other configurations', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.post_text_label' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_text_label', 'Post Text:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.posts_word' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.posts_word', 'posts?', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.return_to_topics' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.return_to_topics', 'Return to topics.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.review_topic' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.review_topic', 'Review topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.review_topic_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.review_topic_title', 'Review your topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.steps_label' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.steps_label', 'Steps:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.store_topic' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.store_topic', 'store topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.store_topic_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.store_topic_title', 'Store your topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_add_post_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_add_post_title', 'Configure topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_courtesy_notice_lower' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_courtesy_notice_lower', 'this service is provided as a courtesy. SGN reserves the right to delete topics and posts at any time for any reason.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_deleted_notice' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_deleted_notice', 'Topic deleted.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_deleted_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_deleted_title', 'Topic deleted', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_description_label' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_description_label', 'Topic Description', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_name_label' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_name_label', 'Topic name', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_owner_intro' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_owner_intro', 'The owner of this topic is:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_owner_permissions' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_owner_permissions', 'The owner can edit and delete the topic at any time when logged in.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_review_intro' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_review_intro', 'Please verify the following topic submission:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_sort_order' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_sort_order', 'Topic sort order:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_stored_success' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_stored_success', 'The topic has been successfully stored.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_subject' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_subject', 'Topic subject:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 })
+);
 use warnings;
 
 use CXGN::DB::Connection;
@@ -47,7 +89,7 @@ use CXGN::Page::FormattingHelpers qw/  page_title_html
   blue_section_html  /;
 
 my $dbh = CXGN::DB::Connection->new();
-my $page = CXGN::Page->new( "SGN Forum | Configure topic", "Lukas" );
+my $page = CXGN::Page->new( "SGN Forum | " . $ui_forum{'community.forum.topic_add_post_title'}, "Lukas" );
 
 my $sp_person_id = CXGN::Login->new($dbh)->verify_session();
 
@@ -77,7 +119,11 @@ if (   ( $topic->get_person_id() && ( $topic->get_person_id() ne $user_id ) )
     && ( $user->get_user_type() ne "curator" ) )
 {
     $page->message_page(
-"Error:\nYou don't have the privileges to edit this topic, because you did not create it.\n\n\n"
+SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_permission_error', 'Error:
+You don\'t have the privileges to edit this topic, because you did not create it.
+
+
+', undef, { entities => '' })
     );
 }
 
@@ -137,15 +183,15 @@ sub save_topic {
 
     $page->header();
 
-    print page_title_html("Store your topic");
+    print page_title_html($ui_forum{'community.forum.store_topic_title'});
 
     print <<HTML;
 
-    Steps: Configure topic</b> -\> Review topic -\> <b>Store topic</b><br /><br /> 
+    @{[$ui_forum{'community.forum.steps_label'}]} @{[$ui_forum{'community.forum.topic_add_post_title'}]}</b> -\> @{[$ui_forum{'community.forum.topic_review_step'}]} -\> <b>@{[$ui_forum{'community.forum.topic_store_step'}]}</b><br /><br />\x20
 	
-    <b>The topic has been successfully stored.</b>
+    <b>@{[$ui_forum{'community.forum.topic_stored_success'}]}</b>
     <br /><br />
-    <a href="topics.pl">Return to topics.</a>
+    <a href="topics.pl">@{[$ui_forum{'community.forum.return_to_topics'}]}</a>
     <br /><br />
     
 HTML
@@ -162,11 +208,11 @@ sub delete_topic {
 
     $page->header();
 
-    print page_title_html("Delete your topic");
+    print page_title_html($ui_forum{'community.forum.delete_topic_title'});
 
     print <<HTML;
     <div class="container-fluid">
-    <b>SGN Forum:</b> Delete the following topic, including <b>$topic_post_count</b> posts?</b><br /><br />\n
+    <b>SGN Forum:</b> @{[$ui_forum{'community.forum.delete_topic_prompt'}]} <b>$topic_post_count</b> @{[$ui_forum{'community.forum.posts_word'}]}</b><br /><br />\n
 
 	<div class="panel panel-default"><div class="panel-body">
 	<b>$topic_name</b><br /><br />
@@ -176,13 +222,13 @@ sub delete_topic {
 	<br />
 	
 	<table width="100%">
-	<tr><td align="left"><a href="topics.pl">Cancel</a>
+	<tr><td align="left"><a href="topics.pl">@{[$ui_forum{'auth.legacy.cancel'}]}</a>
 	</td><td align="right">
 	<form action="add_topic.pl?action=confirm_delete&amp;topic_id=$topic_id">
 	
     <input type="hidden" name="action" value="confirm_delete" />
 	<input type="hidden" name="topic_id" value="$topic_id" />
-	<input class="btn btn-primary"type="submit" value="delete topic" />\n
+	<input class="btn btn-primary"type="submit" value="@{[$ui_forum{'community.forum.confirm_delete_topic'}]}" />\n
 	</form><br />\n
 	</td></tr></table>
 	<br /><br /><br />
@@ -199,14 +245,15 @@ sub confirm_delete_topic {
     my $topic_name   = $topic->get_topic_name();
     my $delete_count = ( $topic->delete() - 1 );
 
+    my $ui_topic_deleted_message = SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_delete_success', 'The topic %{topic_name} and %{post_count} associated posts, have been successfully deleted.', { 'topic_name' => "$topic_name", 'post_count' => "$delete_count" }, { entities => '' });
     $page->header();
 
-    print page_title_html("Topic deleted");
+    print page_title_html($ui_forum{'community.forum.topic_deleted_title'});
     print <<HTML;
 
-    <b>SOL Forum</b>: Topic deleted.<br /><br />
-    The topic $topic_name and $delete_count associated posts, have been successfully deleted.<br />\n
-    <a href="topics.pl">back to topics</a>\n
+    <b>SOL Forum</b>: @{[$ui_forum{'community.forum.topic_deleted_notice'}]}<br /><br />
+    @{[$ui_topic_deleted_message]}<br />\n
+    <a href="topics.pl">@{[$ui_forum{'community.forum.back_to_topics'}]}</a>\n
 
 HTML
 
@@ -226,25 +273,25 @@ sub review_topic {
 
     my $sort_order_message = "";
     if ( $sort_order =~ /asc/i ) {
-        $sort_order_message = "Latest post shown at the bottom.";
+        $sort_order_message = $ui_forum{'community.forum.latest_bottom'};
     }
     elsif ( $sort_order =~ /desc/i ) {
-        $sort_order_message = "Latest post shown at the top.";
+        $sort_order_message = $ui_forum{'community.forum.latest_top'};
     }
 
     $page->header();
 
-    print page_title_html("Review your topic");
+    print page_title_html($ui_forum{'community.forum.review_topic_title'});
 
     print <<HTML;
     <div class="container-fluid">
-    Steps: Configure topic -\> <b>Review topic</b> -\> Store topic<br /><br /> 
-    Please verify the following topic submission: <br /><br />
+    @{[$ui_forum{'community.forum.steps_label'}]} @{[$ui_forum{'community.forum.topic_add_post_title'}]} -\> <b>@{[$ui_forum{'community.forum.topic_review_step'}]}</b> -\> @{[$ui_forum{'community.forum.topic_store_step'}]}<br /><br />\x20
+    @{[$ui_forum{'community.forum.topic_review_intro'}]} <br /><br />
 
     <div class="panel panel-primary"><div class="panel-body">
-    <b>Topic name</b>: $topic_name<br /><br />
-    <b>Topic Description</b>:<br />$display_topic_desc<br /><br />\n
-    <b>Other configurations</b>: $sort_order_message<br /><br />\n
+    <b>@{[$ui_forum{'community.forum.topic_name_label'}]}</b>: $topic_name<br /><br />
+    <b>@{[$ui_forum{'community.forum.topic_description_label'}]}</b>:<br />$display_topic_desc<br /><br />\n
+    <b>@{[$ui_forum{'community.forum.other_configurations'}]}</b>: $sort_order_message<br /><br />\n
     </div></div>
     <br />
     
@@ -255,11 +302,11 @@ sub review_topic {
 	<input type="hidden" name="subject" value="$topic_name" />
 	<input type="hidden" name="topic_description" value="$topic_desc" />
 	<input type="hidden" name="sort_order" value="$sort_order" />
-	<input class="btn btn-info" type="submit" value="Edit Topic" />
+	<input class="btn btn-info" type="submit" value="@{[$ui_forum{'community.forum.edit_topic'}]}" />
 	
 	</form>
 	</td><td align="center">
-	<a href="topics.pl">Back to topics</a>
+	<a href="topics.pl">@{[$ui_forum{'community.forum.back_to_topics_capitalized'}]}</a>
 	</td><td align="right">
 
     <form action="add_topic.pl">
@@ -267,7 +314,7 @@ sub review_topic {
 	<input type="hidden" name="topic_id" value="$topic_id" />
 	<input type="hidden" name="subject" value="$topic_name" />
 	<input type="hidden" name="topic_description" value="$topic_desc" />
-	<input class="btn btn-primary" type="submit" value="store topic"  />
+	<input class="btn btn-primary" type="submit" value="@{[$ui_forum{'community.forum.store_topic'}]}"  />
 	
 	</form>
 	</td></tr></table>
@@ -294,8 +341,8 @@ sub show_form {
         $topic_creator_name =
           $user->get_first_name() . " " . $user->get_last_name();
     }
-    $page->header( "SGN | New topic",
-        "SGN Forum: Configure topic \"" . $subject . "\"" );
+    $page->header( "SGN | " . $ui_forum{'community.forum.new_topic_page_title'},
+        SGN::I18N::translate($ui_forum_i18n, 'community.forum.configure_topic_header', 'SGN Forum: Configure topic "%{subject}"', { 'subject' => $subject }, { entities => '' }) );
 
     if ( !$action ) { $action = "review"; }
 
@@ -306,27 +353,27 @@ sub show_form {
     <form method="post" action="add_topic.pl">
 	
 	Steps: <b>Configure topic</b> -> Review topic -> Store topic<br /><br /> 
-	The owner of this topic is: <b>$topic_creator_name</b>.
-	The owner can edit and delete the topic at any time when logged in.<br /> 
-	HTML tags are not supported. You can add links to your post by using square brackets as follows:<br />
+	@{[$ui_forum{'community.forum.topic_owner_intro'}]} <b>$topic_creator_name</b>.
+	@{[$ui_forum{'community.forum.topic_owner_permissions'}]}<br />\x20
+	@{[$ui_forum{'community.forum.html_links_supported'}]}<br />
 	[url]sgn.cornell.edu[/url].
 	This will appear as <a href="http://sgn.cornell.edu">sgn.cornell.edu</a> in the post.<br /><br />
-	<b>Note:</b> this service is provided as a courtesy. SGN reserves the right to delete topics and posts at any time for any reason.
+	<b>Note:</b> @{[$ui_forum{'community.forum.topic_courtesy_notice_lower'}]}
 	<br /><br />
 	<input type="hidden" name="action" value="$action" />
 	<input type="hidden" name="topic_id" value="$topic_id" />
-	Topic sort order: <br />
-	<input type="radio" name="sort_order" value="asc"  />Latest entry at the top<br />
-	<input type="radio" name="sort_order" value="desc" checked="1" />Latest entry at the bottom<br />
+	@{[$ui_forum{'community.forum.topic_sort_order'}]} <br />
+	<input type="radio" name="sort_order" value="asc"  />@{[$ui_forum{'community.forum.latest_entry_top'}]}<br />
+	<input type="radio" name="sort_order" value="desc" checked="1" />@{[$ui_forum{'community.forum.latest_entry_bottom'}]}<br />
 	<br />
-	Topic subject: <input class="form-control" name="subject" value="$subject"><br /><br />
-	Post Text:<br />
+	@{[$ui_forum{'community.forum.topic_subject'}]} <input class="form-control" name="subject" value="$subject"><br /><br />
+	@{[$ui_forum{'community.forum.post_text_label'}]}<br />
 	<textarea class="form-control" rows="5" cols="80" name="topic_description">$topic_description</textarea>
 	<br /><br />
 
 	<table width="100%" summary="">
-	<tr><td><a href="topics.pl">Back to forum</a></td>
-	<td align="right"><input class="btn btn-primary" type=submit value="Review topic" /></td>
+	<tr><td><a href="topics.pl">@{[$ui_forum{'community.forum.back_to_forum'}]}</a></td>
+	<td align="right"><input class="btn btn-primary" type=submit value="@{[$ui_forum{'community.forum.review_topic'}]}" /></td>
 	</tr></table>
 	</form>
 

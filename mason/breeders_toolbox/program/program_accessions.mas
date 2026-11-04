@@ -9,8 +9,8 @@ $program_id
 <table id="accession_summary_data" class="display">
     <thead>
         <tr>
-            <th>Accession name</th>
-            <th>Description</th>
+            <th><% $c->i18n->p("accessions.find_trials.accession", "Accession name") |h %></th>
+            <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
         </tr>
     </thead>
 </table>

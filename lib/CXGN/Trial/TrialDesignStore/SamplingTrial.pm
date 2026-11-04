@@ -1,5 +1,7 @@
 
 package CXGN::Trial::TrialDesignStore::SamplingTrial;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use Moose;
 use Try::Tiny;
@@ -44,6 +46,7 @@ sub BUILD {
 
 sub validate_design {
     my $self = shift;
+    my SGN::I18N $samplingtrial_validate_i18n = $self->i18n;
 
     print STDERR "validating design\n";
 
@@ -53,7 +56,7 @@ sub validate_design {
     my $error = '';
 
    if ($design_type ne 'sampling_trial') {
-        $error .= "design_type not equal to 'sampling_trial'";
+        $error .= ($samplingtrial_validate_i18n ? $samplingtrial_validate_i18n->p("trial.design_store.sampling_design", "design_type not equal to 'sampling_trial'") : "design_type not equal to 'sampling_trial'");
         return $error;
     }
 
@@ -66,7 +69,7 @@ sub validate_design {
     foreach my $stock (keys %design){
         foreach my $property (keys %{$design{$stock}}){
             if (!exists($allowed_properties{$property})) {
-                $error .= "Property: $property not allowed! ";
+                $error .= ($samplingtrial_validate_i18n ? $samplingtrial_validate_i18n->p("trial.design_store.property_not_allowed", "Property: %{property} not allowed! ", {property => "$property"}) : "Property: $property not allowed! ");
             }
             if ($property eq 'stock_name') {
                 my $stock_name = $design{$stock}->{$property};
@@ -82,10 +85,10 @@ sub validate_design {
     my @stock_names = keys %seen_stock_names;
     my @accession_names = keys %seen_accession_names;
     if(scalar(@stock_names)<1){
-        $error .= "You cannot create a trial with less than one sample.";
+        $error .= ($samplingtrial_validate_i18n ? $samplingtrial_validate_i18n->p("trial.design_store.no_sample", "You cannot create a trial with less than one sample.") : "You cannot create a trial with less than one sample.");
     }
     if(scalar(@accession_names)<1){
-        $error .= "You cannot create a trial with less than one accession.";
+        $error .= ($samplingtrial_validate_i18n ? $samplingtrial_validate_i18n->p("trial.design_store.no_accession", "You cannot create a trial with less than one accession.") : "You cannot create a trial with less than one accession.");
     }
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
@@ -97,7 +100,7 @@ sub validate_design {
         uniquename=>{-in=>\@stock_names}
     });
     while (my $s = $stocks->next()) {
-        $error .= "Name $s->uniquename already exists in the database.";
+        $error .= ($samplingtrial_validate_i18n ? $samplingtrial_validate_i18n->p("trial.design_store.name_exists", "Name %{name} already exists in the database.", {name => "$s->uniquename"}) : "Name $s->uniquename already exists in the database.");
     }
 
     my @source_stock_types = ($accession_type_id, $plot_type_id, $plant_type_id, $tissue_type_id);
@@ -113,7 +116,7 @@ sub validate_design {
     }
     foreach (@accession_names){
         if (!$found_data{$_}){
-            $error .= "The following name is not in the database: $_ .";
+            $error .= ($samplingtrial_validate_i18n ? $samplingtrial_validate_i18n->p("trial.design_store.missing_name_spaced", "The following name is not in the database: %{name} .", {name => "$_"}) : "The following name is not in the database: $_ .");
         }
     }
 

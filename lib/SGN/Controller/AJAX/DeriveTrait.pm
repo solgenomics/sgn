@@ -1,6 +1,8 @@
 package SGN::Controller::AJAX::DeriveTrait;
 
 use Moose;
+use SGN::I18N ();
+use HTML::Entities ();
 use Data::Dumper;
 use List::Util 'max';
 use Bio::Chado::Schema;
@@ -64,6 +66,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_compute_derive_traits_i18n = SGN::I18N::translate($c);
     my $trial_id = $c->req->param('trial_id');
     my $selected_trait = $c->req->param('trait');
     my %parse_result;
@@ -87,12 +90,12 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 
     if (!$c->user()) {
 	print STDERR "User not logged in... not computing trait.\n";
-	$c->stash->{rest} = {error => "You need to be logged in to compute trait." };
+	$c->stash->{rest} = {error => ("" . SGN::I18N::translate($ui_compute_derive_traits_i18n, "phenotype.root.you_need_to_be_logged_in_to_compute_trait", "You need to be logged in to compute trait.", undef, { entities => '<>&', decode => 1 }) . "") };
 	return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to compute trait." };
+	$c->stash->{rest} = {error =>  ("" . SGN::I18N::translate($ui_compute_derive_traits_i18n, "phenotype.root.you_have_insufficient_privileges_to_compute_trait", "You have insufficient privileges to compute trait.", undef, { entities => '<>&', decode => 1 }) . "") };
 	return;
     }
 
@@ -107,7 +110,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 
 
     if (scalar(@{$triat_name}) == 0)  {
-	$c->stash->{rest} = {error => "No trait assayed for this trial." };
+	$c->stash->{rest} = {error => ("" . SGN::I18N::translate($ui_compute_derive_traits_i18n, "phenotype.root.no_trait_assayed_for_this_trial", "No trait assayed for this trial.", undef, { entities => '<>&', decode => 1 }) . "") };
 	return;
     }
 
@@ -115,12 +118,12 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     foreach my $trait_found (@{$triat_name}) {
 	if  ($selected_trait_cvterm_id && ($trait_found->[0] eq $selected_trait_cvterm_id)) {
 	    print "Trait found = $trait_found->[1] with id $trait_found->[0]\n";
-	    $c->stash->{rest} = {error => "$trait_found->[1] has been computed and uploaded for this trial." };
+	    $c->stash->{rest} = {error => ("" . "" . "$trait_found->[1]" . SGN::I18N::translate($ui_compute_derive_traits_i18n, "phenotype.root.has_been_computed_and_uploaded_for_this_trial", " has been computed and uploaded for this trial.", undef, { entities => '<>&', decode => 1 }) . "") };
 	    return;
 	}
 
 	elsif ($selected_trait_cvterm_id eq '')  {
-	    $c->stash->{rest} = {error => "Select trait to compute." };
+	    $c->stash->{rest} = {error => ("" . SGN::I18N::translate($ui_compute_derive_traits_i18n, "phenotype.root.select_trait_to_compute", "Select trait to compute.", undef, { entities => '<>&', decode => 1 }) . "") };
 	    return;
 	}
     }
@@ -209,7 +212,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     my ($stock_name, $stock_id, $plot_name, $value);
     if (@found_trait_cvterm_ids != @traits_cvterm_ids) {
 	print STDERR "DEBUG: MISMATCH! found=" . scalar(@found_trait_cvterm_ids) . " needed=" . scalar(@traits_cvterm_ids) . "\n";
-	$c->stash->{rest} = {error => "Upload or compute trait(s) required for computing \n\n$selected_trait = $msg_formula." };
+	$c->stash->{rest} = {error => ("" . SGN::I18N::translate($ui_compute_derive_traits_i18n, "phenotype.root.upload_or_compute_trait_s_required_for_computing", "Upload or compute trait(s) required for computing \n\n", undef, { entities => '<>&', decode => 1 }) . "$selected_trait" . " = " . "$msg_formula" . "." . "") };
 	return;
     }
     else {
@@ -396,6 +399,7 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
 sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated_plot_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_store_generated_plot_phenotypes_i18n = SGN::I18N::translate($c);
     my %parse_result;
     my $data = decode_json($c->req->param('store_data'));
     my $plots = decode_json($c->req->param('store_plots'));
@@ -417,7 +421,7 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
         my $user_type = $c->user()->get_object->get_user_type();
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
-            $c->stash->{rest} = {error => 'Must be a curator to overwrite values! Please contact us!'};
+            $c->stash->{rest} = {error => ("" . SGN::I18N::translate($ui_store_generated_plot_phenotypes_i18n, "phenotype_upload.server.overwrite_curator", "Must be a curator to overwrite values! Please contact us!", undef, { entities => '<>&', decode => 1 }) . "")};
             $c->detach;
         }
     }

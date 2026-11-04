@@ -7,41 +7,41 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addFieldbookPhenotypeDialog">Upload Fieldbook File</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('fieldbook_upload.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addFieldbookPhenotypeDialog"><% $c->i18n->p('fieldbook_upload.ui.title', 'Upload Fieldbook File') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_phenotype_file_form" name="upload_fieldbook_phenotype_file_form">
                 <div class="well well-sm">
-                    <h5>Upload Exported Fieldbook Phenotype File in Database Format for Plots or Plants</h5>
+                    <h5><% $c->i18n->p('fieldbook_upload.ui.intro', 'Upload Exported Fieldbook Phenotype File in Database Format for Plots or Plants') |h %></h5>
                 </div>
             <&| /page/explanation.mas, title=>'Template Information' &>
                 <p>
-                <b>File format information</b>
+                <b><% $c->i18n->p('fieldbook_upload.ui.format_info', 'File format information') |h %></b>
                 <br>
-                <a id="phenotype_fieldbook_upload_info">Spreadsheet Format</a>
+                <a id="phenotype_fieldbook_upload_info"><% $c->i18n->p('fieldbook_upload.ui.spreadsheet_format', 'Spreadsheet Format') |h %></a>
                 </p>
             </&>
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Data Level: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('fieldbook_upload.ui.data_level', 'Data Level: ') |h %></label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="upload_fieldbook_phenotype_data_level" name="upload_fieldbook_phenotype_data_level">
-                            <option value="plots">Plots</option>
-                            <option value="plants">Plants</option>
-                            <option value="subplots">Subplots</option>
-                            <option value="tissue_samples">Tissue Samples</option>
+                            <option value="plots"><% $c->i18n->p('fieldbook_upload.ui.plots', 'Plots') |h %></option>
+                            <option value="plants"><% $c->i18n->p('fieldbook_upload.ui.plants', 'Plants') |h %></option>
+                            <option value="subplots"><% $c->i18n->p('fieldbook_upload.ui.subplots', 'Subplots') |h %></option>
+                            <option value="tissue_samples"><% $c->i18n->p('fieldbook_upload.ui.tissue_samples', 'Tissue Samples') |h %></option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Fieldbook File: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('fieldbook_upload.ui.file', 'Fieldbook File: ') |h %></label>
                     <div class="col-sm-6" >
                         <input type="file" id="upload_fieldbook_phenotype_file_input" name="upload_fieldbook_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Optional: Images ZipFile (.zip): </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('fieldbook_upload.ui.images', 'Optional: Images ZipFile (.zip): ') |h %></label>
                     <div class="col-sm-6" >
                         <input type="file" id="upload_fieldbook_phenotype_images_zipfile" name="upload_fieldbook_phenotype_images_zipfile" encoding="multipart/form-data" />
                     </div>
@@ -52,9 +52,9 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-info" name="upload_fieldbook_phenotype_submit_verify" id="upload_fieldbook_phenotype_submit_verify">Verify</button>
-	<button disabled type="button" class="btn btn-primary" name="upload_fieldbook_phenotype_submit_store" id="upload_fieldbook_phenotype_submit_store" title="First Verify Your File">Store</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('fieldbook_upload.ui.close', 'Close') |h %></button>
+        <button type="button" class="btn btn-info" name="upload_fieldbook_phenotype_submit_verify" id="upload_fieldbook_phenotype_submit_verify"><% $c->i18n->p('fieldbook_upload.ui.verify', 'Verify') |h %></button>
+	<button disabled type="button" class="btn btn-primary" name="upload_fieldbook_phenotype_submit_store" id="upload_fieldbook_phenotype_submit_store" title="<% $c->i18n->p('fieldbook_upload.ui.verify_first', 'First Verify Your File') |h %>"><% $c->i18n->p('fieldbook_upload.ui.store', 'Store') |h %></button>
       </div>
     </div>
   </div>
@@ -64,22 +64,22 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="transcriptomicsUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('fieldbook_upload.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="transcriptomicsUploadInfoDialog"><% $c->i18n->p('fieldbook_upload.ui.template_info', 'Template Information') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h3>Fieldbook files can be uploaded in .xlsx or .csv format</h3>
-            <h4>When exporting a Phenotype File from Fieldbook, the file should already be in this format. Please check to make sure your file was exported correctly</h4>
+            <h3><% $c->i18n->p('fieldbook.format.format_title', 'Fieldbook files can be uploaded in .xlsx or .csv format') |h %></h3>
+            <h4><% $c->i18n->p('fieldbook.format.format_export', 'When exporting a Phenotype File from Fieldbook, the file should already be in this format. Please check to make sure your file was exported correctly') |h %></h4>
 
             <ul>
 
-                <li><strong>plot_id</strong> or <strong>plant_id</strong> or <strong>subplot_id</strong> or <strong>tissue_sample_id</strong>: This should be one of these stock IDs that already exist in the database.</li>
-                <li><strong>trait</strong>: A trait that exists in the database.</li>
-                <li><strong>value</strong>: Corresponding value for the observed trait.</li>
-                <li><strong>observationTimeStamp</strong>: Timestamp of the observation.</li>
-                <li><strong>collector</strong>: Observation collector's name.</li>
+                <li><% $c->i18n->p('fieldbook.format.stock', '%{plot} or %{plant} or %{subplot} or %{tissue_sample}: This should be one of these stock IDs that already exist in the database.', { plot => 'plot_id', plant => 'plant_id', subplot => 'subplot_id', tissue_sample => 'tissue_sample_id' }) |h %></li>
+                <li><% $c->i18n->p('fieldbook.format.trait', '%{column}: A trait that exists in the database.', { column => 'trait' }) |h %></li>
+                <li><% $c->i18n->p('fieldbook.format.value', '%{column}: Corresponding value for the observed trait.', { column => 'value' }) |h %></li>
+                <li><% $c->i18n->p('fieldbook.format.timestamp', '%{column}: Timestamp of the observation.', { column => 'observationTimeStamp' }) |h %></li>
+                <li><% $c->i18n->p('fieldbook.format.collector', '%{column}: Observation collector\'s name.', { column => 'collector' }) |h %></li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -97,7 +97,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('fieldbook_upload.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>

@@ -1,0 +1,53 @@
+# Visor de vectores {#vector-viewer}
+
+BreedBase ofrece una herramienta para ver vectores, crearlos, guardarlos o cargarlos en BreedBase.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorViewer.png')
+```
+
+El visor de vectores incluye varias funciones interactivas:
+
+- Resaltar regiones
+
+- Mostrar la posición
+
+- Acercar y desplazar la vista
+
+- Tabla de características y sitios de restricción que permite editar, eliminar o añadir elementos en tiempo real
+
+<!-- -   Load data from GenBank (uncomment this when this feature is complete) -->
+
+<!-- -   Save data (uncomment this when this feature is complete) -->
+
+Para resaltar una región del vector, haga clic y arrastre el cursor en sentido horario. Para quitar el resaltado, cree otro segmento seleccionado en el vector o pulse “Actualizar/Restablecer”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorHighlight.png')
+```
+
+Para conocer la posición de un punto del vector, coloque el cursor sobre él. Aparecerá un número con la posición del cursor en pares de bases.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cursorLocation.png')
+```
+
+Para acercar o alejar la vista, pulse el botón "+" o "-" debajo del vector.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/ZoomIn.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/ZoomOut.png')
+```
+
+Para añadir una característica o un sitio de restricción, pulse “Añadir”. Para editarlo, selecciónelo, pulse “Editar” y realice los cambios. Para eliminarlo, seleccione la característica o el sitio de restricción y pulse “Eliminar”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorButtons.png')
+```
+
+<!-- To load data from GenBank (fill in the instructions here when this is finished) -->
+
+<!-- To save data (fill in the instructions here when this is finished) -->

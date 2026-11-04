@@ -50,6 +50,7 @@ use Catalyst qw/
      +SGN::Role::Site::Files
      +SGN::Role::Site::Mason
      +SGN::Role::Site::SiteFeatures
+     +SGN::Role::Site::I18N
      +SGN::Role::Site::TestMode
  /;
 

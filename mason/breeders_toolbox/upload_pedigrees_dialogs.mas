@@ -5,20 +5,20 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesValidateDialog">Results From Validation</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadPedigreesValidateDialog"><% $c->i18n->p('cross.ui.results_from_validation', 'Results From Validation') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-            <div class="well">To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents <input type="checkbox" checked id="pedigree_upload_overwrite_pedigrees" /></div>
+            <div class="well"><% $c->i18n->p('cross.ui.to_overwrite_parents_in_the_case_that_an_accession_already_has', 'To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents') |h %> <input type="checkbox" checked id="pedigree_upload_overwrite_pedigrees" /></div>
  	  <table class="table table-hover">
     	    <tbody></tbody>
   	  </table>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="upload_pedigrees_store" id="upload_pedigrees_store" data-dismiss="modal">Store</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
+        <button type="button" class="btn btn-primary" name="upload_pedigrees_store" id="upload_pedigrees_store" data-dismiss="modal"><% $c->i18n->p('cross.ui.store', 'Store') |h %></button>
       </div>
     </div>
   </div>
@@ -28,8 +28,8 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesErrorDialog">Results From Validation</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadPedigreesErrorDialog"><% $c->i18n->p('cross.ui.results_from_validation', 'Results From Validation') |h %></h4>
       </div>
       <div class="modal-body">
         <table class="table table-hover">
@@ -37,7 +37,7 @@
         </table>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -47,16 +47,16 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesSuccessDialog">Upload Successful</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadPedigreesSuccessDialog"><% $c->i18n->p('cross.ui.upload_successful', 'Upload Successful') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
- 	  <h4>The Pedigree Upload Finished With No Errors.</h4>
+          <h4><% $c->i18n->p('cross.ui.the_pedigree_upload_finished_with_no_errors', 'The Pedigree Upload Finished With No Errors.') |h %></h4>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" id="pedigrees_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" id="pedigrees_upload_success_dismiss" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -66,21 +66,21 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPedigreesDialog">Upload Pedigrees</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPedigreesDialog"><% $c->i18n->p('cross.ui.upload_pedigrees', 'Upload Pedigrees') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.template_information.bf8c643', 'Template Information')) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('cross.ui.file_format_information', 'File format information') |h %></b>
                             <br>
-                            <a id="pedigrees_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                            <a id="pedigrees_upload_spreadsheet_format_info"><% $c->i18n->p('cross.ui.spreadsheet_format.f1285ec', 'Spreadsheet Format') |h %></a>
                         </p>
                     </&>
                     <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_pedigrees_form" name="upload_pedigrees_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload Pedigree File: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('cross.ui.upload_pedigree_file', 'Upload Pedigree File:') |h %> </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="pedigrees_uploaded_file" id="pedigrees_uploaded_file" encoding="multipart/form-data" />
                             </div>
@@ -89,8 +89,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Validate</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit"><% $c->i18n->p('cross.ui.validate', 'Validate') |h %></button>
             </div>
         </div>
     </div>
@@ -100,16 +100,16 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="pedigreeUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="pedigreeUploadInfoDialog"><% $c->i18n->p('cross.ui.template_information.bf8c643', 'Template Information') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
         <& /help/file_upload_type.mas, type => "Pedigrees", optional_column => 0 &>
 	  <hr>
-	  <b>Header:</b>
+          <b><% $c->i18n->p('cross.ui.header', 'Header:') |h %></b>
 	  <br>
-	  <p>The first row (header) should contain the following:</p>
+          <p><% $c->i18n->p('cross.ui.the_first_row_header_should_contain_the_following', 'The first row (header) should contain the following:') |h %></p>
 
 	  <table class="table table-hover table-bordered">
   	  <body>
@@ -124,42 +124,42 @@
 	  </body>
 	  </table>
 
-	  <h4>Required fields:</h4>
+          <h4><% $c->i18n->p('cross.ui.required_fields', 'Required fields:') |h %></h4>
 	  <ul>
-        <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
-        <li>female parent accession (must exist in the database)</li>
-        <li>type (biparental, self, open, backcross, sib, polycross, reselected)</li>
+        <li><% $c->i18n->p('cross.ui.header_must_exist_in_the_database_and_can_be_accession_uniquen', '%{header} (must exist in the database and can be accession uniquename or accession synonym)', {header => 'progeny name'}) |h %></li>
+        <li><% $c->i18n->p('cross.ui.header_must_exist_in_the_database', '%{header} (must exist in the database)', {header => 'female parent accession'}) |h %></li>
+        <li><% $c->i18n->p('cross.ui.header_biparental_self_open_backcross_sib_polycross_reselected', '%{header} (biparental, self, open, backcross, sib, polycross, reselected)', {header => 'type'}) |h %></li>
             <ul class="a">
-                <li>cross type descriptions:</li>
+                <li><% $c->i18n->p('cross.ui.cross_type_descriptions', 'cross type descriptions:') |h %></li>
                 <ul class="b">
-                    <li>biparental: An individual plant pollinated by another individual plant.</li>
-                    <li>self: A self pollinated individual plant.</li>
-                    <li>open: An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                    <li>backcross: An individual plant pollinated by one of its parents.</li>
-                    <li>sib: Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
-                    <li>polycross: Mating between individual female parent from a population and the corresponding male population.</li>
-                    <li>reselected: Selection of a new accession from an existing line (e.g. caused by a mutation).</li>
-                    <li>doubled_haploid: Chromosome doubling of a haploid plant.</li>
-                    <li>dihaploid_induction: Generation of dihaploids from a tetraploid plant.</li>
+                    <li><% $c->i18n->p('cross.ui.biparental_an_individual_plant_pollinated_by_another_individua', 'biparental: An individual plant pollinated by another individual plant.') |h %></li>
+                    <li><% $c->i18n->p('cross.ui.self_a_self_pollinated_individual_plant', 'self: A self pollinated individual plant.') |h %></li>
+                    <li><% $c->i18n->p('cross.ui.open_an_individual_plant_pollinated_by_a_group_of_plants_or_op', 'open: An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).') |h %></li>
+                    <li><% $c->i18n->p('cross.ui.backcross_an_individual_plant_pollinated_by_one_of_its_parents', 'backcross: An individual plant pollinated by one of its parents.') |h %></li>
+                    <li><% $c->i18n->p('cross.ui.sib_mating_between_individuals_that_have_at_least_one_parent_i', 'sib: Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.') |h %></li>
+                    <li><% $c->i18n->p('cross.ui.polycross_mating_between_individual_female_parent_from_a_popul', 'polycross: Mating between individual female parent from a population and the corresponding male population.') |h %></li>
+                    <li><% $c->i18n->p('cross.ui.reselected_selection_of_a_new_accession_from_an_existing_line_', 'reselected: Selection of a new accession from an existing line (e.g. caused by a mutation).') |h %></li>
+                    <li><% $c->i18n->p('cross.ui.doubled_haploid_chromosome_doubling_of_a_haploid_plant', 'doubled_haploid: Chromosome doubling of a haploid plant.') |h %></li>
+                    <li><% $c->i18n->p('cross.ui.dihaploid_induction_generation_of_dihaploids_from_a_tetraploid', 'dihaploid_induction: Generation of dihaploids from a tetraploid plant.') |h %></li>
                 </ul>
             </ul>
       </ul>
 
-	  <h4>Optional fields</h4>
+          <h4><% $c->i18n->p('cross.ui.optional_fields', 'Optional fields') |h %></h4>
 	  <ul>
-        <li>male parent accession (can be accession uniquename or accession synonym or population name). Required for most cross types. </li>
+        <li><% $c->i18n->p('cross.ui.header_can_be_accession_uniquename_or_accession_synonym_or_pop', '%{header} (can be accession uniquename or accession synonym or population name). Required for most cross types.', {header => 'male parent accession'}) |h %> </li>
 	  </ul>
 
-	  <h4>Notes</h4>
+          <h4><% $c->i18n->p('cross.ui.notes', 'Notes') |h %></h4>
 	  <ul>
-	    <li>Always specify the type of the cross (biparental, self, open, sib, backcross, polycross or reselected).</li>
-	    <li>If the type is open and no potential male parent is known, leave the male parent field empty.</li>
-	     <li>For all other cases, list both known parents, even if they are the same, such as in the case of self.</li>
+            <li><% $c->i18n->p('cross.ui.always_specify_the_type_of_the_cross_biparental_self_open_sib_', 'Always specify the type of the cross (biparental, self, open, sib, backcross, polycross or reselected).') |h %></li>
+            <li><% $c->i18n->p('cross.ui.if_the_type_is_open_and_no_potential_male_parent_is_known_leav', 'If the type is open and no potential male parent is known, leave the male parent field empty.') |h %></li>
+             <li><% $c->i18n->p('cross.ui.for_all_other_cases_list_both_known_parents_even_if_they_are_t', 'For all other cases, list both known parents, even if they are the same, such as in the case of self.') |h %></li>
 	  </ul>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>

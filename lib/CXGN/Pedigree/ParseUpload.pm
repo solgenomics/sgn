@@ -9,6 +9,18 @@ use Bio::GeneticRelationships::Individual;
 with 'MooseX::Object::Pluggable';
 
 
+# Optional request-owned presentation; it never controls pedigrees or parsing.
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    trigger => sub {
+        my ($self, $translator) = @_;
+        die 'Presentation translator must implement p'
+            if defined($translator) && !$translator->can('p');
+    },
+);
+
 has 'chado_schema' => (
     is => 'ro',
     isa => 'DBIx::Class::Schema',

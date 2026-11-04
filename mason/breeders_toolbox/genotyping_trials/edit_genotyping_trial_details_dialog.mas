@@ -15,14 +15,14 @@ $trial_description
 <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
         <div class="modal-header text-center">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="genotypingTrialDetailsEditDialog">Edit Genotyping Plate Details</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="genotypingTrialDetailsEditDialog"><% $c->i18n->p("genotype.plate.edit_genotyping_plate_details", "Edit Genotyping Plate Details") |h %></h4>
         </div>
         <div class="modal-body" id="genotyping_trial_details_edit_body">
             <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_genotyping_trial_name">Genotyping Plate Name: </label>
+                    <label class="col-sm-3 control-label" for="edit_genotyping_trial_name"><% $c->i18n->p("genotype.plate.genotyping_plate_name", "Genotyping Plate Name:") |h %> </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <input class="form-control col-sm-8" id="edit_genotyping_trial_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_genotyping_trial_name_status"/>
@@ -30,7 +30,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_genotyping_trial_breeding_program">Breeding Program: </label>
+                    <label class="col-sm-3 control-label" for="edit_genotyping_trial_breeding_program"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_genotyping_trial_breeding_program" title="breeding_program" value="<%$breeding_program%>"></select>
@@ -38,7 +38,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_format">Plate Format: </label>
+                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_format"><% $c->i18n->p("genotype.plate.plate_format_ad0365", "Plate Format:") |h %> </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <input class="form-control col-sm-8" id="edit_genotyping_plate_format" title="plate_format" type="text" value="<%$genotyping_plate_format%>"/>
@@ -46,7 +46,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_sample_type">Plate Sample Type: </label>
+                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_sample_type"><% $c->i18n->p("genotype.plate.plate_sample_type_287e09", "Plate Sample Type:") |h %> </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <input class="form-control col-sm-8" id="edit_genotyping_plate_sample_type" title="plate_sample_type" type="text" value="<%$genotyping_plate_sample_type%>"/>
@@ -54,7 +54,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_genotyping_facility">Genotyping Facility: </label>
+                    <label class="col-sm-3 control-label" for="edit_genotyping_facility"><% $c->i18n->p("genotype.plate.genotyping_facility_733343", "Genotyping Facility:") |h %> </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_genotyping_facility" title="facility" type="text" value="<%$genotyping_facility%>"></select>
@@ -62,7 +62,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_description">Description: </label>
+                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_description"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %> </label>
                     <div class="col-sm-8">
                         <div class="input-group">
                             <textarea class="form-control" id="edit_genotyping_plate_description" title="description" rows="5"><% $trial_description %></textarea>
@@ -88,7 +88,7 @@ $trial_description
                 </div>
                 -->
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_genotyping_raw_data_link">Raw Data Link: </label>
+                    <label class="col-sm-3 control-label" for="edit_genotyping_raw_data_link"><% $c->i18n->p("genotype.plate.raw_data_link_0ef26d", "Raw Data Link:") |h %> </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <input class="form-control col-sm-8" id="edit_genotyping_raw_data_link" title="raw_data_link" type="text" value="<%$genotyping_raw_data_link%>"/>
@@ -99,9 +99,9 @@ $trial_description
             </div>
         </div>
         <div class="modal-footer">
-            <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
-            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_genotyping_trial_details_cancel_button">Cancel</button>
-            <button type="button" class="btn btn-primary" id="save_genotyping_trial_details">Save Changes</button>
+            <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> <% $c->i18n->p("trial.details.pending", "Indicates pending change") |h %></p>
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_genotyping_trial_details_cancel_button"><% $c->i18n->p("auth.legacy.cancel", "Cancel") |h %></button>
+            <button type="button" class="btn btn-primary" id="save_genotyping_trial_details"><% $c->i18n->p("trial.details.save", "Save Changes") |h %></button>
         </div>
     </div>
 </div>
@@ -111,14 +111,14 @@ $trial_description
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="genotypingTrialDetailsSavedDialog">Details Saved</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingTrialDetailsSavedDialog"><% $c->i18n->p("trial.details.saved", "Details Saved") |h %></h4>
             </div>
             <div class="modal-body" id="genotyping_trial_details_saved_body">
               <ul class="list-group" id="genotyping_trial_details_saved_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="genotyping_trial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="genotyping_trial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -128,14 +128,14 @@ $trial_description
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="genotypingTrialDetailsErrorDialog">Error Saving Trial Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingTrialDetailsErrorDialog"><% $c->i18n->p("trial.details.error_title", "Error Saving Trial Details") |h %></h4>
             </div>
             <div class="modal-body" id="genotyping_trial_details_error_body">
               <ul class="list-group" id="genotyping_trial_details_error_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="genotyping_trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="genotyping_trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>

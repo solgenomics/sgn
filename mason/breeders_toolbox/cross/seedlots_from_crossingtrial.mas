@@ -1,3 +1,16 @@
+<%init>
+use JSON::PP ();
+my $seedlot_js_string = sub {
+    my $value = defined $_[0] ? "$_[0]" : '';
+    my $encoded = JSON::PP->new->allow_nonref->encode($value);
+    $encoded =~ s/</\\u003c/g;
+    $encoded =~ s/>/\\u003e/g;
+    $encoded =~ s/&/\\u0026/g;
+    $encoded =~ s/\x{2028}/\\u2028/g;
+    $encoded =~ s/\x{2029}/\\u2029/g;
+    return $encoded;
+};
+</%init>
 <%args>
 $trial_id
 $breeding_program_name
@@ -16,8 +29,8 @@ $locations_by_program_json
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="add_seedlot_dialog">Add New Seedlot</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="add_seedlot_dialog"><% $c->i18n->p('seedlots.ui.add_new_seedlot', 'Add New Seedlot') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -26,8 +39,8 @@ $locations_by_program_json
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="add_cross_seedlot_button" type="button" class="btn btn-primary" >Add</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
+                <button id="add_cross_seedlot_button" type="button" class="btn btn-primary" ><% $c->i18n->p('seedlots.ui.add', 'Add') |h %></button>
             </div>
         </div>
     </div>
@@ -35,10 +48,61 @@ $locations_by_program_json
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
 
-var breeding_program_name = "<% $breeding_program_name %>";
-var breeding_program_id = "<% $breeding_program_id %>";
-var time = "<% $timestamp %>";
+
+var breeding_program_name = <% $seedlot_js_string->("$breeding_program_name") %>;
+var breeding_program_id = <% $seedlot_js_string->("$breeding_program_id") %>;
+var time = <% $seedlot_js_string->("$timestamp") %>;
 var locations = <% $locations_by_program_json %>;
 
 jQuery(document).ready(function(){
@@ -46,19 +110,18 @@ jQuery(document).ready(function(){
     jQuery('#seedlots_from_crossingtrial_section_onswitch').click(function(){
         var seedlots_crossingtrial_table = jQuery('#seedlots_from_crossingtrial_table').DataTable({
 
-            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/seedlots_from_crossingtrial',
-
+            'ajax': {url: '/ajax/breeders/trial/'+ <% $trial_id %> + '/seedlots_from_crossingtrial', headers: _sgnSeedlotLocaleHeaders('/ajax/breeders/trial/'+ <% $trial_id %> + '/seedlots_from_crossingtrial')},
             columns: [
-                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
-                { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) {
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.cross_unique_id.f3182b4", "Cross Unique ID")), "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+seedlotHTML(row.cross_name)+"</a>"; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.seedlot_name.8bbaf6d", "Seedlot Name")), "data": null, "render": function ( data, type, row ) {
                     if (row.seedlot_id === null){
-                        return 'No Seedlot'
+                        return seedlotHTML(seedlotI18n.p("seedlots.ui.no_seedlot", "No Seedlot"))
                     } else {
-                        return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
+                        return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+seedlotHTML(row.seedlot_name)+"</a>"
                     }
                 }},
-                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) {
-                    return `<a onclick='addSeedlot("${row.cross_name}")'>Add</a>`;
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.add_new_seedlot", "Add New Seedlot")), "data": "null", "render": function ( data, type, row ) {
+                    return "<a onclick='" + seedlotHTML("addSeedlot(" + JSON.stringify(row.cross_name) + ")") + "'>" + seedlotHTML(seedlotI18n.p("seedlots.ui.add", "Add")) + "</a>";
                 }},
             ]
         });
@@ -68,44 +131,44 @@ jQuery(document).ready(function(){
 
         var seedlot_name = jQuery('#new_seedlot_name').val();
         if (!seedlot_name) {
-            alert ("Seedlot name is required");
+            alert (seedlotI18n.p("seedlots.ui.seedlot_name_is_required", "Seedlot name is required"));
             return;
         }
 
         var seedlot_program = jQuery('#new_seedlot_program').val();
         if (!seedlot_program) {
-            alert ("Error retrieving breeding program name");
+            alert (seedlotI18n.p("seedlots.ui.error_retrieving_breeding_program_name", "Error retrieving breeding program name"));
             return;
         }
 
         var seedlot_program_id = jQuery('#new_seedlot_breeding_program_id').val();
         if (!seedlot_program_id) {
-            alert ("Error retrieving breeding program id");
+            alert (seedlotI18n.p("seedlots.ui.error_retrieving_breeding_program_id", "Error retrieving breeding program id"));
             return;
         }
 
         var seedlot_location = jQuery('#new_seedlot_location').val();
         if (!seedlot_location) {
-            alert ("Location is required");
+            alert (seedlotI18n.p("seedlots.ui.location_is_required", "Location is required"));
             return;
         }
 
         var box_name = jQuery('#new_seedlot_box_name').val();
         if (!box_name) {
-            alert ("Box name is required");
+            alert (seedlotI18n.p("seedlots.ui.box_name_is_required", "Box name is required"));
             return;
         }
 
         var seedlot_content = jQuery('#new_seedlot_content').val();
         if (!seedlot_content) {
-            alert ("Cross Unique ID is required");
+            alert (seedlotI18n.p("seedlots.ui.cross_unique_id_is_required", "Cross Unique ID is required"));
             return;
         }
 
         var seedlot_amount = jQuery('#new_seedlot_amount').val();
         var seedlot_weight = jQuery('#new_seedlot_weight').val();
         if (!seedlot_amount && !seedlot_weight) {
-            alert ("Seedlot amount or weight is required");
+            alert (seedlotI18n.p("seedlots.ui.seedlot_amount_or_weight_is_required", "Seedlot amount or weight is required"));
             return;
         }
 
@@ -113,7 +176,7 @@ jQuery(document).ready(function(){
 
         var seedlot_timestamp = jQuery('#new_seedlot_timestamp').val();
         if (!seedlot_timestamp) {
-            alert ("Timestamp is required");
+            alert (seedlotI18n.p("seedlots.ui.timestamp_is_required", "Timestamp is required"));
             return;
         }
 
@@ -121,12 +184,13 @@ jQuery(document).ready(function(){
 
         const cross_seedlot_material_type = jQuery('#cross_seedlot_material_type').val();
         if (!cross_seedlot_material_type) {
-            alert ("Material type is required");
+            alert (seedlotI18n.p("seedlots.ui.material_type_is_required", "Material type is required"));
             return;
         }
 
         jQuery.ajax({
             url: '/ajax/breeders/seedlot-create',
+            headers: _sgnSeedlotLocaleHeaders('/ajax/breeders/seedlot-create'),
             data : {
                 'seedlot_name' : seedlot_name,
                 'seedlot_location': seedlot_location,
@@ -147,7 +211,7 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert("The seedlot has been added.");
+                    alert(seedlotI18n.p("seedlots.ui.the_seedlot_has_been_added", "The seedlot has been added."));
                     jQuery('#add_cross_seedlot_dialog').modal('hide');
                     location.reload();
                 }
@@ -157,7 +221,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding seedlot');
+                alert(seedlotI18n.p("seedlots.ui.an_error_occurred_adding_seedlot", "An error occurred adding seedlot"));
             }
         });
     });
@@ -168,24 +232,24 @@ function addSeedlot(cross_name){
     get_select_box('material_types', 'cross_seedlot_material_type_div', { 'name' : 'cross_seedlot_material_type', 'id' : 'cross_seedlot_material_type' });
 
     var html = '';
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">Cross Unique ID: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_content" name="new_seedlot_content" value="'+cross_name+'" disabled></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Seedlot Name: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_name" name="new_seedlot_name" placeholder="Required"></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Material Type: </label><div class="col-sm-8" ><div id="cross_seedlot_material_type_div" name="cross_seedlot_material_type_div"></div></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Breeding Program: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_program" name="new_seedlot_program" value="'+breeding_program_name+'" disabled></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Location: </label><div class="col-sm-8" ><select class="form-control" id="new_seedlot_location" name="new_seedlot_location"><option disabled value="" selected hidden>Select a location</option>';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.cross_unique_id.451831a", "Cross Unique ID:")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_content" name="new_seedlot_content" value="'+seedlotHTML(cross_name)+'" disabled></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.seedlot_name.72a2020", "Seedlot Name:")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_name" name="new_seedlot_name" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.required", "Required")) + '"></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.material_type.21ab872", "Material Type:")) + ' </label><div class="col-sm-8" ><div id="cross_seedlot_material_type_div" name="cross_seedlot_material_type_div"></div></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.breeding_program.5983e34", "Breeding Program:")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_program" name="new_seedlot_program" value="'+seedlotHTML(breeding_program_name)+'" disabled></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.location.8f494b2", "Location:")) + ' </label><div class="col-sm-8" ><select class="form-control" id="new_seedlot_location" name="new_seedlot_location"><option disabled value="" selected hidden>' + seedlotHTML(seedlotI18n.p("seedlots.ui.select_a_location", "Select a location")) + '</option>';
     if (locations) {
         for (var i=0; i<locations.length; i++) {
-            html += `<option value="${locations[i]}">${locations[i]}</option>`;
+            html += `<option value="${seedlotHTML(locations[i])}">${seedlotHTML(locations[i])}</option>`;
         }
     }
     html = html + '</select></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Box Name: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_box_name" name="new_seedlot_box_name" placeholder="Required"></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Amount: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_amount" name="new_seedlot_amount" placeholder="Amount (number of seeds) OR Weight (g), required"></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Weight (g): </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_weight" name="new_seedlot_weight" placeholder="Amount (number of seeds) OR Weight (g), required"></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Organization: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_organization" name="new_seedlot_organization" placeholder="Optional"></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Timestamp: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_timestamp" name="new_seedlot_timestamp" value="'+time+'"></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Description: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_description" name="new_seedlot_description" placeholder="Optional"></div></div></form>';
-    html = html + '<div class="form-group"><input id="new_seedlot_breeding_program_id" type="hidden" value="'+breeding_program_id+'"/>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.box_name.3781c9f", "Box Name:")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_box_name" name="new_seedlot_box_name" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.required", "Required")) + '"></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.amount", "Amount:")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_amount" name="new_seedlot_amount" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.amount_number_of_seeds_or_weight_g_required", "Amount (number of seeds) OR Weight (g), required")) + '"></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.weight_g.c0b6b5c", "Weight (g):")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_weight" name="new_seedlot_weight" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.amount_number_of_seeds_or_weight_g_required", "Amount (number of seeds) OR Weight (g), required")) + '"></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.organization.3dd93c8", "Organization:")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_organization" name="new_seedlot_organization" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.optional", "Optional")) + '"></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.timestamp", "Timestamp:")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_timestamp" name="new_seedlot_timestamp" value="'+seedlotHTML(time)+'"></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + seedlotHTML(seedlotI18n.p("seedlots.ui.description", "Description:")) + ' </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_description" name="new_seedlot_description" placeholder="' + seedlotHTML(seedlotI18n.p("seedlots.ui.optional", "Optional")) + '"></div></div></form>';
+    html = html + '<div class="form-group"><input id="new_seedlot_breeding_program_id" type="hidden" value="'+seedlotHTML(breeding_program_id)+'"/>';
 
     jQuery('#add_cross_seedlot_div').html(html);
     jQuery('#add_cross_seedlot_dialog').modal('show');

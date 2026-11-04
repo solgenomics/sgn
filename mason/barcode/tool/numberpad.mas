@@ -8,7 +8,7 @@ use Tie::UrlEncoder;
 our %urlencode;
 </%perl>
 
-Keypad
+<% $c->i18n->p("barcode.mason.keypad", "Keypad") |h %>
 
 <table border="1">
 <tr><td><% key(".") %></td><td><% key("/") %></td><td><% key("0") %></td></tr>

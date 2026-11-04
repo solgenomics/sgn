@@ -6,9 +6,11 @@ use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use SGN::I18N ();
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $sample_tissue_types_string = $self->get_allowed_tissue_list();
@@ -44,7 +46,7 @@ sub _validate_with_plugin {
 
     $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.first_tab", "Spreadsheet must be on 1st tab in %{product} (%{extension}) file", { "product" => 'Excel', "extension" => '.xls' });
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -52,7 +54,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-        push @error_messages, "Spreadsheet is missing header or contains no rows";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.missing_rows", "Spreadsheet is missing header or contains no rows");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -122,40 +124,40 @@ sub _validate_with_plugin {
     }
 
     if (!$date_head || $date_head ne 'date' ) {
-        push @error_messages, "Cell A1: date is missing from the header";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_missing", "Cell %{cell}: %{field} is missing from the header", { "cell" => "A1", "field" => "date" });
     }
     if (!$sample_name_head || $sample_name_head ne 'sample_name') {
-        push @error_messages, "Cell B1: sample_name is missing from the header";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_missing", "Cell %{cell}: %{field} is missing from the header", { "cell" => "B1", "field" => "sample_name" });
     }
     if (!$source_observation_unit_name_head || $source_observation_unit_name_head ne 'source_observation_unit_name') {
-        push @error_messages, "Cell C1: source_observation_unit_name is missing from the header.";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_missing_period", "Cell %{cell}: %{field} is missing from the header.", { "cell" => "C1", "field" => "source_observation_unit_name" });
     }
     if (!$sample_number_head || $sample_number_head ne 'sample_number') {
-        push @error_messages, "Cell D1: sample_number is missing from the header.";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_missing_period", "Cell %{cell}: %{field} is missing from the header.", { "cell" => "D1", "field" => "sample_number" });
     }
     if (!$replicate_head || $replicate_head ne 'replicate') {
-        push @error_messages, "Cell E1: replicate is missing from the header.";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_missing_period", "Cell %{cell}: %{field} is missing from the header.", { "cell" => "E1", "field" => "replicate" });
     }
     if (!$tissue_type_head || $tissue_type_head ne 'tissue_type') {
-        push @error_messages, "Cell F1: tissue_type is missing from the header.";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_missing_period", "Cell %{cell}: %{field} is missing from the header.", { "cell" => "F1", "field" => "tissue_type" });
     }
     if (!$ncbi_taxonomy_id_head || $ncbi_taxonomy_id_head ne 'ncbi_taxonomy_id') {
-        push @error_messages, "Cell G1: ncbi_taxonomy_id is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_optional_values", "Cell %{cell}: %{field} is missing from the header. (Header is required, but values are optional)", { "cell" => "G1", "field" => "ncbi_taxonomy_id" });
     }
     if (!$person_head || $person_head ne 'person') {
-        push @error_messages, "Cell H1: person is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_optional_values", "Cell %{cell}: %{field} is missing from the header. (Header is required, but values are optional)", { "cell" => "H1", "field" => "person" });
     }
     if (!$notes_head || $notes_head ne 'notes') {
-        push @error_messages, "Cell I1: notes is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_optional_values", "Cell %{cell}: %{field} is missing from the header. (Header is required, but values are optional)", { "cell" => "I1", "field" => "notes" });
     }
     if (!$extraction_head || $extraction_head ne 'extraction') {
-        push @error_messages, "Cell J1: extraction is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_optional_values", "Cell %{cell}: %{field} is missing from the header. (Header is required, but values are optional)", { "cell" => "J1", "field" => "extraction" });
     }
     if (!$concentration_head || $concentration_head ne 'concentration') {
-        push @error_messages, "Cell K1: concentration is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_optional_values", "Cell %{cell}: %{field} is missing from the header. (Header is required, but values are optional)", { "cell" => "K1", "field" => "concentration" });
     }
     if (!$volume_head || $volume_head ne 'volume') {
-        push @error_messages, "Cell L1: volume is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.header_optional_values", "Cell %{cell}: %{field} is missing from the header. (Header is required, but values are optional)", { "cell" => "L1", "field" => "volume" });
     }
 
     my %seen_sample_ids;
@@ -220,16 +222,16 @@ sub _validate_with_plugin {
         }
 
         if (!$sample_name || $sample_name eq '' ) {
-            push @error_messages, "Cell B$row_name: sample_name missing.";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.sample_missing", "Cell %{cell}: %{field} missing.", { "cell" => "B" . $row_name, "field" => 'sample_name' });
         }
         elsif ($sample_name =~ /\s/ || $sample_name =~ /\// || $sample_name =~ /\\/ ) {
-            push @error_messages, "Cell B$row_name: sample_name name must not contain spaces or slashes.";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.sample_name_format", "Cell %{cell}: %{field} name must not contain spaces or slashes.", { "cell" => "B" . $row_name, "field" => 'sample_name' });
         }
         else {
             #file must not contain duplicate sample_id
             $sample_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             if ($seen_sample_ids{$sample_name}) {
-                push @error_messages, "Cell B$row_name: duplicate sample_id at cell B".$seen_sample_ids{$sample_name}.": $sample_name";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.sample_duplicate", "Cell %{cell}: duplicate %{field} at cell %{previous_cell}: %{sample}", { "cell" => "B" . $row_name, "field" => 'sample_id', "previous_cell" => "B" . $seen_sample_ids{$sample_name}, "sample" => "" . $sample_name });
             }
             $seen_sample_ids{$sample_name}=$row_name;
         }
@@ -242,26 +244,26 @@ sub _validate_with_plugin {
 
         #replicate must not be blank
         if (!$replicate || $replicate eq '') {
-            push @error_messages, "Cell E$row_name: replicate missing";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.required_value_missing", "Cell %{cell}: %{field} missing", { "cell" => "E" . $row_name, "field" => "replicate" });
         }
         if (!$sample_number || $sample_number eq '') {
-            push @error_messages, "Cell D$row_name: sample_number missing";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.required_value_missing", "Cell %{cell}: %{field} missing", { "cell" => "D" . $row_name, "field" => "sample_number" });
         }
         #well A01 must be unique in file
         if (exists($seen_sample_numbers{$sample_number})){
-            push @error_messages, "Cell D$row_name: sample_number must be unique in your file. You already used this sample_number in D".$seen_sample_numbers{$sample_number};
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.sample_number_duplicate", "Cell %{cell}: %{field} must be unique in your file. You already used this %{field} in %{previous_cell}", { "cell" => "D" . $row_name, "field" => 'sample_number', "previous_cell" => "D" . $seen_sample_numbers{$sample_number} });
         } else {
             $seen_sample_numbers{$sample_number} = $row_name;
         }
 
         #date must not be blank
         if ( ($date || $date ne '') && !$date =~ m/(\d{4})-(\d{2})-(\d{2})/ ) {
-            push @error_messages, "Cell A$row_name: date must be YYYY-MM-DD format";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.date_format", "Cell %{cell}: %{field} must be %{date_format} format", { "cell" => "A" . $row_name, "field" => 'date', "date_format" => 'YYYY-MM-DD' });
         }
         
         my @sample_tissue_types = split ',',$sample_tissue_types_string;   #tissue_type must not be blank and must be in the list of allowed tissue types
         if (!$tissue_type || $tissue_type eq '' || !(grep(/^$tissue_type$/, @sample_tissue_types))) {
-            push @error_messages, "Cell F$row_name: column tissue type and must be one of $sample_tissue_types_string";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.tissue_type", "Cell %{cell}: column tissue type and must be one of %{types}", { "cell" => "F" . $row_name, "types" => "" . $sample_tissue_types_string });
         }
 
     }
@@ -272,7 +274,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@sample_ids }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cell B".$seen_sample_ids{$r->uniquename}.": sample_name already exists: ".$r->uniquename;
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.sample_existing", "Cell %{cell}: %{field} already exists: %{sample}", { "cell" => "B" . $seen_sample_ids{$r->uniquename}, "field" => 'sample_name', "sample" => "" . $r->uniquename });
     }
 
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
@@ -291,7 +293,7 @@ sub _validate_with_plugin {
     }
     foreach (@seen_source_observation_unit_names){
         if (!$found_source_observation_unit_names{$_}){
-            push @error_messages, "This source observation unit name is not in the database: $_ .";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.sampling.xlsx.source_missing", "This source observation unit name is not in the database: %{unit} .", { "unit" => "$_" });
         }
     }
 

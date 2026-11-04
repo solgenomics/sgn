@@ -1,0 +1,21 @@
+# Gestión de descargas {#managing-downloads}
+
+Con “Listas” puede descargar de la base de datos archivos de fenotipos, metadatos de ensayos, pedigrí, genotipos GBS y control de calidad de genotipos GBS. Para ello, seleccione “Descargas” en el menú “Gestionar”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image255.png')
+```
+
+En cada categoría, seleccione en “Listas” una lista de accesiones para descargar sus fenotipos, pedigrí, genotipos GBS o datos de control de calidad de GBS. Para los metadatos del ensayo se necesita una lista de ensayos; para fenotipos y control de calidad de GBS también puede usar una lista de ensayos o de rasgos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_meta_data_download.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image287.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image182.png')
+```

@@ -36,6 +36,8 @@ $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
 =cut
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use utf8;
 use Spreadsheet::WriteExcel;
 use Excel::Writer::XLSX;
@@ -48,6 +50,7 @@ sub verify {
 
 sub download {
     my $self = shift;
+    my SGN::I18N $ui_download_i18n = SGN::I18N::translate($c);
 
     my $schema = $self->bcs_schema();
     my $trial_id = $self->trial_id();
@@ -58,7 +61,7 @@ sub download {
     my $design = $trial_layout->get_design();
 
     if (! $design) {
-	     return { error => "No design found for this trial. A trial design must exist in order to create this file"};
+	     return { error => SGN::I18N::translate($ui_download_i18n, "collection.server.no_design_found_for_this_trial_a_trial_design", "No design found for this trial. A trial design must exist in order to create this file")};
     }
 
     my %design = %{$trial_layout->get_design()};
@@ -433,7 +436,7 @@ sub download {
     }
     $workbook->close();
     print STDERR "DataCollector File created!\n";
-    return { message => "DataCollector File created!"};
+    return { message => SGN::I18N::translate($ui_download_i18n, "collection.server.datacollector_file_created", "DataCollector File created!")};
 }
 
 1;

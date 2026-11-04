@@ -188,7 +188,7 @@ Minimal Example:
 | 2018plot3      | my_accession2       | 102              | 1                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
 | 2018plot4      | my_accession1       | 202              | 2                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
 
-When uploading multiple trials, the requirements are the same, but with additional headers to differentiate trials in the same file: trial_name breeding_program location year transplanting_date design_type description trial_type trial_stock_type plot_width plot_length field_size planting_date harvest_date. Additionally, when uploading multiple trials, you may choose to get an email when the upload is complete (see section \@ref(email-alert-for-multiple-trial-design-upload) )
+When uploading multiple trials, the requirements are the same, but with additional headers to differentiate trials in the same file: trial_name breeding_program location year transplanting_date design_type description trial_type trial_stock_type plot_width plot_length field_size planting_date harvest_date. Additionally, when uploading multiple trials, you may choose to get an email when the upload is complete (see [Email alert for multiple trial design upload](#email-alert-for-multiple-trial-design-upload) )
 
 ##### File validation {-}
 

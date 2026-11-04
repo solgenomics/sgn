@@ -1,0 +1,44 @@
+# Gestión de la recopilación de datos ODK {#managing-odk-data-collection}
+
+Para acceder a esta página, vaya a Gestionar y luego a Recopilación de datos ODK.
+ODK permite recopilar datos a distancia en dispositivos Android e IOS. Actualmente se trabaja con dos proveedores de servicios ODK: ONA y SMAP. ONA se usa para recopilar información de cruzamientos y actividades de laboratorio posteriores a la producción de semillas. SMAP se usa para recopilar datos fenotípicos.
+
+## Información de cruzamientos de ONA {#ona-crossing-information}
+
+### Gestionar la información de cruzamientos de ONA {#managing-ona-crossing-information}
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/odk_ona_management.png')
+```
+
+Para empezar a recopilar datos con el formulario ONA ODK, primero debe preparar un plan de cruzamientos en forma de lista de cruzamientos deseados (Cross Wishlist). En esta página, pulse “Exportar lista de cruzamientos deseados a ONA”. Consulte la sección de ayuda “Crear lista de cruzamientos deseados” para más información.
+Para ver las listas de cruzamientos deseados disponibles, pulse “Exportar lista de cruzamientos deseados a ONA” y luego “Listas de cruzamientos deseados disponibles”.
+
+Cuando la lista esté disponible, puede registrar en tiempo real los cruzamientos realizados con la aplicación móvil ODK. También puede registrar las actividades de laboratorio desde la extracción de semillas hasta el endurecimiento de plántulas en el invernadero.
+
+A medida que recopila datos con la aplicación móvil ODK, las respuestas se sincronizan con la base de datos. En “Programar importación del formulario seleccionado” puede configurar una importación diaria o más frecuente. También puede iniciar una importación de ONA en cualquier momento con “Importar datos de cruzamientos del formulario seleccionado en ONA”.
+
+### Revisar el estado de las plantas {#reviewing-plant-status}
+
+La aplicación móvil ODK permite recopilar información sobre el estado de las plantas en el campo, por ejemplo, si están floreciendo. También se pueden registrar imágenes de cada planta.
+La base de datos mostrará esta información en una tabla resumen como la siguiente. Observe que las imágenes también se transfieren a la base de datos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/odk_ona_cross_status.png')
+```
+
+### Resumen gráfico de cruzamientos realizados {#graphical-summary-for-performed-crosses}
+
+Esta sección resume las actividades de cada cruzamiento. Cada fila de la tabla representa un cruzamiento realizado y muestra sus actividades, como “primera polinización” y “rescate de embriones”. El gráfico de dispersión muestra en el eje Y el número de semillas obtenidas y en el eje X la fecha de la actividad.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/odk_ona_cross_progress_graph.png')
+```
+
+### Resumen de los cruzamientos realizados {#summary-information-for-performed-crosses}
+
+Otra sección resume las actividades de toda la lista de cruzamientos deseados. La estructura en árbol muestra las actividades realizadas para cada cruzamiento y su relación con la lista.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/odk_ona_cross_progress_tree.png')
+```

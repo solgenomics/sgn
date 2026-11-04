@@ -14,6 +14,8 @@ use Scalar::Util qw/ blessed /;
 use Try::Tiny;
 
 use SGN::Exception;
+use SGN::I18N ();
+use HTML::Entities ();
 
 requires 'finalize_error', 'error', 'stash', 'view', 'res' ;
 
@@ -101,15 +103,23 @@ then throws an exception that will display a 404 error page.
 sub throw_404 {
     my ( $c, $message ) = @_;
 
+    my $has_caller_message = $message;
     $message ||= 'Resource not found.';
     $message .= '.' unless $message =~ /\.\s*$/; #< add a period at the end if the message does not have one
 
     $c->log->debug("throwing 404 error ('$message')") if $c->debug;
 
+    my SGN::I18N $i18n = $c->can('i18n') ? $c->i18n : SGN::I18N->new;
+    # Legacy callers supply HTML here. Escape translated presentation text first,
+    # then insert the unchanged caller fragment; never translate a dynamic msgid.
+    my $display_message = $has_caller_message ? $message : HTML::Entities::encode_entities($i18n->p('common.error.not_found.resource', 'Resource not found.'));
+    my $public_message = HTML::Entities::encode_entities($i18n->p('common.error.not_found.message', '%{message}  We apologize for the inconvenience.', { message => '__SGN_ERROR_CALLER_MESSAGE__' }));
+    $public_message =~ s/__SGN_ERROR_CALLER_MESSAGE__/$display_message/g;
+
     my %throw = (
-            title => '404 - not found',
+            title => HTML::Entities::encode_entities($i18n->p('common.error.not_found.title', '404 - not found')),
             http_status => 404,
-            public_message => "$message  We apologize for the inconvenience.",
+            public_message => $public_message,
            );
 
     # not sure if this logic works if we run under Ambikon
@@ -124,7 +134,7 @@ sub throw_404 {
         $throw{notify} = 0; # was 1 - but don't send these emails - too voluminous - and the above logic probably does not work correctly under Ambikon
         $throw{developer_message} = "404 error seems to be our fault, referrer is '".$c->req->referer."'";
     } else {
-        $throw{public_message}  .= ' If you reached this page from a link on another site, you may wish to inform them that the link is incorrect.';
+        $throw{public_message}  .= ' ' . HTML::Entities::encode_entities($i18n->p('common.error.not_found.external_link', 'If you reached this page from a link on another site, you may wish to inform them that the link is incorrect.'));
         $throw{is_client_error} = 1;
         $throw{is_server_error} = 0;
         $throw{notify} = 0;
@@ -173,10 +183,10 @@ sub _set_exception_response {
             # whoo, really bad.  set the body and status manually
             $self->res->status(500);
             $self->res->content_type('text/plain');
+            # A broken optional catalog must not prevent the last plain response.
+            my SGN::I18N $fatal_i18n = eval { $self->can('i18n') ? $self->i18n : undef } || SGN::I18N->new;
             $self->res->body(
-                'Our apologies, a severe error has occurred. '
-                ."Please contact <a href=\"/contact/form\">this site's maintainers</a>"
-                . ' and report this error.'
+                $fatal_i18n->p('common.error.severe', 'Our apologies, a severe error has occurred. Please contact %{contact_link} and report this error.', { contact_link => '<a href="/contact/form">' . $fatal_i18n->p('common.error.site_maintainers', "this site's maintainers") . '</a>' })
               );
         }
     };
@@ -207,7 +217,7 @@ around 'finalize_error' => sub {
 
     if( @$notify && $self->config->{production_server} ) {
         $self->stash->{email_errors} = $notify;
-        ####supress sgn-bugs emails#####
+        ####suppress sgn-bugs emails#####
         #try {
         #    $self->view('Email::ErrorEmail')->process( $self )
         #} catch {

@@ -1,6 +1,7 @@
 package CXGN::Pedigree::ParseUpload::Plugin::ValidateExistingProgeniesExcel;
 
 use Moose::Role;
+use SGN::I18N ();
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -11,6 +12,7 @@ use CXGN::Stock::RelatedStocks;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_validateexistingprogeniesexcel_i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my @error_messages;
@@ -42,7 +44,7 @@ sub _validate_with_plugin {
 
     $worksheet = ($excel_obj->worksheets())[0]; #support only one worksheet
     if (!$worksheet){
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "accession.catalog.error_1", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -51,7 +53,7 @@ sub _validate_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of progeny
-        push @error_messages, "Spreadsheet is missing header or no progeny data";
+        push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.spreadsheet_is_missing_header_or_no_progeny_data", "Spreadsheet is missing header or no progeny data"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -71,10 +73,10 @@ sub _validate_with_plugin {
     }
 
     if (!$cross_name_head || $cross_name_head ne 'cross_unique_id' ) {
-        push @error_messages, "Cell A1: cross_unique_id is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.cell_a1_cross_unique_id_is_missing_from_the_header", "Cell A1: cross_unique_id is missing from the header"));
     }
     if (!$progeny_name_head || $progeny_name_head ne 'progeny_name') {
-        push @error_messages, "Cell B1: progeny_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.cell_b1_progeny_name_is_missing_from_the_header", "Cell B1: progeny_name is missing from the header"));
     }
 
     my %seen_cross_names;
@@ -93,14 +95,14 @@ sub _validate_with_plugin {
         }
 
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell A$row_name: cross unique id missing";
+            push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.cell_a_row_name_cross_unique_id_missing", "Cell A%{row_name}: cross unique id missing", {row_name => "" . ($row_name)}));
         } else {
             $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
 
         if (!$progeny_name || $progeny_name eq '') {
-            push @error_messages, "Cell B$row_name: progeny name missing";
+            push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.cell_b_row_name_progeny_name_missing", "Cell B%{row_name}: progeny name missing", {row_name => "" . ($row_name)}));
         } else {
             $progeny_name =~ s/^\s+|\s+$//g;
             $seen_progeny_names{$progeny_name}++;
@@ -112,7 +114,7 @@ sub _validate_with_plugin {
     my @crosses_missing = @{$cross_validator->validate($schema,'crosses',\@crosses)->{'missing'}};
 
     if (scalar(@crosses_missing) > 0){
-        push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
+        push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.the_following_cross_unique_ids_are_not_in_the_database_as_uniquenames_or_synonyms_value0", "The following cross unique ids are not in the database as uniquenames or synonyms: %{value0}", {value0 => "" . (join(',',@crosses_missing))}));
     }
 
     my @progenies = keys %seen_progeny_names;
@@ -120,7 +122,7 @@ sub _validate_with_plugin {
     my @progenies_missing = @{$progeny_validator->validate($schema,'uniquenames',\@progenies)->{'missing'}};
 
     if (scalar(@progenies_missing) > 0) {
-        push @error_messages, "The following progeny names are not in the database, or are not in the database as uniquenames: ".join(',',@progenies_missing);
+        push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.the_following_progeny_names_are_not_in_the_database_or_are_not_in_the_database_as_uniquenames_v", "The following progeny names are not in the database, or are not in the database as uniquenames: %{value0}", {value0 => "" . (join(',',@progenies_missing))}));
     }
 
     if (scalar(@error_messages) > 0) {
@@ -134,7 +136,7 @@ sub _validate_with_plugin {
         my $cross_progeny_linkage = CXGN::Stock::RelatedStocks->get_cross_of_progeny($progeny_name, $schema);
         my @previous_cross = @$cross_progeny_linkage;
         if (scalar(@previous_cross) > 0) {
-            push @error_messages, "The following progeny name is already associated with a cross unique id: progeny name ".$progeny_name;
+            push @error_messages, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.the_following_progeny_name_is_already_associated_with_a_cross_unique_id_progeny_name_value0", "The following progeny name is already associated with a cross unique id: progeny name %{value0}", {value0 => "" . ($progeny_name)}));
             $errors{'existing_another_cross_linkage'} = $progeny_name;
         }
     }
@@ -173,10 +175,10 @@ sub _validate_with_plugin {
 
         foreach (@progeny_stock_ids){
             if (exists($progeny_with_female_parent_already{$_})){
-                push @existing_pedigrees, $progenies_hash{$_}." already has female parent stockID ".$progeny_with_female_parent_already{$_}->[0]." saved with cross type ".$progeny_with_female_parent_already{$_}->[1];
+                push @existing_pedigrees, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.value0_already_has_female_parent_stockid_value1_saved_with_cross_type_value2", "%{value0} already has female parent stockID %{value1} saved with cross type %{value2}", {value0 => "" . ($progenies_hash{$_}), value1 => "" . ($progeny_with_female_parent_already{$_}->[0]), value2 => "" . ($progeny_with_female_parent_already{$_}->[1])}));
             }
             if (exists($progeny_with_male_parent_already{$_})){
-                push @existing_pedigrees, $progenies_hash{$_}." already has male parent stockID ".$progeny_with_male_parent_already{$_};
+                push @existing_pedigrees, (SGN::I18N::translate($ui_validateexistingprogeniesexcel_i18n, "cross.value0_already_has_male_parent_stockid_value1", "%{value0} already has male parent stockID %{value1}", {value0 => "" . ($progenies_hash{$_}), value1 => "" . ($progeny_with_male_parent_already{$_})}));
             }
         }
 

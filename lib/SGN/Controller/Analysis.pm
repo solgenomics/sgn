@@ -2,6 +2,7 @@
 package SGN::Controller::Analysis;
 
 use Moose;
+use SGN::I18N ();
 use URI::FromHash 'uri';
 use Data::Dumper;
 
@@ -27,6 +28,7 @@ sub view_analyses :Path('/analyses') Args(0) {
 sub analysis_detail :Path('/analyses') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $analysis_id = shift;
     my $user = $c->user();
 
@@ -44,7 +46,7 @@ sub analysis_detail :Path('/analyses') Args(1) {
 
     my $a;
     eval {
-    $a = CXGN::Analysis->new({
+    $a = CXGN::Analysis->new({ i18n => $c->i18n,
         bcs_schema => $bcs_schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
@@ -55,7 +57,7 @@ sub analysis_detail :Path('/analyses') Args(1) {
 
     if ($@) {
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'The requested analysis ID does not exist in the database or has been deleted.';
+        $c->stash->{message} = SGN::I18N::translate($i18n, "analysis.interface.the_requested_analysis_id_does_not_exist_in_the_database", "The requested analysis ID does not exist in the database or has been deleted.");
         return;
     }
 
@@ -77,6 +79,7 @@ sub analysis_detail :Path('/analyses') Args(1) {
 sub analysis_model_detail :Path('/analyses_model') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $model_id = shift;
 
     my $user_id;
@@ -91,7 +94,7 @@ sub analysis_model_detail :Path('/analyses_model') Args(1) {
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     print STDERR "Viewing analysis model with id $model_id\n";
 
-    my $m = CXGN::AnalysisModel::GetModel->new({
+    my $m = CXGN::AnalysisModel::GetModel->new({ i18n => $c->i18n,
         bcs_schema=>$bcs_schema,
         metadata_schema=>$c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
         phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
@@ -102,7 +105,7 @@ sub analysis_model_detail :Path('/analyses_model') Args(1) {
 
     if (!$saved_model_object->{model_id}) {
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'The requested model ID does not exist in the database.';
+        $c->stash->{message} = SGN::I18N::translate($i18n, "analysis.interface.the_requested_model_id_does_not_exist_in_the_database", "The requested model ID does not exist in the database.");
         return;
     }
 

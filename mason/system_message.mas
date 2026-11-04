@@ -5,7 +5,7 @@ use Path::Class;
 % if( $message && $message =~ /\S/ ) {
 <!-- <div class="devbar"> -->
 <div class="devbar_tmp">
-   <span style="color: #922; font-weight: bold">Notice: </span>
+   <span style="color: #922; font-weight: bold"><% $c->i18n->p('global.system_message.notice', 'Notice:') |h %> </span>
    <!-- system message active -->
    <% $message %>
 </div>

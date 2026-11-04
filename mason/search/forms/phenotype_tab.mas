@@ -12,7 +12,7 @@ my $form = $q->to_html;
 <& /util/import_javascript.mas, classes=>"CXGN.Page.FormattingHelpers" &> 
 
 <table class="search_form_title" summary=""><tr><td>
-    <h4><span class="search_form_title">Phenotype search</span></h4>
+    <h4><span class="search_form_title"><% $c->i18n->p("phenotype.root.phenotype_search", "Phenotype search") |h %></span></h4>
   </td>
   </tr></table>
 

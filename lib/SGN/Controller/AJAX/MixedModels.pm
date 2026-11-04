@@ -2,6 +2,7 @@
 package SGN::Controller::AJAX::MixedModels;
 
 use Moose;
+use SGN::I18N ();
 
 use Data::Dumper;
 use File::Slurp;
@@ -45,7 +46,7 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 
     my $engine = $params->{engine};
 
-    my $mm = CXGN::MixedModels->new();
+    my $mm = CXGN::MixedModels->new(i18n => $c->i18n);
     if ($dependent_variables) {
 	$mm->dependent_variables($dependent_variables);
     }
@@ -92,11 +93,12 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $dataset_id = $c->req->param('dataset_id');
     my $exclude_outliers = $c->req->param('dataset_trait_outliers');
 
     if (! $c->user()) {
-        $c->stash->{rest} = {error=>'You must be logged in first!'};
+        $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "program.identifier.login", "You must be logged in first!")};
         $c->detach;
     }
 
@@ -156,13 +158,14 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
      };
 
     if (!@factor_select) {
-	$c->stash->{rest}->{error} = "There are no factors with multiple levels in this dataset.";
+	$c->stash->{rest}->{error} = SGN::I18N::translate($i18n, "analysis.interface.there_are_no_factors_with_multiple_levels_in_this_dataset", "There are no factors with multiple levels in this dataset.");
     }
 }
 
 sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $params = $c->req()->params();
 
@@ -200,7 +203,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 
     print STDERR "ENGINE = $engine\n";
 
-    my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
+    my $mm = CXGN::MixedModels->new( { i18n => $c->i18n, tempfile => $c->config->{basepath}."/".$tempfile });
 
     $mm->dependent_variables($dependent_variables);
     $mm->random_factors($random_factors);
@@ -259,7 +262,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     }
     else {
 	if (! $error) {
-	    $error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
+	    $error = SGN::I18N::translate($i18n, "analysis.interface.the_analysis_could_not_be_completed_the_factors_may_not", "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.");
 	}
 	$c->stash->{rest} = { error => $error };
 	return;
@@ -282,7 +285,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     }
 
     else {
-	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
+	$error = SGN::I18N::translate($i18n, "analysis.interface.the_analysis_could_not_be_completed_the_factors_may_not", "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.");
         $c->stash->{rest} = { error => $error };
         return;
     }
@@ -365,6 +368,7 @@ sub result_file_to_hash {
 sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
@@ -375,7 +379,7 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
 
     my $F;
     if (! open($F, "<", $temppath)) {
-	$c->stash->{rest} = { error => "Can't find data." };
+	$c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.can_t_find_data", "Can't find data.") };
 	return;
     }
 

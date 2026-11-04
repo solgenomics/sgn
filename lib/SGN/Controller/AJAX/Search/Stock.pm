@@ -7,6 +7,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 
 use Data::Dumper;
 use JSON;
+use HTML::Entities ();
 use CXGN::Stock::Search;
 
 __PACKAGE__->config(
@@ -100,7 +101,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     foreach (@$result){
         if (!$params->{minimal_info}){
             my $stock_id  = $_->{stock_id};
-            my $uniquename = $_->{uniquename};
+            my $uniquename = HTML::Entities::encode_entities($_->{uniquename});
             my $type      = $_->{stock_type};
             my $organism  = $_->{species} // '';
             my $synonym_string = ($_->{synonyms} && @{ $_->{synonyms} || [] })

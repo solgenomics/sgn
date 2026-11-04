@@ -63,7 +63,7 @@ sub verify_accession_list_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this info!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('accessions.server.verify_login', 'You must be logged in to upload this info!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -72,7 +72,7 @@ sub verify_accession_list_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this info!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('accessions.server.verify_login', 'You must be logged in to upload this info!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -121,11 +121,11 @@ sub do_fuzzy_search {
     my $absent_organisms;
 
     if (!$c->user()) {
-	$c->stash->{rest} = {error => "You need to be logged in to add accessions." };
+	$c->stash->{rest} = {error => $c->i18n->p('accessions.server.add_login', 'You need to be logged in to add accessions.') };
 	return;
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to add accessions." };
+	$c->stash->{rest} = {error =>  $c->i18n->p('accessions.server.add_privileges', 'You have insufficient privileges to add accessions.') };
 	return;
     }
     #remove all trailing and ending spaces from accessions and organisms
@@ -217,7 +217,7 @@ sub verify_accessions_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('accessions.server.file_login', 'You must be logged in to upload this seedlot info!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -226,7 +226,7 @@ sub verify_accessions_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('accessions.server.file_login', 'You must be logged in to upload this seedlot info!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -248,7 +248,7 @@ sub verify_accessions_file_POST : Args(0) {
 
     # These roles are required by CXGN::UploadFile
     if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
-        $c->stash->{rest} = {error=>'Only a curator, submitter or sequencer can upload a file'};
+        $c->stash->{rest} = {error=>$c->i18n->p('accessions.server.file_privileges', 'Only a curator, submitter or sequencer can upload a file')};
         $c->detach();
     }
 
@@ -271,13 +271,13 @@ sub verify_accessions_file_POST : Args(0) {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p('accessions.server.archive_failed', 'Could not save file %{filename} in archive', {filename => $upload_original_name}),};
         $c->detach();
     }
     unlink $upload_tempfile;
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
-    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search, append_synonyms=>$append_synonyms);
+    my $parser = CXGN::Stock::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search, append_synonyms=>$append_synonyms);
     $parser->load_plugin('AccessionsGeneric');
     my $parsed_data = $parser->parse();
 
@@ -285,7 +285,7 @@ sub verify_accessions_file_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p('accessions.server.parse_errors_missing', 'Could not get parsing errors')};
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
@@ -408,14 +408,14 @@ sub add_accession_list_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
 
     if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
+        $c->stash->{rest} = {error => $c->i18n->p('accessions.server.submit_login', 'You need to be logged in to submit accessions.') };
         return;
     }
 
     my $user_name = $c->user()->get_object()->get_username();
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('accessions.server.submit_privileges', 'You have insufficient privileges to submit accessions.') };
         return;
     }
 
@@ -508,11 +508,11 @@ sub add_accession_list_POST : Args(0) {
             # print STDERR "send email: $email_address\n";
             print STDERR "transaction succeeded! committing accessions\n\n";
 
-            $email_subject = "Accessions upload status";
-            $email_body = "Dear $user_name,\n\n";
-            $email_body.= "Congratulations, all your accessions have been successfully uploaded to the database.\n\n";
-            $email_body.= "Upload details:\n";
-            $email_body.= "Total accessions added: " . scalar(@added_stocks) . "\n\n";
+            $email_subject = $c->i18n->p("accession.receipt.receipt_subject", "Accessions upload status");
+            $email_body = $c->i18n->p("accession.receipt.greeting", "Dear %{user_name},\n\n", {user_name => "" . ($user_name)});
+            $email_body.= $c->i18n->p("accession.receipt.success", "Congratulations, all your accessions have been successfully uploaded to the database.\n\n");
+            $email_body.= $c->i18n->p("accession.receipt.details", "Upload details:\n");
+            $email_body.= $c->i18n->p("accession.receipt.count_prefix", "Total accessions added: ") . scalar(@added_stocks) . "\n\n";
             $email_body.= "Accession ID\tAccession Name\tAccession URLs\n";
 
             $base_url = "$main_production_site_url/stock/";
@@ -529,10 +529,10 @@ sub add_accession_list_POST : Args(0) {
 
             #uploading more than 1000 accessions
             if (scalar(@sort_added_fullinfo_stocks) > 1000) {
-                $email_body .= "... and more accessions are uploaded.\n";
+                $email_body .= $c->i18n->p("accession.receipt.more", "... and more accessions are uploaded.\n");
             }
 
-            $email_body.= "\nThank you.\nHave a nice day\n";
+            $email_body.= $c->i18n->p("accession.receipt.thanks_success", "\nThank you.\nHave a nice day\n");
 
             CXGN::Contact::send_email($email_subject, $email_body, $email_address);
         }
@@ -545,20 +545,22 @@ sub add_accession_list_POST : Args(0) {
     } catch {
         $transaction_error =  $_;
         my $error_message = "An error occurred while uploading accessions: $_\n";
+        my $ui_receipt_error_details = "$_";
         print STDERR $error_message;
 
         if ($email_option_enabled == 1 && $email_address) {
-            $email_subject = 'Error in Accession Upload';
-            $email_body    = "Dear $user_name,\n\n$error_message\n";
-            $email_body   .= "Please correct these errors and try uploading again.\n\n";
-            $email_body   .= "Thank you\nHave a nice day\n";
+            $email_subject = $c->i18n->p("accession.receipt.error_subject", "Error in Accession Upload");
+            $email_body    = $c->i18n->p("accession.receipt.greeting", "Dear %{user_name},\n\n", {user_name => "" . ($user_name)}) . $c->i18n->p("accessions.server.upload_failed", "An error occurred while uploading accessions: %{detail}\n", {detail => "" . ($ui_receipt_error_details)}) . "\n";
+            $email_body   .= $c->i18n->p("accession.receipt.retry", "Please correct these errors and try uploading again.\n\n");
+            $email_body   .= $c->i18n->p("accession.receipt.thanks_error", "Thank you\nHave a nice day\n");
 
             CXGN::Contact::send_email($email_subject, $email_body, $email_address);
         }
-        $c->stash->{rest} = {error => $error_message};
+        $c->stash->{rest} = {error => $c->i18n->p('accessions.server.upload_failed', 'An error occurred while uploading accessions: %{detail}
+', {detail => "$_"})};
     };
     if ($transaction_error) {
-        $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error" };
+        $c->stash->{rest} = {error =>  $c->i18n->p('accessions.server.transaction_failed', 'Transaction error storing stocks: %{detail}', {detail => "$transaction_error"}) };
         print STDERR "Transaction error storing stocks: $transaction_error\n";
         return;
     }

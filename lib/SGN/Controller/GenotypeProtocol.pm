@@ -1,6 +1,7 @@
 package SGN::Controller::GenotypeProtocol;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
@@ -27,6 +28,7 @@ sub _build_schema {
 sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $protocol_id = shift;
     my $schema = $self->schema;
 
@@ -45,7 +47,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     my $display_observation_unit_type;
     my $observation_unit_type = $protocol->sample_observation_unit_type_name;
     if ($observation_unit_type eq 'tissue_sample_or_accession') {
-        $display_observation_unit_type = 'tissue sample or accession';
+        $display_observation_unit_type = SGN::I18N::translate($i18n, "genotype.protocol.observation_unit", "tissue sample or accession");
     } else {
         $display_observation_unit_type = $observation_unit_type;
     }
@@ -56,39 +58,39 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     if (defined $marker_info_keys) {
         foreach my $info_key (@$marker_info_keys) {
             if ($info_key eq 'name') {
-                push @marker_info_headers, 'Marker Name';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.marker_name", "Marker Name");
             } elsif (($info_key eq 'intertek_name') || ($info_key eq 'facility_name')) {
-                push @marker_info_headers, 'Facility Marker Name';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.facility_marker", "Facility Marker Name");
             } elsif ($info_key eq 'chrom') {
-                push @marker_info_headers, 'Chromosome';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.chromosome", "Chromosome");
             } elsif ($info_key eq 'pos') {
-                push @marker_info_headers, 'Position';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.position", "Position");
             } elsif ($info_key eq 'alt') {
                 if ($assay_type eq 'KASP') {
-                    push @marker_info_headers, 'Y-allele';
+                    push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.y_allele", "Y-allele");
                 } else {
-                    push @marker_info_headers, 'Alternate';
+                    push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.alternate", "Alternate");
                 }
             } elsif ($info_key eq 'ref') {
                 if ($assay_type eq 'KASP') {
-                    push @marker_info_headers, 'X-allele';
+                    push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.x_allele", "X-allele");
                 } else {
-                    push @marker_info_headers, 'Reference';
+                    push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.reference", "Reference");
                 }
             } elsif ($info_key eq 'qual') {
-                push @marker_info_headers, 'Quality';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.quality", "Quality");
             } elsif ($info_key eq 'filter') {
-                push @marker_info_headers, 'Filter';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.filter", "Filter");
             } elsif ($info_key eq 'info') {
-                push @marker_info_headers, 'Info';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.info", "Info");
             } elsif ($info_key eq 'format') {
-                push @marker_info_headers, 'Format';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.format", "Format");
             } elsif ($info_key eq 'sequence') {
-                push @marker_info_headers, 'Sequence';
+                push @marker_info_headers, SGN::I18N::translate($i18n, "genotype.protocol.header.sequence", "Sequence");
             }
         }
     } else {
-        @marker_info_headers = ('Marker Name','Chromosome','Position','Alternate','Reference','Quality','Filter','Info','Format');
+        @marker_info_headers = (SGN::I18N::translate($i18n, "genotype.protocol.header.marker_name", "Marker Name"),SGN::I18N::translate($i18n, "genotype.protocol.header.chromosome", "Chromosome"),SGN::I18N::translate($i18n, "genotype.protocol.header.position", "Position"),SGN::I18N::translate($i18n, "genotype.protocol.header.alternate", "Alternate"),SGN::I18N::translate($i18n, "genotype.protocol.header.reference", "Reference"),SGN::I18N::translate($i18n, "genotype.protocol.header.quality", "Quality"),SGN::I18N::translate($i18n, "genotype.protocol.header.filter", "Filter"),SGN::I18N::translate($i18n, "genotype.protocol.header.info", "Info"),SGN::I18N::translate($i18n, "genotype.protocol.header.format", "Format"));
     }
 
     my $protocol_vcf_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();

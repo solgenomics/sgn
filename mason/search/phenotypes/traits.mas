@@ -6,8 +6,8 @@
 </%args>
 
 
-<&| /page/info_section.mas,
-    title       => 'Search and browse tree of traits',
+<&| /page/info_section.mas, anchor_title => 'Search and browse tree of traits',
+    title       => HTML::Entities::encode_entities($c->i18n->p("phenotype.root.search_and_browse_tree_of_traits", 'Search and browse tree of traits')),
     collapsible=>1, collapsed=>0
 &>
   <&| /page/explanation.mas &>
@@ -20,7 +20,7 @@
 <& /ontology/browser.mas,
    root_nodes => $db_name,
    db_name    => $db_name,
-   title      => "Search and browse tree of traits",
+   title      => $c->i18n->p("phenotype.root.search_and_browse_tree_of_traits", "Search and browse tree of traits"),
    expand => 1,
  &>
 
@@ -28,4 +28,6 @@
 
 </&>
 
-
+<%once>
+use HTML::Entities ();
+</%once>

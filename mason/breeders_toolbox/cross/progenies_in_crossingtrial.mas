@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 </%args>
@@ -8,26 +12,26 @@ $trial_id
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Upload Progenies or Family Names", is_subsection => 1, collapsible=>1, collapsed=>1, &>
-                <&| /page/info_section.mas, title=>"Upload progeny names that are NOT in database ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_progenies_new_accessions_link">Upload</button>'&>
+            <&| /page/info_section.mas, anchor_title => "Upload Progenies or Family Names", title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.upload_progenies_or_family_names", "Upload Progenies or Family Names")), is_subsection => 1, collapsible=>1, collapsed=>1, &>
+                <&| /page/info_section.mas, anchor_title => "Upload progeny names that are NOT in database ", title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.upload_progeny_names_that_are_not_in_database", "Upload progeny names that are NOT in database ")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>("<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" name=\"upload_progenies_new_accessions_link\">" . HTML::Entities::encode_entities($c->i18n->p("global.dataset_publish.action.upload", "Upload")) . "</button>")&>
                 </&>
-                <&| /page/info_section.mas, title=>"Upload progeny names that already EXIST in database", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_progenies_existing_accessions_link">Upload</button>'&>
+                <&| /page/info_section.mas, anchor_title => "Upload progeny names that already EXIST in database", title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.upload_progeny_names_that_already_exist_in_database", "Upload progeny names that already EXIST in database")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>("<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" name=\"upload_progenies_existing_accessions_link\">" . HTML::Entities::encode_entities($c->i18n->p("global.dataset_publish.action.upload", "Upload")) . "</button>")&>
                 </&>
-                <&| /page/info_section.mas, title=>"Upload family names ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_family_names_link">Upload</button>'&>
+                <&| /page/info_section.mas, anchor_title => "Upload family names ", title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.upload_family_names", "Upload family names ")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>("<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" name=\"upload_family_names_link\">" . HTML::Entities::encode_entities($c->i18n->p("global.dataset_publish.action.upload", "Upload")) . "</button>")&>
                 </&>
             </&><!-- closes upload progenies and family names section -->
         </div>
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Progeny and Family Name Info", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+            <&| /page/info_section.mas, anchor_title => "Progeny and Family Name Info", title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.progeny_and_family_name_info", "Progeny and Family Name Info")), is_subsection => 1, collapsible=>1, collapsed=>0 &>
                 <table class="table table-hover table-bordered" id="progenies_in_crossingtrial_table">
                     <thead>
                         <tr>
-                            <th>Cross Unique ID</th>
-                            <th>Cross Combination</th>
-                            <th>Number of Progenies</th>
-                            <th>Family Name</th>
+                            <th><% $c->i18n->p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") |h %></th>
+                            <th><% $c->i18n->p("cross.ui.cross_combination", "Cross Combination") |h %></th>
+                            <th><% $c->i18n->p("accession.usage.header.progenies", "Number of Progenies") |h %></th>
+                            <th><% $c->i18n->p("accession.forms.family_name", "Family Name") |h %></th>
                         </tr>
                     </thead>
                 </table>

@@ -42,15 +42,15 @@ $project_id
             jQuery('#audit_results').DataTable({
               data: json_object,
               columns: [
-                  { title: 'Timestamp' },
-                    { title: 'Operation' },
-                    { title: 'Username' },
-                    { title: 'Logged in User' },
-                    { title: 'Before' },
-                    { title: 'After' },
-                    { title: 'Transaction Code'},
-                    { title: 'Primary Key'},
-                    { title: 'Is Undo'},
+                  { title: SGN.t('trial.card.audit.timestamp', 'Timestamp') },
+                    { title: SGN.t('trial.card.audit.operation', 'Operation') },
+                    { title: SGN.t('trial.card.audit.username', 'Username') },
+                    { title: SGN.t('trial.card.audit.logged_in_user', 'Logged in User') },
+                    { title: SGN.t('trial.card.audit.before', 'Before') },
+                    { title: SGN.t('trial.card.audit.after', 'After') },
+                    { title: SGN.t('trial.card.audit.transaction_code', 'Transaction Code')},
+                    { title: SGN.t('trial.card.audit.primary_key', 'Primary Key')},
+                    { title: SGN.t('trial.card.audit.is_undo', 'Is Undo')},
               ],
               "rowCallback" : function (row, data, index){
                     if(data[1] == "INSERT"){

@@ -41,7 +41,7 @@ sub get_breeding_program : Chained('/') PathPart('breeders/program') CaptureArgs
     };
     if ($@) {
 	$c->stash->{template} = 'system_message.txt';
-	$c->stash->{message} = "The requested breeding program ($program_id) does not exist";
+	$c->stash->{message} = $c->i18n->p("program.server.program_missing", "The requested breeding program (%{id}) does not exist", {id => "$program_id"});
 	return;
     }
     $c->stash->{user} = $c->user();
@@ -59,7 +59,7 @@ sub program_info : Chained('get_breeding_program') PathPart('') Args(0) {
     my $program = $c->stash->{program};
 
     if (!$program) {
-	$c->stash->{message} = "The requested breeding program does not exist or has been deleted.";
+	$c->stash->{message} = $c->i18n->p("program.server.program_deleted", "The requested breeding program does not exist or has been deleted.");
 	$c->stash->{template} = 'generic_message.mas';
 	return;
     }
@@ -77,7 +77,7 @@ sub profile_detail : Path('/profile') Args(1) {
     my $profile_rs = $schema->resultset("Project::Projectprop")->search({ projectprop_id => $profile_id, type_id => $profile_json_type_id });
 
     if (!$profile_rs) {
-        $c->stash->{message} = 'The requested profile does not exist.';
+        $c->stash->{message} = $c->i18n->p("program.server.profile_missing", "The requested profile does not exist.");
     }
 
     my $profile_row = $profile_rs->next();

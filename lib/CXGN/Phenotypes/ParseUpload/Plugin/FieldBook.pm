@@ -17,6 +17,8 @@ package CXGN::Phenotypes::ParseUpload::Plugin::FieldBook;
 #)
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use File::Slurp;
 use Text::CSV;
 use Data::Dumper;
@@ -28,6 +30,7 @@ sub name {
 
 sub validate {
     my $self = shift;
+    my SGN::I18N $ui_validate_i18n = SGN::I18N::translate($c);
     my $filename = shift;
     my $timestamp_included = shift;
     my $data_level = shift;
@@ -82,13 +85,15 @@ sub validate {
     }
 
     if (!@file_lines) {
-        $parse_result{'error'} = "Could not read file.";
+        $parse_result{'error_detail'} = { code => 'unreadable', variables => {} };
+        $parse_result{'error'} = SGN::I18N::translate($ui_validate_i18n, "phenotype_upload.fieldbook_error.unreadable", "Could not read file.");
         print STDERR "Could not read file.\n";
         return \%parse_result;
     }
     ## Check that the file has at least 2 lines;
     if (scalar(@file_lines < 2)) {
-        $parse_result{'error'} = "File has less than 2 lines.";
+        $parse_result{'error_detail'} = { code => 'too_short', variables => {} };
+        $parse_result{'error'} = SGN::I18N::translate($ui_validate_i18n, "phenotype_upload.fieldbook_error.too_short", "File has less than 2 lines.");
         print STDERR "File has less than 2 lines.\n";
         return \%parse_result;
     }
@@ -98,7 +103,8 @@ sub validate {
     my @header_row = $csv->fields();
 
     if (!$header_row[1]) {
-        $parse_result{'error'} = "File has no header row.";
+        $parse_result{'error_detail'} = { code => 'no_header', variables => {} };
+        $parse_result{'error'} = SGN::I18N::translate($ui_validate_i18n, "phenotype_upload.fieldbook_error.no_header", "File has no header row.");
         print STDERR "File has no header row.\n";
         return \%parse_result;
     }
@@ -139,7 +145,8 @@ sub validate {
     }
 
     if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
-        $parse_result{'error'} = "trait or value column not found. Make sure to use the database Fieldbook format.";
+        $parse_result{'error_detail'} = { code => 'missing_trait_value', variables => {} };
+        $parse_result{'error'} = SGN::I18N::translate($ui_validate_i18n, "phenotype_upload.fieldbook_error.missing_trait_value", "trait or value column not found. Make sure to use the database Fieldbook format.");
         print STDERR "trait or value column not found. Make sure to use the database Fieldbook format.";
         return \%parse_result;
     }
@@ -149,6 +156,7 @@ sub validate {
 
 sub parse {
     my $self = shift;
+    my SGN::I18N $ui_parse_i18n = SGN::I18N::translate($c);
     my $filename = shift;
     my $timestamp_included = shift;
     my $data_level = shift;
@@ -250,7 +258,8 @@ sub parse {
     }
     
     if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
-        $parse_result{'error'} = "trait or value column not found. Make sure to use the database Fieldbook format.";
+        $parse_result{'error_detail'} = { code => 'missing_trait_value', variables => {} };
+        $parse_result{'error'} = SGN::I18N::translate($ui_parse_i18n, "phenotype_upload.fieldbook_error.missing_trait_value", "trait or value column not found. Make sure to use the database Fieldbook format.");
         return \%parse_result;
     }
 
@@ -269,11 +278,13 @@ sub parse {
         my $collector = defined $header_column_info{'person'} ? $row[$header_column_info{'person'}] : '';
 
         if (!defined($unit_value) || !defined($trait) || !defined($value) || !defined($timestamp)) {
-            $parse_result{'error'} = "Error parsing line $line_number: unit, trait, or value is undefined.";
+            $parse_result{'error_detail'} = { code => 'undefined_fields', variables => { line => $line_number } };
+            $parse_result{'error'} = SGN::I18N::translate($ui_parse_i18n, "collection.server.error_parsing_line_line_number_unit_trait_or_value", "Error parsing line %{line_number}: unit, trait, or value is undefined.", {line_number => ("" . ($line_number))});
             return \%parse_result;
         }
         if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-            $parse_result{'error'} = "Error parsing line $line_number: timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+            $parse_result{'error_detail'} = { code => 'timestamp_format', variables => { line => $line_number } };
+            $parse_result{'error'} = SGN::I18N::translate($ui_parse_i18n, "collection.server.error_parsing_line_line_number_timestamp_needs_to_be", "Error parsing line %{line_number}: timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000", {line_number => ("" . ($line_number))});
             print STDERR "line $line_number has timestamp: $timestamp\n";
             return \%parse_result;
         }
@@ -284,7 +295,8 @@ sub parse {
             if ($row) {
                 $unit_value = $row->uniquename();
             } else {
-                $parse_result{'error'} = "Error: stock id $unit_value does not exist in the database."
+                $parse_result{'error_detail'} = { code => 'missing_stock', variables => { stock_id => $unit_value } };
+                $parse_result{'error'} = SGN::I18N::translate($ui_parse_i18n, "collection.server.error_stock_id_unit_value_does_not_exist_in", "Error: stock id %{unit_value} does not exist in the database.", {unit_value => ("" . ($unit_value))})
             }
         }
 

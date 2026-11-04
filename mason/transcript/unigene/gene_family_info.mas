@@ -47,6 +47,7 @@ $unigene
 
 use strict;
 use warnings;
+use HTML::Entities ();
 
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
@@ -80,19 +81,19 @@ if (defined $id) {
 	    my $family_link = '<a href="family.pl?family_id='.$fam_id.'">'.$fam_id."</a>";
 	    push @family_info, [$ivalue, $family_link, $annotation, $count];
 	}
-	$gene_family_content = columnar_table_html( headings => ['Family Build <br>(I value*)','Family ID', 'Annotation**','# Members'],
+	$gene_family_content = columnar_table_html( headings => [HTML::Entities::encode_entities($c->i18n->p("cross.gene_family.build_header", "Family Build ")) . '<br>(I value*)',HTML::Entities::encode_entities($c->i18n->p("cross.gene_family.id", "Family ID")), HTML::Entities::encode_entities($c->i18n->p("cross.gene_family.annotation_header", "Annotation**")),HTML::Entities::encode_entities($c->i18n->p("global.ug-ad2.members_heading", "# Members"))],
 						    data     => \@family_info,
 						    __align => ['c', 'c', 'l', 'c'],
 	                                           );
 
-	$gene_family_content .= '<br> *i value: controls inflation, a process to dissipate family clusters. ';
-	$gene_family_content .= 'At high i value, genes tend to be separated into different families.<br>';
-	$gene_family_content .= '**Annotation: the most common InterPro annotation(s) of the Arabidopsis members in the family.<br>';
+	$gene_family_content .= "<br> " . HTML::Entities::encode_entities($c->i18n->p("cross.gene_family.inflation", "*i value: controls inflation, a process to dissipate family clusters.")) . " ";
+	$gene_family_content .= "" . HTML::Entities::encode_entities($c->i18n->p("cross.gene_family.high_inflation", "At high i value, genes tend to be separated into different families.")) . "<br>";
+	$gene_family_content .= "" . HTML::Entities::encode_entities($c->i18n->p("cross.gene_family.annotation_help", "**Annotation: the most common InterPro annotation(s) of the Arabidopsis members in the family.")) . "<br>";
 
     }
 
     my $gf_count = scalar(@families);
-    $gene_family_html_content = info_section_html( title        => "Gene Family (" . $gf_count . ")", 
+    $gene_family_html_content = info_section_html( title        => HTML::Entities::encode_entities($c->i18n->p("cross.gene_family.section", "Gene Family (%{count})", {count => "" . ($gf_count)})), anchor_title => "Gene Family (" . $gf_count . ")", empty_message => HTML::Entities::encode_entities($c->i18n->p("global.dataset_cxgn_dataset.none", "None")),
 						   contents     => $gene_family_content,
 						   collapsible  => 1,
 						   collapsed    => 1, );

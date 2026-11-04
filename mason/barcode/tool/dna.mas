@@ -1,8 +1,8 @@
 
-<h1>Cassavabase DNA extraction tool</h1>
+<h1><% $c->i18n->p("barcode.mason.cassavabase_dna_extraction_tool", "Cassavabase DNA extraction tool") |h %></h1>
 
 <table>
-<tr><th>ROW</th><th>COLUMN</th></tr>
+<tr><th><% $c->i18n->p("barcode.mason.row", "ROW") |h %></th><th><% $c->i18n->p("barcode.mason.column", "COLUMN") |h %></th></tr>
 <tr><td>
 % foreach my $row ('A'..'H') { 
 <& /barcode/tool/generate.mas, code=>$row &>

@@ -64,7 +64,7 @@
       return (!!o.value || o.value === 0 || o.value === -0.0) && (!isNaN(o.value));
     });
     if (observations.length<3){
-      histLoc.html("<center><h4>This trait is not numeric, or there are fewer than 3 values. Unable to draw a histogram.</h4></center>");
+      histLoc.html("<center><h4>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.histogram.not_numeric", "This trait is not numeric, or there are fewer than 3 values. Unable to draw a histogram.")).html() : "This trait is not numeric, or there are fewer than 3 values. Unable to draw a histogram.") + "</h4></center>");
       return;
     } else {
       histLoc.selectAll(function(s){return this.children;})
@@ -75,7 +75,7 @@
     });
 
     if (allValues.every( (val, i, arr) => val === arr[0] )){
-      histLoc.html("<center><h4>All values are the same ("+allValues[0]+") for this trait. Unable to draw a histogram.</h4></center>");
+      histLoc.html("<center><h4>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.histogram.same_values_prefix", "All values are the same (")).html() : "All values are the same (")+allValues[0]+(typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.histogram.same_values_suffix", ") for this trait. Unable to draw a histogram.")).html() : ") for this trait. Unable to draw a histogram.") + "</h4></center>");
       return;
     }
 

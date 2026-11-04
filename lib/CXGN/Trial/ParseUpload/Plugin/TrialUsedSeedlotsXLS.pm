@@ -1,6 +1,7 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialUsedSeedlotsXLS;
 
 use Moose::Role;
+use SGN::I18N ();
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -15,6 +16,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_i18n = SGN::I18N::translate($self);
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -46,7 +48,7 @@ sub _validate_with_plugin {
 
     my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot_maintenance_upload.parse.first_sheet", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -54,7 +56,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-        push @error_messages, "Spreadsheet is missing header or contains no rows";
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot_maintenance_upload.parse.header_or_rows", "Spreadsheet is missing header or contains no rows"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -89,19 +91,19 @@ sub _validate_with_plugin {
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
-        push @error_messages, "Cell A1: seedlot_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_a1_seedlot_name_is_missing_from_the", "Cell A1: seedlot_name is missing from the header"));
     }
     if (!$plot_name_head || $plot_name_head ne 'plot_name') {
-        push @error_messages, "Cell B1: plot_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_b1_plot_name_is_missing_from_the", "Cell B1: plot_name is missing from the header"));
     }
     if (!$amount_head || $amount_head ne 'num_seed_per_plot') {
-        push @error_messages, "Cell C1: num_seed_per_plot is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_c1_num_seed_per_plot_is_missing", "Cell C1: num_seed_per_plot is missing from the header"));
     }
     if (!$weight_head || $weight_head ne 'weight_gram_seed_per_plot') {
-        push @error_messages, "Cell D1: weight_gram_seed_per_plot is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_d1_weight_gram_seed_per_plot_is", "Cell D1: weight_gram_seed_per_plot is missing from the header"));
     }
     if (!$description_head || $description_head ne 'description') {
-        push @error_messages, "Cell E1: description is missing from the header (header must be present even if value is optional)";
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_e1_description_is_missing_from_the_header", "Cell E1: description is missing from the header (header must be present even if value is optional)"));
     }
 
     my %seen_seedlot_names;
@@ -134,27 +136,27 @@ sub _validate_with_plugin {
         }
 
         if (!$seedlot_name || $seedlot_name eq '' ) {
-            push @error_messages, "Cell A$row_name: seedlot_name missing.";
+            push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_a_row_name_seedlot_name_missing", "Cell A%{row_name}: seedlot_name missing.", {row_name => "" . ($row_name)}));
         }
         elsif ($seedlot_name =~ /\s/ || $seedlot_name =~ /\// || $seedlot_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_name: seedlot_name must not contain spaces or slashes.";
+            push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_a_row_name_seedlot_name_must_not", "Cell A%{row_name}: seedlot_name must not contain spaces or slashes.", {row_name => "" . ($row_name)}));
         }
         else {
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
         if (!$plot_name || $plot_name eq '') {
-            push @error_messages, "Cell B$row_name: plot_name missing";
+            push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_b_row_name_plot_name_missing", "Cell B%{row_name}: plot_name missing", {row_name => "" . ($row_name)}));
         } else {
             #file must not contain duplicate plot names
             if ($seen_plot_names{$plot_name}) {
-                push @error_messages, "Cell B$row_name: duplicate plot_name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
+                push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_b_row_name_duplicate_plot_name_at", "Cell B%{row_name}: duplicate plot_name at cell A%{previous_row}: %{plot_name}", {row_name => "" . ($row_name), previous_row => "" . ($seen_plot_names{$plot_name}), plot_name => "" . ($plot_name)}));
             }
             $seen_plot_names{$plot_name}++;
         }
 
         if ($amount eq 'NA' && $weight eq 'NA') {
-            push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
+            push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.on_row_row_name_you_must_provide_either", "On row:%{row_name} you must provide either a weight in grams or a seed count amount.", {row_name => "" . ($row_name)}));
         }
 
         push @pairs, [$seedlot_name, $plot_name];
@@ -165,7 +167,7 @@ sub _validate_with_plugin {
     my @plots_missing = @{$plots_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
     if (scalar(@plots_missing) > 0) {
-        push @error_messages, "The following plot_name are not in the database: ".join(',',@plots_missing);
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.the_following_plot_name_are_not_in_the", "The following plot_name are not in the database: %{names}", {names => "" . (join(',',@plots_missing))}));
         $errors{'missing_plots'} = \@plots_missing;
     }
 
@@ -174,7 +176,7 @@ sub _validate_with_plugin {
     my @seedlots_missing = @{$seedlots_validator->validate($schema,'seedlots',\@seedlots)->{'missing'}};
 
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlot_name are not in the database: ".join(',',@seedlots_missing);
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.the_following_seedlot_name_are_not_in_the", "The following seedlot_name are not in the database: %{names}", {names => "" . (join(',',@seedlots_missing))}));
         $errors{'missing_seedlots'} = \@seedlots_missing;
     }
 

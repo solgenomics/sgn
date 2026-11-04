@@ -1,22 +1,26 @@
 
             
-<& /page/page_title.mas, title=>"Quick Create Account" &>
+<%init>
+  use HTML::Entities ();
+</%init>
+
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('account.quick_create.title', 'Quick Create Account')) &>
 
 <div id="quick_create_account_input_form_div">
   <form id="quick_create_account_input_form" method="post" action="/user/quick_create_account">
     
     <table cellpadding="2" cellspacing="2" width="100%" align="center">
-      <tr><td colspan="2"><b>Curators may use this form to create accounts for new users.<br />&nbsp;</b></td></tr>
-      <tr><td>First Name</td><td><input type="text" name="first_name" size="20" value=""></td></tr>
-      <tr><td>Last Name</td><td><input type="text" name="last_name" size="20" value=""></td></tr>
-      <tr><td>Username (at least 7 characters)</td><td><input type="text" name="username" size="12" value=""></td></tr>
-      <tr><td>Password (at least 7 characters)</td><td><input type="password" name="password" size="12" value=""></td></tr>
-      <tr><td>Confirm Password</td><td><input type="password" name="confirm_password" size="12" value=""></td></tr>
-      <tr><td>Private Email Address</td><td><input type="text" name="confirm_email" size="40" value=""></td></tr>
-      <tr><td>User Type</td><td><input type="text" name="user_type" size="10" value=""></td></tr>
+      <tr><td colspan="2"><b><% $c->i18n->p('account.quick_create.help', 'Curators may use this form to create accounts for new users.') |h %><br />&nbsp;</b></td></tr>
+      <tr><td><% $c->i18n->p('account.quick_create.first_name', 'First Name') |h %></td><td><input type="text" name="first_name" size="20" value=""></td></tr>
+      <tr><td><% $c->i18n->p('account.quick_create.last_name', 'Last Name') |h %></td><td><input type="text" name="last_name" size="20" value=""></td></tr>
+      <tr><td><% $c->i18n->p('account.quick_create.username', 'Username (at least 7 characters)') |h %></td><td><input type="text" name="username" size="12" value=""></td></tr>
+      <tr><td><% $c->i18n->p('account.quick_create.password', 'Password (at least 7 characters)') |h %></td><td><input type="password" name="password" size="12" value=""></td></tr>
+      <tr><td><% $c->i18n->p('account.quick_create.confirm_password', 'Confirm Password') |h %></td><td><input type="password" name="confirm_password" size="12" value=""></td></tr>
+      <tr><td><% $c->i18n->p('account.quick_create.private_email', 'Private Email Address') |h %></td><td><input type="text" name="confirm_email" size="40" value=""></td></tr>
+      <tr><td><% $c->i18n->p('account.quick_create.user_type', 'User Type') |h %></td><td><input type="text" name="user_type" size="10" value=""></td></tr>
       <tr><td>&nbsp;</td></tr>
       <tr><td colspan="2" align="center">
-	  <button class="btn btn-default" id="create_account" name="create_account" type="button">Save</button>
+	  <button class="btn btn-default" id="create_account" name="create_account" type="button"><% $c->i18n->p('account.quick_create.save', 'Save') |h %></button>
       </tr>
     </table>
 </form>

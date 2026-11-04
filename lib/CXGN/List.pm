@@ -3,7 +3,7 @@
 
 CXGN::List - class that deals with website lists
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $list = CXGN::List->new( { dbh => $dbh, list_id => 34 } );
 
@@ -32,8 +32,11 @@ Class function (without instantiation):
 package CXGN::List;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use CXGN::Stock::Seedlot;
+
+has 'i18n' => ( isa => 'Maybe[SGN::I18N]', is => 'ro', default => undef );
 
 has 'dbh' => ( isa => 'DBI::db',
 	       is => 'rw',
@@ -76,6 +79,13 @@ has 'create_date' => (isa => 'Str',
 has 'modified_date' => (isa => 'Str',
     is => 'rw',
 );
+
+sub _list_error_fallback {
+    my ($source, $vars) = @_;
+    $vars ||= {};
+    $source =~ s/%\{([A-Za-z_][A-Za-z0-9_]*)\}/exists($vars->{$1}) ? (defined($vars->{$1}) ? "$vars->{$1}" : '') : "%{$1}"/ge;
+    return $source;
+}
 
 
 # class method: Use like so: CXGN::List::create_list
@@ -203,6 +213,7 @@ sub all_lists {
 sub delete_list {
     my $dbh = shift;
     my $list_id = shift;
+    my SGN::I18N $delete_list_i18n = shift;
 
     my $q = "DELETE FROM sgn_people.list WHERE list_id=?";
 
@@ -211,7 +222,8 @@ sub delete_list {
 	$h->execute($list_id);
     };
     if ($@) {
-	return "An error occurred while deleting list with id $list_id: $@";
+        my $source = "An error occurred while deleting list with id %{id}: %{detail}";
+        return $delete_list_i18n ? $delete_list_i18n->p("lists.model.delete_failed", "An error occurred while deleting list with id %{id}: %{detail}", {id => $list_id, detail => $@}) : _list_error_fallback($source, {id => $list_id, detail => $@});
     }
     return 0;
 }
@@ -264,6 +276,7 @@ around 'BUILDARGS' => sub {
 after 'name' => sub {
     my $self = shift;
     my $name = shift;
+    my SGN::I18N $name_i18n = $self->i18n;
 
     if (!$name) { return; }
 
@@ -272,17 +285,18 @@ after 'name' => sub {
     $h->execute($name, $self->owner());
     my ($old_list) = $h->fetchrow_array();
     if ($old_list) {
-	return "The list name $name already exists. Please choose another name.";
+        my $source = "The list name %{name} already exists. Please choose another name.";
+        return $name_i18n ? $name_i18n->p("lists.model.name_exists", "The list name %{name} already exists. Please choose another name.", {name => $name}) : _list_error_fallback($source, {name => $name});
     }
 
     $q = "UPDATE sgn_people.list SET name=? WHERE list_id=?"; #removed "my"
     $h = $self->dbh->prepare($q);
-
     eval {
-	$h->execute($name, $self->list_id());
+        $h->execute($name, $self->list_id());
     };
     if ($@) {
-	return "An error occurred updating the list name ($@)";
+        my $source = "An error occurred updating the list name (%{detail})";
+        return $name_i18n ? $name_i18n->p("lists.model.name_update_failed", "An error occurred updating the list name (%{detail})", {detail => $@}) : _list_error_fallback($source, {detail => $@});
     }
     return 0;
 };
@@ -290,6 +304,7 @@ after 'name' => sub {
 after 'type' => sub {
     my $self = shift;
     my $type = shift;
+    my SGN::I18N $type_i18n = $self->i18n;
 
     if (!$type) { return; }
 
@@ -298,7 +313,8 @@ after 'type' => sub {
     $h1->execute($type);
     my ($cvterm_id) =$h1->fetchrow_array();
     if (!$cvterm_id) {
-	return "The specified type does not exist";
+        my $source = "The specified type does not exist";
+        return $type_i18n ? $type_i18n->p("lists.model.type_not_found", "The specified type does not exist") : $source;
     }
 
     my $q = "SELECT owner FROM sgn_people.list WHERE list_id=?";
@@ -319,6 +335,7 @@ after 'type' => sub {
 after 'description' => sub {
     my $self = shift;
     my $description = shift;
+    my SGN::I18N $description_i18n = $self->i18n;
 
     if (!$description) {
 	#print STDERR "NO desc provided... skipping!\n";
@@ -327,12 +344,12 @@ after 'description' => sub {
 
     my $q = "UPDATE sgn_people.list SET description=? WHERE list_id=?";
     my $h = $self->dbh->prepare($q);
-
     eval {
-	$h->execute($description, $self->list_id());
+        $h->execute($description, $self->list_id());
     };
     if ($@) {
-	return "An error occurred updating the list description ($@)";
+        my $source = "An error occurred updating the list description (%{detail})";
+        return $description_i18n ? $description_i18n->p("lists.model.description_update_failed", "An error occurred updating the list description (%{detail})", {detail => $@}) : _list_error_fallback($source, {detail => $@});
     }
     return 0;
 };
@@ -341,13 +358,16 @@ after 'description' => sub {
 sub add_element {
     my $self = shift;
     my $element = shift;
+    my SGN::I18N $add_element_i18n = $self->i18n;
     #remove trailing spaces
     $element =~ s/^\s+|\s+$//g;
     if (!$element) {
-			return "Empty list elements are not allowed";
+            my $source = "Empty list elements are not allowed";
+            return $add_element_i18n ? $add_element_i18n->p("lists.model.empty_element", "Empty list elements are not allowed") : $source;
     }
     if ($self->exists_element($element)) {
-			return "The element $element already exists";
+            my $source = "The element %{element} already exists";
+            return $add_element_i18n ? $add_element_i18n->p("lists.model.element_exists", "The element %{element} already exists", {element => $element}) : _list_error_fallback($source, {element => $element});
     }
 
     my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
@@ -357,7 +377,8 @@ sub add_element {
     };
     if ($@) {
         print STDERR Dumper $@;
-				return "An error occurred storing the element $element ($@)";
+                my $source = "An error occurred storing the element %{element} (%{detail})";
+                return $add_element_i18n ? $add_element_i18n->p("lists.model.store_element_failed", "An error occurred storing the element %{element} (%{detail})", {element => $element, detail => $@}) : _list_error_fallback($source, {element => $element, detail => $@});
     }
 
 		eval {
@@ -376,6 +397,7 @@ sub add_element {
 sub remove_element {
     my $self = shift;
     my $element = shift;
+    my SGN::I18N $remove_element_i18n = $self->i18n;
 
     my $h = $self->dbh()->prepare("DELETE FROM sgn_people.list_item where list_id=? and content=?");
 
@@ -384,7 +406,8 @@ sub remove_element {
     };
     if ($@) {
 
-	return "An error occurred while attempting to delete item $element";
+        my $source = "An error occurred while attempting to delete item %{element}";
+        return $remove_element_i18n ? $remove_element_i18n->p("lists.model.delete_element_failed", "An error occurred while attempting to delete item %{element}", {element => $element}) : _list_error_fallback($source, {element => $element});
     }
 
     eval {
@@ -414,13 +437,15 @@ sub remove_element {
 sub remove_element_by_id {
     my $self = shift;
     my $element_id = shift;
+    my SGN::I18N $remove_element_id_i18n = $self->i18n;
     my $h = $self->dbh()->prepare("SELECT content  FROM sgn_people.list_item where list_id=? and list_item_id=?");
 
     eval {
 	$h->execute($self->list_id(), $element_id);
     };
     if ($@) {
-	return "An error occurred while attempting to delete item $element_id";
+        my $source = "An error occurred while attempting to delete item %{id}";
+        return $remove_element_id_i18n ? $remove_element_id_i18n->p("lists.model.delete_element_id_failed", "An error occurred while attempting to delete item %{id}", {id => $element_id}) : _list_error_fallback($source, {id => $element_id});
     }
     my ($element) = $h->fetchrow_array();
 
@@ -435,13 +460,15 @@ sub update_element_by_id {
 	my $self = shift;
 	my $element_id = shift;
 	my $content = shift;
+    my SGN::I18N $update_element_id_i18n = $self->i18n;
 	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and list_item_id=?");
 
 	eval {
 		$h->execute($content, $self->list_id(), $element_id);
 	};
 	if ($@) {
-		return "An error occurred while attempting to update item $element_id";
+        my $source = "An error occurred while attempting to update item %{id}";
+        return $update_element_id_i18n ? $update_element_id_i18n->p("lists.model.update_element_id_failed", "An error occurred while attempting to update item %{id}", {id => $element_id}) : _list_error_fallback($source, {id => $element_id});
 	}
 
 	eval {
@@ -457,13 +484,15 @@ sub replace_by_name {
 	my $self = shift;
 	my $item_name = shift;
 	my $new_name = shift;
+    my SGN::I18N $replace_element_i18n = $self->i18n;
 	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and content=?");
 
 	eval {
 		$h->execute($new_name, $self->list_id(), $item_name);
 	};
 	if ($@) {
-		return "An error occurred while attempting to update item $item_name";
+        my $source = "An error occurred while attempting to update item %{item}";
+        return $replace_element_i18n ? $replace_element_i18n->p("lists.model.replace_element_failed", "An error occurred while attempting to update item %{item}", {item => $item_name}) : _list_error_fallback($source, {item => $item_name});
 	}
 
 	eval {
@@ -478,13 +507,15 @@ sub replace_by_name {
 sub remove_by_name {
 	my $self = shift;
 	my $item_name = shift;
+    my SGN::I18N $remove_element_name_i18n = $self->i18n;
 	my $h = $self->dbh()->prepare("DELETE FROM sgn_people.list_item WHERE list_id=? and content=?");
 
 	eval {
 		$h->execute($self->list_id(), $item_name);
 	};
 	if ($@) {
-		return "An error occurred while attempting to remove item $item_name";
+        my $source = "An error occurred while attempting to remove item %{item}";
+        return $remove_element_name_i18n ? $remove_element_name_i18n->p("lists.model.remove_element_failed", "An error occurred while attempting to remove item %{item}", {item => $item_name}) : _list_error_fallback($source, {item => $item_name});
 	}
 
 	eval {
@@ -625,6 +656,7 @@ sub retrieve_elements {
 sub add_bulk {
 	my $self = shift;
 	my $elements = shift;
+    my SGN::I18N $add_bulk_i18n = $self->i18n;
 	my $list_id = shift // $self->list_id();
 	my %elements_in_list;
 	my @elements_added;
@@ -683,7 +715,8 @@ sub add_bulk {
 	};
 	if ($@) {
 		$self->dbh()->rollback;
-		return {error => "An error occurred in bulk addition to list. ($@)"};
+        my $source = "An error occurred in bulk addition to list. (%{detail})";
+        return {error => $add_bulk_i18n ? $add_bulk_i18n->p("lists.model.bulk_add_failed", "An error occurred in bulk addition to list. (%{detail})", {detail => $@}) : _list_error_fallback($source, {detail => $@})};
 	}
 
 	eval {

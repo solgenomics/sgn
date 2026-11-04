@@ -1,47 +1,58 @@
+<%init>
+use HTML::Entities ();
+
+# Localize only known authored cache messages at the HTML sink; never rewrite cache data.
+my $bulk_missing_display = $summary_data->{missing_ids_msg};
+if (defined($bulk_missing_display) && $bulk_missing_display =~ /\A([0-9]+) ids were not retrieved from the database because they were not part of the corresponding unigene set or because there were duplicate entries in the submitted id list\.\z/) {
+    $bulk_missing_display = HTML::Entities::encode_entities($c->i18n->p("lists_datasets.bulk.missing_ids", "%{count} ids were not retrieved from the database because they were not part of the corresponding unigene set or because there were duplicate entries in the submitted id list.", {count => $1}));
+}
+my $bulk_fasta_display = $summary_data->{fastamessage};
+if (defined($bulk_fasta_display) && $bulk_fasta_display eq "Note: Fasta option is not available because you didn't\n                        choose a sequence to download.<br />") {
+    $bulk_fasta_display = HTML::Entities::encode_entities($c->i18n->p("lists_datasets.bulk.fasta_unavailable", "Note: Fasta option is not available because you didn't choose a sequence to download.")) . '<br />';
+}
+
+</%init>
 
 <%args>
 $summary_data => {}
 </%args>
 
-    <& /page/page_title.mas, title=>"Bulk download summary" &>
+    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("lists_datasets.bulk.bulk_download_summary", "Bulk download summary")) &>
 
-    The query you submitted contained <% $summary_data->{numlines} %> lines.<br />
-    Your query resulted in <% $summary_data->{total} %> lines being retrieved in
-    <% $summary_data->{query_time} %> seconds.<br />
-    <% $summary_data->{missing_ids_msg} %><br /><br />
+    <% $c->i18n->p("lists_datasets.bulk.submitted_lines", "The query you submitted contained %{count} lines.", {count => $summary_data->{numlines}}) |h %><br />
+    <% $c->i18n->p("lists_datasets.bulk.retrieved_lines", "Your query resulted in %{count} lines being retrieved in %{time} seconds.", {count => $summary_data->{total}, time => $summary_data->{query_time}}) |h %><br />
+    <% $bulk_missing_display %><br /><br />
 
 %    if ( $summary_data->{total} == 0 ) {
 
-     Please verify that you used the correct search and that you chose the right
-     unigene or bac assembly to download from. Also make sure that the submitted
-     identifiers are appropriately formatted.<br />
+     <% $c->i18n->p("lists_datasets.bulk.please_verify_that_you_used_the_correct_search_and_that_you_chose_the_right_un", "Please verify that you used the correct search and that you chose the right unigene or bac assembly to download from. Also make sure that the submitted identifiers are appropriately formatted.") |h %><br />
      
-     Please try your search again.<br /><br />
+     <% $c->i18n->p("lists_datasets.bulk.please_try_your_search_again", "Please try your search again.") |h %><br /><br />
 %   }
 %   else {
  
-    The file size is <% $summary_data->{filesize} %> kBytes.
+    <% $c->i18n->p("lists_datasets.bulk.file_size", "The file size is %{size} kBytes.", {size => $summary_data->{filesize}}) |h %>
     <br /><br />
-    <a href="/tools/bulk/display?outputType=HTML&amp;line_count=$line_count&amp;dumpfile=<% $summary_data->{file} %>&amp;page=1&amp;idType=<% $summary_data->{idType} %>">Browse</a>
-    the results.
+    <a href="/tools/bulk/display?outputType=HTML&amp;line_count=$line_count&amp;dumpfile=<% $summary_data->{file} %>&amp;page=1&amp;idType=<% $summary_data->{idType} %>"><% $c->i18n->p("lists_datasets.bulk.browse", "Browse") |h %></a>
+    <% $c->i18n->p("lists_datasets.bulk.the_results", "the results.") |h %>
     <br />
     <br />
 
-    <table border="0" cellpadding="0"><tr><td width="120"><b>View</b></td><td width="120">
-    <b>Download to disk</b></td></tr>
+    <table border="0" cellpadding="0"><tr><td width="120"><b><% $c->i18n->p("lists_datasets.bulk.view", "View") |h %></b></td><td width="120">
+    <b><% $c->i18n->p("lists_datasets.bulk.download_to_disk", "Download to disk") |h %></b></td></tr>
     <tr><td>
 
-    as <a href="/tools/bulk/display?outputType=text&amp;dumpfile=<% $summary_data->{file} %>&amp;idType=<% $summary_data->{idType} %>">Text</a>
+    <% $c->i18n->p("lists_datasets.bulk.as", "as") |h %> <a href="/tools/bulk/display?outputType=text&amp;dumpfile=<% $summary_data->{file} %>&amp;idType=<% $summary_data->{idType} %>"><% $c->i18n->p("lists_datasets.bulk.text", "Text") |h %></a>
     <br />
-    as <% $summary_data->{fastalink} %><br />
+    <% $c->i18n->p("lists_datasets.bulk.as", "as") |h %> <% $summary_data->{fastalink} %><br />
 
     </td><td>
 
-    as <a href="/tools/bulk/display?outputType=text&amp;dumpfile=<% $summary_data->{file} %>&amp;idType=<% $summary_data->{idType} %>&amp;download=1">
-    Text</a><br />
-    as <% $summary_data->{fastadownload} %><br />
+    <% $c->i18n->p("lists_datasets.bulk.as", "as") |h %> <a href="/tools/bulk/display?outputType=text&amp;dumpfile=<% $summary_data->{file} %>&amp;idType=<% $summary_data->{idType} %>&amp;download=1">
+    <% $c->i18n->p("lists_datasets.bulk.text", "Text") |h %></a><br />
+    <% $c->i18n->p("lists_datasets.bulk.as", "as") |h %> <% $summary_data->{fastadownload} %><br />
 
     </td></tr></table>
-    <br /><br /><% $summary_data->{fastamessage} %><br />
+    <br /><br /><% $bulk_fasta_display %><br />
 
 %}

@@ -19,6 +19,8 @@ This class overrides the following functions:
 use strict;
 
 package CXGN::Page::Form::Checkbox;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use base qw/ CXGN::Page::Form::ElementI /;
 
@@ -56,8 +58,9 @@ renders the checkbox as a static element.
 
 sub render { 
     my $self = shift;
+    my SGN::I18N $i18n = $self->{i18n};
    
-    return $self->get_contents() ? "(yes)" : "(no)";
+    return $self->get_contents() ? HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.checkbox.yes", "(yes)") : "(yes)") : HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.checkbox.no", "(no)") : "(no)");
 }
 
 =head2 set_from_external

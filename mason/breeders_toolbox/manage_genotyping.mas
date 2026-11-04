@@ -1,3 +1,15 @@
+<%init>
+use HTML::Entities ();
+# Escape catalog text first; only fixed component-owned markup replaces markers.
+my $genotype_linked_text = sub {
+    my ($text, $replacements) = @_;
+    my $html = HTML::Entities::encode_entities($text, q{&<>"'});
+    for my $marker (sort { length($b) <=> length($a) } keys %$replacements) {
+        $html =~ s/\Q$marker\E/$replacements->{$marker}/g;
+    }
+    return $html;
+};
+</%init>
 
 <%args>
 $genotyping_trials_by_breeding_project
@@ -6,25 +18,25 @@ $breeding_programs
 $facilities => ();
 </%args>
 
-<& /page/page_title.mas, title=>"Manage Genotyping Plates" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.legacy.title', 'Manage Genotyping Plates'), q{&<>"'}) &>
 
 <div class="container-fluid">
     <&| /page/explanation.mas, title=>'Important Notice', collapsible=>1, collapsed=>0, &>
         <p>
-            <b>Important notice:</b> Manage Genotyping Plates page will soon be removed and replaced by Manage Genotyping Projects page. Genotyping project can be used to organize both genotyping plates and associated genotyping data.
+            <% $genotype_linked_text->($c->i18n->p('genotype.legacy.notice', '%{intro_start}Important notice:%{intro_end} Manage Genotyping Plates page will soon be removed and replaced by Manage Genotyping Projects page. Genotyping project can be used to organize both genotyping plates and associated genotyping data.', {intro_start => '__SGN_GENO_BOLD_START__', intro_end => '__SGN_GENO_BOLD_END__'}), {'__SGN_GENO_BOLD_START__' => '<b>', '__SGN_GENO_BOLD_END__' => '</b>'}) %>
             <br/><br/>
-            <b>For previously created genotyping plates:</b>Please move your genotyping plates to a desired genotyping project. On each genotyping project details page, you will find <b>Genotyping Plates</b> section which displays all of the plates included in the project, as well as a link for <b>Move Genotyping Plates to this Project</b> dialog.
+            <% $genotype_linked_text->($c->i18n->p('genotype.legacy.existing_plates', '%{format_0}For previously created genotyping plates:%{format_1}Please move your genotyping plates to a desired genotyping project. On each genotyping project details page, you will find %{format_2}Genotyping Plates%{format_3} section which displays all of the plates included in the project, as well as a link for %{format_4}Move Genotyping Plates to this Project%{format_5} dialog.', {format_0 => '__SGN_GENO_FORMAT_0__', format_1 => '__SGN_GENO_FORMAT_1__', format_2 => '__SGN_GENO_FORMAT_2__', format_3 => '__SGN_GENO_FORMAT_3__', format_4 => '__SGN_GENO_FORMAT_4__', format_5 => '__SGN_GENO_FORMAT_5__'}), {'__SGN_GENO_FORMAT_0__' => '<b>', '__SGN_GENO_FORMAT_1__' => '</b>', '__SGN_GENO_FORMAT_2__' => '<b>', '__SGN_GENO_FORMAT_3__' => '</b>', '__SGN_GENO_FORMAT_4__' => '<b>', '__SGN_GENO_FORMAT_5__' => '</b>'}) %>
             <br/><br/>
-            <b>For new genotyping plates:</b>You can specify genotyping project during creating or uploading new genotyping plates.
+            <% $genotype_linked_text->($c->i18n->p('genotype.legacy.new_plates', '%{intro_start}For new genotyping plates:%{intro_end}You can specify genotyping project during creating or uploading new genotyping plates.', {intro_start => '__SGN_GENO_BOLD_START__', intro_end => '__SGN_GENO_BOLD_END__'}), {'__SGN_GENO_BOLD_START__' => '<b>', '__SGN_GENO_BOLD_END__' => '</b>'}) %>
             <br/><br/>
-            Folders for genotyping plates are now obsoleted.
+            <% $c->i18n->p('genotype.legacy.folders_obsolete', 'Folders for genotyping plates are now obsoleted.') |h %>
             <br/><br/>
-            Links for adding/uploading genotyping plates and related data have been moved to Manage Genotyping Projects page.
-            <a href="/breeders/genotyping_projects"><p>Go To Manage Genotyping Projects</p></a>
+            <% $c->i18n->p('genotype.legacy.links_moved', 'Links for adding/uploading genotyping plates and related data have been moved to Manage Genotyping Projects page.') |h %>
+            <a href="/breeders/genotyping_projects"><p><% $c->i18n->p('genotype.legacy.go_projects', 'Go To Manage Genotyping Projects') |h %></p></a>
         </p>
     </&>
 
-    <&| /page/info_section.mas, title=>'Genotyping Plates', collapsible=>1, collapsed=>0, subtitle => ' ' &>
+    <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.legacy.plates', 'Genotyping Plates'), q{&<>"'}), anchor_title=>'Genotyping Plates', collapsible=>1, collapsed=>0, subtitle => ' ' &>
         <& /breeders_toolbox/genotyping_trials/trials.mas, trials_by_breeding_project=>$genotyping_trials_by_breeding_project, locations=>$locations,  breeding_programs=>$breeding_programs, facilities=>$facilities &>
     </&>
 

@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialGeneric;
 
 use Moose::Role;
+use SGN::I18N ();
+use HTML::Entities ();
 use List::MoreUtils qw(uniq);
 use JSON;
 use CXGN::File::Parse;
@@ -16,8 +18,20 @@ my @REQUIRED_COLUMNS = qw|stock_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|intercrop_stock_name plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
+sub _single_trial_generic_message {
+    my ($text, $slots) = @_;
+    $text = HTML::Entities::encode_entities($text);
+    my %encoded_slots = map { HTML::Entities::encode_entities($_) => $slots->{$_} } keys %{$slots || {}};
+    if (%encoded_slots) {
+        my $pattern = join '|', map { quotemeta($_) } sort { length($b) <=> length($a) } keys %encoded_slots;
+        $text =~ s/($pattern)/$encoded_slots{$1}/ge;
+    }
+    return $text;
+}
+
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $single_generic_validate_i18n = $self->i18n;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $trial_name = $self->get_trial_name();
@@ -55,13 +69,23 @@ sub _validate_with_plugin {
 
     foreach my $treatment (@{$treatments}) {
         if ($treatment !~ m/_TREATMENT:/) {
-            push @error_messages, "Column $treatment is not formatted like a treatment. Use only full, valid treatment names.\n";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.treatment_column_format', "Column %{column} is not formatted like a treatment. Use only full, valid treatment names.\n", { column => '__SGN_TREATMENT_COLUMN__' })
+                    : "Column __SGN_TREATMENT_COLUMN__ is not formatted like a treatment. Use only full, valid treatment names.\n",
+                { '__SGN_TREATMENT_COLUMN__' => $treatment }
+            );
         }
     }
 
     if (@{$validate->{missing}}>0) {
         foreach my $missing (@{$validate->{missing}}) {
-            push @error_messages, "Treatment $missing does not exist in the database.\n";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.treatment_missing', "Treatment %{treatment} does not exist in the database.\n", { treatment => '__SGN_TREATMENT__' })
+                    : "Treatment __SGN_TREATMENT__ does not exist in the database.\n",
+                { '__SGN_TREATMENT__' => $missing }
+            );
         }
     }
 
@@ -130,16 +154,31 @@ sub _validate_with_plugin {
                 cvterm_id => $treatment_id
             });
             if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
-                push @error_messages, "Row $row: value for $treatment is lower than the allowed minimum for that treatment.";
+                push @error_messages, _single_trial_generic_message(
+                    $single_generic_validate_i18n
+                        ? $single_generic_validate_i18n->p('trial.upload.multi.generic.treatment_value_below_minimum', 'Row %{row}: value for %{treatment} is lower than the allowed minimum for that treatment.', { row => '__SGN_ROW__', treatment => '__SGN_TREATMENT__' })
+                        : 'Row __SGN_ROW__: value for __SGN_TREATMENT__ is lower than the allowed minimum for that treatment.',
+                    { '__SGN_ROW__' => $row, '__SGN_TREATMENT__' => $treatment }
+                );
             }
             if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->maximum()) && defined($data->{$treatment}) && $data->{$treatment} > $treatment_obj->maximum()) {
-                push @error_messages, "Row $row: value for $treatment is higher than the allowed maximum for that treatment.";
+                push @error_messages, _single_trial_generic_message(
+                    $single_generic_validate_i18n
+                        ? $single_generic_validate_i18n->p('trial.upload.multi.generic.treatment_value_above_maximum', 'Row %{row}: value for %{treatment} is higher than the allowed maximum for that treatment.', { row => '__SGN_ROW__', treatment => '__SGN_TREATMENT__' })
+                        : 'Row __SGN_ROW__: value for __SGN_TREATMENT__ is higher than the allowed maximum for that treatment.',
+                    { '__SGN_ROW__' => $row, '__SGN_TREATMENT__' => $treatment }
+                );
             }
             if ($treatment_obj->format() eq "qualitative" && defined($treatment_obj->categories()) && defined($data->{$treatment})) {
                 my $qual_value = $data->{$treatment};
                 my $categories = $treatment_obj->categories();
                 if ( $categories !~ m/$qual_value/) {
-                    push @error_messages, "Row $row: value for $treatment is not in the valid categories for that treatment.";
+                    push @error_messages, _single_trial_generic_message(
+                        $single_generic_validate_i18n
+                            ? $single_generic_validate_i18n->p('trial.upload.multi.generic.treatment_value_category', 'Row %{row}: value for %{treatment} is not in the valid categories for that treatment.', { row => '__SGN_ROW__', treatment => '__SGN_TREATMENT__' })
+                            : 'Row __SGN_ROW__: value for __SGN_TREATMENT__ is not in the valid categories for that treatment.',
+                        { '__SGN_ROW__' => $row, '__SGN_TREATMENT__' => $treatment }
+                    );
                 }
             }
         }
@@ -147,52 +186,112 @@ sub _validate_with_plugin {
 
         # Plot Number: must be a positive number
         if (!($plot_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: plot number <strong>$plot_number</strong> must be a positive integer.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'plot number', '__SGN_VALUE__' => '<strong>'.$plot_number.'</strong>' }
+            );
         }
 
         # Block Number: must be a positive integer
         if (!($block_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: block number <strong>$block_number</strong> must be a positive integer.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'block number', '__SGN_VALUE__' => '<strong>'.$block_number.'</strong>' }
+            );
         }
 
         # Rep Number: must be a positive integer, if provided
         if ($rep_number && !($rep_number =~ /^\d+?$/)){
-            push @error_messages, "Row $row: rep_number <strong>$rep_number</strong> must be a positive integer.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'rep_number', '__SGN_VALUE__' => '<strong>'.$rep_number.'</strong>' }
+            );
         }
 
         # Plot Name: cannot contain spaces, should not contain slashes
         if ($plot_name =~ /\s/ ) {
-            push @error_messages, "Row $row: plot name <strong>$plot_name</strong> must not contain spaces.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.no_spaces_row', 'Row %{row}: %{field} %{value} must not contain spaces.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must not contain spaces.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'plot name', '__SGN_VALUE__' => '<strong>'.$plot_name.'</strong>' }
+            );
         }
         if ($plot_name =~ /\// || $plot_name =~ /\\/) {
-            push @warning_messages, "Row $row: plot name <strong>$plot_name</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, plot names can be saved with slashes if you ignore warnings.";
+            push @warning_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.plot_name_slashes_warning', 'Row %{row}: %{field} %{value} contains slashes. Note that slashes can cause problems for third-party applications; however, plot names can be saved with slashes if you ignore warnings.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ contains slashes. Note that slashes can cause problems for third-party applications; however, plot names can be saved with slashes if you ignore warnings.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'plot name', '__SGN_VALUE__' => '<strong>'.$plot_name.'</strong>' }
+            );
         }
 
         # Plot Width / Plot Length / Field Size: must be a positive number, if provided
         if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)) {
-            push @error_messages, "Row $row: plot_width <strong>$plot_width</strong> must be a positive number.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_number', 'Row %{row}: %{field} %{value} must be a positive number.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive number.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'plot_width', '__SGN_VALUE__' => '<strong>'.$plot_width.'</strong>' }
+            );
         }
         if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)) {
-            push @error_messages, "Row $row: plot_length <strong>$plot_length</strong> must be a positive number.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_number', 'Row %{row}: %{field} %{value} must be a positive number.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive number.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'plot_length', '__SGN_VALUE__' => '<strong>'.$plot_length.'</strong>' }
+            );
         }
         if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)) {
-            push @error_messages, "Row $row: plot_width <strong>$field_size</strong> must be a positive number.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_number', 'Row %{row}: %{field} %{value} must be a positive number.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive number.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'plot_width', '__SGN_VALUE__' => '<strong>'.$field_size.'</strong>' }
+            );
         }
 
         # Is A Control: must be blank, 0, or 1, if provided
         if ( $is_a_control && $is_a_control ne '' && $is_a_control ne '0' && $is_a_control ne '1' ) {
-            push @error_messages, "Row $row: is_a_control value of <strong>$is_a_control</strong> is invalid.  It must be blank (not a control), 0 (not a control), or 1 (is a control).";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.control_value_invalid', 'Row %{row}: %{field} value of %{value} is invalid.  It must be %{blank} (not a control), %{zero} (not a control), or %{one} (is a control).', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__', blank => '__SGN_BLANK__', zero => '__SGN_ZERO__', one => '__SGN_ONE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ value of __SGN_VALUE__ is invalid.  It must be __SGN_BLANK__ (not a control), __SGN_ZERO__ (not a control), or __SGN_ONE__ (is a control).',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'is_a_control', '__SGN_VALUE__' => '<strong>'.$is_a_control.'</strong>', '__SGN_BLANK__' => 'blank', '__SGN_ZERO__' => '0', '__SGN_ONE__' => '1' }
+            );
         }
 
         # Range Number / Row Number / Col Number: must be a positive integer, if provided
         if ($range_number && !($range_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: range_number <strong>$range_number</strong> must be a positive integer.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'range_number', '__SGN_VALUE__' => '<strong>'.$range_number.'</strong>' }
+            );
         }
         if ($row_number && !($row_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: row_number <strong>$row_number</strong> must be a positive integer.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'row_number', '__SGN_VALUE__' => '<strong>'.$row_number.'</strong>' }
+            );
         }
         if ($col_number && !($col_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be a positive integer.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'col_number', '__SGN_VALUE__' => '<strong>'.$col_number.'</strong>' }
+            );
         }
 
         # Seedlots: add seedlot_name / accession_name to seedlot_pairs
@@ -201,19 +300,39 @@ sub _validate_with_plugin {
         if ( $seedlot_name ) {
             push @seedlot_pairs, [$seedlot_name, $stock_name];
             if ( $num_seed_per_plot && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/) ) {
-                push @error_messages, "Row $row: num_seed_per_plot <strong>$num_seed_per_plot</strong> must be a positive integer.";
+                push @error_messages, _single_trial_generic_message(
+                    $single_generic_validate_i18n
+                        ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                        : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                    { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'num_seed_per_plot', '__SGN_VALUE__' => '<strong>'.$num_seed_per_plot.'</strong>' }
+                );
             }
             if ( $weight_gram_seed_per_plot && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/) ) {
-                push @error_messages, "Row $row: weight_gram_seed_per_plot <strong>$weight_gram_seed_per_plot</strong> must be a positive integer.";
+                push @error_messages, _single_trial_generic_message(
+                    $single_generic_validate_i18n
+                        ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                        : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                    { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'weight_gram_seed_per_plot', '__SGN_VALUE__' => '<strong>'.$weight_gram_seed_per_plot.'</strong>' }
+                );
             }
             if ( !$num_seed_per_plot && !$weight_gram_seed_per_plot ) {
-                push @warning_messages, "Row $row: this plot does not have a count or weight of seed to be used from seedlot <strong>$seedlot_name</strong>."
+                push @warning_messages, _single_trial_generic_message(
+                    $single_generic_validate_i18n
+                        ? $single_generic_validate_i18n->p('trial.upload.multi.generic.seedlot_no_seed_quantity', 'Row %{row}: this plot does not have a count or weight of seed to be used from seedlot %{seedlot}.', { row => '__SGN_ROW__', seedlot => '__SGN_SEEDLOT__' })
+                        : 'Row __SGN_ROW__: this plot does not have a count or weight of seed to be used from seedlot __SGN_SEEDLOT__.',
+                    { '__SGN_ROW__' => $row, '__SGN_SEEDLOT__' => '<strong>'.$seedlot_name.'</strong>' }
+                );
             }
         }
 
         # Entry Number: must be a positive integer, if provided
         if ($entry_number && !($entry_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: entry_number <strong>$entry_number</strong> must be a positive integer.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+                { '__SGN_ROW__' => $row, '__SGN_FIELD__' => 'entry_number', '__SGN_VALUE__' => '<strong>'.$entry_number.'</strong>' }
+            );
         }
 
 
@@ -271,14 +390,24 @@ sub _validate_with_plugin {
     }
     foreach (($trial_name)) {
         if ($_ =~ /\s/) {
-            push @error_messages, "trial_name <strong>$_</strong> must not contain spaces.";
+            push @error_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.no_spaces', '%{field} %{value} must not contain spaces.', { field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : '__SGN_FIELD__ __SGN_VALUE__ must not contain spaces.',
+                { '__SGN_FIELD__' => 'trial_name', '__SGN_VALUE__' => '<strong>'.$_.'</strong>' }
+            );
         }
         if ($_ =~ /\// || $_ =~ /\\/) {
-            push @warning_messages, "trial_name <strong>$_</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.";
+            push @warning_messages, _single_trial_generic_message(
+                $single_generic_validate_i18n
+                    ? $single_generic_validate_i18n->p('trial.upload.multi.generic.slashes_warning', '%{field} %{value} contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.', { field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+                    : '__SGN_FIELD__ __SGN_VALUE__ contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.',
+                { '__SGN_FIELD__' => 'trial_name', '__SGN_VALUE__' => '<strong>'.$_.'</strong>' }
+            );
         }
     }
     if (scalar(@already_used_trial_names) > 0) {
-        push @error_messages, "Trial name(s) <strong>".join(', ',@already_used_trial_names)."</strong> are invalid because they are already used in the database.";
+        push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.multi.generic.trial_names_already_used", "Trial name(s) %{names} are invalid because they are already used in the database.", {names => "__SGN_SINGLE_0__"}) : "Trial name(s) __SGN_SINGLE_0__ are invalid because they are already used in the database.", {"__SGN_SINGLE_0__" => "<strong>".join(', ',@already_used_trial_names)."</strong>"});
     }
 
     # Stock Names: must exist in the database
@@ -291,26 +420,26 @@ sub _validate_with_plugin {
         @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_synonyms_or_crosses',\@merged_names)->{'missing'}};
         if (scalar(@entry_names_missing) > 0) {
             $errors{'missing_stocks'} = \@entry_names_missing;
-            push @error_messages, "The following entry names are not in the database or are not accession or cross stock type: ".join(',',@entry_names_missing);
+            push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.single.generic.entry_names_cross", "The following entry names are not in the database or are not accession or cross stock type: %{names}", {names => "__SGN_SINGLE_0__"}) : "The following entry names are not in the database or are not accession or cross stock type: __SGN_SINGLE_0__", {"__SGN_SINGLE_0__" => join(',',@entry_names_missing)});
         }
     } elsif ($trial_stock_type eq 'family_name') {
         @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_family_names',\@merged_names)->{'missing'}};
         if (scalar(@entry_names_missing) > 0) {
             $errors{'missing_stocks'} = \@entry_names_missing;
-            push @error_messages, "The following entry names are not in the database or are not accession or family name stock type: ".join(',',@entry_names_missing);
+            push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.single.generic.entry_names_family", "The following entry names are not in the database or are not accession or family name stock type: %{names}", {names => "__SGN_SINGLE_0__"}) : "The following entry names are not in the database or are not accession or family name stock type: __SGN_SINGLE_0__", {"__SGN_SINGLE_0__" => join(',',@entry_names_missing)});
         }
     } else {
         @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions',\@merged_names)->{'missing'}};
         if (scalar(@entry_names_missing) > 0) {
             $errors{'missing_stocks'} = \@entry_names_missing;
-            push @error_messages, "The following entry names are not in the database as uniquenames or synonyms of accession stock type: ".join(',',@entry_names_missing);
+            push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.single.generic.entry_names_accession", "The following entry names are not in the database as uniquenames or synonyms of accession stock type: %{names}", {names => "__SGN_SINGLE_0__"}) : "The following entry names are not in the database as uniquenames or synonyms of accession stock type: __SGN_SINGLE_0__", {"__SGN_SINGLE_0__" => join(',',@entry_names_missing)});
         }
     }
 
     # Seedlots: names must exist in the database
     my @seedlots_missing = @{$validator->validate($schema,'seedlots',$parsed_values->{'seedlot_name'})->{'missing'}};
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "Seedlot(s) <strong>".join(',',@seedlots_missing)."</strong> are not in the database.  To use a seedlot as a seed source for a plot, the seedlot must already exist in the database.";
+        push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.multi.generic.seedlots_missing", "Seedlot(s) %{seedlots} are not in the database.  To use a seedlot as a seed source for a plot, the seedlot must already exist in the database.", {seedlots => "__SGN_SINGLE_0__"}) : "Seedlot(s) __SGN_SINGLE_0__ are not in the database.  To use a seedlot as a seed source for a plot, the seedlot must already exist in the database.", {"__SGN_SINGLE_0__" => "<strong>".join(',',@seedlots_missing)."</strong>"});
     }
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
@@ -339,14 +468,14 @@ sub _validate_with_plugin {
         push @already_used_plot_names, $r->uniquename();
     }
     if (scalar(@already_used_plot_names) > 0) {
-        push @error_messages, "Plot name(s) <strong>".join(', ',@already_used_plot_names)."</strong> are invalid because they are already used in the database.";
+        push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.multi.generic.plot_names_already_used", "Plot name(s) %{names} are invalid because they are already used in the database.", {names => "__SGN_SINGLE_0__"}) : "Plot name(s) __SGN_SINGLE_0__ are invalid because they are already used in the database.", {"__SGN_SINGLE_0__" => "<strong>".join(', ',@already_used_plot_names)."</strong>"});
     }
 
     # Check for duplicated plot numbers
     foreach my $pk (keys %seen_plot_numbers) {
         my $count = $seen_plot_numbers{$pk};
         if ( $count > 1 ) {
-            push @error_messages, "Plot number <strong>$pk</strong> is used $count times.  Each plot should have a unique plot number.";
+            push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.single.generic.plot_number_count", "Plot number %{number} is used %{count} times.  Each plot should have a unique plot number.", {number => "__SGN_SINGLE_0__", count => "__SGN_SINGLE_1__"}) : "Plot number __SGN_SINGLE_0__ is used __SGN_SINGLE_1__ times.  Each plot should have a unique plot number.", {"__SGN_SINGLE_0__" => "<strong>$pk</strong>", "__SGN_SINGLE_1__" => $count});
         }
     }
 
@@ -354,7 +483,7 @@ sub _validate_with_plugin {
     foreach my $pk (keys %seen_plot_names) {
         my $count = $seen_plot_names{$pk};
         if ( $count > 1 ) {
-            push @error_messages, "Plot name <strong>$pk</strong> is used $count times. Each plot should have a unique plot name.";
+            push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.single.generic.plot_name_count", "Plot name %{name} is used %{count} times. Each plot should have a unique plot name.", {name => "__SGN_SINGLE_0__", count => "__SGN_SINGLE_1__"}) : "Plot name __SGN_SINGLE_0__ is used __SGN_SINGLE_1__ times. Each plot should have a unique plot name.", {"__SGN_SINGLE_0__" => "<strong>$pk</strong>", "__SGN_SINGLE_1__" => $count});
         }
     }
 
@@ -364,7 +493,7 @@ sub _validate_with_plugin {
         my $count = scalar(@$plots);
         if ( $count > 1 ) {
             my @pos = split('-', $pk);
-            push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " plots=" . join(',', @$plots);
+            push @warning_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.single.generic.position", "More than 1 plot is assigned to the position row=%{row} col=%{col} plots=%{plots}", {row => "__SGN_SINGLE_0__", col => "__SGN_SINGLE_1__", plots => "__SGN_SINGLE_2__"}) : "More than 1 plot is assigned to the position row=__SGN_SINGLE_0__ col=__SGN_SINGLE_1__ plots=__SGN_SINGLE_2__", {"__SGN_SINGLE_0__" => $pos[0], "__SGN_SINGLE_1__" => $pos[1], "__SGN_SINGLE_2__" => join(',', @$plots)});
         }
     }
 
@@ -377,16 +506,16 @@ sub _validate_with_plugin {
         my @ens = uniq @{$seen_entry_numbers{'by_acc'}{$an}};
         my $count = scalar(@ens);
         if ( scalar(@ens) > 1 ) {
-            push @error_messages, "Entry Number mismatch: Accession <strong>$an</strong> has multiple entry numbers (" . join(', ', @ens) . ") assigned to it.";
+            push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.single.generic.accession_entry_mismatch", "Entry Number mismatch: Accession %{name} has multiple entry numbers (%{numbers}) assigned to it.", {name => "__SGN_SINGLE_0__", numbers => "__SGN_SINGLE_1__"}) : "Entry Number mismatch: Accession __SGN_SINGLE_0__ has multiple entry numbers (__SGN_SINGLE_1__) assigned to it.", {"__SGN_SINGLE_0__" => "<strong>$an</strong>", "__SGN_SINGLE_1__" => join(', ', @ens)});
         }
     }
 
-    # check assigments by entry number
+    # check assignments by entry number
     foreach my $en (keys %{$seen_entry_numbers{'by_num'}} ) {
         my @ans = uniq @{$seen_entry_numbers{'by_num'}{$en}};
         my $count = scalar(@ans);
         if ( scalar(@ans) > 1 ) {
-            push @error_messages, "Entry Number mismatch: Entry number <strong>$en</strong> has multiple accessions (" . join(', ', @ans) . ") assigned to it.";
+            push @error_messages, _single_trial_generic_message($single_generic_validate_i18n ? $single_generic_validate_i18n->p("trial.upload.single.generic.entry_accession_mismatch", "Entry Number mismatch: Entry number %{number} has multiple accessions (%{names}) assigned to it.", {number => "__SGN_SINGLE_0__", names => "__SGN_SINGLE_1__"}) : "Entry Number mismatch: Entry number __SGN_SINGLE_0__ has multiple accessions (__SGN_SINGLE_1__) assigned to it.", {"__SGN_SINGLE_0__" => "<strong>$en</strong>", "__SGN_SINGLE_1__" => join(', ', @ans)});
         }
     }
 

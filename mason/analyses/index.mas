@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 </%args>
@@ -22,9 +26,9 @@ Lukas Mueller <lam87@cornell.edu>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => ['analyses' ] &>
 
-<& /page/page_title.mas, title => "Your Analyses and Analysis Models" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.your_analyses_and_analysis_models", "Your Analyses and Analysis Models")) &>
 
-<button class='btn btn-primary' style='margin:3px;float:right' id='drone_imagery_calculate_statistics_link'>Drone Imagery Statistics</button><button class='btn btn-primary' style='margin:3px;float:right' id='analysis_calculate_statistics_link'>Single/Multi Trial GEBV Analysis</button><button class="btn btn-default" name="upload_new_analysis_button" style="margin:3px;float:right">Upload Analysis</button><br />
+<button class='btn btn-primary' style='margin:3px;float:right' id='drone_imagery_calculate_statistics_link'><% $c->i18n->p("analysis.interface.drone_imagery_statistics", "Drone Imagery Statistics") |h %></button><button class='btn btn-primary' style='margin:3px;float:right' id='analysis_calculate_statistics_link'><% $c->i18n->p("analysis.interface.single_multi_trial_gebv_analysis", "Single/Multi Trial GEBV Analysis") |h %></button><button class="btn btn-default" name="upload_new_analysis_button" style="margin:3px;float:right"><% $c->i18n->p("analysis.interface.upload_analysis", "Upload Analysis") |h %></button><br />
 <hr>
 
 <& /analyses/analysis_calculate_statistics.mas &>
@@ -33,27 +37,27 @@ Lukas Mueller <lam87@cornell.edu>
 <& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div class="well">
-<h3>Your Analyses</h3>
+<h3><% $c->i18n->p("analysis.interface.your_analyses", "Your Analyses") |h %></h3>
 <table class="table table-bordered table-hover" id="analyses_by_user_table">
   <thead>
   <tr>
     <th>
-      Analysis Name
+      <% $c->i18n->p("analysis.interface.analysis_name", "Analysis Name") |h %>
     </th>
     <th>
-      Description
+      <% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %>
     </th>
     <th>
-      Model Type
+      <% $c->i18n->p("analysis.interface.model_type", "Model Type") |h %>
     </th>
     <th>
-      Protocol
+      <% $c->i18n->p("global.search_wizard.protocol", "Protocol") |h %>
     </th>
     <th>
-      Application
+      <% $c->i18n->p("analysis.interface.application", "Application") |h %>
     </th>
     <th>
-      Language
+      <% $c->i18n->p("language.select", "Language") |h %>
     </th>
   </tr>
   </thead>
@@ -63,27 +67,27 @@ Lukas Mueller <lam87@cornell.edu>
 </div>
 
 <div class="well">
-<h3>Your Models</h3>
+<h3><% $c->i18n->p("analysis.interface.your_models", "Your Models") |h %></h3>
 <table class="table table-bordered table-hover" id="models_by_user_table">
   <thead>
   <tr>
     <th>
-      Model Name
+      <% $c->i18n->p("analysis.interface.model_name", "Model Name") |h %>
     </th>
     <th>
-      Description
+      <% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %>
     </th>
     <th>
-      Model Type
+      <% $c->i18n->p("analysis.interface.model_type", "Model Type") |h %>
     </th>
     <th>
-      Protocol
+      <% $c->i18n->p("global.search_wizard.protocol", "Protocol") |h %>
     </th>
     <th>
-      Application
+      <% $c->i18n->p("analysis.interface.application", "Application") |h %>
     </th>
     <th>
-      Language
+      <% $c->i18n->p("language.select", "Language") |h %>
     </th>
   </tr>
   </thead>

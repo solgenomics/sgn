@@ -1,0 +1,57 @@
+# Gestión de imágenes {#managing-images}
+
+## Cargar archivos de imagen {#uploading-image-files}
+
+Al seleccionar “Fenotipado” en Gestionar y luego “Cargar imágenes”, se abrirá este diálogo:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image_upload_dialog.png')
+```
+
+Para cargar imágenes directamente, seleccione el formato "Images". Puede cargar una o varias imágenes. Deben proceder de la aplicación Fieldbook o tener un nombre con esta estructura: observationUnitName, traitname, number, timestamp, separados por guiones bajos. El nombre no puede contener guiones bajos adicionales. Por ejemplo: 38873_branching_5_2025-07-28.jpg
+
+Si las imágenes se tomaron con Fieldbook, sus datos EXIF incluirán los materiales y rasgos asociados. Al cargarlas, se procesarán automáticamente los datos EXIF y se crearán las asociaciones.
+
+Después de seleccionar las imágenes, pulse “Verificar”. Se comprobará que los nombres o metadatos sean correctos y correspondan a materiales existentes en la base de datos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/filename_verify_success.png')
+```
+
+Si la verificación es correcta, pulse “Guardar” para almacenar las imágenes en la base de datos.
+
+Para cargar imágenes con datos fenotípicos asociados, seleccione el formato "Images with Associated Phenotypes". Junto con un archivo zip de imágenes, debe cargar una hoja con los valores fenotípicos. Puede estar en formato .xls o .xlsx y debe tener estos encabezados:
+
+observationUnitName \| observationVariableName \| value \| timestamp \| image_name \| person
+
+La columna image_name debe coincidir con los nombres de archivo de las imágenes correspondientes dentro del zip.
+
+## Cargar imágenes directamente en materiales {#uploading-images-directly-to-stocks}
+
+En la sección Imágenes de la página de detalles de un material, puede añadir una imagen asociada pulsando “Añadir imagen”. Las imágenes cargadas mediante este diálogo quedarán asociadas al material correspondiente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/stock_add_image.png')
+```
+
+## Cargar imágenes desde las páginas del ensayo de campo y de análisis de imágenes {#uploading-images-from-the-field-trial-and-image-analysis-pages}
+
+También puede cargar imágenes desde la página de detalles del ensayo de campo. Abra la página y vaya a la sección “Imágenes”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_trial_images.png')
+```
+
+Pulse “Añadir nueva imagen” para abrir el diálogo de carga y cargar imágenes en los mismos formatos descritos anteriormente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_new_image_trial.png')
+```
+
+Para cargar imágenes desde Análisis de imágenes, seleccione “Análisis de imágenes” en el menú “Analizar” y pulse “Cargar nuevas imágenes”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image_analysis_add_image.png')
+```
+
+Se abrirá el mismo diálogo de carga de imágenes.

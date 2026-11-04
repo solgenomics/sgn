@@ -23,6 +23,8 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::MixedModels;
 
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 use Data::Dumper;
 use File::Basename;
 use File::Copy;
@@ -132,6 +134,7 @@ generates the model string, in lme4 format, from the current parameters
 
 sub generate_model {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
 
     my $tempfile = $self->tempfile();
     my $dependent_variables = $self->dependent_variables();
@@ -167,7 +170,7 @@ sub generate_model {
 	    push @addends, $terms;
 	}
 	else {
-	    $error = "Interaction terms are not correctly defined.";
+	    $error = SGN::I18N::translate($i18n, "analysis.interface.interaction_terms_are_not_correctly_defined", "Interaction terms are not correctly defined.");
 	}
     }
 
@@ -204,6 +207,7 @@ sub generate_model {
 
 sub generate_model_sommer {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
 
     my $tempfile = $self->tempfile();
     my @dependent_variables_cleaned = map { make_R_variable_name($_) } @{$self->dependent_variables()};
@@ -260,7 +264,7 @@ sub generate_model_sommer {
 	    foreach my $interaction(@$fixed_factors_interaction){
 		
 		
-		if (scalar(@$interaction) != 2) { $error = "interaction needs to be pairs :-(";}
+		if (scalar(@$interaction) != 2) { $error = SGN::I18N::translate($i18n, "analysis.interface.interaction_needs_to_be_pairs", "interaction needs to be pairs :-(");}
 
 		
 		else { $mmer_fixed_factors_interaction .= " + ". join(":", @$interaction);}
@@ -295,7 +299,7 @@ sub generate_model_sommer {
 	    foreach my $intersects(@$variable_slope_intersects){
 		
 		
-		if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
+		if (scalar(@$intersects) != 2) { $error = SGN::I18N::translate($i18n, "analysis.interface.intersects_needs_to_be_pairs", "intersects needs to be pairs :-(");}
 		#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
 		
 		else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
@@ -333,6 +337,7 @@ sub generate_model_sommer {
 
 sub generate_model_spl2D {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
 
     my $tempfile = $self->tempfile();
     my @dependent_variables_cleaned = map { make_R_variable_name($_) } @{$self->dependent_variables()};
@@ -390,7 +395,7 @@ sub generate_model_spl2D {
 	    
 	    foreach my $interaction(@$fixed_factors_interaction){
 			
-		if (scalar(@$interaction) != 2) { $error = "interaction needs to be pairs :-(";}
+		if (scalar(@$interaction) != 2) { $error = SGN::I18N::translate($i18n, "analysis.interface.interaction_needs_to_be_pairs", "interaction needs to be pairs :-(");}
 
 		else { $mmer_fixed_factors_interaction .= " + ". join(":", @$interaction);}
 	    }
@@ -401,7 +406,7 @@ sub generate_model_spl2D {
 	}else {
 	    foreach my $intersects(@$variable_slope_intersects){
 			if (scalar(@$intersects) != 2) { 
-				$error = "intersects needs to be pairs :-(";
+				$error = SGN::I18N::translate($i18n, "analysis.interface.intersects_needs_to_be_pairs", "intersects needs to be pairs :-(");
 			}else { 
 				$mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";
 			} # vsr(Days, Subject)
@@ -443,7 +448,7 @@ traits.
 The files from the dataset will contain trait names that are incompatible with R. These names are converted using the clean_file subroutine. The conversion takes place and is saved in a file with a .clean extension. Then, the .clean file is moved to the previous file name, such that there is not difference in file naming.
 
 
-The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The inital result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete. 
+The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The initial result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete.
   
 
 

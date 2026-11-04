@@ -12,13 +12,13 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
-<&| /page/info_section.mas, 
-   title      => "Step 3: Phenotype dataset",
+<&| /page/info_section.mas, anchor_title => "Step 3: Phenotype dataset",
+   title      => HTML::Entities::encode_entities($c->i18n->p("phenotype.step_3_phenotype_dataset", "Step 3: Phenotype dataset")),
   collapsible => 1,
   collapsed   => 1
 &>
 
-The phenotype dataset should be in a text file and in the following format. The traits names in the phenotype dataset must match exactly with the traits in the traits file, submitted in the previous step.
+<% $c->i18n->p("phenotype.the_phenotype_dataset_should_be_in_a_text_file_and", "The phenotype dataset should be in a text file and in the following format. The traits names in the phenotype dataset must match exactly with the traits in the traits file, submitted in the previous step.") |h %>
 
 <pre>
                 plant    fruit       fruit     fruit
@@ -34,3 +34,7 @@ The phenotype dataset should be in a text file and in the following format. The 
 </pre>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

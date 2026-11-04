@@ -1,0 +1,95 @@
+# إدارة بيانات VCF {#managing-vcf-data}
+
+## تحميل بيانات VCF {#uploading-vcf-data}
+
+يمكن تحميل بيانات التنميط الجيني بتنسيق VCF من واجهة الويب. وتستطيع Breedbase تخزين المتغيرات الجينية من VCF، بما فيها تعدد الصيغ الصبغية والمتغيرات البنيوية.
+
+للبدء، انتقل إلى إدارة -> صفائح التنميط الجيني وانقر الزر الموضح أدناه:
+لا يلزم تحميل صفائح التنميط الجيني مسبقًا لتحميل بيانات VCF؛ يمكنك تحميل بيانات التنميط للعينات أو لعينات الأنسجة في صفائح التنميط.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_button.png')
+```
+
+يبدأ سير العمل بمقدمة:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_dialog_intro.png')
+```
+
+في الخطوة التالية، حدد مشروع تنميط جيني أو أنشئه. وهو كيان عام لتجميع عدة أحداث تنميط جيني. وتُحدد له تسمية ووصف وبرنامج تربية ومرفق للتنميط الجيني (IGD أو Intertek وغيرها).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_dialog_project.png')
+```
+
+بعد ذلك، حدد بروتوكول تنميط جيني أو أنشئه. يمثل البروتوكول مجموعة الواسمات المستدعاة مقابل جينوم مرجعي محدد. وتُحدد له تسمية ووصف واسم الجينوم المرجعي والنوع وموقع إنشاء البيانات. كما توضح الصورة، يمكنك تحديد ما إذا كانت العينات في الملف عينات عادية أو عينات أنسجة في قاعدة البيانات؛ وتُستخدم عينات الأنسجة عند وجود صفيحة تنميط محفوظة. ويتوفر خيار تحليل أسماء العينات التي أضيفت إليها أرقام تسلسل IGD، مثل "accession:igdnumber".
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_dialog_protocol.png')
+```
+
+في الخطوة الأخيرة، اختر ملف VCF من جهازك وحمّله. ويُحدد الحد الأقصى لحجم الملفات التي يمكن تحميلها عبر الواجهة بإعداد NGINX.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_dialog_vcf.png')
+```
+
+## البحث عن بيانات VCF وتنزيلها {#searching-and-downloading-vcf-data}
+
+معالج البحث هو الأداة الأساسية للاستعلام عن قاعدة البيانات. للبدء، انتقل إلى البحث -> المعالج.
+
+بعد حفظ بروتوكولات التنميط الجيني، اختر “بروتوكولات التنميط الجيني” من القائمة المنسدلة الأولى. ثم حدد بروتوكولًا أو أكثر واختر “العينات” من القائمة الثانية لعرض العينات التي حُفظت أنماطها الجينية. وكما في الصورة، يمكن التصفية حسب الكروموسوم وموضعي البداية والنهاية. ويمكن تنزيل الأنماط الجينية بتنسيقي VCF أو DosageMatrix.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_wizard_download_prot.png')
+```
+
+باستخدام “بروتوكول التنميط الجيني الافتراضي” المضبوط في النظام، يمكنك الاستعلام عن تقييمات الحقل الظاهرية قبل تنزيل الأنماط الجينية والظاهرية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_wizard_trial.png')
+```
+
+## البحث عن البروتوكولات {#searching-protocols}
+
+يمكن البحث عن بروتوكولات التنميط الجيني عبر البحث -> بروتوكولات التنميط الجيني. لتنزيل الأنماط الجينية يجب تحديد العينات، ويمكن تصفيتها بأي مجموعة من معايير البحث. إذا لم تحدد بروتوكولًا، فسيُستخدم البروتوكول الافتراضي في الإعدادات. ويمكن أيضًا تحديد البروتوكولات في معالج البحث.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/search_wizard_genotyping_protocols_download_main.png')
+```
+
+تتيح قائمة تنزيل الأنماط الجينية في معالج البحث التصفية حسب الكروموسوم وموضعي البداية والنهاية. ويمكن تنزيل الأنماط الجينية بتنسيقي VCF أو Dosage Matrix. ويمكن تنزيل مصفوفة العلاقات الجينومية (GRM) للعينات المحددة كمصفوفة مفصولة بعلامات جدولة أو بتنسيق من ثلاثة أعمدة مناسب لـ Asreml. إذا كانت الأنماط الجينية للأبوين متاحة، فيمكن حساب أنماط النسل من النسب بتحديد مربع "compute from parents". كما يمكن باستخدام هذا الخيار حساب GRM من الأنماط الجينية للأبوين.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/search_wizard_genotyping_protocols_download_genotypes.png')
+```
+
+كما هو موضح في قسم آخر، يتيح معالج البحث تصفية القيم الظاهرية حسب الحدين الأدنى والأقصى وتنزيلها بتنسيقي CSV وExcel.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/search_wizard_genotyping_protocols_download_phenotypes.png')
+```
+
+
+## صفحات التفاصيل والحذف {#detail-pages-and-deletion}
+
+تعرض صفحة تفاصيل بروتوكول التنميط معلوماته، مثل الجينوم المرجعي المستخدم وأسطر العناوين في ملف VCF المحمّل والواسمات والعينات المنمطة.
+
+يعرض قسم الواسمات جميع الواسمات المستخدمة وتعليقاتها، مثل الموضع والكروموسوم والأليل البديل وأليل المرجع وتنسيق الواسم.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/genotyping_protocol_detail_page_markers.png')
+```
+
+يعرض قسم العينات جميع العينات المنمطة. تتيح روابط “تنزيل” في الجدول الحصول بسهولة على ملف VCF لنتائج كل عينة مع جميع واسمات البروتوكول. لتنزيل عدة عينات دفعة واحدة، استخدم معالج البحث كما سبق.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/genotyping_protocol_detail_page_samples.png')
+```
+
+يمكن حذف بروتوكول التنميط وجميع بيانات التنميط المرتبطة به من صفحة البروتوكول.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/genotyping_protocol_detail_page_delete.png')
+```

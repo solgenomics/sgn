@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 
 $pop_id => ''
@@ -40,10 +44,10 @@ $training_pop_id = $pop_id;
    title => "$training_pop_name"
 &>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Training population summary",
     collapsible => 1,
     collapsed   => 0,
-    title       => "Training population summary",
+    title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.training_population_summary", "Training population summary")),
   &>
 
  <& /solgs/population/summary.mas,
@@ -65,10 +69,10 @@ $training_pop_id = $pop_id;
 % if ($markers_no > 1) {
 
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Model training",
       collapsible => 1,
       collapsed   => 0,
-      title       => "Model training"
+      title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.model_training", "Model training"))
 &>
 
 <& /solgs/population/traits_list.mas,
@@ -104,27 +108,27 @@ $training_pop_id = $pop_id;
   
 %} else {
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Genotype Data",
       collapsible => 1,
       collapsed   => 0,
-      title       => "Genotype Data"
+      title       => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotype_data", "Genotype Data"))
 &>
 
   <div id="traits_list_message"  class="message">
-    <p>There is no genotype data for this population.</p>
+    <p><% $c->i18n->p("solgs.interface.there_is_no_genotype_data_for_this_population", "There is no genotype data for this population.") |h %></p>
   </div>
 
 </&>
 %}
 %} else {
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Data Accessibility",
     collapsible => 1,
     collapsed   => 0,
-    title       => "Data Accessibility",
+    title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.data_accessibility", "Data Accessibility")),
   &>
 
-<p>This is private data.</p>
+<p><% $c->i18n->p("solgs.interface.this_is_private_data", "This is private data.") |h %></p>
 
 </&>
 %}

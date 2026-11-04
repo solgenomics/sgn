@@ -5,20 +5,22 @@
 </%args>
 
 <%init>
+use SGN::I18N ();
+
     if ( !$blast_db ) {
-        print "<p><strong>ERROR: </strong>Missing blast_db id!</p>";
+        print ("<p><strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_label", "ERROR:", undef, {entities => '<>&'}) . " </strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_missing_blast_db", "Missing blast_db id!", undef, {entities => '<>&'}) . "</p>");
     }
     if ( !$chrom ) {
-        print "<p><strong>ERROR: </strong>Missing chrom name!</p>";
+        print ("<p><strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_label", "ERROR:", undef, {entities => '<>&'}) . " </strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_missing_chrom", "Missing chrom name!", undef, {entities => '<>&'}) . "</p>");
     }
     if ( !$pos ) {
-        print "<p><strong>ERROR: </strong>Missing pos!</p>";
+        print ("<p><strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_label", "ERROR:", undef, {entities => '<>&'}) . " </strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_missing_pos", "Missing pos!", undef, {entities => '<>&'}) . "</p>");
     }
 </%init>
 
 
 <p>
     <a href="/tools/blast/match/show?blast_db_id=<% $blast_db %>;id=<% $chrom %>;hilite_coords=<% $pos %>-<% $pos %>" target="_blank">
-        View the marker flanking sequence
+        <% $c->i18n->p("marker.detail.view_the_marker_flanking_sequence", "View the marker flanking sequence") |h %>
     </a>
 </p>

@@ -1,5 +1,23 @@
 
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+my SGN::I18N $ui_forum_i18n = SGN::I18N::translate($c);
+my %ui_forum = (
+    'accession.sequencing.action.edit' => SGN::I18N::translate($ui_forum_i18n, 'accession.sequencing.action.edit', 'Edit', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.add_topic' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.add_topic', 'Add topic', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.browse_without_login' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.browse_without_login', 'You don\'t need to be logged in for browsing.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.forum_topics_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.forum_topics_title', 'Forum Topics', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.logged_in_as' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.logged_in_as', 'You are logged in as', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.login_to_post' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.login_to_post', 'You have to be logged in to add new topics and posts.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.main_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.main_title', 'Main', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.not_logged_in' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.not_logged_in', 'You are not logged in.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.posts_count_label' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.posts_count_label', 'Posts', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.started_by' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.started_by', 'Started by:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'global.safe_caption.note' => SGN::I18N::translate($ui_forum_i18n, 'global.safe_caption.note', 'Note:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'lists.render.action.delete' => SGN::I18N::translate($ui_forum_i18n, 'lists.render.action.delete', 'Delete', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'navigation.login.sign_in' => SGN::I18N::translate($ui_forum_i18n, 'navigation.login.sign_in', 'Login', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 })
+);
 use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::People;
@@ -9,7 +27,7 @@ use CXGN::People::Forum;
 use CXGN::Contact;
 use CXGN::Page::FormattingHelpers qw /page_title_html blue_section_html/;
 
-my $page = CXGN::Page->new("Forum Main", "Lukas");
+my $page = CXGN::Page->new("Forum " . $ui_forum{'community.forum.main_title'}, "Lukas");
 	
 my $dbh = CXGN::DB::Connection->new();
 my $sp_person_id = CXGN::Login->new($dbh)->has_session();
@@ -46,12 +64,12 @@ if ($topic_name) {
 
 $page -> header();
 
-print page_title_html("Forum Topics");
+print page_title_html($ui_forum{'community.forum.forum_topics_title'});
 
 my $login_string="";
 
-if ($name) { $login_string = qq { <div class="row"><div class="panel panel-primary"><div class="panel-body"><div class="row"><div class="col-sm-10">You are logged in as <b>$name</b>.</div><div class="col-sm-2"><button class="btn btn-primary" onclick='location.href="add_topic.pl?action=new";'>Add topic</button>.</div></div></div></div></div> }; }
-else { $login_string="<div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-body\"><div class=\"row\"><div class=\"col-sm-10\"><b>Note:</b> <ul><li>You are not logged in.</li><li>You have to be logged in to add new topics and posts. </li><li>You don't need to be logged in for browsing.</li></ul></div><div class=\"col-sm-2\"><button class=\"btn btn-primary\" onclick='location.href=\"/user/login?goto_url=/forum/topics.pl\";'>Login</button></div></div></div></div></div>"; }
+if ($name) { $login_string = qq { <div class="row"><div class="panel panel-primary"><div class="panel-body"><div class="row"><div class="col-sm-10">@{[$ui_forum{'community.forum.logged_in_as'}]} <b>$name</b>.</div><div class="col-sm-2"><button class="btn btn-primary" onclick='location.href="add_topic.pl?action=new";'>@{[$ui_forum{'community.forum.add_topic'}]}</button>.</div></div></div></div></div> }; }
+else { $login_string="<div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-body\"><div class=\"row\"><div class=\"col-sm-10\"><b>@{[$ui_forum{'global.safe_caption.note'}]}</b> <ul><li>@{[$ui_forum{'community.forum.not_logged_in'}]}</li><li>@{[$ui_forum{'community.forum.login_to_post'}]} </li><li>@{[$ui_forum{'community.forum.browse_without_login'}]}</li></ul></div><div class=\"col-sm-2\"><button class=\"btn btn-primary\" onclick='location.href=\"/user/login?goto_url=/forum/topics.pl\";'>@{[$ui_forum{'navigation.login.sign_in'}]}</button></div></div></div></div></div>"; }
 
 print $login_string;
 
@@ -93,8 +111,8 @@ sub topics_list {
 	    || $user->get_user_type() eq "curator"
 	    ) {   
 	    $append = qq {
-		<a href="add_topic.pl?action=edit&amp;topic_id=$topic_id">Edit</a> | 
-		    <a href="add_topic.pl?action=delete&amp;topic_id=$topic_id">Delete</a> 
+		<a href="add_topic.pl?action=edit&amp;topic_id=$topic_id">@{[$ui_forum{'accession.sequencing.action.edit'}]}</a> |
+		    <a href="add_topic.pl?action=delete&amp;topic_id=$topic_id">@{[$ui_forum{'lists.render.action.delete'}]}</a>
 		    
 		}
 	}
@@ -110,10 +128,10 @@ sub topics_list {
                       <a href="posts.pl?topic_id=$topic_id"><b>$topic_name</b></a>
                     </div>
                     <div class="col-sm-2">
-                      Started by:<br/><b><a href="/solpeople/personal-info.pl?sp_person_id=$submitter_id">$submitter_name</a></b>
+                      @{[$ui_forum{'community.forum.started_by'}]}<br/><b><a href="/solpeople/personal-info.pl?sp_person_id=$submitter_id">$submitter_name</a></b>
                     </div>
                     <div class="col-sm-2">
-                      <a href="posts.pl?topic_id=$topic_id"><b>$post_count</b> Posts</a>
+                      <a href="posts.pl?topic_id=$topic_id"><b>$post_count</b> @{[$ui_forum{'community.forum.posts_count_label'}]}</a>
                     </div>
                     <div class="col-sm-2">
                       $most_recent_post_date

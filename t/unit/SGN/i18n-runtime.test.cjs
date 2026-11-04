@@ -1,0 +1,210 @@
+'use strict';
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const I18N = require('../../../static/js/sgn-i18n.js');
+const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n-fixtures.json'),'utf8'));
+const clone = x => JSON.parse(JSON.stringify(x));
+const create = locale => new I18N({locale,dir:locale==='ar'?'rtl':'ltr',domain:'sgn',catalogs:fixture.catalogs[locale]?[fixture.catalogs[locale]]:[]});
+
+test('context, English fallback, named values and independent request objects',()=> {
+ const uk=create('uk'), en=create('en'), ar=create('ar');
+ assert.equal(uk.p('controls.save','Save'),'Зберегти');
+ assert.equal(uk.p('seedlots.save','Save'),'Зберегти партію');
+ assert.equal(uk.p('','Save'),'Зберегти без контексту');
+ assert.equal(uk.p('data','Wheat'),'Wheat');
+ for(let i=0;i<5;i++) {
+  assert.equal(en.p('controls.save','Save'),'Save');
+  assert.equal(uk.p('controls.save','Save'),'Зберегти');
+  assert.equal(ar.np('trials.count','%{count} trial found','%{count} trials found',3,{count:3}),'ar[3] 3');
+ }
+ const name='</script><img src=x onerror=alert(1)>';
+ assert.equal(uk.p('trial.named','Created trial %{name}.',{name}),'Створено дослід '+name+'.');
+ assert.throws(()=>uk.p('trial.named','Created trial %{name}.',{}),/named variable/);
+});
+
+test('GNU plurals and regional catalogs retain different zero rules',()=>{
+ const uk=create('uk'), ar=create('ar');
+ const suffix={0:'дослідів',1:'дослід',2:'досліди',5:'дослідів',11:'дослідів',21:'дослід',22:'досліди',25:'дослідів',101:'дослід'};
+ for(const [n,s] of Object.entries(suffix)) assert.equal(uk.np('trials.count','%{count} trial found','%{count} trials found',Number(n),{count:n}),`Знайдено ${n} ${s}`);
+ for(const [n,i] of [[0,0],[1,1],[2,2],[3,3],[11,4],[100,5],[102,5]]) assert.equal(ar.np('trials.count','%{count} trial found','%{count} trials found',n,{count:n}),`ar[${i}] ${n}`);
+ assert.equal(create('pt-BR').np('trials.count','%{count} trial found','%{count} trials found',0,{count:0}),'pt-BR[0] 0');
+ assert.equal(create('pt-PT').np('trials.count','%{count} trial found','%{count} trials found',0,{count:0}),'pt-PT[1] 0');
+ assert.equal(uk.np('missing','%{count} trial','%{count} trials',21,{count:21}),'21 trials');
+ assert.equal(uk.np('trials.count','%{count} trial found','%{count} records found',1,{count:1}),'1 trial found');
+ for(const n of [-1,1.2,NaN,undefined,9007199254740992]) assert.throws(()=>uk.np('ctx','one','many',n),/count/);
+});
+
+test('catalog cloning, order independent AST comparison and validation',()=> {
+ const catalog=clone(fixture.catalogs.uk);
+ const runtime=new I18N({locale:'uk',dir:'ltr',domain:'sgn',catalogs:[catalog]});
+ catalog.messages['controls.save\x04Save'].forms[0]='changed';
+ assert.equal(runtime.p('controls.save','Save'),'Зберегти');
+ const reordered=JSON.parse(JSON.stringify(fixture.catalogs.uk,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(key=>[key,v[key]])):v));
+ assert.equal(new I18N({locale:'uk',dir:'ltr',domain:'sgn',catalogs:[reordered]}).p('controls.save','Save'),'Зберегти');
+ const bad=clone(fixture.catalogs.uk);bad.pluralAst={type:'EVAL',code:'evil()'};
+ assert.throws(()=>new I18N({locale:'uk',dir:'ltr',domain:'sgn',catalogs:[bad]}),/AST/);
+ assert.throws(()=>I18N.parsePlural('nplurals=2; plural=evil(n);'),/Parse|parse|Lexical|Invalid|Unsupported/);
+ assert.throws(()=>I18N.parsePlural('nplurals=2; plural=(n + 1);'),/Parse|parse|Lexical|Invalid|Unsupported/);
+ assert.throws(()=>I18N.parsePlural('nplurals=2; plural=(n % 0);'),/zero/);
+ assert.throws(()=>I18N.parsePlural('nplurals=2; plural=5;'),/outside/);
+});
+
+test('browser runtime and standard Jed plural parser work with eval disabled',()=>{
+ const sandbox={console};
+ sandbox.eval=()=>{throw new Error('eval forbidden')};
+ sandbox.Function=()=>{throw new Error('Function forbidden')};
+ vm.createContext(sandbox, {codeGeneration:{strings:false,wasm:false}});
+ vm.runInContext(fs.readFileSync(path.resolve(__dirname,'../../../static/js/sgn-i18n.js'),'utf8'),sandbox);
+ assert.equal(sandbox.SGN.i18n.p('ctx','English'),'English');
+ sandbox.payload={locale:'uk',dir:'ltr',domain:'sgn',catalogs:[clone(fixture.catalogs.uk)]};
+ assert.equal(vm.runInContext('new SGN.I18N(payload).np("trials.count", "%{count} trial found", "%{count} trials found", 22, {count:22})',sandbox),'Знайдено 22 досліди');
+});
+
+
+test('GNU logical expressions and single-pass named parameters',()=>{
+ const en=create('en');
+ assert.equal(en.p('literal','Keep {braces} and %{name}.',{name:'value'}),'Keep {braces} and value.');
+ assert.equal(en.p('literal','Value: %{name}',{name:'%{other}'}),'Value: %{other}');
+ for(const formula of ['nplurals=2; plural=(n || 0);','nplurals=2; plural=(n && 5);']) {
+  const parsed=I18N.parsePlural(formula);
+  assert.equal(I18N.evaluatePlural(parsed.ast,0),0);
+  assert.equal(I18N.evaluatePlural(parsed.ast,3),1);
+  const cat=clone(fixture.catalogs['pt-PT']);cat.pluralForms=parsed.normalized;cat.pluralAst=parsed.ast;
+  assert.equal(new I18N({locale:'pt-PT',dir:'ltr',domain:'sgn',catalogs:[cat]}).np('trials.count','%{count} trial found','%{count} trials found',3,{count:3}),'pt-PT[1] 3');
+ }
+});
+
+
+test('native names are optional display data with consistent Unicode limits', () => {
+    assert.equal(new I18N().languageName, 'English');
+    const payload={locale:'uk',dir:'ltr',domain:'sgn',languageName:'Українська',catalogs:[clone(fixture.catalogs.uk)]};
+    assert.equal(new I18N(payload).languageName,'Українська');
+    assert.equal(new I18N({...payload,languageName:'𞤊'.repeat(200)}).languageName,'𞤊'.repeat(200));
+    for (const languageName of ['', ' ', 'x'.repeat(201), 'bad\nname', 'bad\x85name', {}, true]) {
+        assert.throws(()=>new I18N({...payload,languageName}),/native language name/);
+    }
+    assert.throws(()=>new I18N({...payload,catalogs:[{...clone(fixture.catalogs.uk),languageName:[]}]}),/native language name/);
+});
+
+test('requested regional tag remains separate from effective language', () => {
+    const payload={locale:'uk',requestedLocale:'uk-UA',dir:'ltr',domain:'sgn',catalogs:[clone(fixture.catalogs.uk)]};
+    const translator=new I18N(payload);
+    assert.equal(translator.locale,'uk');
+    assert.equal(translator.requestedLocale,'uk-UA');
+    assert.equal(translator.p('controls.save','Save'),'Зберегти');
+    assert.throws(()=>new I18N({...payload,requestedLocale:'../uk'}),/requested locale/);
+});
+
+
+test('short helpers follow bootstrap replacement and retain English without catalogs', () => {
+ const target={}; I18N.install(target);
+ assert.equal(target.SGN.t('name', 'Name: %{name}', {name:'A&B'}), 'Name: A&B');
+ assert.equal(target.SGN.tn('count', '%{count} trial', '%{count} trials', 0, {count:0}), '0 trials');
+ target.SGN.i18n=create('uk');
+ assert.equal(target.SGN.t('controls.save','Save'),'Зберегти');
+ assert.equal(target.SGN.tn('trials.count','%{count} trial found','%{count} trials found',22,{count:22}),'Знайдено 22 досліди');
+ target.SGN.i18n=create('ar');
+ assert.equal(target.SGN.tn('trials.count','%{count} trial found','%{count} trials found',3,{count:3}),'ar[3] 3');
+ delete target.SGN.i18n;
+ assert.equal(target.SGN.t('controls.save','Save'),'Save');
+ assert.throws(()=>target.SGN.t('name','%{name}',{}),/named variable/);
+});
+
+
+test('standard shared script preserves native English when optional locale endpoints fail', () => {
+ const sandbox={jQuery(){},JSAN:{use(){}}}; vm.createContext(sandbox);
+ vm.runInContext(fs.readFileSync(path.resolve(__dirname,'../../../js/source/legacy/sgn.js'),'utf8'),sandbox);
+ assert.equal(sandbox.SGN.t('caption','Name: %{name}',{name:'<img> & %{other}'}),'Name: <img> & %{other}');
+ for(const count of [0,1,2,21]) assert.equal(sandbox.SGN.tn('count','%{count} trial','%{count} trials',count,{count}),`${count} ${count===1?'trial':'trials'}`);
+ assert.throws(()=>sandbox.SGN.t('caption','%{name}',{}),/named variable/);
+ assert.throws(()=>sandbox.SGN.tn('count','One','Many',-1),/count/);
+ sandbox.SGN.i18n=create('uk');
+ assert.equal(sandbox.SGN.t('controls.save','Save'),'Зберегти');
+ assert.equal(sandbox.SGN.tn('trials.count','%{count} trial found','%{count} trials found',22,{count:22}),'Знайдено 22 досліди');
+});
+
+
+test('a plural index without a represented form retains whole English fallback', () => {
+ const catalog=clone(fixture.catalogs['pt-PT']);
+ const parsed=I18N.parsePlural('nplurals=2; plural=(n==5000 ? 7 : 0);');
+ catalog.pluralForms=parsed.normalized;catalog.pluralAst=parsed.ast;
+ const runtime=new I18N({locale:'pt-PT',dir:'ltr',domain:'sgn',catalogs:[catalog]});
+ assert.equal(runtime.np('trials.count','%{count} trial found','%{count} trials found',5000,{count:5000}),'5000 trials found');
+});
+
+
+test('late nonnumeric plural results retain the pinned Jed form-zero behavior', () => {
+ const catalog=clone(fixture.catalogs['pt-PT']);
+ const parsed=I18N.parsePlural('nplurals=2; plural=(n % (n != 5000));');
+ catalog.pluralForms=parsed.normalized;catalog.pluralAst=parsed.ast;
+ const runtime=new I18N({locale:'pt-PT',dir:'ltr',domain:'sgn',catalogs:[catalog]});
+ assert.equal(runtime.np('trials.count','%{count} trial found','%{count} trials found',5000,{count:5000}),'pt-PT[0] 5000');
+ assert.throws(()=>runtime.np('trials.count','%{count} trial found','%{count} trials found',NaN,{count:5000}),/count/);
+});
+
+test('full Trial entrypoint preserves native save and shared plurals without optional locale resources', () => {
+ const shared=fs.readFileSync(path.resolve(__dirname,'../../../js/source/legacy/sgn.js'),'utf8');
+ const source=fs.readFileSync(path.resolve(__dirname,'../../../js/source/legacy/CXGN/Trial.js'),'utf8');
+ const fieldName='Field_Жито_%{name} <img src=x> & literal';
+ for(const mode of ['english-only','locale-assets-failed','translated']) {
+  const callbacks=new Map(),elements=new Map(),calls=[];
+  const item=selector=>{
+   if(selector&&selector.element)return selector.element;
+   if(String(selector).startsWith('<'))return {text:'',children:[]};
+   if(!elements.has(selector))elements.set(selector,{text:selector==='#trialIDDiv'?'73':'',value:'',children:[]});
+   return elements.get(selector);
+  };
+  const jq=selector=>{
+   const element=item(selector);
+   const api={element,
+    ready(){return this;},on(){return this;},change(){return this;},daterangepicker(){return this;},
+    click(callback){callbacks.set(selector,callback);return this;},
+    data(){return this;},attr(){return this;},addClass(){return this;},modal(){return this;},
+    is(){return selector==='#edit_trial_plan_to_genotype';},
+    val(value){if(arguments.length){element.value=value;return this;}return element.value;},
+    text(value){if(arguments.length){element.text=String(value);return this;}return element.text;},
+    empty(){element.children=[];element.text='';return this;},
+    append(child){element.children.push(item(child));return this;},
+    appendTo(target){item(target).children.push(element);return this;}
+   };return api;
+  };
+  jq.noConflict=()=>jq;jq.ajax=options=>calls.push(options);
+  const changed=[
+   {id:'edit_trial_name',title:'name',value:fieldName},
+   {id:'edit_trial_plan_to_genotype',title:'plan_to_genotype',value:'0',selectedIndex:0,options:[{text:'No'}]},
+   {id:'edit_trial_harvest_date',title:'harvest_date',value:''}
+  ];
+  const document={documentElement:{lang:mode==='english-only'?'en':'uk',getAttribute(){return mode==='english-only'?'en':'uk-UA';}},
+   getElementById(){return {innerHTML:'',getAttribute(){return '';}};},getElementsByName(){return changed;}};
+  const sandbox={document,jQuery:jq,JSAN:{use(){}},get_select_box(){},console};sandbox.window=sandbox;
+  vm.createContext(sandbox);vm.runInContext(shared,sandbox,{filename:'shared-sgn.js'});
+  if(mode==='translated') {
+   const catalog=clone(fixture.catalogs.uk);
+   for(const [context,english,translated] of [
+    ['trial.field.name','Trial Name','uk: name'],
+    ['trial.field.plan_to_genotype','Trial Will Be Genotyped','uk: genotype'],
+    ['trial.field.harvest_date','Harvest Date','uk: harvest'],
+    ['trial.details.changed','Changed %{field} to: %{value}','uk: %{field} = %{value}'],
+    ['trial.details.network_error','Trial detail update AJAX request failed. Update not completed.','uk: network error']
+   ])catalog.messages[context+'\u0004'+english]={plural:null,forms:[translated]};
+   sandbox.SGN.i18n=new I18N({locale:'uk',requestedLocale:'uk-UA',dir:'ltr',domain:'sgn',catalogs:[catalog]});
+  }
+  vm.runInContext(source,sandbox,{filename:'native-Trial.js'});
+  sandbox.edit_trial_details();callbacks.get('#save_trial_details')();
+  assert.equal(calls.length,1,mode+': save reaches native AJAX');
+  const request=calls[0];
+  assert.equal(request.url,'/ajax/breeders/trial/73/details/');assert.equal(request.type,'POST');
+  assert.deepEqual(JSON.parse(JSON.stringify(request.data)),{categories:['name','plan_to_genotype','harvest_date'],details:{name:fieldName,plan_to_genotype:'0',harvest_date:'remove'}});
+  assert.equal(request.headers['X-SGN-Locale'],mode==='english-only'?'en':'uk-UA');
+  request.success({success:1});
+  assert.deepEqual(item('#trial_details_saved_message').children.map(child=>child.text),mode==='translated'
+   ?['uk: uk: name = '+fieldName,'uk: uk: genotype = No','uk: uk: harvest = remove']
+   :['Changed Trial Name to: '+fieldName,'Changed Trial Will Be Genotyped to: No','Changed Harvest Date to: remove']);
+  request.error({});
+  assert.equal(item('#trial_details_error_message').children[0].text,mode==='translated'?'uk: network error':'Trial detail update AJAX request failed. Update not completed.');
+  assert.equal(sandbox.SGN.tn('trials.count','%{count} trial found','%{count} trials found',2,{count:2}),mode==='translated'?'Знайдено 2 досліди':'2 trials found',mode+': loading Trial cannot poison shared plural fallback');
+ }
+});

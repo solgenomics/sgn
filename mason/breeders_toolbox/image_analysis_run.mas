@@ -44,15 +44,16 @@ tr.shown td.details-control { text-align:center; color:red; }
 <br/>
 
 <div class="trial-header">
-    <& /page/page_title.mas, info_section_collapsed => 0, title => "Image Analysis Run: " . $run_name &>
+    <& /page/page_title.mas, info_section_collapsed => 0, title => SGN::I18N::translate($c->i18n, 'image_analysis.run.title', 'Image Analysis Run: %{name}', {name => $run_name}, {entities => '<>&"'}) &>
 </div>
 
 <&| /page/info_section.mas,
     id          => "run_details",
-    title       => "Run Details",
+    anchor_title => 'Run Details',
+    title       => HTML::Entities::encode_entities($c->i18n->p('image_analysis.run.run_details', 'Run Details')),
     collapsible => 1,
     collapsed   => 0,
-    subtitle    => "View basic information about this image analysis run."
+    subtitle    => HTML::Entities::encode_entities($c->i18n->p('image_analysis.run.view_basic_information_about_this_image_analysis_run', 'View basic information about this image analysis run.'))
 &>
     <& /breeders_toolbox/image_analysis_run_details.mas,
         run_project_id     => $run_project_id,
@@ -68,18 +69,18 @@ tr.shown td.details-control { text-align:center; color:red; }
     &>
 </&>
 
-<&| /page/info_section.mas, title=>"Image Analysis Results by Image", collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title=>'Image Analysis Results by Image', title=>HTML::Entities::encode_entities($c->i18n->p('image_analysis.run.image_analysis_results_by_image', 'Image Analysis Results by Image')), collapsible => 1, collapsed=>0 &>
   <div class="well well-sm">
 
     <div id="per_image_results_loading" style="text-align:center;padding:20px;">
       <span class="glyphicon glyphicon-refresh" style="font-size:24px;"></span>
-      <p>Loading images…</p>
+      <p><% $c->i18n->p('image_analysis.run.loading_images', 'Loading images…') | h %></p>
     </div>
 
     <div class="panel-group" id="per_image_accordion" role="tablist" aria-multiselectable="true"></div>
 
     <div id="per_image_empty" class="text-muted" style="display:none;padding:15px;">
-      No per-image results are stored for this run.
+      <% $c->i18n->p('image_analysis.run.no_per_image_results_are_stored_for_this_run', 'No per-image results are stored for this run.') | h %>
     </div>
 
   </div>
@@ -90,6 +91,7 @@ tr.shown td.details-control { text-align:center; color:red; }
 
 <script defer="defer">
 jQuery(document).ready(function () {
+    var imageRunI18n = window.SGN.i18n;
 
     var run_project_id = '<% $run_project_id %>';
     var loaded_tables  = {};
@@ -177,15 +179,15 @@ jQuery(document).ready(function () {
         });
 
         if (!detail_rows) {
-            detail_rows = '<tr><td colspan="4" class="text-muted">No stored values.</td></tr>';
+            detail_rows = '<tr><td colspan="4" class="text-muted">' + esc(imageRunI18n.p('image_analysis.run.no_stored_values', 'No stored values.')) + '</td></tr>';
         }
 
         return '<table class="table table-condensed">' +
                    '<thead><tr>' +
-                       '<th scope="col">Object</th>' +
-                       '<th scope="col">Tissue Sample</th>' +
-                       '<th scope="col">Analyzed Image</th>' +
-                       '<th scope="col">Value</th>' +
+                       '<th scope="col">' + esc(imageRunI18n.p('image_analysis.run.object', 'Object')) + '</th>' +
+                       '<th scope="col">' + esc(imageRunI18n.p('image_analysis.run.tissue_sample', 'Tissue Sample')) + '</th>' +
+                       '<th scope="col">' + esc(imageRunI18n.p('image_analysis.run.analyzed_image', 'Analyzed Image')) + '</th>' +
+                       '<th scope="col">' + esc(imageRunI18n.p('image_analysis.run.value', 'Value')) + '</th>' +
                    '</tr></thead>' +
                    '<tbody>' + detail_rows + '</tbody>' +
                '</table>';
@@ -205,7 +207,7 @@ jQuery(document).ready(function () {
 
                 if (!images.length) {
                     jQuery('#per_image_empty')
-                        .text((resp && resp.error) || 'No per-image results are stored for this run.')
+                        .text((resp && resp.error) || imageRunI18n.p('image_analysis.run.no_per_image_results_are_stored_for_this_run', 'No per-image results are stored for this run.'))
                         .show();
                     jQuery('#run_trial_links').html('<span class="text-muted">—</span>');
                     return;
@@ -218,7 +220,7 @@ jQuery(document).ready(function () {
                 jQuery('#per_image_results_loading').hide();
                 jQuery('#run_images_summary_loading').hide();
                 console.error('Failed to load run images:', xhr.responseText);
-                jQuery('#per_image_empty').text('Could not load the image list.').show();
+                jQuery('#per_image_empty').text(imageRunI18n.p('image_analysis.run.could_not_load_the_image_list', 'Could not load the image list.')).show();
             }
         });
     }
@@ -232,10 +234,10 @@ jQuery(document).ready(function () {
         images.forEach(function (img) {
             totalSamples += (img.tissue_sample_count || 0);
             if (img.trial_id) {
-                trials[img.trial_id] = img.trial_name || ('Trial ' + img.trial_id);
+                trials[img.trial_id] = img.trial_name || imageRunI18n.p('image_analysis.run.trial_fallback', 'Trial %{id}', {id: img.trial_id});
             }
 
-            var label = img.source_image_filename || ('Image #' + img.source_image_id);
+            var label = img.source_image_filename || imageRunI18n.p('image_analysis.run.image_fallback', 'Image #%{id}', {id: img.source_image_id});
 
             $tb.append(
                 '<tr>' +
@@ -284,7 +286,7 @@ jQuery(document).ready(function () {
 
         images.forEach(function (img, i) {
             var iid   = img.source_image_id;
-            var label = img.source_image_filename || ('Image #' + iid);
+            var label = img.source_image_filename || imageRunI18n.p('image_analysis.run.image_fallback', 'Image #%{id}', {id: iid});
             var isOpen = (i === 0);
 
             $acc.append(
@@ -297,8 +299,8 @@ jQuery(document).ready(function () {
                       '<span class="glyphicon glyphicon-chevron-right"></span> ' +
                       '<b>' + esc(label) + '</b>' +
                       ' <small class="text-muted">— ' +
-                          esc(img.source_stock_name || ('stock ' + img.source_stock_id)) +
-                          ' · ' + (img.tissue_sample_count || 0) + ' tissue samples' +
+                          esc(img.source_stock_name || imageRunI18n.p('image_analysis.run.stock_fallback', 'stock %{id}', {id: img.source_stock_id})) +
+                          ' · ' + esc(imageRunI18n.np('image_analysis.run.sample_count', '%{count} tissue sample', '%{count} tissue samples', img.tissue_sample_count || 0, {count: img.tissue_sample_count || 0})) +
                       '</small>' +
                     '</a>' +
                   '</h4>' +
@@ -309,15 +311,15 @@ jQuery(document).ready(function () {
                   '<div class="panel-body">' +
                     imageDetailBlock(img) +
                     '<div id="loading_' + esc(iid) + '" style="display:none;padding:10px;">' +
-                      '<span class="glyphicon glyphicon-refresh"></span> Loading results…' +
+                      '<span class="glyphicon glyphicon-refresh"></span> ' + esc(imageRunI18n.p('image_analysis.run.loading_results', 'Loading results…')) +
                     '</div>' +
                     '<div id="msg_' + esc(iid) + '"></div>' +
                     '<table id="result_table_' + esc(iid) + '" ' +
                            'class="table table-bordered table-hover table-condensed display" ' +
                            'style="width:100%">' +
                       '<thead><tr>' +
-                        '<th></th><th>Stock</th><th>Trait</th>' +
-                        '<th># Analyzed Objects</th><th>Mean Value</th>' +
+                        '<th></th><th>' + esc(imageRunI18n.p('image_analysis.run.stock', 'Stock')) + '</th><th>' + esc(imageRunI18n.p('image_analysis.run.trait', 'Trait')) + '</th>' +
+                        '<th>' + esc(imageRunI18n.p('image_analysis.run.analyzed_objects', '# Analyzed Objects')) + '</th><th>' + esc(imageRunI18n.p('image_analysis.run.mean_value', 'Mean Value')) + '</th>' +
                       '</tr></thead>' +
                     '</table>' +
                   '</div>' +
@@ -351,33 +353,33 @@ jQuery(document).ready(function () {
             ? '<div style="border:1px solid #ddd;padding:4px;background:#fff;text-align:center;">' +
                   '<img src="' + img.overlay_image_url + '" ' +
                        'style="max-width:100%;max-height:220px;cursor:pointer;" ' +
-                       'title="Click to view full image" ' +
+                       'title="' + esc(imageRunI18n.p('image_analysis.run.click_to_view_full_image', 'Click to view full image')) + '" ' +
                        'onclick="window.open(\'' + img.overlay_image_url + '\',\'_blank\')"/>' +
               '</div>' +
               '<p class="text-muted" style="font-size:11px;margin-top:4px;">' +
-                  '<a href="/image/view/' + esc(img.overlay_image_id) + '">View overlay details</a>' +
+                  '<a href="/image/view/' + esc(img.overlay_image_id) + '">' + esc(imageRunI18n.p('image_analysis.run.view_overlay_details', 'View overlay details')) + '</a>' +
               '</p>'
             : '<div class="text-center text-muted" style="padding:25px 10px;">' +
                   '<span class="glyphicon glyphicon-picture" style="font-size:32px;"></span>' +
-                  '<p style="margin-top:8px;">No overlay image.</p>' +
+                  '<p style="margin-top:8px;">' + esc(imageRunI18n.p('image_analysis.run.no_overlay_image', 'No overlay image.')) + '</p>' +
               '</div>';
 
         return '<div class="row" style="margin-bottom:12px;">' +
             '<div class="col-sm-8">' +
               '<table class="table table-condensed table-bordered" style="font-size:12px;">' +
-                '<tr><td style="width:35%;"><b>Source Image</b></td><td>' +
+                '<tr><td style="width:35%;"><b>' + esc(imageRunI18n.p('image_analysis.run.source_image', 'Source Image')) + '</b></td><td>' +
                     '<a href="/image/view/' + esc(img.source_image_id) + '">' +
-                    esc(img.source_image_filename || ('Image #' + img.source_image_id)) + '</a></td></tr>' +
-                '<tr><td><b>Source Image ID</b></td><td>' + esc(img.source_image_id) + '</td></tr>' +
-                '<tr><td><b>Source Stock</b></td><td>' + (img.source_stock_id
+                    esc(img.source_image_filename || imageRunI18n.p('image_analysis.run.image_fallback', 'Image #%{id}', {id: img.source_image_id})) + '</a></td></tr>' +
+                '<tr><td><b>' + esc(imageRunI18n.p('image_analysis.run.source_image_id', 'Source Image ID')) + '</b></td><td>' + esc(img.source_image_id) + '</td></tr>' +
+                '<tr><td><b>' + esc(imageRunI18n.p('image_analysis.run.source_stock', 'Source Stock')) + '</b></td><td>' + (img.source_stock_id
                     ? '<a href="/stock/' + esc(img.source_stock_id) + '/view">' +
                       esc(img.source_stock_name || img.source_stock_id) + '</a>'
                     : '<span class="text-muted">—</span>') + '</td></tr>' +
-                '<tr><td><b>Source Trial</b></td><td>' + (img.trial_id
+                '<tr><td><b>' + esc(imageRunI18n.p('image_analysis.run.source_trial', 'Source Trial')) + '</b></td><td>' + (img.trial_id
                     ? '<a href="/breeders/trial/' + esc(img.trial_id) + '">' +
                       esc(img.trial_name || img.trial_id) + '</a>'
                     : '<span class="text-muted">—</span>') + '</td></tr>' +
-                '<tr><td><b>Tissue Samples</b></td><td>' +
+                '<tr><td><b>' + esc(imageRunI18n.p('image_analysis.run.tissue_samples', 'Tissue Samples')) + '</b></td><td>' +
                     (img.tissue_sample_count || 0) + '</td></tr>' +
               '</table>' +
             '</div>' +
@@ -481,3 +483,7 @@ jQuery(document).ready(function () {
 
 });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

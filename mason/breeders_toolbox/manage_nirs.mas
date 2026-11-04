@@ -11,16 +11,20 @@ $sample_tissue_types => ()
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial', 'jquery.iframe-post-form' ] &>
 
-<& /page/page_title.mas, title=>"Manage NIRS Data" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.manage.title", "Manage NIRS Data")) &>
 
 <div>
 
 <%perl>
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' name='upload_high_dim_phenotypes_spreadsheet_link_nirs'>Upload NIRS</button><button class='btn btn-success' style='margin:3px' id='nirs_analysis_training_dialog_show'>Train NIRS Models</button><button class='btn btn-success' style='margin:3px' id='nirs_analysis_prediction_dialog_show'>Predict Phenotypes</button><button class='btn btn-default' style='margin:3px' id='nirs_analysis_plot_spectra_show'>Plot Spectra</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_download_button'>Download NIRS</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_relationship_matrix_download_button'>Download Relationship Matrix</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' name='upload_high_dim_phenotypes_spreadsheet_link_nirs'>" . $c->i18n->p("nirs.manage.upload", "Upload NIRS") . "</button><button class='btn btn-success' style='margin:3px' id='nirs_analysis_training_dialog_show'>" . $c->i18n->p("nirs.manage.train_models", "Train NIRS Models") . "</button><button class='btn btn-success' style='margin:3px' id='nirs_analysis_prediction_dialog_show'>" . $c->i18n->p("nirs.manage.predict_phenotypes", "Predict Phenotypes") . "</button><button class='btn btn-default' style='margin:3px' id='nirs_analysis_plot_spectra_show'>" . $c->i18n->p("nirs.manage.plot_spectra_button", "Plot Spectra") . "</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_download_button'>" . $c->i18n->p("nirs.manage.download_nirs", "Download NIRS") . "</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_relationship_matrix_download_button'>" . $c->i18n->p("nirs.manage.download_relationship_matrix", "Download Relationship Matrix") . "</button>";
 </%perl>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>NIRS</h4>", info_section_subtitle => 'Upload and perform analyses using NIRS data. Please <a href="https://www.biorxiv.org/content/10.1101/2020.09.18.278549v1" target=_blank>cite this work</a> if you find it useful.', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_nirs_main", nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities => $sampling_facilities, sample_tissue_types => $sample_tissue_types &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>NIRS</h4>", info_section_subtitle => $c->i18n->p("nirs.manage.subtitle_prefix", "Upload and perform analyses using NIRS data. Please ") . "<a href=\"https://www.biorxiv.org/content/10.1101/2020.09.18.278549v1\" target=_blank>" . $c->i18n->p("nirs.manage.citation_link", "cite this work") . "</a>" . $c->i18n->p("nirs.manage.subtitle_tail", " if you find it useful."), buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_nirs_main", nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities => $sampling_facilities, sample_tissue_types => $sample_tissue_types &>
 
 </div>
 
 <& /analyses/store_new_analysis_values_and_model.mas &>
+
+<%once>
+use HTML::Entities ();
+</%once>

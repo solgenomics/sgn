@@ -41,7 +41,7 @@ if (!$data_structure) {
    }
 }
 
-my $title = 'Kinship and Inbreeding Analysis'; 
+my $title = $c->i18n->p("solgs.interface.kinship_page_title", "Kinship and Inbreeding Analysis");
 my $collapsed = 0;
 my $collapsible = 0;
 my $section_title;
@@ -49,7 +49,7 @@ my $section_title;
 my $url = $c->req->path;
 
 if ($url !~ /kinship\/analysis/) {
-  $section_title = 'Kinship and inbreeding analysis';
+  $section_title = $c->i18n->p("solgs.interface.kinship_section_title", "Kinship and inbreeding analysis");
   $collapsible = 1;
   $collapsed = 1 if $url =~ /breeders\/trial/;
 }
@@ -64,7 +64,7 @@ if ($url !~ /kinship\/analysis/) {
     &>
 %}
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => defined($section_title) ? "Kinship and inbreeding analysis" : undef,
   collapsible => $collapsible,
   collapsed   => $collapsed,
   title       => $section_title
@@ -83,7 +83,7 @@ if ($url !~ /kinship\/analysis/) {
 %}
 
 % if ($url =~ /solgs\/|breeders\/trial\//) {
-    <input id="run_kinship" class="btn btn-success" type="button" value="Run kinship" />
+    <input id="run_kinship" class="btn btn-success" type="button" value="<% $c->i18n->p("solgs.interface.run_kinship", "Run kinship") |h %>" />
 %}
 
   <& plot.mas,

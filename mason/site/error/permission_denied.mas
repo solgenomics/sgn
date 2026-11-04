@@ -2,9 +2,9 @@
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
-   <h1 style="margin-bottom: 1em">Access denied</h1>
+   <h1 style="margin-bottom: 1em"><% $c->i18n->p('common.error.access_denied.title', 'Access denied') | h %></h1>
 
    <div>
-     You do not have sufficient permissions to view this page. This could be due to your user status or server configuration. Contact a server administrator for more details. 
+     <% $c->i18n->p('common.error.access_denied.message', 'You do not have sufficient permissions to view this page. This could be due to your user status or server configuration. Contact a server administrator for more details.') | h %>
    </div>
 </div>

@@ -174,7 +174,7 @@ ORDER BY name;";
 #   - results = verification results
 #       - processed_filepath = server filepath to processed file
 #       - processed = 1 if file successfully uploaded and processed / 0 if not
-#       - verified = 1 if file sucessfully verified / 0 if not
+#       - verified = 1 if file successfully verified / 0 if not
 #       - missing_features = list of seqid's not in the database as features
 #       - missing_attributes = list of attributes in the protocol that are not in the uploaded file
 #       - undefined_attributes = list attributes in the uploaded file not defined by the protocol
@@ -239,7 +239,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
     # Using an existing protocol...
     if ( $use_existing_protocol eq 'true' ) {
 
-        # Get exisiting protocol id
+        # Get existing protocol id
         my $protocol_id = $c->req->param('existing_protocol_id');
         if ( !defined $protocol_id || $protocol_id eq '' ) {
             $c->stash->{rest} = {error => 'protocol_id not provided!'};
@@ -291,7 +291,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
     }
 
     # Run the verification
-    my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
+    my $smd = CXGN::Genotype::SequenceMetadata->new(i18n => $c->i18n, bcs_schema => $schema);
     my $verification_results = $smd->verify($archived_filepath, $processed_filepath, $species, \@attributes);
     $verification_results->{'processed_filepath'} = $processed_filepath;
 
@@ -431,7 +431,7 @@ sub sequence_metadata_store_POST : Args(0) {
         }
 
         # Create the Sequence Metadata protocol
-        $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $protocol_sequence_metadata_type_id);
+        $smd = CXGN::Genotype::SequenceMetadata->new(i18n => $c->i18n, bcs_schema => $schema, type_id => $protocol_sequence_metadata_type_id);
         my %protocol_args = (
             protocol_name => $protocol_name,
             protocol_description => $protocol_description,
@@ -466,7 +466,7 @@ sub sequence_metadata_store_POST : Args(0) {
         }
 
         # Create SMD with existing protocol id
-        $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $type_id, nd_protocol_id => $protocol_id);
+        $smd = CXGN::Genotype::SequenceMetadata->new(i18n => $c->i18n, bcs_schema => $schema, type_id => $type_id, nd_protocol_id => $protocol_id);
 
         # Get species from the features of the protocol
         my $q = "SELECT DISTINCT(CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), ''))) AS species
@@ -502,7 +502,7 @@ sub sequence_metadata_store_POST : Args(0) {
 #   OPTIONAL:
 #   - start = start position of the query range (default: 0)
 #   - end = end position of the query range (default: feature max)
-#   - reference_genome = (required if start or end are provided) = name of referene genome used by start and/or end positions
+#   - reference_genome = (required if start or end are provided) = name of reference genome used by start and/or end positions
 #   - type_id = cvterm_id(s) of sequence metadata type(s) (comma separated list of multiple type ids)
 #   - nd_protocol_id = nd_protocol_id(s) of sequence metadata protocol(s) (comma separated list of multiple protocol ids)
 #   - attribute = attribute(s) and their properties (protocol id, comparison, and value - | separated) (comma separated list of multiple attributes)
@@ -599,7 +599,7 @@ sub sequence_metadata_query_GET : Args(0) {
 
 
     # Perform query
-    my $smd =  CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
+    my $smd =  CXGN::Genotype::SequenceMetadata->new(i18n => $c->i18n, bcs_schema => $schema);
     my $query = $smd->query({
         feature_id => $feature_id, 
         start => defined $start && $start ne '' ? $start : undef, 

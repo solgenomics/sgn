@@ -1,7 +1,10 @@
 
 package CXGN::Trial::TrialDesign::Plugin::Augmented;
 
+use CXGN::Trial::TrialDesign::ROutput qw(read_rbase_utf8);
+
 use Moose::Role;
+use SGN::I18N ();
 use POSIX; # for ceil function
 use List::Util qw| max |;
 use Data::Dumper;
@@ -9,6 +12,7 @@ use POSIX;
 
 sub create_design {
     my $self = shift;
+    my SGN::I18N $design_i18n = $self->i18n;
     my %augmented_design;
     my $rbase = R::YapRI::Base->new();
     my @stock_list;
@@ -34,7 +38,7 @@ sub create_design {
     if ($self->has_stock_list()) {
 	@stock_list = @{$self->get_stock_list()};
     } else {
-	die "No stock list specified\n";
+	die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
     }
 
     if ($self->has_control_list()) {
@@ -42,7 +46,7 @@ sub create_design {
 	%control_names_lookup = map { $_ => 1 } @control_list;
 	$self->_check_controls_and_accessions_lists;
     } else {
-	die "No list of control stocks specified.  Required for augmented design.\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.augmented_controls", "No list of control stocks specified.  Required for augmented design.") : "No list of control stocks specified.  Required for augmented design.") . "\n");
     }
 
     if ($self->has_maximum_block_size()) {
@@ -51,11 +55,11 @@ sub create_design {
 	#     die "Maximum block size must be greater the number of control stocks for augmented design\n";
 	# }
 	if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
-	    die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
+	    die (($design_i18n ? $design_i18n->p("trial.design.augmented_block_size", "Maximum block size must be less than the number of stocks plus the number of controls for augmented design") : "Maximum block size must be less than the number of stocks plus the number of controls for augmented design") . "\n");
 	}
 	$number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
     } else {
-	die "No block size specified\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.block_size_missing", "No block size specified") : "No block size specified") . "\n");
     }
 
     my $plot_start = $self->get_plot_start_number();
@@ -129,7 +133,7 @@ sub create_design {
     }
     $r_block->add_command('augmented<-as.matrix(augmented)');
     $r_block->run_block();
-    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','augmented');
+    $result_matrix = read_rbase_utf8( $rbase,'r_block','augmented');
     @plot_numbers = $result_matrix->get_column("plots");
     @block_numbers = $result_matrix->get_column("block");
     @stock_names = $result_matrix->get_column("trt");

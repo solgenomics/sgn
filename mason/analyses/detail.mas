@@ -1,4 +1,4 @@
-
+<%once>use HTML::Entities ();</%once>
 <%doc>
 
 =head1 NAME
@@ -47,7 +47,7 @@ $has_col_and_row_numbers
 % my $subtitle = 'View and edit the spatial layout of the experiment. Also view a heatmap for phenotyped traits.';
 % my $layout_buttons = '';
 % if ($has_col_and_row_numbers){
-%     $layout_buttons = '<h3><span class="glyphicon glyphicon-ok-sign text-success"></span>&nbsp;&nbsp;&nbsp;This experiment has spatial layout info uploaded!</h3><button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">Download Spatial Layout</button> <button class="btn btn-danger" id="delete_field_map_hm_link" style="margin:3px">Delete Spatial Layout</button>';
+%     $layout_buttons = '<h3><span class="glyphicon glyphicon-ok-sign text-success"></span>&nbsp;&nbsp;&nbsp;This experiment has spatial layout info uploaded!</h3><button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">' . HTML::Entities::encode_entities($c->i18n->p('trial.spatial_export.open', 'Download Spatial Layout')) . '</button> <button class="btn btn-danger" id="delete_field_map_hm_link" style="margin:3px">Delete Spatial Layout</button>';
 % } else {
 %    $layout_buttons = '<h3><span class="glyphicon glyphicon-remove-sign text-danger"></span>&nbsp;&nbsp;&nbsp;This experiment does not have spatial layout info!</h3><button class="btn btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload Spatial Layout</button>';
 % }

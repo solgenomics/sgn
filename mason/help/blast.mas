@@ -1,27 +1,31 @@
 
-<& /page/page_title.mas, title => "BLAST Help" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("help.blast.title", "BLAST Help")) &>
 
-<p>BLAST on this site is based on NCBI BLAST and is accessible on <a href="/tools/blast">/tools/blast</a>. </p>
+<p><% $c->i18n->p("help.blast.intro", "BLAST on this site is based on NCBI BLAST and is accessible on ") |h %><a href="/tools/blast">/tools/blast</a>. </p>
 
-<p>To make finding the right BLAST database faster, the databases are organized into different categories, which can be selected using the "Categories" pull-down menu. Each category contains a number of BLAST databases which can be selected in the "Database" pull down menu.</p>
+<p><% $c->i18n->p("help.blast.database_categories", "To make finding the right BLAST database faster, the databases are organized into different categories, which can be selected using the ") |h %>"<% $c->i18n->p("help.blast.categories_label", "Categories") |h %>"<% $c->i18n->p("help.blast.category_database_tail", " pull-down menu. Each category contains a number of BLAST databases which can be selected in the ") |h %>"<% $c->i18n->p("help.blast.database_label", "Database") |h %>"<% $c->i18n->p("help.blast.database_menu_tail", " pull down menu.") |h %></p>
 
-<p>Select the category, then the database.</p>
+<p><% $c->i18n->p("help.blast.select_category_database", "Select the category, then the database.") |h %></p>
 
-<p>Enter the sequence in the Query textarea and choose the appropriate format from the format selector (for example, nucleotide fasta). Choose the appropriate blast program (for example, blastn for running a nucleotide query against a nucleotide database). The default is autodetect, which should detect the format you entered and convert it to the correct sequence format to run blast automatically.</p>
+<p><% $c->i18n->p("help.blast.enter_query", "Enter the sequence in the Query textarea and choose the appropriate format from the format selector (for example, nucleotide fasta). Choose the appropriate blast program (for example, blastn for running a nucleotide query against a nucleotide database). The default is autodetect, which should detect the format you entered and convert it to the correct sequence format to run blast automatically.") |h %></p>
 
-<p>If you would like to filter the query for low-complexity sequence, leave the Filter checkbox selected. This is the recommended setting.</p>
+<p><% $c->i18n->p("help.blast.low_complexity", "If you would like to filter the query for low-complexity sequence, leave the Filter checkbox selected. This is the recommended setting.") |h %></p>
 
-<p>Select an appropriate e-value threshold. The default of 1e-10 should work for most common applications.</p>
+<p><% $c->i18n->p("help.blast.evalue", "Select an appropriate e-value threshold. The default of 1e-10 should work for most common applications.") |h %></p>
 
-<h4>Output options</h4>
+<h4><% $c->i18n->p("help.blast.output_options", "Output options") |h %></h4>
 
-<p>You can choose different output options. The "Overview graph" option will show a graphic represenations of the hits in the database. The "Coverage graph" displays a graphical representation how the matches line up on the query sequence. The "Bioperl" parser displays a formatted version of the BLAST report with embedded links to other pages on the site. The "Basic" version shows the raw output of the BLAST report. Note that if the query contains several sequences (such as multi-fasta), the output will always default to the "Basic" parse option.</p>
+<p><% $c->i18n->p("help.blast.output_description", "You can choose different output options. The \"Overview graph\" option will show a graphic represenations of the hits in the database. The \"Coverage graph\" displays a graphical representation how the matches line up on the query sequence. The \"Bioperl\" parser displays a formatted version of the BLAST report with embedded links to other pages on the site. The \"Basic\" version shows the raw output of the BLAST report. Note that if the query contains several sequences (such as multi-fasta), the output will always default to the \"Basic\" parse option.") |h %></p>
 
-<h4>Results</h4>
+<h4><% $c->i18n->p("help.blast.results", "Results") |h %></h4>
 
-<p>The Results section will show the ouput (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be collapsed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters.</p>
+<p><% $c->i18n->p("help.blast.results_behavior", "The Results section will show the output (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be collapsed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters.") |h %></p>
 
-<p>The raw BLAST report can be downloaded using the download link in the Results section header.</p>
+<p><% $c->i18n->p("help.blast.download_report", "The raw BLAST report can be downloaded using the download link in the Results section header.") |h %></p>
 
-<h4>Extract sequences from BLAST databases</h4>
-You can extract sequences from the BLAST databases using identifiers or key words in the annotation of the sequences. Click on the "Extract sequences from BLAST databases" section and enter the search string. It will search in the database selected above.
+<h4><% $c->i18n->p("help.blast.extract_heading", "Extract sequences from BLAST databases") |h %></h4>
+<% $c->i18n->p("help.blast.extract_description", "You can extract sequences from the BLAST databases using identifiers or key words in the annotation of the sequences. Click on the \"Extract sequences from BLAST databases\" section and enter the search string. It will search in the database selected above.") |h %>
+
+<%once>
+use HTML::Entities ();
+</%once>

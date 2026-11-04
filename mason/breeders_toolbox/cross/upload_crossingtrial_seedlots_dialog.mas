@@ -10,59 +10,59 @@ $locations_by_program_json
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="seedlot_upload_dialog">Upload Seedlots</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlot_upload_dialog"><% $c->i18n->p('seedlots.ui.upload_seedlots.b7849bd', 'Upload Seedlots') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "upload_seedlot_main_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"What are seedlots?" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.intro', 'Intro')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.what_are_seedlots', 'What are seedlots?')) &>
                             <ul>
-                                <li>A seedlot is a collection of seeds harvested from a cross, accession, plot or plant.</li>
-                                <li>Seedlots can have a specific location, box, weight(g), and count.</li>
-                                <li>Seedlots can belong to breeding programs and organizations.</li>
+                                <li><% $c->i18n->p('seedlots.ui.a_seedlot_is_a_collection_of_seeds_harvested_from_a_cross_access', 'A seedlot is a collection of seeds harvested from a cross, accession, plot or plant.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.seedlots_can_have_a_specific_location_box_column_weight_g_and_co', 'Seedlots can have a specific location, box, %{column_weight_g}, and count.', {column_weight_g => 'weight(g)'}) |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.seedlots_can_belong_to_breeding_programs_and_organizations', 'Seedlots can belong to breeding programs and organizations.') |h %></li>
                             </ul>
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('seedlots.ui.go_to_next_step', 'Go to Next Step') |h %></button>
                             </center>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "File format" &>
-                        <& /page/page_title.mas, title=>"Make sure your file matches the correct file format" &>
+                    <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.file_format', 'File format')) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.make_sure_your_file_matches_the_correct_file_format', 'Make sure your file matches the correct file format')) &>
                             <br/><br/>
                             <center>
                                 <div id="upload_crosses_seedlots_template_section" style="display:none">
-                                    <button class="btn btn-info" id ="guided_help_crosses_seedlots_upload_format_button" name ="guided_help_crosses_seedlots_upload_format_button">Information about file format for uploading seed lots harvested</button><br/><br/>
+                                    <button class="btn btn-info" id ="guided_help_crosses_seedlots_upload_format_button" name ="guided_help_crosses_seedlots_upload_format_button"><% $c->i18n->p('seedlots.ui.information_about_file_format_for_uploading_seed_lots_harvested', 'Information about file format for uploading seed lots harvested') |h %></button><br/><br/>
                                 </div>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('seedlots.ui.once_you_think_your_file_matches_go_to_next_step', 'Once you think your file matches, go to Next Step') |h %></button>
                             </center>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Upload seedlots" &>
-                        <& /page/page_title.mas, title=>"Provide basic information about the seedlots and upload your file" &>
+                    <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.upload_seedlots.775875c', 'Upload seedlots')) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.provide_basic_information_about_the_seedlots_and_upload_your_fil', 'Provide basic information about the seedlots and upload your file')) &>
                         <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_cross_seedlot_form" name="upload_cross_seedlot_form">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Breeding Program: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.breeding_program.5983e34', 'Breeding Program:') |h %> </label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" name="upload_seedlot_breeding_program_name" id="upload_seedlot_breeding_program_name" disabled value="<% $breeding_program_name %>">
                                     <input name="upload_seedlot_breeding_program_id" id="upload_seedlot_breeding_program_id" type="hidden" value="<% $breeding_program_id %>">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Location of seedlot storage: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.location_of_seedlot_storage', 'Location of seedlot storage:') |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" name="upload_seedlot_location" id="upload_seedlot_location"></select>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Organization Name: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.organization_name', 'Organization Name:') |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" name="upload_seedlot_organization_name" id="upload_seedlot_organization_name" placeholder="Optional">
+                                    <input class="form-control" name="upload_seedlot_organization_name" id="upload_seedlot_organization_name" placeholder="<% $c->i18n->p('seedlots.ui.optional', 'Optional') |h %>">
                                 </div>
                             </div>
                             <div id="upload_seedlots_harvested_section" style="display:none">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.upload_file_extension_xls_or_extension_xlsx', 'Upload File (%{extension_xls} or %{extension_xlsx}):', {extension_xlsx => '.xlsx', extension_xls => '.xls'}) |h %> </label>
                                     <div class="col-sm-9" >
                                         <input type="file" name="seedlot_harvested_uploaded_file" id="seedlot_harvested_uploaded_file" encoding="multipart/form-data" />
                                     </div>
@@ -73,29 +73,29 @@ $locations_by_program_json
                             </div>
                         </form>
                         <center>
-                            <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" id ="upload_cross_seedlot_button" name="upload_cross_seedlot_button" >Upload Seedlots</button><br/><br/>
+                            <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" id ="upload_cross_seedlot_button" name="upload_cross_seedlot_button" ><% $c->i18n->p('seedlots.ui.upload_seedlots.b7849bd', 'Upload Seedlots') |h %></button><br/><br/>
                         </center>
                     </&>
-                    <&| /util/workflow.mas:complete, title=> "Complete" &>
-                        <& /page/page_title.mas, title=>"Finished! Your seedlots are now in the database" &>
+                    <&| /util/workflow.mas:complete, title=> HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.complete', 'Complete')) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.finished_your_seedlots_are_now_in_the_database', 'Finished! Your seedlots are now in the database')) &>
                             <p>
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                The seedlot file was uploaded successfully
+                                <% $c->i18n->p('seedlots.ui.the_seedlot_file_was_uploaded_successfully', 'The seedlot file was uploaded successfully') |h %>
                             </p>
                             <ul>
-                                <li>You may want to proceed to the seedlot detail page(s) for the seedlot(s) you just created.</li>
-                                <li>You can print barcodes for the seedlots.</li>
+                                <li><% $c->i18n->p('seedlots.ui.you_may_want_to_proceed_to_the_seedlot_detail_page_s_for_the_see.d3eabe2', 'You may want to proceed to the seedlot detail page(s) for the seedlot(s) you just created.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.you_can_print_barcodes_for_the_seedlots', 'You can print barcodes for the seedlots.') |h %></li>
                             </ul>
                             <br/>
                             <center>
-                                <button class="btn btn-primary" name="upload_seedlot_success_complete_button">The seedlots were saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                                <button class="btn btn-primary" name="upload_seedlot_success_complete_button"><% $c->i18n->p('seedlots.ui.the_seedlots_were_saved_to_the_database_with_no_errors_congrats_', 'The seedlots were saved to the database with no errors! Congrats Click Here') |h %></button><br/><br/>
                             </center>
                         </&>
                     </&>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_seedlot_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_seedlot_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -105,16 +105,16 @@ $locations_by_program_json
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotHarvestedInfoDialog">Upload Template Information For Seedlots From Crosses</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotHarvestedInfoDialog"><% $c->i18n->p('seedlots.ui.upload_template_information_for_seedlots_from_crosses', 'Upload Template Information For Seedlots From Crosses') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p('seedlots.ui.seedlots_may_be_uploaded_in_an_excel_file_extension_xls_or_exten', 'Seedlots may be uploaded in an Excel file (%{extension_xls} or %{extension_xlsx})', {extension_xlsx => '.xlsx', extension_xls => '.xls'}) |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('seedlots.ui.header', 'Header:') |h %></b>
                     <br>
-                        The first row (header) must contain the following:
+                        <% $c->i18n->p('seedlots.ui.the_first_row_header_must_contain_the_following', 'The first row (header) must contain the following:') |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -131,26 +131,26 @@ $locations_by_program_json
                             </tr>
                         </tbody>
                     </table>
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('seedlots.ui.required_fields', 'Required fields:') |h %></b>
                     <ul>
-                        <li>seedlot_name (must be unique)</li>
-                        <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
-                        <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
-                        <li>amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
-                            <br/><b>AND/OR</b><br/>
-                            weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                        <li><% $c->i18n->p('seedlots.ui.column_seedlot_name_must_be_unique', '%{column_seedlot_name} (must be unique)', {column_seedlot_name => 'seedlot_name'}) |h %></li>
+                        <li><% $c->i18n->p('seedlots.ui.column_cross_unique_id_must_exist_in_the_database_a_column_cross', '%{column_cross_unique_id} (must exist in the database. a %{column_cross_unique_id} can represent a cross between accessions e.g. %{sample_cross}, but a cross can also represent a cross between specific plots in the field if you have this information)', {column_cross_unique_id => 'cross_unique_id', sample_cross => 'AxB'}) |h %></li>
+                        <li><% $c->i18n->p('seedlots.ui.column_operator_name_the_name_of_the_person_who_oversaw_the_inve', '%{column_operator_name} (the name of the person who oversaw the inventory process. can be any name.)', {column_operator_name => 'operator_name'}) |h %></li>
+                        <li><% $c->i18n->p('seedlots.ui.column_amount_number_of_seeds_in_seedlot_can_be_provided_in_conj', '%{column_amount} (number of seeds in seedlot. can be provided in conjunction with %{column_weight_g}. must provide a value for %{column_amount} or %{column_weight_g} or both.)', {column_weight_g => 'weight(g)', column_amount => 'amount'}) |h %>
+                            <br/><b><% $c->i18n->p('seedlots.ui.and_or', 'AND/OR') |h %></b><br/>
+                            <% $c->i18n->p('seedlots.ui.column_weight_g_weight_in_grams_of_seedlot_can_be_provided_in_co', '%{column_weight_g} (weight in grams of seedlot. can be provided in conjunction with %{column_amount}. must provide a value for %{column_amount} or %{column_weight_g} or both.)', {column_weight_g => 'weight(g)', column_amount => 'amount'}) |h %>
                         </li>
-                        <li>box_name (the box name that the seed is located in. can be any name.)</li>
+                        <li><% $c->i18n->p('seedlots.ui.column_box_name_the_box_name_that_the_seed_is_located_in_can_be_', '%{column_box_name} (the box name that the seed is located in. can be any name.)', {column_box_name => 'box_name'}) |h %></li>
                     </ul>
 
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p('seedlots.ui.optional_fields', 'Optional fields:') |h %></b>
                     <ul>
-                        <li>description (additional information about each seedlot)</li>
+                        <li><% $c->i18n->p('seedlots.ui.column_description_additional_information_about_each_seedlot', '%{column_description} (additional information about each seedlot)', {column_description => 'description'}) |h %></li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_seedlot_harvested_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_seedlot_harvested_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -160,8 +160,8 @@ $locations_by_program_json
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadCrossSeedlotErrorDialog">Upload Seedlot File Error</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossSeedlotErrorDialog"><% $c->i18n->p('seedlots.ui.upload_seedlot_file_error', 'Upload Seedlot File Error') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -171,7 +171,7 @@ $locations_by_program_json
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -179,6 +179,57 @@ $locations_by_program_json
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 jQuery(document).ready(function(){
 
     var locations_array = <% $locations_by_program_json %>;
@@ -188,7 +239,7 @@ jQuery(document).ready(function(){
 
         var html = '<select id = "upload_seedlot_location" >';
         for (var i=0; i<locations_array.length; i++) {
-            html += `<option value="${locations_array[i]}">${locations_array[i]}</option>`;
+            html += `<option value="${seedlotHTML(locations_array[i])}">${seedlotHTML(locations_array[i])}</option>`;
         }
         html = html + "</select>";
 
@@ -212,17 +263,17 @@ jQuery(document).ready(function(){
         var uploadSeedlotsHarvestedFile = jQuery("#seedlot_harvested_uploaded_file").val();
         var location = jQuery("#upload_seedlot_location").val();
         var breeding_program = jQuery("#upload_seedlot_breeding_program_id").val();
-        jQuery('#upload_cross_seedlot_form').attr("action", "/ajax/breeders/seedlot-upload");
+        jQuery('#upload_cross_seedlot_form').attr("action", _sgnSeedlotLocaleURL("/ajax/breeders/seedlot-upload"));
         if (breeding_program === '') {
-            alert("Please choose a breeding program");
+            alert(seedlotI18n.p("seedlots.ui.please_choose_a_breeding_program", "Please choose a breeding program"));
             return;
         }
         if (location === '') {
-            alert("Please give a location");
+            alert(seedlotI18n.p("seedlots.ui.please_give_a_location", "Please give a location"));
             return;
         }
         if (uploadSeedlotsHarvestedFile == '') {
-            alert("Please select a file");
+            alert(seedlotI18n.p("seedlots.ui.please_select_a_file", "Please select a file"));
             return;
         }
         jQuery("#upload_cross_seedlot_form").submit();
@@ -235,7 +286,7 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal("show");
             if (uploadSeedlotsHarvestedFile == '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert(seedlotI18n.p("seedlots.ui.no_file_selected", "No file selected"));
             }
         },
         complete: function(response) {
@@ -259,7 +310,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery(document).on('click', '[name="upload_seedlot_success_complete_button"]', function(){
-        alert('Seedlots were saved in the database');
+        alert(seedlotI18n.p("seedlots.ui.seedlots_were_saved_in_the_database", "Seedlots were saved in the database"));
         jQuery('#upload_seedlot_dialog').modal('hide');
         //location.reload();
     });

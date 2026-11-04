@@ -1,0 +1,749 @@
+# إدارة التجارب الحقلية {#managing-field-trials}
+
+لعرض تفاصيل التجارب في قاعدة البيانات، انقر “التجارب الحقلية” ضمن قائمة “إدارة” في شريط الأدوات.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image290.png')
+```
+
+يفتح رابط “التجارب الحقلية” صفحة “إدارة التجارب”. تُنظم التجارب حسب برامج التربية. لعرض تفاصيل تجربة، انقر رمز + بجوار البرنامج المطلوب.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image153.png')
+```
+
+يمكن وضع التجارب مباشرةً في برنامج التربية أو تنظيمها في مجلداته. انقر اسم التجربة لفتح صفحة تفاصيلها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image279.png')
+```
+
+## صفحة تفاصيل التجربة {#trial-detail-page}
+
+تعرض صفحة التجربة معلومات أساسية، مثل برنامج التربية والموقع والسنة والوصف والتصميم والملفات المرتبطة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_start.png')
+```
+
+تجد أسفل تفاصيل التجربة قوائم للوصول إلى بياناتها وتعديلها. وتشمل أقسامًا لطباعة ملصقات القطع أو النباتات، وتسجيل الأنماط الظاهرية، وعرض مخطط التجربة أو تصميمها، ومراجعة الأنماط الظاهرية وإجراء التحليلات.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/trial_detail_page_navigator_1.png', 'assets/images/trial_detail_page_navigator_2.png', 'assets/images/trial_detail_page_navigator_3.png'))
+```
+
+لا يظهر حقل “تاريخ نقل الشتلات” إلا إذا كانت له قيمة. لإضافته بعد إنشاء التجربة، غيّر المعلمة show_transplanting_date من 0 إلى 1 في ملف إعداد SGN. بعد ذلك يمكنك إدخال التاريخ بالنقر على “تحرير تفاصيل التجربة” في صفحة التجربة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_transplanting_date.png')
+```
+
+## إضافة التجارب {#adding-trials}
+
+لا يمكن إنشاء التجارب إلا للمستخدمين ذوي حالة الحساب "submitter". لمعرفة كيفية تغيير الحالة من "user" إلى "submitter"، راجع القسم \@ref(managing-your-account).
+
+### المتطلبات المسبقة {#prerequisites}
+
+-   يجب أن تكون جميع العينات المطلوبة للتجربة موجودة في قاعدة البيانات قبل تصميمها. إذا كانت بعض العينات غير موجودة، راجع تعليمات [*إدارة العينات*](#managing-accessions).
+
+-   يجب أن يكون برنامج التربية وموقع التجربة موجودين أيضًا في قاعدة البيانات. لإضافتهما، راجع قسمي [*إدارة برامج التربية*](#managing-breeding-programs) و[*إدارة المواقع*](#managing-locations).
+
+تتوفر طريقتان لإنشاء التجارب في صفحة “إدارة التجارب”: اختيار “تحميل تجربة/تجارب موجودة” لإنشائها من جدول بيانات، أو اختيار “تصميم تجربة جديدة” وإدخال بياناتها يدويًا.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_manage_trials.png')
+```
+
+### إضافة تجربة باستخدام نموذج “تصميم تجربة جديدة” {#adding-a-trial-by-using-design-new-trial-form}
+
+#### الخطوة 1. بدء خطوات “تصميم تجربة جديدة” {#step-1.-begin-the-design-new-trial-workflow -}
+
+انقر “تصميم تجربة جديدة” للبدء.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_open_form.png')
+```
+
+الخطوة الأولى مقدمة كما هو موضح أدناه:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_1.png')
+```
+
+توضح الصفحة متطلبات التجربة، ومنها ضرورة إعداد قائمة بالعينات التي تريد استخدامها. يمكن عرض القوائم وإنشاؤها وتعديلها عبر أداة “القوائم” أعلى يمين الشاشة. لمزيد من المعلومات، انقر [هنا](#working-with-lists).
+
+#### الخطوة 2. إدخال معلومات التجربة {#step-2.-enter-trial-information -}
+
+أدخل في هذه الشاشة المعلومات الأساسية عن التجربة، مثل برنامج التربية والموقع أو المواقع. واختر نوع التصميم، مثل Complete Block Design. يؤثر التصميم في توزيع الأنماط الجينية وعشوائيتها. انقر “تحقق” قبل الانتقال إلى الخطوة التالية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_2.png')
+```
+
+#### الخطوة 3. إدخال معلومات التصميم {#step-3.-enter-design-information -}
+
+حدد قائمة العينات المستخدمة في التجربة، ويجب أن تكون قائمة صالحة. وأدخل جميع معلومات التصميم المطلوبة، مثل عدد المكررات والكتل.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_3.png')
+```
+
+#### الخطوة 4. معلومات ربط التجربة (اختياري) {#step-4.-enter-trial-linkage-information-optional -}
+
+يتيح هذا القسم ربط التجربة الجديدة بتجارب حقلية أو تجارب تهجين أو صفائح تنميط موجودة في قاعدة البيانات. هذا اختياري ويمكن إكماله لاحقًا من صفحة تفاصيل التجربة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_4.png')
+```
+
+#### الخطوة 5. معلومات خريطة الحقل (اختياري) {#step-5.-enter-field-map-information-optional -}
+
+يمكنك هنا تحديد كيفية إنشاء أرقام الصفوف والأعمدة للقطع، وهي تمثل مواقعها النسبية في الحقل. إذا لم تكن متأكدًا من طريقة الزراعة أو كان التخطيط غير منتظم، يمكنك تخطي هذه الخطوة الآن. ويمكن إضافة هذه المعلومات بعد حفظ التجربة من صفحة تفاصيلها لتطابق مواقع القطع المزروعة فعليًا.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_5.png')
+```
+
+#### الخطوة 6. تخصيص أسماء القطع (اختياري) {#step-6.-custom-plot-naming-optional -}
+
+يمكنك في هذه الشاشة تغيير تنسيق إنشاء أسماء القطع. يُنصح بتخطي هذه الخطوة واستخدام التنسيق الافتراضي لقاعدة البيانات.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_6.png')
+```
+
+#### الخطوة 7. مراجعة التجربة المصممة {#step-7.-review-designed-trial -}
+
+يمكنك في هذه الشاشة مراجعة التجربة التي أنشأتها قاعدة البيانات.
+
+سترى تمثيلًا رسوميًا للتجربة. تمثل الأرقام في المربعات plot_number لكل قطعة. مرر المؤشر فوق مربع لعرض مزيد من المعلومات.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_top.png')
+```
+
+سترى أيضًا جدولًا بجميع القطع ومعلوماتها. لإعادة العشوائية، انقر “إعادة العشوائية”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_middle.png')
+```
+
+يوجد في الأسفل ملخص موجز للتجربة يتبعه زران.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_bottom.png')
+```
+
+
+#### الخطوة 7. حفظ التجربة الجديدة في قاعدة البيانات {#step-7.-saving-new-trial-in-the-database -}
+
+
+بعد مراجعة التجربة، انقر “تأكيد” لحفظها في قاعدة البيانات. وبعد حفظها ستظهر شاشة الإكمال النهائية:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_8.png')
+```
+
+### إضافة تجربة من ملف محمّل {#adding-a-trial-from-an-uploaded-file}
+
+إذا كان تصميم التجربة موجودًا في جدول بيانات، يمكنك إضافته إلى قاعدة البيانات باستخدام زر “تحميل تجربة/تجارب موجودة” في صفحة *إدارة التجارب*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_manage_trials.png')
+```
+
+أدخل المعلومات المطلوبة في خطوات تحميل التجربة من جدول البيانات.
+
+#### الخطوة 1: {#step-1 -}
+
+تعرّف أولًا على تنسيق تحميل التجربة. يمثل تخطيط الحقل قطع التجربة. لكل قطعة plot_name فريد عالميًا وplot_number تسلسلي فريد داخل التجربة فقط (وليس عالميًا؛ مثل 101 و102 و103 لثلاث قطع)، وaccession_name للنمط الجيني المزروع وblock_number لتكرار التصميم. ويحدد row_number وcolumn_number الموضع النسبي للقطعة في الشبكة (مثلًا، القطعة أعلى اليسار في الصف 1 والعمود 1، والتي تليها في الصف 1 والعمود 2). يمكن تحديد كمية البذور من دفعة معينة؛ يحدد seedlot_name عبوة البذور المستخدمة، ويبين num_seed_per_plot وweight_gram_seed_per_plot الكمية المنقولة إلى القطعة. وتُضاف أعمدة للمعاملات؛ وتعني القيمة 1 تطبيق المعاملة، بينما تعني الخلية الفارغة عدم تطبيقها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_1.png')
+```
+
+تتيح لك الصفحة التالية اختيار ملف للتحميل، بما في ذلك تحميل عدة تجارب معًا. ويمكنك أيضًا مراجعة متطلبات الملفات لتجربة واحدة أو لعدة تجارب.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/manage_trials_upload_trial_2.png','assets/images/manage_trials_upload_trial_template.png'))
+```
+
+
+##### الحد الأدنى لمتطلبات الملف {#minimum-file-requirements -}
+
+-   يجب أن تكون جميع أسماء العينات في الملف موجودة في قاعدة البيانات. راجع قسم إضافة العينات لمزيد من المعلومات.
+
+-   يمكن أن يكون الملف Excel (.XLXS أو .XLS)، أو قيمًا مفصولة بفواصل (.CSV)، أو علامات جدولة (.TSV)، أو فاصلة منقوطة (.SSV).
+
+-   يجب أن يحتوي الصف الأول (العناوين) على أسماء الأعمدة التالية: plot_name accession_name plot_number block_number is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number
+
+-   الحقول المطلوبة فقط هي accession_name وplot_number وblock_number.
+
+مثال أدنى:
+
+| **plot\_name** | **accession\_name** | **plot\_number** | **block\_number** | **is\_a\_control** | **rep\_number** | **range\_number** | **row\_number** | **col\_number** | **seedlot\_name** | **num\_seed\_per\_plot** | **weight\_gram\_seed\_per\_plot** | **entry\_number** |
+|----------------|---------------------|------------------|-------------------|--------------------|-----------------|-------------------|-----------------|-----------------|-------------------|--------------------------|-----------------------------------|------------------|
+| 2018plot1      | my_accession1       | 101              | 1                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot2      | my_accession2       | 201              | 2                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot3      | my_accession2       | 102              | 1                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot4      | my_accession1       | 202              | 2                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
+
+عند تحميل عدة تجارب، تنطبق المتطلبات نفسها مع إضافة العناوين التالية للتمييز بينها في الملف: trial_name breeding_program location year transplanting_date design_type description trial_type trial_stock_type plot_width plot_length field_size planting_date harvest_date. ويمكنك أيضًا اختيار تلقي بريد إلكتروني عند اكتمال التحميل (راجع القسم [تنبيه البريد الإلكتروني عند تحميل تصميمات تجارب متعددة](#email-alert-for-multiple-trial-design-upload)).
+
+##### التحقق من الملف {#file-validation -}
+
+-   إذا احتوى الملف على بيانات ناقصة أو غير صالحة، فستظهر نافذة تسرد الأخطاء التي يجب تصحيحها قبل نجاح التحميل.
+
+##### تحميل تجربة مع معاملات {#uploading-a-trial-with-treatments -}
+
+
+-   يمكن تحميل المعاملات بإضافة أعمدة. يكون عنوان العمود اسم المعاملة، مثل fertilizer أو watering regime أو inoculation. وتعني القيمة 1 تطبيق المعاملة على القطعة، بينما تعني الخلية الفارغة عدم تطبيقها.
+
+#### الخطوة 2: {#step-2 -}
+
+عندما يصبح تخطيط الحقل بالتنسيق المطلوب، انقر “الخطوة التالية”. املأ النموذج الذي سيظهر:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_3.png')
+```
+
+يجب أن يكون اسم التجربة فريدًا في قاعدة البيانات. يُرجى اتباع قواعد التسمية المعتمدة في مجموعتك.
+
+#### الخطوة 3: {#step-3 -}
+
+انتقل إلى الصفحة التالية لربط التجربة بمشاريع أخرى. تحقق من النموذج ثم انقر “تحميل التجربة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_4.png')
+```
+
+#### الخطوة 4: {#step-4 -}
+
+إذا تضمن الملف accession_names غير الموجودة في قاعدة البيانات، فستظهر هذه الشاشة. وإذا كانت جميعها موجودة، فسيتم تخطي هذه الخطوة.
+يجب أن تكون العينات في قاعدة البيانات قبل إضافة التجربة، لأن العينة الواحدة قد تُستخدم في تجارب متعددة ويجب أن تكون كيانًا مستقلًا. لذلك احرص على عدم إضافة accession_names مكررة بالخطأ. يمكنك إنشاء قائمة بالقيم المفقودة من accession_names ثم النقر على “إضافة العينات إلى قاعدة البيانات”. بعد تسجيل جميع العينات انتقل إلى الخطوة التالية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_5.png')
+```
+
+#### الخطوة 5: {#step-5 -}
+
+إذا تضمن الملف seedlot_names غير الموجودة في قاعدة البيانات، فستظهر الشاشة التالية. وإذا كانت جميع دفعات البذور مسجلة، فسيتم تخطي هذه الخطوة.
+يجب أن تكون دفعات البذور مسجلة قبل إضافة التجربة، لأن الدفعة الواحدة قد تُستخدم في تجارب متعددة ويجب أن تكون كيانًا مستقلًا. بعد تسجيل جميع الدفعات، انتقل إلى الخطوة التالية.
+
+#### الخطوة 6: {#step-6 -}
+
+إذا وُجدت أخطاء أخرى، مثل تكرار plot_names في قاعدة البيانات أو تكرار plot_numbers في التجربة أو كون row_number غير صحيح، فستظهر في المربع الأحمر. أصلحها في الملف بفتحه في Excel، ثم احفظه. بعد ذلك انقر “إرسال التجربة” لإعادة إرساله. ويمكنك تعديل الملف وإرساله مجددًا حتى يُقبل.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_7.png')
+```
+
+#### شاشة الإكمال {#completion-screen -}
+
+سواء نجحت في إرسال التجربة في الخطوة 2 أو احتجت إلى محاولات عدة في الخطوة 5، ستظهر الشاشة التالية بعد حفظ التجربة:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_8.png')
+```
+
+
+### تجارب متعددة المواقع {#multi-location-trials}
+
+لإضافة تجارب في مواقع متعددة، اختر عدة مواقع في نموذج 'إضافة تجربة'.
+
+سينشأ اختبار مستقل لكل موقع محدد، وستتشارك جميعها التصميم نفسه وتُجمع في مجلد واحد.
+
+افتراضيًا، يحصل كل تصميم تجربة على عشوائية جديدة. إذا رغبت، حدد خيار “استخدام العشوائية نفسها لجميع المواقع”.
+
+
+#### تنبيه البريد الإلكتروني عند تحميل تصميمات تجارب متعددة {#email-alert-for-multiple-trial-design-upload -}
+
+عند تحميل عدة تجارب من ملف، يمكنك تفعيل إشعارات البريد بتحديد مربع “تنبيه البريد الإلكتروني”. سيستخدم النظام عنوان البريد المرتبط بحسابك افتراضيًا، ويمكنك إدخال عنوان آخر. بعد الإرسال، تعمل عملية التحميل في الخلفية ويمكنك متابعة استخدام الواجهة. وعند اكتمالها، ستتلقى رسالة بالنتائج.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/multiple_trial_upload_with_email.png')
+```
+
+### عرض تخطيط القطع والخريطة الحرارية للصفات {#viewing-plot-layout-and-trait-heatmap}
+
+#### عرض تخطيط القطع {#viewing-plot-layout}
+
+يعرض قسم “أدوات تخطيط الحقل والخريطة الحرارية للأنماط الظاهرية” في صفحة تفاصيل التجربة التخطيط الفعلي افتراضيًا. وتُحدد المواقع النسبية للقطع وفق أرقام الصفوف والأعمدة المدخلة عند إنشاء التجربة أو تحميلها. ويعتمد لون القطعة على أرقام التكرار والكتلة وما إذا كانت مستخدمة كشاهد. مرر المؤشر فوق قطعة لعرض تفاصيلها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_trial_layout.png')
+```
+
+#### عرض تخطيط القطع لعدة تجارب {#viewing-plot-layout-for-multiple-trials}
+
+إذا زُرعت عدة تجارب في الحقل نفسه، فيمكن عرض مخططاتها معًا إذا اشتركت في الخصائص التالية:
+
+<ul>
+  <li>لجميع التجارب <strong>السنة</strong> نفسها</li>
+  <li>لجميع التجارب <strong>الموقع</strong> نفسه</li>
+  <li>تم ضبط <strong>نوع الموقع</strong> لمواقع التجارب على <strong>Field</strong></li>
+  <li>لا تتداخل مواضع <strong>الصفوف</strong> و<strong>الأعمدة</strong> لجميع القطع في التجارب المرتبطة. مثلًا، تبدأ التجربة #1 في الصف 1 والتجربة #2 في الصف 10.</li>
+</ul>
+
+عند تحقق هذه الشروط وتحديد “اختيار التجارب في الحقل نفسه”، ستُعرض قطع التجارب المرتبطة معًا في مخطط واحد، بلون مختلف لكل تجربة. وستتضمن ملفات ترتيب الزراعة والحصاد جميع القطع المعروضة حسب ترتيبها في الحقل.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_multi_trial_layout.png')
+```
+
+#### تتبع صور القطع على fieldMap {#tracking-plot-images-on-fieldmap -}
+
+يمكن عرض صور القطعة على fieldMap إذا ارتبطت بأي صورة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_plot_image.png')
+```
+
+لعرض صور القطعة، انقر عليها. تعرض نافذة الحوار تفاصيلها، بما في ذلك المواد الموجودة فيها وتوزيعها إن توفر. وفي الأسفل يمكنك تغيير اسم القطعة أو العينة وعرض صورها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_view_plot_image.png')
+```
+
+في نافذة الحوار، انقر “عرض صور القطعة”. إذا تجاوز عدد الصور 2، انقر “عرض المزيد من الصور...”. ويمكن النقر على صورة لعرضها بحجم متوسط.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_display_plot_image.png')
+```
+
+
+#### عرض الخريطة الحرارية للصفة المقاسة {#viewing-assayed-trait-heatmap -}
+
+لعرض الخريطة الحرارية للأنماط الظاهرية، اختر صفة مقاسة من القائمة المنسدلة. يؤدي تمرير المؤشر فوق قطعة إلى تمييزها بالأخضر وعرض معلوماتها الحقلية، بما في ذلك قيمة الصفة المحددة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_assayed_trait_view.png')
+```
+
+#### حجب النمط الظاهري للقطعة {#suppressing-plot-phenotype -}
+
+يؤدي النقر على قطعة في الخريطة الحرارية إلى فتح نافذة فيها زر لحجب قيمة الصفة للقطعة. ويمكن استبعاد القيمة المحجوبة من تحليل التجربة وتنزيل البيانات الظاهرية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_suppress_phenotype.png')
+```
+
+#### تصحيح الارتباط الذاتي المكاني {#correcting-spatial-autocorrelation}
+
+في التجارب التي تتوفر لها معلومات مكانية وأنماط ظاهرية محفوظة، يمكنك فحص الارتباط الذاتي المكاني وتصحيحه بالنقر على “حساب التصحيح المكاني” فوق خريطة الحقل. ستُفتح نافذة التصحيحات المكانية. لمزيد من التفاصيل، راجع [*أدوات تحليل البيانات*](#data-analysis-tools).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_spatial_correction_button.png')
+```
+
+### إضافة معلومات في صفحة *تفاصيل التجربة* {#adding-additional-information-in-the-trial-detail-page}
+
+بعد إضافة التجربة إلى قاعدة البيانات، يمكنك تعديل تفاصيلها أو إضافة معلومات أخرى من صفحة *تفاصيل التجربة*.
+
+#### تحميل التخطيط الفعلي للتجربة {#uploading-physical-trial-layout -}
+
+يمكنك تحميل التخطيط الفعلي للتجربة بالنقر على “تحميل التخطيط المكاني” في صفحة *تفاصيل التجربة*.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/image332.png')
+```
+
+تحقق بعناية من تنسيق الملف. يمكنك الاطلاع على معلومات التنسيق بالنقر على “تنسيق جدول البيانات” في نافذة “تحميل التخطيط المكاني”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image340.png')
+```
+
+تنسيق جدول البيانات:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image190.png')
+```
+
+#### متطلبات ملف التخطيط الفعلي للتجربة {#physical-trial-layout-file-requirements -}
+
+-   يجب أن تكون جميع أسماء القطع في الملف موجودة في قاعدة البيانات.
+
+-   يجب أن يكون الملف المحمّل بصيغة txt ومفصولًا بعلامات جدولة.
+
+-   يجب أن يحتوي الصف الأول (العنوان) على أسماء الأعمدة.
+
+مثال:
+
+| plot\_name | row\_number | col\_number |
+|------------|-------------|-------------|
+| plot1      | 1           | 1           |
+| plot2      | 1           | 2           |
+| plot3      | 1           | 3           |
+
+اختر ملف إحداثيات تخطيط التجربة ثم انقر “OK” لتحميله.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image79.png')
+```
+
+تظهر الرسالة التالية بعد تحميل الإحداثيات.
+
+```{r echo=FALSE, out.width='50%', fig.align='center'}
+knitr::include_graphics('assets/images/image276.png')
+```
+
+<!--
+لعرض تخطيط الحقل، انقر “قسم الخريطة الحرارية للتجربة” وافتح القائمة المنسدلة لخريطة الحقل.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_default_display.png')
+```
+-->
+
+#### تنزيل جدول خريطة الحقل {#downloading-field-map-spreadsheet -}
+
+يمكن تنزيل جدول خريطة الحقل إذا كانت إحداثيات الحقل (أرقام الصفوف والأعمدة) قد حُمّلت للقطع.
+للتنزيل، انقر رابط “تنزيل تخطيط FieldMap” في قسم الخريطة الحرارية للتجربة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_link.png')
+```
+
+<!--
+ستظهر نافذة حوار؛ انقر “إرسال” لتنزيل الملف.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_dialog.png')
+```
+
+انقر لعرض جدول البيانات الذي تم تنزيله.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_spreadsheet.png')
+```
+-->
+#### تحرير التخطيط الفعلي للتجربة {#editing-physical-trial-layout -}
+
+يحتوي زر “مساعدة الاستخدام” على معلومات حول تحرير التخطيط الفعلي للتجربة.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/spatial_layout_usage_help.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/spatial_layout_usage_help_1.png','assets/images/spatial_layout_usage_help_2.png','assets/images/spatial_layout_usage_help_3.png'))
+```
+
+تتوفر طريقتان لتحرير تخطيط التجربة:
+
+-   استبدال عينة القطعة بالنقر على القطعة في المخطط.
+
+-   استبدال عينة في التجربة باستخدام زر “تحرير تخطيط الحقل”.
+
+
+لتعديل قطعة محددة، انقر عليها. أدخل العينة الجديدة في نموذج “تحرير معلومات القطعة” ثم انقر “استبدال عينة القطعة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/fieldmap_view_plot_image.png','assets/images/replace_plot_accession_form.png'))
+```
+
+لاستبدال عينة في جميع القطع أو النباتات المرتبطة بها، انقر “تحرير تخطيط الحقل”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image173.png')
+```
+
+في نافذة “تحرير تخطيط الحقل”، انقر “استبدال العينة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image87.png')
+```
+
+اختر العينة التي تريد استبدالها، وأدخل العينة الجديدة ثم انقر “استبدال عينة التجربة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image85.png')
+```
+<!--
+يمكنك تبديل العينات بين أي قطعتين بالنقر على زر “استبدال العينة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image162.png')
+```
+
+في نموذج “استبدال عينة القطعة”، اختر القطعتين المراد تبديلهما ثم انقر “استبدال عينة القطعة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image282.png')
+```
+-->
+
+### تنزيل تخطيط التجربة من صفحة *تفاصيل التجربة* {#downloading-the-trial-layout-from-the-trial-detail-page}
+
+في صفحة *تفاصيل التجربة*، ضمن “التصميم التجريبي”، انقر “تنزيل التخطيط”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image348.png')
+```
+
+يتضمن تخطيط التجربة معلومات وحدات الملاحظة، مثل القطع والنباتات والقطع الفرعية. وقد يشمل معلومات التصميم مثل block_number وrep_number ومعلومات الخريطة الفعلية مثل row_number وcol_number إذا توفرت.
+يتضمن التخطيط أيضًا معلومات عن المعاملات التي طُبقت في الحقل.
+يمكن أن يتضمن التخطيط اختياريًا معلومات عن الأداء العام للعينات لمجموعة من الصفات.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image347.png')
+```
+
+### إضافة أنظمة الإدارة {#adding-management-regimes}
+
+إلى جانب تصميم التجربة وتخطيطها، يمكنك تحديد كيفية إدارتها في قسم *نظام الإدارة* ضمن تبويب *التصميم التجريبي* في صفحة تفاصيل التجربة.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_section.png')
+```
+
+يمكنك هنا عرض معلومات عن التسميد والري ومكافحة الأعشاب. وتعتمد أنواع عوامل الإدارة المتاحة على إعداد الخادم؛ تواصل مع المسؤول عند وجود أسئلة.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_details.png')
+```
+
+لإضافة عامل إدارة، انقر 'إضافة عامل إدارة' في القسم المخصص. معظم المعلومات اختيارية، لكن يجب إدخال النوع والوصف. ويمكنك تحديد تاريخ البداية والنهاية وجدول المعاملة، وتسجيل تطبيقات محددة للعامل عند الرغبة. انقر 'إرسال' لإضافته.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_management_factor_dialog.png')
+```
+
+بعد إضافة عامل الإدارة، يمكنك تعديله بالنقر على رمز القلم الأخضر بجواره. ستُفتح نافذة الحوار نفسها مع بياناته الحالية؛ عدّلها وأرسلها. انقر سلة المهملات الحمراء لحذف العامل من التجربة.
+
+### إضافة معاملات تجريبية {#adding-experimental-treatments}
+
+بخلاف أنظمة الإدارة التي تصف كيفية إدارة التجربة ككل، يمكنك تسجيل معاملات تُطبق بصورة مختلفة على المواد في التجربة. أضفها من قسم *المعاملات* ضمن تبويب *التصميم التجريبي*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_treatment_section.png')
+```
+
+يعرض هذا التبويب ملخصًا لعدد المواد التي طُبقت عليها المعاملة وجدولًا للبحث عن قيمها عبر مستويات المواد المختلفة.
+
+تشبه إضافة المعاملات [تحميل البيانات الظاهرية](#managing-phenotypic-data): انقر 'إضافة معاملات' لفتح نافذة تحميلها:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_add_treatment_dialog.png')
+```
+
+كما في تحميل الأنماط الظاهرية، يمكنك تقديم جدول يحدد المواد والمعاملات مع طوابع زمنية اختيارية. للتأكد من صحة عناوين أعمدة المعاملات، راجع [صفحة البحث عن المعاملات](#managing-observation-variables) أو مستعرض الأنطولوجيا.
+
+لكن بخلاف البيانات الظاهرية، تُطبق المعاملات تلقائيًا على المواد التابعة للمادة المعالجة. أي إذا عوملت قطعة، فستتلقى جميع قطعها الفرعية ونباتاتها وعينات الأنسجة المعاملة نفسها.
+
+### إضافة إدخالات النباتات إلى التجربة {#adding-plant-entries-to-your-trial}
+
+بعد إضافة التجربة، يمكنك إضافة سجلات النباتات لإتاحة التنميط على مستوى النبات. ومن الأفضل عادةً إدخال البيانات على مستوى النبات، إذ يمكن حساب النمط الظاهري للقطعة من بيانات النباتات الفردية.
+
+يمكن إضافة سجلات النباتات إلى التجربة بأربع طرق:
+(1) تنشئها قاعدة البيانات تلقائيًا. والمطلوب فقط تحديد عدد النباتات لكل قطعة.
+(2) تحميلها في ملف XLS أو XLSX، ما يتيح تحديد أسماء النباتات.
+(3) تحميلها باستخدام رقم فهرس النبات بدلًا من الاسم (ويُنشأ الاسم تلقائيًا).
+(4) تحميلها بتحديد عدد النباتات لكل قطعة. ويتيح ذلك اختلاف العدد بين القطع، بخلاف الخيار 1.
+
+إذا احتوت التجربة على قطع فرعية، فيمكن استخدام أي من هذه الخيارات لإضافة النباتات إليها. بعد إنشاء القطع الفرعية لا يمكن إضافة النباتات مباشرةً إلى القطع، وبعد إضافة النباتات لا يمكن إنشاء قطع فرعية.
+
+تتوفر هذه الخيارات في قسم “إدخالات النباتات” ضمن تبويب “التصميم التجريبي” في صفحة *تفاصيل التجربة*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plant_entries.png')
+```
+
+#### إنشاء سجلات النباتات تلقائيًا {#automatically-generate-plant-entries -}
+
+يؤدي النقر على “إضافة إدخالات النباتات” إلى فتح نافذة حوار. والمطلوب فقط عدد النباتات لكل قطعة. تُنشأ الأسماء بضم plot_name إلى رقم فهرس النبات، مثل plot_name_plant_1. ويمكنك اختياريًا إدخال الصف والعمود لتحديد المواقع المكانية للنباتات داخل كل قطعة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plant_entries_autogenerated.png')
+```
+
+#### تحميل إدخالات النباتات {#upload-plant-entries -}
+
+يمكنك أيضًا تحميل ملف XLS أو XLSX يتضمن أسماء النباتات أو أرقام فهارسها أو عدد النباتات لكل قطعة. ويعرض مربع الحوار تنسيق الملف المطلوب لكل خيار.
+
+### إضافة إدخالات عينات الأنسجة إلى التجربة {#adding-tissue-sample-entries-to-your-trial}
+
+تتطلب بعض التجارب جمع عينات أنسجة من النباتات. تنشئ قاعدة البيانات معرّفات هذه العينات وتحافظ على ارتباطها بالنبات والقطعة والعينة وغيرها. للبدء، افتح صفحة تفاصيل التجربة وانتقل إلى قسم التصميم ثم “إدخالات عينات الأنسجة”.
+ترتبط عينات الأنسجة بالنباتات مباشرةً، لذا يجب أن تتضمن التجربة نباتات قبل إضافة عينات الأنسجة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_default.png')
+```
+
+انقر “إضافة إدخالات عينات الأنسجة” وحدد عدد العينات المطلوبة لكل نبات. ويمكنك إضافة كلمات لتمييزها، مثل “جذر” أو “ساق”، كما هو موضح أدناه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_create.png')
+```
+
+بعد إضافة إدخالات عينات الأنسجة، ستظهر في قسم تصميم التجربة كما هو موضح أدناه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_samples.png')
+```
+
+لكل عينة نسيج صفحة تفاصيل يمكنك فيها إضافة معلومات، مثل ما إذا كانت قيد النقل أو التخزين.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_detail.png')
+```
+
+يعرض قسم المواد المرتبطة أسفل صفحة التفاصيل العلاقات بين جميع المواد، بما فيها عينات الأنسجة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_related_stock.png')
+```
+
+### تحميل إحداثيات GPS للقطع {#uploading-gps-coordinates-for-plots}
+
+يمكنك تحميل إحداثيات GPS لقطع التجربة. يوجد رابط في صفحة تفاصيل التجربة كما هو موضح أدناه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps.png')
+```
+
+يؤدي النقر على هذا الرابط إلى فتح نافذة الحوار التالية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps_dialog.png')
+```
+
+يمكنك هنا تحميل ملف XLS أو XLSX. للاطلاع على التنسيق المطلوب، انقر “تنسيق جدول البيانات” لفتح نافذة الحوار التالية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps_upload_info.png')
+```
+
+توضح النافذة أن الملف يجب أن يكون XLS أو XLSX وأن يحتوي على الأعمدة: plot_name	WGS84_bottom_left_x	WGS84_bottom_left_y	WGS84_bottom_right_x	WGS84_bottom_right_y	WGS84_top_right_x	WGS84_top_right_y	WGS84_top_left_x	WGS84_top_left_y
+يجب أن تكون إحداثيات GPS بتنسيق WGS84 وأن تحدد مضلعًا رباعي النقاط حول القطعة.
+
+### قسم القياسات المتكررة {#repetitive-measurements-section}
+
+إذا تضمنت التجربة صفات متكررة أو قيمًا زمنية، يمكنك عرضها وتحليلها في قسم “القياسات المتكررة”. اختر الصفة من القائمة ثم حدد النطاق الزمني باستخدام منتقي التاريخ أو شريط التمرير. وبعد ذلك اختر طريقة التعامل مع القياسات: First Value أو Last Value أو Averaged Value أو Sum Values أو All Values. ويتيح خيار “All Values” عرض اتجاه القيم بمرور الوقت للمساعدة في اكتشاف الأنماط.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_view_repetitive_measurements.png')
+```
+
+### تحميل ملفات إضافية إلى التجربة {#uploading-additional-files-to-trial}
+
+يمكنك تحميل مستندات أو صور أو تسجيلات إضافية إلى التجربة. انتقل إلى قسم “الملفات الإضافية المحمّلة” في صفحة التفاصيل لعرض هذه الملفات وتنزيلها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_upload_additional_file.png')
+```
+
+لتحميل ملف إضافي، انقر “تحميل ملفات إضافية” واختر الملف من نافذة الحوار. لعرض المعلومات، انقر “معلومات التحميل”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_upload_additional_file_info.png')
+```
+
+## تحديث بيانات التجربة {#updating-trial-data}
+
+لتحديث البيانات الوصفية لتجربة أو أكثر (مثل تاريخ الزراعة أو نوع التصميم أو الوصف)، انقر “تحديث تجربة/تجارب موجودة” في إدارة > التجارب الحقلية. ويمكن استخدام التحميل أيضًا لإعادة تسمية التجارب أو نقلها إلى برنامج تربية آخر. يجب أن تكون curator أو submitter مرتبطة ببرنامج التجربة لتحديثها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/update_trial_metadata.png')
+```
+
+يمكنك هنا تحميل ملف يحتوي على بيانات وصفية جديدة للتجارب الموجودة. يسمى العمود الأول 'trial_name' ويحتوي اسم التجربة الحالية. أضف أعمدة للبيانات التي تريد تحديثها. الأعمدة غير الموجودة في الملف والقيم الفارغة لا تغير البيانات الوصفية الحالية. ويمكن تضمين الأعمدة التالية:
+
+- new_trial_name: اسم جديد للتجربة، ويجب ألا يكون موجودًا في قاعدة البيانات
+- breeding_program: اسم برنامج التربية المسؤول عن التجربة، ويجب أن يكون موجودًا في قاعدة البيانات.
+- location: اسم الموقع الذي أجريت فيه التجربة أو اختصاره، ويجب أن يكون موجودًا في قاعدة البيانات.
+- year: سنة إجراء التجربة.
+- transplanting_date: تاريخ نقل الشتلات في التجربة. استخدم التنسيق YYYY-MM-DD أو 'remove' لحذف التاريخ.
+- planting_date: تاريخ الزراعة بتنسيق YYYY-MM-DD أو 'remove' لحذف التاريخ.
+- harvest_date: تاريخ الحصاد بتنسيق YYYY-MM-DD أو 'remove' لحذف التاريخ.
+- design_type: اختصار نوع التصميم، ويجب أن يكون موجودًا في قاعدة البيانات. القيم الممكنة هي: CRD: Completely Randomized Design, RCBD: Randomized Complete Block Design, RRC: Resolvable Row-Column, DRRC: Doubly-Resolvable Row-Column, ARC: Augmented Row-Column, Alpha: Alpha Lattice Design, Lattice: Lattice Design, Augmented: Augmented Design, MAD: Modified Augmented Design, greenhouse: undesigned Nursery/Greenhouse, splitplot: Split Plot, p-rep: Partially Replicated, Westcott: Westcott Design.
+- description: نص إضافي يتضمن معلومات أخرى ذات صلة بالتجربة.
+- trial_type: يجب أن يكون نوع التجربة موجودًا في قاعدة البيانات. القيم الممكنة هي: Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial.
+- plot_width: عرض القطعة بوحدة meters
+- plot_length: طول القطعة بوحدة meters
+- field_size: مساحة الحقل بوحدة hectares
+
+## حذف بيانات التجربة {#deleting-trial-data}
+
+لحذف بيانات التجربة، افتح قسم “حذف بيانات التجربة”. توجد روابط لحذف بيانات الصفات والتخطيط وإدخالات التجربة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait1.png')
+```
+
+لحذف بيانات الصفات المقاسة، انقر “حذف بيانات الصفات”. أكد الحذف بالنقر على “اختيار الصفات للحذف”، ثم اختر صفة أو أكثر.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait2.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait3.png')
+```
+
+لحذف بيانات تخطيط التجربة، انقر “حذف بيانات التخطيط” وأكد العملية في نافذة الحوار.
+
+لحذف إدخال التجربة، انقر “حذف إدخال التجربة” وأكد الحذف في نافذة الحوار.
+
+## دعم الزراعة البينية {#intercropping-support}
+
+بدأت Breedbase دعم تجارب الزراعة البينية، ما يسمح بزراعة أكثر من محصول في التجربة وربط أكثر من عينة بالقطعة. وتتيح التغييرات الحديثة أيضًا تخزين عدة أنطولوجيات للصفات وتنظيم مصطلحاتها منفصلةً لكل محصول.
+
+### إنشاء التجربة {#trial-creation}
+
+حاليًا، لا تُدعم الزراعة البينية إلا عند تحميل تصميم التجربة من ملف، ولا تدعمها أداة التصميم التفاعلية بعد.
+
+يحتوي قالب تحميل التجربة، سواء لتجربة واحدة أو لعدة تجارب، على عمود `accession_name` لتحديد العينة الأساسية لكل قطعة، وهو مطلوب. كما يدعم عمودًا اختياريًا `intercrop_accession_name` لإضافة عينة أو أكثر. افصل الأسماء المتعددة بفاصلة أو اترك الخلية فارغة عند عدم وجود عينة بينية.
+
+
+| trial_name  | plot_name             | plot_number | accession_name | intercrop_accession_name |
+|-------------|-----------------------|-------------|----------------|--------------------------|
+| B4I_2025_NY | B4I_2025_NY-PLOT_5001 | 5001        | IL22-5365      | NDP160034Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5002 | 5002        | IL22-5365      | NDP250123Y,NDP250155Y    |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5003 | 5003        | IL21-4364      | NDP250178Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5004 | 5004        | IL21-4020      |                          |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5005 | 5005        | IL23-1619      | NDP150221G               |
+
+**مثال على قالب تحميل عدة تجارب يتضمن عينات متعددة لكل قطعة**
+
+*ملاحظة: حُذفت بعض الأعمدة المطلوبة للتوضيح*
+
+### تفاصيل التجربة {#trial-details}
+
+تُعرض العينات المزروعة بينيًا كبيانات وصفية في أجزاء مختلفة من صفحة تفاصيل التجربة.
+
+يعرض قسم *التصميم التجريبي* هذه العينات في جدولي العينات والقطع.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_plots_table.png')
+```
+
+تعرض تلميحة خريطة الحقل التفاعلية جميع العينات المرتبطة بالقطعة عند تمرير المؤشر فوقها. كما يسرد تنزيل التخطيط المكاني جميع عينات القطعة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_fieldmap_tooltip.png')
+```
+
+### تنزيل الأنماط الظاهرية {#phenotype-downloads}
+
+تتضمن تنزيلات بيانات الصفات الظاهرية (من صفحة التجربة أو معالج البحث وغيرها) العمودين `germplasmDbId` و`germplasmName` اللذين يحتويان معرّف العينة الأساسية واسمها. ويحتوي `intercropGermplasmDbId` و`intercropGermplasmName` على معرّفات وأسماء العينات البينية. إذا لم توجد عينات بينية، يكون العمودان فارغين؛ وإذا تعددت، تفصل بينها فواصل.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_phenotype_download.png')
+```
+
+**مثال على تنزيل بيانات ظاهرية يتضمن عينات متعددة لكل قطعة**
+
+*ملاحظة: حُذفت بعض الأعمدة للتوضيح*
+
+### أنطولوجيات الصفات {#trait-ontologies}
+
+يمكن تحميل أنطولوجيا صفات مستقلة لكل محصول إلى قاعدة البيانات، ما يتيح الفصل الواضح بين تعريفات الصفات الخاصة بالمحاصيل المختلفة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_trait_search.png')
+```

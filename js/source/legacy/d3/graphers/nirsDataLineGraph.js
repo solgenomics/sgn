@@ -12,7 +12,7 @@
     @param {Object} [layout] - (OPTIONAL) ab object that that holds all the dimensions properties including length, width, margin etc ... of the line graph !!
     @param {String} trait_name - the trait_name is used for the y-axis label !!
     @param {string} label_observation_unit_name - since, we have the repetitive values for unique obs_unit_name, therefore, using as the title of the graph !!
-    @param {Object} [options] - (OPTIONAL) this is an object holds the properites related to graphs details - x- and y-axis labels, title, and data-points !!
+    @param {Object} [options] - (OPTIONAL) this is an object holds the properties related to graphs details - x- and y-axis labels, title, and data-points !!
     
     */
 
@@ -127,8 +127,8 @@
                 var e = d3.event;
                 tooltip
                     .html(
-                        "<strong>Value:</strong> " + d.value + "<br/>" +
-                        "<strong>Frequency:</strong> " + d.frequency
+                        "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.value_label", "Value:")).html() : "Value:") + "</strong> " + d.value + "<br/>" +
+                        "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.frequency_label", "Frequency:")).html() : "Frequency:") + "</strong> " + d.frequency
                     )
                     .style("left", (e.pageX + 10) + "px")
                     .style("top",  (e.pageY - 25) + "px")
@@ -324,9 +324,9 @@
 
                         tooltip2
                             .html(
-                                "<strong>Sample:<strong> " + dataset.label + "<br/>" +
-                                "<strong>Value:</strong> " + d.value + "<br/>" +
-                                "<strong>Frequency:</strong> " + d.frequency
+                                "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.sample_label", "Sample:")).html() : "Sample:") + "<strong> " + dataset.label + "<br/>" +
+                                "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.value_label", "Value:")).html() : "Value:") + "</strong> " + d.value + "<br/>" +
+                                "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.frequency_label", "Frequency:")).html() : "Frequency:") + "</strong> " + d.frequency
                             )
                             .style("left", (e.clientX + 10) + "px")
                             .style("top",  (e.clientY - 25 + window.scrollY) + "px")

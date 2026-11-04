@@ -22,6 +22,9 @@ package CXGN::Phenotypes::ParseUpload::Plugin::Observations;
 #)
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use File::Slurp;
 use List::MoreUtils qw(uniq);
 use Data::Dumper;
@@ -32,6 +35,7 @@ sub name {
 }
 
 sub check_unique_var_unit_time {
+    my SGN::I18N $ui_observations_check_unique_var_unit_time_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $schema = shift;
     my $trait_cvterm = shift;
@@ -53,7 +57,7 @@ sub check_unique_var_unit_time {
     my ($id, $value) = $h->fetchrow_array();
     if ($id) {
         #print STDERR "Found id $id and value $value\n";
-        $check_result{'error'} = "The combination of observationVariableDbId $variable_id with observationUnitDbId $unit at observationTimeStamp $timestamp already exists in the database with value $value and observationDbId $id. To update this measurement includes its observationDbId in your request";
+        $check_result{'error'} = (SGN::I18N::translate($ui_observations_check_unique_var_unit_time_i18n, 'phenotype.upload.the_combination_of_observationvariabledbid_variable_id_with_observationunit', 'The combination of observationVariableDbId %{variable_id} with observationUnitDbId %{unit} at observationTimeStamp %{timestamp} already exists in the database with value %{value} and observationDbId %{id}. To update this measurement includes its observationDbId in your request', {variable_id => "$variable_id", unit => "$unit", timestamp => "$timestamp", value => "$value", id => "$id"}));
         return \%check_result;
 	}
 
@@ -62,6 +66,7 @@ sub check_unique_var_unit_time {
 }
 
 sub validate {
+    my SGN::I18N $ui_observations_validate_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $observations = shift;
     my $timestamp_included = shift;
@@ -74,34 +79,34 @@ sub validate {
 
     # Check that "observations" key contains an array
     unless (ref($observations) eq 'ARRAY') {
-        $validate_result{'error'} = "Request body is not valid. \"observations\" must be an array";
+        $validate_result{'error'} = (SGN::I18N::translate($ui_observations_validate_i18n, 'phenotype.upload.request_body_is_not_valid_observations_must_be_an_array', 'Request body is not valid. "observations" must be an array'));
         return \%validate_result;
     }
     my @data = @{$observations};
 
     # Check that array is not empty
     unless (scalar @data) {
-        $validate_result{'error'} = "Request does not contain any observations.";
+        $validate_result{'error'} = (SGN::I18N::translate($ui_observations_validate_i18n, 'phenotype.upload.request_does_not_contain_any_observations', 'Request does not contain any observations.'));
         return \%validate_result;
     }
 
     foreach my $obs (@data){
         #check that is hash
         unless (ref($obs) eq 'HASH') {
-            $validate_result{'error'} = "Request body is not valid. The \"observations\" array does not contain valid objects";
+            $validate_result{'error'} = (SGN::I18N::translate($ui_observations_validate_i18n, 'phenotype.upload.request_body_is_not_valid_the_observations_array_does_not_contain_valid_obj', 'Request body is not valid. The "observations" array does not contain valid objects'));
             return \%validate_result;
         }
         #check that each hash contains required key - value pairs
         if (!$obs->{'observationUnitDbId'}) {
-            $validate_result{'error'} = "Request body is not valid. An observation object is missing required field \"observationUnitDbId\"";
+            $validate_result{'error'} = (SGN::I18N::translate($ui_observations_validate_i18n, 'phenotype.upload.request_body_is_not_valid_an_observation_object_is_missing_required_field_o.20a8635', 'Request body is not valid. An observation object is missing required field "observationUnitDbId"'));
             return \%validate_result;
         }
         if (!$obs->{'observationVariableDbId'}) {
-            $validate_result{'error'} = "Request body is not valid. An observation object is missing required field \"observationVariableDbId\"";
+            $validate_result{'error'} = (SGN::I18N::translate($ui_observations_validate_i18n, 'phenotype.upload.request_body_is_not_valid_an_observation_object_is_missing_required_field_o.dee0183', 'Request body is not valid. An observation object is missing required field "observationVariableDbId"'));
             return \%validate_result;
         }
         if (!$obs->{'value'} && $obs->{'value'} != '0') {
-            $validate_result{'error'} = "Request body is not valid. An observation object is missing required field \"value\"";
+            $validate_result{'error'} = (SGN::I18N::translate($ui_observations_validate_i18n, 'phenotype.upload.request_body_is_not_valid_an_observation_object_is_missing_required_field_v', 'Request body is not valid. An observation object is missing required field "value"'));
             return \%validate_result;
         }
     }
@@ -111,6 +116,7 @@ sub validate {
 }
 
 sub parse {
+    my SGN::I18N $ui_observations_parse_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $data = shift;
     my $timestamp_included = shift;
@@ -145,7 +151,7 @@ sub parse {
 
         my $unique_combo = $obsunit_db_id.$variable_db_id.$timestamp;
         if ($seen{$unique_combo}) {
-            $parse_result{'error'} = "Invalid request. The combination of $unique_combo appears more than once in the request";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_observations_parse_i18n, 'phenotype.upload.invalid_request_the_combination_of_unique_combo_appears_more_than_once_in_t', 'Invalid request. The combination of %{unique_combo} appears more than once in the request', {unique_combo => "$unique_combo"}));
             return \%parse_result;
         }
         $seen{$unique_combo} = 1;
@@ -156,7 +162,7 @@ sub parse {
             ## If observationDbId is undefined, check that same trait, stock, and timestamp triplet doesn't already exist in the database
             my $unique_observation = $self->check_unique_var_unit_time($schema, $trait_cvterm, $obsunit_db_id, $timestamp);
             if (!$unique_observation || $unique_observation->{'error'}) {
-                $parse_result{'error'} = $unique_observation ? $unique_observation->{'error'} : "Error validating that observations are unique";
+                $parse_result{'error'} = $unique_observation ? $unique_observation->{'error'} : (SGN::I18N::translate($ui_observations_parse_i18n, 'phenotype.upload.error_validating_that_observations_are_unique', 'Error validating that observations are unique'));
                 return \%parse_result;
             }
         }
@@ -185,7 +191,7 @@ sub parse {
         my $validated_observations = $validator->validate($schema,'observations', \@observations);
         my @observations_missing = @{$validated_observations->{'missing'}};
         if (scalar @observations_missing) {
-            $parse_result{'error'} = "The following observations do not exist in the database: ".@observations_missing;
+            $parse_result{'error'} = (SGN::I18N::translate($ui_observations_parse_i18n, 'phenotype.upload.the_following_observations_do_not_exist_in_the_database_values', 'The following observations do not exist in the database: %{values}', {values => "" . (scalar(@observations_missing))}));
             #print STDERR "Invalid observations: @observations_missing\n";
             return \%parse_result;
         }
@@ -198,7 +204,7 @@ sub parse {
     my $validated_units = $validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@unit_names);
     my @units_missing = @{$validated_units->{'missing'}};
     if (scalar @units_missing) {
-        $parse_result{'error'} = "The following observationUnitDbIds do not exist in the database: @units_missing";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_observations_parse_i18n, 'phenotype.upload.the_following_observationunitdbids_do_not_exist_in_the_database_units_missi', 'The following observationUnitDbIds do not exist in the database: %{units_missing}', {units_missing => "@units_missing"}));
         return \%parse_result;
     }
 
@@ -219,14 +225,14 @@ sub parse {
     my $validated_variables = $validator->validate($schema,'traits',\@variables);
     my @variables_missing = @{$validated_variables ->{'missing'}};
     if (scalar @variables_missing) {
-        $parse_result{'error'} = "The following observationVariableDbIds do not exist in the database: @variables_missing";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_observations_parse_i18n, 'phenotype.upload.the_following_observationvariabledbids_do_not_exist_in_the_database_variabl', 'The following observationVariableDbIds do not exist in the database: %{variables_missing}', {variables_missing => "@variables_missing"}));
         #print STDERR "Invalid observationVariableDbIds: @variables_missing\n";
         return \%parse_result;
     }
 
     foreach my $timestamp (@timestamps) {
         if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-            $parse_result{'error'} = "Timestamp $timestamp is not of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_observations_parse_i18n, 'phenotype.upload.timestamp_timestamp_is_not_of_form_yyyy_mm_dd_hh_mm_ss_0000_or_yyyy_mm_dd_h', 'Timestamp %{timestamp} is not of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000', {timestamp => "$timestamp"}));
             print STDERR "Invalid Timestamp: $timestamp\n";
             return \%parse_result;
         }

@@ -20,32 +20,32 @@ $purpose
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
-<& /page/page_title.mas, title => "Details for Propagation Group ID '$propagation_group_name'" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("seedlot.details_for_propagation_group_id_name", "Details for Propagation Group ID '%{name}'", {name => "" . $propagation_group_name})) &>
 
-<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => "Details", title=>HTML::Entities::encode_entities($c->i18n->p("accession.stock.trials.header.details", "Details")),  collapsible => 1, collapsed=>0 &>
 
     <div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
                 <div class="col-sm-6">
                     <table class="table table-bordered table-hover">
-                        <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
-                        <tr><td><b>Material</b></td><td><%$accession_link%></td></tr>
-                        <tr><td><b>Material Type</b></td><td><%$material_type%></td></tr>
-                        <tr><td><b>Source Type</b></td><td><%$material_source_type%></td></tr>
-                        <tr><td><b>Source Name</b></td><td><%$source_link%></td></tr>
-                        <tr><td><b>Date</b></td><td><%$date%></td></tr>
-                        <tr><td><b>Sub-Location</b></td><td><%$sub_location%></td></tr>
-                        <tr><td><b>Purpose</b></td><td><%$purpose%></td></tr>                        
-                        <tr><td><b>Description</b></td><td><%$description%></td></tr>
-                        <tr><td><b>Operator</b></td><td><%$operator_name%></td></tr>
+                        <tr><td><b><% $c->i18n->p("global.search_wizard.project", "Project") |h %></b></td><td><%$project_link%></td></tr>
+                        <tr><td><b><% $c->i18n->p("seedlot.material", "Material") |h %></b></td><td><%$accession_link%></td></tr>
+                        <tr><td><b><% $c->i18n->p("seedlot_split.ui.material_type", "Material Type") |h %></b></td><td><%$material_type%></td></tr>
+                        <tr><td><b><% $c->i18n->p("seedlot.source_type.9399840", "Source Type") |h %></b></td><td><%$material_source_type%></td></tr>
+                        <tr><td><b><% $c->i18n->p("accession.forms.source_name", "Source Name") |h %></b></td><td><%$source_link%></td></tr>
+                        <tr><td><b><% $c->i18n->p("global.file_dump_share_files.date", "Date") |h %></b></td><td><%$date%></td></tr>
+                        <tr><td><b><% $c->i18n->p("seedlot.sub_location.6ef459e", "Sub-Location") |h %></b></td><td><%$sub_location%></td></tr>
+                        <tr><td><b><% $c->i18n->p("seedlot.purpose.608fe34", "Purpose") |h %></b></td><td><%$purpose%></td></tr>
+                        <tr><td><b><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></b></td><td><%$description%></td></tr>
+                        <tr><td><b><% $c->i18n->p("cross.ui.operator", "Operator") |h %></b></td><td><%$operator_name%></td></tr>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_propagation_id_link">Add New Propagation ID</button>
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_propagation_id_link"><% $c->i18n->p("seedlot.add_new_propagation_id", "Add New Propagation ID") |h %></button>
 </&>
 
 <& /propagation/propagation_id_section.mas, propagation_group_stock_id => $propagation_group_id &>
@@ -73,3 +73,7 @@ jQuery('#add_new_propagation_id_link').click(function() {
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

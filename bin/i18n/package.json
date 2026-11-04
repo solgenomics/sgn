@@ -1,0 +1,9 @@
+{
+  "name": "sgn-i18n-extraction-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Isolated developer-only JavaScript AST parser for SGN catalog extraction",
+  "dependencies": {
+    "acorn": "8.18.0"
+  }
+}

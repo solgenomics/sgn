@@ -17,10 +17,13 @@ function addComments() {
 	var given_referer = document.getElementById("referer").innerHTML;
 	
 	var commentdiv = document.getElementById("commentsarea");
-	commentdiv.innerHTML = "Please wait, checking for comments about " + thingtype + " " + thingid;
+	var commentUiI18n = (window.SGN && window.SGN.i18n) || { p: function (context, source, variables) {
+	    return source.replace(/%\{([^}]+)\}/g, function (match, name) { return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match; });
+	} };
+	commentdiv.textContent = commentUiI18n.p("global.comments.loading", "Please wait, checking for comments about %{type} %{id}", {type: thingtype, id: thingid});
 	
  	if(!MochiKit.Async.doSimpleXMLHttpRequest) {
- 	    alert("cannot do simple request");
+        alert(commentUiI18n.p("global.comments.simple_request_unavailable", "cannot do simple request"));
  	    return true;
  	}
 	
@@ -50,6 +53,7 @@ function myXmlRequestResponse(req) {
     
     var response = req.responseText;
     document.getElementById("commentsarea").innerHTML = req.responseText;
+    localizeCommentCaptions(document.getElementById("commentsarea"));
     
 }
 
@@ -74,3 +78,58 @@ if(window.onload) {
 }
 //alert("things are going fine");
 
+
+// Translate only the known metadata captions after preserving the raw comment response.
+function localizeCommentCaptions(root) {
+    if (!root || !window.SGN || !SGN.i18n || SGN.i18n.locale === 'en') return;
+    var captions = {
+        title: SGN.i18n.p('community.people.user_comments', 'User comments'),
+        empty: SGN.i18n.p("global.comments.empty", "None"),
+        add: SGN.i18n.p('community.people.add_comment', '[Add comment]'),
+        remove: SGN.i18n.p('community.people.delete', 'Delete'),
+        anonymous: SGN.i18n.p('community.people.anonymous', 'anonymous'),
+        postedBy: SGN.i18n.p('community.people.posted_by', 'Posted by '),
+        postedOn: SGN.i18n.p('community.people.posted_on', ' on ')
+    };
+    if (captions.title === 'User comments' && captions.empty === 'None' && captions.add === '[Add comment]' &&
+        captions.remove === 'Delete' && captions.anonymous === 'anonymous' &&
+        captions.postedBy === 'Posted by ' && captions.postedOn === ' on ') return;
+    function replaceText(node, source, target) {
+        if (!node) return;
+        for (var i = 0; i < node.childNodes.length; i++) {
+            var child = node.childNodes[i];
+            if (child.nodeType === 3 && child.nodeValue === source) child.nodeValue = target;
+            else if (child.nodeType === 1) replaceText(child, source, target);
+        }
+    }
+    var heading = root.querySelector('table.infosectionhead, table.infosectionhead_empty');
+    if (heading) {
+        replaceText(heading.querySelector('.infosectiontitle, .infosectiontitle_empty'), 'User comments', captions.title);
+        var empty = heading.querySelector('.infosection_emptymessage');
+        if (heading.classList.contains('infosectionhead_empty') && empty && !empty.children.length && empty.textContent === 'None') empty.textContent = captions.empty;
+        var subtitle = heading.querySelector('.infosectionsubtitle, .infosectionsubtitle_empty');
+        if (subtitle) Array.prototype.forEach.call(subtitle.querySelectorAll('a'), function (link) {
+            if (/^\/forum\/add_post\.pl\?page_type=/.test(link.getAttribute('href') || '') &&
+                !link.children.length && link.textContent === '[Add comment]') link.textContent = captions.add;
+        });
+    }
+    Array.prototype.forEach.call(root.querySelectorAll('div.boxbgcolor2'), function (bar) {
+        for (var parent = bar.parentNode; parent && parent !== root; parent = parent.parentNode) {
+            if (parent.nodeType === 1 && parent.classList.contains('boxbgcolor5')) return;
+        }
+        var table = bar.firstElementChild;
+        if (!table || table.tagName !== 'TABLE' || !table.rows.length || table.rows[0].cells.length !== 2) return;
+        var meta = table.rows[0].cells[0];
+        Array.prototype.forEach.call(meta.childNodes, function (node) {
+            if (node.nodeType !== 3) return;
+            if (node.nodeValue === 'Posted by ') node.nodeValue = captions.postedBy;
+            else if (node.nodeValue.slice(0, 4) === ' on ') node.nodeValue = captions.postedOn + node.nodeValue.slice(4);
+        });
+        var poster = meta.querySelector('b');
+        if (poster && !poster.children.length && poster.textContent === 'anonymous') poster.textContent = captions.anonymous;
+        Array.prototype.forEach.call(table.rows[0].cells[1].querySelectorAll('a'), function (link) {
+            if (/^\/forum\/forum_post_delete\.pl\?post_id=\d+(?:&|$)/.test(link.getAttribute('href') || '') &&
+                !link.children.length && link.textContent === 'Delete') link.textContent = captions.remove;
+        });
+    });
+}

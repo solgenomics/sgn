@@ -83,7 +83,7 @@ sub create_parents_file_POST : Args(0) {
     my $female_validator = CXGN::List::Validate->new();
     my @female_accessions_missing = @{$female_validator->validate($schema,'uniquenames',\@female_names)->{'missing'}};
     if (scalar(@female_accessions_missing) > 0) {
-        $list_error_message = "The following female parents did not pass validation: ".join("\n", @female_accessions_missing);
+        $list_error_message = $c->i18n->p("cross.controller.the_following_female_parents_did_not_pass_validation", "The following female parents did not pass validation: ").join("\n", @female_accessions_missing);
         $c->stash->{rest} = { error => $list_error_message };
         $c->detach();
     }
@@ -91,7 +91,7 @@ sub create_parents_file_POST : Args(0) {
     my $male_validator = CXGN::List::Validate->new();
     my @male_accessions_missing = @{$male_validator->validate($schema,'uniquenames',\@male_names)->{'missing'}};
     if (scalar(@male_accessions_missing) > 0) {
-        $list_error_message = "The following male parents did not pass validation: ".join("\n", @male_accessions_missing);
+        $list_error_message = $c->i18n->p("cross.controller.the_following_male_parents_did_not_pass_validation", "The following male parents did not pass validation: ").join("\n", @male_accessions_missing);
         $c->stash->{rest} = { error => $list_error_message };
         $c->detach();
     }
@@ -238,7 +238,7 @@ sub create_intercross_wishlist_POST : Args(0) {
         $activity_types{'seed'} = 1;
 
         if (!$activity_types{$type}){
-            $c->stash->{rest} = {error => "$type type is not supported. Please use only flower, fruit or seed"};
+            $c->stash->{rest} = {error => $c->i18n->p("cross.controller.type_type_is_not_supported_please_use_only", "%{type} type is not supported. Please use only flower, fruit or seed", {type => "" . ($type)})};
             return;
         } else {
             push @each_combination, $type;
@@ -250,7 +250,7 @@ sub create_intercross_wishlist_POST : Args(0) {
         if (looks_like_number($min)) {
             push @each_combination, $min;
         } else {
-            $c->stash->{rest} = {error => "$min is not a number. Please indicate minimum number"};
+            $c->stash->{rest} = {error => $c->i18n->p("cross.controller.min_is_not_a_number_please_indicate_minimum", "%{min} is not a number. Please indicate minimum number", {min => "" . ($min)})};
             return;
         }
 
@@ -260,7 +260,7 @@ sub create_intercross_wishlist_POST : Args(0) {
         if (looks_like_number($max)) {
             push @each_combination, $max;
         } else {
-            $c->stash->{rest} = {error => "$max is not a number. Please indicate maximum number"};
+            $c->stash->{rest} = {error => $c->i18n->p("cross.controller.max_is_not_a_number_please_indicate_maximum", "%{max} is not a number. Please indicate maximum number", {max => "" . ($max)})};
             return;
         }
 
@@ -401,7 +401,7 @@ sub upload_intercross_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload intercross data!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.you_must_be_logged_in_to_upload_intercross", "You must be logged in to upload intercross data!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -410,7 +410,7 @@ sub upload_intercross_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload intercross data!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.you_must_be_logged_in_to_upload_intercross", "You must be logged in to upload intercross data!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -419,7 +419,7 @@ sub upload_intercross_file_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload intercross file'};
+        $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.only_a_submitter_or_a_curator_can_upload.890dd87", "Only a submitter or a curator can upload intercross file")};
         $c->detach();
     }
 
@@ -433,17 +433,17 @@ sub upload_intercross_file_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p("cross.server.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}),};
         return;
     }
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('IntercrossCSV');
     $parsed_data = $parser->parse();
 #    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
@@ -451,7 +451,7 @@ sub upload_intercross_file_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p("cross.server.could_not_get_parsing_errors", "Could not get parsing errors")};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -488,7 +488,7 @@ sub upload_intercross_file_POST : Args(0) {
         my $page_crossing_experiment_name = $page_crossing_experiment_rs->name();
 
         if ($crossing_experiment_id != $page_crossing_experiment_id) {
-            $c->stash->{rest} = {error_string => "Error: You are uploading data for crossing experiment:$crossing_experiment_name on $page_crossing_experiment_name page!"};
+            $c->stash->{rest} = {error_string => $c->i18n->p("cross.controller.error_you_are_uploading_data_for_crossing_experiment", "Error: You are uploading data for crossing experiment:%{crossing_experiment_name} on %{page_crossing_experiment_name} page!", {crossing_experiment_name => "" . ($crossing_experiment_name), page_crossing_experiment_name => "" . ($page_crossing_experiment_name)})};
             $c->detach();
         }
 
@@ -521,7 +521,7 @@ sub upload_intercross_file_POST : Args(0) {
                 foreach my $new_identifier (@new_cross_identifiers) {
                     my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
                     my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
-                    push @error_messages, "Cross between $intercross_female_parent and $intercross_male_parent has no associated cross unique ID in crossing experiment: $crossing_experiment_name";
+                    push @error_messages, $c->i18n->p("cross.controller.cross_between_intercross_female_parent_and_intercross_male", "Cross between %{intercross_female_parent} and %{intercross_male_parent} has no associated cross unique ID in crossing experiment: %{crossing_experiment_name}", {intercross_female_parent => "" . ($intercross_female_parent), intercross_male_parent => "" . ($intercross_male_parent), crossing_experiment_name => "" . ($crossing_experiment_name)});
                 }
 
                 my $formatted_error_messages = join("<br>", @error_messages);
@@ -549,7 +549,7 @@ sub upload_intercross_file_POST : Args(0) {
 #                    print STDERR "GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
                     my $validate_new_cross_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $generated_cross_unique_id});
                     if ($validate_new_cross_rs->count() > 0) {
-                        $c->stash->{rest} = {error_string => "Error creating new cross unique id",};
+                        $c->stash->{rest} = {error_string => $c->i18n->p("cross.controller.error_creating_new_cross_unique_id", "Error creating new cross unique id"),};
                         return;
                     }
 
@@ -635,12 +635,12 @@ sub upload_intercross_file_POST : Args(0) {
                 });
 
                 if (!$cross_add->validate_crosses()){
-                    $c->stash->{rest} = {error_string => "Error validating crosses",};
+                    $c->stash->{rest} = {error_string => $c->i18n->p("cross.server.error_validating_crosses", "Error validating crosses"),};
                     return;
                 }
 
                 if (!$cross_add->add_crosses()){
-                    $c->stash->{rest} = {error_string => "Error adding crosses",};
+                    $c->stash->{rest} = {error_string => $c->i18n->p("cross.server.error_adding_crosses", "Error adding crosses"),};
                     return;
                 }
            }
@@ -658,7 +658,7 @@ sub upload_intercross_file_POST : Args(0) {
             my $return = $cross_transaction->add_intercross_transaction();
 
             if (!$return) {
-                $c->stash->{rest} = {error_string => "Error adding cross transaction",};
+                $c->stash->{rest} = {error_string => $c->i18n->p("cross.controller.error_adding_cross_transaction", "Error adding cross transaction"),};
                 return;
             }
         }

@@ -1,0 +1,25 @@
+# Gestión de poblaciones {#managing-populations}
+
+Las poblaciones se representan como grupos de accesiones. Esta agrupación puede ser útil para análisis posteriores. Para gestionarlas, vaya a “Gestionar accesiones” y desplácese hasta el final de la página.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations.png')
+```
+
+Para añadir una población, pulse “Crear población”. En el diálogo, seleccione una lista de accesiones y asigne un nombre a la población. También puede crearla al cargar accesiones nuevas en la base de datos.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_add_population.png')
+```
+
+Pulse el botón más (+) junto a “Poblaciones” para ver las poblaciones disponibles. Pulse el nombre de una población para ver sus accesiones.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_expand_table.png')
+```
+
+Desde aquí puede quitar accesiones de una población y añadir otras.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_table.png')
+```

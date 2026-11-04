@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialSpatialLayoutGeneric;
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use List::MoreUtils qw(uniq);
 use CXGN::File::Parse;
 use SGN::Model::Cvterm;
@@ -15,6 +17,7 @@ my @OPTIONAL_COLUMNS = qw||;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_trialspatiallayoutgeneric_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $trial_id = $self->get_trial_id();
@@ -50,7 +53,7 @@ sub _validate_with_plugin {
 
     # Unsupported column headers
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
-        $errors{'error_messages'} = [ 'The following column headers are not supported: ' . join(', ', @$additional_columns) ];
+        $errors{'error_messages'} = [ (SGN::I18N::translate($ui_trialspatiallayoutgeneric_i18n, "trial.parse.unsupported_columns_following", "The following column headers are not supported: %{columns}", {columns => join(', ', @$additional_columns)})) ];
         $self->_set_parse_errors(\%errors);
         return;
     }
@@ -66,12 +69,12 @@ sub _validate_with_plugin {
 
         # Row Number: must be a positive integer
         if (!($row_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: row_number <strong>$row_number</strong> must be a positive integer.";
+            push @error_messages, (SGN::I18N::translate($ui_trialspatiallayoutgeneric_i18n, "trial.upload.multi.generic.positive_integer", "Row %{row}: %{field} %{value} must be a positive integer.", {row => "$row", field => "row_number", value => "<strong>$row_number</strong>"}));
         }
 
         # Col Number: must be a positive integer
         if (!($col_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be a positive integer.";
+            push @error_messages, (SGN::I18N::translate($ui_trialspatiallayoutgeneric_i18n, "trial.upload.multi.generic.positive_integer", "Row %{row}: %{field} %{value} must be a positive integer.", {row => "$row", field => "col_number", value => "<strong>$col_number</strong>"}));
         }
 
         # Track row/col positions to check for duplicates
@@ -90,7 +93,7 @@ sub _validate_with_plugin {
 
     # Report missing plots
     if (scalar(@missing_plots) > 0) {
-        push @error_messages, "Plot name(s) <strong>".join(', ',@missing_plots)."</strong> do not exist in the database as plots.";
+        push @error_messages, (SGN::I18N::translate($ui_trialspatiallayoutgeneric_i18n, "trial.parse.plots_missing", "Plot name(s) %{names} do not exist in the database as plots.", {names => "<strong>".join(', ',@missing_plots)."</strong>"}));
     }
 
     # Check that all plots belong to the same trial
@@ -110,7 +113,7 @@ sub _validate_with_plugin {
     }
 
     if (scalar(@mismatched_plots) > 0) {
-        push @error_messages, "All plots must belong to ".$trial->get_name().". ";
+        push @error_messages, (SGN::I18N::translate($ui_trialspatiallayoutgeneric_i18n, "trial.parse.same_trial.97346ca", "All plots must belong to %{name}. ", {name => "" . ($trial->get_name())}));
     }
 
     # Check for unique row/col positions
@@ -119,7 +122,7 @@ sub _validate_with_plugin {
         my $count = scalar(@$plots);
         if ( $count > 1 ) {
             my @pos = split('-', $position_key);
-            push @error_messages, "Position row=" . $pos[0] . " col=" . $pos[1] . " is assigned to multiple plots: <strong>" . join(', ', @$plots) . "</strong>. Each position can only be occupied once.";
+            push @error_messages, (SGN::I18N::translate($ui_trialspatiallayoutgeneric_i18n, "trial.parse.position_duplicate", "Position row=%{row} col=%{col} is assigned to multiple plots: %{plots}. Each position can only be occupied once.", {row => "" . ($pos[0]), col => "" . ($pos[1]), plots => "<strong>" . join(', ', @$plots) . "</strong>"}));
         }
     }
 

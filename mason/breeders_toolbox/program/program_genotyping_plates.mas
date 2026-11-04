@@ -9,8 +9,8 @@ $program_id
 <table id="program_genotyping_plates" class="display">
     <thead>
         <tr>
-            <th>Genotyping Plate Name</th>
-            <th>Description</th>
+            <th><% $c->i18n->p("folder.detail.genotyping_plate_name", "Genotyping Plate Name") |h %></th>
+            <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
         </tr>
     </thead>
 </table>

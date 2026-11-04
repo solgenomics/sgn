@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 
 
@@ -6,51 +9,51 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<& /page/page_title.mas, title=>'Accession Usage' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.usage.title", "Accession Usage")) &>
 
-<&| /page/info_section.mas, title => 'Accession Usage for Trials', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.usage.trials", "Accession Usage for Trials")), collapsible=>1, collapsed=>1 &>
 
 <table id="accession_usage_trials" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
-    <th>Accession Name</th>
-    <th>Number of Trials</th>
-    <th>Total Number of Plots</th>
+    <th><% $c->i18n->p("accession.usage.header.accession_name", "Accession Name") |h %></th>
+    <th><% $c->i18n->p("accession.usage.header.trial_count", "Number of Trials") |h %></th>
+    <th><% $c->i18n->p("accession.usage.header.plot_count", "Total Number of Plots") |h %></th>
   </tr>
 </thead>
 </table>
 
 </&>
 
-<&| /page/info_section.mas, title => 'Accession Usage as Female Parent', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.usage.female", "Accession Usage as Female Parent")), collapsible=>1, collapsed=>1 &>
 
 <table id="accession_usage_female" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
-    <th>Accession Name</th>
-    <th>Number of Progenies</th>
+    <th><% $c->i18n->p("accession.usage.header.accession_name", "Accession Name") |h %></th>
+    <th><% $c->i18n->p("accession.usage.header.progenies", "Number of Progenies") |h %></th>
   </tr>
 </thead>
 </table>
-<a href="/search/download_parents_and_numbers_of_progenies?parent_type=female_parent" class="btn btn-sm btn-default">Download</a>
+<a href="/search/download_parents_and_numbers_of_progenies?parent_type=female_parent" class="btn btn-sm btn-default"><% $c->i18n->p("accession.usage.download", "Download") |h %></a>
 
 </&>
 
-<&| /page/info_section.mas, title => 'Accession Usage as Male Parent', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.usage.male", "Accession Usage as Male Parent")), collapsible=>1, collapsed=>1 &>
 
 <table id="accession_usage_male" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
-    <th>Accession Name</th>
-    <th>Number of Progenies</th>
+    <th><% $c->i18n->p("accession.usage.header.accession_name", "Accession Name") |h %></th>
+    <th><% $c->i18n->p("accession.usage.header.progenies", "Number of Progenies") |h %></th>
   </tr>
 </thead>
 </table>
-<a href="/search/download_parents_and_numbers_of_progenies?parent_type=male_parent" class="btn btn-sm btn-default">Download</a>
+<a href="/search/download_parents_and_numbers_of_progenies?parent_type=male_parent" class="btn btn-sm btn-default"><% $c->i18n->p("accession.usage.download", "Download") |h %></a>
 
 </&>
 
-<&| /page/info_section.mas, title => 'Accession Phenotype Performance', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.usage.phenotype", "Accession Phenotype Performance")), collapsible=>1, collapsed=>0 &>
 
 <div class="well">
     <div class="panel panel-default">
@@ -59,14 +62,14 @@
             <table id="accession_usage_phenotypes" class='table table-bordered table-hover'>
                 <thead>
                     <tr>
-                        <th>Accession</th>
-                        <th>Observation Variable</th>
-                        <th>Mean</th>
-                        <th>Min</th>
-                        <th>Max</th>
-                        <th>Std Dev</th>
-                        <th>CV</th>
-                        <th>Count</th>
+                        <th><% $c->i18n->p("accession.usage.header.accession", "Accession") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.variable", "Observation Variable") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.mean", "Mean") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.min", "Min") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.max", "Max") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.stddev", "Std Dev") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.cv", "CV") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.count", "Count") |h %></th>
                     </tr>
                 </thead>
                 <tbody>

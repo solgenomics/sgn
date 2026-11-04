@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME 
@@ -16,14 +20,14 @@ $traits_list
 
 </%args>
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Analyze QTLs",
   collapsible => 1, 
   collapsed   => 1, 
-  title       => "Analyze QTLs" 
+  title       => HTML::Entities::encode_entities($c->i18n->p("global.iconmenu.analyze_qtls", "Analyze QTLs"))
 &> 
 
 <& /page/columnar_table.mas,
-  headings     => ["Trait", "Min", "Max", "Ave", "No. of<br />Lines", "Analyze<br />QTL"], 
+  headings     => [("" . HTML::Entities::encode_entities($c->i18n->p("accession.population_cgi.trait", "Trait")) . ""), "Min", "Max", "Ave", ("" . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.no_of", "No. of")) . "<br />" . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.lines", "Lines")) . ""), ("" . HTML::Entities::encode_entities($c->i18n->p("accession.sequencing.table.analyze", "Analyze")) . "<br />QTL")],
   data         => $traits_list,
   __alt_freq   =>2,
   __alt_width  =>1,

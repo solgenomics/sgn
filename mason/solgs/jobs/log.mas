@@ -17,24 +17,24 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 <div id="analysis_log_div" style="display:none">
-  <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Dismiss failed and timed out jobs</button>
+  <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'><% $c->i18n->p("solgs.interface.dismiss_failed_and_timed_out_jobs", "Dismiss failed and timed out jobs") |h %></button>
   <br>
-  <button id="clear_jobs_cache_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
+  <button id="clear_jobs_cache_button" class='btn btn-sm btn-primary'><% $c->i18n->p("solgs.interface.dismiss_all_jobs_older_than", "Dismiss all jobs older than") |h %></button><% " " %>
   <select id="keep_recent_jobs_select">
-    <option value='one_week'>One week</option>
-    <option value='one_month'>One month</option>
-    <option value='six_months'>Six months</option>
-    <option value='one_year'>One year</option>
+    <option value='one_week'><% $c->i18n->p("solgs.interface.one_week", "One week") |h %></option>
+    <option value='one_month'><% $c->i18n->p("solgs.interface.one_month", "One month") |h %></option>
+    <option value='six_months'><% $c->i18n->p("solgs.interface.six_months", "Six months") |h %></option>
+    <option value='one_year'><% $c->i18n->p("solgs.interface.one_year", "One year") |h %></option>
   </select>
   <br>
   <table class="table" id="analysis_list" style="text-align: left;">
     <thead>
       <tr>
-    	<th>Analysis name</th>
-        <th>Analysis type</th>
-        <th>Submitted on</th>
-    	<th>Status</th>
-    	<th>Result page</th>
+<% "    \t" %><th><% $c->i18n->p("solgs.interface.analysis_name", "Analysis name") |h %></th>
+        <th><% $c->i18n->p("solgs.interface.analysis_type", "Analysis type") |h %></th>
+        <th><% $c->i18n->p("solgs.interface.submitted_on", "Submitted on") |h %></th>
+<% "    \t" %><th><% $c->i18n->p("solgs.interface.status", "Status") |h %></th>
+<% "    \t" %><th><% $c->i18n->p("solgs.interface.result_page", "Result page") |h %></th>
       </tr>
     </thead>
   </table>

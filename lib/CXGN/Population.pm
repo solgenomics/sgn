@@ -2,6 +2,8 @@
 package CXGN::Population;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
@@ -84,6 +86,7 @@ sub get_accession_members {
 
 
 sub delete_population {
+    my SGN::I18N $ui_population_delete_population_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $dbh = $self->schema()->storage()->dbh();
     my $schema = $self->schema();
@@ -98,14 +101,14 @@ sub delete_population {
         my $male_parent_rs = $schema->resultset("Stock::StockRelationship")->search({subject_id => $population_id, type_id => $male_parent_type_id});
         if ($male_parent_rs->count > 0){
             print STDERR "Population has associated cross or pedigree. Cannot delete.\n";
-            die "Population has associated cross or pedigree: Cannot delete.\n";
+            die (SGN::I18N::translate($ui_population_delete_population_i18n, "accession.population.related", "Population has associated cross or pedigree: Cannot delete.\n"));
         }
 
         #checking if the stock id has population stock type
         my $population_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $population_id, type_id => $population_type_id});
         if (!$population_rs) {
             print STDERR "This stock id is not a population. Cannot delete.\n";
-	        die "This stock id is not a population. Cannot delete.\n";
+	        die (SGN::I18N::translate($ui_population_delete_population_i18n, "accession.population.wrong_id", "This stock id is not a population. Cannot delete.\n"));
         }
 
         my $q = "delete from phenome.stock_owner where stock_id = ?";
@@ -130,6 +133,7 @@ sub delete_population {
 
 
 sub delete_population_member {
+    my SGN::I18N $ui_population_delete_population_member_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $dbh = $self->schema()->storage()->dbh();
     my $schema = $self->schema();
@@ -146,18 +150,18 @@ sub delete_population_member {
         my $population_member_rs = $schema->resultset("Stock::StockRelationship")->find({stock_relationship_id => $stock_relationship_id, type_id => $member_of_type_id});
         if (!$population_member_rs) {
             print STDERR "This accession is not a population member. Cannot delete.\n";
-	        die "This accession is not a population memeber. Cannot delete.\n";
+	        die (SGN::I18N::translate($ui_population_delete_population_member_i18n, "accession.population.not_member", "This accession is not a population member. Cannot delete.\n"));
         } else {
             $population_id = $population_member_rs->object_id();
             my $population_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $population_id, type_id => $population_type_id});
             if (!$population_rs) {
                 print STDERR "This stock id is not a population. Cannot delete.\n";
-    	        die "This stock is not a population. Cannot delete.\n";
+            die (SGN::I18N::translate($ui_population_delete_population_member_i18n, "accession.population.wrong_stock", "This stock is not a population. Cannot delete.\n"));
             } else {
                 my $male_parent_rs = $schema->resultset("Stock::StockRelationship")->search({subject_id => $population_id, type_id => $male_parent_type_id});
                 if ($male_parent_rs->count > 0){
                     print STDERR "Population has associated cross or pedigree. Cannot delete population member.\n";
-                    die "Population has associated cross or pedigree: Cannot delete population member.\n";
+                    die (SGN::I18N::translate($ui_population_delete_population_member_i18n, "accession.population.member_related", "Population has associated cross or pedigree: Cannot delete population member.\n"));
                 }
             }
         }

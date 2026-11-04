@@ -5,11 +5,15 @@ $deleted_phenotype_files => undef
 $locations => undef
 </%args>
 
+<%once>
+use HTML::Entities ();
+</%once>
+
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreedersToolbox.UploadImages', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
 
-<& /page/page_title.mas, title=>"Manage Phenotypic Data" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('phenotyping.manage.title', 'Manage Phenotypic Data')) &>
 
-<div class="container-fluid">
+<div class="container-fluid sgn-phenotyping-page">
 
 <!--button class="btn btn-info" onclick=location.href="/search/stocks">Phenotype Search</button><br /><br /-->
 
@@ -22,7 +26,7 @@ $locations => undef
 
 <div class="well">
 
-<&| /page/info_section.mas, title=>'Your Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link" >Upload Phenotype Spreadsheet</a>] [<a id="upload_images_link" >Upload Images</a>] <br/> [<a name="create_spreadsheet_link" >Create Phenotype Spreadsheet</a>]' &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('phenotyping.manage.section.uploaded_files', 'Your Uploaded Files')), anchor_title=>'Your Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link" >' . HTML::Entities::encode_entities($c->i18n->p('phenotyping.manage.action.upload_spreadsheet', 'Upload Phenotype Spreadsheet')) . '</a>] [<a id="upload_images_link" >' . HTML::Entities::encode_entities($c->i18n->p('phenotyping.manage.action.upload_images', 'Upload Images')) . '</a>] <br/> [<a name="create_spreadsheet_link" >' . HTML::Entities::encode_entities($c->i18n->p('phenotyping.manage.action.create_spreadsheet', 'Create Phenotype Spreadsheet')) . '</a>]' &>
   <br/>
   <& /breeders_toolbox/file_list.mas, files=>$phenotype_files, allow_delete=>1 &>
 
@@ -31,7 +35,7 @@ $locations => undef
 </div>
 <div class="well">
 
-<&| /page/info_section.mas, title=>'Your Obsoleted Files', subtitle=>'These files will not be shown anywhere else on the website', is_subsection=>1 &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('phenotyping.manage.section.obsoleted_files', 'Your Obsoleted Files')), anchor_title=>'Your Obsoleted Files', subtitle=>HTML::Entities::encode_entities($c->i18n->p('phenotyping.manage.section.obsoleted_help', 'These files will not be shown anywhere else on the website')), is_subsection=>1 &>
 
   <& /breeders_toolbox/file_list.mas, files=>$deleted_phenotype_files, allow_delete=>0 &>
 
@@ -45,9 +49,13 @@ $locations => undef
 
 jQuery(document).ready(function() {
 
+    var managePhenotypingI18n = (window.SGN && window.SGN.i18n) || {
+        p: function(context, source) { return source; }
+    };
+
     jQuery('.files_datatables').on('click', 'button[name=delete_pheno_file_link]', function() {
         var delete_phenotypes_file_id = jQuery(this).data('file_id');
-        if (confirm('Are you sure you want to delete all phenotype values related to this file from the database and make this file obsolete?')){
+        if (confirm(managePhenotypingI18n.p('phenotyping.manage.delete.confirm', 'Are you sure you want to delete all phenotype values related to this file from the database and make this file obsolete?'))){
             jQuery.ajax ( {
                 url : '/ajax/breeders/phenotyping/delete/'+delete_phenotypes_file_id,
                 beforeSend : function() {
@@ -55,12 +63,12 @@ jQuery(document).ready(function() {
                 },
                 success: function(response){
                     jQuery('#working_modal').modal('hide');
-                    alert('Made phenotype file obsolete and deleted all related phenotype values in the database!');
+                    alert(managePhenotypingI18n.p('phenotyping.manage.delete.success', 'Made phenotype file obsolete and deleted all related phenotype values in the database!'));
                     location.reload();
                 },
                 error: function(response){
                     jQuery('#working_modal').modal('hide');
-                    alert("Error deleting file and phenotypes!");
+                    alert(managePhenotypingI18n.p('phenotyping.manage.delete.failed', "Error deleting file and phenotypes!"));
                 }
             });
         }
@@ -69,3 +77,30 @@ jQuery(document).ready(function() {
 });
 
 </script>
+
+<style>
+/* Allow translated section titles and actions to wrap independently. */
+.sgn-phenotyping-page > .well > table.sub_infosectionhead,
+.sgn-phenotyping-page > .well > table.sub_infosectionhead > tbody {
+    display: block;
+}
+.sgn-phenotyping-page > .well > table.sub_infosectionhead > tbody > tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5em 1em;
+}
+.sgn-phenotyping-page > .well > table.sub_infosectionhead td.sub_infosectiontitle,
+.sgn-phenotyping-page > .well > table.sub_infosectionhead td.sub_infosectionsubtitle {
+    min-width: 0;
+    width: auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: start;
+}
+.sgn-phenotyping-page > .well > table.sub_infosectionhead td.sub_infosectiontitle {
+    flex: 1 1 14rem;
+}
+.sgn-phenotyping-page > .well > table.sub_infosectionhead td.sub_infosectionsubtitle {
+    flex: 1 1 28rem;
+}
+</style>

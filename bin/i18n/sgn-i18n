@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""One entry point for release builders, translators and site operators."""
+
+# Standard command names use hyphens.
+# pylint: disable=invalid-name
+import argparse
+import os
+import sys
+from pathlib import Path
+
+COMMANDS = {
+    "review": "review.py",
+    **{name: "workflow.py" for name in ("prepare", "package")},
+    **{name: "catalog.py" for name in ("extract", "update", "freeze", "init", "build")},
+    **{name: "pack.py" for name in ("create", "validate", "install", "activate", "rollback", "doctor")},
+}
+
+
+def main():
+    """Offer only commands included in this toolkit and execute without a shell."""
+    directory = Path(__file__).resolve().parent
+    available = {name: script for name, script in COMMANDS.items() if (directory / script).is_file()}
+    guidance = []
+    if (directory / "pack.py").is_file():
+        guidance.append("Ready packs: install --activate, doctor, rollback")
+    if (directory / "workflow.py").is_file():
+        guidance.append("Translator workflow: prepare, package")
+    if (directory / "catalog.py").is_file():
+        guidance.append("Source tools: extract, update, freeze, init, build")
+    guidance.append("Use COMMAND --help for its options. Put options after the command.")
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        usage="%(prog)s COMMAND [OPTIONS]",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="\n".join(guidance),
+    )
+    parser.add_argument("command", choices=available)
+    command = parser.parse_args(sys.argv[1:2]).command
+    script = directory / available[command]
+    os.execv(sys.executable, [sys.executable, str(script), *sys.argv[1:]])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -20,14 +20,14 @@ $breeder_search_params =>''
 <%perl>
 my $label = $analysis_type =~ s/_/ /gr;
 my $analysis_abbr = $analysis_type =~ /correlation/ ? 'corr' : $analysis_type;
-$wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
+$wizard_link_txt = $c->i18n->p("solgs.interface.create_a_new_list_or_dataset", "Create a new list or dataset") if !$wizard_link_txt;
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "solGS.Dataset", "CXGN.List", "solGS.dataTableTabs"] &>
 
 <div id="lists_datasets_canvas">
 
-    <div id="lists_datasets_message" class="message" style="display:none;">Retrieving lists and datasets...please wait...it may take minutes.
+    <div id="lists_datasets_message" class="message" style="display:none;"><% $c->i18n->p("solgs.interface.retrieving_lists_and_datasets_please_wait_it_may_take_minutes", "Retrieving lists and datasets...please wait...it may take minutes.") |h %>
     </div>
     <div id="lists_datasets_progress">
     <& /solgs/spinner/spinner.mas &>

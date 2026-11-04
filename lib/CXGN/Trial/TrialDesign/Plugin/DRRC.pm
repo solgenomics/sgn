@@ -4,12 +4,14 @@ package CXGN::Trial::TrialDesign::Plugin::DRRC;
 use File::Slurp;
 use CXGN::Tools::Run;
 use Moose::Role;
+use SGN::I18N ();
 use List::MoreUtils qw(first_index);
 use Data::Dumper;
 use SGN::Context;
 
 sub create_design {
   my $self = shift;
+    my SGN::I18N $design_i18n = $self->i18n;
   my %drrc_design;
   my $rbase = R::YapRI::Base->new();
   my $stock_list;
@@ -43,7 +45,7 @@ sub create_design {
     @stock_list = @{$self->get_stock_list()};
     $stock_list = '"'.join('","', @stock_list).'"';
   } else {
-    die "No stock list specified\n";
+    die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
   }
   if ($self->has_control_list_crbd()) {
     $control_list = '"'.join('","',@{$self->get_control_list_crbd()}).'"';
@@ -53,13 +55,13 @@ sub create_design {
   if ($self->has_number_of_reps()) {
     $repNumber = $self->get_number_of_reps();
   } else {
-    die "Number of reps not specified\n";
+    die (($design_i18n ? $design_i18n->p("trial.design.reps_missing", "Number of reps not specified") : "Number of reps not specified") . "\n");
   }
 
   if ($self->has_number_of_cols()) {
     $colNumber = $self->get_number_of_cols();
   } else {
-    die "Number of cols not specified\n";
+    die (($design_i18n ? $design_i18n->p("trial.design.cols_missing", "Number of cols not specified") : "Number of cols not specified") . "\n");
   }
 
   $rowNumber = scalar(@stock_list) / ($colNumber/$repNumber);
@@ -68,12 +70,12 @@ sub create_design {
   if (scalar(@stock_list) % $colNumber == 0) {
     print "Correct entries and col number proportion.\n";
   } else {
-    die "The number of entries must be divisible by the number of cols.\nThis design is resulting in:\nCols: $colNumber\nRows: $rowNumber\n";
+    die (($design_i18n ? $design_i18n->p("trial.design.drrc_entries", "The number of entries must be divisible by the number of cols.\nThis design is resulting in:\nCols: %{cols}\nRows: %{rows}\n", {cols => $colNumber, rows => $rowNumber}) : "The number of entries must be divisible by the number of cols.\nThis design is resulting in:\nCols: $colNumber\nRows: $rowNumber\n"));
   }
   if (scalar(@stock_list) % $rowNumber == 0)  {
     print "Correct entries and row number proportion.\n "
     } else {
-    die "Total number of treatments must be divisible by the number of rows.\nThis design is resulting in:\nCols: $colNumber\nRows: $rowNumber\n";
+    die (($design_i18n ? $design_i18n->p("trial.design.drrc_treatments", "Total number of treatments must be divisible by the number of rows.\nThis design is resulting in:\nCols: %{cols}\nRows: %{rows}\n", {cols => $colNumber, rows => $rowNumber}) : "Total number of treatments must be divisible by the number of rows.\nThis design is resulting in:\nCols: $colNumber\nRows: $rowNumber\n"));
   }
 
   print STDERR "Stock number is ".scalar(@stock_list)." and the number of rep is $repNumber and row number is $rowNumber and the number of col is $colNumber\n";

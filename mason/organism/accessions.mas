@@ -1,10 +1,13 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%args>
 $accessions
 
 </%args>
 
-<&| /page/info_section.mas, title=>'External Links' &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.organism.external_links", "External Links")) &>
 <% $accessions %>
 </&>
 

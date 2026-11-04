@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialMetadataGeneric;
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use List::MoreUtils qw(uniq);
 use CXGN::File::Parse;
 use SGN::Model::Cvterm;
@@ -35,6 +37,7 @@ my %valid_design_types = (
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_trialmetadatageneric_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
 
@@ -78,7 +81,7 @@ sub _validate_with_plugin {
 
     # Unsupported column headers
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
-        $errors{'error_messages'} = [ 'The follow column headers are not supported: ' . join(', ', @$additional_columns) ];
+        $errors{'error_messages'} = [ (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.parse.unsupported_columns_follow", "The follow column headers are not supported: %{columns}", {columns => join(', ', @$additional_columns)})) ];
         $self->_set_parse_errors(\%errors);
         return;
     }
@@ -97,24 +100,24 @@ sub _validate_with_plugin {
 
         # Transplanting / Planting / Harvest Dates: must be YYYY-MM-DD format, if provided
         if ($transplanting_date && $transplanting_date ne 'remove' && !$calendar_funcs->check_value_format($transplanting_date)) {
-            push @error_messages, "Row $row: transplanting_date <strong>$transplanting_date</strong> must be in the format YYYY-MM-DD.";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.date_format", "Row %{row}: %{field} %{value} must be in the format %{date_format}.", {row => "$row", field => "transplanting_date", value => "<strong>$transplanting_date</strong>", date_format => "YYYY-MM-DD"}));
         }
         if ($planting_date && $planting_date ne 'remove' && !$calendar_funcs->check_value_format($planting_date)) {
-            push @error_messages, "Row $row: planting_date <strong>$planting_date</strong> must be in the format YYYY-MM-DD.";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.date_format", "Row %{row}: %{field} %{value} must be in the format %{date_format}.", {row => "$row", field => "planting_date", value => "<strong>$planting_date</strong>", date_format => "YYYY-MM-DD"}));
         }
         if ($harvest_date && $harvest_date ne 'remove' && !$calendar_funcs->check_value_format($harvest_date)) {
-            push @error_messages, "Row $row: harvest_date <strong>$harvest_date</strong> must be in the format YYYY-MM-DD.";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.date_format", "Row %{row}: %{field} %{value} must be in the format %{date_format}.", {row => "$row", field => "harvest_date", value => "<strong>$harvest_date</strong>", date_format => "YYYY-MM-DD"}));
         }
 
         # Plot Width / Plot Length / Field Size: must be a positive number, if provided
         if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)) {
-            push @error_messages, "Row $row: plot_width <strong>$plot_width</strong> must be a positive number.";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.positive_number", "Row %{row}: %{field} %{value} must be a positive number.", {row => "$row", field => "plot_width", value => "<strong>$plot_width</strong>"}));
         }
         if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)) {
-            push @error_messages, "Row $row: plot_length <strong>$plot_length</strong> must be a positive number.";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.positive_number", "Row %{row}: %{field} %{value} must be a positive number.", {row => "$row", field => "plot_length", value => "<strong>$plot_length</strong>"}));
         }
         if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)) {
-            push @error_messages, "Row $row: plot_width <strong>$field_size</strong> must be a positive number.";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.positive_number", "Row %{row}: %{field} %{value} must be a positive number.", {row => "$row", field => "plot_width", value => "<strong>$field_size</strong>"}));
         }
     }
 
@@ -126,7 +129,7 @@ sub _validate_with_plugin {
     my $trial_validation = $validator->validate($schema,'trials',$parsed_values->{'trial_name'});
     my @missing_trial_names = @{$trial_validation->{'missing'}};
     if (scalar(@missing_trial_names) > 0) {
-        push @error_messages, "Trial name(s) <strong>".join(', ',@missing_trial_names)."</strong> do not exist in the database.";
+        push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.parse.trials_missing", "Trial name(s) %{names} do not exist in the database.", {names => "<strong>".join(', ',@missing_trial_names)."</strong>"}));
     }
 
     # New Trial Names: must NOT already exist in the database, cannot contains spaces
@@ -136,25 +139,25 @@ sub _validate_with_plugin {
     foreach (@{$parsed_values->{'name'}}) {
         push(@already_used_new_trial_names, $_) unless exists $unused_new_trial_names{$_};
         if ($_ =~ /\s/) {
-            push @error_messages, "new_trial_name <strong>$_</strong> must not contain spaces.";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.no_spaces", "%{field} %{value} must not contain spaces.", {field => "new_trial_name", value => "<strong>$_</strong>"}));
         }
         if ($_ =~ /\// || $_ =~ /\\/) {
-            push @warning_messages, "trial_name <strong>$_</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.";
+            push @warning_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.slashes_warning", "%{field} %{value} contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.", {field => "trial_name", value => "<strong>$_</strong>"}));
         }
     }
     if (scalar(@already_used_new_trial_names) > 0) {
-        push @error_messages, "New Trial Name(s) <strong>".join(', ',@already_used_new_trial_names)."</strong> are invalid because they are already used in the database.";
+        push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.parse.new_trials_used", "New Trial Name(s) %{names} are invalid because they are already used in the database.", {names => "<strong>".join(', ',@already_used_new_trial_names)."</strong>"}));
     }
 
     # Breeding Program: must already exist in the database
     my $breeding_programs_missing = $validator->validate($schema,'breeding_programs',$parsed_values->{'breeding_program'})->{'missing'};
     my @breeding_programs_missing = @{$breeding_programs_missing};
     if (scalar(@breeding_programs_missing) > 0) {
-        push @error_messages, "Breeding program(s) <strong>".join(', ',@breeding_programs_missing)."</strong> are not in the database.";
+        push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.programs_missing", "Breeding program(s) %{programs} are not in the database.", {programs => "<strong>".join(', ',@breeding_programs_missing)."</strong>"}));
     }
 
     # Folder: should already exist in the database
-    # return missing folder names as a warning, that can be overriden by the user
+    # return missing folder names as a warning, that can be overridden by the user
     my @existing_folders = CXGN::Trial::Folder->list({ bcs_schema => $schema, folder_for_trials => 1 });
     my %folders_hash = map { @{$_}[1] => @{$_}[0] } @existing_folders;
     my $entered_folders = $parsed_values->{'folder'};
@@ -165,7 +168,7 @@ sub _validate_with_plugin {
         }
     }
     if ( scalar @missing_folders > 0 ) {
-        push @warning_messages, "The following folders do not exist and will be created if warnings are ignored: " . join(', ', @missing_folders);
+        push @warning_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.parse.folders_missing", "The following folders do not exist and will be created if warnings are ignored: %{names}", {names => join(', ', @missing_folders)}));
     }
 
     # Location: Transform location abbreviations/codes to full names
@@ -176,7 +179,7 @@ sub _validate_with_plugin {
         my $location_code = $code->[0];
         my $found_location_name = $code->[1];
         $location_code_map{$location_code} = $found_location_name;
-        push @warning_messages, "File location <strong>$location_code</strong> matches the code for the location named <strong>$found_location_name</strong> and will be substituted if you ignore warnings.";
+        push @warning_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.location_code_match", "File location %{code} matches the code for the location named %{location} and will be substituted if you ignore warnings.", {code => "<strong>$location_code</strong>", location => "<strong>$found_location_name</strong>"}));
     }
     $self->_set_location_code_map(\%location_code_map);
 
@@ -184,27 +187,27 @@ sub _validate_with_plugin {
     my @locations_missing = @{$locations_hashref->{'missing'}};
     my @locations_missing_no_codes = grep { !exists $location_code_map{$_} } @locations_missing;
     if (scalar(@locations_missing_no_codes) > 0) {
-        push @error_messages, "Location(s) <strong>".join(', ',@locations_missing_no_codes)."</strong> are not in the database.";
+        push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.locations_missing", "Location(s) %{locations} are not in the database.", {locations => "<strong>".join(', ',@locations_missing_no_codes)."</strong>"}));
     }
 
     # Year: must be a 4 digit integer
     foreach (@{$parsed_values->{'year'}}) {
         if (!($_ =~ /^\d{4}$/)) {
-            push @error_messages, "year <strong>$_</strong> is not a valid year, must be a 4 digit positive integer.";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.invalid_year", "%{field} %{year} is not a valid year, must be a %{digits} digit positive integer.", {field => "year", year => "<strong>$_</strong>", digits => "4"}));
         }
     }
 
     # Design Type: must be a valid / supported design type
     foreach (@{$parsed_values->{'design_type'}}) {
         if ( !exists $valid_design_types{$_} ) {
-            push @error_messages, "design_type <strong>$_</strong> is not supported. Supported design types: " . join(', ', keys(%valid_design_types)) . ".";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.unsupported_design_type", "%{field} %{value} is not supported. Supported design types: %{supported_types}.", {field => "design_type", value => "<strong>$_</strong>", supported_types => join(', ', keys(%valid_design_types))}));
         }
     }
 
     # Trial Type: must be a valid / supported trial type
     foreach (@{$parsed_values->{'type'}}) {
         if ( !exists $valid_trial_types{$_} ) {
-            push @error_messages, "trial_type <strong>$_</strong> is not supported. Supported trial types: " . join(', ', keys(%valid_trial_types)) . ".";
+            push @error_messages, (SGN::I18N::translate($ui_trialmetadatageneric_i18n, "trial.upload.multi.generic.unsupported_trial_type", "%{field} %{value} is not supported. Supported trial types: %{supported_types}.", {field => "trial_type", value => "<strong>$_</strong>", supported_types => join(', ', keys(%valid_trial_types))}));
         }
     }
 

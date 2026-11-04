@@ -11,10 +11,10 @@ my $line_errors_string;
 foreach my $line_key (keys %line_errors) {
     $line_errors_string .= "<tr><td>".$line_errors{$line_key}."</td></tr>";
 }
-print "<tr><td><b>Error in upload file: $file_name</b></td></tr>";
+print "<tr><td><b>" . HTML::Entities::encode_entities($c->i18n->p("cross.forms.error_in_upload_file", "Error in upload file:")) . " $file_name</b></td></tr>";
 if ($header_error) {
   print "<tr><td>$header_error</td></tr>";
 }
-print "<tr><td><b>Errors were found in the following lines:</b></td></tr>".$line_errors_string."\n";
+print "<tr><td><b>" . HTML::Entities::encode_entities($c->i18n->p("cross.forms.errors_were_found_in_the_following_lines", "Errors were found in the following lines:")) . "</b></td></tr>".$line_errors_string."\n";
 </%perl>
 </table>

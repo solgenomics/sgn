@@ -1,0 +1,211 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Recolección y almacenamiento de datos con Field Book y BreedBase {#Using-Field-Book-with-BreedBase}
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/FB_Section_Header.png')
+```
+
+## Introducción {#introduction-1}
+
+**Field Book** es una aplicación de código abierto para Android que facilita la recopilación de datos fenotípicos, sustituye los cuadernos de campo en papel y reduce los errores de transcripción.
+
+**BreedBase** se integra con Field Book y permite generar archivos de distribución de campo y rasgos con el formato adecuado, importar los datos recopilados e intercambiarlos opcionalmente mediante **BrAPI**.
+
+Esta sección explica paso a paso cómo preparar Field Book para recopilar datos de ensayos almacenados en BreedBase, incluida la creación de archivos, su importación manual y la exportación de datos. Se supone que BreedBase ya contiene los datos de parcelas y las definiciones de rasgos, y que el usuario dispone de un dispositivo Android.
+
+[*Field Book User Manual*](https://fieldbook.phenoapps.org/#/)
+
+---
+
+## Instalar Field Book {#installing-field-book}
+
+Field Book se puede instalar en un dispositivo Android desde Google Play Store o manualmente desde GitHub. Se recomienda comprobar periódicamente si hay actualizaciones para disponer de las últimas funciones y correcciones.
+
+
+### Opción 1: descargar desde Google Play Store {#option-1-downloading-from-the-google-play-store}
+
+Descargue Field Book directamente desde [Google Play Store](https://play.google.com/store/apps/details?id=com.fieldbook.tracker) o escanee el código QR que aparece a continuación.
+
+```{r echo=FALSE, out.width='25%', fig.align='center'}
+knitr::include_graphics('assets/images/QR_FieldBook_PlayStore.png')
+```
+
+[**Guía paso a paso: instalación y configuración**](https://scribehow.com/shared/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ)
+
+<iframe src="https://scribehow.com/embed/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Opción 2: instalación manual desde GitHub {#option-2-manual-installation-from-github}
+
+[**Guía paso a paso: instalar Field Book desde GitHub**](https://scribehow.com/shared/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A)
+
+<iframe src="https://scribehow.com/embed/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Mantener Field Book actualizado {#keeping-field-book-updated}
+
+Se recomienda mantener la aplicación actualizada para obtener nuevas funciones y correcciones.
+
+[**Guía paso a paso: actualizar la aplicación Field Book**](https://scribehow.com/shared/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA).
+
+<iframe src="https://scribehow.com/embed/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+---
+
+## Preparar archivos de distribución de campo en BreedBase {#preparing-field-layout-files-in-breedbase}
+
+Field Book necesita un **archivo de distribución de campo** que incluya un identificador único para cada parcela o planta observada. Opcionalmente, puede incluir columnas de fila, columna, pedigrí o datos fenotípicos previos.
+
+BreedBase incluye herramientas para generar archivos de distribución a partir de los metadatos del ensayo. Después puede exportarlos y cargarlos en Field Book para recopilar datos.
+
+[**Guía paso a paso: crear un archivo de distribución de campo en BreedBase**](https://scribehow.com/shared/Creating_a_Field_Layout_File_for_Field_Book_in_Breedbase__FDBwW83OS66kHXIvVsP-1A?referrer=documents)
+
+---
+
+## Importar archivos de distribución de campo en Field Book {#importing-field-layout-files-into-field-book}
+
+Los archivos de distribución pueden importarse en Field Book desde el almacenamiento en la nube o directamente desde el dispositivo.
+
+### Opción 1: importar desde almacenamiento en la nube {#option-1-import-from-cloud-storage}
+
+Requisitos:
+
+1. Un archivo de distribución de campo generado.
+2. Un servicio en la nube vinculado al dispositivo (por ejemplo, Google Drive).
+3. El archivo cargado en la cuenta de almacenamiento en la nube.
+
+[**Guía paso a paso: importar desde almacenamiento en la nube**](https://scribehow.com/shared/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA)
+
+<iframe src="https://scribehow.com/embed/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Opción 2: importar desde el almacenamiento local {#option-2-import-from-local-storage-device}
+
+Requisitos:
+
+1. Un archivo de distribución de campo generado.
+2. El archivo transferido al almacenamiento local del dispositivo Android.
+
+**Guía paso a paso: importar desde el dispositivo local** (El original en inglés aún no incluye el enlace a esta guía externa.)
+
+---
+
+## Añadir rasgos a Field Book mediante BreedBase {#adding-traits-to-field-book-using-breedbase}
+
+Para que los datos exportados sean compatibles con BreedBase, los nombres de rasgos en Field Book deben coincidir exactamente con los almacenados en la base de datos.
+
+BreedBase permite generar **archivos de rasgos** con nombres, tipos, unidades y metadatos debidamente formateados.
+
+### Crear archivos de rasgos en BreedBase {#creating-trait-files-in-breedbase}
+
+[**Guía paso a paso: crear archivos de rasgos en BreedBase**](https://scribehow.com/shared/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q)
+
+<iframe src="https://scribehow.com/embed/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Importar archivos de rasgos en Field Book {#importing-trait-files-to-field-book}
+
+[**Guía paso a paso: importar archivos de rasgos**](https://scribehow.com/shared/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw)
+
+<iframe src="https://scribehow.com/embed/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+---
+
+## Recopilar y exportar datos fenotípicos {#collecting-and-exporting-phenotype-data}
+
+Esta sección describe cómo registrar y exportar datos fenotípicos con Field Book. Se supone que los archivos necesarios de distribución de campo y rasgos ya se importaron en la aplicación.
+
+Se explica cómo registrar observaciones fenotípicas en el campo y exportar los datos en un formato compatible con su procesamiento posterior y carga en **BreedBase**. Este flujo estandarizado favorece la integridad y trazabilidad de los datos y su integración con bases de mejoramiento.
+
+### Recopilar datos fenotípicos en Field Book {#collecting-phenotype-data-in-field-book}
+
+Una vez cargados los archivos de distribución y rasgos, puede comenzar la recopilación. Field Book permite consultar cada parcela o planta, registrar valores de rasgos en formularios estructurados y añadir automáticamente la fecha, hora y geolocalización si la configuración del dispositivo lo permite.
+
+[**Guía paso a paso: recopilar datos en Field Book**](https://scribehow.com/shared/Collecting_Data_in_Fieldbook__hIsZkb9xSnKcLW65gN60lA)
+
+
+### Exportar datos fenotípicos de Field Book e importarlos en BreedBase {#exporting-phenotype-data-from-field-book-and-importing-to-breedbase}
+
+Al terminar la recopilación, Field Book permite exportar los datos como archivo .csv. Luego puede cargarse en BreedBase para almacenarlos y analizarlos.
+
+[**Guía paso a paso: exportar datos fenotípicos de Field Book**](https://scribehow.com/shared/Exporting_Phenotype_Data_in_FieldBook__ToUuuA3YTYGclEg7SDArLg)
+
+Una vez exportado, el archivo .csv puede importarse en BreedBase desde la interfaz de carga de datos del ensayo. Siga las instrucciones de la sección **Gestión de datos fenotípicos**.
+
+Es importante que:
+
+- Los nombres de los rasgos coincidan con los definidos en la base de datos.
+- Los identificadores de parcelas o plantas coincidan con la distribución original.
+
+---
+
+## Transferir datos entre Field Book y BreedBase mediante BrAPI {#using-brapi-for-data-transfer-between-field-book-and-breedbase}
+
+Field Book se integra con **BreedBase** mediante la especificación **BrAPI (Breeding API)**. BrAPI permite intercambiar directamente metadatos de ensayos y observaciones fenotípicas entre ambas aplicaciones sin cargar archivos manualmente.
+
+Esta guía explica cómo:
+
+- Conectar Field Book con un servidor BreedBase compatible con BrAPI
+- Importar la distribución del ensayo y los rasgos de BreedBase a Field Book
+- Exportar datos fenotípicos recopilados desde Field Book a BreedBase
+
+**Requisitos previos:**
+
+- Necesita una cuenta de BreedBase con permisos para acceder a los datos de ensayos y rasgos.
+- Su instancia de BreedBase debe tener configurados endpoints BrAPI operativos.
+- La aplicación Field Book debe estar instalada en un dispositivo Android con acceso a Internet.
+
+**Ventajas de usar BrAPI:**
+
+- Reduce los errores manuales al manipular archivos.
+- Permite sincronizar datos en tiempo real.
+- Facilita la coordinación remota del equipo y los flujos de trabajo eficientes.
+
+### Conectar Field Book a un servidor BrAPI {#connecting-field-book-to-a-brapi-server}
+
+[**Guía paso a paso: conectar Field Book a un servidor BreedBase con BrAPI**](https://scribehow.com/shared/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA)
+
+<iframe src="https://scribehow.com/embed/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Importar ensayos y rasgos desde BreedBase {#importing-trials-and-traits-from-breedbase}
+
+[**Guía paso a paso: importar ensayos de BreedBase mediante BrAPI**](https://scribehow.com/shared/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg)
+
+<iframe src="https://scribehow.com/embed/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+[**Guía paso a paso: importar rasgos de BreedBase mediante BrAPI**](https://scribehow.com/shared/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?referrer=documents)
+
+<iframe src="https://scribehow.com/embed/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Recopilar datos {#collecting-data}
+
+Continúe registrando observaciones fenotípicas como se describe en **Recopilar datos fenotípicos en Field Book**.
+
+Asegúrese de que:
+
+- Los valores de rasgos tienen el formato esperado (por ejemplo, numérico o categórico).
+- Las observaciones se guardan periódicamente durante el trabajo de campo.
+
+### Exportar datos fenotípicos a BreedBase mediante BrAPI {#exporting-phenotype-data-to-breedbase-via-brapi}
+
+[**Guía paso a paso: enviar datos fenotípicos mediante BrAPI**](https://scribehow.com/shared/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ)
+
+<iframe src="https://scribehow.com/embed/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Verificar datos en BreedBase {#verifying-data-in-breedbase}
+
+Después de exportar datos a BreedBase mediante BrAPI, compruebe en BreedBase que la exportación se haya completado correctamente.
+
+1. Inicie sesión en su instancia de BreedBase.
+2. Vaya a “Gestionar ensayos” o a la página de detalles del ensayo cargado.
+3. Confirme que:
+    - Los datos de rasgos aparecen en la pestaña “Datos fenotípicos”.
+    - Los puntos de datos coinciden con los identificadores esperados de parcelas o plantas.
+    - Las unidades y escalas de los rasgos coinciden con las definidas en la base de datos.
+
+
+### Solución de problemas {#troubleshooting}
+
+- Falla la conexión: compruebe la URL del servidor BrAPI y que las credenciales sean válidas.
+- No se cargan los rasgos: confirme que existan en BreedBase.
+- Falla la carga: compruebe la conexión a Internet, los permisos del usuario y el formato de los rasgos.

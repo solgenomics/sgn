@@ -1,5 +1,9 @@
 # lib/SGN/Controller/AJAX/DecisionMeeting.pm
 package SGN::Controller::AJAX::DecisionMeeting;
+
+use HTML::Entities ();
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Moose;
 use utf8 ();
 use CXGN::List;
@@ -151,8 +155,9 @@ sub _is_meeting_saved {
 sub lists : Path('lists') : Args(0) : ActionClass('REST') {}
 sub lists_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_lists_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_lists_GET_i18n, 'decision.server.login_required', 'Login required')))
       unless $c->user;
 
     my $owner_id  = $c->user->get_object->get_sp_person_id;
@@ -198,8 +203,9 @@ sub lists_GET {
 sub programs : Path('programs') : ActionClass('REST') { }
 sub programs_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_programs_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_programs_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $schema   = $c->dbic_schema('Bio::Chado::Schema');
@@ -254,8 +260,9 @@ sub _configured_meeting_locations {
 
 sub locations_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_locations_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_locations_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     $c->res->headers->header('Cache-Control' => 'no-store, no-cache, must-revalidate');
@@ -276,15 +283,16 @@ sub locations_GET {
 sub decisions : Path('decisions') : Args(0) : ActionClass('REST') { }
 sub decisions_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_decisions_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_decisions_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $list_id          = $c->req->param('list_id');
     my $meeting_id       = $c->req->param('meeting_id');
     my $selected_program = $c->req->param('breeding_program') // '';
 
-    return $self->status_bad_request($c, message => 'Missing list_id')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_decisions_GET_i18n, 'decision.server.missing_list_id', 'Missing list_id')))
         unless $list_id;
 
     my $entity = $self->_decision_rows_entity(
@@ -587,6 +595,7 @@ sub _normalize_decision_upload_header {
 
 sub _parse_decision_upload_file {
     my ($self, %args) = @_;
+    my SGN::I18N $ui__parse_decision_upload_file_i18n = SGN::I18N::translate($c);
 
     my $filename = $args{filename} || '';
     my $original_filename = $args{original_filename} || $filename;
@@ -603,24 +612,24 @@ sub _parse_decision_upload_file {
         $parser = Spreadsheet::ParseExcel->new();
     }
     else {
-        return (undef, ['The uploaded file must be an Excel .xls or .xlsx file.']);
+        return (undef, [(SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.the_uploaded_file_must_be_an_excel_xls_or_xlsx_file', 'The uploaded file must be an Excel .xls or .xlsx file.'))]);
     }
 
     my $excel_obj = $parser->parse($filename);
     if (!$excel_obj) {
-        my $err = eval { $parser->error() } || 'Could not parse the Excel file.';
+        my $err = eval { $parser->error() } || (SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.could_not_parse_the_excel_file', 'Could not parse the Excel file.'));
         return (undef, [$err]);
     }
 
     my $worksheet = ($excel_obj->worksheets())[0];
     unless ($worksheet) {
-        return (undef, ['Spreadsheet must be on the first worksheet.']);
+        return (undef, [(SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.spreadsheet_must_be_on_the_first_worksheet', 'Spreadsheet must be on the first worksheet.'))]);
     }
 
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
     if (!defined $row_max || $row_max < 1) {
-        return (undef, ['Spreadsheet is missing data rows.']);
+        return (undef, [(SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.spreadsheet_is_missing_data_rows', 'Spreadsheet is missing data rows.'))]);
     }
 
     my @expected_headers = $self->_decision_upload_headers();
@@ -632,7 +641,7 @@ sub _parse_decision_upload_file {
         my $normalized = $self->_normalize_decision_upload_header($header);
         if ($normalized ne $normalized_expected[$idx]) {
             my $col_letter = chr(65 + $idx);
-            push @errors, "Cell ${col_letter}1 must contain '$expected_headers[$idx]'.";
+            push @errors, (SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.cell_value1_1_must_contain_value2', 'Cell %{value1}1 must contain \'%{value2}\'.', {value1 => ("" . ("${col_letter}")), value2 => ("" . ("$expected_headers[$idx]"))}));
         }
     }
 
@@ -657,15 +666,15 @@ sub _parse_decision_upload_file {
         my ($accession, $breeding_program, $previous_stage, $decision, $new_stage, $notes, $comment) = @values;
 
         if ($accession eq '') {
-            push @errors, "Cell A$row_number: accession is required.";
+            push @errors, (SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.cell_a_row_number_accession_is_required', 'Cell A%{row_number}: accession is required.', {row_number => ("" . ("$row_number"))}));
         }
         if ($breeding_program eq '') {
-            push @errors, "Cell B$row_number: breeding program is required.";
+            push @errors, (SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.cell_b_row_number_breeding_program_is_required', 'Cell B%{row_number}: breeding program is required.', {row_number => ("" . ("$row_number"))}));
         }
 
         my $decision_norm = lc($decision || '');
         if ($decision_norm ne '' && !$allowed_decisions{$decision_norm}) {
-            push @errors, "Cell D$row_number: decision must be one of drop, hold, advance, or jump.";
+            push @errors, (SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.cell_d_row_number_decision_must_be_one_of_drop_hold_advance_or_jump', 'Cell D%{row_number}: decision must be one of drop, hold, advance, or jump.', {row_number => ("" . ("$row_number"))}));
         }
 
         push @rows, {
@@ -681,7 +690,7 @@ sub _parse_decision_upload_file {
     }
 
     if (!@rows) {
-        push @errors, 'Spreadsheet contains no accession decision rows.';
+        push @errors, (SGN::I18N::translate($ui__parse_decision_upload_file_i18n, 'decision.server.spreadsheet_contains_no_accession_decision_rows', 'Spreadsheet contains no accession decision rows.'));
     }
 
     return (undef, \@errors) if @errors;
@@ -923,6 +932,7 @@ sub _validate_uploaded_decision_rows {
     my ($self, %args) = @_;
 
     my $c           = $args{c};
+    my SGN::I18N $ui__validate_uploaded_decision_rows_i18n = SGN::I18N::translate($c);
     my $schema      = $args{schema};
     my $meeting_year = $args{meeting_year} || '';
     my $current_rows = $args{current_rows} || [];
@@ -959,7 +969,7 @@ sub _validate_uploaded_decision_rows {
 
         if ($self->_is_drop_stage_value($current_stage_value)) {
             if ($decision ne '') {
-                push @errors, "Row $row_number: current stage '$current_stage_value' is already a DROP stage, so no further decision can be applied to this accession.";
+                push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_current_stage_current_stage_value_is_already_a_drop_s', 'Row %{row_number}: current stage \'%{current_stage_value}\' is already a DROP stage, so no further decision can be applied to this accession.', {row_number => ("" . ("$row_number")), current_stage_value => ("" . ("$current_stage_value"))}));
                 next;
             }
             next;
@@ -967,7 +977,7 @@ sub _validate_uploaded_decision_rows {
 
         if ($decision eq '') {
             if ($new_stage ne '') {
-                push @errors, "Row $row_number: new stage '$new_stage' was provided but decision is empty.";
+                push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_new_stage_new_stage_was_provided_but_decision_is_empt', 'Row %{row_number}: new stage \'%{new_stage}\' was provided but decision is empty.', {row_number => ("" . ("$row_number")), new_stage => ("" . ("$new_stage"))}));
             }
             next;
         }
@@ -988,27 +998,27 @@ sub _validate_uploaded_decision_rows {
         my $uploaded_token = $self->_normalize_stage_token($new_stage, $breeding_stages);
 
         if (($decision eq 'advance' || $decision eq 'jump') && !@allowed) {
-            push @errors, "Row $row_number: decision '$decision' is not compatible with current stage '" . ($target->{stage} || '') . "'.";
+            push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_decision_decision_is_not_compatible_with_current_stag', 'Row %{row_number}: decision \'%{decision}\' is not compatible with current stage \'%{value3}\'.', {row_number => ("" . ("$row_number")), decision => ("" . ("$decision")), value3 => ("" . (($target->{stage} || '')))}));
             next;
         }
 
         if ($decision eq 'advance' || $decision eq 'jump') {
             if ($new_stage eq '') {
-                push @errors, "Row $row_number: decision '$decision' requires a new stage.";
+                push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_decision_decision_requires_a_new_stage', 'Row %{row_number}: decision \'%{decision}\' requires a new stage.', {row_number => ("" . ("$row_number")), decision => ("" . ("$decision"))}));
                 next;
             }
 
             if ($uploaded_token eq '') {
                 my $suggest = $self->_stage_name_suggestion($new_stage, \@allowed) || $self->_stage_name_suggestion($new_stage, \@all_stages);
-                my $msg = "Row $row_number: stage '$new_stage' is not stored.";
-                $msg .= " Did you mean '$suggest'?" if $suggest ne '';
+                my $msg = (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_stage_new_stage_is_not_stored', 'Row %{row_number}: stage \'%{new_stage}\' is not stored.', {row_number => ("" . ("$row_number")), new_stage => ("" . ("$new_stage"))}));
+                $msg .= (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.did_you_mean_suggest', ' Did you mean \'%{suggest}\'?', {suggest => ("" . ("$suggest"))})) if $suggest ne '';
                 push @errors, $msg;
                 next;
             }
 
             my %allowed_lookup = map { $_ => 1 } @allowed;
             if (!$allowed_lookup{$uploaded_token}) {
-                push @errors, "Row $row_number: this stage '$new_stage' is not compatible with the decision '$decision'. Allowed target stages: " . join(', ', @allowed) . ".";
+                push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_this_stage_new_stage_is_not_compatible_with_the_decis.b43d54b', 'Row %{row_number}: this stage \'%{new_stage}\' is not compatible with the decision \'%{decision}\'. Allowed target stages: %{value4}.', {row_number => ("" . ("$row_number")), new_stage => ("" . ("$new_stage")), decision => ("" . ("$decision")), value4 => ("" . (join(', ', @allowed)))}));
                 next;
             }
 
@@ -1024,7 +1034,7 @@ sub _validate_uploaded_decision_rows {
             );
 
             if (($expected->{new_stage} || '') ne $new_stage && $new_stage ne $uploaded_token) {
-                push @errors, "Row $row_number: this stage '$new_stage' is not compatible with the decision '$decision'. Did you mean '$expected->{new_stage}'?";
+                push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_this_stage_new_stage_is_not_compatible_with_the_decis.35b893c', 'Row %{row_number}: this stage \'%{new_stage}\' is not compatible with the decision \'%{decision}\'. Did you mean \'%{value4}\'?', {row_number => ("" . ("$row_number")), new_stage => ("" . ("$new_stage")), decision => ("" . ("$decision")), value4 => ("" . ("$expected->{new_stage}"))}));
                 next;
             }
         }
@@ -1044,19 +1054,19 @@ sub _validate_uploaded_decision_rows {
 
             if ($new_stage eq '') {
                 my $required_stage = $decision eq 'hold' ? ($current_stage_for_hold || $expected_new_stage) : $expected_new_stage;
-                push @errors, "Row $row_number: decision '$decision' requires new stage '$required_stage'.";
+                push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_decision_decision_requires_new_stage_required_stage', 'Row %{row_number}: decision \'%{decision}\' requires new stage \'%{required_stage}\'.', {row_number => ("" . ("$row_number")), decision => ("" . ("$decision")), required_stage => ("" . ("$required_stage"))}));
                 next;
             }
 
             if ($decision eq 'hold') {
                 if ($new_stage ne $expected_new_stage && $new_stage ne $current_stage_for_hold) {
                     my $suggest = $current_stage_for_hold || $expected_new_stage;
-                    push @errors, "Row $row_number: this stage '$new_stage' is not compatible with the decision '$decision'. Did you mean '$suggest'?";
+                    push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_this_stage_new_stage_is_not_compatible_with_the_decis.6797933', 'Row %{row_number}: this stage \'%{new_stage}\' is not compatible with the decision \'%{decision}\'. Did you mean \'%{suggest}\'?', {row_number => ("" . ("$row_number")), new_stage => ("" . ("$new_stage")), decision => ("" . ("$decision")), suggest => ("" . ("$suggest"))}));
                     next;
                 }
             }
             elsif ($new_stage ne $expected_new_stage) {
-                push @errors, "Row $row_number: this stage '$new_stage' is not compatible with the decision '$decision'. Did you mean '$expected_new_stage'?";
+                push @errors, (SGN::I18N::translate($ui__validate_uploaded_decision_rows_i18n, 'decision.server.row_row_number_this_stage_new_stage_is_not_compatible_with_the_decis.bb0fd10', 'Row %{row_number}: this stage \'%{new_stage}\' is not compatible with the decision \'%{decision}\'. Did you mean \'%{expected_new_stage}\'?', {row_number => ("" . ("$row_number")), new_stage => ("" . ("$new_stage")), decision => ("" . ("$decision")), expected_new_stage => ("" . ("$expected_new_stage"))}));
                 next;
             }
         }
@@ -1099,11 +1109,12 @@ sub _normalize_stage_token {
 
 sub stages_GET : Path('/ajax/decisionmeeting/stages') Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_stages_GET_i18n = SGN::I18N::translate($c);
 
     unless ($c->user) {
         $c->res->status(403);
         $c->res->content_type('application/json');
-        $c->res->body(encode_json({ error => 'Login required' }));
+        $c->res->body(encode_json({ error => (SGN::I18N::translate($ui_stages_GET_i18n, 'decision.server.login_required', 'Login required'))}));
         $c->detach();
     }
 
@@ -1137,8 +1148,9 @@ sub compute_new_stage : Path('compute_new_stage') : Args(0) : ActionClass('REST'
 
 sub compute_new_stage_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_compute_new_stage_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_compute_new_stage_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $current_stage  = $c->req->param('current_stage');
@@ -1249,8 +1261,9 @@ sub _get_stockprop_value {
 sub datasets : Path('datasets') : Args(0) : ActionClass('REST') {}
 sub datasets_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_datasets_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_datasets_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $dbh = $c->dbc->dbh;
@@ -1276,7 +1289,7 @@ sub datasets_GET {
 
     if ($@) {
         return $self->status_ok($c, entity => {
-            error    => "Failed to load datasets",
+            error    => (SGN::I18N::translate($ui_datasets_GET_i18n, 'decision.server.failed_to_load_datasets', 'Failed to load datasets')),
             details  => "$@",
             datasets => []
         });
@@ -1290,12 +1303,13 @@ sub datasets_GET {
 sub dataset_summary : Path('dataset_summary') : Args(0) : ActionClass('REST') { }
 sub dataset_summary_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_dataset_summary_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_dataset_summary_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $dataset_id = $c->req->param('dataset_id');
-    return $self->status_bad_request($c, message => 'Missing dataset_id')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_dataset_summary_GET_i18n, 'decision.server.missing_dataset_id', 'Missing dataset_id')))
         unless $dataset_id;
 
     $c->tempfiles_subdir("decisionmeeting");
@@ -1318,8 +1332,7 @@ sub dataset_summary_GET {
     if (!$ds_traits || ref($ds_traits) ne 'ARRAY' || !@$ds_traits) {
         return $self->status_ok($c, entity => {
             summary => [],
-            error   => "No traits found in the dataset. Please select a dataset with trial(s) and trait(s)."
-        });
+            error   => (SGN::I18N::translate($ui_dataset_summary_GET_i18n, 'decision.server.no_traits_found_in_the_dataset_please_select_a_dataset_with_trial_s_', 'No traits found in the dataset. Please select a dataset with trial(s) and trait(s).'))});
     }
 
     my $ds = CXGN::Dataset::File->new(
@@ -1338,8 +1351,7 @@ sub dataset_summary_GET {
     unless (-e $phenofile) {
         return $self->status_ok($c, entity => {
             summary => [],
-            error   => "Phenotype file was not generated."
-        });
+            error   => (SGN::I18N::translate($ui_dataset_summary_GET_i18n, 'decision.server.phenotype_file_was_not_generated', 'Phenotype file was not generated.'))});
     }
 
     open(my $in, '<', $phenofile) or die "Cannot open phenotype file '$phenofile': $!";
@@ -1349,8 +1361,7 @@ sub dataset_summary_GET {
         close($in);
         return $self->status_ok($c, entity => {
             summary => [],
-            error   => "Phenotype file is empty."
-        });
+            error   => (SGN::I18N::translate($ui_dataset_summary_GET_i18n, 'decision.server.phenotype_file_is_empty', 'Phenotype file is empty.'))});
     }
 
     chomp($header);
@@ -1369,8 +1380,7 @@ sub dataset_summary_GET {
         close($in);
         return $self->status_ok($c, entity => {
             summary => [],
-            error   => "germplasmName column not found in phenotype file."
-        });
+            error   => (SGN::I18N::translate($ui_dataset_summary_GET_i18n, 'decision.server.germplasmname_column_not_found_in_phenotype_file', 'germplasmName column not found in phenotype file.'))});
     }
 
     my @trait_cols;
@@ -1455,8 +1465,9 @@ sub dataset_summary_GET {
 sub accessions : Path('accessions') : Args(0) : ActionClass('REST') {}
 sub accessions_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_accessions_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_accessions_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $dataset_id    = $c->req->param('dataset_id');
@@ -1516,6 +1527,7 @@ sub _dm_is_numeric {
 
 sub _dm_build_dataset_phenofile {
     my ($self, $c, $dataset_id) = @_;
+    my SGN::I18N $ui__dm_build_dataset_phenofile_i18n = SGN::I18N::translate($c);
 
     $c->tempfiles_subdir("decisionmeeting");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE => "decisionmeeting/dm_XXXXX");
@@ -1536,7 +1548,7 @@ sub _dm_build_dataset_phenofile {
 
     if (!$ds_traits || ref($ds_traits) ne 'ARRAY' || !@$ds_traits) {
         return {
-            error   => "No traits found in the dataset. Please select a dataset with trial(s) and trait(s).",
+            error   => (SGN::I18N::translate($ui__dm_build_dataset_phenofile_i18n, 'decision.server.no_traits_found_in_the_dataset_please_select_a_dataset_with_trial_s_', 'No traits found in the dataset. Please select a dataset with trial(s) and trait(s).')),
             summary => [],
         };
     }
@@ -1556,7 +1568,7 @@ sub _dm_build_dataset_phenofile {
 
     unless (-e $phenofile) {
         return {
-            error   => "Phenotype file was not generated.",
+            error   => (SGN::I18N::translate($ui__dm_build_dataset_phenofile_i18n, 'decision.server.phenotype_file_was_not_generated', 'Phenotype file was not generated.')),
             summary => [],
         };
     }
@@ -1571,12 +1583,13 @@ sub _dm_build_dataset_phenofile {
 sub dataset_traits : Path('dataset_traits') : Args(0) : ActionClass('REST') { }
 sub dataset_traits_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_dataset_traits_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_dataset_traits_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $dataset_id = $c->req->param('dataset_id');
-    return $self->status_bad_request($c, message => 'Missing dataset_id')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_dataset_traits_GET_i18n, 'decision.server.missing_dataset_id', 'Missing dataset_id')))
         unless $dataset_id;
 
     my $res = $self->_dm_build_dataset_phenofile($c, $dataset_id);
@@ -1598,7 +1611,7 @@ sub dataset_traits_GET {
         return $self->status_ok($c, entity => {
             traits     => [],
             accessions => [],
-            error      => "Phenotype file is empty.",
+            error      => (SGN::I18N::translate($ui_dataset_traits_GET_i18n, 'decision.server.phenotype_file_is_empty', 'Phenotype file is empty.')),
         });
     }
 
@@ -1620,7 +1633,7 @@ sub dataset_traits_GET {
         return $self->status_ok($c, entity => {
             traits     => [],
             accessions => [],
-            error      => "germplasmName column not found in phenotype file.",
+            error      => (SGN::I18N::translate($ui_dataset_traits_GET_i18n, 'decision.server.germplasmname_column_not_found_in_phenotype_file', 'germplasmName column not found in phenotype file.')),
         });
     }
 
@@ -1664,17 +1677,18 @@ sub dataset_traits_GET {
 sub dataset_plot_data : Path('dataset_plot_data') : Args(0) : ActionClass('REST') { }
 sub dataset_plot_data_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_dataset_plot_data_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_dataset_plot_data_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $dataset_id = $c->req->param('dataset_id');
     my $trait      = $c->req->param('trait');
 
-    return $self->status_bad_request($c, message => 'Missing dataset_id')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_dataset_plot_data_GET_i18n, 'decision.server.missing_dataset_id', 'Missing dataset_id')))
         unless $dataset_id;
 
-    return $self->status_bad_request($c, message => 'Missing trait')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_dataset_plot_data_GET_i18n, 'decision.server.missing_trait', 'Missing trait')))
         unless defined $trait && $trait ne '';
 
     $trait = $self->_dm_trim($trait);
@@ -1700,7 +1714,7 @@ sub dataset_plot_data_GET {
             trait             => $trait,
             rows              => [],
             accession_summary => [],
-            error             => "Phenotype file is empty.",
+            error             => (SGN::I18N::translate($ui_dataset_plot_data_GET_i18n, 'decision.server.phenotype_file_is_empty', 'Phenotype file is empty.')),
         });
     }
 
@@ -1728,7 +1742,7 @@ sub dataset_plot_data_GET {
             trait             => $trait,
             rows              => [],
             accession_summary => [],
-            error             => "germplasmName column not found in phenotype file.",
+            error             => (SGN::I18N::translate($ui_dataset_plot_data_GET_i18n, 'decision.server.germplasmname_column_not_found_in_phenotype_file', 'germplasmName column not found in phenotype file.')),
         });
     }
 
@@ -1738,7 +1752,7 @@ sub dataset_plot_data_GET {
             trait             => $trait,
             rows              => [],
             accession_summary => [],
-            error             => "Trait column not found in phenotype file.",
+            error             => (SGN::I18N::translate($ui_dataset_plot_data_GET_i18n, 'decision.server.trait_column_not_found_in_phenotype_file', 'Trait column not found in phenotype file.')),
         });
     }
 
@@ -1839,31 +1853,32 @@ sub _validated_decisions_for_save {
     my ($self, %args) = @_;
 
     my $c            = $args{c};
+    my SGN::I18N $ui__validated_decisions_for_save_i18n = SGN::I18N::translate($c);
     my $schema       = $args{schema};
     my $meeting_data = $args{meeting_data};
     my $payload      = $args{payload};
 
-    return (undef, ['Missing request context']) unless $c;
-    return (undef, ['Missing database schema']) unless $schema;
-    return (undef, ['Stored meeting metadata is invalid'])
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.missing_request_context', 'Missing request context'))]) unless $c;
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.missing_database_schema', 'Missing database schema'))]) unless $schema;
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.stored_meeting_metadata_is_invalid', 'Stored meeting metadata is invalid'))])
         unless ref($meeting_data) eq 'HASH';
-    return (undef, ['Missing or invalid JSON payload'])
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.missing_or_invalid_json_payload', 'Missing or invalid JSON payload'))])
         unless ref($payload) eq 'HASH';
 
     my $list_id = $payload->{list_id};
-    return (undef, ['Missing list_id in payload'])
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.missing_list_id_in_payload', 'Missing list_id in payload'))])
         unless defined($list_id) && !ref($list_id) && $list_id =~ /^\d+$/;
 
     my $submitted_rows = $payload->{accessions};
-    return (undef, ['The accessions field must be an array'])
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.the_accessions_field_must_be_an_array', 'The accessions field must be an array'))])
         unless ref($submitted_rows) eq 'ARRAY';
-    return (undef, ['There are no accession decisions to save'])
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.there_are_no_accession_decisions_to_save', 'There are no accession decisions to save'))])
         unless @$submitted_rows;
 
     my $meeting_date = $self->_normalize_meeting_date(
         $meeting_data->{date} // $meeting_data->{meeting_date} // ''
     );
-    return (undef, ['The selected meeting does not have a valid date'])
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.the_selected_meeting_does_not_have_a_valid_date', 'The selected meeting does not have a valid date'))])
         unless $meeting_date;
     my ($meeting_year) = $meeting_date =~ /^(\d{4})-/;
 
@@ -1874,11 +1889,11 @@ sub _validated_decisions_for_save {
             meeting_id => $payload->{meeting_id},
         );
     };
-    return (undef, ['Could not load the current accession decisions'])
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.could_not_load_the_current_accession_decisions', 'Could not load the current accession decisions'))])
         if $@ || ref($entity) ne 'HASH';
 
     my $current_rows = $entity->{rows};
-    return (undef, ['Could not load the current accession decisions'])
+    return (undef, [(SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.could_not_load_the_current_accession_decisions', 'Could not load the current accession decisions'))])
         unless ref($current_rows) eq 'ARRAY';
 
     my %current_lookup;
@@ -1891,7 +1906,7 @@ sub _validated_decisions_for_save {
     my (@candidate_rows, @errors, %seen);
     foreach my $submitted (@$submitted_rows) {
         unless (ref($submitted) eq 'HASH') {
-            push @errors, 'Each accession decision must be an object.';
+            push @errors, (SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.each_accession_decision_must_be_an_object', 'Each accession decision must be an object.'));
             next;
         }
 
@@ -1900,17 +1915,17 @@ sub _validated_decisions_for_save {
         my $key       = join("\t", lc($accession), lc($program));
 
         if ($accession eq '' || $program eq '') {
-            push @errors, 'Each decision must include an accession and breeding program.';
+            push @errors, (SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.each_decision_must_include_an_accession_and_breeding_program', 'Each decision must include an accession and breeding program.'));
             next;
         }
         if ($seen{$key}++) {
-            push @errors, "Duplicate decision for accession '$accession' and breeding program '$program'.";
+            push @errors, (SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.duplicate_decision_for_accession_accession_and_breeding_program_prog', 'Duplicate decision for accession \'%{accession}\' and breeding program \'%{program}\'.', {accession => ("" . ("$accession")), program => ("" . ("$program"))}));
             next;
         }
 
         my $target = $current_lookup{$key};
         unless ($target) {
-            push @errors, "Accession '$accession' and breeding program '$program' are not in the selected list and meeting.";
+            push @errors, (SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.accession_accession_and_breeding_program_program_are_not_in_the_sele', 'Accession \'%{accession}\' and breeding program \'%{program}\' are not in the selected list and meeting.', {accession => ("" . ("$accession")), program => ("" . ("$program"))}));
             next;
         }
 
@@ -1947,8 +1962,7 @@ sub _validated_decisions_for_save {
     push @errors, @$validation_errors if $validation_errors;
     if ($unmatched_rows && @$unmatched_rows) {
         push @errors, map {
-            "Accession '" . ($_->{accession} || '') . "' and breeding program '"
-                . ($_->{breeding_program} || '') . "' are not in the selected list and meeting."
+            (SGN::I18N::translate($ui__validated_decisions_for_save_i18n, 'decision.server.accession_accession_and_breeding_program_program_are_not_in_the_sele', 'Accession \'%{accession}\' and breeding program \'%{program}\' are not in the selected list and meeting.', {accession => ("" . ($_->{accession} || '')), program => ("" . ($_->{breeding_program} || ''))}))
         } @$unmatched_rows;
     }
     return (undef, \@errors) if @errors;
@@ -1985,19 +1999,20 @@ sub _validated_decisions_for_save {
 
 sub save_all_decisions_POST {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_save_all_decisions_POST_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $payload = $c->req->data;
 
     unless ($payload && ref($payload) eq 'HASH') {
-        return $self->status_bad_request($c, message => 'Missing or invalid JSON payload');
+        return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.missing_or_invalid_json_payload', 'Missing or invalid JSON payload')));
     }
 
     my $meeting_id = $payload->{meeting_id};
     unless (defined($meeting_id) && !ref($meeting_id) && $meeting_id =~ /^\d+$/) {
-        return $self->status_bad_request($c, message => 'Missing meeting_id in payload');
+        return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.missing_meeting_id_in_payload', 'Missing meeting_id in payload')));
     }
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -2021,8 +2036,7 @@ sub save_all_decisions_POST {
     unless ($can_save) {
         return $self->status_forbidden(
             $c,
-            message => 'You are not allowed to save accessions stage change'
-        );
+            message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.you_are_not_allowed_to_save_accessions_stage_change', 'You are not allowed to save accessions stage change')));
     }
 
     my $meeting_json_type = SGN::Model::Cvterm->get_cvterm_row(
@@ -2031,7 +2045,7 @@ sub save_all_decisions_POST {
         'project_property',
     );
     unless ($meeting_json_type) {
-        return $self->status_bad_request($c, message => 'Meeting metadata type not found');
+        return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.meeting_metadata_type_not_found', 'Meeting metadata type not found')));
     }
 
     my $meeting_prop = $schema->resultset('Project::Projectprop')->search(
@@ -2045,19 +2059,19 @@ sub save_all_decisions_POST {
         }
     )->first;
     unless ($meeting_prop && defined($meeting_prop->value)) {
-        return $self->status_bad_request($c, message => 'Meeting metadata not found');
+        return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.meeting_metadata_not_found', 'Meeting metadata not found')));
     }
 
     my ($meeting_data, $meeting_decode_error) =
         $self->_decode_meeting_json($meeting_prop->value);
     if ($meeting_decode_error || ref($meeting_data) ne 'HASH') {
-        return $self->status_bad_request($c, message => 'Stored meeting metadata is invalid');
+        return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.stored_meeting_metadata_is_invalid', 'Stored meeting metadata is invalid')));
     }
 
     if ($self->_is_meeting_saved($meeting_data)) {
         return $self->status_bad_request(
             $c,
-            message => 'This meeting has already been saved and cannot be changed',
+            message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.this_meeting_has_already_been_saved_and_cannot_be_changed', 'This meeting has already been saved and cannot be changed')),
         );
     }
 
@@ -2085,7 +2099,7 @@ sub save_all_decisions_POST {
         $json_text = JSON->new->allow_nonref->canonical->encode($updated_payload);
     };
     if ($@) {
-        return $self->status_bad_request($c, message => 'Could not encode payload to JSON');
+        return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.could_not_encode_payload_to_json', 'Could not encode payload to JSON')));
     }
 
     eval {
@@ -2135,7 +2149,7 @@ sub save_all_decisions_POST {
         if ($error =~ /DM_MEETING_ALREADY_SAVED/) {
             return $self->status_bad_request(
                 $c,
-                message => 'This meeting has already been saved and cannot be changed',
+                message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.this_meeting_has_already_been_saved_and_cannot_be_changed', 'This meeting has already been saved and cannot be changed')),
             );
         }
         $c->log->error("DecisionMeeting save decisions error: $error")
@@ -2143,8 +2157,8 @@ sub save_all_decisions_POST {
         $c->res->status(500);
         $c->res->content_type('application/json; charset=utf-8');
         $c->res->body(encode_json({
-            error   => 'Failed to save decisions',
-            message => 'The decisions could not be saved. No changes were applied.',
+            error   => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.failed_to_save_decisions', 'Failed to save decisions')),
+            message => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.the_decisions_could_not_be_saved_no_changes_were_applied', 'The decisions could not be saved. No changes were applied.')),
         }));
         return;
     }
@@ -2155,18 +2169,18 @@ sub save_all_decisions_POST {
             success      => JSON::true,
             meeting_id   => $meeting_id,
             saved_status => 'successfully',
-            message      => 'Decisions saved successfully'
-        }
+            message      => (SGN::I18N::translate($ui_save_all_decisions_POST_i18n, 'decision.server.decisions_saved_successfully', 'Decisions saved successfully'))}
     );
 }
 
 sub decision_upload_template : Path('decision_upload_template') : Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_decision_upload_template_i18n = SGN::I18N::translate($c);
 
     unless ($c->user) {
         $c->res->status(403);
         $c->res->content_type('application/json');
-        $c->res->body(encode_json({ error => 'Login required' }));
+        $c->res->body(encode_json({ error => (SGN::I18N::translate($ui_decision_upload_template_i18n, 'decision.server.login_required', 'Login required'))}));
         return;
     }
 
@@ -2176,7 +2190,7 @@ sub decision_upload_template : Path('decision_upload_template') : Args(0) {
     unless ($list_id) {
         $c->res->status(400);
         $c->res->content_type('application/json');
-        $c->res->body(encode_json({ error => 'Missing list_id' }));
+        $c->res->body(encode_json({ error => (SGN::I18N::translate($ui_decision_upload_template_i18n, 'decision.server.missing_list_id', 'Missing list_id'))}));
         return;
     }
 
@@ -2235,20 +2249,21 @@ sub decision_upload_template : Path('decision_upload_template') : Args(0) {
 sub upload_decision_template : Path('upload_decision_template') : Args(0) : ActionClass('REST') { }
 sub upload_decision_template_POST {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_upload_decision_template_POST_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_upload_decision_template_POST_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $list_id    = $c->req->param('list_id');
     my $meeting_id = $c->req->param('meeting_id');
 
-    return $self->status_bad_request($c, message => 'Missing list_id')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_upload_decision_template_POST_i18n, 'decision.server.missing_list_id', 'Missing list_id')))
         unless $list_id;
-    return $self->status_bad_request($c, message => 'Missing meeting_id')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_upload_decision_template_POST_i18n, 'decision.server.missing_meeting_id', 'Missing meeting_id')))
         unless $meeting_id;
 
     my $upload = $c->req->upload('decision_upload_file');
-    return $self->status_bad_request($c, message => 'Missing uploaded Excel file')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_upload_decision_template_POST_i18n, 'decision.server.missing_uploaded_excel_file', 'Missing uploaded Excel file')))
         unless $upload;
 
     my ($parsed_rows, $parse_errors) = $self->_parse_decision_upload_file(
@@ -2272,7 +2287,7 @@ sub upload_decision_template_POST {
     my $meeting_year = $self->_meeting_year_from_meeting_id($c, $meeting_id);
 
     unless ($meeting_year) {
-        return $self->status_bad_request($c, message => 'The selected meeting does not have a valid date/year, so uploaded stages cannot be validated.');
+        return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_upload_decision_template_POST_i18n, 'decision.server.the_selected_meeting_does_not_have_a_valid_date_year_so_uploaded_sta', 'The selected meeting does not have a valid date/year, so uploaded stages cannot be validated.')));
     }
 
     my ($validation_errors, $unmatched_rows) = $self->_validate_uploaded_decision_rows(
@@ -2311,7 +2326,7 @@ sub upload_decision_template_POST {
         rows           => \@current_rows,
         updated_count  => $updated_count,
         unmatched_rows => $unmatched_rows,
-        message        => 'Decision upload processed successfully',
+        message        => (SGN::I18N::translate($ui_upload_decision_template_POST_i18n, 'decision.server.decision_upload_processed_successfully', 'Decision upload processed successfully')),
     });
 }
 
@@ -2357,8 +2372,9 @@ sub _meeting_tracker_metadata {
 
 sub meetings_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_meetings_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_meetings_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     $c->res->headers->header('Cache-Control' => 'no-store, no-cache, must-revalidate');
@@ -2483,12 +2499,13 @@ sub meetings_GET {
 
 sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_meeting_report_html_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $meeting_id = $c->req->param('meeting_id');
-    return $self->status_bad_request($c, message => 'Missing meeting_id')
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.missing_meeting_id', 'Missing meeting_id')))
         unless $meeting_id;
 
     my $dbh = $c->dbc->dbh;
@@ -2516,7 +2533,7 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
     unless ($project_id) {
         $c->res->status(404);
         $c->res->content_type('text/plain; charset=utf-8');
-        $c->res->body("Meeting not found");
+        $c->res->body((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.meeting_not_found', 'Meeting not found')));
         return;
     }
 
@@ -2551,9 +2568,8 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
         $c->res->status(409);
         $c->res->content_type('application/json; charset=utf-8');
         $c->res->body(encode_json({
-            error   => 'Report not available yet',
-            message => 'This meeting report cannot be downloaded because decisions have not been saved yet.'
-        }));
+            error   => (SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.report_not_available_yet', 'Report not available yet')),
+            message => (SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.this_meeting_report_cannot_be_downloaded_because_decisions_have_not_', 'This meeting report cannot be downloaded because decisions have not been saved yet.'))}));
         return;
     }
 
@@ -2630,12 +2646,32 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
         $attendees_html =~ s/"/&quot;/g;
     }
 
+    my $ui_report_caption1 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.print_save_as_pdf', 'Print / Save as PDF')));
+    my $ui_report_caption2 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.meeting_report.bf49ee3', 'Meeting Report')));
+    my $ui_report_caption3 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.meeting', 'Meeting:')));
+    my $ui_report_caption4 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.meeting_id', 'Meeting ID:')));
+    my $ui_report_caption5 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.programs', 'Programs:')));
+    my $ui_report_caption6 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'seedlot_maintenance_table.ui.date', 'Date:')));
+    my $ui_report_caption7 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'cross.ui.year.c9410fe', 'Year:')));
+    my $ui_report_caption8 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'seedlot_record.ui.location', 'Location:')));
+    my $ui_report_caption9 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'global.est.status', 'Status:')));
+    my $ui_report_caption10 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.attendees', 'Attendees:')));
+    my $ui_report_caption11 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.meeting_notes', 'Meeting Notes')));
+    my $ui_report_caption12 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.decisions', 'Decisions')));
+    my $ui_report_caption13 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'accession.sequencing.table.accession', 'Accession')));
+    my $ui_report_caption14 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'cross.ui.breeding_program.2f6b84b', 'Breeding Program')));
+    my $ui_report_caption15 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.previous_stage', 'Previous Stage')));
+    my $ui_report_caption16 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.root.decision', 'Decision')));
+    my $ui_report_caption17 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.root.new_stage', 'New Stage')));
+    my $ui_report_caption18 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.current_notes', 'Current Notes')));
+    my $ui_report_caption19 = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.comment_before_save', 'Comment Before Save')));
+    my $ui_report_title_prefix = HTML::Entities::encode_entities((SGN::I18N::translate($ui_meeting_report_html_i18n, 'decision.server.meeting_report.5682d02', 'Meeting Report - ')));
     my $html = qq{
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Meeting Report - $safe_project_name</title>
+  <title>$ui_report_title_prefix$safe_project_name</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -2682,35 +2718,35 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
 </head>
 <body>
   <div class="no-print" style="margin-bottom:20px;">
-    <button onclick="window.print()">Print / Save as PDF</button>
+    <button onclick="window.print()">$ui_report_caption1</button>
   </div>
 
-  <h1>Meeting Report</h1>
+  <h1>$ui_report_caption2</h1>
   <div class="meta">
-    <strong>Meeting:</strong> $safe_project_name<br>
-    <strong>Meeting ID:</strong> $meeting_id<br>
-    <strong>Programs:</strong> $programs_html<br>
-    <strong>Date:</strong> $meeting_date<br>
-    <strong>Year:</strong> $meeting_year<br>
-    <strong>Location:</strong> $location<br>
-    <strong>Status:</strong> $meeting_status<br>
-    <strong>Attendees:</strong> $attendees_html
+    <strong>$ui_report_caption3</strong> $safe_project_name<br>
+    <strong>$ui_report_caption4</strong> $meeting_id<br>
+    <strong>$ui_report_caption5</strong> $programs_html<br>
+    <strong>$ui_report_caption6</strong> $meeting_date<br>
+    <strong>$ui_report_caption7</strong> $meeting_year<br>
+    <strong>$ui_report_caption8</strong> $location<br>
+    <strong>$ui_report_caption9</strong> $meeting_status<br>
+    <strong>$ui_report_caption10</strong> $attendees_html
   </div>
 
-  <h2>Meeting Notes</h2>
+  <h2>$ui_report_caption11</h2>
   <div class="notes">$meeting_notes</div>
 
-  <h2>Decisions</h2>
+  <h2>$ui_report_caption12</h2>
   <table>
     <thead>
       <tr>
-        <th>Accession</th>
-        <th>Breeding Program</th>
-        <th>Previous Stage</th>
-        <th>Decision</th>
-        <th>New Stage</th>
-        <th>Current Notes</th>
-        <th>Comment Before Save</th>
+        <th>$ui_report_caption13</th>
+        <th>$ui_report_caption14</th>
+        <th>$ui_report_caption15</th>
+        <th>$ui_report_caption16</th>
+        <th>$ui_report_caption17</th>
+        <th>$ui_report_caption18</th>
+        <th>$ui_report_caption19</th>
       </tr>
     </thead>
     <tbody>
@@ -2730,7 +2766,8 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
 
 sub create : Path('create') Args(0) {
     my ($self, $c) = @_;
-    return $self->status_forbidden($c, message => 'Login required')
+    my SGN::I18N $ui_create_i18n = SGN::I18N::translate($c);
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -2754,8 +2791,7 @@ sub create : Path('create') Args(0) {
     unless ($can_create_meeting) {
         return $self->status_forbidden(
             $c,
-            message => 'You are not allowed to create meetings'
-        );
+            message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.you_are_not_allowed_to_create_meetings', 'You are not allowed to create meetings')));
     }
 
     my $p = $c->req->params;
@@ -2775,19 +2811,19 @@ sub create : Path('create') Args(0) {
     my $description   = defined($p->{data}) && !ref($p->{data}) ? "$p->{data}" : '';
     my $meeting_status= $self->_trim($p->{meeting_status});
 
-    return $self->status_bad_request($c, message => "Missing meeting_name")
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.missing_meeting_name', 'Missing meeting_name')))
         unless $trial_name_in;
-    return $self->status_bad_request($c, message => "Meeting name is too long")
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.meeting_name_is_too_long', 'Meeting name is too long')))
         if length($trial_name_in) > 255;
-    return $self->status_bad_request($c, message => "Missing breeding_program")
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.missing_breeding_program', 'Missing breeding_program')))
         unless ($program_in || ref($p->{breeding_programs}) eq 'ARRAY');
-    return $self->status_bad_request($c, message => "Missing location")
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.missing_location', 'Missing location')))
         unless $location_in;
-    return $self->status_bad_request($c, message => "Missing date")
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.missing_date', 'Missing date')))
         unless $date_in;
-    return $self->status_bad_request($c, message => "Date must use the YYYY-MM-DD format")
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.date_must_use_the_yyyy_mm_dd_format', 'Date must use the YYYY-MM-DD format')))
         unless $meeting_date;
-    return $self->status_bad_request($c, message => "Year must use the YYYY format")
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.year_must_use_the_yyyy_format', 'Year must use the YYYY format')))
         unless $trial_year =~ /^\d{4}$/;
 
     my @requested_programs =
@@ -2812,7 +2848,7 @@ sub create : Path('create') Args(0) {
         else {
             return $self->status_bad_request(
                 $c,
-                message => "Breeding program not found: '$requested_program'",
+                message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.breeding_program_not_found_requested_program', 'Breeding program not found: \'%{requested_program}\'', {requested_program => ("" . ("$requested_program"))})),
             );
         }
 
@@ -2822,19 +2858,19 @@ sub create : Path('create') Args(0) {
     }
 
     my $program_choice = $program_in_list[0] // '';
-    return $self->status_bad_request($c, message => "Missing breeding_program")
+    return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.missing_breeding_program', 'Missing breeding_program')))
         unless $program_choice;
 
     my $program_name  = $program_name_list[0];
     my $location_name = _resolve_location_name($schema, $location_in)
-        or return $self->status_bad_request($c, message => "Location not found: '$location_in'");
+        or return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.location_not_found_location_in', 'Location not found: \'%{location_in}\'', {location_in => ("" . ("$location_in"))})));
 
     my $configured_locations = $self->_configured_meeting_locations(
         $c->config->{meeting_locations}
     );
     if (@$configured_locations) {
         my %allowed_location = map { lc($_) => 1 } @$configured_locations;
-        return $self->status_bad_request($c, message => "Location is not enabled for decision meetings")
+        return $self->status_bad_request($c, message => (SGN::I18N::translate($ui_create_i18n, 'decision.server.location_is_not_enabled_for_decision_meetings', 'Location is not enabled for decision meetings')))
             unless $allowed_location{lc($location_name)};
     }
 
@@ -3001,8 +3037,8 @@ sub create : Path('create') Args(0) {
 
     if ($err) {
         my $client_message = $err =~ /Trial name already exists/i
-            ? 'A meeting or trial with that name already exists.'
-            : 'The meeting could not be created.';
+            ? (SGN::I18N::translate($ui_create_i18n, 'decision.server.a_meeting_or_trial_with_that_name_already_exists', 'A meeting or trial with that name already exists.'))
+            : (SGN::I18N::translate($ui_create_i18n, 'decision.server.the_meeting_could_not_be_created', 'The meeting could not be created.'));
         $c->res->status($err =~ /Trial name already exists/i ? 409 : 500);
         $c->res->content_type('application/json');
         $c->res->body(encode_json({
@@ -3025,7 +3061,7 @@ sub create : Path('create') Args(0) {
     $c->res->content_type('application/json');
     $c->res->body(encode_json({
         ok               => \1,
-        msg              => "Meeting saved as trial '$trial_name' (type=meeting_project).",
+        msg              => (SGN::I18N::translate($ui_create_i18n, 'decision.server.meeting_saved_as_trial', 'Meeting saved as trial \'%{trial_name}\' (type=meeting_project).', {trial_name => ("" . ("$trial_name"))})),
         project_id       => $project_id,
         nd_experiment_id => $nd_experiment_id,
         design_cvterm_id => $design_cvterm_id,
@@ -3336,8 +3372,9 @@ sub _meeting_people_for_roles {
 
 sub _validate_meeting_attendees {
     my ($self, $dbh, $meeting_roles, $attendees) = @_;
+    my SGN::I18N $ui__validate_meeting_attendees_i18n = SGN::I18N::translate($c);
 
-    return ([], ['Attendees must be an array']) unless ref($attendees) eq 'ARRAY';
+    return ([], [(SGN::I18N::translate($ui__validate_meeting_attendees_i18n, 'decision.server.attendees_must_be_an_array', 'Attendees must be an array'))]) unless ref($attendees) eq 'ARRAY';
     return ($attendees, [])
         unless ref($meeting_roles) eq 'ARRAY' && @$meeting_roles;
 
@@ -3360,7 +3397,7 @@ sub _validate_meeting_attendees {
 
         my $canonical = $allowed{lc($value)};
         unless (defined($canonical) && $canonical ne '') {
-            push @errors, "Attendee '$value' does not have an allowed meeting role.";
+            push @errors, (SGN::I18N::translate($ui__validate_meeting_attendees_i18n, 'decision.server.attendee_value_does_not_have_an_allowed_meeting_role', 'Attendee \'%{value}\' does not have an allowed meeting role.', {value => ("" . ("$value"))}));
             next;
         }
         next if $seen{lc($canonical)}++;
@@ -3372,8 +3409,9 @@ sub _validate_meeting_attendees {
 
 sub people_GET {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_people_GET_i18n = SGN::I18N::translate($c);
 
-    return $self->status_forbidden($c, message => 'Login required')
+    return $self->status_forbidden($c, message => (SGN::I18N::translate($ui_people_GET_i18n, 'decision.server.login_required', 'Login required')))
         unless $c->user;
 
     $c->res->headers->header('Cache-Control' => 'no-store, no-cache, must-revalidate');

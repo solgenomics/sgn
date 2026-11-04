@@ -2,6 +2,7 @@
 package SGN::Controller::Help;
 
 use Moose;
+use HTML::Entities ();
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -35,7 +36,7 @@ sub help_section : Path('/help') Args(1) {
     }
     else { 
     	$c->stash->{template} = '/generic_message.mas';
-	$c->stash->{message}  = 'The requested page could not be found. <br /><a href="/help">Help page</a>';
+	$c->stash->{message}  = HTML::Entities::encode_entities($c->i18n->p("help.route.missing", "The requested page could not be found. ")) . '<br /><a href="/help">' . HTML::Entities::encode_entities($c->i18n->p("help.route.help_page", "Help page")) . '</a>';
     }
 }
 

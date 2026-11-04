@@ -4,9 +4,9 @@ $has_associated_transformants
 </%args>
 
 % if ($has_associated_transformants) {
-    <font color="red">This transformation ID has associated transformants. Cannot delete!</font>
+    <font color="red"><% $c->i18n->p("transformation.root.this_transformation_id_has_associated_transformants_cannot_delete", "This transformation ID has associated transformants. Cannot delete!") |h %></font>
 % } else {
-    <button id="delete_transformation_button" class="btn btn-primary">Delete</button>
+    <button id="delete_transformation_button" class="btn btn-primary"><% $c->i18n->p("global.dataset_cxgn_dataset.delete", "Delete") |h %></button>
 % }
 
 <script>

@@ -1,6 +1,10 @@
 
 package CXGN::Stock::Order;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use Data::Dumper;
 use CXGN::Stock::OrderBatch;
@@ -370,6 +374,7 @@ sub _format_clone_list {
     my $all_items = shift;
     my $clone_list_format_type = shift;
     my $properties = shift;
+    my SGN::I18N $ui__format_clone_list_i18n = SGN::I18N::translate($c);
     my $formatted_clone_list;
 
     my $item_name;
@@ -382,7 +387,7 @@ sub _format_clone_list {
             my $order_details = $each_item->{'order_details'};
             foreach my $stock_name (sort keys %$item_info) {
                 my $quantity = $item_info->{$stock_name};
-                my $formatted_item = $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+                my $formatted_item = $stock_name.$empty_string.":".$empty_string. (SGN::I18N::translate($ui__format_clone_list_i18n, 'barcode.server.quantity', 'quantity')).$empty_string. $quantity;
                 push @request_details, "<b>".$formatted_item."</b>";
             }
             push @request_details, $empty_string;
@@ -397,7 +402,7 @@ sub _format_clone_list {
 
         } elsif ($clone_list_format_type eq 'individual_item') {
             $item_name = (keys %$each_item)[0];
-            push @request_details, "<b>"."Item Name"."</b>". ":"."".$item_name;
+            push @request_details, "<b>".(SGN::I18N::translate($ui__format_clone_list_i18n, 'barcode.server.item_name', 'Item Name'))."</b>". ":"."".$item_name;
             foreach my $field (@$properties) {
                 my $each_detail = $each_item->{$item_name}->{$field};
                 my $detail_string = $field. ":"."".$each_detail;

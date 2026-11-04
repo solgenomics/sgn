@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $analytics_protocol_id
 $analytics_protocol_name
@@ -15,31 +19,31 @@ $analytics_protocol_result_summary
         <table class="table table-hover table-bordered" >
 
             <tr>
-                <td><b>Analytics Protocol Name</b></td>
+                <td><b><% $c->i18n->p("analysis.interface.analytics_protocol_name", "Analytics Protocol Name") |h %></b></td>
                 <td>
                     <div id="analytics_protocol_name">
 % if ($analytics_protocol_name) {
 %   print "$analytics_protocol_name";
 % } else {
-%   print "<span class='text-danger'>[No Analytics Protocol Name]</span>";
+%   print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.no_analytics_protocol_name", "[No Analytics Protocol Name]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Description</b></td>
+            <tr><td><b><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></b></td>
                 <td>
                     <div id="analytics_protocol_description">
 % if ($analytics_protocol_description) {
 %  print "$analytics_protocol_description";
 % } else {
-%  print "<span class='text-danger'>[No Description]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_description", "[No Description]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Type</b></td>
+            <tr><td><b><% $c->i18n->p("global.search.features.type.f65b938", "Type") |h %></b></td>
                 <td>
                     <div id="analytics_protocol_type_name">
 %  print "$analytics_protocol_type_name";
@@ -47,7 +51,7 @@ $analytics_protocol_result_summary
                 </td>
             </tr>
 
-            <tr><td><b>Created</b></td>
+            <tr><td><b><% $c->i18n->p("analysis.interface.created", "Created") |h %></b></td>
                 <td>
                     <div id="analytics_protocol_create_date">
 %  print "$analytics_protocol_create_date";
@@ -55,7 +59,7 @@ $analytics_protocol_result_summary
                 </td>
             </tr>
 
-            <tr><td><b>Properties</b></td>
+            <tr><td><b><% $c->i18n->p("stock_search.section.properties", "Properties") |h %></b></td>
                 <td>
                     <div id="analytics_protocol_properties">
 %  if ($analytics_protocol_properties) {
@@ -67,7 +71,7 @@ $analytics_protocol_result_summary
                 </td>
             </tr>
 
-            <tr><td><b>Result Summary</b></td>
+            <tr><td><b><% $c->i18n->p("analysis.interface.result_summary", "Result Summary") |h %></b></td>
                 <td>
                     <div id="analytics_protocol_result_summary">
 %  if ($analytics_protocol_result_summary) {

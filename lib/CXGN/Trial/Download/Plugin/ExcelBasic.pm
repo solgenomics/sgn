@@ -34,6 +34,8 @@ $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
 =cut
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use JSON;
 use Data::Dumper;
 use Excel::Writer::XLSX;
@@ -46,6 +48,7 @@ sub verify {
 
 sub download {
     my $self = shift;
+    my SGN::I18N $export_error_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 
     my $schema = $self->bcs_schema();
     my @trial_ids = @{$self->trial_list()};
@@ -158,7 +161,7 @@ sub download {
         my $design = $trial_layout->get_design();
 
         if (!$design) {
-            return "No design found for trial: ".$trial_name;
+            return ($export_error_i18n ? $export_error_i18n->p("trial.export.no_design", "No design found for trial: %{name}", {name => "$trial_name"}) : "No design found for trial: ".$trial_name);
         }
         my %design = %{$design};
 

@@ -16,6 +16,7 @@ use CXGN::List::Validate;
 use CXGN::List;
 use JSON::XS;
 use Data::Dumper;
+use HTML::Entities ();
 use CXGN::TrialStatus;
 use SGN::Model::Cvterm;
 use CXGN::Genotype::GenotypingProject;
@@ -43,7 +44,7 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     };
     if ($@) {
 	    $c->stash->{template} = 'system_message.txt';
-	    $c->stash->{message} = "The requested trial ($trial_id) does not exist";
+	    $c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p('trial.summary.notice.missing', 'The requested trial (%{trial_id}) does not exist', { trial_id => $trial_id }));
 	    return;
     }
 
@@ -96,7 +97,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
 
     if (!$program_object->trial_exists($c->stash->{trial_id})) {
-	$c->stash->{message} = "The requested trial does not exist or has been deleted.";
+	$c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p('trial.summary.notice.deleted', 'The requested trial does not exist or has been deleted.'));
 	$c->stash->{template} = 'generic_message.mas';
 	return;
     }

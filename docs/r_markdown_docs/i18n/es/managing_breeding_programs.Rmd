@@ -1,0 +1,13 @@
+# Gestión de programas de mejoramiento {#managing-breeding-programs}
+
+Para añadir un programa de mejoramiento, pulse “Añadir nuevo programa” en la página “Gestionar programas de mejoramiento”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/breeding_programs_screenshot.png')
+```
+
+Al pulsar “Añadir nuevo programa” se abrirá un formulario vacío. Escriba el nombre y la descripción del programa y pulse “Añadir programa de mejoramiento” para terminar.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/new_program_screenshot.png')
+```

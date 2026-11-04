@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 displays list of GS populations evaluated for a trait.
@@ -21,14 +25,14 @@ $trait_name
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas,
-    title => "GS populations evaluated for $query" ,
+    title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.gs_populations_evaluated_for_query", "GS populations evaluated for %{query}", {query => "" . ($query // "")})) ,
 &>
   
 % if ($result) 
 % { 
 
-<&| /page/info_section.mas,
-      title => "Create a training population using individuals from one or more trials to fit a prediction model for $trait_name",
+<&| /page/info_section.mas, anchor_title => "Create a training population using individuals from one or more trials to fit a prediction model for $trait_name",
+      title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.create_a_training_population_using_individuals_from_one_or_more", "Create a training population using individuals from one or more trials to fit a prediction model for %{trait_name}", {trait_name => "" . ($trait_name // "")})),
 &>
 
 
@@ -47,7 +51,7 @@ $trait_name
 % {
 
 <div id="select_done">
-  <input  class="button" type="button" value="Select" onclick="selectedPops();"/>
+  <input  class="button" type="button" value="<% $c->i18n->p("global.select", "Select") |h %>" onclick="selectedPops();"/>
 </div>
 
 %}
@@ -57,17 +61,17 @@ $trait_name
 %}
 %else
 %{
-<&| /page/info_section.mas,
-      title => 'No Search Results',
+<&| /page/info_section.mas, anchor_title => 'No Search Results',
+      title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.no_search_results", 'No Search Results')),
 &>
 
 %if ( $query )
 %{
-<br>No results found for <i><strong>'<% $query %>'.</strong></i><br />
+<br><% $c->i18n->p("analysis.qtl.ui.no_results_found_for", "No results found for") |h %> <i><strong>'<% $query %>'.</strong></i><br />
 %}
 %else
 %{
-<br>No results. Search again with a trait name.<br />
+<br><% $c->i18n->p("solgs.interface.no_results_search_again_with_a_trait_name", "No results. Search again with a trait name.") |h %><br />
 %}
 </&>
 %}

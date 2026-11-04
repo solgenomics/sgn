@@ -1,9 +1,9 @@
 <br/>
 <div class="text-center">
-    <p><b>Welcome to the Label Designer</b></p>
+    <p><b><% $c->i18n->p("barcode.mason.welcome_to_the_label_designer", "Welcome to the Label Designer") |h %></b></p>
     <br/>
-    <p>This workflow will guide you through each step of the design process. For detailed explanations of each step please refer to the <a href="https://solgenomics.github.io/sgn/using-the-label-designer.html">label designer section of the manual</a>.<p>
-    <p>To start, select a data source and a data level. The data source can be a list, crossing experiment, trial, or genotyping plate. When you are finished, click 'Next'.<p>
+    <p><% $c->i18n->p("barcode.mason.this_workflow_will_guide_you_through_each_step_of_the", "This workflow will guide you through each step of the design process. For detailed explanations of each step please refer to the") |h %> <a href="https://solgenomics.github.io/sgn/using-the-label-designer.html"><% $c->i18n->p("barcode.mason.label_designer_section_of_the_manual", "label designer section of the manual") |h %></a>.<p>
+    <p><% $c->i18n->p("barcode.mason.to_start_select_a_data_source_and_a_data_level", "To start, select a data source and a data level. The data source can be a list, crossing experiment, trial, or genotyping plate. When you are finished, click 'Next'.") |h %><p>
 </div>
 <br/><br/>
 <div class="container-fluid">
@@ -11,21 +11,21 @@
         <div class="col-md-6">
             <div class="row">
                 <div class="col-md-4 text-center">
-                    <label><strong>Datatype:</strong></label>
+                    <label><strong><% $c->i18n->p("barcode.mason.datatype", "Datatype:") |h %></strong></label>
                 </div>
                 <div class="col-md-8" id="data_source_type"></div>
             </div>
             <br /><br />
             <div class="row">
                 <div class="col-md-4 text-center">
-                    <label><strong>Data Source:</strong></label>
+                    <label><strong><% $c->i18n->p("barcode.mason.data_source", "Data Source:") |h %></strong></label>
                 </div>
                 <div class="col-md-8" id="data_source"></div>
             </div>
             <br /><br />
         </div>
         <div class="col-md-2 text-center">
-            <label>Label For Every:</label>
+            <label><% $c->i18n->p("barcode.mason.label_for_every", "Label For Every:") |h %></label>
         </div>
         <div class="col-md-4" id="label_designer_data_level_select_div"></div>
     </div>

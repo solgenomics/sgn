@@ -22,6 +22,7 @@ use strict;
 package SGN::Controller::AJAX::Markers::Genotyped;
 
 use Moose;
+use SGN::I18N ();
 use JSON;
 use CXGN::Marker::SearchMatView;
 
@@ -143,6 +144,7 @@ sub query_variants : Path('/ajax/markers/genotyped/query') : ActionClass('REST')
 sub query_variants_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $name = $c->req->param('name');
@@ -158,19 +160,19 @@ sub query_variants_GET : Args(0) {
 
     # Check required parameters
     if ( (!defined $species || $species eq '') && (defined $chrom || defined $start || defined $end) ) {
-        $c->stash->{rest} = {error => 'Species must be provided!'};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.species_must_be_provided", "Species must be provided!")};
         $c->detach();
     }
     if ( (!defined $reference_genome || $reference_genome eq '') && (defined $chrom || defined $start || defined $end) ) {
-        $c->stash->{rest} = {error => 'Reference genome must be provided!'};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.reference_genome_must_be_provided", "Reference genome must be provided!")};
         $c->detach();
     }
     if ( (!defined $chrom || $chrom eq '') && (defined $start || defined $end) ) {
-        $c->stash->{rest} = {error => 'Chromosome name must be provided!'};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.chromosome_name_must_be_provided", "Chromosome name must be provided!")};
         $c->detach();
     }
     if ( defined $page && !defined $limit ) {
-        $c->stash->{rest} = {error => 'limit must be provided with page!'};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.limit_must_be_provided_with_page", "limit must be provided with page!")};
         $c->detach();
     }
 

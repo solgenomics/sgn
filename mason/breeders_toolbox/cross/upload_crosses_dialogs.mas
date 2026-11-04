@@ -12,79 +12,79 @@ $breeding_program_id => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="reset" class="close" id="upload_crosses_dismiss_button_2" name="upload_crosses_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCrossesDialog">Upload Crosses</h4>
+                <button type="reset" class="close" id="upload_crosses_dismiss_button_2" name="upload_crosses_dismiss_button" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossesDialog"><% $c->i18n->p('cross.ui.upload_crosses', 'Upload Crosses') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "crosses_upload_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Introduction" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.intro', 'Intro')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.introduction', 'Introduction')) &>
                             <ul>
-                                <li>Crosses can be of different types (biparental, self, open, backcross, sib, polycross, bulk, bulk_open, bulk_self, doubled_haploid, or dihaploid_induction)</li>
+                                <li><% $c->i18n->p('cross.ui.crosses_can_be_of_different_types_biparental_self_open_backcro', 'Crosses can be of different types (biparental, self, open, backcross, sib, polycross, bulk, bulk_open, bulk_self, doubled_haploid, or dihaploid_induction)') |h %></li>
                                     <ul class="a">
-                                        <li>cross type descriptions:</li>
+                                        <li><% $c->i18n->p('cross.ui.cross_type_descriptions', 'cross type descriptions:') |h %></li>
                                         <ul class="b">
-                                            <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
-                                            <li><b>self:</b> A self pollinated individual plant.</li>
-                                            <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                                            <li><b>backcross:</b> An individual plant pollinated by one of its parents. Cross Unique ID can be used as one of the parents.</li>
-                                            <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
-                                            <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
-                                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
-                                            <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
-                                            <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
-                                            <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
-                                            <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from tetraploid to diploid.</li>
+                                            <li><b>biparental:</b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_another_individual_plant', 'An individual plant pollinated by another individual plant.') |h %></li>
+                                            <li><b>self:</b> <% $c->i18n->p('cross.ui.a_self_pollinated_individual_plant', 'A self pollinated individual plant.') |h %></li>
+                                            <li><b>open:</b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_a_group_of_plants_or_open_po', 'An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).') |h %></li>
+                                            <li><b>backcross:</b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_one_of_its_parents_cross_uni', 'An individual plant pollinated by one of its parents. Cross Unique ID can be used as one of the parents.') |h %></li>
+                                            <li><b>sib:</b> <% $c->i18n->p('cross.ui.mating_between_individuals_that_have_at_least_one_parent_in_co', 'Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.') |h %></li>
+                                            <li><b>polycross:</b> <% $c->i18n->p('cross.ui.mating_between_individual_female_parent_from_a_population_and_', 'Mating between individual female parent from a population and the corresponding male population.') |h %></li>
+                                            <li><b>bulk:</b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_pollinated_by_an_in.96aa26c', 'A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).') |h %></li>
+                                            <li><b>bulk_open:</b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_that_are_pollinated.9391a0c', 'A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).') |h %></li>
+                                            <li><b>bulk_self:</b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_that_are_self_polli', 'A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).') |h %></li>
+                                            <li><b>doubled_haploid:</b> <% $c->i18n->p('cross.ui.plants_derived_from_doubling_the_chromosome_number_of_haploid_', 'Plants derived from doubling the chromosome number of haploid tissue.') |h %></li>
+                                            <li><b>dihaploid_induction</b><% $c->i18n->p('cross.ui.plants_derived_from_reducing_the_chromosome_set_from_tetraploi', ': Plants derived from reducing the chromosome set from tetraploid to diploid.') |h %></li>
                                         </ul>
                                     </ul>
                                 </li>
-                                <li>An individual cross can be linked to a female plot or plant, as well as a male plot or plant.</li>
-                                <li>A cross can have a number of properties associated to it, such as number of flowers, pollination date, etc.</li>
-                                <li>A cross can produce seed, which goes into a seedlot.</li>
-                                <li>A cross can ultimately produce progeny, which then become named accessions in the database.</li>
+                                <li><% $c->i18n->p('cross.ui.an_individual_cross_can_be_linked_to_a_female_plot_or_plant_as', 'An individual cross can be linked to a female plot or plant, as well as a male plot or plant.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.a_cross_can_have_a_number_of_properties_associated_to_it_such_', 'A cross can have a number of properties associated to it, such as number of flowers, pollination date, etc.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.a_cross_can_produce_seed_which_goes_into_a_seedlot', 'A cross can produce seed, which goes into a seedlot.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.a_cross_can_ultimately_produce_progeny_which_then_become_named', 'A cross can ultimately produce progeny, which then become named accessions in the database.') |h %></li>
                             </ul>
 
                             <br/><br/>
                             <center>
-                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('cross.ui.go_to_next_step', 'Go to Next Step') |h %></button>
                             </center>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Crossing experiment" &>
-                            <& /page/page_title.mas, title=>"Select a crossing experiment for your crosses" &>
-                            <center><label style="color:DarkOliveGreen" class="col-sm-12 control-label">If you are uploading an Intercross file and using auto-generated cross unique IDs, please use manage Intercross section</label></center>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.crossing_experiment.1297ad4', 'Crossing experiment')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.select_a_crossing_experiment_for_your_crosses', 'Select a crossing experiment for your crosses')) &>
+                            <center><label style="color:DarkOliveGreen" class="col-sm-12 control-label"><% $c->i18n->p('cross.ui.if_you_are_uploading_an_intercross_file_and_using_auto_generat', 'If you are uploading an Intercross file and using auto-generated cross unique IDs, please use manage Intercross section') |h %></label></center>
                             <br>
                             <br>
                             <div id="manage_page_section_1" style="display:none">
-                                <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
+                                <p><% $c->i18n->p('cross.ui.crossing_experiments_are_for_grouping_crosses_together_the_gro', 'Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.') |h %></p>
                                 <center>
-                                    <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a new crossing experiment, click here</button><br/><br/>
-                                    <button id="next_step_crossing_trial_button" class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
+                                    <button class="btn btn-info" name="create_crossingtrial_link"><% $c->i18n->p('cross.ui.if_you_need_to_create_a_new_crossing_experiment_click_here', 'If you need to create a new crossing experiment, click here') |h %></button><br/><br/>
+                                    <button id="next_step_crossing_trial_button" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('cross.ui.if_you_already_have_a_crossing_experiment_go_to_next_step', 'If you already have a crossing experiment, go to Next Step') |h %></button>
                                 </center>
                             </div>
 
                             <div id="crossing_experiment_page_section_1" style="display:none">
                                 <center>
                                     <div class="form-group">
-                                        <label class="col-sm-5 control-label">You are uploading crosses for crossing experiment: </label>
+                                        <label class="col-sm-5 control-label"><% $c->i18n->p('cross.ui.you_are_uploading_crosses_for_crossing_experiment', 'You are uploading crosses for crossing experiment:') |h %> </label>
                                         <div class="col-sm-6" >
                                             <input class="form-control" name="experiment_name_1" id="experiment_name_1" disabled value="<% $trial_name %>">
                                         </div>
                                     </div>
                                     <br/><br/><br/><br/>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('cross.ui.go_to_next_step', 'Go to Next Step') |h %></button>
                                 </center>
                             </div>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Upload your crosses" &>
-                            <& /page/page_title.mas, title=>"Enter basic information about the crosses and upload your file" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.upload_your_crosses', 'Upload your crosses')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.enter_basic_information_about_the_crosses_and_upload_your_file', 'Enter basic information about the crosses and upload your file')) &>
                             <br/>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
                                 <div id="manage_page_section_2" style="display:none">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('cross.ui.breeding_program.2c9b17e', 'Breeding Program:') |h %> </label>
                                         <div class="col-sm-9" >
                                             <div id="upload_crosses_breeding_program_select_div">
                                             </div>
@@ -92,7 +92,7 @@ $breeding_program_id => undef
                                     </div><br/>
                                     <div id="manage_page_crossing_experiment" style="display:none">
                                         <div class="form-group">
-                                            <label class="col-sm-3 control-label">Crossing Experiment: </label>
+                                            <label class="col-sm-3 control-label"><% $c->i18n->p('cross.ui.crossing_experiment.9272d74', 'Crossing Experiment:') |h %> </label>
                                             <div class="col-sm-9">
                                                 <div id="upload_crosses_crossing_experiment_select_div" name="upload_crosses_crossing_experiment_select_div" >
                                                 </div>
@@ -102,7 +102,7 @@ $breeding_program_id => undef
                                 </div>
                                 <div id="crossing_experiment_page_section_2" style="display:none">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Crossing Experiment: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('cross.ui.crossing_experiment.9272d74', 'Crossing Experiment:') |h %> </label>
                                         <div class="col-sm-9" >
                                             <input class="form-control" name="experiment_name" id="experiment_name" disabled value="<% $trial_name %>">
                                             <input name="experiment_id" id="experiment_id" type="hidden" value="<% $trial_id %>">
@@ -113,11 +113,11 @@ $breeding_program_id => undef
                                 <div class="well well-sm">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                            <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.template_information.2b5757e', 'Template information')) &>
                                                 <p>
-                                                    <b>File format information</b>
+                                                    <b><% $c->i18n->p('cross.ui.file_format_information', 'File format information') |h %></b>
                                                     <br>
-                                                    <a id="upload_crosses_spreadsheet_format_info">Spreadsheet format</a>
+                                                    <a id="upload_crosses_spreadsheet_format_info"><% $c->i18n->p('cross.ui.spreadsheet_format.2b7e73c', 'Spreadsheet format') |h %></a>
                                                 </p>
                                             </&>
                                         </div>
@@ -126,7 +126,7 @@ $breeding_program_id => undef
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-5 control-label">Upload File: </label>
+                                                        <label class="col-sm-5 control-label"><% $c->i18n->p('cross.ui.upload_file.9798051', 'Upload File:') |h %> </label>
                                                         <div class="col-sm-7">
                                                             <input type="file" name="upload_crosses_file" id="upload_crosses_file" encoding="multipart/form-data" />
                                                         </div>
@@ -161,26 +161,26 @@ $breeding_program_id => undef
 
                             <div id="submit_button_section">
                                 <center>
-                                    <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
+                                    <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit"><% $c->i18n->p('cross.ui.upload_file.3ee3b0b', 'Upload File') |h %></button>
                                 </center>
                             </div>
 
                         </&>
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your crosses are now in the database" &>
+                        <&| /util/workflow.mas:complete, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.complete', 'Complete')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.finished_your_crosses_are_now_in_the_database', 'Finished! Your crosses are now in the database')) &>
                             <p>
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                The crosses file was uploaded successfully
+                                <% $c->i18n->p('cross.ui.the_crosses_file_was_uploaded_successfully', 'The crosses file was uploaded successfully') |h %>
                             </p>
 
                             <ul>
-                                <li>You may want to proceed to the cross detail page(s) for the cross(es) you just created.</li>
-                                <li>You can print barcodes for the crosses.</li>
-                                <li>You can add crossing information as it becomes available (e.g. number of seeds, progeny, etc).</li>
+                                <li><% $c->i18n->p('cross.ui.you_may_want_to_proceed_to_the_cross_detail_page_s_for_the_cro', 'You may want to proceed to the cross detail page(s) for the cross(es) you just created.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.you_can_print_barcodes_for_the_crosses', 'You can print barcodes for the crosses.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.you_can_add_crossing_information_as_it_becomes_available_e_g_n', 'You can add crossing information as it becomes available (e.g. number of seeds, progeny, etc).') |h %></li>
                             </ul>
                             <br/>
                             <center>
-                            <button  class="btn btn-primary" name="upload_crosses_success_complete_button">The crosses were saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            <button  class="btn btn-primary" name="upload_crosses_success_complete_button"><% $c->i18n->p('cross.ui.the_crosses_were_saved_to_the_database_with_no_errors_congrats', 'The crosses were saved to the database with no errors! Congrats Click Here') |h %></button><br/><br/>
                             </center>
                         </&>
 
@@ -189,7 +189,7 @@ $breeding_program_id => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="upload_crosses_dismiss_button_1" name="upload_crosses_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="upload_crosses_dismiss_button_1" name="upload_crosses_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -199,8 +199,8 @@ $breeding_program_id => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCrossesErrorDialog">Upload Crosses File Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossesErrorDialog"><% $c->i18n->p('cross.ui.upload_crosses_file_error', 'Upload Crosses File Error') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -210,7 +210,7 @@ $breeding_program_id => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -220,15 +220,15 @@ $breeding_program_id => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="crossSpreadsheetInfoDialog">Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="crossSpreadsheetInfoDialog"><% $c->i18n->p('cross.ui.template_information.bf8c643', 'Template Information') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <br>
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('cross.ui.header', 'Header:') |h %></b>
                     <br>
-                    To set up crosses in the database, please provide required information. The first row (header) must contain the following:
+                    <% $c->i18n->p('cross.ui.to_set_up_crosses_in_the_database_please_provide_required_info', 'To set up crosses in the database, please provide required information. The first row (header) must contain the following:') |h %>
                     <br>
 
                     <table class="table table-bordered table-hover" id = "cross_parents_header">
@@ -245,48 +245,66 @@ $breeding_program_id => undef
                     <style>
                         ul.a {text-indent};
                     </style>
-                    <b>Required columns:</b>
+                    <b><% $c->i18n->p('cross.ui.required_columns', 'Required columns:') |h %></b>
                     <ul>
-                        <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
-                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, backcross, bulk, bulk_open, bulk_self, doubled_haploid, dihaploid_induction)</li>
+                        <li><b>cross_unique_id</b> <% $c->i18n->p('cross.ui.must_not_exist_in_the_database', '(must NOT exist in the database)') |h %></li>
+                        <li><b>cross_combination</b> <% $c->i18n->p('cross.ui.required_in_the_header_but_value_for_cross_combination_e_g_fem', '(required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)') |h %></li>
+                        <li><b>cross_type</b> <% $c->i18n->p('cross.ui.must_be_one_of_the_following_biparental_self_open_sib_polycros', '(must be one of the following: biparental, self, open, sib, polycross, backcross, bulk, bulk_open, bulk_self, doubled_haploid, dihaploid_induction)') |h %></li>
                         <ul class="a">
-                            <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
-                            <li><b>self:</b> A self pollinated individual plant.</li>
-                            <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                            <li><b>backcross:</b> An individual plant pollinated by one of its parents.</li>
-                            <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
-                            <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
-                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
-                            <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
-                            <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
-                            <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
-                            <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
+                            <li><b>biparental:</b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_another_individual_plant', 'An individual plant pollinated by another individual plant.') |h %></li>
+                            <li><b>self:</b> <% $c->i18n->p('cross.ui.a_self_pollinated_individual_plant', 'A self pollinated individual plant.') |h %></li>
+                            <li><b>open:</b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_a_group_of_plants_or_open_po', 'An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).') |h %></li>
+                            <li><b>backcross:</b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_one_of_its_parents', 'An individual plant pollinated by one of its parents.') |h %></li>
+                            <li><b>sib:</b> <% $c->i18n->p('cross.ui.mating_between_individuals_that_have_at_least_one_parent_in_co', 'Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.') |h %></li>
+                            <li><b>polycross:</b> <% $c->i18n->p('cross.ui.mating_between_individual_female_parent_from_a_population_and_', 'Mating between individual female parent from a population and the corresponding male population.') |h %></li>
+                            <li><b>bulk:</b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_pollinated_by_an_in.96aa26c', 'A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).') |h %></li>
+                            <li><b>bulk_open:</b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_that_are_pollinated.9391a0c', 'A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).') |h %></li>
+                            <li><b>bulk_self:</b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_that_are_self_polli', 'A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).') |h %></li>
+                            <li><b>doubled_haploid:</b> <% $c->i18n->p('cross.ui.plants_derived_from_doubling_the_chromosome_number_of_haploid_', 'Plants derived from doubling the chromosome number of haploid tissue.') |h %></li>
+                            <li><b>dihaploid_induction</b><% $c->i18n->p('cross.ui.plants_derived_from_reducing_the_chromosome_set_from_4_to_2', ': Plants derived from reducing the chromosome set from 4 to 2.') |h %></li>
                         </ul>
-                        <li><b>female_parent:</b> Female parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
-                        <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, backcross, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
+                        <li><b>female_parent:</b> <% $c->i18n->p('cross.ui.female_parent_names_must_exist_as', 'Female parent names must exist as') |h %> <b>uniquenames</b> <% $c->i18n->p('cross.ui.in_the_database_can_be_accession_plot_plant_or_population_stoc', 'in the database, can be accession, plot, plant or population stock type.') |h %></li>
+                        <li><b>male_parent:</b> <% $c->i18n->p('cross.ui.required_in_the_header_but_value_may_be_left_blank_for_most_cr', 'Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, backcross, polycross and bulk cross types. When specified, male parent names must exist as') |h %> <b>uniquenames</b> <% $c->i18n->p('cross.ui.in_the_database_can_be_accession_plot_plant_or_population_stoc', 'in the database, can be accession, plot, plant or population stock type.') |h %></li>
                     </ul>
-                    <b>Optional columns (additional parent info):</b> You can add additional parent info after male_plant column by using one or more of these column headers.
+                    <b><% $c->i18n->p('cross.ui.optional_columns_additional_parent_info', 'Optional columns (additional parent info):') |h %></b> <% $c->i18n->p('cross.ui.you_can_add_additional_parent_info_after_male_plant_column_by_', 'You can add additional parent info after male_plant column by using one or more of these column headers.') |h %>
                     <ul>
 % foreach $additional_info(@cross_additional_info){
                         <li><%$additional_info%></li>
 %}
                     </ul>
-                    <b>Additional cross information:</b>
+                    <b><% $c->i18n->p('cross.ui.additional_cross_information', 'Additional cross information:') |h %></b>
                     <ul>
-                        <li>After cross unique ids are stored in the database, you can add field crossing data (e.g. pollination date, total number of flowers pollinated, total number of fruits set) or progenies to each cross unique id.</li>
-                        <li>Field crossing data and progenies can be uploaded via links in crossing experiment detail page or can be added directly in each cross detail page.</li>
+                        <li><% $c->i18n->p('cross.ui.after_cross_unique_ids_are_stored_in_the_database_you_can_add_', 'After cross unique ids are stored in the database, you can add field crossing data (e.g. pollination date, total number of flowers pollinated, total number of fruits set) or progenies to each cross unique id.') |h %></li>
+                        <li><% $c->i18n->p('cross.ui.field_crossing_data_and_progenies_can_be_uploaded_via_links_in', 'Field crossing data and progenies can be uploaded via links in crossing experiment detail page or can be added directly in each cross detail page.') |h %></li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+// Optional locale assets never block the native crossing workflow.
+var crossI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function crossHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+
+
 
 jQuery(document).ready(function(){
 

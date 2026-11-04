@@ -1,11 +1,31 @@
 package CXGN::Transformation::ParseUpload;
 
+=head1 NAME
+
+CXGN::Transformation::ParseUpload - parse transformation upload files
+
+=head1 ATTRIBUTES
+
+=head2 i18n
+
+Optional request-local C<SGN::I18N> translator for human-readable validation
+messages. When omitted, the parser and its file reader retain English fallback
+text.
+
+=cut
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 
 with 'MooseX::Object::Pluggable';
 
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    required => 0,
+);
 
 has 'chado_schema' => (
     is => 'ro',

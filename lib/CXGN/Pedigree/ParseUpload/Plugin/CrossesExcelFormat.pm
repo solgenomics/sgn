@@ -1,6 +1,7 @@
 package CXGN::Pedigree::ParseUpload::Plugin::CrossesExcelFormat;
 
 use Moose::Role;
+use SGN::I18N ();
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -12,6 +13,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_crossesexcelformat_i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $cross_additional_info = $self->get_cross_additional_info();
@@ -57,7 +59,7 @@ sub _validate_with_plugin {
 
     $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "accession.catalog.error_1", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -65,7 +67,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 6 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
-        push @error_messages, "Spreadsheet is missing header or contains no row";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.spreadsheet_is_missing_header_or_contains_no_row", "Spreadsheet is missing header or contains no row"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -110,25 +112,25 @@ sub _validate_with_plugin {
     }
 
     if (!$cross_name_header || $cross_name_header ne 'cross_unique_id' ) {
-        push @error_messages, "Cell A1: cross_unique_id is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_a1_cross_unique_id_is_missing_from_the_header", "Cell A1: cross_unique_id is missing from the header"));
     }
     if (!$cross_combination_header || $cross_combination_header ne 'cross_combination' ) {
-        push @error_messages, "Cell B1: cross_combination is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_b1_cross_combination_is_missing_from_the_header", "Cell B1: cross_combination is missing from the header"));
     }
     if (!$cross_type_header || $cross_type_header ne 'cross_type') {
-        push @error_messages, "Cell C1: cross_type is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_c1_cross_type_is_missing_from_the_header", "Cell C1: cross_type is missing from the header"));
     }
     if (!$female_parent_header || $female_parent_header ne 'female_parent') {
-        push @error_messages, "Cell D1: female_parent is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_d1_female_parent_is_missing_from_the_header", "Cell D1: female_parent is missing from the header"));
     }
     if (!$male_parent_header || $male_parent_header ne 'male_parent') {
-        push @error_messages, "Cell E1: male_parent is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_e1_male_parent_is_missing_from_the_header", "Cell E1: male_parent is missing from the header"));
     }
     if (!$female_plot_plant_header || (($female_plot_plant_header ne 'female_plot') && ($female_plot_plant_header ne 'female_plant'))) {
-        push @error_messages, "Cell F1: female_plot or female_plant is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_f1_female_plot_or_female_plant_is_missing_from_the_header", "Cell F1: female_plot or female_plant is missing from the header"));
     }
     if (!$male_plot_plant_header || (($male_plot_plant_header ne 'male_plot') && ($male_plot_plant_header ne 'male_plant'))) {
-        push @error_messages, "Cell G1: male_plot or male_plant is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_g1_male_plot_or_male_plant_is_missing_from_the_header", "Cell G1: male_plot or male_plant is missing from the header"));
     }
 
     my %valid_additional_info;
@@ -142,7 +144,7 @@ sub _validate_with_plugin {
             my $header_string = $worksheet->get_cell(0,$column)->value();
             $header_string =~ s/^\s+|\s+$//g;
             if (($header_string) && (!$valid_additional_info{$header_string})){
-                push @error_messages, "Invalid info type: $header_string";
+                push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.invalid_info_type_header_string", "Invalid info type: %{header_string}", {header_string => "" . ($header_string)}));
             }
         }
     }
@@ -199,32 +201,32 @@ sub _validate_with_plugin {
 
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell A$row_name: cross unique id missing";
+            push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_a_row_name_cross_unique_id_missing", "Cell A%{row_name}: cross unique id missing", {row_name => "" . ($row_name)}));
         } else {
             $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
         }
 #        } elsif ($cross_name =~ /\s/ || $cross_name =~ /\// || $cross_name =~ /\\/ ) {
 #            push @error_messages, "Cell A$row_name: cross_name must not contain spaces or slashes.";
         if ($seen_cross_names{$cross_name}) {
-            push @error_messages, "Cell A$row_name: duplicate cross unique id: $cross_name";
+            push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_a_row_name_duplicate_cross_unique_id_cross_name", "Cell A%{row_name}: duplicate cross unique id: %{cross_name}", {row_name => "" . ($row_name), cross_name => "" . ($cross_name)}));
         }
 
         #cross type must not be blank
         if (!$cross_type || $cross_type eq '') {
-            push @error_messages, "Cell C$row_name: cross type missing";
+            push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_c_row_name_cross_type_missing", "Cell C%{row_name}: cross type missing", {row_name => "" . ($row_name)}));
         } elsif (!$supported_cross_types{$cross_type}){
-            push @error_messages, "Cell C$row_name: cross type not supported: $cross_type";
+            push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_c_row_name_cross_type_not_supported_cross_type", "Cell C%{row_name}: cross type not supported: %{cross_type}", {row_name => "" . ($row_name), cross_type => "" . ($cross_type)}));
         }
 
         #female parent must not be blank
         if (!$female_parent || $female_parent eq '') {
-            push @error_messages, "Cell D$row_name: female parent missing";
+            push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_d_row_name_female_parent_missing", "Cell D%{row_name}: female parent missing", {row_name => "" . ($row_name)}));
         }
 
         #male parent must not be blank if type is biparental or bulk
         if (!$male_parent || $male_parent eq '') {
             if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' || 'polycross' || 'backcross' )) {
-                push @error_messages, "Cell E$row_name: male parent required for biparental, sib, polycross, backcross and bulk cross types";
+                push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cell_e_row_name_male_parent_required_for_biparental_sib_polycross_backcross_and_bulk_cross_type", "Cell E%{row_name}: male parent required for biparental, sib, polycross, backcross and bulk cross types", {row_name => "" . ($row_name)}));
             }
         }
 
@@ -283,7 +285,7 @@ sub _validate_with_plugin {
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames',\@accessions)->{'missing'}};
     if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as accession uniquenames: ".join(',',@accessions_missing);
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.the_following_parents_are_not_in_the_database_or_are_not_in_the_database_as_accession_uniquenam", "The following parents are not in the database, or are not in the database as accession uniquenames: %{value0}", {value0 => "" . (join(',',@accessions_missing))}));
         $errors{'missing_accessions'} = \@accessions_missing;
     }
 
@@ -291,14 +293,14 @@ sub _validate_with_plugin {
     my $population_validator = CXGN::List::Validate->new();
     my @populations_missing = @{$population_validator->validate($schema,'populations',\@populations)->{'missing'}};
     if (scalar(@populations_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as population uniquenames: ".join(',',@populations_missing);
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.the_following_parents_are_not_in_the_database_or_are_not_in_the_database_as_population_uniquena", "The following parents are not in the database, or are not in the database as population uniquenames: %{value0}", {value0 => "" . (join(',',@populations_missing))}));
     }
 
     my @backcross_parents = keys %seen_backcross_parents;
     my $backcross_parent_validator = CXGN::List::Validate->new();
     my @backcross_parents_missing = @{$backcross_parent_validator->validate($schema,'accessions_or_crosses',\@backcross_parents)->{'missing'}};
     if (scalar(@backcross_parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@backcross_parents_missing);
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.the_following_parents_are_not_in_the_database_or_are_not_in_the_database_as_uniquenames_value0", "The following parents are not in the database, or are not in the database as uniquenames: %{value0}", {value0 => "" . (join(',',@backcross_parents_missing))}));
         $errors{'missing_accessions_or_crosses'} = \@backcross_parents_missing;
     }
 
@@ -308,7 +310,7 @@ sub _validate_with_plugin {
         my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
         if (scalar(@plots_missing) > 0) {
-            push @error_messages, "The following plots are not in the database or are not in the database as uniquenames: ".join(',',@plots_missing);
+            push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.the_following_plots_are_not_in_the_database_or_are_not_in_the_database_as_uniquenames_value0", "The following plots are not in the database or are not in the database as uniquenames: %{value0}", {value0 => "" . (join(',',@plots_missing))}));
             $errors{'missing_plots'} = \@plots_missing;
         }
     } elsif (($female_plot_plant_header eq 'female_plant') && ($male_plot_plant_header eq 'male_plant')) {
@@ -317,7 +319,7 @@ sub _validate_with_plugin {
         my @plants_missing = @{$plant_validator->validate($schema,'plants',\@plants)->{'missing'}};
 
         if (scalar(@plants_missing) > 0) {
-            push @error_messages, "The following plants are not in the database as uniquenames or synonyms: ".join(',',@plants_missing);
+            push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.the_following_plants_are_not_in_the_database_as_uniquenames_or_synonyms_value0", "The following plants are not in the database as uniquenames or synonyms: %{value0}", {value0 => "" . (join(',',@plants_missing))}));
             $errors{'missing_plants'} = \@plants_missing;
         }
     }
@@ -328,7 +330,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@crosses }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cross unique id already exists in database: ".$r->uniquename;
+        push @error_messages, (SGN::I18N::translate($ui_crossesexcelformat_i18n, "cross.cross_unique_id_already_exists_in_database_value0", "Cross unique id already exists in database: %{value0}", {value0 => "" . ($r->uniquename)}));
     }
 
     #store any errors found in the parsed file to parse_errors accessor

@@ -36,6 +36,9 @@ package CXGN::Phenotypes::ParseUpload::Plugin::TranscriptomicsSpreadsheetCSV;
 #)
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use JSON;
 use Data::Dumper;
 use Text::CSV;
@@ -46,6 +49,7 @@ sub name {
 }
 
 sub validate {
+    my SGN::I18N $ui_transcriptomicsspreadsheetcsv_validate_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
@@ -62,7 +66,7 @@ sub validate {
     open(my $fh, '<', $filename) or die "Could not open file '$filename' $!";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype_upload.fieldbook_error.unreadable', 'Could not read file.'));
         print STDERR "Could not read file.\n";
         return \%parse_result;
     }
@@ -79,7 +83,7 @@ sub validate {
             @columns = $csv->column_names;
         }
         else {
-            $parse_result{'error'} = "Could not parse header row.";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'cross.could_not_parse_header_row', 'Could not parse header row.'));
             print STDERR "Could not parse header.\n";
             return \%parse_result;
         }
@@ -88,7 +92,7 @@ sub validate {
     my $header_col_1 = shift @columns;
     $header_col_1 =~ s/^\s+|\s+$//g;
     if ( $header_col_1 ne "sample_name" ) {
-      $parse_result{'error'} = "First cell must be 'sample_name'. Please, check your file.";
+      $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.first_cell_must_be_sample_name_please_check_your_file', 'First cell must be \'sample_name\'. Please, check your file.'));
       print STDERR "First cell must be 'sample_name'\n";
       return \%parse_result;
     }
@@ -96,7 +100,7 @@ sub validate {
     my $header_col_2 = shift @columns;
     $header_col_2 =~ s/^\s+|\s+$//g;
     if ($header_col_2 ne "device_id") {
-        $parse_result{'error'} = "Second cell must be 'device_id'. Please, check your file.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.second_cell_must_be_device_id_please_check_your_file', 'Second cell must be \'device_id\'. Please, check your file.'));
         print STDERR "Second cell must be 'device_id'\n";
         return \%parse_result;
     }
@@ -104,7 +108,7 @@ sub validate {
     my $header_col_3 = shift @columns;
     $header_col_3 =~ s/^\s+|\s+$//g;
     if ($header_col_3 ne "comments") {
-        $parse_result{'error'} = "Third cell must be 'comments'. Please, check your file.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.third_cell_must_be_comments_please_check_your_file', 'Third cell must be \'comments\'. Please, check your file.'));
         print STDERR "Third cell must be 'comments'\n";
         return \%parse_result;
     }
@@ -125,7 +129,7 @@ sub validate {
 
         foreach (@fields) {
             if (not $_=~/^[-+]?\d+\.?\d*$/ && $_ ne 'NA'){
-                $parse_result{'error'}= "It is not a real value for trancripts. Must be numeric or NA: '$_'";
+                $parse_result{'error'}= (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.it_is_not_a_real_value_for_trancripts_must_be_numeric_or_na_value', 'It is not a real value for trancripts. Must be numeric or NA: \'%{value}\'', {value => "$_"}));
                 return \%parse_result;
             }
         }
@@ -136,7 +140,7 @@ sub validate {
         or die "Could not open file '$nd_protocol_filename' $!";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype_upload.fieldbook_error.unreadable', 'Could not read file.'));
         print STDERR "Could not read file.\n";
         return \%parse_result;
     }
@@ -146,7 +150,7 @@ sub validate {
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        $parse_result{'error'} = "Could not parse header row.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'cross.could_not_parse_header_row', 'Could not parse header row.'));
         print STDERR "Could not parse header.\n";
         return \%parse_result;
     }
@@ -175,7 +179,7 @@ sub validate {
         $pos_right_head ne "pos_right" ||
         $functional_annotation_head ne "functional_annotation" ||
         $notes_head ne "notes") {
-      $parse_result{'error'} = "Header row must be 'gene_id', 'chromosome', 'pos_left', 'pos_right', 'functional_annotation', 'notes'. Please, check your file.";
+      $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.header_row_must_be_gene_id_chromosome_pos_left_pos_right_functional_annotat', 'Header row must be \'gene_id\', \'chromosome\', \'pos_left\', \'pos_right\', \'functional_annotation\', \'notes\'. Please, check your file.'));
       return \%parse_result;
     }
     while (my $line = <$fh>) {
@@ -191,19 +195,19 @@ sub validate {
         my $notes = $fields[5];
 
         if (!$gene_id){
-            $parse_result{'error'}= "Transcript name is required!";
+            $parse_result{'error'}= (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.transcript_name_is_required', 'Transcript name is required!'));
             return \%parse_result;
         }
         if (!defined($chromosome) && !length($chromosome)) {
-            $parse_result{'error'}= "Chromosome is required!";
+            $parse_result{'error'}= (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.chromosome_is_required', 'Chromosome is required!'));
             return \%parse_result;
         }
         if (!defined($pos_left) && !length($pos_left)){
-            $parse_result{'error'}= "Start position is required!";
+            $parse_result{'error'}= (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.start_position_is_required', 'Start position is required!'));
             return \%parse_result;
         }
         if (!defined($pos_right) && !length($pos_right)){
-            $parse_result{'error'}= "End position is required!";
+            $parse_result{'error'}= (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.end_position_is_required', 'End position is required!'));
             return \%parse_result;
         }
     }
@@ -213,7 +217,7 @@ sub validate {
     my @samples_missing = @{$samples_validator->validate($schema, $data_level, \@samples)->{'missing'}};
     if (scalar(@samples_missing) > 0) {
         my $samples_string = join ', ', @samples_missing;
-        $parse_result{'error'}= "The following samples in your file are not valid in the database (".$samples_string."). Please add them in a sampling trial first!";
+        $parse_result{'error'}= (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.the_following_samples_in_your_file_are_not_valid_in_the_database_samples_pl', 'The following samples in your file are not valid in the database (%{samples}). Please add them in a sampling trial first!', {samples => "$samples_string"}));
         return \%parse_result;
     }
 
@@ -239,7 +243,7 @@ sub validate {
 
         #If there are markers in the uploaded file that are not saved in the protocol, they will be returned along in the error message
         if (scalar(@transcripts_not_in_protocol)>0){
-            $parse_result{'error'} = "The following transcripts are not in the database for the selected protocol: ".join(',',@transcripts_not_in_protocol);
+            $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_validate_i18n, 'phenotype.upload.the_following_transcripts_are_not_in_the_database_for_the_selected_protocol', 'The following transcripts are not in the database for the selected protocol: %{values}', {values => "" . (join(',',@transcripts_not_in_protocol))}));
             return \%parse_result;
         }
     }
@@ -249,6 +253,7 @@ sub validate {
 
 
 sub parse {
+    my SGN::I18N $ui_transcriptomicsspreadsheetcsv_parse_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
@@ -274,7 +279,7 @@ sub parse {
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_parse_i18n, 'phenotype_upload.fieldbook_error.unreadable', 'Could not read file.'));
         print STDERR "Could not read file.\n";
         return \%parse_result;
     }
@@ -290,7 +295,7 @@ sub parse {
             @header = $csv->column_names;
         }
         else {
-            $parse_result{'error'} = "Could not parse header row.";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_parse_i18n, 'cross.could_not_parse_header_row', 'Could not parse header row.'));
             print STDERR "Could not parse header.\n";
             return \%parse_result;
         }
@@ -328,7 +333,7 @@ sub parse {
         or die "Could not open file '$nd_protocol_filename' $!";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_parse_i18n, 'phenotype_upload.fieldbook_error.unreadable', 'Could not read file.'));
         print STDERR "Could not read file.\n";
         return \%parse_result;
     }
@@ -345,7 +350,7 @@ sub parse {
             @columns = $csv->column_names;
         }
         else {
-            $parse_result{'error'} = "Could not parse header row of nd_protocol_file.";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_transcriptomicsspreadsheetcsv_parse_i18n, 'phenotype.upload.could_not_parse_header_row_of_nd_protocol_file', 'Could not parse header row of nd_protocol_file.'));
             print STDERR "Could not parse header of nd_protocol_file.\n";
             return \%parse_result;
         }

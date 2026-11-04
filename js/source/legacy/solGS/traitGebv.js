@@ -53,7 +53,7 @@ jQuery(window).load( function() {
   
         var gebvData = gebvDataRenderer();          
         if (gebvData == 'undefined') {
-            var message = 'There is no GEBV data to plot. Please report this problem';  
+            var message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_no_gebv_data", "There is no GEBV data to plot. Please report this problem") : 'There is no GEBV data to plot. Please report this problem');
             jQuery('#gebvPlot').append(message).show();
         } else {        
             var graph = jQuery.jqplot('gebvPlot', {
@@ -99,7 +99,7 @@ jQuery(window).load( function() {
                                 fontSize:5,
                             },
                             labelRenderer: jQuery.jqplot.CanvasAxisLabelRenderer,
-                            label: 'Genotypes',
+                            label: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_genotypes_axis", "Genotypes") : 'Genotypes'),
                         },
                         yaxis: {
                             tickRenderer: jQuery.jqplot.CanvasAxisTickRenderer,
@@ -107,7 +107,7 @@ jQuery(window).load( function() {
                                 fontSize: 10,
                             },                           
                             labelRenderer: jQuery.jqplot.CanvasAxisLabelRenderer,
-                            label: 'GEBV values',
+                            label: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_gebv_values_axis", "GEBV values") : 'GEBV values'),
                         },
                     }
                 });

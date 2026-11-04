@@ -30,6 +30,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
   
 use CXGN::Page::FormattingHelpers qw | info_section_html |;  
   #sgn id, collections, and sources
@@ -58,12 +60,12 @@ if($sources and @{$sources}) {
       $link="a(n) $source->{source_name} (ID unknown)";
     }
     if($link) {
-      $about_html.="This marker was derived from $link<br />";
+      $about_html.=(SGN::I18N::translate($c->i18n, "marker.detail.derived_from_prefix", "This marker was derived from ", undef, {entities => '<>&'}) . "$link<br />");
     }
   }
 }
 if($about_html) {
-  print info_section_html(title=>'Derivations',contents=>$about_html);
+  print info_section_html(title=>SGN::I18N::translate($c->i18n, "marker.detail.derivations", "Derivations", undef, {entities => '<>&'}), anchor_title => "Derivations",contents=>$about_html);
 }
 
 </%perl>

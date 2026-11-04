@@ -19,17 +19,33 @@ $variance_components
 </%args>
 
 <%perl>
+my %display_labels = (
+    "Additive genetic variance" => $c->i18n->p("solgs.interface.additive_genetic_variance", "Additive genetic variance"),
+    "Error variance" => $c->i18n->p("solgs.interface.error_variance", "Error variance"),
+    "SNP heritability (h)" => $c->i18n->p("solgs.interface.snp_heritability_h", "SNP heritability (h)")
+);
+my $display_rows = ref($variance_components) eq "ARRAY" ? [map {
+    if (ref($_) eq "ARRAY") {
+        my @row = @$_;
+        $row[0] = $display_labels{$row[0]} if defined($row[0]) && exists($display_labels{$row[0]});
+        \@row;
+    } else { $_; }
+} @$variance_components] : $variance_components;
+</%perl>
+
+
+<%perl>
 
 </%perl>
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Variance components",
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Variance components"
+    title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.variance_components", "Variance components"))
 &>     
   <& /page/columnar_table.mas,
-     headings   => ["Variance Components", "Estimates"], 
-     data        => $variance_components,
+     headings   => [$c->i18n->p("solgs.interface.variance_components_4ed83d", "Variance Components"), $c->i18n->p("solgs.interface.estimates", "Estimates")],
+     data        => $display_rows,
     __alt_freq   => 2,
     __alt_width  => 1,
     __alt_offset => 3,
@@ -38,3 +54,6 @@ $variance_components
 
 </&>
 
+<%once>
+use HTML::Entities ();
+</%once>

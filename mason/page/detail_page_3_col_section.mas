@@ -3,15 +3,17 @@ $col1_width_class => "col-sm-3"
 $col2_width_class => "col-sm-7"
 $col3_width_class => "col-sm-2"
 $icon_class => "glyphicon glyphicon-qrcode"
-$title => "A title."
+$title => HTML::Entities::encode_entities($c->i18n->p('global.page.detail_3_col.title_default', 'A title.'))
 $label_design_btn_id => undef
 $legacy_barcode_btn_id => undef
 $go_btn_id => undef
-$label_design_btn_text => "Label Designer (Recommended)"
-$legacy_barcode_text => "Legacy Barcode Generator"
-$go_btn_text => "Go"
+$label_design_btn_text => HTML::Entities::encode_entities($c->i18n->p('global.page.detail_3_col.label_designer', 'Label Designer (Recommended)'))
+$legacy_barcode_text => HTML::Entities::encode_entities($c->i18n->p('global.page.detail_3_col.legacy_barcode_generator', 'Legacy Barcode Generator'))
+$go_btn_text => HTML::Entities::encode_entities($c->i18n->p('global.page.detail_3_col.go', 'Go'))
 </%args>
-
+<%once>
+use HTML::Entities ();
+</%once>
 
 <div class="well">
     <div class="row">

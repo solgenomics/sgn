@@ -1,9 +1,11 @@
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext qw( $c );
+my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
 use CXGN::Page;
 my $page=CXGN::Page->new("Sol Genomics Network","Tyler");
 $page->header();
-print <<END_HEREDOC;
-
+print (qq~
 <br />
 <center>
 
@@ -37,7 +39,7 @@ print <<END_HEREDOC;
 </map>
 
 <img src="/documents/img/marker_diagram.png" usemap="#marker_search" border="0" alt="" />
-To search other markers use our <a href="/search/markers/markersearch.pl">marker search</a>.
+~ . SGN::I18N::translate($ui_i18n, "genotype.marker.to_search_other_markers_use_our", "To search other markers use our", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . qq~ <a href="/search/markers/markersearch.pl">~ . SGN::I18N::translate($ui_i18n, "genotype.marker.marker_search_55a844", "marker search", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . qq~</a>.
 
 </div>
 </td>
@@ -47,7 +49,7 @@ To search other markers use our <a href="/search/markers/markersearch.pl">marker
 </center>
 
 
-END_HEREDOC
+~);
 
 
 $page->footer();

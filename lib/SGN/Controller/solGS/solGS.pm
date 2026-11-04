@@ -23,6 +23,7 @@ use CXGN::Tools::Run;
 use JSON;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
+use SGN::I18N ();
 use SGN::Controller::solGS::Utils;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -51,13 +52,13 @@ The root page (/)
 
 sub population : Path('/solgs/population') Args() {
     my ( $self, $c, $training_pop_id, $gp, $protocol_id ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
     $training_pop_id = quotemeta($training_pop_id);
     $gp = quotemeta($gp);
     $protocol_id = quotemeta($protocol_id);
 
     if ( !$training_pop_id ) {
-        $c->stash->{message} =
-          "You can not access this page with out population id.";
+        $c->stash->{message} = SGN::I18N::translate($ui_solgs_i18n, "solgs.server.missing_population_id", "You can not access this page with out population id.");
         $c->stash->{template} = "/generic_message.mas";
     }
 
@@ -78,9 +79,12 @@ sub population : Path('/solgs/population') Args() {
 
     if ( !$cached ) {
         $c->stash->{message} =
-"Cached output for this training population  does not exist anymore.\n"
-          . "Please go to <a href=\"/solgs/search/\">the search page</a>"
-          . " and create the training population data.";
+            SGN::I18N::translate($ui_solgs_i18n, "solgs.server.cached_training_data_missing", "Cached output for this training population  does not exist anymore.\n")
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.please_go_to", "Please go to ")
+          . "<a href=\"/solgs/search/\">"
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.search_page_link", "the search page")
+          . "</a>"
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.create_training_population_data", " and create the training population data.");
 
         $c->stash->{template} = "/generic_message.mas";
     }
@@ -96,7 +100,7 @@ sub population : Path('/solgs/population') Args() {
         my $trial_page_url =
           $c->controller('solGS::Path')->trial_page_url($training_pop_id);
         $c->stash->{trial_detail_page} = $c->controller('solGS::Path')
-          ->create_hyperlink( $trial_page_url, 'See trial detail' );
+          ->create_hyperlink( $trial_page_url, SGN::I18N::translate($ui_solgs_i18n, "solgs.server.see_trial_detail", "See trial detail") );
 
         $c->stash->{analysis_type} =
           $c->controller('solGS::Path')->page_type($c);
@@ -253,6 +257,7 @@ sub selection_trait : Path('/solgs/selection/') Args() {
         $model_key, $training_pop_id, $trait_key,
         $trait_id,  $gp,              $protocol_id
     ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
     my $trait_abbr = $c->stash->{trait_abbr};
@@ -280,10 +285,13 @@ sub selection_trait : Path('/solgs/selection/') Args() {
 
     if ( !-s $gebvs_file ) {
         $model_page = $c->controller('solGS::Path')
-          ->create_hyperlink( $model_page, 'training model page' );
+          ->create_hyperlink( $model_page, SGN::I18N::translate($ui_solgs_i18n, "solgs.server.training_model_page", "training model page") );
 
-        $c->stash->{message} = "No cached output was found for this trait.\n"
-          . " Please go to the $model_page and run the prediction.";
+        $c->stash->{message} =
+            SGN::I18N::translate($ui_solgs_i18n, "solgs.server.no_cached_trait_output", "No cached output was found for this trait.\n")
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.please_go_to_space", " Please go to ")
+          . $model_page
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.run_prediction", " and run the prediction.");
 
         $c->stash->{template} = "/generic_message.mas";
     }
@@ -409,10 +417,10 @@ sub build_single_trait_model {
 
 sub trait : Path('/solgs/trait') Args(5) {
     my ( $self, $c, $trait_id, $key, $training_pop_id, $gp, $protocol_id ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     if ( !$training_pop_id || !$trait_id ) {
-        $c->stash->{message} =
-          "You can not access this page with out population id or trait id.";
+        $c->stash->{message} = SGN::I18N::translate($ui_solgs_i18n, "solgs.server.missing_population_or_trait_id", "You can not access this page with out population id or trait id.");
         $c->stash->{template} = "/generic_message.mas";
     }
 
@@ -452,8 +460,10 @@ sub trait : Path('/solgs/trait') Args(5) {
 
     if ( !$cached ) {
         $c->stash->{message} =
-            "Cached output for this model does not exist anymore.\n"
-          . " Please go to $training_pop_page and run the analysis.";
+            SGN::I18N::translate($ui_solgs_i18n, "solgs.server.cached_model_output_missing", "Cached output for this model does not exist anymore.\n")
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.please_go_to_space", " Please go to ")
+          . $training_pop_page
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.run_analysis", " and run the analysis.");
 
         $c->stash->{template} = "/generic_message.mas";
     }
@@ -482,7 +492,7 @@ sub trait : Path('/solgs/trait') Args(5) {
         my $trial_page_url =
           $c->controller('solGS::Path')->trial_page_url($training_pop_id);
         $c->stash->{trial_detail_page} = $c->controller('solGS::Path')
-          ->create_hyperlink( $trial_page_url, 'See trial detail' );
+          ->create_hyperlink( $trial_page_url, SGN::I18N::translate($ui_solgs_i18n, "solgs.server.see_trial_detail", "See trial detail") );
 
         $c->stash->{analysis_type} =
           $c->controller('solGS::Path')->page_type($c);
@@ -1009,6 +1019,7 @@ sub all_traits_output : Path('/solgs/traits/all/population') Args() {
     my ( $self, $c, $training_pop_id, $tr_txt, $traits_selection_id, $gp,
         $protocol_id )
       = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     $c->stash->{training_pop_id} = $training_pop_id;
 
@@ -1048,8 +1059,10 @@ sub all_traits_output : Path('/solgs/traits/all/population') Args() {
 
     if ( !@traits_ids ) {
         $c->stash->{message} =
-            "Cached output for this page does not exist anymore.\n"
-          . " Please go to $training_pop_page and run the analysis.";
+            SGN::I18N::translate($ui_solgs_i18n, "solgs.server.cached_page_output_missing", "Cached output for this page does not exist anymore.\n")
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.please_go_to_space", " Please go to ")
+          . $training_pop_page
+          . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.run_analysis", " and run the analysis.");
 
         $c->stash->{template} = "/generic_message.mas";
     }

@@ -7,16 +7,14 @@ $trial_id => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" id="new_trial_add_management_factor_header_close_btn" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTrialDesignManagementFactorsDialog">Add Management Factor to Trial</h4>
+                <button type="button" id="new_trial_add_management_factor_header_close_btn" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTrialDesignManagementFactorsDialog"><% $c->i18n->p("program.management_factor_add.title", "Add Management Factor to Trial") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="new_management_factor_form" name="new_management_factor_form">
                     <div class="form-group">
-                            <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="The allowed management factor types are defined
-in the server configuration file. Contact the 
-server administrator with questions."></span>&nbsp; Management factor type:</label>
+                            <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="<% $c->i18n->p("program.management_factor_add.type_help", "The allowed management factor types are defined\nin the server configuration file. Contact the \nserver administrator with questions.") |h %>"></span>&nbsp; <% $c->i18n->p("program.management_factor_add.type_label", "Management factor type:") |h %></label>
                             <div class="col-sm-8">
                                     <select class="form-control" id="new_management_factor_type" name="new_management_factor_type">
 %                                   foreach my $management_factor_type(@$management_factor_types){
@@ -26,32 +24,32 @@ server administrator with questions."></span>&nbsp; Management factor type:</lab
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Management factor description:</label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("program.management_factor_add.description", "Management factor description:") |h %></label>
                             <div class="col-sm-8">
-                                <input style="width:100%;" class="form-control" id="new_management_factor_description" name="new_management_factor_description" type="text" placeholder="e.g. Fertilizer Brand Sprayed with 20N40P50K"/>
+                                <input style="width:100%;" class="form-control" id="new_management_factor_description" name="new_management_factor_description" type="text" placeholder="<% $c->i18n->p("program.management_factor_add.description_example", "e.g. Fertilizer Brand Sprayed with 20N40P50K") |h %>"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Application schedule:</label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("program.management_factor_add.schedule", "Application schedule:") |h %></label>
                             <div class="col-sm-8">
-                                <input style="width:100%;" class="form-control" id="new_management_factor_schedule" name="new_management_factor_schedule" type="text" placeholder="e.g. Twice weekly on Mondays and Thursdays starting 1 July 2025"/>
+                                <input style="width:100%;" class="form-control" id="new_management_factor_schedule" name="new_management_factor_schedule" type="text" placeholder="<% $c->i18n->p("program.management_factor_add.schedule_example", "e.g. Twice weekly on Mondays and Thursdays starting 1 July 2025") |h %>"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Application start date:</label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("program.management_factor_add.start_date", "Application start date:") |h %></label>
                             <div class="col-sm-8">
                                 <input style="width:100%;" class="form-control" id="new_management_factor_start_date" name="new_management_factor_schedule" type="date"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Application end date:</label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("program.management_factor_add.end_date", "Application end date:") |h %></label>
                             <div class="col-sm-8">
                                 <input style="width:100%;" class="form-control" id="new_management_factor_end_date" name="new_management_factor_schedule" type="date"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Completion records:<br>
-                            <i style="font-weight:normal;">These can be modified later.</i></label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("program.management_factor_add.completions", "Completion records:") |h %><br>
+                            <i style="font-weight:normal;"><% $c->i18n->p("program.management_factor_add.completions_help", "These can be modified later.") |h %></i></label>
                             <div class="col-sm-8">
                                 <table>
                                     <tr>
@@ -69,8 +67,8 @@ server administrator with questions."></span>&nbsp; Management factor type:</lab
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" id="new_trial_add_management_factors_submit" >Submit</button>
-                <button type="button" id="new_trial_add_management_factor_footer_close_btn" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info" id="new_trial_add_management_factors_submit" ><% $c->i18n->p("trial.repetitive.submit", "Submit") |h %></button>
+                <button type="button" id="new_trial_add_management_factor_footer_close_btn" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>

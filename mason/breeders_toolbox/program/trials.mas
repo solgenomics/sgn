@@ -10,8 +10,8 @@ $program_id
 <table id="trial_summary_data_<% $program_id %>" class="display">
     <thead>
         <tr>
-            <th>Trial name</th>
-            <th>Description</th>
+            <th><% $c->i18n->p('trial.card.program_trials.column.name', 'Trial name') |h %></th>
+            <th><% $c->i18n->p('trial.card.program_trials.column.description', 'Description') |h %></th>
         </tr>
     </thead>
 </table>

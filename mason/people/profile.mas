@@ -26,40 +26,40 @@ $allow_treatment_edits => 0
 
 % if ($is_users_profile) {
 
-    <&| /page/info_section.mas, title=>'General Tools', collapsible=>0, collapsed=>0 &>
+    <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.general_tools", "General Tools")), anchor_title=>"General Tools", collapsible=>0, collapsed=>0 &>
         <div class="well">
-            <a href="/solpeople/personal-info.pl?action=edit&sp_person_id=<% $sp_person_id %>">View or update personal (contact and research) information</a><br />
-            <a href="/user/update">Update account information</a><br />
-            <a href="/forum/topics.pl">Post to SGN forum</a><br />
-	    <a href="/about/audit">View audit tables</a><br />
+            <a href="/solpeople/personal-info.pl?action=edit&sp_person_id=<% $sp_person_id %>"><% $c->i18n->p("community.people.personal_info_link", "View or update personal (contact and research) information") |h %></a><br />
+            <a href="/user/update"><% $c->i18n->p("community.people.update_account_link", "Update account information") |h %></a><br />
+            <a href="/forum/topics.pl"><% $c->i18n->p("community.people.profile_forum_link", "Post to SGN forum") |h %></a><br />
+	    <a href="/about/audit"><% $c->i18n->p("community.people.view_audit_tables", "View audit tables") |h %></a><br />
         </div>
     </&>
 
 %   if (exists($user_roles->{'curator'}) || exists($user_roles->{'sequencer'}) ) {
 
-    <&| /page/info_section.mas, title=>'Sequencer Tools', collapsible=>0, collapsed=>0, subtitle=>'For Curators and Sequencers' &>
+    <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.sequencer_tools", "Sequencer Tools")), anchor_title=>"Sequencer Tools", collapsible=>0, collapsed=>0, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_curators_and_sequencers", "For Curators and Sequencers")) &>
         <div class="well">
-            <a href="/solpeople/attribute_bacs.pl">Attribute a BAC to your chromosome sequencing project</a><br />
-            <a href="/maps/physical/clone_il_view.pl">View/update BAC IL mapping information (list view)</a><br />
-            <a href="/maps/physical/clone_reg.pl">View/update all BAC registry info (list view)</a></br>
-            <a href="/sequencing/tpf.pl">View TPF Files</a><br />
-            <a href="/sequencing/agp.pl">View AGP Files</a><br />
+            <a href="/solpeople/attribute_bacs.pl"><% $c->i18n->p("community.people.attribute_bac", "Attribute a BAC to your chromosome sequencing project") |h %></a><br />
+            <a href="/maps/physical/clone_il_view.pl"><% $c->i18n->p("community.people.view_update_bac_il", "View/update BAC IL mapping information (list view)") |h %></a><br />
+            <a href="/maps/physical/clone_reg.pl"><% $c->i18n->p("community.people.view_update_bac_registry", "View/update all BAC registry info (list view)") |h %></a></br>
+            <a href="/sequencing/tpf.pl"><% $c->i18n->p("community.people.view_tpf_files", "View TPF Files") |h %></a><br />
+            <a href="/sequencing/agp.pl"><% $c->i18n->p("community.people.view_agp_files", "View AGP Files") |h %></a><br />
         </div>
 
 %       if (exists($user_roles->{'curator'})) {
 
-            <&| /page/info_section.mas, title=>'AGP and TPF File Upload', collapsible=>1, collapsed=>1, subtitle=>'For Curators' &>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.agp_tpf_upload", "AGP and TPF File Upload")), anchor_title=>"AGP and TPF File Upload", collapsible=>1, collapsed=>1, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_curators", "For Curators")) &>
 
                 <div class="well">
                     <div style="margin-top: 1em">
-                        <center><h4>Upload Accessioned Golden Path (AGP) File</h4></center>
+                        <center><h4><% $c->i18n->p("community.people.upload_agp_file", "Upload Accessioned Golden Path (AGP) File") |h %></h4></center>
                         <hr>
 
                         <form class="form-horizontal" action="/sequencing/agp.pl" method="post" enctype="multipart/form-data">
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-6 control-label">For Chromosome #: </label>
+                                        <label class="col-sm-6 control-label"><% $c->i18n->p("community.people.for_chromosome", "For Chromosome #:") |h %> </label>
                                         <div class="col-sm-6">
                                             <input class="form-control" id="chrnuminput_agp" name="chr" type="text" size="2" maxlength="2" />
                                         </div>
@@ -67,7 +67,7 @@ $allow_treatment_edits => 0
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-2 control-label">File: </label>
+                                        <label class="col-sm-2 control-label"><% $c->i18n->p("community.people.file_label", "File:") |h %> </label>
                                         <div class="col-sm-10">
                                             <input type="hidden" name="filetype" value="agp" />
                                             <input id="agpinput" type="file" name="agp_file" value="Upload AGP file" />
@@ -77,14 +77,14 @@ $allow_treatment_edits => 0
                             </div>
                         </form>
 
-                        <center><h4>Upload Tiling Path Format (TPF) File</h4></center>
+                        <center><h4><% $c->i18n->p("community.people.upload_tpf_file", "Upload Tiling Path Format (TPF) File") |h %></h4></center>
                         <hr>
 
                         <form class="form-horizontal" action="/sequencing/tpf.pl" method="post" enctype="multipart/form-data">
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-6 control-label">For Chromosome #: </label>
+                                        <label class="col-sm-6 control-label"><% $c->i18n->p("community.people.for_chromosome", "For Chromosome #:") |h %> </label>
                                         <div class="col-sm-6">
                                             <input class="form-control" id="chrnuminput_tpf" name="chr" type="text" size="2" maxlength="2" />
                                         </div>
@@ -92,7 +92,7 @@ $allow_treatment_edits => 0
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-2 control-label">File: </label>
+                                        <label class="col-sm-2 control-label"><% $c->i18n->p("community.people.file_label", "File:") |h %> </label>
                                         <div class="col-sm-10">
                                             <input type="hidden" name="filetype" value="tpf" />
                                             <input id="tpfinput" type="file" name="tpfinput" value="Upload TPF file" />
@@ -114,19 +114,19 @@ $allow_treatment_edits => 0
 
 %   if (exists($user_roles->{'curator'}) || exists($user_roles->{'sequencer'}) || exists($user_roles->{'submitter'})) {
 
-    <&| /page/info_section.mas, title=>'QTL Data Submission', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+    <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.qtl_submission", "QTL Data Submission")), anchor_title=>"QTL Data Submission", collapsible=>0, collapsed=>0, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_submitters_up", "For Submitters and up")) &>
         <div class="well">
-            <a href="/phenome/qtl_form.pl">Upload and analyse your QTL data</a><br/>
+            <a href="/phenome/qtl_form.pl"><% $c->i18n->p("community.people.upload_analyse_qtl", "Upload and analyse your QTL data") |h %></a><br/>
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'Populations', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+    <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.populations", "Populations")), anchor_title=>"Populations", collapsible=>0, collapsed=>0, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_submitters_up", "For Submitters and up")) &>
         <div class="well">
             <% $populations_list %>
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'Job Submissions', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+    <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.job_submissions", "Job Submissions")), anchor_title=>"Job Submissions", collapsible=>0, collapsed=>0, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_submitters_up", "For Submitters and up")) &>
         <div class="well">
             <& /jobs/log.mas, sp_person_id => $sp_person_id &>
         </div>
@@ -138,28 +138,28 @@ $allow_treatment_edits => 0
 
     <div class="row">
         <div class="col-sm-6">
-            <&| /page/info_section.mas, title=>'Curator Tools', collapsible=>0, collapsed=>0, subtitle=>'For Curators' &>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.curator_tools", "Curator Tools")), anchor_title=>"Curator Tools", collapsible=>0, collapsed=>0, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_curators", "For Curators")) &>
                 <div class="well">
-                    <a href="/solpeople/admin/crash_test.pl">Test website error handling</a><br />
-                    <a href="/solpeople/admin/stats.pl">View user stats</a><br />
-                    <a href="/user/admin/quick_create_account">Create new user account</a><br />
-                    <a href="/solpeople/admin/create_organization.pl">Create new organization</a><br>
+                    <a href="/solpeople/admin/crash_test.pl"><% $c->i18n->p("community.people.test_error_handling", "Test website error handling") |h %></a><br />
+                    <a href="/solpeople/admin/stats.pl"><% $c->i18n->p("community.people.view_user_stats", "View user stats") |h %></a><br />
+                    <a href="/user/admin/quick_create_account"><% $c->i18n->p("community.people.create_user_account", "Create new user account") |h %></a><br />
+                    <a href="/solpeople/admin/create_organization.pl"><% $c->i18n->p("community.people.create_new_organization", "Create new organization") |h %></a><br>
 %       if ($allow_trait_edits) {
-                    <a href="/traits/design">Design new traits</a><br>
+                    <a href="/traits/design"><% $c->i18n->p("community.people.design_new_traits", "Design new traits") |h %></a><br>
 %       }
 %       if ($allow_treatment_edits) {
-                    <a href="/treatments/design">Design new treatments</a>
+                    <a href="/treatments/design"><% $c->i18n->p("community.people.design_new_treatments", "Design new treatments") |h %></a>
 %       }
                 </div>
             </&>
         </div>
         <div class="col-sm-6">
-            <&| /page/info_section.mas, title=>'Literature Mining', collapsible=>0, collapsed=>0, subtitle=>'For Curators' &>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.literature_mining", "Literature Mining")), anchor_title=>"Literature Mining", collapsible=>0, collapsed=>0, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_curators", "For Curators")) &>
                 <div class="well">
-                    <a href= "/search/pub_search.pl">Search the SGN publication database </a><br />
-                    <a href= "/search/pub_search.pl?w9b3_assigned_to=<% $sp_person_id %>">See your assigned publications</a><br />
-                    <a href= "/search/pub_search.pl?w9b3_status=pending">See publications pending curation</a><br />
-                    <a href= "/chado/fetch_pubmed.pl">Load new publications from PubMed</a><br />
+                    <a href= "/search/pub_search.pl"><% $c->i18n->p("community.people.search_publication_database", "Search the SGN publication database") |h %> </a><br />
+                    <a href= "/search/pub_search.pl?w9b3_assigned_to=<% $sp_person_id %>"><% $c->i18n->p("community.people.assigned_publications", "See your assigned publications") |h %></a><br />
+                    <a href= "/search/pub_search.pl?w9b3_status=pending"><% $c->i18n->p("community.people.pending_publications", "See publications pending curation") |h %></a><br />
+                    <a href= "/chado/fetch_pubmed.pl"><% $c->i18n->p("community.people.load_pubmed", "Load new publications from PubMed") |h %></a><br />
                 </div>
             </&>
         </div>
@@ -171,14 +171,14 @@ $allow_treatment_edits => 0
 
     <div class="row">
         <div class="col-sm-6">
-            <&| /page/info_section.mas, title=>'Loci Editor', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.loci_editor", "Loci Editor")), anchor_title=>"Loci Editor", collapsible=>0, collapsed=>0, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_submitters_up", "For Submitters and up")) &>
                 <div class="well">
                     <% $loci_editor_privileges %>
                 </div>
             </&>
         </div>
         <div class="col-sm-6">
-            <&| /page/info_section.mas, title=>'Annotated Loci', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.annotated_loci", "Annotated Loci")), anchor_title=>"Annotated Loci", collapsible=>0, collapsed=>0, subtitle=>HTML::Entities::encode_entities($c->i18n->p("community.people.for_submitters_up", "For Submitters and up")) &>
                 <div class="well">
                     <% $loci_annotations %>
                 </div>
@@ -187,7 +187,7 @@ $allow_treatment_edits => 0
     </div>
 %   }
 
-<&| /page/info_section.mas, title=>'User Status', collapsible=>0, collapsed=>0 &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.user_status", "User Status")), anchor_title=>"User Status", collapsible=>0, collapsed=>0 &>
     <div class="well">
         <% $user_status %>
     </div>

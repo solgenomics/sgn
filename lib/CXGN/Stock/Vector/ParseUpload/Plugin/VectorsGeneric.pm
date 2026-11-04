@@ -1,5 +1,8 @@
 package CXGN::Stock::Vector::ParseUpload::Plugin::VectorsGeneric;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose::Role;
 use CXGN::File::Parse;
 use CXGN::Stock::StockLookup;
@@ -12,6 +15,7 @@ use CXGN::BreedersToolbox::OrganismFuzzySearch;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui__validate_with_plugin_i18n = SGN::I18N::translate($c);
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -21,6 +25,7 @@ sub _validate_with_plugin {
     my %errors;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $ui__validate_with_plugin_i18n,
         file => $filename,
         required_columns => ['uniquename'],
         optional_columns => $editable_vector_stockprops,
@@ -57,8 +62,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
-        ];
+            (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.the_following_columns_are_not_recognized_value1_please_check_the_spr', 'The following columns are not recognized: %{value1}. Please check the spreadsheet format for the allowed columns.', {value1 => ("" . (join(', ', @$additional_columns)))}))];
         $self->_set_parse_errors(\%errors);
         return;
     }
@@ -76,7 +80,7 @@ sub _validate_with_plugin {
         }
     }
     if ( scalar(@stocks_existing) > 0 ) {
-        push @error_messages, "The following vector construct names are already used in the database (as different stock types): " . join(',', @stocks_existing);
+        push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.the_following_vector_construct_names_are_already_used_in_the_databas', 'The following vector construct names are already used in the database (as different stock types): %{value1}', {value1 => ("" . (join(',', @stocks_existing)))}));
     }
 
     if (scalar(@error_messages) >= 1) {

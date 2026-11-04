@@ -1,5 +1,8 @@
 package CXGN::Transformation::ParseUpload::Plugin::NormalizedqPCRData;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose::Role;
 use CXGN::File::Parse;
 use CXGN::Stock::StockLookup;
@@ -9,6 +12,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui__validate_with_plugin_i18n = SGN::I18N::translate($c);
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -23,6 +27,7 @@ sub _validate_with_plugin {
     my %errors;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $ui__validate_with_plugin_i18n,
         file => $filename,
         required_columns => [ 'accession_name', 'gene', 'relative_expression' ],
         optional_columns => ['number_of_replicates', 'standard_deviation'],
@@ -49,8 +54,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
-        ];
+            (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.the_following_columns_are_not_recognized_value1_please_check_the_spr', 'The following columns are not recognized: %{value1}. Please check the spreadsheet format for the allowed columns.', {value1 => ("" . (join(', ', @$additional_columns)))}))];
         $self->_set_parse_errors(\%errors);
         return;
     }
@@ -61,12 +65,12 @@ sub _validate_with_plugin {
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames', $seen_accession_names)->{'missing'}};
     if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+        push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.the_following_accessions_are_not_in_the_database_or_are_not_in_the_d', 'The following accessions are not in the database, or are not in the database as uniquenames: %{value1}', {value1 => ("" . (join(',',@accessions_missing)))}));
     }
 
     foreach my $gene_name (@$seen_genes) {
         if (!exists $vector_construct_genes{$gene_name}) {
-            push @error_messages, "Gene not in this vector construct: $gene_name.";
+            push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.gene_not_in_this_vector_construct_gene_name', 'Gene not in this vector construct: %{gene_name}.', {gene_name => ("" . ("$gene_name"))}));
         }
     }
 

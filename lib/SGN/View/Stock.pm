@@ -1,6 +1,9 @@
 package SGN::View::Stock;
+use SGN::I18N ();
+use HTML::Entities ();
 use base 'Exporter';
 use strict;
+use CatalystX::GlobalContext '$c';
 use warnings;
 
 our @EXPORT_OK = qw/
@@ -52,6 +55,7 @@ sub stock_table {
 
 sub related_stats {
     my ($stocks) = @_;
+    my SGN::I18N $stock_stats_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $stats = { };
     my $total = scalar @$stocks;
     for my $s (@$stocks) {
@@ -62,7 +66,8 @@ sub related_stats {
         push @$data, [ $stats->{$k}, $k ];
     }
     if( 1 < scalar keys %$stats ) {
-        push @$data, [ $total, "<b>Total</b>" ];
+        my $total_caption = HTML::Entities::encode_entities($stock_stats_i18n ? $stock_stats_i18n->p("global.page.columnar_table.total", "Total") : "Total");
+        push @$data, [ $total, "<b>$total_caption</b>" ];
     }
     return $data;
 }

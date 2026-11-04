@@ -1,0 +1,76 @@
+# Gestión de códigos de barras {#managing-barcodes}
+
+Las bases de datos SGN ofrecen herramientas para generar códigos de barras que identifican el material. Para abrir “Herramientas de códigos de barras”, pulse “Códigos de barras” en el menú “Gestionar”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image82.png')
+```
+
+La página “Herramientas de códigos de barras” ofrece cuatro opciones para generarlos:
+
+-   Código de barras individual
+
+-   Varios códigos de barras
+
+-   Códigos de barras para fenotipado de parcelas
+
+-   Códigos de barras de ensayos
+
+Para generar un solo código, pulse el enlace “Generar código de barras” en “Herramientas de códigos de barras”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image274.png')
+```
+
+En la sección “Generar código de barras”, indique el nombre y el tamaño del código y pulse “Generar código de barras”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image245.png')
+```
+
+La base de datos generará un código para el material. Puede imprimirlo para identificarlo; también aparecerá en la página correspondiente del material.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image264.png')
+```
+
+Si desea generar códigos para una lista de materiales, use la sección “Descargar códigos de barras de materiales”. Puede indicar sus nombres de tres maneras:
+
+1. Escriba los nombres del material o cópielos de otro archivo y péguelos en el cuadro (1).
+
+2. Elija una lista de materiales en “Listas” (2) y pásela al cuadro (1) con el botón “Pegar”.
+
+3. Cargue un “archivo de texto delimitado por tabuladores” con los nombres del material.
+
+4. Si lo desea, seleccione uno de los formatos de impresión disponibles.
+
+En “Configuración de impresión”, elija los ajustes deseados. Después de introducir los nombres y configurar la impresión, pulse “Descargar códigos de barras” al final de la página.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image248.png')
+```
+
+
+Para generar códigos de fenotipado para una lista de parcelas, use la sección “Descargar códigos de fenotipado de parcelas”. Puede indicar sus nombres de tres maneras:
+
+1. Escriba los nombres de las parcelas o cópielos de otro archivo y péguelos en el cuadro (1).
+
+2. Elija una lista de parcelas en “Listas” (2) y pásela al cuadro (1) con el botón “Pegar”.
+
+3. Cargue un “archivo de texto delimitado por tabuladores” con los nombres de las parcelas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/plot_pheno_barcode.png')
+```
+
+Si desea generar códigos para una lista de ensayos, use la sección “Descargar códigos de barras de ensayos”. Puede indicar sus nombres de tres maneras:
+
+1. Escriba los nombres de los ensayos o cópielos de otro archivo y péguelos en el cuadro (1).
+
+2. Elija una lista de ensayos en “Listas” (2) y pásela al cuadro (1) con el botón “Pegar”.
+
+3. Cargue un “archivo de texto delimitado por tabuladores” con los nombres de los ensayos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_barcode.png')
+```

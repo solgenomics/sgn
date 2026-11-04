@@ -9,12 +9,13 @@ make a link to '/sgn-events' in an event notice SGN is participating.
 <%perl>
 
 use strict;
+use HTML::Entities ();
 use File::Spec;
 use CXGN::Tools::File;
 
 my $file = File::Spec->catfile($c->config->{'homepage_files_dir'}, 'sgn_events.txt');
 
-my $contents = "No SGN event is scheduled at the moment.<br /><br />";
+my $contents = HTML::Entities::encode_entities($c->i18n->p('global.sgn_events.unavailable', 'No SGN event is scheduled at the moment.')) . "<br /><br />";
 
 eval {
   $contents = CXGN::Tools::File::get_sections($file);
@@ -24,6 +25,6 @@ eval {
 </%perl>
 
 <div class="boxbgcolor1" style="margin:0px;">
-<div class="boxheading">SGN Presentations</div>
+<div class="boxheading"><% $c->i18n->p('global.sgn_events.heading', 'SGN Presentations') |h %></div>
 <div class="boxcontent"><% $contents %></div>
 </div>

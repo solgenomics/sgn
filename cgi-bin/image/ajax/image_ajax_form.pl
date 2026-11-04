@@ -4,13 +4,14 @@ use warnings;
 
 my $image_ajax_form = CXGN::ImageAjaxForm->new();
 
-package CXGN::ImageAjaxForm;
+package CXGN::ImageAjaxForm; ## no critic (Modules::RequireFilenameMatchesPackage) # This CGI script intentionally declares its historical page package.
 
 use CatalystX::GlobalContext '$c';
 
 use base "CXGN::Page::Form::AjaxFormPage";
 
 use JSON;
+use SGN::I18N;
 use SGN::Image;
 use Try::Tiny;
 
@@ -39,6 +40,7 @@ sub define_object {
 
 sub generate_form {
     my $self = shift;
+    my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
 
     my $form_id = 'image_form';
     my %args    = $self->get_args();
@@ -70,7 +72,7 @@ sub generate_form {
     }
 
     $form->add_field(
-        display_name => "Image Name:",
+        display_name => $ui_i18n->p("community.image.image_name", "Image Name:"),
         field_name   => "name",
         contents     => $name,
         length       => 15,
@@ -79,7 +81,7 @@ sub generate_form {
         setter       => "set_name"
     );
     $form->add_field(
-        display_name => "Image Description: ",
+        display_name => $ui_i18n->p("community.image.image_description", "Image Description: "),
         field_name   => "description",
         contents     => $description,
         length       => 40,
@@ -88,17 +90,17 @@ sub generate_form {
         setter       => "set_description"
     );
     $form->add_hidden(
-        display_name => "Image ID",
+        display_name => $ui_i18n->p("community.image.image_id", "Image ID"),
         field_name   => "object_id",
         contents     => $object_id
     );
     $form->add_hidden(
-        display_name => "Action",
+        display_name => $ui_i18n->p("community.image.action", "Action"),
         field_name   => "action",
         contents     => "store"
     );
     $form->add_label(
-        display_name => "Uploaded by: ",
+        display_name => $ui_i18n->p("community.image.uploaded_by", "Uploaded by: "),
         field_name   => "submitter",
         contents     => $submitter_link,
     );

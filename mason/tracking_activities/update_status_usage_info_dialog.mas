@@ -9,28 +9,28 @@
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <div class="modal-header" style="text-align: center">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title" id="updateStatusUsageInfoDialog">Update Status as Completed/Terminated and Undo Options</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="updateStatusUsageInfoDialog"><% $c->i18n->p("transformation.root.update_status_as_completed_terminated_and_undo_options", "Update Status as Completed/Terminated and Undo Options") |h %></h4>
                         </div>
                         <div class="modal-body">
                             <div class="container-fluid">
-                                <p> Only curators can update status to completed/terminated or undo the update status.</p>
+                                <p> <% $c->i18n->p("transformation.root.only_curators_can_update_status_to_completed_terminated_or_undo", "Only curators can update status to completed/terminated or undo the update status.") |h %></p>
                                 <hr class ="solid">
                                 <h4>
-                                    Updating status to completed/terminated vs. Deleting:
+                                    <% $c->i18n->p("transformation.root.updating_status_to_completed_terminated_vs_deleting", "Updating status to completed/terminated vs. Deleting:") |h %>
                                 </h4>
-                                <p> Terminating a process/experiment is different from deleting a process/experiment.
-                                <li>Deleting a process/experiment removes its identifier from the database. Marking a process/experiment as completed/terminated inactivates that process/experiment, but its related information is still kept in the database.</li>
-                                <li>You can delete a process/experiment only if there is no associated data</li>
-                                <li>You can still access the details page but the page is marked as "COMPLETED" or "TERMINATED". You can no longer add additional info to that page.</li>
+                                <p> <% $c->i18n->p("transformation.root.terminating_a_process_experiment_is_different_from_deleting_a_process", "Terminating a process/experiment is different from deleting a process/experiment.") |h %>
+                                <li><% $c->i18n->p("transformation.root.deleting_a_process_experiment_removes_its_identifier_from_the_database", "Deleting a process/experiment removes its identifier from the database. Marking a process/experiment as completed/terminated inactivates that process/experiment, but its related information is still kept in the database.") |h %></li>
+                                <li><% $c->i18n->p("transformation.root.you_can_delete_a_process_experiment_only_if_there_is", "You can delete a process/experiment only if there is no associated data") |h %></li>
+                                <li><% $c->i18n->p("transformation.root.you_can_still_access_the_details_page_but_the_page", "You can still access the details page but the page is marked as \"COMPLETED\" or \"TERMINATED\". You can no longer add additional info to that page.") |h %></li>
                                 <hr class ="solid">
                                 <h4>
-                                    Undo updating status:
+                                    <% $c->i18n->p("transformation.root.undo_updating_status", "Undo updating status:") |h %>
                                 </h4>
-                                <p>Completed or Terminated status can be reversed by using UNDO option. Deleting a process/experiment cannot be undone</p>
+                                <p><% $c->i18n->p("transformation.root.completed_or_terminated_status_can_be_reversed_by_using_undo", "Completed or Terminated status can be reversed by using UNDO option. Deleting a process/experiment cannot be undone") |h %></p>
                             </div>
                             <div class="modal-footer">
-                                <button id="close_update_status_usage_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                <button id="close_update_status_usage_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
                             </div>
                         </div>
                     </div>

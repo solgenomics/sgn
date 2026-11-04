@@ -28,6 +28,8 @@ $plot_name_template => undef
 </%args>
 
 <%init>
+use HTML::Entities ();
+use CXGN::JSONUtils qw(decode_stored_json);
 my ($dap, $dah);
 
 sub _normalize_to_ymd {
@@ -96,8 +98,7 @@ my $dah_display = $display_dap_dah ? _limit_days_display($dah, _positive_integer
 
 my ($plot_name_template_name, $plot_name_template_display);
 if ($plot_name_template) {
-    require JSON;
-    my $tmpl = eval { JSON::decode_json($plot_name_template) };
+    my $tmpl = eval { decode_stored_json($plot_name_template) };
     if ($tmpl) {
         ($plot_name_template_name) = keys %$tmpl;
         my $name_attributes = $tmpl->{$plot_name_template_name}->{name_attributes} || [];
@@ -114,64 +115,64 @@ if ($plot_name_template) {
         <table class="table table-hover table-bordered" >
 
             <tr>
-                <td><b>Trial Name</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.name', 'Trial Name') | h %></b></td>
                 <td>
                     <div id="trial_name">
 % if ($trial_name) {
-%   print "$trial_name";
+%   print HTML::Entities::encode_entities($trial_name);
 % } else {
-%   print "<span class='text-danger'>[No Trial Name]</span>";
+%   print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.name', '[No Trial Name]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Breeding Program </b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.program', 'Breeding Program ') | h %></b></td>
                 <td>
                     <span id="breeding_program">
 % if ($breeding_program_name) {
-                    <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
+                    <a href="/breeders/program/<% $breeding_program_id | h %>"><% $breeding_program_name | h %></a>
 % }
 % else {
-%  print "<span class='text-danger'>[No Breeding Program]</span>";
+%  print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.program', '[No Breeding Program]')) . "</span>";
 % }
                     </span>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Trial Location</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.location', 'Trial Location') | h %></b></td>
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
-%  print "$location_name ( $country_name )";
+%  print HTML::Entities::encode_entities("$location_name ( $country_name )");
 % } else {
-%  print "<span class='text-danger'>[No Location]</span>";
+%  print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.location', '[No Location]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Year</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.year', 'Year') | h %></b></td>
                 <td>
                     <div id="trial_year">
 % if ($year) {
-%  print "$year";
+%  print HTML::Entities::encode_entities($year);
 % } else {
-%  print "<span class='text-danger'>[No Year]</span>";
+%  print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.year', '[No Year]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Stock Type Being Evaluated in This Trial</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.stock_type', 'Stock Type Being Evaluated in This Trial') | h %></b></td>
                 <td>
                     <div id="stock_type_in_trial">
 % if ($trial_stock_type) {
-%     print "$trial_stock_type";
+%     print HTML::Entities::encode_entities($trial_stock_type);
 % } else {
 %     print "accession";
 % }
@@ -180,111 +181,111 @@ if ($plot_name_template) {
             </tr>
 
 	    <tr>
-                <td><b>Number of Stocks in This Trial</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.stock_count', 'Number of Stocks in This Trial') | h %></b></td>
                 <td>
                     <div id="stock_number_in_trial">
 % if ($trial_stock_count) {
-%     print "$trial_stock_count";
+%     print HTML::Entities::encode_entities($trial_stock_count);
 % } else {
-% print "<span class='text-danger'>[No Stocks in Trial]</span>";
+% print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.stocks', '[No Stocks in Trial]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Trial Type</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.type', 'Trial Type') | h %></b></td>
                 <td>
                     <div id="trial_type">
 % if ($trial_type) {
-%  print "$trial_type";
+%  print HTML::Entities::encode_entities($trial_type);
 % } else {
-% print "<span class='text-danger'>[Type not set]</span>";
+% print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.type', '[Type not set]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Planting Date</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.planting_date', 'Planting Date') | h %></b></td>
                 <td>
                     <div id="planting_date">
 % if ($planting_date) {
-<a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
+<a href="/breeders/trial/<% $trial_id | h %>?currentDate=<% $planting_date | h %>" ><% $planting_date | h %></a>
 % if (defined $dap_display) {
 &nbsp;<span>| DAP: <% $dap_display %> </span>
 % }
 % } else {
-%  print "<span class='text-danger'>[No Planting Date]</span>";
+%  print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.planting_date', '[No Planting Date]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
 % if ($transplanting_date && $transplanting_date ne '') {
 <tr>
-    <td><b>Transplanting Date</b></td>
+    <td><b><% $c->i18n->p('trial.summary.label.transplanting_date', 'Transplanting Date') | h %></b></td>
     <td>
         <div id="transplanting_date">
-            <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $transplanting_date %>" ><% $transplanting_date %></a>
+            <a href="/breeders/trial/<% $trial_id | h %>?currentDate=<% $transplanting_date | h %>" ><% $transplanting_date | h %></a>
         </div>
     </td>
 </tr>
 % }
             <tr>
-                <td><b>Harvest Date</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.harvest_date', 'Harvest Date') | h %></b></td>
                 <td>
                     <div id="harvest_date">
 % if ($harvest_date) {
-<a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
+<a href="/breeders/trial/<% $trial_id | h %>?currentDate=<% $harvest_date | h %>" ><% $harvest_date | h %></a>
 % if (defined $dah_display) {
 &nbsp;<span> | DAH: <% $dah_display %> </span>
 % }
 % } else {
-%  print "<span class='text-danger'>[No Harvest Date]</span>";
+%  print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.harvest_date', '[No Harvest Date]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Description</b></td>
+            <tr><td><b><% $c->i18n->p('trial.summary.label.description', 'Description') | h %></b></td>
                 <td>
 % if ($trial_description) {
-%  print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
+%  print "<div id='trial_description' style='white-space: pre-wrap;'>" . HTML::Entities::encode_entities($trial_description) . "</div>";
 % } else {
-%  print "<div id='trial_description'><span class='text-danger'>[No Description]</span></div>";
+%  print "<div id='trial_description'><span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.description', '[No Description]')) . "</span></div>";
 % }
                 </td>
             </tr>
 
             <tr>
-                <td><b>Folder</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.folder', 'Folder') | h %></b></td>
                 <td>
-                    <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+                    <span id="trial_folder_div"><a href="/folder/<% $folder_id | h %>"><% $folder_name | h %></a></span>
                     <br/><br/>
-                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link"><% $c->i18n->p('trial.summary.folder.new', 'New Folder') | h %></button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link"><% $c->i18n->p('trial.summary.folder.change', 'Change Folder') | h %></button>
                 </td>
             </tr>
 
-	    <tr><td><b>Created by</b></td>
+	    <tr><td><b><% $c->i18n->p('trial.summary.label.owner', 'Created by') | h %></b></td>
                 <td>
                     <div id="trial_owner">
 % if ($trial_owner) {
 %  print "$trial_owner";
 % } else {
-%  print "<span class='text-danger'>[N/A]</span>";
+%  print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.owner', '[N/A]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Latest Trial Activity</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.latest_activity', 'Latest Trial Activity') | h %></b></td>
                 <td>
                         <div id="latest_trial_activity">
 % if ($latest_trial_activity) {
-%  print "<span class='text-success'>$latest_trial_activity</span>";
+%  print "<span class='text-success'>" . HTML::Entities::encode_entities($latest_trial_activity) . "</span>";
 % } else {
-%  print "<span class='text-danger'>[No Record]</span>";
+%  print "<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.activity', '[No Record]')) . "</span>";
 % }
                         </div>
                     </td>
@@ -292,11 +293,11 @@ if ($plot_name_template) {
 
 % if ($plot_name_template_display) {
             <tr>
-                <td><b>Plot Name Template</b></td>
+                <td><b><% $c->i18n->p('trial.summary.label.plot_name_template', 'Plot Name Template') | h %></b></td>
                 <td>
                     <div id="plot_name_template">
-                        <div><b><% $plot_name_template_name %></b></div>
-                        <div><% $plot_name_template_display %></div>
+                        <div><b><% $plot_name_template_name | h %></b></div>
+                        <div><% $plot_name_template_display | h %></div>
                     </div>
                 </td>
             </tr>
@@ -307,61 +308,65 @@ if ($plot_name_template) {
     </div>
     <div class="col-sm-4">
         <div class="well well-sm">
-            <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+            <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> HTML::Entities::encode_entities($trial_name), format=>"trial_qrcode"  &>
         </div>
 
         <table class="table table-hover table-bordered">
-            <tr><td><b>Plot Width (m)</b></td>
+            <tr><td><b><% $c->i18n->p('trial.summary.label.plot_width', 'Plot Width (m)') | h %></b></td>
                 <td>
                     <div id="plot_width">
 % if ($plot_width) {
-%  print "$plot_width";
+%  print HTML::Entities::encode_entities($plot_width);
 % } else {
-%  print "<span class='text-default'>[No Plot Width]</span>";
+%  print "<span class='text-default'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.plot_width', '[No Plot Width]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
-            <tr><td><b>Plot Length (m)</b></td>
+            <tr><td><b><% $c->i18n->p('trial.summary.label.plot_length', 'Plot Length (m)') | h %></b></td>
                 <td>
                     <div id="plot_length">
 % if ($plot_length) {
-%  print "$plot_length";
+%  print HTML::Entities::encode_entities($plot_length);
 % } else {
-%  print "<span class='text-default'>[No Plot Length]</span>";
+%  print "<span class='text-default'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.plot_length', '[No Plot Length]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
-            <tr><td><b>Field Size (ha)</b></td>
+            <tr><td><b><% $c->i18n->p('trial.summary.label.field_size', 'Field Size (ha)') | h %></b></td>
                 <td>
                     <div id="field_size">
 % if ($field_size) {
-%  print "$field_size";
+%  print HTML::Entities::encode_entities($field_size);
 % } else {
-%  print "<span class='text-default'>[No Field Size]</span>";
+%  print "<span class='text-default'>" . HTML::Entities::encode_entities($c->i18n->p('trial.summary.empty.field_size', '[No Field Size]')) . "</span>";
 % }
                     </div>
                 </td>
             </tr>
-            <tr><td><b>Trial Will Be Genotyped</b></td>
+            <tr><td><b><% $c->i18n->p('trial.summary.label.planned_genotyping', 'Trial Will Be Genotyped') | h %></b></td>
                 <td>
                     <div id="planned_to_be_genotyped">
-% if ($field_trial_is_planned_to_be_genotyped) {
-%  print "$field_trial_is_planned_to_be_genotyped";
+% if ($field_trial_is_planned_to_be_genotyped && $field_trial_is_planned_to_be_genotyped eq 'yes') {
+    <% $c->i18n->p('trial.summary.plan.yes', 'yes') | h %>
+% } elsif (!$field_trial_is_planned_to_be_genotyped || $field_trial_is_planned_to_be_genotyped eq 'no') {
+    <% $c->i18n->p('trial.summary.plan.no', 'no') | h %>
 % } else {
-%  print "no";
+    <% $field_trial_is_planned_to_be_genotyped | h %>
 % }
                     </div>
                 </td>
             </tr>
-            <tr><td><b>Trial Will Be In Crosses</b></td>
+            <tr><td><b><% $c->i18n->p('trial.summary.label.planned_crossing', 'Trial Will Be In Crosses') | h %></b></td>
                 <td>
                     <div id="planned_to_cross">
-% if ($field_trial_is_planned_to_cross) {
-%  print "$field_trial_is_planned_to_cross";
+% if ($field_trial_is_planned_to_cross && $field_trial_is_planned_to_cross eq 'yes') {
+    <% $c->i18n->p('trial.summary.plan.yes', 'yes') | h %>
+% } elsif (!$field_trial_is_planned_to_cross || $field_trial_is_planned_to_cross eq 'no') {
+    <% $c->i18n->p('trial.summary.plan.no', 'no') | h %>
 % } else {
-%  print "no";
+    <% $field_trial_is_planned_to_cross | h %>
 % }
                     </div>
                 </td>

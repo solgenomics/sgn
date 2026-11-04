@@ -6,16 +6,16 @@
         <div class="panel-body">
 
             <div class="well well-sm">
-                <p>If a previous imaging event on this field experiment has already completed the standard process and has ground control points (GCPs) defined, then that imaging event can be used to automate the rest of the standard process on this new imaging event.</p>
+                <p><% $c->i18n->p("drone.interface.if_a_previous_imaging_event_on_this_field_experiment_has_already_completed_the", "If a previous imaging event on this field experiment has already completed the standard process and has ground control points (GCPs) defined, then that imaging event can be used to automate the rest of the standard process on this new imaging event.") |h %></p>
             </div>
 
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Has a previous imaging event on this field trial completed the standard process and also has GCPs defined already?: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.has_a_previous_imaging_event_on_this_field_trial_completed_the_standard_proces", "Has a previous imaging event on this field trial completed the standard process and also has GCPs defined already?:") |h %> </label>
                     <div class="col-sm-6">
                         <select class="form-control" id="manage_drone_imagery_standard_process_interative_ground_control_points_option">
-                            <option value="No">No</option>
-                            <option value="Yes">Yes</option>
+                            <option value="No"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                            <option value="Yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                         </select>
                     </div>
                 </div>
@@ -26,7 +26,7 @@
                     <div class="panel panel-default">
                         <div class="panel-body">
                             <div class="form-group form-group-sm">
-                                <label class="col-sm-6 control-label">Select the aerial imaging event to use as a template: </label>
+                                <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.select_the_aerial_imaging_event_to_use_as_a_template_label", "Select the aerial imaging event to use as a template:") |h %> </label>
                                 <div class="col-sm-6">
                                     <div id="manage_drone_imagery_standard_process_interactive_ground_control_points_select"></div>
                                 </div>
@@ -36,10 +36,10 @@
 
                             <div class="well well-sm">
                                 <ul>
-                                    <li>Click on the ground control points (GCPs) in the image below and save them.</li>
-                                    <li>Please click and save at least three points. The names of the GCPs MUST be consistent across imaging events!</li>
-                                    <li>For best results, use ground control points at the far four corners of the field.</li>
-                                    <li>You can zoom out on your browser (Cntrl + -).</li>
+                                    <li><% $c->i18n->p("drone.interface.click_on_the_ground_control_points_gcps_in_the_image_below_and_save_them", "Click on the ground control points (GCPs) in the image below and save them.") |h %></li>
+                                    <li><% $c->i18n->p("drone.interface.please_click_and_save_at_least_three_points_the_names_of_the_gcps_must_be_cons", "Please click and save at least three points. The names of the GCPs MUST be consistent across imaging events!") |h %></li>
+                                    <li><% $c->i18n->p("drone.interface.for_best_results_use_ground_control_points_at_the_far_four_corners_of_the_fiel", "For best results, use ground control points at the far four corners of the field.") |h %></li>
+                                    <li><% $c->i18n->p("drone.interface.you_can_zoom_out_on_your_browser_cntrl", "You can zoom out on your browser (Cntrl + -).") |h %></li>
                                 </ul>
                             </div>
 
@@ -48,8 +48,8 @@
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_ground_control_points_step">Draw Computed Plot Polygons</button>
-                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_ground_control_points_step_confirm">Confirm and Save</button>
+                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_ground_control_points_step"><% $c->i18n->p("drone.interface.draw_computed_plot_polygons", "Draw Computed Plot Polygons") |h %></button>
+                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_ground_control_points_step_confirm"><% $c->i18n->p("drone.interface.confirm_and_save", "Confirm and Save") |h %></button>
                                 </center>
                             </div>
 

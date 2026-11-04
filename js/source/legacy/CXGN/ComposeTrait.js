@@ -16,13 +16,13 @@ function display_matching_traits () {
         trait_html = format_options_list(matching_traits);
     }
     else {
-        trait_html = 'No matching traits.';
+        trait_html = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.no_matching_traits", "No matching traits.") : 'No matching traits.');
     }
     if (new_traits.length > 0) {
         new_trait_html = format_options_list(new_traits);
     }
     else {
-        new_trait_html = 'No new traits.';
+        new_trait_html = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.no_new_traits", "No new traits.") : 'No new traits.');
     }
     jQuery('#existing_traits').html(trait_html);
     jQuery('#new_traits').html(new_trait_html);

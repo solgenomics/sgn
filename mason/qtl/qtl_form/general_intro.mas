@@ -17,26 +17,20 @@ $guide
 
 </%args>
 
-% if (!$guide) {$guide = 'guidelines';}
+% if (!$guide) {$guide = $c->i18n->p("analysis.qtl.ui.guidelines", "guidelines");}
 
-<p>The uploading of QTL data needs to be done in one session. 
-  Therefore, prepare your data files in the required format before 
-  starting the process. Please read the submission <% lc($guide) %> first. If you 
-  would like to have the formatting of your dataset checked 
-  beforehand, send your data to: <a href=mailto:iyt2\@cornell.edu>iyt2@cornell.edu</a>.
+<p><% $c->i18n->p("analysis.qtl.ui.the_uploading_of_qtl_data_needs_to_be_done_in", "The uploading of QTL data needs to be done in one session. \n  Therefore, prepare your data files in the required format before \n  starting the process. Please read the submission") |h %> <% lc($guide) %> <% $c->i18n->p("analysis.qtl.ui.first_if_you_would_like_to_have_the_formatting_of", "first. If you \n  would like to have the formatting of your dataset checked \n  beforehand, send your data to:") |h %> <a href=mailto:iyt2\@cornell.edu>iyt2@cornell.edu</a>.
 </p> 
         
-<p>Required data:</p>
+<p><% $c->i18n->p("analysis.qtl.ui.required_data", "Required data:") |h %></p>
        
 <ul>
-  <li>Some basic information about the population,</li>
-  <li>Traits data file (tab delimited),</li>
-  <li>Phenotype data file (tab delimited),</li> 
-  <li>Genotype data file (tab delimited) and</li> 
-  <li>Statistical parameters.</li>
-  <li><i>Markers with their sequences need to be already in SGN. 
-      Read <a href="/cview/help/map_submission">here</a> on how 
-      to submit markers to SGN.
+  <li><% $c->i18n->p("analysis.qtl.ui.some_basic_information_about_the_population", "Some basic information about the population,") |h %></li>
+  <li><% $c->i18n->p("analysis.qtl.ui.traits_data_file_tab_delimited", "Traits data file (tab delimited),") |h %></li>
+  <li><% $c->i18n->p("analysis.qtl.ui.phenotype_data_file_tab_delimited", "Phenotype data file (tab delimited),") |h %></li><% ' ' %>
+  <li><% $c->i18n->p("analysis.qtl.ui.genotype_data_file_tab_delimited_and", "Genotype data file (tab delimited) and") |h %></li><% ' ' %>
+  <li><% $c->i18n->p("analysis.qtl.ui.statistical_parameters", "Statistical parameters.") |h %></li>
+  <li><i><% $c->i18n->p("analysis.qtl.ui.markers_with_their_sequences_need_to_be_already_in_sgn", "Markers with their sequences need to be already in SGN. \n      Read") |h %> <a href="/cview/help/map_submission"><% $c->i18n->p("global.page.comments.link_here", "here") |h %></a> <% $c->i18n->p("analysis.qtl.ui.on_how_to_submit_markers_to_sgn", "on how \n      to submit markers to SGN.") |h %>
   </i>
 </ul>
 

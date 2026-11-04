@@ -1,0 +1,21 @@
+# إدارة التنزيلات {#managing-downloads}
+
+يمكنك باستخدام “القوائم” تنزيل ملفات الأنماط الظاهرية وبيانات التجارب والنسب والأنماط الجينية GBS وملفات ضبط جودة الأنماط الجينية GBS إلى جهازك. اختر “التنزيلات” من قائمة “إدارة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image255.png')
+```
+
+لكل فئة، اختر من “القوائم” قائمة عينات لتنزيل أنماطها الظاهرية أو نسبها أو أنماطها الجينية GBS أو بيانات ضبط الجودة GBS. لتنزيل بيانات التجربة، قدّم قائمة تجارب؛ أما بيانات الأنماط الظاهرية وضبط جودة GBS فيمكن تنزيلها باستخدام قائمة تجارب أو صفات أيضًا.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_meta_data_download.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image287.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image182.png')
+```

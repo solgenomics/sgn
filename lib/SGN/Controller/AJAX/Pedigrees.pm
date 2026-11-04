@@ -12,10 +12,14 @@ use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use utf8;
 use JSON;
+use HTML::Entities ();
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 __PACKAGE__->config(
+    # ASCII JSON escapes keep the complete owned response stable through both
+    # JSON and iframe text/html serialization; decoded scientific values match.
+    json_options_encode => { ascii => 1 },
     default   => 'application/json',
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
@@ -40,7 +44,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload pedigrees!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('pedigree.server.you_must_be_logged_in_to_upload_pedigrees', 'You must be logged in to upload pedigrees!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -49,7 +53,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         $user_name = $p->get_username;
     } else {
         if (!$c->user()){
-            $c->stash->{rest} = {error=>'You must be logged in to upload pedigrees!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('pedigree.server.you_must_be_logged_in_to_upload_pedigrees', 'You must be logged in to upload pedigrees!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -58,7 +62,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload pedigrees'};
+        $c->stash->{rest} = {error=>$c->i18n->p('pedigree.server.only_a_submitter_or_a_curator_can_upload_pedigrees', 'Only a submitter or a curator can upload pedigrees')};
         $c->detach();
     }
 
@@ -88,14 +92,14 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $archived_filename_with_path = $uploader->archive();
 
     if (!$archived_filename_with_path) {
-	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+	$c->stash->{rest} = {error => $c->i18n->p('pedigree.server.could_not_save_file_upload_original_name_in_archive', 'Could not save file %{upload_original_name} in archive', {upload_original_name => $upload_original_name}),};
 	return;
     }
 
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
 
-    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    my $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('PedigreesGeneric');
     my $parsed_data = $parser->parse();
 
@@ -103,13 +107,13 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p('pedigree.server.could_not_get_parsing_errors', 'Could not get parsing errors')};
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
             my $error_messages = $parse_errors->{'error_messages'};
             foreach my $error_string (@$error_messages){
-                $return_error .= $error_string."<br>";
+                $return_error .= HTML::Entities::encode_entities($error_string)."<br>";
             }
         }
         $c->stash->{rest} = {error_string => $return_error};
@@ -126,7 +130,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $pedigree_info = '';
     if ($pedigree_check) {
         foreach my $pedigree (@$pedigree_check){
-            $pedigree_info .= $pedigree."<br>";
+            $pedigree_info .= HTML::Entities::encode_entities($pedigree)."<br>";
         }
         $c->stash->{rest} = {error => $pedigree_info, pedigree_data => $pedigree_string };
     } else {
@@ -146,17 +150,17 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $pedigree_hash = decode_json $pedigree_data;
     my $file_pedigree_info = $pedigree_hash->{'pedigrees'};
 
-    my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ schema => $schema });
+    my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ i18n => $c->i18n, schema => $schema });
 
     my $generated_pedigrees = $pedigrees->generate_pedigrees($file_pedigree_info);
 
-    my $add = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => $generated_pedigrees });
+    my $add = CXGN::Pedigree::AddPedigrees->new({ i18n => $c->i18n, schema => $schema, pedigrees => $generated_pedigrees });
     my $error;
 
     my $return = $add->add_pedigrees($overwrite_pedigrees);
 
     if (!$return){
-        $error = "The pedigrees were not stored";
+        $error = $c->i18n->p('pedigree.server.the_pedigrees_were_not_stored', 'The pedigrees were not stored');
     }
     if ($return->{error}){
         $error = $return->{error};

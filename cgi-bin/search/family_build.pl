@@ -4,15 +4,18 @@ use strict;
 use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
-                                       blue_section_html  /;
+                                       info_section_html  /;
 use GD::Graph::bars;
 use GD::Text;
 use GD;
 use File::Temp;
 use CXGN::DB::Connection;
 use CatalystX::GlobalContext '$c';
+use SGN::I18N ();
+use HTML::Entities ();
+my SGN::I18N $ui_family_build_i18n = SGN::I18N::translate($c);
 
-my $page = CXGN::Page->new( "SGN Gene Family Build", "Chenwei Lin");
+my $page = CXGN::Page->new( HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.sgn_gene_family_build", "SGN Gene Family Build"))), "Chenwei Lin");
 my ($family_build_sum_q, $total_family_q, $total_gene_q, $other_build_q, $organism_member_q, $family_organism_q, $family_size_q);
 my ($family_build_id, $family_build_nr) = $page->get_arguments("family_build_id", "family_build_nr");
 
@@ -55,13 +58,13 @@ my ($i_value_content, $date_content, $group_comment_content, $build_nr_content, 
 if (($group_id, $i_value, $build_date, $group_comment, $build_nr, $total_family) = $family_build_sum_q->fetchrow_array()){
   my $date_content = substr($build_date, 0, 10);
   if ($i_value < 2){
-    $i_value_content =  $i_value . "  (Low stringency in grouping genes together)";
+    $i_value_content =  $i_value . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.low_stringency_in_grouping_genes_together.e71940d", "  (Low stringency in grouping genes together)")));
   }
   elsif ($i_value >= 2 && $i_value < 5){
-    $i_value_content = $i_value . "  (Normal stringency in grouping genes together)";
+    $i_value_content = $i_value . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.normal_stringency_in_grouping_genes_together.a79a9db", "  (Normal stringency in grouping genes together)")));
   }
   elsif ($i_value >= 5){
-    $i_value_content =  $i_value . "  (High stringency in grouping genes together)";
+    $i_value_content =  $i_value . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.high_stringency_in_grouping_genes_together.75ab5eb", "  (High stringency in grouping genes together)")));
   }
   else { $i_value_content = $i_value }
 
@@ -69,14 +72,14 @@ if (($group_id, $i_value, $build_date, $group_comment, $build_nr, $total_family)
   ($total_family) = $total_family_q->fetchrow_array();
   $total_gene_q->execute($family_build_id);
   ($total_gene) = $total_gene_q->fetchrow_array();
-  $date_content = "<tr><th>Build Date</th><td>" . $date_content . "</td></tr>";
+  $date_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "global.family.build_date", "Build Date"))) . "</th><td>" . $date_content . "</td></tr>";
   $i_value_content = "<tr><th>i Value</th><td> ". $i_value_content . "</td></tr>"; 
-  $group_comment_content = "<tr><th>Data Set</th><td>" . $group_comment . "</td></tr>";
-  $build_nr_content = "<tr><th>Build number</th><td>" . $build_nr . "</td></tr>";
-  $total_family_content = "<tr><th>Total Families</th><td>" . $total_family . "</td></tr>";
-  $total_gene_content = "<tr><th>Total Genes/Unigenes</th><td>" . $total_gene . "</td></tr>";
+  $group_comment_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "global.family.dataset", "Data Set"))) . "</th><td>" . $group_comment . "</td></tr>";
+  $build_nr_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.build_number", "Build number"))) . "</th><td>" . $build_nr . "</td></tr>";
+  $total_family_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.total_families", "Total Families"))) . "</th><td>" . $total_family . "</td></tr>";
+  $total_gene_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.total_genes_unigenes", "Total Genes/Unigenes"))) . "</th><td>" . $total_gene . "</td></tr>";
   $sum_content = $date_content . $i_value_content . $group_comment_content . $build_nr_content . $total_family_content . $total_gene_content;
-  $sum_content .= "<tr><td colspan=\"2\" align=\"center\" bgcolor=\"gray\"><a href=\"/about/family_analysis.pl\" target=\"blank\">For help with gene family analysis, please click here.</a></td></tr>";
+  $sum_content .= "<tr><td colspan=\"2\" align=\"center\" bgcolor=\"gray\"><a href=\"/about/family_analysis.pl\" target=\"blank\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.for_help_with_gene_family_analysis_please_click_here", "For help with gene family analysis, please click here."))) . "</a></td></tr>";
 }
 else {
   &invalid_search;
@@ -125,7 +128,7 @@ foreach (keys %family_organism){
   }
 }
   
-my $member_data_content = "<tr><th>Species</th><th># Genes or Unigenes</th><th># Families</th><th># Unique Families</th></tr>";
+my $member_data_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.species", "Species"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.genes_or_unigenes", "# Genes or Unigenes"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.families", "# Families"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.unique_families", "# Unique Families"))) . "</th></tr>";
 foreach (sort {$organism_gene_count{$b} <=> $organism_gene_count{$a}} keys %organism_gene_count){
   $member_data_content .= "<tr><td>$organism_comment{$_}</td><td>$organism_gene_count{$_}</td><td>$organism_family_count{$_}</td><td>$organism_uniq_family_count{$_}</td></tr>";
 }
@@ -141,20 +144,20 @@ while (my ($other_build_id, $other_build_nr, $other_i_value) = $other_build_q->f
 {
   
   if ($other_i_value < 2){
-    $other_i_value .= " (Low stringency in grouping genes together)";
+    $other_i_value .= HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.low_stringency_in_grouping_genes_together.e3bf63f", " (Low stringency in grouping genes together)")));
   }
   elsif($other_i_value >= 2 && $other_i_value < 5){
-    $other_i_value .= " (Normal stringency in grouping genes together)";
+    $other_i_value .= HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.normal_stringency_in_grouping_genes_together.a6aae7a", " (Normal stringency in grouping genes together)")));
   }
   else {
-    $other_i_value .= " (High stringency in grouping genes together)";
+    $other_i_value .= HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.high_stringency_in_grouping_genes_together.002e75f", " (High stringency in grouping genes together)")));
   }
   $other_build{$other_build_nr} = $other_i_value;
   $other_build_id{$other_build_nr} = $other_build_id;
 
 }
 
-$other_build_content = "<tr><th>Build number</th><th>i Value</th></tr>";
+$other_build_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.build_number", "Build number"))) . "</th><th>i Value</th></tr>";
 foreach (sort keys %other_build){
   $other_build_content .= "<tr><td><a href=\"family_build.pl?family_build_id=$other_build_id{$_}\">$_</a></td><td>$other_build{$_}</td></tr>";
 }
@@ -190,18 +193,18 @@ while (my ($count) = $family_size_q->fetchrow_array()){
   
 ###############################################
 #Draw bar chart
-#First generte a random file.
+#First generate a random file.
 my $html_root_path = $c->config->{'basepath'};
 my $doc_path = $c->tempfiles_subdir('family_images');
 my $path = $html_root_path . $doc_path;
-my $tmp = new File::Temp(
+my $tmp = File::Temp->new(
                         DIR => $path,
                         SUFFIX => '.png',
                         UNLINK => 0,
                     );
 
 #Draw the bar chart  
-my $graph = new GD::Graph::bars(700, 400);
+my $graph = GD::Graph::bars->new(700, 400);
 
 $graph->set(
 		   x_label => 'Family Size',
@@ -239,24 +242,21 @@ my $size_content = "<tr><td><center><img src=\"$tmp\" alt=\"\" /></center></td><
 ###############################################
 #Page printout
 $page->header();
-print page_title_html("SGN Gene Family Build $family_build_id");
-print blue_section_html('Summary','<table width="100%" cellpadding="5" cellspacing="0" border="0">' . $sum_content . '</table>');
-print blue_section_html('Member Data Sets','<table width="100%" cellpadding="5" cellspacing="0" border="1">' . $member_data_content . '</table>');
-print blue_section_html('Other Builds with Different Inflation Factor','<table width="100%" cellpadding="5" cellspacing="0" border="0">' . $other_build_content . '</table>');
-print blue_section_html('Unigene Family Size Distribution','<table width="100%" cellpadding="5" cellspacing="0" border="0" align="center">' . $size_content . '</table>');
+print page_title_html((HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.gene_family_build_prefix", "SGN Gene Family Build "))) . $family_build_id));
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "global.family.summary", "Summary"))), anchor_title => 'Summary', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0">' . $sum_content . '</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.member_data_sets", "Member Data Sets"))), anchor_title => 'Member Data Sets', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="1">' . $member_data_content . '</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.other_builds_with_different_inflation_factor", "Other Builds with Different Inflation Factor"))), anchor_title => 'Other Builds with Different Inflation Factor', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0">' . $other_build_content . '</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_i18n, "cross.unigene_family_size_distribution", "Unigene Family Size Distribution"))), anchor_title => 'Unigene Family Size Distribution', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0" align="center">' . $size_content . '</table>');
 
 
   $page->footer();
 sub empty_search {
   my ($page, $family_id) = @_;
+  my SGN::I18N $ui_family_build_empty_search_i18n = SGN::I18N::translate($c);
 
   $page->header();
 
-  print <<EOF;
-
-  <b>No family id specified</b>
-
-EOF
+  print "\n  <b>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_build_empty_search_i18n, "global.family.no_family_id", "No family id specified"))) . "</b>\n\n";
 
   $page->footer();
   exit 0;
@@ -264,14 +264,11 @@ EOF
 
 sub invalid_search {
   my ($page, $family_build_id) = @_;
+  my SGN::I18N $ui_family_build_invalid_search_i18n = SGN::I18N::translate($c);
 
   $page->header();
 
-  print <<EOF;
-
-  <b>The specified family identifer ($family_build_id) does not result in a valid search.</b>
-
-EOF
+  my %ui_caption_values = (BUILD_ID => $family_build_id); my $ui_caption = (SGN::I18N::translate($ui_family_build_invalid_search_i18n, "cross.the_specified_family_identifer_family_build_id_does_not_result_in_a_valid_search", "The specified family identifier (%{family_build_id}) does not result in a valid search.", {family_build_id => "__SGN_B20_BUILD_ID__"}, { fallback => "The specified family identifier ($family_build_id) does not result in a valid search." })); if ($ui_family_build_invalid_search_i18n) { $ui_caption = HTML::Entities::encode_entities($ui_caption, '^\x00-\x7F'); $ui_caption =~ s/__SGN_B20_(BUILD_ID)__/$ui_caption_values{$1}/ge; } print "\n  <b>" . $ui_caption . "</b>\n\n";
 
   $page->footer();
   exit 0;

@@ -93,11 +93,38 @@ function makeURL(target, id) {
     }
 }
 
+
+function wizardTypeCaptions() {
+  return {
+    "accessions": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.accessions", "Accessions")),
+    "accessions_ids": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.accessions_ids", "Accessions Ids")),
+    "organisms": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.organisms", "Organisms")),
+    "breeding_programs": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.breeding_programs", "Breeding Programs")),
+    "genotyping_protocols": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.genotyping_protocols", "Genotyping Protocols")),
+    "genotyping_projects": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.genotyping_projects", "Genotyping Projects")),
+    "locations": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.locations", "Locations")),
+    "protocols": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.protocols", "HDP Protocols")),
+    "instances": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.instances", "HDP Upload Ids")),
+    "plots": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.plots", "Plots")),
+    "subplots": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.subplots", "Subplots")),
+    "plants": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.plants", "Plants")),
+    "tissue_sample": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.tissue_sample", "Tissue Samples")),
+    "populations": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.populations", "Populations")),
+    "seedlots": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.seedlots", "Seedlots")),
+    "trait_components": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.trait_components", "Trait Components")),
+    "traits": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.traits", "Traits")),
+    "trials": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.trials", "Trials")),
+    "trial_designs": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.trial_designs", "Trial Designs")),
+    "trial_types": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.trial_types", "Trial Types")),
+    "years": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.years", "Years")),
+  };
+}
+
 export function WizardSetup(main_id) {
   var list = new CXGN.List();
 
   var wiz = new Wizard(d3.select(main_id).select(".wizard-main").node(), 4)
-    .types(types)
+    .types(wizardTypeCaptions())
     .initial_types(initialtypes)
 
     // Column 1 loader
@@ -155,7 +182,7 @@ export function WizardSetup(main_id) {
         const loadType     = toLoadType(validateType);
 
         if (!fetchTypes.includes(validateType)) {
-          setTimeout(() => alert("List is not of an appropriate type."), 1);
+          setTimeout(() => alert((typeof window !== "undefined" && SGN.t("unassigned.wizard.invalid_list_type", "List is not of an appropriate type."))), 1);
         }
 
 
@@ -204,7 +231,7 @@ export function WizardSetup(main_id) {
 
   wiz.add_to_list((listID, items) => {
     var count = list.addBulk(listID, items.map(i => i.name));
-    if (count) alert(`${count} items added to list.`);
+    if (count) alert((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.items_added", "%{count} items added to list.", {count: count}) : `${count} items added to list.`));
     load_lists();
   })
   .create_list((listName, colType, items) => {
@@ -212,7 +239,7 @@ export function WizardSetup(main_id) {
     if (newID) {
       list.setListType(newID, colType);
       var count = list.addBulk(newID, items.map(i => i.name));
-      if (count) alert(`${count} items added to list ${listName}.`);
+      if (count) alert((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.items_added_named", "%{count} items added to list %{list_name}.", {count: count, list_name: listName}) : `${count} items added to list ${listName}.`));
     }
     load_lists();
   });

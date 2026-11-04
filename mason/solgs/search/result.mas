@@ -12,18 +12,18 @@ $form
 </%args>
 
 <& /page/page_title.mas,
-    title => 'solGS search results',
+    title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.solgs_search_results", "solGS search results")),
 &>
   
 % if ($result) 
 % { 
 
-<&| /page/info_section.mas,
-      title => 'Search Results',
+<&| /page/info_section.mas, anchor_title => "Search", anchor_title => "No Search Results", anchor_title => "Search Results",
+      title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.search_results", "Search Results")),
 &>
 
 <& /page/columnar_table.mas,
-     headings    => [ 'Population', 'Location', 'Year', 'PI' ],
+     headings    => [ $c->i18n->p("solgs.interface.population", "Population"), $c->i18n->p("solgs.interface.location", "Location"), $c->i18n->p("solgs.interface.year", "Year"), 'PI' ],
      data        => $result,
     __alt_freq   => 2,
     __alt_width  => 1,
@@ -34,18 +34,18 @@ $form
 %}
 %else
 %{
-<&| /page/info_section.mas,
-      title => 'No Search Results',
+<&| /page/info_section.mas, anchor_title => 'No Search Results',
+      title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.no_search_results", "No Search Results")),
 &>
 
-<br>No results. Search again with a different term.<br />
+<br><% $c->i18n->p("solgs.interface.no_results_search_again_with_a_different_term", "No results. Search again with a different term.") |h %><br />
 
 </&>
 
 %}
 
-<&| /page/info_section.mas,
-    title       => 'Search',
+<&| /page/info_section.mas, anchor_title => 'Search',
+    title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.search", "Search")),
     collapsible => '1',
     collapsed   =>  1
 &>
@@ -54,5 +54,6 @@ $form
 
 </&>
 
-
-
+<%once>
+use HTML::Entities ();
+</%once>

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 solgs search results view.
 </%doc>
@@ -15,17 +19,17 @@ $genotyping_protocol_id => ''
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 
 <& /page/page_title.mas,
-    title => 'Traits with genomic selection data',
+    title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.traits_with_genomic_selection_data", 'Traits with genomic selection data')),
 &>
   
 % if ($result) 
 % { 
 
-<&| /page/info_section.mas,
-      title => 'Search Results',
+<&| /page/info_section.mas, anchor_title => 'Search Results',
+      title => HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.search_results", 'Search Results')),
 &>
   <& /page/columnar_table.mas,
-     headings    => ['Name', 'Definition'],
+     headings    => [HTML::Entities::encode_entities($c->i18n->p("global.library_search.name", "Name")), HTML::Entities::encode_entities($c->i18n->p("phenotype.definition", "Definition"))],
     data         => $result,
     __alt_freq   => 2,
     __alt_width  => 1,
@@ -37,16 +41,16 @@ $genotyping_protocol_id => ''
 %}
 %else
 %{
-<&| /page/info_section.mas,
-      title => 'Search Results',
+<&| /page/info_section.mas, anchor_title => 'Search Results',
+      title => HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.search_results", 'Search Results')),
 &>
 %if ( $query )
 %{
-<br>No results found for <i><strong>'<% $query %>'.</strong></i><br />
+<br><% $c->i18n->p("analysis.qtl.ui.no_results_found_for", "No results found for") |h %> <i><strong>'<% $query %>'.</strong></i><br />
 %}
 %else
 %{
-<br>No results. Search again with a trait name.<br />
+<br><% $c->i18n->p("solgs.interface.no_results_search_again_with_a_trait_name", "No results. Search again with a trait name.") |h %><br />
 %}
 </&>
 %}

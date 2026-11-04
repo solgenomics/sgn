@@ -1,0 +1,239 @@
+# Gestión de cruzamientos {#managing-crosses}
+
+La información de los cruzamientos se gestiona desde la opción “Cruzamientos” del menú Gestionar.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image148.png')
+```
+
+## Ensayo de cruzamientos {#crossing-experiment}
+
+Los cruzamientos de un mismo ensayo, vivero o proyecto se agrupan en un “**ensayo de cruzamientos**”. Estos ensayos se organizan por programa de mejoramiento. Para encontrar uno, escriba su nombre en el cuadro “Buscar” o localícelo en su programa pulsando el icono “**+**”. Los ensayos pueden aparecer directamente en el programa o dentro de carpetas. En “**Carpetas**” puede organizar ensayos en carpetas, moverlos entre ellas y cambiar el orden de las carpetas del programa.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses1.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses2.png')
+```
+
+### Añadir un ensayo de cruzamientos {#add-new-crossing-experiment}
+
+Para añadir un ensayo de cruzamientos, pulse el enlace “Añadir ensayo de cruzamientos”.
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses_crossingtrial.png')
+```
+
+Información obligatoria:
+
+• “**Nombre del ensayo de cruzamientos**”: indique un nombre que aún no exista en la base de datos.
+
+• “**Programa de mejoramiento**”: seleccione un programa disponible en la base de datos. Puede añadir programas en la página “Programa de mejoramiento”, accesible desde el menú Gestionar. *Página del programa de mejoramiento*
+
+• “**Ubicación**”: seleccione dónde se realizará el ensayo. Puede añadir ubicaciones en la página “**Ubicaciones**”, disponible en el menú “**Gestionar**”. *Página de ubicaciones*
+
+• “**Año”**: seleccione un año.
+
+• “**Descripción**”: escriba una descripción del ensayo.
+
+Después de completar la información, pulse “**Enviar**” para crear el ensayo.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/add_crossingtrial.png')
+```
+
+## Cruzamiento {#cross}
+
+### Añadir cruzamientos {#add-new-crosses}
+
+#### Añadir un cruzamiento mediante el diálogo “Añadir nuevo cruzamiento” {#add-a-cross-by-using-the-add-new-cross-dialog -}
+
+Para añadir un cruzamiento, pulse el enlace “Añadir cruzamiento”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses_addcross.png')
+```
+
+Introduzca la información del cruzamiento en el diálogo emergente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_cross.png')
+```
+
+Información obligatoria:
+
+• “**Ensayo de cruzamientos**”: seleccione un ensayo disponible en la base de datos.
+
+• “**Ubicación**”: seleccione una ubicación disponible en la base de datos.
+
+• “**Nombre del cruzamiento**”: indique un nombre que aún no exista en la base de datos.
+
+• “**Tipo de cruzamiento**”: las opciones disponibles son: biparental, self, open pollinated, bulk, bulk selfed, bulk and open pollinated, double haploid, polycross, reciprocal y multicross.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/new_cross_dialog_type.png')
+```
+
+• Los campos “**Progenitor femenino**” y “**Progenitor masculino**” ofrecen autocompletado con accesiones que ya están en la base de datos. Los progenitores seleccionados se incluirán en el pedigrí de las nuevas accesiones generadas.
+
+Información opcional:
+
+• “**Parcela del progenitor femenino y/o masculino**”: además de los nombres de las accesiones, puede añadir las parcelas concretas usadas en el cruzamiento. Escriba el nombre del ensayo y pulse “**Buscar parcelas**” para ver las parcelas asociadas a cada progenitor. Luego seleccione la parcela utilizada.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/new_cross_dialog2.png')
+```
+
+Al añadir el cruzamiento puede especificar otros datos, como la fecha de polinización y el número de flores, frutos y semillas. También puede actualizar esta información en la página “**Detalles del cruzamiento**”.
+
+Si conoce cuántas accesiones se obtendrán del cruzamiento, puede crearlas de inmediato en la base de datos marcando “**Añadir accesiones de la progenie**” e indicando la cantidad.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_cross_info.png')
+```
+
+Pulse “Enviar” para crear el cruzamiento.
+
+#### Cargar nuevos cruzamientos {#upload-new-crosses -}
+
+Para cargar nuevos cruzamientos desde un archivo Excel (.xls o .xlsx), pulse el enlace “Cargar cruzamientos”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses_upload.png')
+```
+
+Seleccione en las listas desplegables un ensayo de cruzamientos y una ubicación existentes, elija el archivo y pulse “**Cargar archivo**”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/upload_crosses.png')
+```
+
+Revise cuidadosamente el formato de la hoja de cálculo. El archivo debe ser de Excel (.xls o .xlsx).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_upload_format.png')
+```
+
+### Actualizar cruzamientos mediante carga {#update-crosses-by-uploading}
+
+Para cargar la progenie o información experimental de cruzamientos existentes, vaya a la página “**Gestionar - Cargar**”.
+
+En la sección “**Cruzamientos**” hay enlaces para cargar progenie e información experimental.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_upload_page.png')
+```
+
+Revise cuidadosamente el formato indicado en cada enlace. El archivo debe ser de Excel (.xls o .xlsx).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/progenies_upload_spreadsheet.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/crossinfo_upload_spreadsheet.png')
+```
+
+Nota: la información experimental de cruzamientos se adapta a las necesidades de cada cultivo. Por ello, los encabezados de su base de datos pueden diferir de los que aparecen en este manual.
+
+## Lista de cruzamientos deseados {#cross-wishlist}
+
+Se está desarrollando una aplicación ODK para Android que permitirá registrar cruzamientos en el campo. La lista de cruzamientos deseados permite crear un plan y vincular la aplicación móvil con la base de datos.
+
+La herramienta está disponible en la página de gestión de cruzamientos, aunque por ahora solo en algunas bases de datos. Si no está habilitada en la suya, aparecerá un aviso al pulsar el enlace.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_cross_click_cross_wishlist.png')
+```
+
+### Crear una lista de cruzamientos deseados {#create-a-cross-wishlist}
+
+#### Paso 1. Seleccionar las accesiones que se cruzarán en el ensayo {#step-1.-select-the-accessions-to-be-crossed-in-your-trial -}
+
+Este paso ofrece dos interfaces: “Sin usar listas” y “Usar listas”. Elija según si ya dispone de listas de accesiones femeninas y masculinas. Ambas opciones producen el mismo resultado.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_initial_dialog.png')
+```
+
+Primero se muestra la interfaz “Sin usar listas”. Seleccione el ensayo donde se realizarán los cruzamientos. Aparecerán todas las accesiones usadas en él; seleccione una o varias como progenitores femeninos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_not_using_list_01.png')
+```
+
+Al seleccionar las accesiones femeninas, aparece una tabla. Cada fila comienza con la accesión femenina elegida e incluye una lista de todas las accesiones del ensayo. Seleccione una o varias como progenitores masculinos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_not_using_list_02.png')
+```
+
+Después de seleccionar los progenitores masculinos para cada accesión femenina, aparece una tabla de prioridades. La prioridad indica el orden de los intentos: primero se considera el macho con mayor prioridad y, si el cruzamiento no es posible, los siguientes. Las prioridades iguales no establecen un orden concreto.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_not_using_list_03.png')
+```
+
+También puede usar la interfaz “Usar listas”. Seleccione el ensayo y proporcione las listas de accesiones que se considerarán como progenitores femeninos y masculinos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_using_list_01.png')
+```
+
+#### Paso 2. Seleccionar las parcelas femeninas para los cruzamientos {#step-2.-select-the-female-plots-to-be-considered-in-the-crosses -}
+
+Al seleccionar las listas, se completa la tabla. La primera columna contiene las accesiones femeninas y la fila de encabezado, las masculinas. La prioridad indica qué machos se considerarán para cada hembra.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_using_list_02.png')
+```
+
+Después de seleccionar las accesiones femeninas y masculinas, ya sea con o sin listas, pulse “Siguiente”. En el diálogo siguiente podrá elegir las parcelas femeninas concretas. Para cada accesión se mostrará la distribución del campo. Si selecciona todas las parcelas donde está presente, el cruzamiento se planificará en todas ellas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_not_using_list_04.png')
+```
+
+#### Paso 3. Transferir la lista al aplicativo móvil de cruzamientos {#step-3.-transfer-the-cross-wishlist-to-your-mobile-crossing-application -}
+
+Al pulsar “Enviar lista de cruzamientos para ODK”, el plan se envía al servidor ONA para usarlo en la aplicación móvil ODK. Después podrá realizar y registrar los cruzamientos en el campo y devolverlos a la base de datos para guardarlos.
+
+## Página de detalles del ensayo de cruzamientos {#crossing-experiment-detail-page}
+
+La página de detalles del ensayo reúne la información de sus cruzamientos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/crossingtrial_1.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/crossingtrial_2.png')
+```
+
+El nombre del cruzamiento, los progenitores y sus parcelas enlazan a páginas de detalles con información específica.
+Nota: la información experimental de cruzamientos se adapta a cada cultivo, por lo que los datos de su base pueden diferir de los que aparecen en este manual.
+
+## Página de detalles del cruzamiento {#cross-detail-page}
+
+La información de cada cruzamiento también puede consultarse en su página de detalles.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_page_1.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_page_2.png')
+```
+
+ En esta página puede actualizar o editar la información experimental del cruzamiento y añadir su progenie.
+ Nota: la información experimental de cruzamientos se adapta a cada cultivo, por lo que los datos de su base pueden diferir de los que aparecen en este manual.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/edit_cross_info.png')
+```
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_add_progenies.png')
+```

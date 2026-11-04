@@ -6,14 +6,14 @@ $marker_info_headers
 <div class="well well-sm">
     <div class="form form-horizontal" id="markers_table_search_form">
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Marker Name(s): </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('genotype.protocol.markers.name_label', 'Marker Name(s): ') |h %></label>
             <div class="col-sm-9" >
-                <input class="form-control" id="markers_table_search_marker_name" type="text" placeholder="Marker name(s) (comma separated)"/>
+                <input class="form-control" id="markers_table_search_marker_name" type="text" placeholder="<% $c->i18n->p('genotype.protocol.markers.name_placeholder', 'Marker name(s) (comma separated)') |h %>"/>
             </div>
         </div>
     </div>
     <div style="text-align: center">
-        <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
+        <button class="btn btn-primary btn-sm" id="marker_table_search_submit"><% $c->i18n->p('global.search.advanced_search.search', 'Search') |h %></button>
     </div>
 </div>
 <div style="overflow:scroll">

@@ -6,6 +6,7 @@ use Data::Dumper;
 use CXGN::Login;
 use CXGN::Job;
 use List::MoreUtils qw /any /;
+use URI::FromHash ();
 
 use CXGN::Genotype::StoreGenotypingProject;
 
@@ -166,13 +167,13 @@ sub add_genotyping_project_POST :Args(0){
     my $data_type = $c->req->param('data_type');
 
     if (!$c->user()){
-        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( URI::FromHash::uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query, lang => $c->i18n->requested_locale } ) );
         return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
         print STDERR "User does not have sufficient privileges.\n";
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a genotyping project." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('genotype.project.server.permission_required', 'you have insufficient privileges to add a genotyping project.') };
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -190,7 +191,8 @@ sub add_genotyping_project_POST :Args(0){
             year => $project_year,
             project_description => $project_description,
             nd_geolocation_id => $project_location,
-            owner_id => $user_id
+            owner_id => $user_id,
+            i18n => $c->i18n
         });
         my $store_return = $add_genotyping_project->store_genotyping_project();
         if ($store_return->{error}){

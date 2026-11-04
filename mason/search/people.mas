@@ -5,7 +5,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Search People' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.people.search_page_title", "Search People")) &>
 
 <div class="row" id="people_search_form" >
   <div class="col-sm-1">
@@ -16,13 +16,13 @@
   <div class="col-sm-6">
     <div class="form-horizontal">
       <div class="form-group">
-        <label class="col-sm-6 control-label">Last Name: </label>
+        <label class="col-sm-6 control-label"><% $c->i18n->p("community.people.last_name_field_label", "Last Name:") |h %> </label>
         <div class="col-sm-6" >
           <input type="text" class="form-control" id="last_name" />
         </div>
       </div>
       <div class="form-group">
-        <label class="col-sm-6 control-label">First Name: </label>
+        <label class="col-sm-6 control-label"><% $c->i18n->p("community.people.first_name_field_label", "First Name:") |h %> </label>
         <div class="col-sm-6" >
           <input type="text" class="form-control" id="first_name" />
         </div>
@@ -32,13 +32,13 @@
   <div class="col-sm-6">
     <div class="form-horizontal">
       <div class="form-group">
-        <label class="col-sm-6 control-label">Organization: </label>
+        <label class="col-sm-6 control-label"><% $c->i18n->p("community.people.organization_field_label", "Organization:") |h %> </label>
         <div class="col-sm-6" >
           <input type="text" class="form-control" id="organization" />
         </div>
       </div>
       <div class="form-group">
-        <label class="col-sm-6 control-label">Country: </label>
+        <label class="col-sm-6 control-label"><% $c->i18n->p("community.people.country_field_label", "Country:") |h %> </label>
         <div class="col-sm-6" >
           <input type="text" class="form-control" id="country" />
         </div>
@@ -46,7 +46,7 @@
     </div>
   </div>
   <center>
-    <button class="btn btn-primary" id="submit_people_search" >Search</button>
+    <button class="btn btn-primary" id="submit_people_search" ><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></button>
   </center>
 
     </div>
@@ -72,10 +72,10 @@
 <table id="people_search_results" class="display">
 <thead>
   <tr>
-    <th>Last name</th>
-    <th>First name</th>
-    <th>Organization</th>
-    <th>Country</th>
+    <th><% $c->i18n->p("community.people.last_name_header", "Last name") |h %></th>
+    <th><% $c->i18n->p("community.people.first_name_header", "First name") |h %></th>
+    <th><% $c->i18n->p("community.people.organization_header", "Organization") |h %></th>
+    <th><% $c->i18n->p("community.people.country_header", "Country") |h %></th>
 </tr>
 </thead>
 
@@ -125,3 +125,7 @@ jQuery(document).ready(function () {
 
   
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

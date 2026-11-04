@@ -1,0 +1,13 @@
+# إدارة برامج التربية {#managing-breeding-programs}
+
+لإضافة برنامج تربية جديد، انقر زر “إضافة برنامج جديد” في صفحة “إدارة برامج التربية”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/breeding_programs_screenshot.png')
+```
+
+يؤدي النقر على “إضافة برنامج جديد” إلى فتح نموذج فارغ. أدخل اسم برنامج التربية ووصفه، ثم انقر “إضافة برنامج تربية” لإكمال العملية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/new_program_screenshot.png')
+```

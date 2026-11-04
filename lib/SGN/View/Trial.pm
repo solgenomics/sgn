@@ -4,6 +4,9 @@ use List::MoreUtils ':all';
 use Data::Dumper;
 use strict;
 use warnings;
+use HTML::Entities qw(encode_entities);
+use Scalar::Util qw(blessed);
+use SGN::I18N;
 
 our @EXPORT_OK = qw/
     design_layout_view
@@ -13,58 +16,95 @@ our @EXPORT_OK = qw/
 /;
 our @EXPORT = ();
 
+# Presentation locale belongs to the caller; older callers retain English.
+sub _presentation_i18n {
+    my $candidate = shift;
+    return SGN::I18N->new(locale => 'en') unless defined $candidate;
+    die 'Expected an SGN::I18N presentation translator'
+        unless blessed($candidate) && $candidate->isa('SGN::I18N');
+    return $candidate;
+}
+
+sub _design_headers {
+    my SGN::I18N $header_i18n = _presentation_i18n(shift);
+    return {
+        plant_name => encode_entities($header_i18n->p('trial.design.header.plant_name', 'Plant Name')),
+        subplot_name => encode_entities($header_i18n->p('trial.design.header.subplot_name', 'Subplot Name')),
+        plot_name => encode_entities($header_i18n->p('trial.design.header.plot_name', 'Plot Name')),
+        accession_name => encode_entities($header_i18n->p('trial.design.header.accession_name', 'Accession Name')),
+        family_name => encode_entities($header_i18n->p('trial.design.header.family_name', 'Family Name')),
+        cross_id => encode_entities($header_i18n->p('trial.design.header.cross_id', 'Cross Unique ID')),
+        check_name => encode_entities($header_i18n->p('trial.design.header.check_name', 'Check Name')),
+        plot_number => encode_entities($header_i18n->p('trial.design.header.plot_number', 'Plot Number')),
+        row_number => encode_entities($header_i18n->p('trial.design.header.row_number', 'Row number')),
+        col_number => encode_entities($header_i18n->p('trial.design.header.col_number', 'Col number')),
+        block_number => encode_entities($header_i18n->p('trial.design.header.block_number', 'Block Number')),
+        block_row_number => encode_entities($header_i18n->p('trial.design.header.block_row_number', 'Block Row Number')),
+        block_col_number => encode_entities($header_i18n->p('trial.design.header.block_col_number', 'Block Col Number')),
+        rep_number => encode_entities($header_i18n->p('trial.design.header.rep_number', 'Rep Number')),
+        seedlot_name => encode_entities($header_i18n->p('trial.design.header.seedlot_name', 'Seedlot Name')),
+        seeds_per_plot => encode_entities($header_i18n->p('trial.design.header.seeds_per_plot', 'Num Seeds Per Plot')),
+    };
+}
+
+sub _table_row {
+    return '<tr>' . join('', map { '<td>' . encode_entities(defined $_ ? $_ : '') . '</td>' } @_) . '</tr>';
+}
+
 sub trial_detail_design_view {
   my $design_ref = shift;
+  my SGN::I18N $detail_i18n = _presentation_i18n(shift);
+  my $headers = _design_headers($detail_i18n);
   my %design = %{$design_ref};
   my $design_result_html;
 
   $design_result_html .= '<table border="1">';
-  $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
+  $design_result_html .= qq{<tr><th>$headers->{plot_name}</th><th>$headers->{accession_name}</th><th>$headers->{check_name}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th></tr>};
 
   foreach my $key (sort { $a <=> $b} keys %design) {
       $design_result_html .= "<tr>";
       if ($design{$key}->{plot_name}) {
-	  $design_result_html .= "<td>".$design{$key}->{plot_name}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{plot_name})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
       if ($design{key}->{accession_name}) {
-	  $design_result_html .= "<td>".$design{$key}->{accession_name}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{accession_name})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
       if ($design{key}->{check_name}) {
-	  $design_result_html .= "<td>".$design{$key}->{check_name}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{check_name})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
       if ($design{key}->{row_number}) {
-	  $design_result_html .= "<td>".$design{$key}->{row_number}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{row_number})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
       if ($design{key}->{col_number}) {
-	  $design_result_html .= "<td>".$design{$key}->{col_number}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{col_number})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
       if ($design{key}->{block_number}) {
-	  $design_result_html .= "<td>".$design{$key}->{block_number}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{block_number})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
       if ($design{key}->{block_row_number}) {
-	  $design_result_html .= "<td>".$design{$key}->{block_row_number}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{block_row_number})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
       if ($design{key}->{block_col_number}) {
-	  $design_result_html .= "<td>".$design{$key}->{block_col_number}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{block_col_number})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
       if ($design{key}->{rep_number}) {
-	  $design_result_html .= "<td>".$design{$key}->{rep_number}."</td>";
+	  $design_result_html .= "<td>".encode_entities($design{$key}->{rep_number})."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
       }
@@ -78,6 +118,7 @@ sub trial_detail_design_view {
 sub design_layout_map_view {
     my $design_ref = shift;
     my $design_type = shift;
+    my SGN::I18N $map_i18n = _presentation_i18n(shift);
     my $result;
     my %design = %{$design_ref};
     my @layout_info;
@@ -155,7 +196,11 @@ sub design_layout_map_view {
 
     my $plot_popUp;
 	foreach my $hash (@layout_info){
-		$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
+		$plot_popUp = $map_i18n->p('trial.design.map.plot_message', '%{plot_name}
+plot_No:%{plot_number}
+block_No:%{block_number}
+rep_No:%{rep_number}
+stock:%{stock_name}', { plot_name => $hash->{'plot_name'}, plot_number => $hash->{'plot_number'}, block_number => $hash->{'block_number'}, rep_number => $hash->{'rep_number'}, stock_name => $hash->{'accession_name'} });
         push @$result,  {plotname => $hash->{'plot_name'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
     }
 
@@ -200,6 +245,8 @@ sub design_layout_view {
     my $design_info_ref = shift;
     my $design_type = shift;
     my $trial_stock_type = shift;
+    my SGN::I18N $layout_i18n = _presentation_i18n(shift);
+    my $headers = _design_headers($layout_i18n);
     my %design = %{$design_ref};
     my %design_info = %{$design_info_ref};
     my $design_result_html;
@@ -208,27 +255,27 @@ sub design_layout_view {
 
     if ($trial_stock_type eq 'family_name') {
         if ($design_type eq 'greenhouse') {
-            $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Family Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plant_name}</th><th>$headers->{plot_name}</th><th>$headers->{family_name}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         } elsif ($design_type eq 'splitplot') {
-            $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Family Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plant_name}</th><th>$headers->{subplot_name}</th><th>$headers->{plot_name}</th><th>$headers->{family_name}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         } else {
-            $design_result_html .= qq{<tr><th>Plot Name</th><th>Family Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plot_name}</th><th>$headers->{family_name}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         }
     } elsif ($trial_stock_type eq 'cross') {
         if ($design_type eq 'greenhouse') {
-            $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Cross Unique ID</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plant_name}</th><th>$headers->{plot_name}</th><th>$headers->{cross_id}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         } elsif ($design_type eq 'splitplot') {
-            $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Cross Unique ID</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plant_name}</th><th>$headers->{subplot_name}</th><th>$headers->{plot_name}</th><th>$headers->{cross_id}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         } else {
-            $design_result_html .= qq{<tr><th>Plot Name</th><th>Cross Unique ID</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plot_name}</th><th>$headers->{cross_id}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         }
     } else {
         if ($design_type eq 'greenhouse') {
-            $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plant_name}</th><th>$headers->{plot_name}</th><th>$headers->{accession_name}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         } elsif ($design_type eq 'splitplot') {
-            $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plant_name}</th><th>$headers->{subplot_name}</th><th>$headers->{plot_name}</th><th>$headers->{accession_name}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         } else {
-            $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+            $design_result_html .= qq{<tr><th>$headers->{plot_name}</th><th>$headers->{accession_name}</th><th>$headers->{check_name}</th><th>$headers->{plot_number}</th><th>$headers->{row_number}</th><th>$headers->{col_number}</th><th>$headers->{block_number}</th><th>$headers->{block_row_number}</th><th>$headers->{block_col_number}</th><th>$headers->{rep_number}</th><th>$headers->{seedlot_name}</th><th>$headers->{seeds_per_plot}</th></tr>};
         }
     }
 
@@ -253,15 +300,15 @@ sub design_layout_view {
             foreach my $subplot_name (sort keys %{$design{$key}->{subplots_plant_names}}) {
                 my $plant_names = $design{$key}->{subplots_plant_names}->{$subplot_name};
                 foreach my $plant_name (@$plant_names){
-                    $design_result_html .= "<tr><td>".$plant_name."</td><td>".$subplot_name."</td><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$plot_number."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td><td>".$seedlot_name."</td><td>".$num_seed_per_plot."</td></tr>";
+                    $design_result_html .= _table_row($plant_name, $subplot_name, $plot_name, $stock_name, $check_name, $plot_number, $row_number, $col_number, $block_number, $block_row_number, $block_col_number, $rep_number, $seedlot_name, $num_seed_per_plot);
                 }
             }
         } elsif ($design{$key}->{plant_names}) {
             foreach my $plant_name (@{$design{$key}->{plant_names}}) {
-                $design_result_html .= "<tr><td>".$plant_name."</td><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$plot_number."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td><td>".$seedlot_name."</td><td>".$num_seed_per_plot."</td></tr>";
+                $design_result_html .= _table_row($plant_name, $plot_name, $stock_name, $check_name, $plot_number, $row_number, $col_number, $block_number, $block_row_number, $block_col_number, $rep_number, $seedlot_name, $num_seed_per_plot);
             }
         } else {
-            $design_result_html .= "<tr><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$plot_number."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td><td>".$seedlot_name."</td><td>".$num_seed_per_plot."</td></tr>";
+            $design_result_html .= _table_row($plot_name, $stock_name, $check_name, $plot_number, $row_number, $col_number, $block_number, $block_row_number, $block_col_number, $rep_number, $seedlot_name, $num_seed_per_plot);
         }
     }
 
@@ -273,6 +320,7 @@ sub design_info_view { #TODO: fix treatments here
     my $design_ref = shift;
     my $design_info_ref = shift;
     my $trial_stock_type = shift;
+    my SGN::I18N $info_i18n = _presentation_i18n(shift);
     my %design = %{$design_ref};
     my %design_info = %{$design_info_ref};
     my %block_hash;
@@ -286,22 +334,22 @@ sub design_info_view { #TODO: fix treatments here
     if ($design_info{'design_type'}) {
         $design_description = $design_info{'design_type'};
         if ($design_info{'design_type'} eq "CRD") {
-            $design_description = "Completely Randomized Design";
+            $design_description = $info_i18n->p('trial.design.summary.description.crd', 'Completely Randomized Design');
         }
         if ($design_info{'design_type'} eq "RCBD") {
-            $design_description = "Randomized Complete Block Design";
+            $design_description = $info_i18n->p('trial.design.summary.description.rcbd', 'Randomized Complete Block Design');
         }
         if ($design_info{'design_type'} eq "Alpha") {
-            $design_description = "Alpha Lattice Incomplete Block Design";
+            $design_description = $info_i18n->p('trial.design.summary.description.alpha', 'Alpha Lattice Incomplete Block Design');
         }
         if ($design_info{'design_type'} eq "Augmented") {
-            $design_description = "Augmented Incomplete Block Design";
+            $design_description = $info_i18n->p('trial.design.summary.description.augmented', 'Augmented Incomplete Block Design');
         }
         if ($design_info{'design_type'} eq "MAD") {
-            $design_description = "Modified Augmented Design";
+            $design_description = $info_i18n->p('trial.design.summary.description.mad', 'Modified Augmented Design');
         }
         if ($design_info{'design_type'} eq "greenhouse") {
-            $design_description = "Greenhouse Design";
+            $design_description = $info_i18n->p('trial.design.summary.description.greenhouse', 'Greenhouse Design');
         }
 #    if ($design_info{'design_type'} eq "MADII") {
 #      $design_description = "Modified Augmented Design II";
@@ -312,25 +360,25 @@ sub design_info_view { #TODO: fix treatments here
 #    if ($design_info{'design_type'} eq "MADIV") {
 #      $design_description = "Modified Augmented Design IV";
 #    }
-        $design_info_html .= "<dt>Design type</dt><dd>".$design_description."</dd>";
+        $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.design_type', 'Design type'))."</dt><dd>".encode_entities($design_description)."</dd>";
     }
     if ($design_info{'number_of_locations'}) {
-        $design_info_html .= "<dt>Number of locations</dt><dd>".$design_info{'number_of_locations'}."</dd>";
+        $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.locations', 'Number of locations'))."</dt><dd>".encode_entities($design_info{'number_of_locations'})."</dd>";
     }
     if ($design_info{'number_of_stocks'}) {
         if ($trial_stock_type eq 'family_name') {
-            $design_info_html .= "<dt>Number of family names</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+            $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.family_names', 'Number of family names'))."</dt><dd>".encode_entities($design_info{'number_of_stocks'})."</dd>";
         } elsif ($trial_stock_type eq 'cross') {
-            $design_info_html .= "<dt>Number of cross unique ids</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+            $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.cross_ids', 'Number of cross unique ids'))."</dt><dd>".encode_entities($design_info{'number_of_stocks'})."</dd>";
         } else {
-            $design_info_html .= "<dt>Number of accessions</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+            $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.accessions', 'Number of accessions'))."</dt><dd>".encode_entities($design_info{'number_of_stocks'})."</dd>";
         }
     }
     if ($design_info{'number_of_checks'}) {
-        $design_info_html .= "<dt>Number of checks</dt><dd>".$design_info{'number_of_checks'}."</dd>";
+        $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.checks', 'Number of checks'))."</dt><dd>".encode_entities($design_info{'number_of_checks'})."</dd>";
     }
     if ($design_info{'number_of_controls'}) {
-        $design_info_html .= "<dt>Number of controls</dt><dd>".$design_info{'number_of_controls'}."</dd>";
+        $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.controls', 'Number of controls'))."</dt><dd>".encode_entities($design_info{'number_of_controls'})."</dd>";
     }
 
     my $treatment_info_string = "";
@@ -355,27 +403,27 @@ sub design_info_view { #TODO: fix treatments here
 
         if($key eq 'treatments'){
             while(my($k,$v) = each %{$design{$key}->{'treatments'}}){
-                $treatment_info_string .= " - $k<br/>";
+                $treatment_info_string .= " - ".encode_entities($k)."<br/>";
             }
         }
     }
 
     if (%block_hash) {
-        $design_info_html .= "<dt>Number of blocks</dt><dd>".scalar(keys %block_hash)."</dd>";
+        $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.blocks', 'Number of blocks'))."</dt><dd>".scalar(keys %block_hash)."</dd>";
         if ($trial_stock_type eq 'family_name') {
-            $design_info_html .= "<dt>Number of family names per block</dt><dd>";
+            $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.families_per_block', 'Number of family names per block'))."</dt><dd>";
             foreach my $key (sort { $a <=> $b} keys %block_hash) {
-                $design_info_html .= "Block ".$key.": ".$block_hash{$key}." family names <br>";
+                $design_info_html .= encode_entities($info_i18n->np('trial.design.summary.block_families', 'Block %{block}: %{count} family name', 'Block %{block}: %{count} family names', $block_hash{$key}, { block => $key, count => $block_hash{$key} }))." <br>";
             }
         } elsif ($trial_stock_type eq 'cross') {
-            $design_info_html .= "<dt>Number of cross unique ids per block</dt><dd>";
+            $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.crosses_per_block', 'Number of cross unique ids per block'))."</dt><dd>";
             foreach my $key (sort { $a <=> $b} keys %block_hash) {
-                $design_info_html .= "Block ".$key.": ".$block_hash{$key}." cross unique ids <br>";
+                $design_info_html .= encode_entities($info_i18n->np('trial.design.summary.block_crosses', 'Block %{block}: %{count} cross unique id', 'Block %{block}: %{count} cross unique ids', $block_hash{$key}, { block => $key, count => $block_hash{$key} }))." <br>";
             }
         } else {
-            $design_info_html .= "<dt>Number of accessions per block</dt><dd>";
+            $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.accessions_per_block', 'Number of accessions per block'))."</dt><dd>";
             foreach my $key (sort { $a <=> $b} keys %block_hash) {
-                $design_info_html .= "Block ".$key.": ".$block_hash{$key}." accessions <br>";
+                $design_info_html .= encode_entities($info_i18n->np('trial.design.summary.block_accessions', 'Block %{block}: %{count} accession', 'Block %{block}: %{count} accessions', $block_hash{$key}, { block => $key, count => $block_hash{$key} }))." <br>";
             }
         }
         $design_info_html .= "</dt>";
@@ -383,13 +431,13 @@ sub design_info_view { #TODO: fix treatments here
 
 
     if (%rep_hash) {
-        $design_info_html .= "<dt>Number of reps</dt><dd>".scalar(keys %rep_hash)."</dd>";
+        $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.reps', 'Number of reps'))."</dt><dd>".scalar(keys %rep_hash)."</dd>";
     }
 
     if ($treatment_info_string) {
-        $design_info_html .= "<dt>Treatments:</dt><dd><div id='trial_design_confirm_treatments' >$treatment_info_string</div></dd>";
+        $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.treatments', 'Treatments:'))."</dt><dd><div id='trial_design_confirm_treatments' >$treatment_info_string</div></dd>";
     } else {
-        $design_info_html .= "<dt>Treatments:</dt><dd><div id='trial_design_confirm_treatments' >None added. Treatments and management regimes can be added on the trial detail page.</div></dd>";
+        $design_info_html .= "<dt>".encode_entities($info_i18n->p('trial.design.summary.treatments', 'Treatments:'))."</dt><dd><div id='trial_design_confirm_treatments' >".encode_entities($info_i18n->p('trial.design.summary.no_treatments', 'None added. Treatments and management regimes can be added on the trial detail page.'))."</div></dd>";
     }
 
     

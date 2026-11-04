@@ -17,6 +17,64 @@ Bryan Ellerbrock <bje24@cornell.edu>
 */
 
 
+var fieldBookTraitI18n = window.SGN && window.SGN.i18n || {
+    p: function(context, text, vars) {
+        return String(text).replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function(token, name) {
+            return vars && Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : token;
+        });
+    }
+};
+function fieldBookTraitHTML(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function(c) {
+        return {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"}[c];
+    });
+}
+function fieldBookTraitLocaleHeaders(url) {
+    try {
+        var destination = new URL(url, window.location.href);
+        if (destination.origin !== window.location.origin) return {};
+        var locale = fieldBookTraitI18n.requestedLocale || document.documentElement.getAttribute("data-sgn-locale") || "en";
+        return {"X-SGN-Locale": /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : "en"};
+    } catch (error) { return {}; }
+}
+
+function fieldBookTableLanguage() {
+    return {
+        sEmptyTable: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.empty', 'No data available in table')),
+        sInfo: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.info', 'Showing %{start} to %{end} of %{total} entries', {start: '_START_', end: '_END_', total: '_TOTAL_'})),
+        sInfoEmpty: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.info_empty', 'Showing 0 to 0 of 0 entries')),
+        sInfoFiltered: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.filtered', '(filtered from %{maximum} total entries)', {maximum: '_MAX_'})),
+        sLengthMenu: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.length', 'Show %{menu} entries', {menu: '_MENU_'})),
+        sLoadingRecords: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.loading', 'Loading...')),
+        sProcessing: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.processing', 'Processing...')),
+        sSearch: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.search', 'Search:')),
+        sZeroRecords: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.zero', 'No matching records found')),
+        oPaginate: {
+            sFirst: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.first', 'First')),
+            sLast: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.last', 'Last')),
+            sNext: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.next', 'Next')),
+            sPrevious: fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.table.previous', 'Previous'))
+        },
+        oAria: {
+            sSortAscending: fieldBookTraitI18n.p('fieldbook.table.sort_ascending', ': activate to sort column ascending'),
+            sSortDescending: fieldBookTraitI18n.p('fieldbook.table.sort_descending', ': activate to sort column descending')
+        }
+    };
+}
+
+// DataTables serializes a heading into its ARIA prefix. Restore the literal
+// DOM text while preserving the plugin's own next-sort instruction verbatim.
+function fieldBookTableAria(settings) {
+    settings.aoColumns.forEach(function(column) {
+        var heading = column.nTh;
+        var label = heading.getAttribute('aria-label');
+        var prefix = column.sTitle.replace(/<.*?>/g, '');
+        if (label !== null && label.slice(0, prefix.length) === prefix) {
+            heading.setAttribute('aria-label', heading.textContent + label.slice(prefix.length));
+        }
+    });
+}
+
 var $j = jQuery.noConflict();
 
 jQuery(document).ready(function($) {
@@ -31,7 +89,7 @@ jQuery(document).ready(function($) {
 
     jQuery('#create_new_trait_file_link').click(function() {
         var list = new CXGN.List();
-        var trait_lists = list.listSelect('select_list', ['traits'], 'Select a list', undefined, undefined);
+        var trait_lists = list.listSelect('select_list', ['traits'], fieldBookTraitI18n.p('fieldbook.trait.client.select_list', 'Select a list'), undefined, undefined);
         jQuery('#select_list_div').html(trait_lists);
         if (document.getElementById("html_select_traits_for_trait_file")) {
             show_list_counts_fb('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length);
@@ -57,15 +115,15 @@ jQuery(document).ready(function($) {
     });
 
     jQuery('#delete_fieldbook_layout_link').click(function() {
-        alert('Layout deleted successfully.');
+        alert(fieldBookTraitI18n.p('fieldbook.layout.deleted', 'Layout deleted successfully.'));
     });
 
 });
 
 function show_list_counts_fb(count_div, total_count, selected) {
-    var html = 'Traits: ' + total_count + '<br />';
+    var html = fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.trait.client.total', 'Traits: %{count}', {count: total_count})) + '<br />';
     if (selected) {
-        html += 'Selected: ' + selected;
+        html += fieldBookTraitHTML(fieldBookTraitI18n.p('fieldbook.trait.client.selected', 'Selected: %{count}', {count: selected}));
     }
     jQuery('#' + count_div).html(html);
 }
@@ -100,7 +158,7 @@ function generate_trait_file() {
     }
 
     if (trait_ids == '') {
-        alert("Traits, from a list or selected individually, are required.");
+        alert(fieldBookTraitI18n.p('fieldbook.trait.client.traits_required', 'Traits, from a list or selected individually, are required.'));
         return;
     }
 
@@ -108,12 +166,13 @@ function generate_trait_file() {
     var trait_file_name = jQuery('#trait_file_name').val();
 
     if (trait_file_name == '') {
-        alert("A trait file name is required.");
+        alert(fieldBookTraitI18n.p('fieldbook.trait.client.name_required', 'A trait file name is required.'));
         return;
     }
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/fieldbook/traitfile/create',
+        headers: fieldBookTraitLocaleHeaders('/ajax/fieldbook/traitfile/create'),
         dataType: "json",
         data: {
             'trait_list': trait_list,
@@ -137,7 +196,7 @@ function generate_trait_file() {
         },
         error: function() {
             jQuery("#working_modal").modal("hide");
-            alert('An error occurred creating the trait file.');
+            alert(fieldBookTraitI18n.p('fieldbook.trait.client.create_failed', 'An error occurred creating the trait file.'));
             jQuery('#create_trait_file_dialog').modal("hide");
         },
     });

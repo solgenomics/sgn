@@ -9,16 +9,25 @@ $sp_person_id
 $image_url
 </%args>
 
-<& /page/page_title.mas, title=>"Upload Image" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.image.upload_image", "Upload Image")) &>
 
 <%perl>
+use HTML::Entities ();
+my %image_ui = (
+    "confirmation" => HTML::Entities::encode_entities($c->i18n->p("community.image.the_image_uploaded_is_shown_below_please_click_on_store_in_sgn_database_to_per", "The image uploaded is shown below. Please click on \"Store in SGN database\" to permanently store the image in the database.")),
+    "association" => HTML::Entities::encode_entities($c->i18n->p("community.image.association", "Association:")),
+    "submitter" => HTML::Entities::encode_entities($c->i18n->p("community.image.submitter", "Submitter:")),
+    "store" => HTML::Entities::encode_entities($c->i18n->p("community.image.store_in_sgn_database", "Store in SGN database")),
+    "back" => HTML::Entities::encode_entities($c->i18n->p("community.image.go_back", "Go Back")),
+);
 
-  print qq { The image uploaded is shown below. Please click on "Store in SGN database" to permanently store the image in the database. <br /> };
+
+  print qq { $image_ui{confirmation} <br /> };
 
 print "<br />\n";
-if ($type && $type_id) { print "<b>Association:</b> $type id $type_id<br />\n"; }
+if ($type && $type_id) { print "<b>$image_ui{association}</b> $type id $type_id<br />\n"; }
 
-print "<b>Submitter:</b> $sp_person_id<br /><br/>\n";
+print "<b>$image_ui{submitter}</b> $sp_person_id<br /><br/>\n";
 
 print qq { 
 	  <form name="store_image" action="/image/store" method="post" enctype="multipart/form-data" >
@@ -26,13 +35,13 @@ print qq {
 	  <input type="hidden" name="filename" value="$filename" />
 	  <input type="hidden" name="type" value="$type" />
 	  <input type="hidden" name="type_id" value="$type_id" />
-	  <input id="store_image_submit" class="btn btn-primary" type="submit" value="Store in SGN database" />
+	  <input id="store_image_submit" class="btn btn-primary" type="submit" value="$image_ui{store}" />
 	  
 	  </form>
 	  <br/>
 	 };
 
-if ($refering_page) { print "<a class=\"footer\" href=\"$refering_page\"><button class=\"btn btn-default\">Go Back</button></a><br /><br />\n"; }
+if ($refering_page) { print "<a class=\"footer\" href=\"$refering_page\"><button class=\"btn btn-default\">$image_ui{back}</button></a><br /><br />\n"; }
 
 print qq { <img src="$image_url" /><br/><br/> };
 

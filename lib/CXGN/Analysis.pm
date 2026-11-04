@@ -56,6 +56,8 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Analysis;
 
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 
 extends 'CXGN::Project';
 
@@ -322,6 +324,7 @@ sub retrieve_analyses_by_user {
 
 sub create_and_store_analysis_design {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $precomputed_design_to_save = shift; #DESIGN HASHREF
 
     my $schema = $self->bcs_schema();
@@ -330,16 +333,16 @@ sub create_and_store_analysis_design {
     print STDERR "CREATE AND STORE ANALYSIS DESIGN...\n";
 
     if (!$self->user_id()) {
-        die "Need an sp_person_id to store an analysis.";
+        die SGN::I18N::translate($i18n, "analysis.interface.need_an_field_to_store_an_analysis", "Need an %{field} to store an analysis.", {field => "sp_person_id"});
     }
     if (!$self->get_description()) {
-        die "Need a description to store an analysis.";
+        die SGN::I18N::translate($i18n, "analysis.interface.need_a_description_to_store_an_analysis", "Need a description to store an analysis.");
     }
     if (!$self->get_name()) {
-        die "Need a name to store an analysis.";
+        die SGN::I18N::translate($i18n, "analysis.interface.need_a_name_to_store_an_analysis", "Need a name to store an analysis.");
     }
     if (!$self->breeding_program_id()) {
-        die "Need a breeding program to store an analysis.";
+        die SGN::I18N::translate($i18n, "analysis.interface.need_a_breeding_program_to_store_an_analysis", "Need a breeding program to store an analysis.");
     }
 
     my $p = CXGN::People::Person->new($dbh, $self->user_id);
@@ -423,7 +426,7 @@ sub create_and_store_analysis_design {
             $self->design($design);
         }
         else {
-            die "An error occurred creating the analysis design.";
+            die SGN::I18N::translate($i18n, "analysis.interface.an_error_occurred_creating_the_analysis_design", "An error occurred creating the analysis design.");
         }
     } else {
         $design = $precomputed_design_to_save;
@@ -464,7 +467,7 @@ sub create_and_store_analysis_design {
 #	print STDERR "VALIDATE ERROR! "; #.Dumper($validate_error)."\n";
 #    }
 #    else {
-##	print STDERR "Valiation successful. Storing...\n";
+##	print STDERR "Validation successful. Storing...\n";
 #	try { $store_error = $design_store->store() }
 #	catch { $store_error = $_ };
 #    }
@@ -476,7 +479,7 @@ sub create_and_store_analysis_design {
         $trial_create->save_trial();
     }
     catch {
-        die "Error saving trial: $_";
+        die SGN::I18N::translate($i18n, "analysis.interface.error_saving_trial_item", "Error saving trial: %{item}", {item => ("" . "$_")});
     };
 
     $self->_get_layout()->get_design();
@@ -491,6 +494,7 @@ sub create_and_store_analysis_design {
 
 sub store_analysis_values {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $metadata_schema = shift;
     my $phenome_schema = shift;
     my $values = shift;
@@ -544,7 +548,7 @@ sub store_analysis_values {
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
     if ($stored_phenotype_error) {
-	    die "An error occurred storing the phenotypes: $stored_phenotype_error\n";
+	    die SGN::I18N::translate($i18n, "analysis.interface.an_error_occurred_storing_the_phenotypes_stored_phenotype_error", "An error occurred storing the phenotypes: %{stored_phenotype_error}\n", {stored_phenotype_error => ("" . "$stored_phenotype_error")});
     }
 
 }

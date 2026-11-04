@@ -1,5 +1,7 @@
 
 package CXGN::Trial::TrialDesignStore::PhenotypingTrial;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use Moose;
 use Try::Tiny;
@@ -46,6 +48,7 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
 
 sub validate_design {
     my $self = shift;
+    my SGN::I18N $phenotypingtrial_validate_i18n = $self->i18n;
 
     #print STDERR "validating design\n";
     my $chado_schema = $self->get_bcs_schema;
@@ -56,7 +59,7 @@ sub validate_design {
 
     if (defined $design_type){
         if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'URDD'&& $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'stripplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis' && $design_type ne 'Meeting'){
-            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, URDD, ARC, MAD, p-rep, greenhouse, Westcott, splitplot or stripplot";
+            $error .= ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.design_type", "Design %{type} type must be either: %{allowed}", {type => $design_type, allowed => "CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, URDD, ARC, MAD, p-rep, greenhouse, Westcott, splitplot or stripplot"}) : "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, URDD, ARC, MAD, p-rep, greenhouse, Westcott, splitplot or stripplot");
             return $error;
         }
     }
@@ -75,12 +78,12 @@ sub validate_design {
             next;
         }
         if (!exists($design{$stock}->{plot_number})) {
-            $error .= "Property: plot_number is required for stock " . $stock;
+            $error .= ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.plot_number_required", "Property: plot_number is required for stock %{stock}", {stock => "$stock"}) : "Property: plot_number is required for stock " . $stock);
         }
 
         foreach my $property (keys %{$design{$stock}}){
             if (!exists($allowed_properties{$property})) {
-                $error .= "Property: $property not allowed! ";
+                $error .= ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.property_not_allowed", "Property: %{property} not allowed! ", {property => "$property"}) : "Property: $property not allowed! ");
             }
             if ($property eq 'stock_name') {
                 my $stock_name = $design{$stock}->{$property};
@@ -137,13 +140,13 @@ sub validate_design {
     my @source_names = keys %seen_source_names;
     my @accession_names = keys %seen_accession_names;
     if(scalar(@stock_names)<1){
-        $error .= "You cannot create a trial with less than one plot.";
+        $error .= ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.no_plot", "You cannot create a trial with less than one plot.") : "You cannot create a trial with less than one plot.");
     }
     #if(scalar(@source_names)<1){
     #	$error .= "You cannot create a trial with less than one seedlot.";
     #}
     if(scalar(@accession_names)<1){
-        $error .= "You cannot create a trial with less than one accession.";
+        $error .= ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.no_accession", "You cannot create a trial with less than one accession.") : "You cannot create a trial with less than one accession.");
     }
     my $subplot_type_id = $self->get_subplot_cvterm_id();      #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
     my $plot_type_id = $self->get_plot_cvterm_id();            #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
@@ -154,13 +157,13 @@ sub validate_design {
         uniquename=>{-in=>\@stock_names}
     });
     while (my $s = $stocks->next()) {
-        $error .= sprintf("Name %s already exists in the database.", $s->uniquename);
+        $error .= ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.name_exists", "Name %{name} already exists in the database.", {name => $s->uniquename}) : sprintf("Name %s already exists in the database.", $s->uniquename));
     }
 
     my $seedlot_validator = CXGN::List::Validate->new();
     my @seedlots_missing = @{$seedlot_validator->validate($chado_schema,'seedlots',\@source_names)->{'missing'}};
     if (scalar(@seedlots_missing) > 0) {
-        $error .=  "The following seedlots are not in the database as uniquenames or synonyms or are marked as discarded: ".join(',',@seedlots_missing);
+        $error .=  ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.missing_seedlots", "The following seedlots are not in the database as uniquenames or synonyms or are marked as discarded: %{names}", {names => join(',',@seedlots_missing)}) : "The following seedlots are not in the database as uniquenames or synonyms or are marked as discarded: ".join(',',@seedlots_missing));
     }
 
     my @source_stock_types = @{$self->get_source_stock_types()};
@@ -191,7 +194,7 @@ sub validate_design {
     # Report any missing names
     foreach my $name (@accession_names) {
         if (!$found_data{$name}) {
-            $error .= "The following name is not in the database: $name.\n";
+            $error .= ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.missing_name", "The following name is not in the database: %{name}.", {name => "$name"}) : "The following name is not in the database: $name.") . "\n";
         }
     }
 
@@ -206,7 +209,7 @@ sub validate_design {
         my $trial_layout_json = decode_json($trial_layout_json);
         foreach my $key (keys %{$trial_layout_json}) {
             if (defined $seen_plot_numbers{$key}) {
-                $error .= "Plot number '$key' already exists in the database for that study. Plot number must be unique.";
+                $error .= ($phenotypingtrial_validate_i18n ? $phenotypingtrial_validate_i18n->p("trial.design_store.duplicate_plot_number", "Plot number '%{number}' already exists in the database for that study. Plot number must be unique.", {number => "$key"}) : "Plot number '$key' already exists in the database for that study. Plot number must be unique.");
             }
         }
     }

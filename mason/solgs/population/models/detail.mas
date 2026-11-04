@@ -54,7 +54,7 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
 "solGS.genotypingProtocol", "save-svg-as-png.saveSvgAsPng", "solGS.selectMenu"] &>
 
 <& /page/page_title.mas,
-   title => "Prediction models from $training_pop_name"
+   title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.prediction_models_from_training_pop_name", "Prediction models from %{training_pop_name}", {training_pop_name => "" . ($training_pop_name // "")}))
 &>
 
 
@@ -124,3 +124,7 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
 
 <& /solgs/population/trait_acronyms.mas,
 &>
+
+<%once>
+use HTML::Entities ();
+</%once>

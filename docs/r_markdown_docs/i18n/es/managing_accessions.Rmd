@@ -1,0 +1,207 @@
+---
+editor_options:
+  markdown:
+    wrap: sentence
+---
+
+# Gestionar accesiones {#managing-accessions}
+
+La página “Gestionar accesiones” ofrece enlaces para añadir nuevas accesiones.
+Puede añadir accesiones a la base de datos mediante una lista o cargando un archivo Excel en formato XLS o XLSX.
+A continuación se explican ambas opciones con más detalle.
+Para empezar, pulse el enlace “Añadir accesiones o cargar información de accesiones”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_link.png')
+```
+
+Se abrirá un diálogo donde podrá elegir “Mediante listas” o “Cargar un archivo”.
+
+## Añadir accesiones mediante una lista {#add-accessions-using-a-list}
+
+Primero veremos cómo añadir accesiones “mediante listas”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_using_lists.png')
+```
+
+Aquí seleccione una lista de accesiones creada previamente (véase el capítulo “Gestor de listas”).
+Si necesita crear o editar la lista, puede hacerlo ahora pulsando “Gestionar listas”.
+Después de seleccionar la lista, pulse “Continuar”.
+
+El contenido de la lista se comprobará con la base de datos y se marcarán los elementos que ya existan.
+Aparecerá un cuadro de diálogo con las accesiones que ya están en la base de datos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_found.png')
+```
+
+Al pulsar “Continuar”, aparecerá otro diálogo con accesiones cuyos nombres son muy parecidos al de la nueva accesión.
+En el ejemplo hay dos accesiones con nombres muy parecidos a los de accesiones existentes. “TME0419” se parece mucho a “TME419” y probablemente representa la misma línea, así que sería un error volver a añadirla.
+Deben evitarse los duplicados: dificultan la evaluación de las líneas porque los datos quedan repartidos entre varias copias y es más difícil obtener una visión completa de la accesión.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_fuzzy.png')
+```
+
+Para evitar añadir por error una accesión duplicada, la base de datos ofrece varias opciones para tratar nombres muy parecidos.
+Puede “continuar guardando el nombre en la lista”, “reemplazar el nombre de la lista por el nombre existente seleccionado”, “quitar el nombre de la lista e ignorarlo” o “añadir el nombre de la lista como sinónimo del nombre existente seleccionado”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_fuzzy_options.png')
+```
+
+Al pulsar “Descargar coincidencias aproximadas” se obtendrá una tabla con los resultados de coincidencias aproximadas mostrados.
+Pulse “Realizar cambios y continuar” para seguir.
+
+El último diálogo muestra las accesiones que se añadirán.
+Debe asignarles la especie. También puede agruparlas en una población o asociarles una organización.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_complete_using_list.png')
+```
+
+Al pulsar “Añadir accesiones”, se crearán en la base de datos y aparecerá un diálogo de confirmación con enlaces a las nuevas accesiones.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_saved.png')
+```
+
+## Cargar accesiones y sus datos desde un archivo {#uploading-accessions-and-accessions-info-from-a-file}
+
+Cargar accesiones desde un archivo es parecido a usar una lista, pero permite añadir en bloque varios atributos, como sinónimos o niveles de ploidía.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_using_file.png')
+```
+
+Pulse “Formato de hoja de cálculo” para ver la estructura requerida.
+El archivo debe estar en formato XLS o XLSX y puede contener varias columnas de encabezado para atributos.
+Es importante usar exactamente los nombres de columna indicados en la plantilla.
+En las columnas que permiten varios valores mediante (s), como synonym(s), puede indicar una lista separada por comas, por ejemplo 'synonym1,synonym2'.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_spreadsheet_info.png')
+```
+
+Después de seleccionar el archivo XLS o XLSX que desea cargar, pulse “Continuar”.
+
+El proceso siguiente es el mismo que con las listas:
+
+El primer diálogo que puede aparecer mostrará los nombres de accesiones que ya están en la base de datos.
+
+Pulse “Continuar”; en el siguiente diálogo pueden aparecer coincidencias aproximadas de los nombres de accesiones que carga.
+Aquí puede evitar añadir nombres muy parecidos entre sí para prevenir duplicados erróneos.
+
+Pulse “Continuar”. El diálogo final mostrará la información que se añadirá a la base de datos.
+Se separarán los nombres de accesiones nuevos y los que ya existen; para los existentes se mostrarán los atributos adicionales del archivo que se incorporarán.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_complete_using_file.png')
+```
+
+Al pulsar “Añadir accesiones”, se crearán las nuevas accesiones y sus datos en la base de datos. El diálogo de confirmación incluirá enlaces a las accesiones creadas y actualizadas.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_accessions_add_accessions_saved.png')
+```
+
+## Aviso por correo sobre la carga de accesiones {#email-alert-for-accession-upload}
+
+Al cargar muchas accesiones desde un archivo, el proceso puede tardar porque el sistema realiza varias comprobaciones para cada registro.
+Puede recibir por correo una notificación sobre el estado y los resultados de la carga marcando “Aviso por correo”.
+De forma predeterminada, se usará el correo asociado a su cuenta, pero puede introducir otra dirección si lo prefiere.
+Tras enviarlo, la carga se ejecuta en segundo plano y podrá seguir usando la interfaz sin interrupciones.
+Al finalizar, recibirá un correo con los resultados de la carga, incluidos los avisos o errores que se hayan producido.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/accession_upload_using_email.png')
+```
+
+## Añadir información de parentesco (pedigrí) a las accesiones {#add-parentage-pedigree-information-to-accessions}
+
+Puede cargar datos de pedigrí desde su equipo pulsando “Cargar archivo de pedigrí”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image286.png')
+```
+
+Puede consultar cómo preparar el archivo de pedigrí pulsando “Información del formato de archivo”.
+El archivo puede ser de texto delimitado por tabulaciones o comas, o de Excel (.xls o .xlsx).
+
+El formato admitido actualmente tiene cuatro columnas:
+
+progeny name female parent accession male parent accession type
+
+El tipo puede ser biparental, self, backcross, sib, polycross, reselected u open.
+Para el tipo open, el campo male parent accession puede quedar vacío.
+En los demás tipos deben rellenarse ambas columnas, aunque contengan la misma información que otra (como en self).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image333.png')
+```
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/pedigree_upload_format.png')
+```
+
+## Trabajar con injertos {#working-with-grafts}
+
+Los injertos son plantas formadas por un portainjerto y un vástago genéticamente distintos que se unen, normalmente a nivel del tallo.
+
+Para trabajar con injertos, el administrador del sistema debe activar la interfaz correspondiente.
+Póngase en contacto con el proveedor de Breedbase.
+En resumen, hay que añadir el parámetro show_grafting_interface al archivo sgn_local.conf.
+Debe establecerse en 1 en sgn_local.conf; en sgn.conf el valor predeterminado es 0.
+
+Los injertos que se van a crear deben especificarse en un archivo Excel (formato xlsx) con dos columnas.
+La primera debe tener el encabezado "scion accession" y enumerar las accesiones que serán vástagos.
+La segunda debe llevar el encabezado "rootstock accession" y enumerar las accesiones que serán portainjertos.
+
+En la base de datos, cada injerto se crea como una accesión independiente.
+El injerto tendrá dos relaciones: una con la accesión vástago (relación scion_of) y otra con el portainjerto (relación rootstock_of).
+Estas relaciones se muestran en el visor de pedigrí.
+El nombre de la accesión injertada se forma con los nombres del vástago y el portainjerto, separados por el carácter separador de injerto.
+De forma predeterminada, es el signo más .
+Puede cambiarse en sgn_local.conf mediante el parámetro graft_separator_string.
+La cadena separadora no debe aparecer en los nombres de otras accesiones que no sean injertos.
+
+Al activar la interfaz de injertos, aparecerá un botón nuevo en la página de gestión de accesiones: “Cargar injertos”.
+
+Al pulsar el botón se abre el diálogo para cargar injertos.
+
+Seleccione el archivo Excel con la información de injertos. El sistema lo validará; por ejemplo, comprobará si las accesiones existen en la base de datos y si los encabezados son correctos.
+
+Se mostrará el resultado de la validación y se enumerarán los problemas encontrados. Si hay errores, el botón “Cargar injertos” aparecerá desactivado y no se podrá realizar la carga. Si no hay errores, el botón se activará y podrá pulsarlo para guardar los datos.
+
+Al finalizar la carga, aparecerá un mensaje con un resumen de los datos cargados.
+
+Las accesiones injertadas pueden usarse como cualquier otra, por ejemplo, en diseños de campo.
+Si crea una lista de accesiones injertadas, use el tipo de lista 'accessions'.
+
+No cree injertos nuevos a partir de otros injertos.
+La accesión del vástago y la del portainjerto deben ser distintas; de lo contrario, no se crearán.
+
+## Cambiar nombres de accesiones en bloque {#bulk-renaming-of-accessions}
+
+Puede cambiar en bloque los nombres de las accesiones mediante la función correspondiente.
+Prepare un archivo delimitado por tabulaciones con dos columnas: la primera debe tener el encabezado "old name" y los nombres que desea cambiar.
+La segunda debe tener el encabezado "new name" y los nuevos nombres para las accesiones de la columna 1.
+
+La función para cambiar nombres está disponible desde la página Gestionar-\>Accesiones.
+Pulse el botón “Renombrar accesiones”.
+Primero se carga el archivo y se realiza una verificación.
+Se comprueba que todos los nombres de la columna 1 existan en la base de datos y que ninguno de los nombres de la columna 2 exista allí.
+Solo si se cumplen ambas condiciones se activa el botón “Renombrar”; de lo contrario, se muestra un error con los nombres problemáticos.
+
+Opcionalmente, el nombre anterior puede añadirse automáticamente como sinónimo de la accesión renombrada mediante la casilla del formulario.
+La casilla está marcada de forma predeterminada.
+Desmárquela para NO guardar los nombres anteriores como sinónimos.
+
+No se deben cambiar los nombres de accesiones a la ligera.
+Esta función está pensada para casos especiales, como cuando en un vivero se crean accesiones con nombres distintos de los usados después en el programa de mejoramiento.
+
+También puede usarla para corregir en bloque errores ortográficos y otros problemas en los nombres.
+Tenga en cuenta que la herramienta no cambia los nombres de elementos relacionados, como las parcelas, que quizá se hayan creado usando los nombres de las accesiones.
+
+Dadas las implicaciones de cambiar nombres, esta función se limita a las cuentas con el rol curator.

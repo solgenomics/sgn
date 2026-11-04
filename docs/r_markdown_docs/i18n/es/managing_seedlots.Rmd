@@ -1,0 +1,185 @@
+# Gestión de lotes de semillas {#managing-seed-lots}
+
+Los lotes de semillas se diferencian de las accesiones porque representan semillas físicas que se evalúan en un ensayo. Los lotes pueden tener datos como el lugar de almacenamiento y la cantidad de semillas, a diferencia de las accesiones. Las semillas de un lote pueden proceder de cruzamientos o corresponder a accesiones con nombre. Los lotes procedentes de cruzamientos representan semillas cosechadas. Para empezar, haga clic en Gestionar y luego en Lotes de semillas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlots.png')
+```
+
+## Añadir lotes de semillas {#add-new-seedlots}
+
+Para añadir un lote, pulse "Añadir lote de semillas". En el diálogo, indique dónde se encuentra, qué accesión o cruzamiento contiene y cuántas semillas hay. El lote debe corresponder a una accesión o a un cruzamiento, pero no a ambos. Debe indicarse el peso en gramos, el número de semillas o ambos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlot_add_seedlot.png')
+```
+
+Si tiene que añadir muchos lotes a la base de datos, puede cargar un archivo Excel XLS o XLSX. Pulse "Cargar lotes de semillas" para abrir el siguiente diálogo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlot_upload_seedlots.png')
+```
+
+## Transacciones de lotes de semillas {#seedlot-transactions}
+
+Los lotes permiten registrar el origen de las semillas, por ejemplo, un cruzamiento, y su destino, como las parcelas del campo. Al abrir la página de detalles del lote verá lo siguiente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/seedlot_detail_page.png')
+```
+
+En esta página puede consultar y editar los datos de un lote, como su nombre y ubicación. También verá una tabla con todas las transacciones del lote, por ejemplo, si se sembró en una parcela. Las transacciones de parcelas se crean al añadir o cargar un ensayo o desde su página de detalles. Al pulsar "Agregar una nueva operación" puede registrar una transacción entre este lote y otro. Esto permite representar la distribución de semillas en distintas ubicaciones.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/seedlot_add_new_transaction.png')
+```
+
+## Inventario de semillas {#seed-inventory}
+
+Para hacer el inventario de semillas:
+1) Compruebe que los lotes estén en la base de datos. Use "Crear lote de semillas" para añadir uno o "Cargar lotes de semillas" para añadir varios.
+2) Asegúrese de que los lotes tengan códigos de barras. Puede imprimirlos desde la base de datos.
+3) Use la aplicación Android "Inventory" para escanear los códigos de barras de los lotes y registrar el peso. Después use "Cargar inventario" para cargar esos datos en la base. Si lo prefiere, puede crear su propio archivo CSV y cargarlo en lugar de usar Inventory.
+<b>Para más información sobre la aplicación Android "Inventory", visite <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b>
+
+Al pulsar "Cargar inventario" se abrirá el siguiente diálogo:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlot_upload_inventory.png')
+```
+
+El archivo CSV del inventario debe cumplir estos requisitos de plantilla. La aplicación Android Seed Inventory exporta exactamente este formato.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlot_upload_inventory_template.png')
+```
+
+## Buscar lotes para una lista de accesiones {#find-seedlots-for-a-list-of-accessions}
+
+La herramienta de listas permite buscar fácilmente lotes disponibles para una lista de accesiones. Primero abra su lista de accesiones. Para obtener ayuda, consulte la sección «Listas». Allí encontrará el botón "Ver lotes de semillas disponibles".
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlot_accession_list_search.png')
+```
+
+Al hacer clic, aparecerá una tabla en un diálogo. Desde allí puede crear una lista de lotes con las casillas y el campo de la parte inferior.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlot_list_available_seedlots.png')
+```
+
+## Crear un lote para una accesión o un cruzamiento {#create-a-seedlot-for-an-accession-or-cross}
+
+Además de crear lotes desde la página "Gestionar lotes de semillas", puede crear uno desde la página de detalles de una accesión o un cruzamiento. En la página de la accesión, la opción aparece en la sección "Materiales relacionados", como se muestra abajo. La página del cruzamiento tiene la misma sección. Use el enlace para crear un lote y agilizar el proceso.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlot_accession_detail.png')
+```
+
+## Añadir datos de calidad a un lote {#add-quality-data-to-a-seedlot}
+
+La calidad del lote se indica en el campo quality, que también está disponible como columna del formato de carga. Se recomienda usar un vocabulario controlado definido por el usuario. Por ejemplo, las semillas de buena calidad pueden llevar la etiqueta "ok" y otros descriptores pueden ser "moldy", "insect damage" o "low sprouting".
+
+## Eventos de mantenimiento de lotes {#seedlot-maintenance-events}
+
+Algunos cultivos, como sugar kelp, requieren mantenimiento periódico del lote para conservar las semillas a largo plazo. Por ejemplo, un evento de mantenimiento de sugar kelp puede registrar el cambio rutinario del agua en la que se mantienen los gametofitos. Breedbase permite guardar estos eventos vinculados directamente a lotes existentes. Pueden cargarse con una plantilla sencilla de Excel o registrarse en el sitio.
+
+### Configuración {#setup}
+
+Cada instancia de Breedbase debe configurarse para guardar eventos de mantenimiento de lotes, ya que cada cultivo puede tener sus propios eventos. Para comprobar si su instancia admite esta función, abra el menú Gestionar y la página Lotes de semillas. Inicie sesión y busque arriba el botón **Mantenimiento de lotes de semillas**, junto a **Create Seedlot(s)** y **Cargar inventario**. Si no aparece, consulte a los desarrolladores de su instancia de Breedbase si pueden habilitar esta función.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlots_seedlot_maintenance.png')
+```
+*Ubicación del botón de mantenimiento de lotes en la página Gestionar &gt; Lotes de semillas*
+
+### Añadir eventos {#adding-events}
+
+Los eventos de mantenimiento pueden añadirse de dos formas: 1) cargar una plantilla de Excel o 2) registrar los eventos directamente en el sitio
+
+#### Cargar eventos con una plantilla de Excel {#uploading-events-with-excel-template -}
+
+Para cargar eventos de mantenimiento en bloque, cree primero un archivo Excel (.xls o .xlsx) con los siguientes encabezados:
+
+- **seedlot**: nombre del lote al que se asociará el evento (debe coincidir exactamente con un lote existente en la base de datos)
+- **type**: nombre del tipo de evento de mantenimiento del lote (puede variar entre instancias de Breedbase; la página de carga muestra los tipos admitidos)
+- **value**: valor del evento de mantenimiento (puede variar según el tipo de evento y la instancia de Breedbase; la página de carga muestra los valores admitidos)
+- **notes**: notas o comentarios adicionales opcionales sobre el evento
+- **operator**: nombre de usuario de Breedbase que registró el evento
+- **timestamp**: fecha y hora del registro del evento en formato 'YYYY-MM-DD HH:MM:SS'
+
+Cuando tenga listo el archivo Excel con los eventos, siga estos pasos para cargarlos en la base de datos:
+
+1. Inicie sesión en su instancia de Breedbase.
+2. Abra la página Gestionar &gt; Lotes de semillas.
+3. Pulse **Mantenimiento de lotes de semillas**.
+4. Seleccione el botón **Cargar mantenimiento**.
+5. Elija el archivo Excel (.xls o .xlsx) que desea cargar.
+6. Pulse **Cargar**.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/seedlot_maintenance_upload.png')
+```
+*Diálogo de carga de Mantenimiento de lotes de semillas con los tipos y valores de evento admitidos (para sugar kelp)*
+
+#### Registrar eventos en el sitio {#recording-events-on-website -}
+
+Para añadir eventos individuales de mantenimiento a la base de datos en tiempo real, use la página **Registrar mantenimiento**. Siga estos pasos para registrar los eventos:
+
+1. Inicie sesión en su instancia de Breedbase.
+2. Abra la página Gestionar &gt; Lotes de semillas.
+3. Pulse **Mantenimiento de lotes de semillas**.
+4. Pulse **Registrar mantenimiento**.
+5. Introduzca **Nombre del lote de semillas** o escanee un código de barras que lo contenga. Al introducirlo, el recuadro superior mostrará información básica del lote y sus eventos recientes.
+6. Seleccione o introduzca los valores de cada evento.
+7. Si lo desea, use el botón notes junto a cada evento para añadir comentarios.
+8. Compruebe que operator/username y timestamp sean correctos.
+9. Pulse **Enviar** para añadir los eventos registrados a la base de datos. NOTA: los eventos que sigan marcados como "Not Recorded" no se enviarán.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/seedlot_maintenance_record.png')
+```
+*Página de registro de Mantenimiento de lotes de semillas configurada para sugar kelp*
+
+### Mostrar eventos {#displaying-events}
+
+Los eventos de mantenimiento recientes aparecen en una tabla de la página principal de Mantenimiento de lotes de semillas y en la página de detalles de cada lote.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/seedlot_maintenance_events_unfiltered.png')
+```
+*Tabla sin filtrar de eventos recientes de Mantenimiento de lotes de semillas*
+
+Los eventos de estas tablas se ordenan por timestamp, con los más recientes primero. Puede filtrarlos con uno o varios criterios admitidos, por ejemplo:
+- nombres de lotes (introducidos en la página o tomados de una lista existente),
+- fechas (en, en o antes, antes, en o después, y/o después de las fechas indicadas)
+- tipos de evento
+- valores del tipo de evento
+- operator/username
+
+Seleccione las propiedades del filtro que desea aplicar y pulse **Añadir** para añadirlo a la lista de filtros aplicados. Cuando termine, pulse **Filtrar** para buscar en la base los eventos que coincidan.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/seedlot_maintenance_events_filtered.png')
+```
+*Tabla filtrada de eventos de Mantenimiento de lotes de semillas*
+
+Puede descargar los eventos filtrados desde la tabla con los botones **Excel** o **CSV** de la parte superior. También puede descargar en bloque todos los eventos de los lotes usando una lista de Seedlots desde la página principal de descargas (véase abajo).
+
+### Descargar eventos {#downloading-events}
+
+Para descargar en bloque todos los eventos de un subconjunto de lotes:
+
+1. Cree una lista con los Seedlots que le interesan.
+2. Abra la página **Descargar mediante listas** (Gestionar &gt; Descargar).
+3. Busque la sección **Descargar eventos de mantenimiento de lotes de semillas**.
+4. Seleccione su lista de Seedlots.
+5. Pulse **Descargar** para generar el archivo.
+
+El archivo descargado tendrá el mismo formato que la plantilla de carga e incluirá todos los eventos registrados para cada lote de la lista.
+
+## Eliminar lotes de semillas {#deleting-seedlots}
+
+Puede eliminar lotes desde Gestionar lotes de semillas (/breeders/seedlots): busque el lote y pulse X para eliminarlos de uno en uno. El usuario debe tener los permisos necesarios para eliminarlo. Además, el lote no debe tener transacciones asociadas, salvo la transacción inicial.
+
+Para eliminar lotes en bloque, genere una lista de tipo seedlot, por ejemplo, con Asistente de búsqueda. Abra la sección "Eliminar lotes de semillas mediante una lista" en Gestionar lotes de semillas y seleccione la lista. La eliminación mediante una lista solo está disponible para usuarios con estado curator.

@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 
 <%args>
 </%args>
@@ -10,44 +13,44 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title => "Image Search" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.images.image_search', 'Image Search')) &>
 
-<&| /page/info_section.mas, title=>"Image Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "All images may not have names, descriptions, or tags associated with them."&>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.images.image_search_criteria', 'Image Search Criteria')),  collapsible => 1, collapsed=>0, subtitle => HTML::Entities::encode_entities($c->i18n->p('global.search.images.all_images_may_not_have_names_descriptions_or_tags_associated_with_them', 'All images may not have names, descriptions, or tags associated with them.'))&>
 
     <div id="image_search_form" class="well well-sm">
         <div class="form-horizontal" >
             <div class="form-group">
-                <label class="col-sm-6 control-label">Image descriptors (name, description, or filename): </label>
+                <label class="col-sm-6 control-label"><% $c->i18n->p('global.search.images.image_descriptors_name_description_or_filename', 'Image descriptors (name, description, or filename):') |h %> </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="image_description_filename_composite" name="image_description_filename_composite" placeholder="e.g. MyImageName" />
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-6 control-label">Submitter: </label>
+                <label class="col-sm-6 control-label"><% $c->i18n->p('global.search.images.submitter.31da5f6', 'Submitter:') |h %> </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="image_submitter" name="image_submitter" placeholder="e.g. JaneDoe" />
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-6 control-label">Image tag: </label>
+                <label class="col-sm-6 control-label"><% $c->i18n->p('global.search.images.image_tag', 'Image tag:') |h %> </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="image_tag" name="image_tag" placeholder="e.g. ImageTagName" />
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-6 control-label">Associated stock: </label>
+                <label class="col-sm-6 control-label"><% $c->i18n->p('global.search.images.associated_stock', 'Associated stock:') |h %> </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="image_stock_uniquename" name="image_stock_uniquename" placeholder="e.g. FieldPlot100" />
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-6 control-label">Related stock: </label>
+                <label class="col-sm-6 control-label"><% $c->i18n->p('global.search.images.related_stock', 'Related stock:') |h %> </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="image_related_stock" name="image_related_stock" placeholder="e.g. Accession/Plot/TissueSample" />
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-6 control-label">Associated project: </label>
+                <label class="col-sm-6 control-label"><% $c->i18n->p('global.search.images.associated_project', 'Associated project:') |h %> </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="image_project_name" name="image_project_name" placeholder="e.g. DroneProject 01/01/2019" />
                 </div>
@@ -55,25 +58,25 @@
         </div>
 
         <center>
-        <button class="btn btn-primary" id="image_search_submit" >Search</button>
+        <button class="btn btn-primary" id="image_search_submit" ><% $c->i18n->p('global.search.images.search', 'Search') |h %></button>
         </center>
     </div>
 </&>
 
-<&| /page/info_section.mas, title=>"Image Search Results",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.images.image_search_results', 'Image Search Results')),  collapsible => 1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
                 <table id="images_search_results" class="table table-hover table-striped">
                 <thead>
                   <tr>
-                    <th>Image Thumbnail</th>
-                    <th>Filename</th>
-                    <th>Description</th>
-                    <th>Submitter</th>
-                    <th>Associations</th>
-                    <th>Related Accession</th>
-                    <th>Tags</th>
+                    <th><% $c->i18n->p('global.search.images.image_thumbnail', 'Image Thumbnail') |h %></th>
+                    <th><% $c->i18n->p('global.search.images.filename', 'Filename') |h %></th>
+                    <th><% $c->i18n->p('global.search.images.description', 'Description') |h %></th>
+                    <th><% $c->i18n->p('global.search.images.submitter.5559e18', 'Submitter') |h %></th>
+                    <th><% $c->i18n->p('global.search.images.associations', 'Associations') |h %></th>
+                    <th><% $c->i18n->p('global.search.images.related_accession', 'Related Accession') |h %></th>
+                    <th><% $c->i18n->p('global.search.images.tags', 'Tags') |h %></th>
                 </tr>
                 </thead>
                 </table>

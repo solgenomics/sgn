@@ -41,10 +41,10 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Expected genetic gain analysis",
   collapsible => 1,
    collapsed  => 0,
-  title      => "Expected genetic gain analysis"
+  title      => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.expected_genetic_gain_analysis", "Expected genetic gain analysis"))
   &>
 
 
@@ -79,3 +79,7 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 </&>
 
 <& /util/import_javascript.mas, classes => [ "solGS.geneticGain"] &>
+
+<%once>
+use HTML::Entities ();
+</%once>

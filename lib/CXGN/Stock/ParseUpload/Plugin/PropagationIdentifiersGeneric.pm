@@ -1,6 +1,7 @@
 package CXGN::Stock::ParseUpload::Plugin::PropagationIdentifiersGeneric;
 
 use Moose::Role;
+use SGN::I18N ();
 use CXGN::File::Parse;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
@@ -9,6 +10,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_i18n = SGN::I18N::translate($self);
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -17,6 +19,7 @@ sub _validate_with_plugin {
     my %errors;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $ui_i18n,
         file => $filename,
         required_columns => [ 'propagation_group_identifier', 'propagation_identifier', 'status_type', 'status_date', 'status_updated_by'],
         optional_columns => [ 'rootstock', 'status_notes', 'inventory_identifier'],
@@ -47,7 +50,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            (SGN::I18N::translate($ui_i18n, "seedlot.server.the_following_columns_are_not_recognized_names_please", "The following columns are not recognized: %{names}. Please check the spreadsheet format for the allowed columns.", {names => "" . (join(', ', @$additional_columns))}))
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -71,14 +74,14 @@ sub _validate_with_plugin {
     my $propagation_group_id_validator = CXGN::List::Validate->new();
     my @propagation_group_ids_missing = @{$propagation_group_id_validator->validate($schema,'propagation_groups', $seen_propagation_group_identifiers)->{'missing'}};
     if (scalar(@propagation_group_ids_missing) > 0) {
-        push @error_messages, "The following propagation group identifiers are not in the database: ".join(',',@propagation_group_ids_missing);
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.the_following_propagation_group_identifiers_are_not_in", "The following propagation group identifiers are not in the database: %{names}", {names => "" . (join(',',@propagation_group_ids_missing))}));
     }
 
     if (scalar(@$seen_rootstocks) > 0) {
         my $accession_validator = CXGN::List::Validate->new();
         my @accessions_missing = @{$accession_validator->validate($schema,'accessions', $seen_rootstocks)->{'missing'}};
         if (scalar(@accessions_missing) > 0) {
-            push @error_messages, "The following rootstocks are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+            push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.the_following_rootstocks_are_not_in_the_database", "The following rootstocks are not in the database, or are not in the database as uniquenames: %{names}", {names => "" . (join(',',@accessions_missing))}));
         }
     }
 
@@ -86,7 +89,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => $seen_propagation_identifiers }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Propagation Identifier already exists in database: ".$r->uniquename;
+        push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.propagation_identifier_already_exists_in_database_name", "Propagation Identifier already exists in database: %{name}", {name => "" . ($r->uniquename)}));
     }
 
     my %duplicated_propagation_identifiers;
@@ -95,7 +98,7 @@ sub _validate_with_plugin {
         my $propagation_identifier = $row->{'propagation_identifier'};
 
         if ($duplicated_propagation_identifiers{$propagation_identifier}) {
-            push @error_messages, "Cell A$row_num: duplicate propagation identifier: $propagation_identifier. Propagation Identifier must be unique.";
+            push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.cell_a_row_num_duplicate_propagation_identifier_propagation", "Cell A%{row_num}: duplicate propagation identifier: %{propagation_identifier}. Propagation Identifier must be unique.", {row_num => "" . ($row_num), propagation_identifier => "" . ($propagation_identifier)}));
         } else {
             $duplicated_propagation_identifiers{$propagation_identifier}++;
         }
@@ -105,7 +108,7 @@ sub _validate_with_plugin {
         if (scalar(@$seen_status_types) > 0) {
             foreach my $type (@$seen_status_types) {
                 if (!exists $supported_status_types{$type}) {
-                    push @error_messages, "Status type not supported: $type. Status type must be 'in progress', 'inventoried', 'distributed', 'in trial', 'dead', 'disposed'";
+                    push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.status_type_not_supported_type_status_type_must", "Status type not supported: %{type}. Status type must be 'in progress', 'inventoried', 'distributed', 'in trial', 'dead', 'disposed'", {type => "" . ($type)}));
                 }
             }
         }
@@ -114,7 +117,7 @@ sub _validate_with_plugin {
     if ($seen_status_dates) {
         foreach my $status_date (@$seen_status_dates)  {
             if (!($status_date =~ m/(\d{4})\-(\d{2})\-(\d{2})/)) {
-                push @error_messages, "$status_date is not a valid date. Dates must be YYYY-MM-DD";
+                push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.status_date_is_not_a_valid_date_dates", "%{status_date} is not a valid date. Dates must be YYYY-MM-DD", {status_date => "" . ($status_date)}));
             }
         }
     }
@@ -125,7 +128,7 @@ sub _validate_with_plugin {
                 'uniquename' => { -in => $seen_inventory_identifiers }
             });
             while (my $r=$inventory_rs->next){
-                push @error_messages, "Inventory Identifier already exists in database: ".$r->uniquename;
+                push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.inventory_identifier_already_exists_in_database_name", "Inventory Identifier already exists in database: %{name}", {name => "" . ($r->uniquename)}));
             }
         }
     }

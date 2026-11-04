@@ -2,7 +2,7 @@
 $redirect_uri
 </%args>%>
 
-<b>Logging out...</b>
+<b><% $c->i18n->p('global.logout_externally.status', 'Logging out...') |h %></b>
 
 <script>
 console.log(<% $redirect_uri %>);

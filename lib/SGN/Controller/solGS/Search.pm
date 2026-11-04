@@ -27,6 +27,7 @@ use File::Basename;
 use JSON;
 use List::MoreUtils qw /uniq/;
 use Try::Tiny;
+use SGN::I18N ();
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -43,11 +44,15 @@ sub solgs_breeder_search : Path('/solgs/breeder_search') Args(0) {
 
 sub solgs_login_message : Path('/solgs/login/message') Args(0) {
     my ( $self, $c ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my $page = $c->req->param('page');
 
-    my $msg = "This is a private data. If you are the owner, "
-      . "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
+    my $msg = SGN::I18N::translate($ui_solgs_i18n, "solgs.server.private_data_intro", "This is a private data. If you are the owner, please ")
+      . "<a href=\"/user/login?goto_url=$page\">"
+      . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.private_data_login", "login")
+      . "</a>"
+      . SGN::I18N::translate($ui_solgs_i18n, "solgs.server.private_data_suffix", " to view it.");
 
     $c->controller('solGS::Utils')->generic_message( $c, $msg );
 
@@ -455,6 +460,7 @@ sub check_selection_pops_list : Path('/solgs/check/selection/populations')
 
 sub projects_links {
     my ( $self, $c, $pr_rs ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
@@ -499,7 +505,7 @@ qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="solGS.c
             my $trial_url =
               $c->controller('solGS::Path')->trial_page_url($pr_id);
             my $trial_link = $c->controller('solGS::Path')
-              ->create_hyperlink( $trial_url, 'View' );
+              ->create_hyperlink( $trial_url, SGN::I18N::translate($ui_solgs_i18n, "solgs.server.view_trial", "View") );
 
             push @projects_pages,
               [
@@ -573,6 +579,7 @@ sub project_description {
 
 sub format_trait_gs_projects {
     my ( $self, $c, $trait_id, $projects, $protocol_id ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my @formatted_projects;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
@@ -611,7 +618,7 @@ qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.
                 my $trial_url =
                   $c->controller('solGS::Path')->trial_page_url($pr_id);
                 my $trial_link = $c->controller('solGS::Path')
-                  ->create_hyperlink( $trial_url, 'View' );
+                  ->create_hyperlink( $trial_url, SGN::I18N::translate($ui_solgs_i18n, "solgs.server.view_trial", "View") );
 
                 push @formatted_projects,
                   [
@@ -632,6 +639,7 @@ qq|<a href="$model_page" onclick="solGS.waitPage(this.href); return false;">$pr_
 
 sub format_gs_projects {
     my ( $self, $c, $projects ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my @formatted_projects;
 
@@ -672,7 +680,7 @@ qq | <div class=trial_code style="color: $match_code; background-color: $match_c
                 my $trial_url =
                   $c->controller('solGS::Path')->trial_page_url($pr_id);
                 my $trial_link = $c->controller('solGS::Path')
-                  ->create_hyperlink( $trial_url, 'View' );
+                  ->create_hyperlink( $trial_url, SGN::I18N::translate($ui_solgs_i18n, "solgs.server.view_trial", "View") );
 
                 push @formatted_projects,
                   [
@@ -919,6 +927,7 @@ sub get_project_owners {
 
 sub format_selection_pops {
     my ( $self, $c, $selection_pops_ids ) = @_;
+    my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my $training_pop_id = $c->stash->{training_pop_id};
 
@@ -962,7 +971,7 @@ qq | <data><input type="hidden" value=\'$id_pop_name\'>$name</data>|;
                 my $trial_url = $c->controller('solGS::Path')
                   ->trial_page_url($selection_pop_id);
                 my $trial_link = $c->controller('solGS::Path')
-                  ->create_hyperlink( $trial_url, 'View' );
+                  ->create_hyperlink( $trial_url, SGN::I18N::translate($ui_solgs_i18n, "solgs.server.view_trial", "View") );
 
                 $c->controller('solGS::Download')
                   ->selection_prediction_download_urls( $c, $training_pop_id,

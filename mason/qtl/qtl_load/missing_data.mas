@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -27,7 +31,7 @@ my ( $messages, $count );
 if ( @{$missing_data} ) 
 {
        
-$messages .= "Data for the following field(s) is missing: <br /><br />";
+$messages .= ($c->i18n->p("analysis.qtl.ui.data_for_the_following_field_s_is_missing", "Data for the following field(s) is missing: ") . "<br /><br />");
 my $count = 1;
 foreach my $e (@{$missing_data}) {
 
@@ -35,14 +39,14 @@ $messages .= $count . ")" . "\t" . $e . "." . "<br />";
 $count++;
 }
 
-$messages .= qq | <p><a href="javascript:history.go(-1)">
-   Please go back and fill in the missing information.</a> </p>|;
+$messages .= (qq | <p><a href="javascript:history.go(-1)">
+   | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.please_go_back_and_fill_in_the_missing_information", "Please go back and fill in the missing information.")) . qq |</a> </p>|);
 }
 
 </%perl>
 
-<& /page/page_title.mas, title => "Missing Data:" &>
-<&| /page/info_section.mas, title => ' ', 
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.missing_data", "Missing Data:")) &>
+<&| /page/info_section.mas, anchor_title => ' ', title => ' ',
   subtitle => $guide &>
  <% $messages %>  
 </&>

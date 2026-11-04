@@ -40,10 +40,10 @@ $pop_id = $trial_id if $trial_id;
 
 <& /util/import_javascript.mas, classes => [ "solGS.gebvPhenoRegression", "solGS.scatterPlot", "solGS.olsLine"] &>
 
-  <&| /page/info_section.mas, 
+  <&| /page/info_section.mas, anchor_title => "GEBVs vs observed phenotypes",
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "GEBVs vs observed phenotypes" 
+  title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.gebvs_vs_observed_phenotypes", "GEBVs vs observed phenotypes"))
     &>
     
 <div id="gebv_pheno_regression_canvas">
@@ -52,3 +52,7 @@ $pop_id = $trial_id if $trial_id;
 </div>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

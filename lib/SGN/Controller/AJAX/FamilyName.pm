@@ -139,7 +139,7 @@ sub remove_family_member_POST : Args(0) {
     }
 
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to modify family members. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p("cross.controller.you_do_not_have_the_correct_role_to.0ac3a03", "You do not have the correct role to modify family members. Please contact us.") };
         $c->detach();
     }
 
@@ -154,7 +154,7 @@ sub remove_family_member_POST : Args(0) {
 
     my $return;
     if ($error) {
-        $c->stash->{rest} = { error => "Error removing member from family: $error" };
+        $c->stash->{rest} = { error => $c->i18n->p("cross.controller.error_removing_member_from_family_error", "Error removing member from family: %{error}", {error => "" . ($error)}) };
         return;
     } else {
         $c->stash->{rest} = {success => 1};
@@ -175,7 +175,7 @@ sub delete_family_POST : Args(0) {
     }
 
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete family. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p("cross.controller.you_do_not_have_the_correct_role_to.227c8ec", "You do not have the correct role to delete family. Please contact us.") };
         $c->detach();
     }
 
@@ -188,7 +188,7 @@ sub delete_family_POST : Args(0) {
     my $error = $family_obj->delete_family();
     my $return;
     if ($error) {
-        $c->stash->{rest} = { error => "Error deleting family: $error" };
+        $c->stash->{rest} = { error => $c->i18n->p("cross.controller.error_deleting_family_error", "Error deleting family: %{error}", {error => "" . ($error)}) };
         return;
     } else {
         $c->stash->{rest} = {success => 1};
@@ -212,7 +212,7 @@ sub add_family_members_using_list_POST : Args(0) {
     my $user_name = $c->user()->get_object()->get_username();
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can add family members'};
+        $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.only_a_submitter_or_a_curator_can_add", "Only a submitter or a curator can add family members")};
         $c->detach();
     }
 
@@ -240,7 +240,7 @@ sub add_family_members_using_list_POST : Args(0) {
 
     if (scalar @duplicate_members > 0) {
         my $duplicate_members_string = join(',', @duplicate_members);
-        $c->stash->{rest} = { error_string => "These crosses are already members of this family: $duplicate_members_string" };
+        $c->stash->{rest} = { error_string => $c->i18n->p("cross.controller.these_crosses_are_already_members_of_this_family", "These crosses are already members of this family: %{duplicate_members_string}", {duplicate_members_string => "" . ($duplicate_members_string)}) };
         return;
     }
 
@@ -263,7 +263,7 @@ sub add_family_members_using_list_POST : Args(0) {
         $return = $family_name_add->add_family_and_members();
         my $error;
         if (!$return){
-            $error = "Error adding family members";
+            $error = $c->i18n->p("cross.controller.error_adding_family_members", "Error adding family members");
         }
         if ($return->{error}){
             $error = $return->{error};

@@ -9,11 +9,11 @@ $is_a_parent
 <& /util/import_javascript.mas, classes => [ 'CXGN.Stock' ] &>
 
 % if ($is_obsolete) {
-    <button class="btn btn-primary" id="stock_detail_page_unobsolete_stock">Un-Obsolete This Stock</button>
+    <button class="btn btn-primary" id="stock_detail_page_unobsolete_stock"><% $c->i18n->p("accession.stock.delete.unobsolete", "Un-Obsolete This Stock") |h %></button>
 %} elsif ($is_a_parent) {
-%    print "This stock is associated with another stock (e.g., as a parent of another accession), cannot obsolete";
+%    print $c->i18n->p("accession.stock.delete.parent_warning", "This stock is associated with another stock (e.g., as a parent of another accession), cannot obsolete");
 %} else {
-    <button class="btn btn-primary" id="stock_detail_page_obsolete_stock">Obsolete This Stock</button>
+    <button class="btn btn-primary" id="stock_detail_page_obsolete_stock"><% $c->i18n->p("accession.stock.delete.obsolete", "Obsolete This Stock") |h %></button>
 % }
 
 <script>

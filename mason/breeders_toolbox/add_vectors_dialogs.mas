@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $preferred_species => ""
 $editable_vector_props => {}
@@ -15,8 +19,8 @@ $editable_stock_props_definitions
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addVectorsDialog">Add Vectors</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addVectorsDialog"><% $c->i18n->p("transformation.root.add_vectors", "Add Vectors") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -25,23 +29,23 @@ $editable_stock_props_definitions
 
                 <div id="with_file_tab" class="tab-pane fade in active">
                     <hr>
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title=>$c->i18n->p("accession.files.template_info", 'Template information') &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                             <br>
-                            <a id="vectors_upload_spreadsheet_format_info">Spreadsheet format</a>
+                            <a id="vectors_upload_spreadsheet_format_info"><% $c->i18n->p("accessions.dialog.spreadsheet_format", "Spreadsheet format") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_new_vectors_form" name="upload_new_vectors_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("cross.ui.upload_file.9798051", "Upload File:") |h %> </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="new_vectors_upload_file" id="new_vectors_upload_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.root.use_fuzzy_search", "Use Fuzzy Search:") |h %> </label>
                             <div class="col-sm-8">
 % if ( $user_role eq 'curator' ) {
                                 <input type="checkbox" id="fuzzy_check_upload_vectors" name="fuzzy_check_upload_vectors" checked></input>
@@ -49,7 +53,7 @@ $editable_stock_props_definitions
                                 <input type="checkbox" id="fuzzy_check_upload_vectors" name="fuzzy_check_upload_vectors" checked disabled></input>
 % }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate vectors. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
+                                <small><% $c->i18n->p("transformation.root.note_use_the_fuzzy_search_to_match_similar_names_to", "Note: Use the fuzzy search to match similar names to prevent uploading of duplicate vectors. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.") |h %></small>
                             </div>
                         </div>
                         <!--
@@ -62,14 +66,14 @@ $editable_stock_props_definitions
                         -->
                     </form>
                     <br>
-                    <& /help/file_upload_type.mas, type => "Vectors", optional_column => 1 &>
+                    <& /help/file_upload_type.mas, type => $c->i18n->p("transformation.root.vectors", "Vectors"), optional_column => 1 &>
                 </div>
             </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="new_vectors_submit" id="new_vectors_submit">Continue</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="new_vectors_submit" id="new_vectors_submit"><% $c->i18n->p("accessions.common.continue", "Continue") |h %></button>
       </div>
     </div>
   </div>
@@ -79,15 +83,15 @@ $editable_stock_props_definitions
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadVectorsInfoDialog">Upload Vectors Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadVectorsInfoDialog"><% $c->i18n->p("transformation.root.upload_vectors_template_information", "Upload Vectors Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <br /><br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
-                    The first row (header) must contain the uniquename column. Additional information can be included by selecting optional column(s) (see below). : 
+                    <% $c->i18n->p("transformation.root.the_first_row_header_must_contain_the_uniquename_column_additional", "The first row (header) must contain the uniquename column. Additional information can be included by selecting optional column(s) (see below). :") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -102,24 +106,24 @@ $editable_stock_props_definitions
                         </tbody>
                     </table>
 
-                    <b>Required Fields:</b>
+                    <b><% $c->i18n->p("accessions.template.required", "Required Fields:") |h %></b>
                     <ul>
-                    <li>uniquename (vector name must be unique)</li>
+                    <li><% $c->i18n->p("transformation.root.uniquename_vector_name_must_be_unique", "uniquename (vector name must be unique)") |h %></li>
                     </ul>
-                    <b>Optional Fields:</b>
+                    <b><% $c->i18n->p("accessions.template.optional", "Optional Fields:") |h %></b>
                     <ul>
 %  foreach my $editable_stockprop (@$editable_vector_props) {
 %    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
 %                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
 %    } else {
-%                   print "<li>$editable_stockprop (no definition available)</li>";
+%                   print ("<li>$editable_stockprop (" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.no_definition_available", "no definition available")) . ")</li>");
 %    }
 %  }
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -129,20 +133,20 @@ $editable_stock_props_definitions
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewAbsentDialog">Vectors to be Added</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewAbsentDialog"><% $c->i18n->p("transformation.root.vectors_to_be_added", "Vectors to be Added") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
             <div id="add_vectors_using_list_inputs" style="display:none">
                 <br><br>
-                <label for="population_name_input">Population name for added vectors (optional)</label>
+                <label for="population_name_input"><% $c->i18n->p("transformation.root.population_name_for_added_vectors_optional", "Population name for added vectors (optional)") |h %></label>
                 <input class="form-control" type="text" id="population_name_input"></input>
                 <br><br>
-                <label for="organization_name_input">Organization name for added vectors (optional)</label>
+                <label for="organization_name_input"><% $c->i18n->p("transformation.root.organization_name_for_added_vectors_optional", "Organization name for added vectors (optional)") |h %></label>
                 <input class="form-control" type="text" id="organization_name_input"></input>
                 <br><br>
-                <b>The following vectors are new and will be added to the database:</b>
+                <b><% $c->i18n->p("transformation.root.the_following_vectors_are_new_and_will_be_added_to", "The following vectors are new and will be added to the database:") |h %></b>
                 <div id="count_of_absent_vectors"></div>
                 <br>
                 <div id="view_absent"></div>
@@ -151,8 +155,8 @@ $editable_stock_props_definitions
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="review_absent_vectors_submit" id="review_absent_vectors_submit">Add Vectors</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+	<button type="button" class="btn btn-primary" name="review_absent_vectors_submit" id="review_absent_vectors_submit"><% $c->i18n->p("transformation.root.add_vectors", "Add Vectors") |h %></button>
       </div>
     </div>
   </div>
@@ -162,19 +166,19 @@ $editable_stock_props_definitions
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFuzzyDialog">Fuzzy Matches</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFuzzyDialog"><% $c->i18n->p("accessions.review.fuzzy_title", "Fuzzy Matches") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <b>Vectors were found with similar names.</b>
+          <b><% $c->i18n->p("transformation.root.vectors_were_found_with_similar_names", "Vectors were found with similar names.") |h %></b>
   	  <br/><br/>
   	  <div id="view_fuzzy_matches"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="review_fuzzy_matches_download" id="review_fuzzy_matches_download">Download Fuzzy Matches</button>
-        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
+        <button type="button" class="btn btn-default" name="review_fuzzy_matches_download" id="review_fuzzy_matches_download"><% $c->i18n->p("accessions.review.fuzzy_download", "Download Fuzzy Matches") |h %></button>
+        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal"><% $c->i18n->p("accessions.review.fuzzy_continue", "Make Changes and Continue") |h %></button>
       </div>
     </div>
   </div>
@@ -184,19 +188,19 @@ $editable_stock_props_definitions
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFoundDialog">Found Vectors</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFoundDialog"><% $c->i18n->p("transformation.root.found_vectors", "Found Vectors") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <b>The following vectors already exist in the database:</b>
+          <b><% $c->i18n->p("transformation.root.the_following_vectors_already_exist_in_the_database", "The following vectors already exist in the database:") |h %></b>
   	  <div id="count_of_found_vectors"></div>
   	  <br/>
   	  <div id="view_found_matches"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal">Continue</button>
+        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal"><% $c->i18n->p("accessions.common.continue", "Continue") |h %></button>
       </div>
     </div>
   </div>
@@ -206,8 +210,8 @@ $editable_stock_props_definitions
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addVectorsSavedDialog">Vectors Saved</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addVectorsSavedDialog"><% $c->i18n->p("transformation.root.vectors_saved", "Vectors Saved") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -215,7 +219,7 @@ $editable_stock_props_definitions
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_add_vectors_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_add_vectors_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>

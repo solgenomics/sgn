@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%doc>
 </%doc>
@@ -23,7 +26,7 @@ if (@trial_names) {
 
 </%perl>
 
-<& '/page/page_title.mas', title => "Compare trials" &>
+<& '/page/page_title.mas', title => HTML::Entities::encode_entities($c->i18n->p("trial.comparison.title", "Compare trials")) &>
 
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login' ] &>
 
@@ -33,7 +36,7 @@ Total accession count: <span id="total_accession_count"></span><br />
 Common accession count: <span id="common_accession_count"></span><br />
 Common traits: <span id="common_trait_count"></span><br />
 
-Trait: <select id="trait_select"><option disabled="1">select trials first</option></select>
+<% $c->i18n->p("trial.comparison.no_list.trait", "Trait:") |h %> <select id="trait_select"><option disabled="1"><% $c->i18n->p("trial.comparison.select_trials_first", "select trials first") |h %></option></select>
 
 <center>
 <div id="result_div">

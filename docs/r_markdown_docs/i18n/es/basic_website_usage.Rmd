@@ -1,0 +1,236 @@
+---
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+# Uso básico del sitio web {#basic-website-usage}
+
+Breedbase suele estar alojado en la nube y funciona completamente en la web; solo se necesita un navegador para acceder y usarlo. Se recomienda Firefox. Para usar Breedbase, usted o su proyecto normalmente necesitarán una instancia propia. Encontrará información para obtenerla en el proyecto Breedbase (https://breedbase.org/).
+
+Una vez configurada una instancia, hay que configurar el sitio y cargar algunos metadatos antes de diseñar, ejecutar y analizar ensayos:
+
+- definir las cuentas de usuario y sus privilegios de acceso.
+
+- añadir una ontología de rasgos con los rasgos necesarios.
+
+- añadir las ubicaciones que utiliza en su programa de mejoramiento.
+
+- añadir el germoplasma de base y los datos de pedigrí correspondientes.
+
+- se pueden cargar datos de ensayos “históricos” cuando sea necesario. Por lo general, se priorizan los ensayos recientes.
+
+En este capítulo se explica cómo gestionar las cuentas de usuario y algunas funciones básicas del sitio, como las listas y la navegación por los menús. Los demás temas se tratan en capítulos posteriores. Las instancias de Breedbase son muy personalizables, por lo que las opciones y su ubicación pueden variar. Consulte la documentación específica de su sitio, si la hay.
+
+## Crear una cuenta de usuario {#creating-a-user-account}
+
+### Compruebe primero si ya tiene una cuenta {#verifying-first-that-you-do-not-already-have-an-account}
+
+Antes de crear una cuenta, compruebe si ya tiene una. Puede usar el menú “Buscar” para verificar si ya está registrado como usuario.
+
+En el menú “Buscar”, seleccione la pestaña “Personas” y busque su nombre. Si no aparece, siga las instrucciones de abajo. Si ya tiene cuenta, pulse “Iniciar sesión”. Si olvidó la contraseña, puede recuperarla mediante el enlace “¿Olvidó su contraseña?” en la página de inicio de sesión.
+
+### Crear una cuenta de usuario {#creating-a-user-account-1}
+
+En la parte derecha de la barra de herramientas, pulse “Iniciar sesión” para abrir el diálogo de acceso. Allí, pulse el enlace “Crear una cuenta”, que le llevará a la página siguiente:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image331.png')
+```
+
+Complete todos los datos y pulse “Crear cuenta”.
+
+Al enviar los datos, se mandará un correo a la dirección indicada. Revise su correo y pulse el enlace para activar la cuenta.
+
+## Gestionar su cuenta {#managing-your-account}
+
+### Inicio de sesión {#login}
+
+Para iniciar sesión, pulse el enlace “Iniciar sesión” en la barra de herramientas de cualquier página e introduzca el nombre de usuario y la contraseña.
+
+Si olvidó la contraseña, puede recuperarla mediante el enlace “¿Olvidó su contraseña?” en la página de inicio de sesión.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image166.png')
+```
+
+### Editar la configuración de la cuenta {#editing-account-settings}
+
+Puede editar la configuración de la cuenta mediante el enlace “Mi perfil”, que aparece como su nombre de usuario a la derecha de la barra. Debe iniciar sesión para acceder a la configuración y modificarla.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image261.png')
+```
+
+Puede añadir información personal mediante el enlace “Ver o actualizar información personal”.
+
+Para cambiar la contraseña, el nombre de usuario o el correo de contacto, pulse “Actualizar los datos de la cuenta”. Antes de hacer cambios deberá introducir la contraseña anterior.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image144.png')
+```
+
+### Cambiar el estado de la cuenta: de “User” a “Submitter” {#changing-your-account-status-from-user-to-submitter}
+
+Después de crearla, la cuenta tiene el estado "user" y privilegios limitados.
+
+Las cuentas con estado “user” pueden:
+
+- cambiar la información personal
+- publicar comentarios en las páginas
+- publicar en el foro
+
+Para cambiar el estado de la cuenta a "submitter", contacte con los curadores mediante el enlace “contacto” al pie de cada página. Las cuentas submitter pueden añadir datos, como nuevas parcelas, accesiones, datos fenotípicos e imágenes.
+
+### Enviar comentarios sobre una base de datos de SGN {#submitting-feedback-on-an-sgn-database}
+
+Agradecemos sus comentarios. Envíe cualquier pregunta o sugerencia mediante el enlace “Comentarios” que aparece al pie de cada página.
+
+## Estructura de los menús {#menu-layout}
+
+Los sitios SGN tienen una barra en la parte superior de cada página con menús para acceder a las funciones principales. Como se muestra abajo, son “Buscar”, “Gestionar”, “Analizar” y “Mapas”. La barra también incluye búsqueda rápida, un botón “Iniciar sesión” y otro “Nuevo usuario”. Los menús se pueden personalizar para cada instancia y quizá no aparezcan exactamente como en la imagen; por ejemplo, la mayoría no tiene menú de mapas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image270.png')
+```
+
+### Opciones de menú {#menu-options}
+
+#### Buscar {#search .unnumbered}
+
+El menú Buscar incluye estas opciones:
+
+| Opción del menú | Descripción |
+|---------------|---------------------------------------------------------|
+| Asistente de búsqueda | Buscar accesiones y parcelas por ubicación, año, ensayo y rasgos. También permite crear listas de distintos tipos. |
+| Accesiones y parcelas | Buscar accesiones y parcelas con distintos criterios |
+| Ensayos | Buscar ensayos por nombre, descripción, programa de mejoramiento, año, ubicación y tipo de ensayo. |
+| Marcadores | Buscar distintos marcadores |
+| Imágenes | Buscar imágenes de la base de datos SGN |
+| Personas | Buscar usuarios de la base de datos |
+
+#### Gestionar {#manage .unnumbered}
+
+El menú Gestionar incluye estas opciones:
+
+| Opción del menú | Descripción |
+|----------------|--------------------------------------------------------|
+| Programas de mejoramiento | Ver, añadir y eliminar programas de mejoramiento |
+| Ubicaciones | Ver, añadir y eliminar ubicaciones |
+| Accesiones | Gestionar y buscar accesiones |
+| Lotes de semillas | Gestionar y buscar lotes de semillas |
+| Cruzamientos | Crear nuevos cruzamientos en la base de datos |
+| Ensayos de campo | Gestionar ensayos de campo y crearlos con distintos diseños de parcela. |
+| Placas de genotipado | Gestionar placas de genotipado y crear placas de 96 o 384 pocillos. |
+| Fenotipado | Cargar archivos de fenotipado desde la aplicación Field Book para tabletas |
+| Aplicación Field Book | Gestionar los datos de Field Book (descargar archivos a la tableta) |
+| Códigos de barras | Se refiere al sistema antiguo de códigos de barras, principalmente histórico |
+| Descargar | Descargar información de la base de datos a partir de listas |
+
+#### Analizar {#analyze .unnumbered}
+
+**Al hacer clic en el enlace “Analizar” se abrirá el menú completo de funciones de análisis.**\
+El menú Analizar incluye estas opciones:
+
+| Opción del menú | Descripción |
+|-----------------|-------------------------------------------------------|
+| **Herramientas de mejoramiento** |  |
+| Inicio del mejorador | Acceso a las funciones de mejoramiento y a enlaces útiles e importantes. |
+| Herramientas de códigos de barras | Gestionar, crear y descargar códigos de barras, y acceder a las herramientas relacionadas. |
+| Selección genómica | Buscar rasgos, iniciar la construcción de un modelo GS y predecir valores a partir de genotipos |
+| **Análisis de secuencias** |  |
+| BLAST | Búsqueda de homología de secuencias |
+| **Otros** |  |
+| Explorador de ontologías | Consultar todas las ontologías registradas |
+
+## Trabajar con listas {#working-with-lists}
+
+Las listas son colecciones de identificadores almacenadas en la base de datos. Pueden contener accesiones, parcelas, rasgos, ubicaciones y ensayos. Una lista solo puede contener un tipo de elemento; por ejemplo, una lista de ubicaciones solo contiene ubicaciones. Las listas se asocian a la cuenta de cada usuario y este solo puede crearlas y verlas cuando ha iniciado sesión, aunque puede hacerlas públicas. Las bases SGN usan listas en muchas herramientas; por ejemplo, los ensayos se crean a partir de listas de accesiones.
+
+### Crear listas {#creating-lists}
+
+Hay varias formas de crear listas:
+
+Una forma de crear una lista es pulsar el enlace “Listas” de la barra de herramientas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/list_manager_start.png')
+```
+
+Para crear una lista, escriba su nombre y pulse el botón “Lista nueva”. Puede elegir cualquier nombre, pero debe ser único y permitirle identificarla fácilmente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/list_manager_new_list.png')
+```
+
+Si la lista ya existe, aparecerá en el diálogo “Sus listas”. Para añadir elementos, pulse el icono “Ver” para abrir la sección “Contenido de la lista”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/list_manager_view_list.png')
+```
+
+En la página “Contenido de la lista”, introduzca los elementos que desea añadir y pulse “Añadir”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/list_manager_add_items.png')
+```
+
+La página se actualizará y mostrará los elementos en una tabla al pie del diálogo. Puede ordenar la lista si lo necesita.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/list_manager_added_items.png')
+```
+
+Seleccione el tipo de elementos de la lista. Para comprobar que ya están en la base de datos y que eligió el tipo correcto, pulse “Validar”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/list_manager_list_types.png')
+```
+
+Si los elementos ya están en la base de datos, aparecerá el mensaje “La lista pasó la validación”.
+
+```{r echo=FALSE, out.width='50%', fig.align='center'}
+knitr::include_graphics('assets/images/image346.png')
+```
+
+Una lista no puede contener elementos duplicados. Si se introduce un duplicado, el administrador de listas indicará que ya está incluido y no lo añadirá de nuevo.
+
+Otra forma sencilla de crear una lista es usar \@ref(search-wizard), disponible desde el menú Buscar.
+
+### Ver y editar listas {#viewing-and-editing-lists}
+
+Puede ver y editar listas mediante el enlace “Listas” de la barra de herramientas. Se abrirá un diálogo con todas sus listas y una opción para crear otras.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image71.png')
+```
+
+Esta página muestra todas las listas creadas, incluidas las del Asistente de búsqueda. Puede verlas y editarlas con los botones “Acciones”.
+
+1. Al pulsar el icono “Ver”, se abrirá la ventana “Contenido de la lista”, donde puede cambiar el nombre o el tipo, añadir elementos o eliminar los existentes.
+
+2. El icono “Eliminar” borra la lista. **Atención: esta acción no se puede deshacer.**
+
+3. Pulse el icono “Descargar” para descargar el contenido de la lista a su equipo.
+
+4. El icono “Hacer público” permite que otros usuarios vean y utilicen la lista.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image297.png')
+```
+
+## Permisos de usuario {#user-permissions}
+
+A las cuentas de Breedbase se les asigna uno o varios de cuatro roles que determinan su nivel de acceso a la base de datos. Los roles disponibles son **User**, **Submitter**, **Sequencer** y **Curator**. Cada rol concede permisos específicos; gestionarlos cuidadosamente ayuda a evitar que los datos se modifiquen o eliminen por error.
+
+```{r echo=FALSE, out.width='50%', fig.align='center'}
+knitr::include_graphics('assets/images/roles.png')
+```
+
+También se asignan roles de programa de mejoramiento para dar acceso a los programas con los que trabaja cada usuario.
+
+- El rol **User** permite consultar y descargar datos de toda la base de datos.
+- El rol **Submitter** permite diseñar ensayos de campo, cargar y editar datos con las herramientas de “Gestionar”. Para enviar y gestionar datos de un programa, la cuenta submitter también necesita el rol correspondiente de ese programa.
+- El rol **Sequencer** permite diseñar ensayos de genotipado y enviar placas a un servicio de genotipado.
+- El rol **Curator** concede todos los permisos anteriores y, además, permite eliminar datos. En la herramienta “Roles de usuario” puede añadir o quitar roles de cualquier cuenta.

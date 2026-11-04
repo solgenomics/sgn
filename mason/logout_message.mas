@@ -1,12 +1,12 @@
 <%init>
 use Path::Class;
 </%init>
-% my $message = "You have successfully logged out. Thanks for using " . $c->config->{project_name} ."!";
+% my $message = $c->i18n->p('global.logout_message.success', 'You have successfully logged out. Thanks for using %{project_name}!', {project_name => $c->config->{project_name}});
 <!-- <div class="devbar"> -->
 <div class="devbar_tmp">
    <span style="color: #922; font-weight: bold"> </span>
    <!-- system message active -->
-   <% $message %>
+   <% $message |h %>
 </div>
 
   <style>

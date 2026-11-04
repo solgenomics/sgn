@@ -2,26 +2,45 @@
     $timestamp => localtime()
 </%args>
 
-<div class="panel panel-default">
+<style>
+.seedlot-split-tool .btn,
+#seedlot_split_modal .btn {
+    max-inline-size: 100%;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.seedlot-split-tool .control-label,
+#seedlot_split_modal {
+    overflow-wrap: anywhere;
+}
+.seedlot-split-tool .form-group::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+</style>
+
+<div class="panel panel-default seedlot-split-tool">
     <div class="panel-heading">
-        <h5 class="panel-title">Split Seedlot</h5>
+        <h5 class="panel-title"><% $c->i18n->p('seedlot_split.ui.title', 'Split Seedlot') |h %></h5>
     </div>
     <div class="panel-body">
-        <p>This tool will split an existing Seedlot - keeping the existing Seedlot and creating a new one with the same Accession as the contents.</p>
+        <p><% $c->i18n->p('seedlot_split.ui.intro', 'This tool will split an existing Seedlot - keeping the existing Seedlot and creating a new one with the same Accession as the contents.') |h %></p>
 
         <br />
 
         <!-- Seedlot to Split -->
         <div class="form-group">
-            <label class="col-sm-3 control-label" style="text-align: right">Original Seedlot to Split</label>
+            <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.original', 'Original Seedlot to Split') |h %></label>
             <div class="col-sm-5">
                 <input class="form-control" id="seedlot_split_name" type="text" value="">
             </div>
             <div class="col-sm-2">
-                <button id="seedlot_split_name_update" class="btn btn-block btn-info"><span class="glyphicon glyphicon-refresh"></span> Update</button>
+                <button id="seedlot_split_name_update" class="btn btn-block btn-info"><span class="glyphicon glyphicon-refresh"></span> <% $c->i18n->p('seedlot_split.ui.update', 'Update') |h %></button>
             </div>
             <div class="col-sm-2">
-                <button id="seedlot_split_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
+                <button id="seedlot_split_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> <% $c->i18n->p('seedlot_split.ui.barcode', 'Barcode') |h %></button>
             </div>
         </div>
 
@@ -35,15 +54,15 @@
             <!-- New Seedlot Attributes -->
             <div id="seedlot_split_new_attributes_panel" class="panel panel-info" style="max-width: 600px; margin: 0 auto">
                 <div class="panel-heading">
-                    <h5 class="panel-title">New Seedlot Attributes</h5>
+                    <h5 class="panel-title"><% $c->i18n->p('seedlot_split.ui.new_attributes', 'New Seedlot Attributes') |h %></h5>
                 </div>
                 <div class="panel-body">
 
                     <!-- New Seedlot Name -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Seedlot Name</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.name', 'Seedlot Name') |h %></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_name" type="text" value="" placeholder="Required, must be a unique Seedlot name">
+                            <input class="form-control" id="seedlot_split_new_name" type="text" value="" placeholder="<% $c->i18n->p('seedlot_split.ui.unique_name_required', 'Required, must be a unique Seedlot name') |h %>">
                         </div>
                     </div>
 
@@ -51,9 +70,9 @@
 
                     <!-- New Seedlot Contents -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Contents</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.contents', 'Contents') |h %></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_contents" type="text" value="" placeholder="Required, must be an existing Accession name">
+                            <input class="form-control" id="seedlot_split_new_contents" type="text" value="" placeholder="<% $c->i18n->p('seedlot_split.ui.accession_required', 'Required, must be an existing Accession name') |h %>">
                         </div>
                     </div>
 
@@ -61,7 +80,7 @@
 
                     <!-- New Seedlot Material Type -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Material Type</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.material_type', 'Material Type') |h %></label>
                         <div class="col-sm-9">
                             <div id="seedlot_split_new_material_type_div"></div>
                         </div>
@@ -71,7 +90,7 @@
 
                     <!-- New Seedlot Breeding Program -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Breeding Program</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.breeding_program', 'Breeding Program') |h %></label>
                         <div class="col-sm-9">
                             <div id="seedlot_split_new_breeding_program_div"></div>
                         </div>
@@ -81,9 +100,9 @@
 
                     <!-- New Seedlot Location -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Location</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.location', 'Location') |h %></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_location" type="text" value="" placeholder="Required">
+                            <input class="form-control" id="seedlot_split_new_location" type="text" value="" placeholder="<% $c->i18n->p('seedlot_split.ui.required', 'Required') |h %>">
                         </div>
                     </div>
 
@@ -91,9 +110,9 @@
 
                     <!-- New Seedlot Box -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Box</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.box', 'Box') |h %></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_box" type="text" value="" placeholder="Required">
+                            <input class="form-control" id="seedlot_split_new_box" type="text" value="" placeholder="<% $c->i18n->p('seedlot_split.ui.required', 'Required') |h %>">
                         </div>
                     </div>
 
@@ -101,9 +120,9 @@
 
                     <!-- New Seedlot Quality Issues -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Quality Issues</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.quality', 'Quality Issues') |h %></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_quality_issues" type="text" value="" placeholder="Optional, list quality issues here, or 'ok' for good quality seed">
+                            <input class="form-control" id="seedlot_split_new_quality_issues" type="text" value="" placeholder="<% $c->i18n->p('seedlot_split.ui.quality_optional', 'Optional, list quality issues here, or \'ok\' for good quality seed') |h %>">
                         </div>
                     </div>
 
@@ -111,9 +130,9 @@
 
                     <!-- New Seedlot Organization -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Organization</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.organization', 'Organization') |h %></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_organization" type="text" value="" placeholder="Optional">
+                            <input class="form-control" id="seedlot_split_new_organization" type="text" value="" placeholder="<% $c->i18n->p('seedlot_split.ui.optional', 'Optional') |h %>">
                         </div>
                     </div>
 
@@ -121,7 +140,7 @@
 
                     <!-- New Seedlot Timestamp -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Timestamp</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.timestamp', 'Timestamp') |h %></label>
                         <div class="col-sm-9">
                             <input class="form-control" id="seedlot_split_new_timestamp" type="text" value="<% $timestamp %>" placeholder="<% $timestamp %>">
                         </div>
@@ -131,9 +150,9 @@
 
                     <!-- New Seedlot Description -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Description</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.description', 'Description') |h %></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_description" type="text" value="" placeholder="Optional">
+                            <input class="form-control" id="seedlot_split_new_description" type="text" value="" placeholder="<% $c->i18n->p('seedlot_split.ui.optional', 'Optional') |h %>">
                         </div>
                     </div>
 
@@ -145,13 +164,13 @@
             <!-- New Seedlot Contents -->
             <div id="seedlot_split_new_contents_panel" class="panel panel-info" style="max-width: 600px; margin: 0 auto">
                 <div class="panel-heading">
-                    <h5 class="panel-title">New Seedlot Contents</h5>
+                    <h5 class="panel-title"><% $c->i18n->p('seedlot_split.ui.new_contents', 'New Seedlot Contents') |h %></h5>
                 </div>
                 <div class="panel-body">
 
                     <!-- Original Seedlot Count -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Original Seedlot Count</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.original_count', 'Original Seedlot Count') |h %></label>
                         <div class="col-sm-9">
                             <p id="seedlot_split_original_contents_count">&nbsp;</p>
                         </div>
@@ -161,7 +180,7 @@
 
                     <!-- Original Seedlot Weight -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">Original Seedlot Weight (g)</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.original_weight_g', 'Original Seedlot Weight (g)') |h %></label>
                         <div class="col-sm-9">
                             <p id="seedlot_split_original_contents_weight">&nbsp;</p>
                         </div>
@@ -171,11 +190,11 @@
 
                     <!-- New Seedlot Contents Type -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">New Seedlot Contents Type</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.contents_type', 'New Seedlot Contents Type') |h %></label>
                         <div class="col-sm-9">
                             <select class="form-control" id="seedlot_split_new_contents_type">
-                                <option value="amount">Amount / Count</option>
-                                <option value="weight">Weight (g)</option>
+                                <option value="amount"><% $c->i18n->p('seedlot_split.ui.amount_count', 'Amount / Count') |h %></option>
+                                <option value="weight"><% $c->i18n->p('seedlot_split.ui.weight_g', 'Weight (g)') |h %></option>
                             </select>
                         </div>
                     </div>
@@ -184,9 +203,9 @@
 
                     <!-- New Seedlot Contents Value -->
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="text-align: right">New Seedlot Contents Value</label>
+                        <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_split.ui.contents_value', 'New Seedlot Contents Value') |h %></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_contents_value" value="" placeholder="Required">
+                            <input class="form-control" id="seedlot_split_new_contents_value" value="" placeholder="<% $c->i18n->p('seedlot_split.ui.required', 'Required') |h %>">
                         </div>
                     </div>
 
@@ -196,7 +215,7 @@
                     <div class="form-group">
                         <label class="col-sm-3 control-label" style="text-align: right"></label>
                         <div class="col-sm-9">
-                            <p><strong>Subtract initial contents of new seedlot from original seedlot:</strong></p>
+                            <p><strong><% $c->i18n->p('seedlot_split.ui.subtract_initial', 'Subtract initial contents of new seedlot from original seedlot:') |h %></strong></p>
                             <input id="seedlot_split_new_contents_transaction" name="seedlot_split_new_contents_transaction" type="checkbox" data-toggle="toggle">
                         </div>
                     </div>
@@ -208,7 +227,7 @@
 
             <!-- Create New Seedlot -->
             <div style="max-width: 400px; margin: 0 auto">
-                <button id="seedlot_split_new_create" class="btn btn-primary btn-block">Create Seedlot</button>
+                <button id="seedlot_split_new_create" class="btn btn-primary btn-block"><% $c->i18n->p('seedlot_split.ui.create', 'Create Seedlot') |h %></button>
             </div>
 
         </div>
@@ -221,13 +240,36 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div id="seedlot_split_modal_body" class="modal-body"></div>
-            <div class="modal-footer"><button id="seedlot_split_modal_close" type="button" class="btn btn-default">Close</button></div>
+            <div class="modal-footer"><button id="seedlot_split_modal_close" type="button" class="btn btn-default"><% $c->i18n->p('seedlot_split.ui.close', 'Close') |h %></button></div>
         </div>
     </div>
 </div>
 
 
 <script type="text/javascript">
+
+    // Optional browser language assets preserve native scientific values.
+    var splitI18n = (window.SGN && window.SGN.i18n) || {
+        p: function (context, source, variables) {
+            return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+                return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+            });
+        }
+    };
+    function splitRequestedLocale() {
+        var root = document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var locale = root.getAttribute('data-sgn-locale') || (runtime && runtime.requestedLocale) || root.lang || (runtime && runtime.locale) || 'en';
+        return typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en';
+    }
+    function splitLocaleHeaders(url) {
+        try {
+            var target = new URL(url, window.location.href);
+            if (target.origin !== window.location.origin || !/^\/ajax\/(?:breeders\/(?:seedlots|seedlot-create)|stock\/seedlot_name_autocomplete)$/.test(target.pathname)) return {};
+            return {'X-SGN-Locale': splitRequestedLocale()};
+        } catch (error) { return {}; }
+    }
+
 
     jQuery(document).ready(function() {
 
@@ -236,7 +278,9 @@
 
         // Click / Change listeners
         jQuery('#seedlot_split_name_barcode').click(function() {
-            window.location = "/barcode/read?return=/breeders/seedlot/maintenance?tool=split_seedlot&param=seedlot_name";
+            var locale = splitRequestedLocale();
+            var target = '/breeders/seedlot/maintenance?' + new URLSearchParams({tool: 'split_seedlot', lang: locale}).toString();
+            window.location = '/barcode/read?' + new URLSearchParams({return: target, param: 'seedlot_name', lang: locale}).toString();
             return false;
         });
         jQuery('#seedlot_split_name').change(getSeedlotInfo);
@@ -248,7 +292,13 @@
 
         // Autocomplete for Seedlot Name input
         jQuery("#seedlot_split_name").autocomplete({
-            source: '/ajax/stock/seedlot_name_autocomplete',
+            source: function (request, response) {
+                jQuery.ajax({
+                    url: '/ajax/stock/seedlot_name_autocomplete', data: {term: request.term}, dataType: 'json',
+                    headers: splitLocaleHeaders('/ajax/stock/seedlot_name_autocomplete'),
+                    success: response, error: function () { response([]); }
+                });
+            },
         });
 
         // Breeding Program Select Box
@@ -268,8 +318,15 @@
     function parseArgs() {
         const urlSearchParams = new URLSearchParams(window.location.search);
         if ( urlSearchParams.get('tool') === 'split_seedlot' && urlSearchParams.has('seedlot_name') ) {
-            let seedlot_name = decodeURIComponent(urlSearchParams.get('seedlot_name'));
-            seedlot_name = seedlot_name.includes('seedlot_name=') ? seedlot_name.match(/.*seedlot_name=(.*)/)[1] : seedlot_name;
+            // URLSearchParams has already decoded the scanner's outer value once.
+            let seedlot_name = urlSearchParams.get('seedlot_name');
+            // Keep the legacy full-URL QR tail, while ordinary scientific names
+            // containing seedlot_name= remain literal. Preserve raw +, & and #.
+            if (/^(?:https?:\/\/|\/)/i.test(seedlot_name) && /[?&]seedlot_name=/.test(seedlot_name)) {
+                seedlot_name = seedlot_name.match(/.*[?&]seedlot_name=([\s\S]*)/)[1];
+                try { seedlot_name = decodeURIComponent(seedlot_name); }
+                catch (error) { if (!(error instanceof URIError)) throw error; }
+            }
             jQuery('#seedlot_split_name').val(seedlot_name);
             getSeedlotInfo();
         }
@@ -293,18 +350,20 @@
         let quality_issues = "";
         let organization = "";
         let description = "";
-        let original_count = "&nbsp;";
-        let original_weight = "&nbsp;"
+        let original_count = "\u00a0";
+        let original_weight = "\u00a0"
         jQuery.ajax({
             type: 'GET',
             dataType: 'json',
-            url: '/ajax/breeders/seedlots?seedlot_name=' + name,
+            url: '/ajax/breeders/seedlots', data: {seedlot_name: name},
+            headers: splitLocaleHeaders('/ajax/breeders/seedlots'),
             success: function(response) {
                 if ( response && response.data ) {
                     for ( let i = 0; i < response.data.length; i++ ) {
                         if ( response.data[i].seedlot_stock_uniquename.toUpperCase() === name.toUpperCase() ) {
                             let sl = response.data[i];
-                            contents = jQuery(sl.contents_html).first().html();
+                            // The core escapes scientific anchor text once; read its text, not HTML.
+                            contents = jQuery(sl.contents_html).first().text();
                             breeding_program_id = sl.breeding_program_id;
                             material_type = sl.material_type;
                             default_seedlot_material_type = sl.default_seedlot_material_type;
@@ -326,8 +385,8 @@
                 jQuery("#seedlot_split_new_quality_issues").val(quality_issues);
                 jQuery("#seedlot_split_new_organization").val(organization);
                 jQuery("#seedlot_split_new_description").val(description);
-                jQuery("#seedlot_split_original_contents_count").html(original_count);
-                jQuery("#seedlot_split_original_contents_weight").html(original_weight);
+                jQuery("#seedlot_split_original_contents_count").text(original_count);
+                jQuery("#seedlot_split_original_contents_weight").text(original_weight);
                 if (material_type) {
                     jQuery("#seedlot_split_new_material_type").val(material_type);
                     jQuery("#seedlot_split_new_material_type").prop("disabled", true);
@@ -351,7 +410,7 @@
      */
     function setNewSeedlotName() {
         let origin_name = jQuery("#seedlot_split_name").val();
-        _setNewName("Generating...", false)
+        _setNewName(splitI18n.p("seedlot_split.ui.generating", "Generating..."), false)
         _generateSeedlotName(origin_name);
 
         /**
@@ -391,7 +450,8 @@
             jQuery.ajax({
                 type: 'GET',
                 dataType: 'json',
-                url: '/ajax/breeders/seedlots?seedlot_name=' + new_name,
+                url: '/ajax/breeders/seedlots', data: {seedlot_name: new_name},
+                headers: splitLocaleHeaders('/ajax/breeders/seedlots'),
                 success: function(response) {
                     if ( response && response.data ) {
                         for ( let i = 0; i < response.data.length; i++ ) {
@@ -449,28 +509,28 @@
 
         // Check for required parameters
         if ( !data.seedlot_name || data.seedlot_name === "" ) {
-            return displayError("Seedlot name required!");
+            return displayError(splitI18n.p("seedlot_split.ui.name_required", "Seedlot name required!"));
         }
         if ( !data.seedlot_location || data.seedlot_location === "" ) {
-            return displayError("Location required!");
+            return displayError(splitI18n.p("seedlot_split.ui.location_required", "Location required!"));
         }
         if ( !data.seedlot_box_name || data.seedlot_box_name === "" ) {
-            return displayError("Box name required!");
+            return displayError(splitI18n.p("seedlot_split.ui.box_required", "Box name required!"));
         }
         if ( !data.seedlot_accession_uniquename || data.seedlot_accession_uniquename === "" ) {
-            return displayError("Seedlot Contents / Accession required!");
+            return displayError(splitI18n.p("seedlot_split.ui.contents_required", "Seedlot Contents / Accession required!"));
         }
         if ( !data.seedlot_breeding_program_id || data.seedlot_breeding_program_id === "" ) {
-            return displayError("Breeding Program required!");
+            return displayError(splitI18n.p("seedlot_split.ui.breeding_program_required", "Breeding Program required!"));
         }
         if ( (!data.seedlot_amount || data.seedlot_amount === "") && (!data.seedlot_weight || data.seedlot_weight === "") ) {
-            return displayError("Seedlot contents value required!");
+            return displayError(splitI18n.p("seedlot_split.ui.value_required", "Seedlot contents value required!"));
         }
         if ( add_transaction && (!data.origin_seedlot_uniquename || data.origin_seedlot_uniquename === "") ) {
-            return displayError("Original Seedlot name required for initial transaction!");
+            return displayError(splitI18n.p("seedlot_split.ui.original_required", "Original Seedlot name required for initial transaction!"));
         }
         if ( !data.seedlot_material_type || data.seedlot_material_type === "" ) {
-            return displayError("Material type required!");
+            return displayError(splitI18n.p("seedlot_split.ui.material_required", "Material type required!"));
         }
 
 
@@ -478,18 +538,18 @@
         jQuery('#working_modal').modal('show');
         jQuery.ajax({
             url: '/ajax/breeders/seedlot-create',
+            headers: splitLocaleHeaders('/ajax/breeders/seedlot-create'),
             data: data,
             success: function(response) {
                 if (response.success === 1) {
-                    displaySuccess("Seedlot successfully created!");
+                    displaySuccess(splitI18n.p("seedlot_split.ui.created", "Seedlot successfully created!"));
                 }
                 if (response.error) {
-                    let msg = "Could not create Seedlot:<br /><code>" + response.error + "</code>";
-                    displayError(msg);
+                    displayError(splitI18n.p("seedlot_split.ui.create_failed", "Could not create Seedlot:"), response.error);
                 }
             },
             error: function(response){
-                displayError("Could not create Seedlot: AJAX error");
+                displayError(splitI18n.p("seedlot_split.ui.create_ajax_error", "Could not create Seedlot: AJAX error"));
             },
             complete: function() {
                 jQuery('#working_modal').modal('hide');
@@ -500,31 +560,31 @@
 
     /**
      * Display an error message in a bootstrap modal
-     * @param {string} msg Error message to display (can include HTML)
+     * @param {string} msg Plain error message to display
      */
-    function displayError(msg) {
-        displayModal("Error", "#a94442", msg);
+    function displayError(msg, details) {
+        displayModal(splitI18n.p("seedlot_split.ui.error", "Error"), "#a94442", msg, details);
     }
 
     /**
      * Display a success message in a bootstrap modal
-     * @param {string} msg Success message to display (can include HTML)
+     * @param {string} msg Plain success message to display
      */
     function displaySuccess(msg) {
-        displayModal("Success", "#3c763d", msg);
+        displayModal(splitI18n.p("seedlot_split.ui.success", "Success"), "#3c763d", msg);
     }
 
     /**
      * Display a message (and any existing messages) in a bootstrap modal
      * @param {string} title Message title
      * @param {string} color Message title color
-     * @param {string} msg Message to display (can include HTML)
+     * @param {string} msg Plain message to display
      */
-    function displayModal(title, color, msg) {
-        let html = "<h1 style='color: " + color + "'>" + title + "</h1>";
-        html += "<p style='margin: 15px 5px; font-size: 110%;'>" + msg + "</p>";
-
-        jQuery('#seedlot_split_modal_body').html(html);
+    function displayModal(title, color, msg, details) {
+        const body = jQuery('#seedlot_split_modal_body').empty();
+        jQuery('<h1>').css('color', color).text(title).appendTo(body);
+        const paragraph = jQuery('<p>').css({margin: '15px 5px', fontSize: '110%'}).text(msg).appendTo(body);
+        if (details !== undefined) paragraph.append(jQuery('<br>')).append(jQuery('<code>').text(details));
         jQuery('#seedlot_split_modal').modal({backdrop: 'static', keyboard: false});
     }
 

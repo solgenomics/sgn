@@ -7,6 +7,9 @@ use Digest::SHA qw/sha1_hex/;
 use File::Path qw/make_path/;
 use CXGN::Page::FormattingHelpers qw/modesel simple_selectbox_html /;
 use CXGN::Tools::Text qw/trim/;
+use SGN::I18N ();
+use Scalar::Util ();
+use HTML::Entities ();
 use SGN::View::Feature qw/mrna_cds_protein_sequence get_descriptions/;
 #use Carp::Always;
 
@@ -53,7 +56,7 @@ sub array_tab: Path('/tools/bulk/tabs/array_tab') Args(0) {
     my $c = shift;
     
     $c->stash->{ug_select} = $self->ug_build_selectbox($c);
-    $c->stash->{output_list} = $self->output_list();
+    $c->stash->{output_list} = $self->output_list($c->i18n);
     $c->stash->{template} = '/tools/bulk/tabs/array_tab.mas';
 }
 
@@ -219,7 +222,7 @@ sub bulk_gene_type_validate :Local :Args(0) {
 
     unless ($type && $type ~~ [qw/cdna cds protein/]) {
         $c->throw_client_error(
-            public_message => 'Invalid data type chosen',
+            public_message => $c->i18n->p("lists_datasets.bulk.invalid_type_chosen", "Invalid data type chosen"),
             http_status    => 200,
         );
     }
@@ -257,7 +260,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
 
     unless ($ids) {
         $c->throw_client_error(
-            public_message => 'At least one identifier must be given',
+            public_message => $c->i18n->p("lists_datasets.bulk.identifiers_required", "At least one identifier must be given"),
             http_status => 200,
         );
     }
@@ -349,7 +352,7 @@ sub populate_gene_sequences :Local {
 
         unless (defined $index) {
             $c->throw_client_error(
-                public_message => 'Invalid data type',
+                public_message => $c->i18n->p("lists_datasets.bulk.invalid_type", "Invalid data type"),
                 http_status    => 200,
             );
         }
@@ -381,7 +384,7 @@ sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
     $sha1 =~ s/\.(fasta|txt)$//g;
 
     my $seqs = $self->gene_cache->thaw($sha1)
-        or $c->throw_404('Bulk dataset not found');
+        or $c->throw_404($c->i18n->p("lists_datasets.bulk.dataset_not_found", "Bulk dataset not found"));
 
     $c->stash->{sequences} = $seqs;
     $c->forward('View::SeqIO');
@@ -414,7 +417,7 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
     $sha1 =~ s/\.(fasta|txt)$//g;
 
     my $seqs = $self->feature_cache->thaw($sha1)
-        or $c->throw_404('Bulk dataset not found');
+        or $c->throw_404($c->i18n->p("lists_datasets.bulk.dataset_not_found", "Bulk dataset not found"));
 
     $c->stash( sequences => $seqs->[1] );
 
@@ -444,7 +447,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     $ids = trim($ids);
 
     unless ($ids) {
-        $c->throw_client_error(public_message => 'At least one identifier must be given');
+        $c->throw_client_error(public_message => $c->i18n->p("lists_datasets.bulk.identifiers_required", "At least one identifier must be given"));
     }
 
     $c->stash( sequence_identifiers => [ split /\s+/, $ids ] );
@@ -497,9 +500,9 @@ sub ug_build_selectbox {
 
     return simple_selectbox_html(
         name    => 'build_id',
-        label   => 'Only include unigene build:',
+        label   => HTML::Entities::encode_entities($c->i18n->p("lists_datasets.bulk.build_label", "Only include unigene build:")),
         choices => [
-            [ all => 'include all' ],
+            [ all => HTML::Entities::encode_entities($c->i18n->p("lists_datasets.bulk.include_all", "include all")) ],
             ( map [ $_, $builds{$_} ], keys %builds ),
         ],
     );
@@ -508,22 +511,39 @@ sub ug_build_selectbox {
 
 
 sub output_list {
+    my ($self, $presentation) = @_;
+    my SGN::I18N $bulk_output_i18n = Scalar::Util::blessed($presentation) && $presentation->isa('SGN::I18N') ? $presentation : undef;
+    my $bulk_output_caption_0 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.please_select_the_information_you_would_like_for_each_identifier", "Please select the information you would like for each identifier:") : "Please select the information you would like for each identifier:");
+    my $bulk_output_caption_1 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.clone_name", "clone name") : "clone name");
+    my $bulk_output_caption_2 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.clone_id_sgn_c", "clone id (SGN-C)") : "clone id (SGN-C)");
+    my $bulk_output_caption_3 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.sequence_read_id_sgn_t", "sequence read id (SGN-T)") : "sequence read id (SGN-T)");
+    my $bulk_output_caption_4 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.est_id_sgn_e", "est id (SGN-E)") : "est id (SGN-E)");
+    my $bulk_output_caption_5 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.unigene_build_nr", "unigene build nr") : "unigene build nr");
+    my $bulk_output_caption_6 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.unigene_id_sgn_u", "unigene id (SGN-U)") : "unigene id (SGN-U)");
+    my $bulk_output_caption_7 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.chipname", "chipname") : "chipname");
+    my $bulk_output_caption_8 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.microarray_spot_id_sgn_s", "microarray spot id (SGN-S)") : "microarray spot id (SGN-S)");
+    my $bulk_output_caption_9 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.tus_number_used_to_order_clones", "TUS number (used to order clones)") : "TUS number (used to order clones)");
+    my $bulk_output_caption_10 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.manual_annotation", "manual annotation") : "manual annotation");
+    my $bulk_output_caption_11 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.automatic_blast_annotation", "automatic (BLAST) annotation") : "automatic (BLAST) annotation");
+    my $bulk_output_caption_12 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.sequence", "sequence") : "sequence");
+    my $bulk_output_caption_13 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.est_sequence", "EST sequence") : "EST sequence");
+    my $bulk_output_caption_14 = HTML::Entities::encode_entities($bulk_output_i18n ? $bulk_output_i18n->p("lists_datasets.bulk.unigene_sequence", "Unigene sequence") : "Unigene sequence");
     return <<OUTPUT_LIST 
-	"<b>Please select the information you would like for each identifier:</b><br />
-	<input type="checkbox" name="clone_name" checked="checked" /> clone name<br />
-	<input type="checkbox" name="SGN_C" checked="checked" /> clone id (SGN-C)<br />
-	<input type="checkbox" name="SGN_T" checked="checked" /> sequence read id (SGN-T)<br />
-	<input type="checkbox" name="SGN_E" checked="checked" /> est id (SGN-E)<br />
-	<input type="checkbox" name="build_nr" checked="checked" /> unigene build nr<br />
-	<input type="checkbox" name="SGN_U" checked="checked" /> unigene id (SGN-U)<br />
-	<input type="checkbox" name="chipname" checked="checked" /> chipname<br />
-	<input type="checkbox" name="SGN_S" checked="checked" /> microarray spot id (SGN-S)<br />
-	<input type="checkbox" name="TUS" checked="checked" /> TUS number (used to order clones)<br />
-	<input type="checkbox" name="manual_annotation" /> manual annotation<br />
-	<input type="checkbox" name="automatic_annotation" /> automatic (BLAST) annotation<br />
-	<input type="checkbox" name="sequence" onclick="check_fasta_option()" /> sequence<br />
-	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="est_seq" checked="checked" /> EST sequence<br />
-	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="unigene_seq" /> Unigene sequence<br />";
+	"<b>$bulk_output_caption_0</b><br />
+	<input type="checkbox" name="clone_name" checked="checked" /> $bulk_output_caption_1<br />
+	<input type="checkbox" name="SGN_C" checked="checked" /> $bulk_output_caption_2<br />
+	<input type="checkbox" name="SGN_T" checked="checked" /> $bulk_output_caption_3<br />
+	<input type="checkbox" name="SGN_E" checked="checked" /> $bulk_output_caption_4<br />
+	<input type="checkbox" name="build_nr" checked="checked" /> $bulk_output_caption_5<br />
+	<input type="checkbox" name="SGN_U" checked="checked" /> $bulk_output_caption_6<br />
+	<input type="checkbox" name="chipname" checked="checked" /> $bulk_output_caption_7<br />
+	<input type="checkbox" name="SGN_S" checked="checked" /> $bulk_output_caption_8<br />
+	<input type="checkbox" name="TUS" checked="checked" /> $bulk_output_caption_9<br />
+	<input type="checkbox" name="manual_annotation" /> $bulk_output_caption_10<br />
+	<input type="checkbox" name="automatic_annotation" /> $bulk_output_caption_11<br />
+	<input type="checkbox" name="sequence" onclick="check_fasta_option()" /> $bulk_output_caption_12<br />
+	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="est_seq" checked="checked" /> $bulk_output_caption_13<br />
+	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="unigene_seq" /> $bulk_output_caption_14<br />";
 
 OUTPUT_LIST
 

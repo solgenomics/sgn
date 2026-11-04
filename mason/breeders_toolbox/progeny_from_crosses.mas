@@ -5,5 +5,5 @@ $cross_name => undef
 
 
 <%perl>
-print "Created cross: $cross_name\n";
+print $c->i18n->p("cross.cross.created", "Created cross: %{name}\n", {name => "" . ($cross_name)});
 </%perl>

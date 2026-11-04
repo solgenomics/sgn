@@ -12,11 +12,11 @@ sub create_design {
         @stock_list = @{$self->get_stock_list()};
         my $number_of_stocks = scalar(@stock_list);
         if ($number_of_stocks > $self->get_block_size) {
-            die "Too many to fit on one plate! $number_of_stocks > ".$self->get_block_size;
+            die ($self->i18n ? $self->i18n->p('genotype.generation.too_many', 'Too many to fit on one plate! %{comparison}', { 'comparison' => "$number_of_stocks > ".$self->get_block_size }) : "Too many to fit on one plate! $number_of_stocks > ".$self->get_block_size);
         }
     }
     else {
-        die "No stock list specified\n";
+        die ($self->i18n ? $self->i18n->p('genotype.generation.no_stock_list', 'No stock list specified') . "\n" : "No stock list specified\n");
     }
 
     my $blank = $self->get_blank ? $self->get_blank : ' ';

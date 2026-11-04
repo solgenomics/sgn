@@ -28,12 +28,12 @@ $output_list
 <% $ug_select %>
 <br /><br />
 	<br />
-Enter a list of identifiers or upload a file containing one identifier:<br />
+<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifier", "Enter a list of identifiers or upload a file containing one identifier:") |h %><br />
 <table summary="" width="100%"><tr><td>
 <textarea name="ids" rows="5" cols="20"></textarea>
 </td>
 <td>
-<i>Example:</i>
+<i><% $c->i18n->p("lists_datasets.bulk.example", "Example:") |h %></i>
 <pre style="border: 1px solid gray; width: 10em; height: 5em">
 1-1-1.2.3.4
 1-1-1.2.4.5
@@ -42,7 +42,7 @@ Enter a list of identifiers or upload a file containing one identifier:<br />
 </td></tr></table>
 <br />
 <br />
-And/or upload list file: <br /><input type="file" name="file" />
+<% $c->i18n->p("lists_datasets.bulk.and_or_upload_list_file", "And/or upload list file:") |h %> <br /><input type="file" name="file" />
 <br />
 <br />
 
@@ -57,7 +57,7 @@ And/or upload list file: <br /><input type="file" name="file" />
 %    }
 
 <input type="hidden" name="idType" value="microarray" />
-	<input type="reset" />&nbsp;&nbsp;
-<input type="submit" value="Submit" /><br />
+	<input type="reset"  value="<% $c->i18n->p("lists_datasets.bulk.reset", "Reset") |h %>"/>&nbsp;&nbsp;
+<input type="submit" value="<% $c->i18n->p("lists_datasets.bulk.submit", "Submit") |h %>" /><br />
 </form>
 

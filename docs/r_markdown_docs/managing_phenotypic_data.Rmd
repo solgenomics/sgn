@@ -20,7 +20,7 @@ To upload a Field Book Phenotype file in a database format, click the “Upload 
 knitr::include_graphics('assets/images/image185.png')
 ```
 
-The “Upload Fieldbook” link on this page and “Upload” link on the “Field Book Tools” page open the same dialogue. Please follow instructions for uploading phenotypic files on the \@ref(using-fieldbook-app) page.
+The “Upload Fieldbook” link on this page and “Upload” link on the “Field Book Tools” page open the same dialogue. Please follow instructions for uploading phenotypic files on the \@ref(Using-Field-Book-with-BreedBase) page.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/image112.png')

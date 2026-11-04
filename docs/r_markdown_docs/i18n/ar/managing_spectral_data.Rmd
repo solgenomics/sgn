@@ -1,0 +1,50 @@
+# إدارة البيانات الطيفية {#managing-spectral-data}
+
+تستخدم Breedbase بروتوكولًا مرنًا لتخزين البيانات الطيفية، بغض النظر عن جهاز قياس الطيف المستخدم. وتعتمد Breedbase على حزمة R المسماة *waves* لتحديد القيم الشاذة ورسم البيانات وتجميع العينات وتدريب نماذج التنبؤ.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/waves_breedbase_schema.png')
+```
+
+---
+## تحميل البيانات الطيفية {#upload-spectral-data}
+يمكن إضافة البيانات الطيفية في ملف CSV، بحيث توضع البيانات الوصفية في الأعمدة الأولى ثم عمود لكل قياس طيفي. يمثل كل صف مسحًا أو عينة واحدة، ويجب أن يحمل معرّفًا فريدًا يطابق observationUnitName في Breedbase. وسيسمح نقل البيانات مستقبلًا عبر [BrAPI](https://brapi.org) بالتكامل مع برامج جمع البيانات.
+
+لتحميل مجموعة بيانات طيفية، افتح صفحة 'إدارة بيانات NIRS' باختيار 'NIRS' من قائمة 'إدارة' ثم انقر الزر الأزرق 'تحميل NIRS'. ستُفتح خطوات التحميل. يحتوي مربع المعلومات الأزرق الفاتح على رابط للتنسيق المطلوب وملف .csv نموذجي، ويظهر أدناه مثال آخر.
+
+* **id**: معرّف اختياري لكل قراءة NIRS. يجب أن تكون قيمة id عددًا صحيحًا.
+* **sampling_id**: معرّف اختياري لكل عينة. يُسمح بالقيم النصية.
+* **sampling_date**: حقل اختياري. التنسيق المسموح به هو YYYY-MM-DD.
+* **observationunit_name**: حقل مطلوب يجب أن يطابق عنصرًا موجودًا في قاعدة البيانات. وقد يكون اسم قطعة أو قطع فرعية أو نبات أو عينة نسيج، بحسب تصميم التجربة.
+* **device_id**: حقل اختياري لتعريف الجهاز. يُسمح بالقيم النصية.
+* **device_type**: حقل مطلوب. يمكن تحميل بيانات لنوع جهاز واحد فقط. الأنواع المتاحة هي: SCiO وQST وFoss6500 وBunchiN500 وLinkSquare.
+* **comments**: حقل اختياري للتعليقات العامة.
+يجب أن تحتوي الأعمدة الأخرى على قيم الأطوال الموجية. ويمكنك إضافة أي عدد من الأعمدة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_NIRS_main_display.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/upload_NIRS_example_format.png')
+```
+
+## تقييم القيم الشاذة وإزالتها {#evaluate-and-remove-outliers}
+قد تؤثر القيم الشاذة بشدة في نماذج معايرة الطيف، سواء نتجت عن آثار جهاز القياس أو أخطاء المستخدم. تقيس مسافة ماهالانوبيس (Mahalanobis, 1936) بُعد مشاهدة واحدة عن توزيع أوسع، وتُستخدم عادةً لتحديد القيم الشاذة في فضاء متعدد المتغيرات (Des Maesschalck وآخرون، 2000). تحسب الدالة *FilterSpectra()* في حزمة R [*waves*](https://CRAN.R-project.org/package=waves) هذه المسافة لكل مشاهدة في المصفوفة الطيفية باستخدام *stats::mahalanobis()*. وتُعد المشاهدات شاذة إذا تجاوز مربع المسافة المئين 95 لتوزيع $\chi$^2^- بدرجات حرية *p*، حيث *p* هو عدد أعمدة (الأطوال الموجية) في المصفوفة (Johnson and Wichern, 2007). تطبق Breedbase هذا الإجراء على كل مجموعة بيانات عند تحميلها، وتُعطى القيم الشاذة الوسم الثنائي "Outlier."
+
+## رسم الأطياف {#plot-spectra}
+بعد تحديد القيم الشاذة، تنشئ الدالة *PlotSpectra()* في [*waves*](https://CRAN.R-project.org/package=waves) رسمًا بيانيًا. تستخدم الأطياف المصفاة و*ggplot2::ggplot()* لإنشاء رسم خطي يبرز القيم الشاذة بالألوان. وتظهر أسفل الرسم قائمة الصفوف التي حُددت على أنها شاذة. تُحفظ الرسوم بصيغة .png وتُربط بمجموعة البيانات الأصلية. ويمكن تنزيل صور الرسوم عبر زر "تنزيل الرسم" في خطوات التحميل.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/upload_NIRS_plot_example.png')
+```
+
+## تجميع الأطياف {#aggregate-spectra}
+للحصول على ملف طيفي مستقر وموثوق، يوصي معظم مصنعي أجهزة قياس الطيف بالتقاط عدة مسوحات لكل عينة. تجمع بعض الأجهزة هذه المسوحات داخليًا، بينما يحتاج المستخدم في أجهزة أخرى إلى ذلك قبل التحليل. تعالج Breedbase هذه الحالات عند تحميل البيانات؛ فبعد التصفية تستدعي *AggregateSpectra()* من [*waves*](https://CRAN.R-project.org/package=waves) وتحفظ المسوحات المجمعة لإتاحتها لاحقًا عبر معالج البحث. تُجمع المسوحات بمتوسط العينة (مثل مستوى القطعة) وفقًا للحقل observationUnitName. بعد التجميع، يغادر المستخدم خطوات التحميل ويُحفظ ملف البيانات الخام في أرشيف التحميل.
+
+## المراجع {#references}
+* De Maesschalck, R., Jouan-Rimbaud, D., and Massart, D. L. (2000). The Mahalanobis distance. Chemom. Intell. Lab. Syst. 50(1): 1-18.
+* Johnson, R. A. \& Wichern, D. W. (2007). Applied Multivariate Statistical Analysis (6th Edition). p 773.
+* Mahalanobis, P. C. (1936). On the generalized distance in statistics. National Institute of Science of India.
+
+[**وثائق أداة التحليل**](#spectral-analysis)

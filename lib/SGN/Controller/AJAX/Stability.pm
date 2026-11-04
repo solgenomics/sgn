@@ -3,6 +3,7 @@ use strict;
 package SGN::Controller::AJAX::Stability;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
@@ -59,7 +60,7 @@ sub get_method: Path('/ajax/Stability/get_method') : {
     my $method_1 = $c->req->param('method_id');
     print STDERR Dumper($method_1);
     $method_id = $method_1;
-    print "The vairable method_id is $method_id \n";
+    print "The variable method_id is $method_id \n";
 }
 
 my $imput_id;
@@ -74,6 +75,7 @@ sub get_imput: Path('/ajax/Stability/get_imput') : {
 sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
@@ -85,7 +87,7 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
 
     my $F;
     if (! open($F, "<", $temppath)) {
-  $c->stash->{rest} = { error => "Can't find data." };
+  $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.can_t_find_data", "Can't find data.") };
   return;
     }
 
@@ -273,4 +275,4 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     };
 }
 
-1
+1;

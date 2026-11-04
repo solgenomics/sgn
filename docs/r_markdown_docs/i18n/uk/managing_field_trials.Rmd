@@ -1,0 +1,749 @@
+# Керування польовими дослідами {#managing-field-trials}
+
+Щоб переглянути відомості про досліди в базі даних, натисніть “Польові досліди” в меню “Керування” на панелі інструментів.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image290.png')
+```
+
+Посилання “Польові досліди” відкриває сторінку “Керування дослідами”. Тут досліди згруповано за селекційними програмами. Щоб переглянути відомості про дослід, натисніть піктограму + біля потрібної програми.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image153.png')
+```
+
+Досліди можна розміщувати безпосередньо в селекційній програмі або впорядковувати в її папках. Натисніть назву досліду, щоб перейти на сторінку його відомостей.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image279.png')
+```
+
+## Сторінка відомостей про дослід {#trial-detail-page}
+
+На сторінці досліду наведено основні відомості: селекційну програму, місце, рік, опис, схему та пов’язані файли.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_start.png')
+```
+
+Під основними відомостями розташовано меню доступу до даних досліду та їх редагування. У відповідних розділах можна друкувати етикетки для ділянок або рослин, записувати фенотипи, переглядати схему чи розміщення досліду, переглядати фенотипи та виконувати аналіз.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/trial_detail_page_navigator_1.png', 'assets/images/trial_detail_page_navigator_2.png', 'assets/images/trial_detail_page_navigator_3.png'))
+```
+
+Поле “Дата пересаджування” відображається лише за наявності значення. Щоб додати таку дату після створення досліду, змініть параметр show_transplanting_date з 0 на 1 у файлі конфігурації SGN. Після цього дату можна буде ввести, натиснувши “Редагувати відомості про дослід” на сторінці досліду.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_transplanting_date.png')
+```
+
+## Додавання дослідів {#adding-trials}
+
+Створювати досліди можуть лише користувачі зі статусом облікового запису "submitter". Як змінити статус із "user" на "submitter", див. у розділі \@ref(managing-your-account).
+
+### Передумови {#prerequisites}
+
+-   Усі зразки для досліду мають уже бути в базі даних. Якщо потрібних зразків немає, див. інструкції в розділі [*Керування зразками*](#managing-accessions).
+
+-   Селекційна програма й місце проведення досліду також мають бути в базі даних. Щоб додати їх, див. розділи [*Керування селекційними програмами*](#managing-breeding-programs) та [*Керування місцями*](#managing-locations).
+
+На сторінці “Керування дослідами” є два способи створення: вибрати “Завантажити наявний дослід/досліди” й створити дослід із таблиці або вибрати “Спроєктувати новий дослід” і ввести дані вручну.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_manage_trials.png')
+```
+
+### Додавання досліду за допомогою форми “Спроєктувати новий дослід” {#adding-a-trial-by-using-design-new-trial-form}
+
+#### Крок 1. Початок процесу “Спроєктувати новий дослід” {#step-1.-begin-the-design-new-trial-workflow -}
+
+Натисніть “Спроєктувати новий дослід”, щоб почати.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_open_form.png')
+```
+
+Перший крок — вступна сторінка, показана нижче:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_1.png')
+```
+
+Тут наведено вимоги до досліду. Зокрема, перед створенням досліду потрібно скласти список зразків, які плануєте використати. Списки можна переглядати, створювати й змінювати за допомогою інструмента “Списки” у верхній правій частині екрана. Докладніше про списки — [тут](#working-with-lists).
+
+#### Крок 2. Введення відомостей про дослід {#step-2.-enter-trial-information -}
+
+На цьому екрані введіть основні відомості про дослід, зокрема селекційну програму та місце/місця. Також виберіть тип схеми, наприклад Complete Block Design. Схема визначає розподіл і рандомізацію генотипів у досліді. Перш ніж перейти далі, натисніть “Перевірити”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_2.png')
+```
+
+#### Крок 3. Введення відомостей про схему {#step-3.-enter-design-information -}
+
+Укажіть список зразків для досліду. Це має бути коректний список зразків. Також укажіть усі обов’язкові параметри схеми, наприклад кількість повторень і блоків.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_3.png')
+```
+
+#### Крок 4. Відомості про зв’язки досліду (необов’язково) {#step-4.-enter-trial-linkage-information-optional -}
+
+У цьому розділі можна пов’язати новий дослід з іншими польовими дослідами, дослідами зі схрещування або планшетами генотипування в базі даних. Це необов’язково; зв’язки можна додати пізніше на сторінці досліду.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_4.png')
+```
+
+#### Крок 5. Відомості про карту поля (необов’язково) {#step-5.-enter-field-map-information-optional -}
+
+На цьому екрані можна задати номери рядків і стовпців для ділянок — їхнє відносне розташування в полі. Якщо схема посадки ще невідома або поле має неправильну (непрямокутну) форму, цей крок можна пропустити. Після збереження досліду ці відомості можна додати на його сторінці, щоб точно відобразити посадку.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_5.png')
+```
+
+#### Крок 6. Власний формат назв ділянок (необов’язково) {#step-6.-custom-plot-naming-optional -}
+
+На цьому екрані можна змінити формат створення назв ділянок. Рекомендовано пропустити цей крок і використовувати типовий формат бази даних.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_6.png')
+```
+
+#### Крок 7. Перевірка спроєктованого досліду {#step-7.-review-designed-trial -}
+
+На цьому екрані можна переглянути дослід, створений базою даних.
+
+Ви побачите графічне зображення досліду. Числа в клітинках відповідають plot_number ділянок. Наведіть курсор на клітинку, щоб побачити докладніші відомості.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_top.png')
+```
+
+Також буде показано таблицю всіх ділянок та їхніх відомостей. Щоб повторити рандомізацію, натисніть “Повторити рандомізацію”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_middle.png')
+```
+
+Унизу наведено коротке зведення про дослід і дві кнопки.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_bottom.png')
+```
+
+
+#### Крок 7. Збереження нового досліду в базі даних {#step-7.-saving-new-trial-in-the-database -}
+
+
+Перевіривши дослід, натисніть “Підтвердити”, щоб зберегти його в базі даних. Після збереження з’явиться підсумковий екран:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_8.png')
+```
+
+### Додавання досліду із завантаженого файла {#adding-a-trial-from-an-uploaded-file}
+
+Якщо схема досліду вже є в таблиці, додайте дослід до бази даних кнопкою “Завантажити наявний дослід/досліди” на сторінці *Керування дослідами*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_manage_trials.png')
+```
+
+Введіть потрібні відомості в процесі завантаження досліду з таблиці.
+
+#### Крок 1: {#step-1 -}
+
+На першому кроці важливо зрозуміти формат файла. Схема поля описує ділянки досліду. Кожна ділянка має глобально унікальне значення plot_name і номер plot_number, унікальний лише в межах досліду (наприклад, 101, 102, 103 для трьох окремих ділянок), accession_name генотипу, висадженого на ділянці, і block_number повторення схеми. Положення ділянки в сітці визначають row_number і column_number (наприклад, верхня ліва ділянка має рядок 1 і стовпець 1, наступна — рядок 1 і стовпець 2). Для ділянки можна вказати кількість насіння з певної партії: seedlot_name визначає використаний пакет насіння, а num_seed_per_plot і weight_gram_seed_per_plot — кількість, перенесену з цієї партії на ділянку. Для обробок додають окремі стовпці: значення 1 означає, що обробку застосовано, а порожня клітинка — що ні.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_1.png')
+```
+
+На наступній сторінці можна вибрати файл, зокрема для одночасного завантаження кількох дослідів. Тут також наведено вимоги до файлів для одного або кількох дослідів.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/manage_trials_upload_trial_2.png','assets/images/manage_trials_upload_trial_template.png'))
+```
+
+
+##### Мінімальні вимоги до файла {#minimum-file-requirements -}
+
+-   Усі назви зразків у файлі мають бути в базі даних. Докладніше див. у розділі про додавання зразків.
+
+-   Файл може бути Excel (.XLXS або .XLS), зі значеннями, розділеними комами (.CSV), табуляцією (.TSV) або крапкою з комою (.SSV).
+
+-   Перший рядок (заголовок) має містити назви стовпців: plot_name accession_name plot_number block_number is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number
+
+-   Обов’язкові лише accession_name, plot_number і block_number.
+
+Мінімальний приклад:
+
+| **plot\_name** | **accession\_name** | **plot\_number** | **block\_number** | **is\_a\_control** | **rep\_number** | **range\_number** | **row\_number** | **col\_number** | **seedlot\_name** | **num\_seed\_per\_plot** | **weight\_gram\_seed\_per\_plot** | **entry\_number** |
+|----------------|---------------------|------------------|-------------------|--------------------|-----------------|-------------------|-----------------|-----------------|-------------------|--------------------------|-----------------------------------|------------------|
+| 2018plot1      | my_accession1       | 101              | 1                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot2      | my_accession2       | 201              | 2                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot3      | my_accession2       | 102              | 1                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot4      | my_accession1       | 202              | 2                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
+
+Під час завантаження кількох дослідів вимоги ті самі, але потрібно додати заголовки для їх розрізнення: trial_name breeding_program location year transplanting_date design_type description trial_type trial_stock_type plot_width plot_length field_size planting_date harvest_date. Також можна отримати електронний лист після завершення завантаження (див. розділ [Сповіщення електронною поштою про завантаження кількох дослідів](#email-alert-for-multiple-trial-design-upload)).
+
+##### Перевірка файла {#file-validation -}
+
+-   Якщо у файлі бракує даних або є помилки, з’явиться вікно з переліком проблем, які потрібно виправити перед успішним завантаженням.
+
+##### Завантаження досліду з обробками {#uploading-a-trial-with-treatments -}
+
+
+-   Щоб завантажити дослід з обробками, додайте відповідні стовпці. Заголовок стовпця — назва обробки, наприклад fertilizer, watering regime або inoculation. Значення 1 означає, що обробку застосовано до ділянки, порожня клітинка — що ні.
+
+#### Крок 2: {#step-2 -}
+
+Коли схема поля підготовлена в потрібному форматі, натисніть “Наступний крок”. Заповніть форму, що з’явиться:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_3.png')
+```
+
+Назва досліду має бути унікальною в усій базі даних. Дотримуйтеся стандартних правил найменування вашої групи.
+
+#### Крок 3: {#step-3 -}
+
+Перейдіть на наступну сторінку, щоб пов’язати дослід з іншими проєктами. Перевірте форму, а потім натисніть “Завантажити дослід”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_4.png')
+```
+
+#### Крок 4: {#step-4 -}
+
+Якщо файл досліду містить accession_names, яких ще немає в базі даних, відкриється цей екран. Якщо всі accession_names уже є в базі, цей крок буде пропущено.
+Зразки мають бути в базі даних до створення досліду, оскільки один зразок може використовуватися в багатьох дослідах і має існувати як окремий об’єкт. Тому важливо не додавати помилково дубльовані accession_names. На цьому екрані можна створити список відсутніх accession_names і натиснути “Додати зразки до бази даних”. Коли всі зразки буде додано, перейдіть до наступного кроку.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_5.png')
+```
+
+#### Крок 5: {#step-5 -}
+
+Якщо файл досліду містить seedlot_names, яких ще немає в базі даних, відкриється наступний екран. Якщо всі партії насіння вже є в базі, цей крок буде пропущено.
+Партії насіння мають бути в базі даних до створення досліду, оскільки одна партія може використовуватися в багатьох дослідах і має існувати як окремий об’єкт. Після додавання всіх партій перейдіть до наступного кроку.
+
+#### Крок 6: {#step-6 -}
+
+Якщо є інші помилки — наприклад, plot_names не унікальні в базі, plot_numbers повторюються в досліді або row_number не є цілим числом, — їх буде перелічено в червоному блоці. Виправте їх у файлі: відкрийте його в Excel, внесіть зміни та збережіть. Потім натисніть “Надіслати дослід”. Можна редагувати й надсилати файл повторно, доки його не буде прийнято.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_7.png')
+```
+
+#### Екран завершення {#completion-screen -}
+
+Незалежно від того, чи вдалося надіслати дослід з першої спроби на кроці 2, чи знадобилося кілька спроб на кроці 5, після збереження досліду з’явиться такий екран:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_8.png')
+```
+
+
+### Досліди в кількох місцях {#multi-location-trials}
+
+Щоб додати досліди в кількох місцях, виберіть кілька місць у формі 'Додати дослід'.
+
+Для кожного вибраного місця буде створено окремий дослід, але всі вони матимуть однакову схему й будуть згруповані в одній папці.
+
+Типово для кожного досліду створюється окрема рандомізація. За потреби встановіть прапорець “Використовувати однакову рандомізацію для всіх місць”.
+
+
+#### Сповіщення електронною поштою про завантаження кількох дослідів {#email-alert-for-multiple-trial-design-upload -}
+
+Під час завантаження кількох дослідів із файла можна ввімкнути сповіщення електронною поштою прапорцем “Сповіщення електронною поштою”. Типово використовується адреса, пов’язана з вашим обліковим записом, але можна вказати іншу. Після надсилання процес завантаження працює у фоновому режимі, тож ви можете продовжити роботу. Після завершення надійде лист із результатами.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/multiple_trial_upload_with_email.png')
+```
+
+### Перегляд розміщення ділянок і теплової карти ознак {#viewing-plot-layout-and-trait-heatmap}
+
+#### Перегляд розміщення ділянок {#viewing-plot-layout}
+
+У розділі “Інструменти схеми поля й теплової карти фенотипів” на сторінці досліду типово показано фактичне розміщення. Відносні позиції ділянок визначаються номерами рядків і стовпців, заданими під час створення або завантаження досліду. Колір ділянки залежить від її rep і block numbers та від того, чи використовується вона як контроль. Наведіть курсор на ділянку, щоб побачити подробиці.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_trial_layout.png')
+```
+
+#### Перегляд розміщення ділянок для кількох дослідів {#viewing-plot-layout-for-multiple-trials}
+
+Якщо в одному полі вирощують кілька дослідів, їхні схеми можна показати разом, якщо вони мають такі характеристики:
+
+<ul>
+  <li>Усі досліди мають однаковий <strong>рік</strong></li>
+  <li>Усі досліди мають однакове <strong>місце</strong></li>
+  <li>Для місця проведення дослідів тип <strong>місця</strong> має значення <strong>Field</strong></li>
+  <li>Позиції <strong>рядків</strong> і <strong>стовпців</strong> усіх ділянок у пов’язаних дослідах не перекриваються. Наприклад, дослід #1 починається з рядка 1, а дослід #2 — з рядка 10.</li>
+</ul>
+
+Якщо виконано ці умови й установлено прапорець “Вибрати досліди в тому самому полі”, на одній схемі буде показано ділянки всіх пов’язаних дослідів, розфарбовані за дослідами. Завантаження порядку висаджування та збирання міститиме ділянки всіх показаних дослідів у порядку їх розташування в полі.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_multi_trial_layout.png')
+```
+
+#### Перегляд зображень ділянок на fieldMap {#tracking-plot-images-on-fieldmap -}
+
+Зображення ділянки можна переглянути на fieldMap, якщо з нею пов’язано хоча б одне зображення.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_plot_image.png')
+```
+
+Щоб переглянути зображення ділянки, натисніть на неї. У діалоговому вікні буде докладний огляд ділянки, зокрема матеріали, що входять до неї, та їх розміщення, якщо воно задане. Унизу можна змінити назву ділянки чи зразок і переглянути зображення.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_view_plot_image.png')
+```
+
+У діалоговому вікні натисніть “Переглянути зображення ділянки”. Якщо зображень більше ніж 2, натисніть “Показати більше зображень...”. Натисніть зображення, щоб переглянути його у середньому розмірі.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_display_plot_image.png')
+```
+
+
+#### Перегляд теплової карти виміряної ознаки {#viewing-assayed-trait-heatmap -}
+
+Щоб переглянути теплову карту фенотипів, виберіть виміряну ознаку зі спадного списку. Наведення курсора на ділянку підсвічує її зеленим і показує відомості про ділянку, зокрема значення вибраної ознаки.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_assayed_trait_view.png')
+```
+
+#### Приховування фенотипу ділянки {#suppressing-plot-phenotype -}
+
+Натисніть ділянку на тепловій карті, щоб відкрити діалогове вікно з кнопкою приховування значення ознаки для цієї ділянки. Приховане значення можна виключити з аналізу досліду й завантаження фенотипових даних.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_suppress_phenotype.png')
+```
+
+#### Корекція просторової автокореляції {#correcting-spatial-autocorrelation}
+
+Для дослідів із даними про розміщення та збереженими фенотипами можна перевірити й скоригувати просторову автокореляцію кнопкою “Обчислити просторову корекцію” над картою поля. Відкриється діалогове вікно просторових корекцій. Докладніше див. розділ [*Інструменти аналізу даних*](#data-analysis-tools).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_spatial_correction_button.png')
+```
+
+### Додавання відомостей на сторінці *Відомості про дослід* {#adding-additional-information-in-the-trial-detail-page}
+
+Після додавання досліду до бази даних можна змінити його відомості або додати іншу інформацію на сторінці *Відомості про дослід*.
+
+#### Завантаження фактичного плану досліду {#uploading-physical-trial-layout -}
+
+Щоб завантажити фактичне розміщення ділянок, натисніть “Завантажити просторову схему” на сторінці *Відомості про дослід*.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/image332.png')
+```
+
+Уважно перевірте формат файла. Відомості про формат можна переглянути, натиснувши “Формат таблиці” у вікні “Завантажити просторову схему”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image340.png')
+```
+
+Формат таблиці:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image190.png')
+```
+
+#### Вимоги до файла фактичного плану досліду {#physical-trial-layout-file-requirements -}
+
+-   Усі назви ділянок у файлі мають бути в базі даних.
+
+-   Файл потрібно завантажити у форматі txt із розділенням табуляцією.
+
+-   У першому рядку (заголовку) мають бути назви стовпців.
+
+Приклад:
+
+| plot\_name | row\_number | col\_number |
+|------------|-------------|-------------|
+| plot1      | 1           | 1           |
+| plot2      | 1           | 2           |
+| plot3      | 1           | 3           |
+
+Виберіть файл координат розміщення ділянок для цього досліду й натисніть “OK”, щоб завантажити його.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image79.png')
+```
+
+Після завантаження координат з’явиться таке повідомлення.
+
+```{r echo=FALSE, out.width='50%', fig.align='center'}
+knitr::include_graphics('assets/images/image276.png')
+```
+
+<!--
+Щоб переглянути розміщення ділянок, натисніть “Розділ теплової карти досліду” та відкрийте спадний список карти поля.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_default_display.png')
+```
+-->
+
+#### Завантаження таблиці карти поля {#downloading-field-map-spreadsheet -}
+
+Таблицю карти поля можна завантажити, якщо для ділянок досліду завантажено координати поля (номери рядків і стовпців).
+Щоб завантажити її, натисніть посилання “Завантажити схему FieldMap” у розділі теплової карти досліду.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_link.png')
+```
+
+<!--
+Відкриється діалогове вікно. Натисніть “Надіслати”, щоб завантажити файл.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_dialog.png')
+```
+
+Натисніть, щоб переглянути завантажену таблицю.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_spreadsheet.png')
+```
+-->
+#### Редагування фактичного плану досліду {#editing-physical-trial-layout -}
+
+Кнопка “Довідка з використання” містить інструкції з редагування фактичного плану досліду.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/spatial_layout_usage_help.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/spatial_layout_usage_help_1.png','assets/images/spatial_layout_usage_help_2.png','assets/images/spatial_layout_usage_help_3.png'))
+```
+
+Є два способи редагування плану досліду:
+
+-   Замінити зразок ділянки, натиснувши ділянку на схемі.
+
+-   Замінити зразок у досліді за допомогою кнопки “Редагувати схему поля”.
+
+
+Щоб змінити окрему ділянку, натисніть її. У формі “Редагувати відомості про ділянку” введіть новий зразок і натисніть “Замінити зразок ділянки”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/fieldmap_view_plot_image.png','assets/images/replace_plot_accession_form.png'))
+```
+
+Щоб замінити зразок у кожній пов’язаній із ним ділянці або рослині, натисніть “Редагувати схему поля”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image173.png')
+```
+
+У вікні “Редагувати схему поля” натисніть “Замінити зразок”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image87.png')
+```
+
+Виберіть зразок для заміни, введіть новий зразок і натисніть “Замінити зразок у досліді”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image85.png')
+```
+<!--
+Щоб поміняти зразки місцями між двома ділянками, натисніть “Поміняти зразки”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image162.png')
+```
+
+У формі “Поміняти зразки ділянок” виберіть дві ділянки та натисніть “Поміняти зразки ділянок”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image282.png')
+```
+-->
+
+### Завантаження схеми досліду зі сторінки *Відомості про дослід* {#downloading-the-trial-layout-from-the-trial-detail-page}
+
+На сторінці *Відомості про дослід* у розділі “Експериментальний дизайн” натисніть “Завантажити схему”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image348.png')
+```
+
+Схема досліду містить усі відомості про одиниці спостереження: ділянки, рослини або підділянки. Вона може включати параметри дизайну, наприклад block_number і rep_number, а також дані фізичної карти — row_number і col_number, якщо вони задані.
+Також схема містить відомості про обробки, застосовані в полі.
+За бажанням схема може містити загальні показники ефективності зразків за списком ознак.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image347.png')
+```
+
+### Додавання режимів ведення досліду {#adding-management-regimes}
+
+Окрім дизайну й плану досліду, на вкладці *Експериментальний дизайн* сторінки досліду можна вказати, як саме вели дослід, у розділі *Режим ведення досліду*.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_section.png')
+```
+
+Тут можна переглянути відомості про удобрення, зрошення та боротьбу з бур’янами. Доступні типи чинників керування залежать від конфігурації сервера; із запитаннями звертайтеся до адміністратора.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_details.png')
+```
+
+Щоб додати чинник керування, натисніть 'Додати чинник керування' у відповідному розділі. Більшість відомостей необов’язкова, але тип і опис потрібно вказати. За бажанням зазначте дати початку й завершення, графік обробки та окремі випадки застосування чинника. Натисніть 'Надіслати', щоб додати його.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_management_factor_dialog.png')
+```
+
+Після додавання чинник можна змінити, натиснувши зелену піктограму олівця поруч із ним. Відкриється те саме діалогове вікно із заповненими даними; внесіть зміни й надішліть їх. Натисніть червоний кошик, щоб видалити чинник із досліду.
+
+### Додавання експериментальних обробок {#adding-experimental-treatments}
+
+На відміну від режимів ведення досліду, які описують керування дослідом загалом, експериментальні обробки можна задавати для окремих матеріалів у досліді. Додавайте їх у розділі *Обробки* вкладки *Експериментальний дизайн*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_treatment_section.png')
+```
+
+Відкривши цю вкладку, ви побачите коротке зведення про кількість матеріалів, до яких застосовано обробку, та таблицю для пошуку її значень на різних рівнях матеріалу.
+
+Додавання обробок подібне до [завантаження фенотипових даних](#managing-phenotypic-data): натисніть 'Додати обробки', щоб відкрити діалог завантаження:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_add_treatment_dialog.png')
+```
+
+Як і для фенотипових даних, можна подати таблицю з матеріалами й обробками та необов’язковими часовими позначками. Перевірте заголовки стовпців обробок на [сторінці пошуку обробок](#managing-observation-variables) або в переглядачі онтологій.
+
+На відміну від фенотипових даних, обробки автоматично поширюються на дочірні матеріали обробленого матеріалу. Тобто обробка ділянки також застосовується до всіх її підділянок, рослин і зразків тканин.
+
+### Додавання рослин до досліду {#adding-plant-entries-to-your-trial}
+
+Після додавання досліду можна додати до нього записи про рослини. Це дає змогу збирати фенотипи на рівні рослин. Зазвичай краще вносити дані на рівні рослини, оскільки з окремих рослин завжди можна обчислити фенотипи ділянки.
+
+До досліду можна додати записи про рослини чотирма способами:
+(1) Створити автоматично в базі даних. Потрібно вказати лише кількість рослин на ділянку.
+(2) Завантажити у файлі XLS або XLSX. Це дає змогу задати назви окремих рослин.
+(3) Завантажити з індексом рослини замість назви (назва створюється автоматично).
+(4) Завантажити, указавши кількість рослин на ділянку. На відміну від способу 1, для різних ділянок можна вказати різну кількість рослин.
+
+Якщо в досліді є підділянки, кожен спосіб можна використати для додавання рослин до них. Після створення підділянок не можна додавати рослини безпосередньо до ділянок, а після додавання рослин не можна створювати підділянки.
+
+Ці способи доступні в розділі “Рослини” на сторінці *Відомості про дослід*, у вкладці “Експериментальний дизайн”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plant_entries.png')
+```
+
+#### Автоматичне створення записів про рослини {#automatically-generate-plant-entries -}
+
+Натисніть “Додати записи про рослини”, щоб відкрити діалогове вікно. Потрібно вказати лише кількість рослин на ділянку. Назви записів буде утворено з plot_name та індексу рослини, наприклад plot_name_plant_1. За бажанням можна вказати рядок і стовпець для просторового розміщення рослин на ділянці.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plant_entries_autogenerated.png')
+```
+
+#### Завантаження записів про рослини {#upload-plant-entries -}
+
+Також можна завантажити файл XLS або XLSX із назвами рослин, їхніми індексами або кількістю рослин на ділянку. Для кожного способу передбачено діалогове вікно з вимогами до формату файла.
+
+### Додавання зразків тканин до досліду {#adding-tissue-sample-entries-to-your-trial}
+
+У деяких дослідах потрібно відбирати з рослин зразки тканин. База даних створить для них ідентифікатори та збереже зв’язки з рослинами, ділянками, зразками тощо. Щоб почати, відкрийте сторінку досліду, перейдіть до розділу “Дизайн” і відкрийте “Записи зразків тканин”.
+Зразки тканин пов’язані безпосередньо з рослинами, тому перед додаванням таких зразків у досліді мають бути рослини.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_default.png')
+```
+
+Натисніть “Додати записи зразків тканин” і в діалоговому вікні вкажіть кількість зразків для кожної рослини. Потім можна додати до назв уточнення, наприклад “корінь” або “стебло”, як показано нижче.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_create.png')
+```
+
+Після додавання записи про зразки тканин з’являться в розділі дизайну досліду, як показано нижче.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_samples.png')
+```
+
+Для кожного зразка тканини є окрема сторінка, де можна додати відомості, наприклад про транспортування чи зберігання.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_detail.png')
+```
+
+У розділі пов’язаних матеріалів унизу цієї сторінки показано зв’язки між усіма матеріалами, включно зі зразками тканин.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_related_stock.png')
+```
+
+### Завантаження GPS-координат ділянок {#uploading-gps-coordinates-for-plots}
+
+Можна завантажити GPS-координати ділянок досліду. Посилання розташоване на сторінці відомостей про дослід, як показано нижче.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps.png')
+```
+
+Натисніть це посилання, щоб відкрити діалогове вікно.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps_dialog.png')
+```
+
+Тут можна завантажити файл XLS або XLSX. Щоб переглянути вимоги до формату, натисніть “Формат таблиці”; відкриється відповідне діалогове вікно.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps_upload_info.png')
+```
+
+У цьому вікні зазначено, що файл має бути XLS або XLSX і містити такі стовпці: plot_name	WGS84_bottom_left_x	WGS84_bottom_left_y	WGS84_bottom_right_x	WGS84_bottom_right_y	WGS84_top_right_x	WGS84_top_right_y	WGS84_top_left_x	WGS84_top_left_y
+Координати GPS мають бути у форматі WGS84 і задавати чотирикутник навколо ділянки.
+
+### Розділ повторних вимірювань {#repetitive-measurements-section}
+
+Якщо дослід містить повторні вимірювання ознак або часові ряди, переглядайте й аналізуйте їх у розділі “Повторні вимірювання”. Спершу виберіть ознаку зі спадного списку. Потім задайте період за допомогою вибору діапазону дат або інтерактивного повзунка. Виберіть спосіб обробки: First Value, Last Value, Averaged Value, Sum Values або All Values. Опція “All Values” також показує зміну значень у часі, що допомагає виявити закономірності.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_view_repetitive_measurements.png')
+```
+
+### Завантаження додаткових файлів до досліду {#uploading-additional-files-to-trial}
+
+До досліду можна додати документи, зображення або записи. Для цього прокрутіть сторінку досліду до розділу “Завантажені додаткові файли”. Тут можна переглядати й завантажувати ці файли.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_upload_additional_file.png')
+```
+
+Щоб завантажити додатковий файл, натисніть посилання “Завантажити додаткові файли”. У діалоговому вікні виберіть файл. Щоб переглянути довідку, натисніть “Відомості про завантаження”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_upload_additional_file_info.png')
+```
+
+## Оновлення даних досліду {#updating-trial-data}
+
+Щоб оновити метадані одного або кількох дослідів (наприклад, дату висаджування, тип схеми чи опис), натисніть “Оновити наявний дослід/досліди” на сторінці Керування > Польові досліди. Цей файл також можна використати для перейменування дослідів або переміщення їх до іншої селекційної програми. Оновлювати дослід може curator або submitter, пов’язаний із його селекційною програмою.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/update_trial_metadata.png')
+```
+
+Тут можна завантажити файл із новими метаданими наявних у базі дослідів. Перший стовпець має назву 'trial_name' і містить назву наявного досліду. Додайте стовпці для метаданих, які потрібно оновити. Відсутні стовпці й порожні значення не змінюють наявні метадані. Можна включити такі стовпці:
+
+- new_trial_name: назва досліду, якої ще немає в базі даних
+- breeding_program: назва селекційної програми, яка веде дослід; вона має бути в базі даних.
+- location: назва або скорочення місця проведення досліду; воно має бути в базі даних.
+- year: рік проведення досліду.
+- transplanting_date: дата пересаджування в досліді. Укажіть у форматі YYYY-MM-DD або 'remove', щоб вилучити дату.
+- planting_date: дата висаджування у форматі YYYY-MM-DD або 'remove', щоб вилучити дату.
+- harvest_date: дата збирання у форматі YYYY-MM-DD або 'remove', щоб вилучити дату.
+- design_type: скорочене позначення типу схеми має існувати в базі даних. Можливі значення: CRD: Completely Randomized Design, RCBD: Randomized Complete Block Design, RRC: Resolvable Row-Column, DRRC: Doubly-Resolvable Row-Column, ARC: Augmented Row-Column, Alpha: Alpha Lattice Design, Lattice: Lattice Design, Augmented: Augmented Design, MAD: Modified Augmented Design, greenhouse: undesigned Nursery/Greenhouse, splitplot: Split Plot, p-rep: Partially Replicated, Westcott: Westcott Design.
+- description: додатковий текст із будь-якими іншими важливими відомостями про дослід.
+- trial_type: назва типу досліду має існувати в базі даних. Можливі значення: Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial.
+- plot_width: ширина ділянки в meters
+- plot_length: довжина ділянки в meters
+- field_size: площа поля в hectares
+
+## Видалення даних досліду {#deleting-trial-data}
+
+Щоб видалити дані досліду, відкрийте розділ “Видалити дані досліду”. Там є посилання для видалення даних ознак, схеми та записів досліду.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait1.png')
+```
+
+Щоб видалити дані виміряних ознак, натисніть “Видалити дані ознак”. У діалоговому вікні підтвердьте дію кнопкою “Вибрати ознаки для видалення”, а потім виберіть одну чи кілька ознак.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait2.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait3.png')
+```
+
+Щоб видалити дані схеми досліду, натисніть “Видалити дані схеми” та підтвердьте дію в діалоговому вікні.
+
+Щоб видалити запис досліду, натисніть “Видалити запис досліду” та підтвердьте дію в діалоговому вікні.
+
+## Підтримка міжрядного вирощування {#intercropping-support}
+
+У Breedbase впроваджується підтримка дослідів із міжрядним вирощуванням, де в одному досліді можуть рости кілька культур, а з ділянкою може бути пов’язано кілька зразків. Останні зміни також дають змогу зберігати кілька онтологій ознак і впорядковувати терміни окремо для кожної культури.
+
+### Створення досліду {#trial-creation}
+
+Наразі міжрядне вирощування підтримується лише під час завантаження схеми досліду з файла; інтерактивний інструмент поки що цього не підтримує.
+
+У шаблоні завантаження досліду (для одного або кількох дослідів) є стовпець `accession_name` для основного зразка кожної ділянки; він обов’язковий. Також підтримується необов’язковий стовпець `intercrop_accession_name` для одного або кількох додаткових зразків на ділянці. Кілька назв можна розділити комами; якщо додаткового зразка немає, залиште клітинку порожньою.
+
+
+| trial_name  | plot_name             | plot_number | accession_name | intercrop_accession_name |
+|-------------|-----------------------|-------------|----------------|--------------------------|
+| B4I_2025_NY | B4I_2025_NY-PLOT_5001 | 5001        | IL22-5365      | NDP160034Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5002 | 5002        | IL22-5365      | NDP250123Y,NDP250155Y    |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5003 | 5003        | IL21-4364      | NDP250178Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5004 | 5004        | IL21-4020      |                          |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5005 | 5005        | IL23-1619      | NDP150221G               |
+
+**Приклад шаблону завантаження кількох дослідів із кількома зразками на ділянку**
+
+*Примітка: деякі обов’язкові стовпці не показано для наочності*
+
+### Відомості про дослід {#trial-details}
+
+Зразки міжрядних культур відображаються як метадані в різних розділах сторінки досліду.
+
+У розділі *Експериментальний дизайн* такі зразки наведено в таблицях “Зразки” та “Ділянки”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_plots_table.png')
+```
+
+Підказка інтерактивної карти поля, що з’являється під час наведення курсора на ділянку, показує всі пов’язані з нею зразки. У завантаженій просторовій схемі також наведено всі зразки ділянки.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_fieldmap_tooltip.png')
+```
+
+### Завантаження фенотипових даних {#phenotype-downloads}
+
+У завантаженнях фенотипових даних (зі сторінки досліду, майстра пошуку тощо) залишаються стовпці `germplasmDbId` і `germplasmName` з ID та назвою основного зразка. Стовпці `intercropGermplasmDbId` і `intercropGermplasmName` містять ID та назви додаткових міжрядних зразків. Якщо їх немає, стовпці будуть порожніми. Якщо їх кілька, ID та назви буде розділено комами.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_phenotype_download.png')
+```
+
+**Приклад завантаження фенотипових даних із кількома зразками на ділянку**
+
+*Примітка: деякі стовпці не показано для наочності*
+
+### Онтології ознак {#trait-ontologies}
+
+До бази даних можна завантажити окрему онтологію ознак для кожної культури. Це дає змогу чітко розділити визначення ознак між культурами.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_trait_search.png')
+```

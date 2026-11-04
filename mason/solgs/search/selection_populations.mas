@@ -22,11 +22,14 @@ $selection_pop_analyzed_traits => ''
 <%perl>
 
 my $title;
+my $title_anchor;
 
 if ($c->req->path =~ /solgs\/traits\/all\/population/) {
-    $title = 'Predict GEBVs of a selection population using the models';
+    $title = $c->i18n->p("solgs.interface.predict_gebvs_of_a_selection_population_using_the_models", "Predict GEBVs of a selection population using the models");
+ $title_anchor = 'Predict GEBVs of a selection population using the models';
   } else {
- $title = 'Predict GEBVs of a selection population using the model';
+ $title = $c->i18n->p("solgs.interface.predict_gebvs_of_a_selection_population_using_the_model", "Predict GEBVs of a selection population using the model");
+ $title_anchor = 'Predict GEBVs of a selection population using the model';
 }
 
 </%perl>
@@ -38,14 +41,14 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 <&| /page/info_section.mas,
     collapsible => 1,
     collapsed   => 0,
-    title       => $title,
+    anchor_title => $title_anchor, title       => $title,
 &>
 
   <div  id="selection_pops_div">
     <div id="search_div" class="form-inline">
     <input  type="text"
 	    class="form-control"
-	    placeholder="search for a trial"
+	    placeholder="<% $c->i18n->p("solgs.interface.search_for_a_trial", "search for a trial") |h %>"
 	    size="30" id="trial_search_box"/>
 
     <button type="submit"
@@ -63,11 +66,11 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     <table class="table" id="selection_pops_table" style="text-align:left;">
       <thead>
 	<tr>
-	  <th>Selection population</th>
-	  <th>Description</th>
-	  <th>Year</th>
-	  <th>More details</th>
-	  <th>View GEBVs</th>
+	  <th><% $c->i18n->p("solgs.interface.selection_population", "Selection population") |h %></th>
+	  <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
+	  <th><% $c->i18n->p("global.trial_table.year", "Year") |h %></th>
+	  <th><% $c->i18n->p("solgs.interface.more_details", "More details") |h %></th>
+	  <th><% $c->i18n->p("solgs.interface.view_gebvs", "View GEBVs") |h %></th>
 	</tr>
       </thead>
   </table>

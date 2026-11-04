@@ -24,25 +24,25 @@ $q ||= CXGN::Genomic::Search::Clone->new->new_query;
 </%perl>
 
   <table class="search_form_title" summary=""><tr><td>
-    <span class="search_form_title">Genomic clone search</span>
+    <span class="search_form_title"><% $c->i18n->p('global.search.forms.bac_tab.genomic_clone_search', 'Genomic clone search') |h %></span>
   </td><td align="right">
     <a class="search_form_random" href="/maps/physical/clone_info.pl?random=yes">
-    Select a genomic clone at random
+    <% $c->i18n->p('global.search.forms.bac_tab.select_a_genomic_clone_at_random', 'Select a genomic clone at random') |h %>
     </a>
   </td></tr></table>
 
 <form action="/maps/physical/clone_search.pl" method="get">
   <div class="indentedcontent">
       <% $q->to_html %>
-    <h3>Related Links:</h3>
+    <h3><% $c->i18n->p('global.search.forms.bac_tab.related_links', 'Related Links:') |h %></h3>
     <ul>
-    <li><a href="/maps/physical/list_bacs_by_plate.pl">Browse BACs by Overgo Plate</a></li>
-    <li><a href="/cview/map.pl?map_id=1&amp;physical=1">About Physical Mapping</a></li>
-    <li><a href="/maps/physical/overgo_stats.pl">Overgo Project</a></li>
-    <li><a href="/maps/physical/overgo_process_explained.pl">Overgo plating process</a></li>
-    <li><a href="http://www.genome.arizona.edu/fpc/tomato/">Tomato FPC Map at AGI</a></li>
-    <li><a href="/supplement/plantcell-14-1441/bac_annotation.pl">Old (2000) chromosome 6 tomato BAC annotation</a></li>
-    <li><a href="/solanaceae-project/seed_bac_selection.pl">Guidelines for seed BAC selection</a></li>
+    <li><a href="/maps/physical/list_bacs_by_plate.pl"><% $c->i18n->p('global.search.forms.bac_tab.browse_bacs_by_overgo_plate', 'Browse BACs by Overgo Plate') |h %></a></li>
+    <li><a href="/cview/map.pl?map_id=1&amp;physical=1"><% $c->i18n->p('global.search.forms.bac_tab.about_physical_mapping', 'About Physical Mapping') |h %></a></li>
+    <li><a href="/maps/physical/overgo_stats.pl"><% $c->i18n->p('global.search.forms.bac_tab.overgo_project', 'Overgo Project') |h %></a></li>
+    <li><a href="/maps/physical/overgo_process_explained.pl"><% $c->i18n->p('global.search.forms.bac_tab.overgo_plating_process', 'Overgo plating process') |h %></a></li>
+    <li><a href="http://www.genome.arizona.edu/fpc/tomato/"><% $c->i18n->p('global.search.forms.bac_tab.tomato_fpc_map_at_agi', 'Tomato FPC Map at AGI') |h %></a></li>
+    <li><a href="/supplement/plantcell-14-1441/bac_annotation.pl"><% $c->i18n->p('global.search.forms.bac_tab.old_2000_chromosome_6_tomato_bac_annotation', 'Old (2000) chromosome 6 tomato BAC annotation') |h %></a></li>
+    <li><a href="/solanaceae-project/seed_bac_selection.pl"><% $c->i18n->p('global.search.forms.bac_tab.guidelines_for_seed_bac_selection', 'Guidelines for seed BAC selection') |h %></a></li>
     </ul>
   </div>
 </form>

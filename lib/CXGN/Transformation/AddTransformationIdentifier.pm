@@ -7,6 +7,9 @@ CXGN::Transformation::AddTransformationIdentifier - a module for adding transfor
 
 package CXGN::Transformation::AddTransformationIdentifier;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
@@ -90,6 +93,7 @@ sub existing_transformation_id {
 
 sub add_transformation_identifier {
     my $self = shift;
+    my SGN::I18N $ui_add_transformation_identifier_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
     my $transformation_identifier = $self->get_transformation_identifier();
@@ -105,7 +109,7 @@ sub add_transformation_identifier {
     my $owner_id = $self->get_owner_id();
 
     if ($self->existing_transformation_id()){
-        return {error => "Error: Transformation identifier: $transformation_identifier already exists in the database."};
+        return {error => (SGN::I18N::translate($ui_add_transformation_identifier_i18n, 'transformation.error_transformation_identifier_transformation_identifier_already_ex', 'Error: Transformation identifier: %{transformation_identifier} already exists in the database.', {transformation_identifier => ("" . ("$transformation_identifier"))}))};
     }
 
     my $coderef = sub {

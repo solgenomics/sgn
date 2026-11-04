@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -20,14 +24,12 @@ $guide
 </%args>
 
 <%perl>
-$error .= qq |<p>Please go <a href="javascript:history.go(-1)"><b>back</b></a> and 
-                 rearrange the order of the columns and upload the file again or if 
-                 you keep having problem with it contact us.
+$error .= (qq |<p>| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.please_go", "Please go")) . qq | <a href="javascript:history.go(-1)"><b>| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.back", "back")) . qq |</b></a> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.and_rearrange_the_order_of_the_columns_and_upload_the", "and \n                 rearrange the order of the columns and upload the file again or if \n                 you keep having problem with it contact us.")) . qq |
               </p>
-             |;
+             |);
 </%perl>
 
-<& /page/page_title.mas, title => 'Traits file' &>
-<&| /page/info_section.mas, title => '', subtitle => $guide &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.traits_file", 'Traits file')) &>
+<&| /page/info_section.mas, anchor_title => '', title => '', subtitle => $guide &>
   <% $error %>  
 </&>

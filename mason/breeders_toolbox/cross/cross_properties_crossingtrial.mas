@@ -9,8 +9,8 @@ $trial_id
     <table class="table table-hover table-bordered" id="cross_properties_crossingtrial_table">
         <thead>
             <tr>
-                <th>Cross Unique ID</th>
-                <th>Cross Combination</th>
+                <th><% $c->i18n->p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") |h %></th>
+                <th><% $c->i18n->p("cross.ui.cross_combination", "Cross Combination") |h %></th>
 % my $cross_properties = $c->config->{cross_properties};
 % my @column_header = split ',',$cross_properties;
 % foreach my $column_header(@column_header){

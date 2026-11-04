@@ -1,7 +1,8 @@
 <%init>
+    use HTML::Entities ();
 	my $feedback_email = eval{ $c->get_conf('email') };
-	$feedback_email = $feedback_email ? qq|<a class="footer" href="mailto:$feedback_email">$feedback_email</a>|
-	                                  : '<span style="font-weight: bold; color: red">[email not set]</b>';
+	$feedback_email = $feedback_email ? '<a class="footer" href="mailto:' . HTML::Entities::encode_entities($feedback_email) . '">' . HTML::Entities::encode_entities($feedback_email) . '</a>'
+        : '<span style="font-weight: bold; color: red">' . HTML::Entities::encode_entities($c->i18n->p('footer.email_not_set', '[email not set]')) . '</span>';
 </%init>
 
 
@@ -14,23 +15,23 @@
 
 <!--
 <div id="working" style="text-align : center;">
-  <img src="/img/wheel.gif" />
+  <img src="/img/wheel.gif" alt="" />
   <div id="working_msg"></div>
 </div>
 -->
 
-<div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+<div class="modal" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
   <div class="modal-dialog modal-sm" role="document">
     <div class="modal-content">
       <div class="modal-header">
 	      <center>
-          <h4 class="modal-title" id="workingModalDialog">Working</h4>
+          <h4 class="modal-title" id="workingModalDialog"><% $c->i18n->p('interface.working', 'Working') |h %></h4>
 	      </center>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 	        <center>
-	          <img src="/img/wheel.gif" />
+	          <img src="/img/wheel.gif" alt="" />
     	      <div id="working_msg"></div>
 	        </center>
           <div id="working_modal_progress_div" style="display: none">
@@ -51,7 +52,7 @@
     <div class="modal-content">
       <div class="modal-header">
 	<center>
-          <h4 class="modal-title" id="progressModalDialog">Progress</h4>
+          <h4 class="modal-title" id="progressModalDialog"><% $c->i18n->p('interface.progress', 'Progress') |h %></h4>
 	</center>
       </div>
       <div class="modal-body">

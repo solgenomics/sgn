@@ -25,30 +25,30 @@ $odk_service => undef
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Information</th>
-            <th>Breeding Programs -- Folders -- Crossing Experiments&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_crosses_jstree_html_trialtree_button" name="refresh_crosses_jstree_html">Refresh</button></th>
+            <th><% $c->i18n->p('cross.ui.information', 'Information') |h %></th>
+            <th><% $c->i18n->p('cross.ui.breeding_programs_folders_crossing_experiments', 'Breeding Programs -- Folders -- Crossing Experiments    ') |h %><button class="btn btn-sm btn-default" id="refresh_crosses_jstree_html_trialtree_button" name="refresh_crosses_jstree_html"><% $c->i18n->p('cross.ui.refresh', 'Refresh') |h %></button></th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>
-                <h4>Search</h4>
-                <input type="text" class="form-control input-sm" id="cross_tree_search" placeholder="Search" />
+                <h4><% $c->i18n->p('cross.ui.search', 'Search') |h %></h4>
+                <input type="text" class="form-control input-sm" id="cross_tree_search" placeholder="<% $c->i18n->p('cross.ui.search', 'Search') |h %>" />
                 <hr>
 
-                <h5><i>Double click<br />crossing experiment (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
-                <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+                <h5><i><% $c->i18n->p('cross.ui.double_click', 'Double click') |h %><br /><% $c->i18n->p('cross.ui.crossing_experiment.722f9e0', 'crossing experiment ( ') |h %><span class="glyphicon glyphicon-grain text-success"></span><% $c->i18n->p('cross.ui.or_folder', ' ) or folder ( ') |h %><span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/><% $c->i18n->p('cross.ui.to_view_detail_page', 'to view detail page.') |h %></i></h5>
+                <h5><i><% $c->i18n->p('cross.ui.breeding_programs', 'Breeding programs ( ') |h %><span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
                 <hr>
 
-                <h4>Folders</h4>
-                <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move crossing experiment(s) to folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
+                <h4><% $c->i18n->p('cross.ui.folders', 'Folders') |h %></h4>
+                <button class="btn btn-sm btn-default" id="new_folder_dialog_link"><% $c->i18n->p('cross.ui.create_new_folder', 'Create new folder') |h %></button><br/><br/>
+                <button class="btn btn-sm btn-default" id="open_folder_dialog_link"><% $c->i18n->p('cross.ui.move_crossing_experiment_s_to_folder', 'Move crossing experiment(s) to folder') |h %></button><br/><br/>
+                <button class="btn btn-sm btn-default" id="move_folder_dialog_link"><% $c->i18n->p('cross.ui.move_folder', 'Move folder') |h %></button>
 
                 <div id="folder_edit_options" style="display:none">
                     <hr>
-                    <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
-                    <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+                    <h5><i><% $c->i18n->p('cross.ui.select_multiple_folders_by_holding_ctrl', 'Select multiple folders by holding \'Ctrl\'.') |h %></i></h5>
+                    <button class="btn btn-primary" id="edit_folders_button" title="<% $c->i18n->p('cross.ui.first_select_folder_s_to_edit', 'First Select Folder(s) to Edit') |h %>"><% $c->i18n->p('cross.ui.edit_folder_s', 'Edit Folder(s)') |h %></button>
                     <br/>
                 </div>
 
@@ -56,7 +56,7 @@ $odk_service => undef
                 <br />
             </td>
             <td>
-                <div id="crosses_list" >[loading...]</div>
+                <div id="crosses_list" ><% $c->i18n->p('cross.ui.loading', '[loading...]') |h %></div>
             </td>
         </tr>
     </tbody>
@@ -64,6 +64,24 @@ $odk_service => undef
 
 
 <script>
+// Optional locale assets never block the native crossing workflow.
+var crossI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function crossHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+
+
 
 jQuery.noConflict();
 
@@ -106,7 +124,7 @@ jQuery(document).ready(function($) {
 
       },
       error: function(response) {
-        alert("An error occurred while loading the trial data.");
+        alert(crossI18n.p("cross.ui.an_error_occurred_while_loading_the_trial_data", "An error occurred while loading the trial data."));
       }
   });
 

@@ -3,6 +3,7 @@ package CXGN::Trial::TrialDesign::Plugin::URDD;
 use File::Slurp;
 use CXGN::Tools::Run;
 use Moose::Role;
+use SGN::I18N ();
 use Data::Dumper;
 
 use File::Slurp;
@@ -12,6 +13,7 @@ use Data::Dumper;
 
 sub create_design {
   my ($self, $c) = @_;
+    my SGN::I18N $design_i18n = $self->i18n;
   my %urdd_design;
   my $rbase = R::YapRI::Base->new();
   my $stock_list;
@@ -40,7 +42,7 @@ sub create_design {
     @stock_list = @{$self->get_stock_list()};
     $stock_list = '"'.join('","', @stock_list).'"';
   } else {
-    die "No stock list specified\n";
+    die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
   }
   if ($self->has_control_list_crbd()) {
     $control_list = '"'.join('","',@{$self->get_control_list_crbd()}).'"';
@@ -79,7 +81,7 @@ sub create_design {
   my $num_controls = $self->has_control_list_crbd() ? scalar(@{$self->get_control_list_crbd()}) : 0;
   my $num_stocks = scalar(@stock_list) - $num_controls;
   if ($num_stocks % $number_of_blocks != 0) {
-      die "The number of stocks ($num_stocks) must be divisible by the number of blocks ($number_of_blocks).";
+      die (($design_i18n ? $design_i18n->p("trial.design.urdd_divisible", "The number of stocks (%{stocks}) must be divisible by the number of blocks (%{blocks}).", {stocks => $num_stocks, blocks => $number_of_blocks}) : "The number of stocks ($num_stocks) must be divisible by the number of blocks ($number_of_blocks)."));
   }
 
  

@@ -19,10 +19,11 @@ Lukas Mueller <lam87@cornell.edu>
 <%perl>
 
 use strict;
+use HTML::Entities ();
 use File::Spec;
 use CXGN::Tools::File;
 
-my $publication = "The tomato genome publication information is currently unavailable.<br /><br />";
+my $publication = HTML::Entities::encode_entities($c->i18n->p('global.tomato_genome_publication.unavailable', 'The %{crop} genome publication information is currently unavailable.', {crop => 'tomato'})) . "<br /><br />";
 
 eval {
 
@@ -35,7 +36,7 @@ if ($@) { print "ERROR $@\n"; }
 </%perl>
 
 <div class="boxbgcolor1" style="margin:0px;">
-<div class="boxheading">Tomato Genome Published</div>
+<div class="boxheading"><% $c->i18n->p('global.tomato_genome_publication.heading', '%{crop} Genome Published', {crop => 'Tomato'}) |h %></div>
 <div class="boxcontent"><% $publication %>
 
 </div>

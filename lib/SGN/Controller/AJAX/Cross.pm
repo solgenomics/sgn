@@ -114,7 +114,7 @@ sub upload_cross_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('cross.server.you_must_be_logged_in_to_upload_crosses', 'You must be logged in to upload crosses!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -123,7 +123,7 @@ sub upload_cross_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('cross.server.you_must_be_logged_in_to_upload_crosses', 'You must be logged in to upload crosses!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -132,7 +132,7 @@ sub upload_cross_file_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload crosses'};
+        $c->stash->{rest} = {error=>$c->i18n->p('cross.server.only_a_submitter_or_a_curator_can_upload_crosses', 'Only a submitter or a curator can upload crosses')};
         $c->detach();
     }
 
@@ -146,11 +146,11 @@ sub upload_cross_file_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p('cross.server.could_not_save_file_upload_original_name_in_archive', 'Could not save file %{upload_original_name} in archive', {upload_original_name => $upload_original_name}),};
         return;
     }
     unlink $upload_tempfile;
@@ -160,7 +160,7 @@ sub upload_cross_file_POST : Args(0) {
     my $cross_additional_info = \@additional_info;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_additional_info => $cross_additional_info);
+    $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_additional_info => $cross_additional_info);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -169,13 +169,13 @@ sub upload_cross_file_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p('cross.server.could_not_get_parsing_errors', 'Could not get parsing errors')};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= HTML::Entities::encode_entities($error_string)."<br>";
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions_or_crosses => $parse_errors->{'missing_accessions_or_crosses'}};
@@ -209,13 +209,13 @@ sub upload_cross_file_POST : Args(0) {
 
     #validate the crosses
     if (!$cross_add->validate_crosses()){
-        $c->stash->{rest} = {error_string => "Error validating crosses",};
+        $c->stash->{rest} = {error_string => $c->i18n->p('cross.server.error_validating_crosses', 'Error validating crosses'),};
         return;
     }
 
     #add the crosses
     if (!$cross_add->add_crosses()){
-        $c->stash->{rest} = {error_string => "Error adding crosses",};
+        $c->stash->{rest} = {error_string => $c->i18n->p('cross.server.error_adding_crosses', 'Error adding crosses'),};
         return;
     }
 
@@ -236,7 +236,7 @@ sub upload_cross_file_POST : Args(0) {
                $cross_add_info->add_info();
 
                if (!$cross_add_info->add_info()){
-                   $c->stash->{rest} = {error_string => "Error saving info",};
+                   $c->stash->{rest} = {error_string => $c->i18n->p('cross.server.error_saving_info', 'Error saving info'),};
                    return;
                }
 
@@ -265,13 +265,13 @@ sub add_cross_POST :Args(0) {
     my $user_id;
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a cross.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+        $c->stash->{rest} = {error => $c->i18n->p('cross.server.you_need_to_be_logged_in_to_add_a_cross', 'You need to be logged in to add a cross.') };
         return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
         print STDERR "User does not have sufficient privileges.\n";
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.you_have_insufficient_privileges_to_add_a_cross', 'you have insufficient privileges to add a cross.') };
         return;
     } else {
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -350,7 +350,7 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
     my $cross = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
 
     if ($cross && $cross->type()->name() ne "cross") {
-	    $c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
+	    $c->stash->{rest} = { error => $c->i18n->p('cross.server.this_entry_is_not_of_type_cross_and_cannot_be_displayed_using_', 'This entry is not of type cross and cannot be displayed using this page.') };
 	    return;
     }
 
@@ -375,7 +375,7 @@ sub get_membership :Path('/ajax/cross/membership') :Args(1) {
     my $cross = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
 
     if ($cross && $cross->type()->name() ne "cross") {
-	    $c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
+	    $c->stash->{rest} = { error => $c->i18n->p('cross.server.this_entry_is_not_of_type_cross_and_cannot_be_displayed_using_', 'This entry is not of type cross and cannot be displayed using this page.') };
 	    return;
     }
 
@@ -402,7 +402,7 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) 
     my $cross = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
 
     if ($cross && $cross->type()->name() ne "cross") {
-	    $c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
+	    $c->stash->{rest} = { error => $c->i18n->p('cross.server.this_entry_is_not_of_type_cross_and_cannot_be_displayed_using_', 'This entry is not of type cross and cannot be displayed using this page.') };
 	    return;
     }
 
@@ -612,13 +612,13 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
 
     if (ref($suggested_values{$type})) {
 	      if (!exists($suggested_values{$type}->{$value})) { # don't make this case insensitive!
-	          $c->stash->{rest} =  { message => 'The provided value is not in the suggested list of terms. This could affect downstream data processing.' };
+	          $c->stash->{rest} =  { message => $c->i18n->p('cross.server.the_provided_value_is_not_in_the_suggested_list_of_terms_this_', 'The provided value is not in the suggested list of terms. This could affect downstream data processing.') };
 	          return;
 	      }
     }
     else {
 	      if ($value !~ m/^$suggested_values{$type}$/) {
-	          $c->stash->{rest} = { error => 'The provided value is not in a valid format. Format example: "'.$example_values{$type}.'"' };
+	          $c->stash->{rest} = { error => $c->i18n->p('cross.server.the_provided_value_is_not_in_a_valid_format_format_example_exa', 'The provided value is not in a valid format. Format example: "%{example}"', {example => $example_values{$type}}) };
 	          return;
 	      }
     }
@@ -632,11 +632,11 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $c = shift;
 
     if (!$c->user()) {
-	      $c->stash->{rest} = { error => "You must be logged in to add properties." };
+	      $c->stash->{rest} = { error => $c->i18n->p('cross.server.you_must_be_logged_in_to_add_properties', 'You must be logged in to add properties.') };
 	      return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-	      $c->stash->{rest} = { error => "You do not have sufficient privileges to add properties." };
+	      $c->stash->{rest} = { error => $c->i18n->p('cross.server.you_do_not_have_sufficient_privileges_to_add_properties', 'You do not have sufficient privileges to add properties.') };
 	      return;
     }
 
@@ -661,7 +661,7 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
     $cross_add_info->add_info();
 
     if (!$cross_add_info->add_info()){
-        $c->stash->{rest} = {error_string => "Error saving info",};
+        $c->stash->{rest} = {error_string => $c->i18n->p('cross.server.error_saving_info', 'Error saving info'),};
         return;
     }
 
@@ -674,11 +674,11 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
     my $cross_id = shift;
 
     if (!$c->user()) {
-	$c->stash->{rest} = { error => "You must be logged in add progeny." };
+	$c->stash->{rest} = { error => $c->i18n->p('cross.server.you_must_be_logged_in_add_progeny', 'You must be logged in add progeny.') };
 	return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-	$c->stash->{rest} = { error => "You do not have sufficient privileges to add progeny." };
+	$c->stash->{rest} = { error => $c->i18n->p('cross.server.you_do_not_have_sufficient_privileges_to_add_progeny', 'You do not have sufficient privileges to add progeny.') };
 	return;
     }
 
@@ -711,7 +711,7 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 	    owner_name => $owner_name,
 	      });
     if (!$progeny_add->add_progeny()){
-      $c->stash->{rest} = {error_string => "Error adding progeny. Please change the input parameters and try again.",};
+      $c->stash->{rest} = {error_string => $c->i18n->p('cross.server.error_adding_progeny_please_change_the_input_parameters_and_tr', 'Error adding progeny. Please change the input parameters and try again.'),};
       #should delete crosses and other progeny if add progeny fails?
       return;
     }
@@ -787,45 +787,45 @@ sub add_individual_cross {
     my $maximum_progeny_number = 999; #higher numbers break cross name convention
     if ($progeny_number) {
         if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
-            $c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
+            $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.progeny_number_exceeds_the_maximum_of_maximum_progeny_number_o', 'progeny number exceeds the maximum of %{maximum_progeny_number} or is invalid.', {maximum_progeny_number => $maximum_progeny_number}) };
             return 0;
         }
     }
 
     #check that maternal name is not blank
     if ($maternal eq "") {
-        $c->stash->{rest} = {error =>  "Female parent name cannot be blank." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.female_parent_name_cannot_be_blank', 'Female parent name cannot be blank.') };
         return 0;
     }
 
     #if required, check that paternal parent name is not blank;
     if ($paternal eq "" && ($cross_type ne "open") && ($cross_type ne "bulk_open")) {
-        $c->stash->{rest} = {error =>  "Male parent name cannot be blank." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.male_parent_name_cannot_be_blank', 'Male parent name cannot be blank.') };
         return 0;
     }
 
     #check that parents exist in the database
     if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$maternal,})){
-        $c->stash->{rest} = {error =>  "Female parent does not exist." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.female_parent_does_not_exist', 'Female parent does not exist.') };
         return 0;
     }
 
     if ($paternal) {
         if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$paternal,})){
-            $c->stash->{rest} = {error =>  "Male parent does not exist." };
+            $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.male_parent_does_not_exist', 'Male parent does not exist.') };
             return 0;
         }
     }
 
     #check that cross name does not already exist
     if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
-        $c->stash->{rest} = {error =>  "Cross Unique ID already exists." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.cross_unique_id_already_exists', 'Cross Unique ID already exists.') };
         return 0;
     }
 
     #check that progeny do not already exist
     if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name.$prefix.'001'.$suffix,})){
-        $c->stash->{rest} = {error =>  "progeny already exist." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.progeny_already_exist', 'progeny already exist.') };
         return 0;
     }
 
@@ -881,7 +881,7 @@ sub add_individual_cross {
     };
 
     if ($@) {
-        $c->stash->{rest} = { error => "Error creating the cross: $@" };
+        $c->stash->{rest} = { error => $c->i18n->p('cross.server.error_creating_the_cross_detail', 'Error creating the cross: %{detail}', {detail => $@}) };
         return 0;
     }
 
@@ -911,7 +911,7 @@ sub add_individual_cross {
     };
 
     if ($@) {
-        $c->stash->{rest} = { error => "An error occurred: $@"};
+        $c->stash->{rest} = { error => $c->i18n->p('cross.server.an_error_occurred_detail', 'An error occurred: %{detail}', {detail => $@})};
         return 0;
     }
     return 1;
@@ -935,7 +935,7 @@ sub add_crossingtrial_POST :Args(0){
 
     if (!$c->user()){
         print STDERR "User not logged in... not adding a crossing experiment.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to add a crossing experiment."};
+        $c->stash->{rest} = {error => $c->i18n->p('cross.server.you_need_to_be_logged_in_to_add_a_crossing_experiment', 'You need to be logged in to add a crossing experiment.')};
         return;
     }
 
@@ -943,10 +943,10 @@ sub add_crossingtrial_POST :Args(0){
     my $check_roles = CXGN::People::Roles->new({ people_schema => $people_schema});
     my $invalid_roles = $check_roles->check_sp_roles(\@user_roles, $program_name);
     if ($invalid_roles->{'invalid_role'}) {
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossing experiment." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('cross.server.you_have_insufficient_privileges_to_add_a_crossing_experiment', 'you have insufficient privileges to add a crossing experiment.') };
         return;
     } elsif ($invalid_roles->{'invalid_program'}) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add new crossing experiment." };
+        $c->stash->{rest} = { error => $c->i18n->p('cross.server.you_need_to_be_either_a_curator_or_a_submitter_associated_with', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to add new crossing experiment.', {program_name => $program_name}) };
         return;
     }
 
@@ -955,13 +955,14 @@ sub add_crossingtrial_POST :Args(0){
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($location);
     if(!$geolocation_lookup->get_geolocation()){
-        $c->stash->{rest}={error => "Location not found"};
+        $c->stash->{rest}={error => $c->i18n->p('cross.server.location_not_found', 'Location not found')};
         return;
     }
 
     my $error;
     eval{
         my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
+            i18n => $c->i18n,
             chado_schema => $schema,
             dbh => $dbh,
             breeding_program_id => $breeding_program_id,
@@ -1056,7 +1057,7 @@ sub upload_progenies_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1066,7 +1067,7 @@ sub upload_progenies_POST : Args(0) {
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -1203,7 +1204,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1213,7 +1214,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -1255,7 +1256,7 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
     my $upload_type = 'StoreExistingProgeniesExcel';
     my @all_crosses;
 
-    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    my $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     my $parsed_data = $parser->parse();
     if ($parsed_data){
@@ -1398,7 +1399,7 @@ sub upload_info_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1416,7 +1417,7 @@ sub upload_info_POST : Args(0) {
     my $cross_additional_info = \@additional_info;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties, cross_additional_info => $cross_additional_info);
+    $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties, cross_additional_info => $cross_additional_info);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
 #    print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -1576,7 +1577,7 @@ sub upload_family_names_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1586,7 +1587,7 @@ sub upload_family_names_POST : Args(0) {
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin('FamilyNameExcel');
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -1678,11 +1679,11 @@ sub delete_cross_POST : Args(0) {
     my $c = shift;
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to delete crosses" };
+        $c->stash->{rest} = { error => $c->i18n->p('cross.server.you_must_be_logged_in_to_delete_crosses', 'You must be logged in to delete crosses') };
         $c->detach();
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete crosses. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p('cross.server.you_do_not_have_the_correct_role_to_delete_crosses_please_cont', 'You do not have the correct role to delete crosses. Please contact us.') };
         $c->detach();
     }
 
@@ -1691,7 +1692,7 @@ sub delete_cross_POST : Args(0) {
     my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
 
     if (!$cross->cross_stock_id()) {
-	$c->stash->{rest} = { error => "No such cross exists. Cannot delete." };
+	$c->stash->{rest} = { error => $c->i18n->p('cross.server.no_such_cross_exists_cannot_delete', 'No such cross exists. Cannot delete.') };
 	return;
     }
 
@@ -1700,7 +1701,7 @@ sub delete_cross_POST : Args(0) {
     print STDERR "ERROR = $error\n";
 
     if ($error) {
-	$c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
+	$c->stash->{rest} = { error => $c->i18n->p('cross.server.an_error_occurred_attempting_to_delete_a_cross_detail', 'An error occurred attempting to delete a cross. (%{detail})', {detail => $@}) };
 	return;
     }
 

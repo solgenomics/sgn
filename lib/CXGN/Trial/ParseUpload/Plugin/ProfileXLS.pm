@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::ProfileXLS;
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -10,6 +12,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_profilexls_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my @error_messages;
@@ -40,7 +43,7 @@ sub _validate_with_plugin {
 
     $worksheet = ($excel_obj->worksheets())[0]; #support only one worksheet
     if (!$worksheet){
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "seedlot_maintenance_upload.parse.first_sheet", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -49,7 +52,7 @@ sub _validate_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
     if (($col_max - $col_min)  < 5 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of info
-        push @error_messages, "Spreadsheet is missing header or no profile info";
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.profile_missing", "Spreadsheet is missing header or no profile info"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -89,22 +92,22 @@ sub _validate_with_plugin {
     }
 
     if (!$trait_name_header || $trait_name_header ne 'Trait Name' ) {
-        push @error_messages, "Cell A1: Trait Name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "A1", field => "Trait Name"}));
     }
     if (!$target_value_header || $target_value_header ne 'Target Value') {
-        push @error_messages, "Cell B1: Target Value is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "B1", field => "Target Value"}));
     }
     if (!$benchmark_variety_header || $benchmark_variety_header ne 'Benchmark Variety') {
-        push @error_messages, "Cell C1: Benchmark Variety is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "C1", field => "Benchmark Variety"}));
     }
     if (!$performance_header || $performance_header ne 'Performance (equal, smaller, larger)') {
-        push @error_messages, "Cell D1: Performance is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "D1", field => "Performance"}));
     }
     if (!$weight_header || $weight_header ne 'Weight') {
-        push @error_messages, "Cell E1: Weight is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "E1", field => "Weight"}));
     }
     if (!$trait_type_header || $trait_type_header ne 'Trait Type') {
-        push @error_messages, "Cell F1: Trait Type is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "F1", field => "Trait Type"}));
     }
 
     my %seen_trait_names;
@@ -140,19 +143,19 @@ sub _validate_with_plugin {
         }
 
         if (!$trait_name || $trait_name eq '') {
-            push @error_messages, "Cell A$row_name: Trait name missing";
+            push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.cell_missing", "Cell %{cell}: %{field} missing", {cell => "A$row_name", field => "Trait name"}));
         }
 
         if ((!$target_value || $target_value eq '') && (!$benchmark_variety || $benchmark_variety eq '')) {
-            push @error_messages, "Cell B$row_name or C$row_name: You must indicate either Target Value or Benchmark Variety";
+            push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.profile_choice", "Cell %{first} or %{second}: You must indicate either Target Value or Benchmark Variety", {first => "B$row_name", second => "C$row_name"}));
         }
 
         if (defined $target_value && defined $benchmark_variety) {
-            push @error_messages, "Cell B$row_name or C$row_name: You must indicate either Target Value or Benchmark Variety, not both";
+            push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.profile_exclusive", "Cell %{first} or %{second}: You must indicate either Target Value or Benchmark Variety, not both", {first => "B$row_name", second => "C$row_name"}));
         }
 
         if (!$performance || $performance eq '') {
-            push @error_messages, "Cell D$row_name: Performance parameter missing";
+            push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.performance_missing", "Cell %{cell}: Performance parameter missing", {cell => "D$row_name"}));
         }
 
         if ($trait_name){
@@ -172,7 +175,7 @@ sub _validate_with_plugin {
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@traits)->{'missing'}};
 
     if (scalar(@traits_missing) > 0){
-        push @error_messages, "The following Traits are not in the database: ".join(',',@traits_missing);
+        push @error_messages, (SGN::I18N::translate($ui_profilexls_i18n, "trial.parse.traits_missing", "The following Traits are not in the database: %{names}", {names => join(',',@traits_missing)}));
         $errors{'missing_traits'} = \@traits_missing;
     }
 

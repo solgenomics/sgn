@@ -7,14 +7,14 @@ $type_name
 
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
-		<b> Trials </b>
+		<b> <% $c->i18n->p("accession.stock.trials.title", "Trials") |h %> </b>
 		<br/> <br/>
 		<table class="table table-hover table-bordered" id="trial_summary_data">
 			<thead>
 			  <tr>
-				<th>Trial name</th>
-				<th>Location</th>
-				<th>Details</th>
+				<th><% $c->i18n->p("accession.stock.trials.header.name", "Trial name") |h %></th>
+				<th><% $c->i18n->p("accession.stock.trials.header.location", "Location") |h %></th>
+				<th><% $c->i18n->p("accession.stock.trials.header.details", "Details") |h %></th>
 			  </tr>
 			</thead>
 		</table>
@@ -24,12 +24,12 @@ $type_name
 % if ($type_name eq "accession") {
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
-		<b> Stored Analyses </b>
+		<b> <% $c->i18n->p("accession.stock.trials.analyses", "Stored Analyses") |h %> </b>
 		<br/> <br/>
 		<table class="table table-hover table-bordered" id="analysis_usage_data">
 			<thead>
 				<tr>
-					<th>Name</th>
+					<th><% $c->i18n->p("accession.stock.trials.analyses_header.name", "Name") |h %></th>
 				</tr>
 			</thead>
 		</table>

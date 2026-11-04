@@ -58,12 +58,18 @@ sub send_email {
 
     $body .= $request_info;
 
+    # Keep the character subject for RFC 2047 encoding at each transport boundary.
+    my $smtp_subject = $subject;
+    my $subject_has_non_ascii = utf8::is_utf8($smtp_subject) && $smtp_subject =~ /[^\x00-\x7f]/;
+    my $body_has_non_ascii = utf8::is_utf8($body) && $body =~ /[^\x00-\x7f]/;
+
     # Encode any decoded/wide-character text (e.g. non-ASCII web form input)
     # to UTF-8 bytes so it can't crash the send with "Wide character in print".
     # Strings that are already bytes are left alone.
     $subject = Encode::encode( 'UTF-8', $subject, Encode::FB_DEFAULT ) if utf8::is_utf8($subject);
     $body    = Encode::encode( 'UTF-8', $body,    Encode::FB_DEFAULT ) if utf8::is_utf8($body);
     $subject =~ tr/\r\n//d;    # keep a bad value from breaking the headers
+    $smtp_subject =~ tr/\r\n//d;
 
     print STDERR "$subject\n\n$body";
 
@@ -95,7 +101,7 @@ sub send_email {
             return;
         }
 
-        _send_email_with_optional_attachment($mail, $smtp_from, $mailto, $subject, $body, $attachment_file);
+        _send_email_with_optional_attachment($mail, $smtp_from, $mailto, $smtp_subject, $body, $attachment_file);
     }
     elsif ($smtp_server) {
         my ( $mail, $error ) = Email::Send::SMTP::Gmail->new(
@@ -110,7 +116,7 @@ sub send_email {
             return;
         }
 
-        _send_email_with_optional_attachment($mail, $smtp_from, $mailto, $subject, $body, $attachment_file);
+        _send_email_with_optional_attachment($mail, $smtp_from, $mailto, $smtp_subject, $body, $attachment_file);
     }
     else {
         my %mail = (
@@ -128,6 +134,10 @@ sub send_email {
                 text => $body,
                 file => $attachment_file,
             };
+        }
+        else {
+            $mail{'Subject'} = Encode::encode('MIME-Q', $smtp_subject) if $subject_has_non_ascii;
+            $mail{'Content-type'} = 'text/plain; charset=UTF-8' if $body_has_non_ascii;
         }
 
         print STDERR "MAIL = " . Dumper( \%mail );

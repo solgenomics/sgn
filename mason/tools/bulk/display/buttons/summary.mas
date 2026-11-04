@@ -18,6 +18,6 @@ $idType
 
 </%perl>
 
-<a href="/tools/bulk/summary/<% $dumpfile %>">Summary Page</a>
+<a href="/tools/bulk/summary/<% $dumpfile %>"><% $c->i18n->p("lists_datasets.bulk.summary_page", "Summary Page") |h %></a>
 
 

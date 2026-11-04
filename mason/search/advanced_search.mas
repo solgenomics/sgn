@@ -11,39 +11,39 @@
             <td width="70%" class="left">
                 <div class="boxcontent">
                     <div class="subheading" style='font-size:1.1em'>
-                    Search<br>
+                    <% $c->i18n->p('global.search.advanced_search.search', 'Search') |h %><br>
                     </div>
                     <div class="boxsubcontent">
                         <div style="margin-left:10px">
-                            <a href="/search/organisms">Organisms</a> - search for organisms<br><br></div>
+                            <a href="/search/organisms"><% $c->i18n->p('global.search.advanced_search.organisms', 'Organisms') |h %></a> <% $c->i18n->p('global.search.advanced_search.search_for_organisms', '- search for organisms') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/locus">Genes</a> - Gene search.<br><br></div>
+                            <a href="/search/locus"><% $c->i18n->p('global.search.advanced_search.genes', 'Genes') |h %></a> <% $c->i18n->p('global.search.advanced_search.gene_search', '- Gene search.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/features">Genome features</a> - Search for many types of annotations and sequences.<br><br></div>
+                            <a href="/search/features"><% $c->i18n->p('global.search.advanced_search.genome_features', 'Genome features') |h %></a> <% $c->i18n->p('global.search.advanced_search.search_for_many_types_of_annotations_and_sequences', '- Search for many types of annotations and sequences.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/stocks">Phenotypes</a> - Search for mutants, accessions, and traits.<br><br></div>
+                            <a href="/search/stocks"><% $c->i18n->p('global.search.advanced_search.phenotypes', 'Phenotypes') |h %></a> <% $c->i18n->p('global.search.advanced_search.search_for_mutants_accessions_and_traits', '- Search for mutants, accessions, and traits.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/phenotypes/qtl">QTLs</a> - A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.<br><br></div>
+                            <a href="/search/phenotypes/qtl"><% $c->i18n->p('global.search.advanced_search.qtls', 'QTLs') |h %></a> <% $c->i18n->p('global.search.advanced_search.a_web_interface_for_uploading_qtl_raw_data_on_the_fly_qtl_mapping_and_search_interfac', '- A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/transcripts/unigene">Unigenes</a> - Unigene search.<br><br></div>
+                            <a href="/search/transcripts/unigene"><% $c->i18n->p('global.search.advanced_search.unigenes', 'Unigenes') |h %></a> <% $c->i18n->p('global.search.advanced_search.unigene_search', '- Unigene search.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/family">Gene Families</a> - Unigene family search.<br><br></div>
+                            <a href="/search/family"><% $c->i18n->p('global.search.advanced_search.gene_families', 'Gene Families') |h %></a> <% $c->i18n->p('global.search.advanced_search.unigene_family_search', '- Unigene family search.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/markers">Markers</a> - Marker search.<br><br></div>
+                            <a href="/search/markers"><% $c->i18n->p('global.search.advanced_search.markers', 'Markers') |h %></a> <% $c->i18n->p('global.search.advanced_search.marker_search', '- Marker search.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/genomic/clones">BACs</a> - BAC (Bacterial Artificial Chromosome) search.<br><br></div>
+                            <a href="/search/genomic/clones"><% $c->i18n->p('global.search.advanced_search.bacs', 'BACs') |h %></a> <% $c->i18n->p('global.search.advanced_search.bac_bacterial_artificial_chromosome_search', '- BAC (Bacterial Artificial Chromosome) search.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/transcripts/est">ESTs and libraries</a> - Find EST (Expressed Sequence Tag) libraries by keyword, e.g. library name, organism, tissue, development stage, or authors.<br><br></div>
+                            <a href="/search/transcripts/est"><% $c->i18n->p('global.search.advanced_search.ests_and_libraries', 'ESTs and libraries') |h %></a> <% $c->i18n->p('global.search.advanced_search.find_est_expressed_sequence_tag_libraries_by_keyword_e_g_library_name_organism_tissue', '- Find EST (Expressed Sequence Tag) libraries by keyword, e.g. library name, organism, tissue, development stage, or authors.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/insitu/">Insitu database</a> - A database of in-situ images which can be updated by users, with image add, delete and annotation editing functions. The current images were generated by the floral genome project (FGP). For more information on the floral genome project, visit http://floralgenome.org/ and http://pgn.cornell.edu/.<br><br></div>
+                            <a href="/insitu/"><% $c->i18n->p('global.search.advanced_search.insitu_database', 'Insitu database') |h %></a> <% $c->i18n->p('global.search.advanced_search.a_database_of_in_situ_images_which_can_be_updated_by_users_with_image_add_delete_and_', '- A database of in-situ images which can be updated by users, with image add, delete and annotation editing functions. The current images were generated by the floral genome project (FGP). For more information on the floral genome project, visit http://floralgenome.org/ and http://pgn.cornell.edu/.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/images">Images</a> - Search images contained in the SGN database.<br><br></div>
+                            <a href="/search/images"><% $c->i18n->p('global.search.advanced_search.images', 'Images') |h %></a> <% $c->i18n->p('global.search.advanced_search.search_images_contained_in_the_sgn_database', '- Search images contained in the SGN database.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/expression">Expression</a> - Search images contained in the SGN database.<br><br></div>
+                            <a href="/search/expression"><% $c->i18n->p('global.search.advanced_search.expression', 'Expression') |h %></a> <% $c->i18n->p('global.search.advanced_search.search_images_contained_in_the_sgn_database', '- Search images contained in the SGN database.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/search/people">People</a> - Search database of researchers who use SGN.<br><br></div>
+                            <a href="/search/people"><% $c->i18n->p('global.search.advanced_search.people', 'People') |h %></a> <% $c->i18n->p('global.search.advanced_search.search_database_of_researchers_who_use_sgn', '- Search database of researchers who use SGN.') |h %><br><br></div>
                         <div style="margin-left:10px">
-                            <a href="/help/faq.pl">FAQ</a> - Frequently asked questions from users of SGN.<br><br></div>
+                            <a href="/help/faq.pl"><% $c->i18n->p('global.search.advanced_search.faq', 'FAQ') |h %></a> <% $c->i18n->p('global.search.advanced_search.frequently_asked_questions_from_users_of_sgn', '- Frequently asked questions from users of SGN.') |h %><br><br></div>
                     </div>
                 </div>
             </td>

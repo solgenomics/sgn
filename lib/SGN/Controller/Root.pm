@@ -160,6 +160,12 @@ sub render : ActionClass('RenderView') { }
 sub end : Private {
     my ( $self, $c ) = @_;
 
+    if ($c->config->{i18n_enabled}) {
+        $c->res->headers->header('Content-Language' => $c->i18n->locale);
+        $c->res->headers->push_header('Vary', 'Accept-Language');
+        $c->res->headers->push_header('Vary', 'X-SGN-Locale');
+        $c->res->headers->push_header('Vary', 'Cookie');
+    }
     return if @{$c->error};
 
     # don't try to render a default view if this was handled by a CGI
@@ -241,6 +247,7 @@ sub auto : Private {
     CatalystX::GlobalContext->set_context( $c );
     $c->stash->{c} = $c;
     weaken $c->stash->{c};
+    $c->initialize_i18n;
 
     # gluecode for logins
     #

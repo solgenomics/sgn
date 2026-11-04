@@ -3,21 +3,72 @@
   <table class="table table-hover table-bordered">
     <thead>
       <tr>
-        <th rowspan="2" style="text-align: center;">Accessions</th><th colspan="7" style="text-align: center;">Seedlots</th>
+        <th rowspan="2" style="text-align: center;"><% $c->i18n->p('seedlots.ui.accessions', 'Accessions') |h %></th><th colspan="7" style="text-align: center;"><% $c->i18n->p('seedlots.ui.seedlots', 'Seedlots') |h %></th>
       </tr>
       <tr>
-        <th style="text-align: center;"><button id="selectallaccessions" type="button" disabled>Select/Deselect All</button></th>
-        <th style="text-align: center;">Breeding Program</th>
-        <th style="text-align: center;">Seedlot Name</th>
-        <th style="text-align: center;">Contents</th>
-        <th style="text-align: center;">Seedlot Location</th>
-        <th style="text-align: center;">Count</th>
-        <th style="text-align: center;">Weight(g)</th>
+        <th style="text-align: center;"><button id="selectallaccessions" type="button" disabled><% $c->i18n->p('seedlots.ui.select_deselect_all', 'Select/Deselect All') |h %></button></th>
+        <th style="text-align: center;"><% $c->i18n->p('seedlots.ui.breeding_program.a79d70a', 'Breeding Program') |h %></th>
+        <th style="text-align: center;"><% $c->i18n->p('seedlots.ui.seedlot_name.8bbaf6d', 'Seedlot Name') |h %></th>
+        <th style="text-align: center;"><% $c->i18n->p('seedlots.ui.contents.d1ce6ee', 'Contents') |h %></th>
+        <th style="text-align: center;"><% $c->i18n->p('seedlots.ui.seedlot_location', 'Seedlot Location') |h %></th>
+        <th style="text-align: center;"><% $c->i18n->p('seedlots.ui.count', 'Count') |h %></th>
+        <th style="text-align: center;"><% $c->i18n->p('seedlots.ui.weight_g.7547b01', 'Weight(g)') |h %></th>
       </tr>
     </thead>
   </table>
 </form>
 <script type="text/javascript">
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
   (function(global){
     var mainFormSelector = "#available-seedlots";
     var d3 = global.d3v4;
@@ -45,6 +96,7 @@
       jQuery.ajax({
         type: 'POST',
         url: '/ajax/accessions/possible_seedlots',
+        headers: _sgnSeedlotLocaleHeaders('/ajax/accessions/possible_seedlots'),
         data: {'names': accession_names, 'type': list_type},
         dataType: "json",
         success: function(response) {
@@ -58,7 +110,7 @@
         error: function(response) {
           jQuery('#working_modal').modal('hide');
           console.log(response);
-          alert("Something went wrong in the available-seedlots AJAX call. See console for more information.")
+          alert(seedlotI18n.p("seedlots.ui.something_went_wrong_in_the_available_seedlots_ajax_call_see_con", "Something went wrong in the available-seedlots AJAX call. See console for more information."))
         }
       });
     };
@@ -110,14 +162,14 @@
       allOptionRows = newOptionRows.merge(optionRows);
       var optionRowCells = allOptionRows.selectAll("td").data(function(d){
           if (d==empty_placeholder){
-            return ['<input disabled type="checkbox">'," ","No Available Seedlots"," "," "," "," "]
+            return ['<input disabled type="checkbox">'," ",seedlotHTML(seedlotI18n.p("seedlots.ui.no_available_seedlots", "No Available Seedlots"))," "," "," "," "]
           }
           var cells = [];
-          cells.push('<input value="'+d.seedlot[0]+'" name="'+d.seedlot[0]+'" type="checkbox">');
-          cells.push(d.program);
-          cells.push('<a href="/breeders/seedlot/'+d.seedlot[1]+'">'+d.seedlot[0]+'</a>');
-          cells.push('<a href="/stock/'+d.contents[1]+'/view">'+d.contents[0]+'</a>');
-          cells.push(d.location);
+          cells.push('<input value="'+seedlotHTML(d.seedlot[0])+'" name="'+seedlotHTML(d.seedlot[0])+'" type="checkbox">');
+          cells.push(seedlotHTML(d.program));
+          cells.push('<a href="/breeders/seedlot/'+d.seedlot[1]+'">'+seedlotHTML(d.seedlot[0])+'</a>');
+          cells.push('<a href="/stock/'+d.contents[1]+'/view">'+seedlotHTML(d.contents[0])+'</a>');
+          cells.push(seedlotHTML(d.location));
           cells.push(d.count);
           cells.push(d.weight_gram);
           return cells;

@@ -1,11 +1,11 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" >Maps</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown"><% $c->i18n->p('global.maps.title', 'Maps') |h %></a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
     
-    <li><a href="/cview/index.pl">All Maps</a></li>
-    <li><a href="http://maps.solgenomics.net">The New Comparative Viewer</a></li>
-    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></li>
-    <li><a href="/cview/help/map_submission">Submit a map</a></li>
+    <li><a href="/cview/index.pl"><% $c->i18n->p('global.maps.all', 'All Maps') |h %></a></li>
+    <li><a href="http://maps.solgenomics.net"><% $c->i18n->p('global.maps.new_comparative_viewer', 'The New Comparative Viewer') |h %></a></li>
+    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1"><% $c->i18n->p('global.maps.comparative_viewer', 'Comparative Viewer') |h %></a></li>
+    <li><a href="/cview/help/map_submission"><% $c->i18n->p('global.maps.submit', 'Submit a map') |h %></a></li>
     <li role="separator" class="divider"></li>
     
     <li class="dropdown-header">Tomato</li>
@@ -30,7 +30,7 @@
     <li><a href="/cview/map.pl?map_id=6">Eggplant-LXM 2002</a></li>
     <li role="separator" class="divider"></li>
     
-    <li class="dropdown-header">More Maps</li>
+    <li class="dropdown-header"><% $c->i18n->p('global.maps.more', 'More Maps') |h %></li>
     <li><a href="/cview/map.pl?map_id=3">Potato-TXB 1992</a></li>
     <li><a href="/cview/map.pl?map_id=15">Tobacco SSR 2007</a></li>
     <li><a href="/cview/map.pl?map_id=7&amp;show_offsets=1&amp;show_ruler=1">Arabidopsis COSII</a></li>

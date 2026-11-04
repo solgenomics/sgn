@@ -9,18 +9,18 @@ $trial_id
     <table class="table table-hover table-bordered" id="propagation_groups_in_project_table">
         <thead>
             <tr>
-                <th>Propagation Group ID</th>
-                <th>Accession</th>
-                <th>Variety</th>
-                <th>Material Type</th>
-                <th>Source Type</th>
-                <th>Source Name</th>
-                <th>Date</th>
-                <th>Sub-Location</th>
-                <th>Purpose</th>
-                <th>Description</th>
-                <th>Operator</th>
-                <th>Number of Propagation IDs</th>
+                <th><% $c->i18n->p("seedlot.propagation_group_id", "Propagation Group ID") |h %></th>
+                <th><% $c->i18n->p("global.index_logged_in_user.accession", "Accession") |h %></th>
+                <th><% $c->i18n->p("seedlot.variety", "Variety") |h %></th>
+                <th><% $c->i18n->p("seedlot_split.ui.material_type", "Material Type") |h %></th>
+                <th><% $c->i18n->p("seedlot.source_type.9399840", "Source Type") |h %></th>
+                <th><% $c->i18n->p("accession.forms.source_name", "Source Name") |h %></th>
+                <th><% $c->i18n->p("global.file_dump_share_files.date", "Date") |h %></th>
+                <th><% $c->i18n->p("seedlot.sub_location.6ef459e", "Sub-Location") |h %></th>
+                <th><% $c->i18n->p("seedlot.purpose.608fe34", "Purpose") |h %></th>
+                <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
+                <th><% $c->i18n->p("cross.ui.operator", "Operator") |h %></th>
+                <th><% $c->i18n->p("seedlot.number_of_propagation_ids", "Number of Propagation IDs") |h %></th>
             </tr>
         </thead>
     </table>

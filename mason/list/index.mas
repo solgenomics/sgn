@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 
 <%args>
 $user_id
@@ -5,13 +8,13 @@ $user_id
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>
 
-<& /page/page_title.mas, title=>"Available lists" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('lists_datasets.shared.available_lists', 'Available lists')) &>
 <div id="list_div">
 
 </div>
 
 % if (! $user_id) { 
-  <& /generic_message.mas, message=>"Login required for viewing your lists" &>
+  <& /generic_message.mas, message=>HTML::Entities::encode_entities($c->i18n->p('lists_datasets.shared.login_required_for_viewing_your_lists', 'Login required for viewing your lists')) &>
 % return;
 % }
 
@@ -32,7 +35,7 @@ pasteListMenu("test_area");
 </script>
 
 <form action="javascript:addNewList('new_list_name')">
-Create new list <input type="text" id="new_list_name" on/>
+<% $c->i18n->p('lists_datasets.shared.create_new_list', 'Create new list') |h %> <input type="text" id="new_list_name" on/>
 <input type="submit" name="add" />
 </form>
 

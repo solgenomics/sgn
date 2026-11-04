@@ -1,9 +1,13 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME 
 
 qtl/population/download.mas - a mason component for 
-diplaying links to download pages of phenotype, genotype,
+displaying links to download pages of phenotype, genotype,
 correlation and trait acronmyms files.
 
 =AUTHOR
@@ -23,10 +27,10 @@ $acronym_download
 
 </%args>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => 'Download',
     collapsible => 1, 
     collapsed   => 1, 
-    title => 'Download',
+    title => HTML::Entities::encode_entities($c->i18n->p("global.download", 'Download')),
 &>
 %if ($phenotype_download)
 %{

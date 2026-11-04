@@ -1,10 +1,14 @@
 
-<& /page/page_title.mas, title => "SolGWAS Help" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("help.solgwas.title", "SolGWAS Help")) &>
 
-<h4>Input options</h4>
+<h4><% $c->i18n->p("help.solgwas.input_heading", "Input options") |h %></h4>
 
-<p>SolGWAS is meant to be used in conjunction with datasets. The dataset must contain a Genotyping protocol and one or more Trials. The user should first select the dataset they wish to analyze. The list of phenotypes available will then be filled. The user can then select a phenotype of interest, as well as selecting whether to include principal components or kinship covariates in the model.</p>
+<p><% $c->i18n->p("help.solgwas.input_text", "SolGWAS is meant to be used in conjunction with datasets. The dataset must contain a Genotyping protocol and one or more Trials. The user should first select the dataset they wish to analyze. The list of phenotypes available will then be filled. The user can then select a phenotype of interest, as well as selecting whether to include principal components or kinship covariates in the model.") |h %></p>
 
-<h4>Results</h4>
+<h4><% $c->i18n->p("help.solgwas.results_heading", "Results") |h %></h4>
 
-<p>Once the "Run SolGWAS" button is pressed, several plots will be displayed. These include a Manhattan plot and a QQ plot.</p>
+<p><% $c->i18n->p("help.solgwas.results_text", "Once the \"Run SolGWAS\" button is pressed, several plots will be displayed. These include a Manhattan plot and a QQ plot.") |h %></p>
+
+<%once>
+use HTML::Entities ();
+</%once>

@@ -2,6 +2,7 @@
 $unigene
 </%args>
 <%init>
+use HTML::Entities ();
 my @xrefs = map {
     $_->xrefs({
         -types   => ['match'],
@@ -11,7 +12,7 @@ my @xrefs = map {
 } $c->enabled_feature('gbrowse2');
 
 </%init>
-<&| /page/info_section.mas, title => 'Genomic locations ('.@xrefs.')',collapsible => 1, &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("program.unigene.genomic_locations", "Genomic locations (%{count})", {count => scalar(@xrefs)})),collapsible => 1, &>
 % if( @xrefs ) {
   <& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@xrefs &>
 % }

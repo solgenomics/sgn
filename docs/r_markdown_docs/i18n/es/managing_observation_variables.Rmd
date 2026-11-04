@@ -1,0 +1,47 @@
+# Gestión de variables de observación {#managing-observation-variables}
+
+## Gestionar variables de observación con rasgos, métodos y escalas {#managing-observation-variables-with-traits-methods-and-scales}
+
+Aunque esta sección trata de rasgos, la información también se aplica a los tratamientos experimentales. En general, lo que puede hacerse con un rasgo también puede hacerse con un tratamiento.
+
+Las variables de observación son identificadores usados al recopilar datos fenotípicos. Una variable se compone de un rasgo, un método y una escala. El rasgo describe el atributo medido, por ejemplo, 'Plant Height'. El método define el protocolo de observación, por ejemplo, 'Using a one meter long measuring stick'. La escala indica las unidades o dimensiones de la medición, por ejemplo, 'Meters'.
+
+Por lo general, las variables se definen en ontologías preestablecidas, a menudo de cropontology.org. En ese caso no podrá definirlas directamente; deberá ponerse en contacto con nosotros para que las añadamos. Más adelante se explica cómo crear manualmente rasgos o tratamientos.
+
+Antes de añadir rasgos, búsquelos en la pestaña *Buscar* para comprobar que no existan ya. Tras añadir rasgos, métodos, unidades, escalas y otros términos a la base, puede combinarlos en una variable de observación desde la pestaña *Analizar*, en *Componer un rasgo nuevo*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/compose_a_new_trait_tab.png')
+```
+
+Un término de rasgo base puede combinarse con un objeto o parte de la planta, un método de recopilación, una unidad de medida y términos temporales para crear una variable nueva. Las combinaciones disponibles determinan qué elementos pueden combinarse. Los tipos de rasgos compuestos dependen de la configuración del servidor; consulte al administrador si tiene dudas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/compose_a_new_trait_page.png')
+```
+
+Para continuar, seleccione uno o varios términos de cada cuadro. En la parte inferior verá los rasgos compuestos existentes que coinciden con su selección y las nuevas combinaciones posibles. Seleccione los nuevos rasgos deseados y pulse 'Enviar' para crearlos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/compose_a_new_trait_selections.png')
+```
+
+Después podrá usar el término de ontología de la variable creada al fenotipar. La misma interfaz sirve para tratamientos en la página *Componer un tratamiento nuevo*.
+
+En las bases de datos donde los usuarios tienen más control, los curadores disponen de una interfaz para añadir rasgos o tratamientos.
+
+Si su base de datos permite añadir variables de observación directamente (consulte al administrador para cambiarlo), verá los enlaces en la sección de herramientas de su perfil.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trait_designer_links.png')
+```
+
+En la página de diseño de rasgos, un formulario solicita el nombre y la definición del rasgo, así como datos opcionales, como valor predeterminado, mínimo, máximo o categorías. Al final se incluye otra vez el explorador de ontologías.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trait_design_page.png')
+```
+
+El último campo permite elegir el término padre. En el menú de formato puede especificar rasgos numéricos, categóricos o una ontología nueva. Las ontologías nuevas permiten organizar los rasgos jerárquicamente. Por ejemplo, podría crearse una subontología 'Agronomic trait' para agrupar las mediciones agronómicas. Un término definido como numérico o categórico no puede tener más términos hijos: constituye el final de la jerarquía.
+
+Después de enviar un rasgo nuevo, la página se actualizará y el rasgo estará disponible en la herramienta de composición.

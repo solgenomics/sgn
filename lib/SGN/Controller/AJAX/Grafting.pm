@@ -1,6 +1,8 @@
 
 package SGN::Controller::AJAX::Grafting;
 
+use SGN::I18N ();
+
 use Moose;
 use List::Util qw | any |;
 use File::Slurp qw | read_file |;
@@ -30,6 +32,7 @@ has 'schema' => (
 sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_upload_grafts_verify_i18n = SGN::I18N::translate($c);
     my $session_id = $c->req->param("sgn_session_id");
     
     my $separator_string = $c->config->{graft_separator_string};
@@ -46,7 +49,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_grafts_verify_i18n, 'accession.rename_server.login', 'You must be logged in to upload seedlots!'))};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -56,7 +59,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     } else{
 	print STDERR "We do not have a session id...\n";
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_grafts_verify_i18n, 'accession.rename_server.login', 'You must be logged in to upload seedlots!'))};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -65,7 +68,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     }
     
     if (!any { $_ eq "curator" || $_ eq "submitter" }  ($user_role)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to add grafts." };
+	$c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_upload_grafts_verify_i18n, 'transformation.helper.you_have_insufficient_privileges_to_add_grafts', 'You have insufficient privileges to add grafts.'))};
 	return;
     }
     
@@ -83,7 +86,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     # check file type by file name extension
     #
     if ($upload_original_name =~ /\.xls$|\.xlsx/) {
-	$c->stash->{rest} = { error => "Grafting upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
+	$c->stash->{rest} = { error => (SGN::I18N::translate($ui_upload_grafts_verify_i18n, 'transformation.helper.grafting_upload_requires_a_tab_delimited_file_excel_files_xls_and_xl', 'Grafting upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again.'))};
 	return;
     }
     
@@ -108,7 +111,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     my $archived_filename_with_path = $uploader->archive();
     
     if (!$archived_filename_with_path) {
-	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+	$c->stash->{rest} = {error => (SGN::I18N::translate($ui_upload_grafts_verify_i18n, 'accession.rename_server.archive', 'Could not save file %{upload_original_name} in archive', {upload_original_name => ("" . ("$upload_original_name"))})),};
 	return;
     }
     
@@ -128,6 +131,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
 sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_upload_grafts_store_i18n = SGN::I18N::translate($c);
     my $archived_filename = $c->req->param('archived_filename');
 
     print STDERR "ARCHIVED FILENAME: $archived_filename\n";
@@ -146,7 +150,7 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_grafts_store_i18n, 'accession.rename_server.login', 'You must be logged in to upload seedlots!'))};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -156,7 +160,7 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     } else{
 	print STDERR "We do not have a session id...\n";
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_grafts_store_i18n, 'accession.rename_server.login', 'You must be logged in to upload seedlots!'))};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -165,7 +169,7 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     }
     
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to add grafts." };
+	$c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_upload_grafts_store_i18n, 'transformation.helper.you_have_insufficient_privileges_to_add_grafts', 'You have insufficient privileges to add grafts.'))};
 	return;
     }
 
@@ -214,6 +218,7 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
 sub validate_grafts {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_validate_grafts_i18n = SGN::I18N::translate($c);
     my $header = shift;
     my $grafts = shift;
     
@@ -229,11 +234,11 @@ sub validate_grafts {
     my @missing_accessions;
     
     if ($scion_accession ne 'scion accession') {
-	$header_errors{'scion accession'} = "First column must have header 'scion accession' (not '$scion_accession'); ";
+	$header_errors{'scion accession'} = (SGN::I18N::translate($ui_validate_grafts_i18n, 'transformation.helper.first_column_must_have_header_scion_accession_not_scion_accession', 'First column must have header \'scion accession\' (not \'%{scion_accession}\'); ', {scion_accession => ("" . ("$scion_accession"))}));
     }
     
     if ($rootstock_accession ne 'rootstock accession') {
-	$header_errors{'rootstock accession'} = "Second column must have header 'rootstock accession' (not '$rootstock_accession'); ";
+	$header_errors{'rootstock accession'} = (SGN::I18N::translate($ui_validate_grafts_i18n, 'transformation.helper.second_column_must_have_header_rootstock_accession_not_rootstock_acc', 'Second column must have header \'rootstock accession\' (not \'%{rootstock_accession}\'); ', {rootstock_accession => ("" . ("$rootstock_accession"))}));
     }
     
     if (%header_errors) {
@@ -247,7 +252,8 @@ sub validate_grafts {
 	my ($scion, $rootstock) = @$g;
 	
 	if ($scion eq $rootstock) {
-	    push @errors, "Scion and rootstock ($scion and $rootstock) designate the same accession. Not generating a graft.\n";
+	    push @errors, (SGN::I18N::translate($ui_validate_grafts_i18n, 'transformation.helper.scion_and_rootstock_scion_and_rootstock_designate_the_same_accession', 'Scion and rootstock (%{scion} and %{rootstock}) designate the same accession. Not generating a graft.
+', {scion => ("" . ("$scion")), rootstock => ("" . ("$rootstock"))}));
 	    
 	}
 	
@@ -263,12 +269,12 @@ sub validate_grafts {
 	}
 	
 	if (defined($graft_check->{errors}) && @{$graft_check->{errors}} > 0){
-	    push @errors, "There was a problem validating graft between $scion and $rootstock (".join("\n", @{$graft_check->{errors}}).")";
+	    push @errors, (SGN::I18N::translate($ui_validate_grafts_i18n, 'transformation.helper.there_was_a_problem_validating_graft_between_scion_and_rootstock_val', 'There was a problem validating graft between %{scion} and %{rootstock} (%{value3})', {scion => ("" . ("$scion")), rootstock => ("" . ("$rootstock")), value3 => ("" . (join("\n", @{$graft_check->{errors}})))}));
 	}
     }
 
     if (@grafts_already_present == @$grafts) {
-	push @errors, "All grafts are already in the database. Nothing remains to be done :-) ";
+	push @errors, (SGN::I18N::translate($ui_validate_grafts_i18n, 'transformation.helper.all_grafts_are_already_in_the_database_nothing_remains_to_be_done', 'All grafts are already in the database. Nothing remains to be done :-) '));
     }
     
     if (@errors){

@@ -24,12 +24,12 @@ my $pages = ( int( $line_count / $page_size ) ) + 1;
 
 </%perl>
 
-<br />Page <% $page_number %> of <% $pages %> |
+<br /><% $c->i18n->p("lists_datasets.bulk.page_of", "Page %{page} of %{pages}", {page => $page_number, pages => $pages}) |h %> |
 <& /tools/bulk/display/buttons/previous.mas, page_number => $page_number, dumpfile => $dumpfile &>
  |
 <& /tools/bulk/display/buttons/summary.mas, dumpfile=>$dumpfile, idType=>$idType &>
  | 
-<a href="/tools/bulk">New query</a>
+<a href="/tools/bulk"><% $c->i18n->p("lists_datasets.bulk.new_query", "New query") |h %></a>
  | 
 <& /tools/bulk/display/buttons/next.mas, page_number => $page_number, page_size=>$page_size, line_count => $line_count, dumpfile=>$dumpfile &>
 <br /><br />

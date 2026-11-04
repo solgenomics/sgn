@@ -1,5 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialChangePlotAccessions;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose::Role;
 use CXGN::Stock::StockLookup;
 use CXGN::File::Parse;
@@ -15,6 +18,7 @@ my @OPTIONAL_COLUMNS = qw|new_plot_name|;
 my $parsed_accession_ids = {};
 
 sub _validate_with_plugin {
+    my SGN::I18N $ui_validate_with_plugin_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -59,14 +63,14 @@ sub _validate_with_plugin {
     my %trial_plots = map {$_->[1] => 1} @{$trial->get_observation_units_direct('plot')};
     foreach my $old_plot_name (@old_plot_names) {
         if (!exists($trial_plots{$old_plot_name})) {
-            push @error_messages, "Plot $old_plot_name does not exist in this trial.";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.change_plot.error_2", "Plot %{old_plot_name} does not exist in this trial.", {old_plot_name => "" . ($old_plot_name)}));
         }
     }
 
     my $transform = CXGN::List::Transform->new();
     my $validate_plots = $transform->transform($schema, 'plots_2_plot_ids', \@old_plot_names);
     if (scalar(@{$validate_plots->{'missing'}}) > 0) {
-        push @error_messages, "The following plots were not found in the database: ".join(";",@{$validate_plots->{'missing'}});
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.change_plot.error_3", "The following plots were not found in the database: ")).join(";",@{$validate_plots->{'missing'}});
     }
 
     my @plot_ids = @{$validate_plots->{'transform'}};
@@ -75,14 +79,14 @@ sub _validate_with_plugin {
         my $seedlots = $related_seedlots->get_plots_related_seedlots();
         if (scalar @$seedlots > 0) {
             foreach my $seedlot (@$seedlots) {
-                push @error_messages, "Plot: $seedlot->[4] is associated with seedlot: $seedlot->[2]. Please delete seedlot transaction linked to the plot first.";
+                push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.change_plot.error_4", "Plot: %{seedlot_4} is associated with seedlot: %{seedlot_2}. Please delete seedlot transaction linked to the plot first.", {seedlot_4 => "" . ($seedlot->[4]), seedlot_2 => "" . ($seedlot->[2])}));
             }
         }
     }
 
     my $validate_stocks = $transform->transform($schema, 'stocks_2_stock_ids', \@accessions);
     if (scalar(@{$validate_stocks->{'missing'}}) > 0) {
-        push @error_messages, "The following accessions were not found in the database: ".$validate_stocks->{'missing'};
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.change_plot.error_5", "The following accessions were not found in the database: ")).$validate_stocks->{'missing'};
     } else {
         foreach my $accession_id (@{$validate_stocks->{'transform'}}) {
             my $accession_name = shift(@accessions);
@@ -93,7 +97,7 @@ sub _validate_with_plugin {
     if (scalar(@new_plot_names) > 0) {
         my $validate_new_stocks = $validator->validate($schema, 'new_stocks', \@new_plot_names);
         foreach my $new_name (@{$validate_new_stocks->{invalid}}) { #new name is invalid if any stock, obsolete or not, is found in the db
-            push @error_messages, "New plot name $new_name already exists as a stock in the database. ";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.change_plot.error_6", "New plot name %{new_name} already exists as a stock in the database. ", {new_name => "" . ($new_name)}));
         }
     }
 

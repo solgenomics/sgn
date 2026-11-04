@@ -1,10 +1,14 @@
 
 package CXGN::Trial::TrialDesign::Plugin::RCBD;
 
+use CXGN::Trial::TrialDesign::ROutput qw(read_rbase_utf8);
+
 use Moose::Role;
+use SGN::I18N ();
 
 sub create_design {
   my $self = shift;
+    my SGN::I18N $design_i18n = $self->i18n;
   my %rcbd_design;
   my $rbase = R::YapRI::Base->new();
   my @stock_list;
@@ -28,7 +32,7 @@ sub create_design {
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
   } else {
-    die "No stock list specified\n";
+    die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
   }
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
@@ -38,7 +42,7 @@ sub create_design {
   if ($self->has_number_of_blocks()) {
     $number_of_blocks = $self->get_number_of_blocks();
   } else {
-    die "Number of blocks not specified\n";
+    die (($design_i18n ? $design_i18n->p("trial.design.blocks_missing", "Number of blocks not specified") : "Number of blocks not specified") . "\n");
   }
 
   if ($self->has_fieldmap_col_number()) {
@@ -97,7 +101,7 @@ sub create_design {
   }
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
   $r_block->run_block();
-  $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','rcbd');
+  $result_matrix = read_rbase_utf8( $rbase,'r_block','rcbd');
   #print STDERR Dumper $result_matrix;
   @plot_numbers = $result_matrix->get_column("plots");
   #print STDERR Dumper \@plot_numbers;

@@ -1,0 +1,63 @@
+# إدارة بيانات الأنماط الظاهرية {#managing-phenotypic-data}
+
+لتسهيل تحميل بيانات الأنماط الظاهرية، توفر صفحة “إدارة البيانات الظاهرية” خيارين: ملف Field Book Phenotype بتنسيق قاعدة البيانات، أو ملف Excel (.xls أو .xlsx). للوصول إلى الصفحة، اختر “التنميط الظاهري” من قائمة “إدارة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image178.png')
+```
+
+## تحميل بيانات Field Book الظاهرية {#uploading-fieldbook-phenotypes}
+
+### تصدير ملف قاعدة بيانات Field Book {#export-field-book-database-file}
+
+يتطلب تحميل بيانات Field Book الظاهرية إلى قاعدة البيانات تنسيق "Database". إذا كنت ستستخدم طريقة تحميل Field Book الموضحة أدناه، فصدّر البيانات بهذا التنسيق. ويمكن تعديل تنسيق "Table" الذي يصدره Field Book لاستخدام طريقة تحميل جدول البيانات الموضحة لاحقًا.
+
+### تحميل ملف قاعدة بيانات Field Book {#upload-field-book-database-file}
+
+لتحميل ملف Field Book Phenotype بتنسيق قاعدة البيانات، انقر رابط “تحميل Fieldbook”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image185.png')
+```
+
+يفتح رابط “تحميل Fieldbook” هنا ورابط “تحميل” في صفحة “أدوات Field Book” نافذة الحوار نفسها. اتبع تعليمات تحميل الملفات الظاهرية في صفحة \@ref(Using-Field-Book-with-BreedBase).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image112.png')
+```
+
+## تحميل بيانات ظاهرية من جدول بيانات {#uploading-spreadsheet-phenotypes}
+
+لتحميل ملف بيانات ظاهرية بتنسيق Excel (.xls أو .xlsx)، انقر رابط “تحميل جدول بيانات”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image288.png')
+```
+
+حدد “مستوى البيانات” (القطع أو النباتات) واختر ملف Excel المراد تحميله.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image68.png')
+```
+
+### إنشاء ملف جدول بيانات {#generating-spreadsheet-file}
+
+لمعرفة المزيد عن تنسيق الملف، انقر رابط “تنسيق جدول البيانات”. ستُفتح نافذة الحوار التالية.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/phenotype_spreadsheet_upload_help_dialog.png')
+```
+
+انقر “إنشاء جدول للتنميط الظاهري” لفتح نافذة تحدد فيها التجارب وقائمة الصفات المطلوبة. انقر “إرسال” لتنزيل ملف xlsx على جهازك ثم أدخل بيانات الأنماط الظاهرية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/create_phenotype_spreadsheet_dialog.png')
+```
+
+### تحميل ملف جدول البيانات {#uploading-spreadsheet-file}
+
+للتأكد من صحة تنسيق الملف، انقر “تحقق”. سيفحص النظام المحتوى وجودة القيم، بما في ذلك تعريف الصفة للقيم الفئوية والحدين الأدنى والأقصى ونوع البيانات. وسيتحقق أيضًا مما إذا كانت هناك قيم مسجلة لوحدات الملاحظة والصفات المحددة. إذا وُجدت، يمكن استبدالها بالقيم الموجودة في الملف. ولا يتاح زر “حفظ” إلا إذا كان الملف صالحًا.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/phenotype_spreadsheet_upload_dialog.png')
+```

@@ -1,7 +1,7 @@
 
 <td>
-    <a href="/search/crosses_using_female"><p>Search Cross Details Using Female Parents</p></a>
+    <a href="/search/crosses_using_female"><p><% $c->i18n->p("cross.pages.search_cross_details_using_female_parents", "Search Cross Details Using Female Parents") |h %></p></a>
 </td>
 <td>
-    <a href="/search/crosses_using_male"><p>Search Cross Details Using Male Parents / Populations</p></a>
+    <a href="/search/crosses_using_male"><p><% $c->i18n->p("cross.pages.search_cross_details_using_male_parents_populations", "Search Cross Details Using Male Parents / Populations") |h %></p></a>
 </td>

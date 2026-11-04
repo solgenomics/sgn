@@ -1,0 +1,69 @@
+# Керування зразками тканин {#managing-tissue-samples}
+
+Щоб відкрити цю сторінку, перейдіть до “Керування” -> “Зразки тканин”.
+
+## Зразки тканин із польових дослідів {#tissue-samples-from-field-trials}
+
+Польовий дослід складається з ділянок, засіяних певним зразком. На кожній ділянці може бути багато рослин, а з кожної рослини можна відібрати кілька зразків тканин.
+На сторінці керування зразками тканин показано польові досліди, для яких зразки вже відібрано. Тут можна завантажити схему розміщення зразків, як показано нижче.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_download.png')
+```
+
+Якщо потрібного польового досліду немає в таблиці, натисніть кнопку, виділену нижче.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_button.png')
+```
+
+Після натискання кнопки відкриється процес із таким вступним повідомленням.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_intro.png')
+```
+
+Натисніть “Далі”, щоб вибрати дослід.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_select.png')
+```
+
+Далі, якщо для досліду збережено лише ділянки, укажіть кількість рослин на кожній ділянці.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_num_plants.png')
+```
+
+Нарешті вкажіть кількість зразків тканини для кожної рослини. До назви зразка можна додати текст, наприклад “листок” або “корінь”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_num_tissues.png')
+```
+
+Після цього з’явиться повідомлення про успішне збереження зразків тканин.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_submit.png')
+```
+
+## Зразки тканин для планшета генотипування (96 або 384 лунки) {#genotyping-plate-tissue-samples-96-or-384-well-plates}
+
+Планшет генотипування має 96 або 384 лунки. Щоб створити його схему, можна скористатися застосунком Coordinate для Android, завантажити власну схему Excel або доручити базі даних створити її.
+Бажано використовувати для кожного зразка в лунці назву зразка тканини з польового досліду як "джерело", але також можна вказати назву рослини, ділянки або зразка.
+
+На сторінці керування зразками тканин можна переглянути планшети генотипування, збережені в базі даних, і завантажити їхні схеми, як показано нижче.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_genotyping_trial_download.png')
+```
+
+Щоб створити новий планшет генотипування, натисніть кнопку нижче. Відкриється процес завантаження або створення схеми планшета.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_genotyping_trial_button.png')
+```
+
+Під час надсилання зразків постачальники послуг генотипування вимагають схему планшета. Її можна завантажити описаним вище способом або відкрити сторінку планшета й завантажити файл у форматі Intertek.
+
+У майбутньому можна буде експортувати схему планшета генотипування безпосередньо постачальникам.

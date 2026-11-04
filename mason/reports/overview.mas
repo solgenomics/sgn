@@ -4,19 +4,20 @@
 
 </%args>
 
-<& /page/page_title.mas, title => 'Database Overview Report' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("jobs.interface.database_overview_report", "Database Overview Report")) &>
 
 <table id="overview_report_table">
   <tr>
     <thead>
-      Data Type
+      <% $c->i18n->p("global.dataset_publish.data_type", "Data Type") |h %>
     </thead>
     <thead>
-      Total Count
+      <% $c->i18n->p("jobs.interface.total_count", "Total Count") |h %>
     </thead>
     <thead>
   </tr>
 </table>
 
-
-      
+<%once>
+use HTML::Entities ();
+</%once>

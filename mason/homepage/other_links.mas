@@ -5,7 +5,7 @@ use CXGN::Tools::File;
 
 my $documents_folder = $c->get_conf('homepage_files_dir');
 
-my $OTHER_LINKS = "Other links are currently not available.";
+my $OTHER_LINKS = $c->i18n->p('global.other_links.unavailable', 'Other links are currently not available.');
 
 
 eval { 

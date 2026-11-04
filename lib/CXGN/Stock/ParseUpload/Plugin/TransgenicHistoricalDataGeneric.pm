@@ -1,5 +1,8 @@
 package CXGN::Stock::ParseUpload::Plugin::TransgenicHistoricalDataGeneric;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose::Role;
 use CXGN::File::Parse;
 use SGN::Model::Cvterm;
@@ -7,6 +10,7 @@ use Data::Dumper;
 use CXGN::List::Validate;
 
 sub _validate_with_plugin {
+    my SGN::I18N $ui_validate_with_plugin_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
 
     my $filename = $self->get_filename();
@@ -16,6 +20,7 @@ sub _validate_with_plugin {
     my %errors;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $ui_validate_with_plugin_i18n,
         file => $filename,
         required_columns => [ 'accession_name', 'vector_construct', 'batch_number'],
         optional_columns => [ 'is_a_control', 'existing_accession', 'number_of_insertions' ],
@@ -44,7 +49,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accessions.parse.unknown_columns", "The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.", {columns => "" . (join(', ', @$additional_columns))}))
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -57,7 +62,7 @@ sub _validate_with_plugin {
     my $vector_construct_validator = CXGN::List::Validate->new();
     my @vector_constructs_missing = @{$vector_construct_validator->validate($schema,'vector_constructs', $seen_vector_constructs)->{'missing'}};
     if (scalar(@vector_constructs_missing) > 0) {
-        push @error_messages, "The following vector constructs are not in the database, or are not in the database as uniquenames: ".join(',',@vector_constructs_missing);
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.transgenic.error_1", "The following vector constructs are not in the database, or are not in the database as uniquenames: ")).join(',',@vector_constructs_missing);
     }
 
     my $accession_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id;
@@ -69,7 +74,7 @@ sub _validate_with_plugin {
             my $accession_validator = CXGN::List::Validate->new();
             my @accessions_missing = @{$accession_validator->validate($schema,'accessions_and_obsoleted_accessions', $seen_accession_names)->{'missing'}};
             if (scalar(@accessions_missing) > 0) {
-                push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+                push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.transgenic.error_2", "The following accessions are not in the database, or are not in the database as uniquenames: ")).join(',',@accessions_missing);
             }
 
             foreach my $row (@$parsed_data) {
@@ -94,15 +99,15 @@ sub _validate_with_plugin {
                         });
 
                         if (!$vector_construct_stock) {
-                            push @error_messages, "Error retrieving vector construct for previously stored accession: $accession_name!";
+                            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.transgenic.error_3", "Error retrieving vector construct for previously stored accession: %{accession_name}!", {accession_name => "" . ($accession_name)}));
                         } else {
                             my $stored_vector_construct = $vector_construct_stock->uniquename();
                             if ($stored_vector_construct ne $vector_construct) {
-                                push @error_messages, "Previously stored accession: $accession_name has vector construct: $stored_vector_construct, but the vector construct in the file is $vector_construct";
+                                push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.transgenic.error_4", "Previously stored accession: %{accession_name} has vector construct: %{stored_vector_construct}, but the vector construct in the file is %{vector_construct}", {accession_name => "" . ($accession_name), stored_vector_construct => "" . ($stored_vector_construct), vector_construct => "" . ($vector_construct)}));
                             }
                         }
                     } else {
-                        push @error_messages, "Previously stored accession: $accession_name is not linked to any vector construct in the database";
+                        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.transgenic.error_5", "Previously stored accession: %{accession_name} is not linked to any vector construct in the database", {accession_name => "" . ($accession_name)}));
                     }
                 }
             }
@@ -112,7 +117,7 @@ sub _validate_with_plugin {
             'uniquename' => { -in => $seen_accession_names }
         });
         while (my $r=$rs->next){
-            push @error_messages, "Accession name already exists in database: ".$r->uniquename;
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.transgenic.error_6", "Accession name already exists in database: ")).$r->uniquename;
         }
     }
 
@@ -122,7 +127,7 @@ sub _validate_with_plugin {
         my $accession_name = $row->{'accession_name'};
 
         if ($duplicated_accession_names{$accession_name}) {
-            push @error_messages, "Cell A$row_num: duplicate accession name: $accession_name. Accession name must be unique.";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.transgenic.error_7", "Cell A%{row_num}: duplicate accession name: %{accession_name}. Accession name must be unique.", {row_num => "" . ($row_num), accession_name => "" . ($accession_name)}));
         } else {
             $duplicated_accession_names{$accession_name}++;
         }

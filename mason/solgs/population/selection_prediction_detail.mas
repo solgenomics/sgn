@@ -50,13 +50,13 @@ $data_set_type => ''
 <& /util/import_javascript.mas, classes => ["solGS.genotypingProtocol"] &>
 
 <& /page/page_title.mas,
-   title => "$trait_name ($trait_abbr) GEBVs -- $selection_pop_name"
+   title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.trait_name_trait_abbr_gebvs_selection_pop_name", "%{trait_name} (%{trait_abbr}) GEBVs -- %{selection_pop_name}", {trait_name => "" . ($trait_name // ""), trait_abbr => "" . ($trait_abbr // ""), selection_pop_name => "" . ($selection_pop_name // "")}))
 &>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Selection population summary",
   collapsible => 1,
   collapsed   => 0,
-  title       => "Selection population summary",
+  title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.selection_population_summary", "Selection population summary")),
   &>
 
  <& /solgs/population/summary.mas,
@@ -98,3 +98,6 @@ $data_set_type => ''
 
 <& /solgs/population/download.mas &>
 
+<%once>
+use HTML::Entities ();
+</%once>

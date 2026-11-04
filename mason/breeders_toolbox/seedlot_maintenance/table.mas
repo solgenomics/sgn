@@ -6,6 +6,13 @@
 </%args>
 
 <%perl>
+    use JSON::PP ();
+    use HTML::Entities ();
+    my $maintenance_table_js = sub {
+        my $json = JSON::PP->new->ascii->allow_nonref->encode(defined($_[0]) ? "$_[0]" : "");
+        $json =~ s/([<>&])/sprintf("\\u%04x", ord($1))/ge;
+        return $json;
+    };
     my $user_role = '';
     my $user_name = '';
     if ($c->user) {
@@ -16,14 +23,15 @@
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
+<div id="seedlot-maintenance-event-table">
+
 <br /><br />
 
-<&| /page/info_section.mas, title=>"Filter Events",  collapsible=>1, collapsed=>!$show_filters, subtitle=>"Filter maintenance events based on date, type, and/or value" &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance_table.ui.filter_events', 'Filter Events')), anchor_title=>"Filter Events",  collapsible=>1, collapsed=>!$show_filters, subtitle=>HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance_table.ui.filter_subtitle', 'Filter maintenance events based on date, type, and/or value')) &>
 
     <div class="well">
 
-        <p>Add one or more filters to apply to the table of displayed maintenance events.  To add a filter, enter the properties for a filter type 
-        and click the add button to add the filter to the list.  Once you're done adding filters, click the Filter button to display the results.</p>
+        <p><% $c->i18n->p('seedlot_maintenance_table.ui.intro', 'Add one or more filters to apply to the table of displayed maintenance events.  To add a filter, enter the properties for a filter type and click the add button to add the filter to the list.  Once you\'re done adding filters, click the Filter button to display the results.') |h %></p>
         <br />
         
         <!-- Filter Form -->
@@ -33,19 +41,19 @@
 
             <!-- Seedlot (by user-input) -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Seedlot(s): </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_maintenance_table.ui.seedlots', 'Seedlot(s):') |h %></label>
                 <div class="col-sm-8">
                     <div class="panel panel-info">
-                        <div class="panel-heading">Seedlot Name Contains</div>
+                        <div class="panel-heading"><% $c->i18n->p('seedlot_maintenance_table.ui.name_contains', 'Seedlot Name Contains') |h %></div>
                         <div class="panel-body">
-                            <input id="event_filter_seedlot_name_contains" class="form-control" placeholder="part of Seedlot name" />
+                            <input id="event_filter_seedlot_name_contains" class="form-control" placeholder="<% $c->i18n->p('seedlot_maintenance_table.ui.name_part_placeholder', 'part of Seedlot name') |h %>" />
                         </div>
                     </div>
 
-                    <div style="text-align: center"><strong>OR</strong></div>
+                    <div style="text-align: center"><strong><% $c->i18n->p('seedlot_maintenance_table.ui.or', 'OR') |h %></strong></div>
                 </div>
                 <div class="col-sm-1">
-                    <button id="event_filter_seedlot_name_contains_add" class='btn btn-info btn-sm'>Add</button>
+                    <button id="event_filter_seedlot_name_contains_add" class='btn btn-info btn-sm'><% $c->i18n->p('seedlot_maintenance_table.ui.add', 'Add') |h %></button>
                 </div>
             </div>
 
@@ -54,16 +62,16 @@
                 <label class="col-sm-3 control-label"></label>
                 <div class="col-sm-8">
                     <div class="panel panel-info">
-                        <div class="panel-heading">Enter the name(s) of the Seedlot(s) - one per line</div>
+                        <div class="panel-heading"><% $c->i18n->p('seedlot_maintenance_table.ui.names_per_line', 'Enter the name(s) of the Seedlot(s) - one per line') |h %></div>
                         <div class="panel-body">
                             <textarea id="event_filter_seedlot_names" class="form-control" rows=5></textarea>
                         </div>
                     </div>
 
-                    <div style="text-align: center"><strong>OR</strong></div>
+                    <div style="text-align: center"><strong><% $c->i18n->p('seedlot_maintenance_table.ui.or', 'OR') |h %></strong></div>
                 </div>
                 <div class="col-sm-1">
-                    <button id="event_filter_seedlot_names_add" class='btn btn-info btn-sm'>Add</button>
+                    <button id="event_filter_seedlot_names_add" class='btn btn-info btn-sm'><% $c->i18n->p('seedlot_maintenance_table.ui.add', 'Add') |h %></button>
                 </div>
             </div>
 
@@ -72,20 +80,20 @@
                 <label class="col-sm-3 control-label"></label>
                 <div class="col-sm-8">
                     <div class="panel panel-info">
-                        <div class="panel-heading">Select a List of Seedlots</div>
+                        <div class="panel-heading"><% $c->i18n->p('seedlot_maintenance_table.ui.select_list', 'Select a List of Seedlots') |h %></div>
                         <div class="panel-body"><div id="event_filter_seedlot_list"></div></div>
                     </div>
                 </div>
                 <div class="col-sm-1">
-                    <button id="event_filter_seedlot_list_add" class='btn btn-info btn-sm'>Add</button>
+                    <button id="event_filter_seedlot_list_add" class='btn btn-info btn-sm'><% $c->i18n->p('seedlot_maintenance_table.ui.add', 'Add') |h %></button>
                 </div>
             </div>
 % } else {
             <!-- Single Seedlot Name -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Seedlot: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_maintenance_table.ui.single_seedlot', 'Seedlot:') |h %></label>
                 <div class="col-sm-8">
-                    <input class="form-control" type="text" value="<% $seedlot_name %>" disabled>
+                    <input class="form-control" type="text" value="<% $seedlot_name |h %>" disabled>
                 </div>
                 <div class="col-sm-1"></div>
             </div>
@@ -93,46 +101,46 @@
         
             <!-- Date -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Date: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_maintenance_table.ui.date', 'Date:') |h %></label>
                 <div class="col-sm-4">
                     <input class="form-control" id="event_filter_date" type="date">
                 </div>
                 <div class="col-sm-4">
                     <select class="form-control" id="event_filter_date_type">
-                        <option value="=">on</option>
-                        <option value="<=">on or before</option>
-                        <option value="<">before</option>
-                        <option value=">=">on or after</option>
-                        <option value=">">after</option>
+                        <option value="="><% $c->i18n->p('seedlot_maintenance_table.ui.on', 'on') |h %></option>
+                        <option value="<="><% $c->i18n->p('seedlot_maintenance_table.ui.on_or_before', 'on or before') |h %></option>
+                        <option value="<"><% $c->i18n->p('seedlot_maintenance_table.ui.before', 'before') |h %></option>
+                        <option value=">="><% $c->i18n->p('seedlot_maintenance_table.ui.on_or_after', 'on or after') |h %></option>
+                        <option value=">"><% $c->i18n->p('seedlot_maintenance_table.ui.after', 'after') |h %></option>
                     </select>
                 </div>
                 <div class="col-sm-1">
-                    <button id="event_filter_date_add" class='btn btn-info btn-sm'>Add</button>
+                    <button id="event_filter_date_add" class='btn btn-info btn-sm'><% $c->i18n->p('seedlot_maintenance_table.ui.add', 'Add') |h %></button>
                 </div>
             </div>
 
             <!-- Type -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Type: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_maintenance_table.ui.type', 'Type:') |h %></label>
                 <div class="col-sm-4">
-                    <select class="form-control" id="event_filter_type" disabled><option>Loading...</option></select>
+                    <select class="form-control" id="event_filter_type" disabled><option><% $c->i18n->p('seedlot_maintenance_table.ui.loading', 'Loading...') |h %></option></select>
                 </div>
                 <div class="col-sm-4" id="event_filter_type_value">
                     
                 </div>
                 <div class="col-sm-1">
-                    <button id="event_filter_type_add" class='btn btn-info btn-sm'>Add</button>
+                    <button id="event_filter_type_add" class='btn btn-info btn-sm'><% $c->i18n->p('seedlot_maintenance_table.ui.add', 'Add') |h %></button>
                 </div>
             </div>
 
             <!-- Operator -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Operator: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_maintenance_table.ui.operator', 'Operator:') |h %></label>
                 <div class="col-sm-8">
                     <input class="form-control" id="event_filter_operator" />
                 </div>
                 <div class="col-sm-1">
-                    <button id="event_filter_operator_add" class='btn btn-info btn-sm'>Add</button>
+                    <button id="event_filter_operator_add" class='btn btn-info btn-sm'><% $c->i18n->p('seedlot_maintenance_table.ui.add', 'Add') |h %></button>
                 </div>
             </div>
 
@@ -141,15 +149,15 @@
         <br /><br />
 
         <!-- Filter Table -->
-        <p><strong>Applied Filters:</strong></p>
+        <p><strong><% $c->i18n->p('seedlot_maintenance_table.ui.applied_filters', 'Applied Filters:') |h %></strong></p>
 
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Property</th>
-                    <th>Comparison</th>
-                    <th>Value</th>
-                    <th>Remove</th>
+                    <th><% $c->i18n->p('seedlot_maintenance_table.ui.property_header', 'Property') |h %></th>
+                    <th><% $c->i18n->p('seedlot_maintenance_table.ui.comparison_header', 'Comparison') |h %></th>
+                    <th><% $c->i18n->p('seedlot_maintenance_table.ui.value_header', 'Value') |h %></th>
+                    <th><% $c->i18n->p('seedlot_maintenance_table.ui.remove_filter_header', 'Remove') |h %></th>
                 </tr>
             </thead>
             <tbody id="event_filter_table"></tbody>
@@ -158,7 +166,7 @@
         <br /><br />
 
         <!-- Submit Filters -->
-        <button id="event_filter_submit" class="btn btn-primary btn-block" style="max-width: 400px; margin: 0 auto">Filter</button>
+        <button id="event_filter_submit" class="btn btn-primary btn-block" style="max-width: 400px; margin: 0 auto"><% $c->i18n->p('seedlot_maintenance_table.ui.filter', 'Filter') |h %></button>
 
     </div>
 
@@ -175,8 +183,8 @@
         <span id="seedlot_maintenance_events_status_page"></span>
     </span>
     <div class="btn-group" style="float: right">
-        <button id="seedlot_maintenance_events_prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Prev</button>
-        <button id="seedlot_maintenance_events_next" type="button" class="btn btn-default" disabled>Next&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+        <button id="seedlot_maintenance_events_prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;<% $c->i18n->p('seedlot_maintenance_table.ui.previous', 'Prev') |h %></button>
+        <button id="seedlot_maintenance_events_next" type="button" class="btn btn-default" disabled><% $c->i18n->p('seedlot_maintenance_table.ui.next', 'Next') |h %>&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
     </div>
 </div>
 
@@ -185,21 +193,177 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <p class="modal-title">Remove Event?</p>
+                <p class="modal-title"><% $c->i18n->p('seedlot_maintenance_table.ui.remove_question', 'Remove Event?') |h %></p>
             </div>
             <div id="seedlot_modal_body" class="modal-body">
-                <p class="modal-body">Are you sure you want to remove this Seedlot Maintenance Event?</p>
+                <p class="modal-body"><% $c->i18n->p('seedlot_maintenance_table.ui.remove_confirmation', 'Are you sure you want to remove this Seedlot Maintenance Event?') |h %></p>
             </div>
             <div class="modal-footer">
-                <button id="seedlot_maintenance_remove_modal_cancel" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button id="seedlot_maintenance_remove_modal_ok" type="button" class="btn btn-danger">Remove Event</button>
+                <button id="seedlot_maintenance_remove_modal_cancel" type="button" class="btn btn-secondary" data-dismiss="modal"><% $c->i18n->p('seedlot_maintenance_table.ui.cancel', 'Cancel') |h %></button>
+                <button id="seedlot_maintenance_remove_modal_ok" type="button" class="btn btn-danger"><% $c->i18n->p('seedlot_maintenance_table.ui.remove_event', 'Remove Event') |h %></button>
             </div>
         </div>
     </div>
 </div>
 
 
+</div>
+
 <script type="text/javascript">
+
+const maintenanceTableI18n = window.SGN && window.SGN.i18n || {
+    p: function(context, text, vars) {
+        return String(text).replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function(token, name) {
+            return vars && Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : token;
+        });
+    }
+};
+const maintenanceTableUserRole = <% $maintenance_table_js->($user_role) %>;
+const maintenanceTableUserName = <% $maintenance_table_js->($user_name) %>;
+const maintenanceTableSeedlotName = <% $maintenance_table_js->($seedlot_name) %>;
+function maintenanceTableHTML(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function(c) {
+        return {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"}[c];
+    });
+}
+function maintenanceTableScientificText(value, type) {
+    return type === "display" ? maintenanceTableHTML(value) : value;
+}
+function maintenanceTableLocaleHeaders(url) {
+    const destination = new URL(url, window.location.href);
+    if (destination.origin !== window.location.origin) return {};
+    const locale = maintenanceTableI18n.requestedLocale || document.documentElement.getAttribute("data-sgn-locale") || "en";
+    return {"X-SGN-Locale": /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : "en"};
+}
+
+// Preserve raw scientific exports in this table without changing vendor defaults.
+const maintenanceTableExport = (function () {
+    'use strict';
+    var SML = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+    var XML = 'http://www.w3.org/XML/1998/namespace';
+    function assert(ok, message) { if (!ok) throw new Error(message); }
+    function columnIndex(reference) {
+        var letters = reference.match(/^[A-Z]+/)[0], value = 0;
+        for (var i = 0; i < letters.length; i++) value = value * 26 + letters.charCodeAt(i) - 64;
+        return value - 1;
+    }
+    function allowedXML(value) {
+        // Keep TAB/LF/CR/C1. XML1.0 cannot represent these other C0 characters.
+        assert(!/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(value), 'Scientific text contains an unrepresentable XML1.0 control');
+    }
+    function copyData(data) {
+        return {header: data.header.slice(), body: data.body.map(function (row) { return row.slice(); })};
+    }
+    function rewriteText(sheet, snapshot, numericColumn) {
+        var rows = sheet.getElementsByTagName('row');
+        assert(rows.length === snapshot.body.length + 1, 'Pinned header-row/body-row count changed');
+        for (var r = 0; r < rows.length; r++) {
+            var rowNumber = Number(rows[r].getAttribute('r'));
+            var values = rowNumber === 1 ? snapshot.header : snapshot.body[rowNumber - 2];
+            assert(values && values.length === snapshot.header.length, 'Unexpected worksheet row coordinate');
+            var cells = rows[r].getElementsByTagName('c');
+            assert(cells.length === values.length, 'Pinned exporter omitted or added a cell');
+            for (var i = 0; i < cells.length; i++) {
+                var cell = cells[i], c = columnIndex(cell.getAttribute('r'));
+                assert(c === i, 'Pinned worksheet column ordering changed');
+                var value = values[c];
+                assert(value === null || value === undefined || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean',
+                    'Scientific exporter accepts JSON scalar values only');
+                if (rowNumber !== 1 && c === numericColumn) {
+                    assert(typeof value === 'number' && Number.isFinite(value) && Number.isInteger(value) && value > 0, 'Event ID DTO must be a positive numeric integer');
+                    assert(cell.getAttribute('t') === 'n', 'Event ID must remain numeric');
+                    continue;
+                }
+                if (rowNumber !== 1 && typeof value === 'boolean') {
+                    while (cell.firstChild) cell.removeChild(cell.firstChild);
+                    cell.setAttribute('t', 'b');
+                    var boolean = sheet.createElementNS(SML, 'v');
+                    boolean.appendChild(sheet.createTextNode(value ? '1' : '0'));cell.appendChild(boolean);
+                    continue;
+                }
+                if (rowNumber !== 1 && typeof value === 'number') {
+                    assert(Number.isFinite(value), 'Nonfinite scientific number cannot be exported');
+                    while (cell.firstChild) cell.removeChild(cell.firstChild);
+                    cell.setAttribute('t', 'n');
+                    var number = sheet.createElementNS(SML, 'v');
+                    number.appendChild(sheet.createTextNode(String(value)));cell.appendChild(number);
+                    continue;
+                }
+                var raw = value === null || value === undefined ? '' : String(value);
+                allowedXML(raw);
+                while (cell.firstChild) cell.removeChild(cell.firstChild);
+                cell.setAttribute('t', 'inlineStr');
+                var is = sheet.createElementNS(SML, 'is');
+                var text = sheet.createElementNS(SML, 't');
+                text.setAttributeNS(XML, 'xml:space', 'preserve');
+                text.appendChild(sheet.createTextNode(raw));
+                is.appendChild(text);cell.appendChild(is);
+            }
+        }
+    }
+    function repairEmptyUnusedFill(styles) {
+        var fills = styles.getElementsByTagName('fills')[0];
+        assert(fills && fills.children.length === 6, 'Pinned XLSX fill layout changed');
+        var fill = fills.children[1];
+        assert(fill.localName === 'fill', 'Pinned unused fill position changed');
+        if (fill.children.length) return;
+        var formats = styles.getElementsByTagName('xf');
+        for (var i = 0; i < formats.length; i++) {
+            assert(formats[i].getAttribute('fillId') !== '1', 'Empty fill is referenced; preserving its appearance requires review');
+        }
+        // The pinned exporter leaves this unused fill empty. A valid no-fill
+        // element lets standard readers open the workbook without changing
+        // any referenced style, style index, format or scientific cell.
+        var pattern = styles.createElementNS(SML, 'patternFill');
+        pattern.setAttribute('patternType', 'none');fill.appendChild(pattern);
+    }
+    function options(headers) {
+        return {orthogonal:'export', stripHtml:false, trim:false, stripNewlines:false, decodeEntities:false,
+            format:{header:function (_html, originalIndex) { return headers[originalIndex]; },
+                    body:function (value) { return value === null || value === undefined ? '' : value; }}};
+    }
+    function action(vendorAction, numericColumn, probe) {
+        return function (event, table, button, config) {
+            var prototype = XMLSerializer.prototype, original = prototype.serializeToString;
+            var sheet, snapshot, documentSeen = false;
+            var scoped = Object.assign({}, config, {
+                customizeData:function (data) {
+                    if (config.customizeData) config.customizeData(data);
+                    snapshot = copyData(data);
+                },
+                customize:function (xlsx) {
+                    if (config.customize) config.customize(xlsx);
+                    sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    assert(sheet && snapshot, 'Pinned exporter did not expose the original worksheet/data');
+                    rewriteText(sheet, snapshot, numericColumn);
+                    repairEmptyUnusedFill(xlsx.xl['styles.xml']);
+                }
+            });
+            prototype.serializeToString = function (node) {
+                var serialized = original.call(this, node);
+                if (node === sheet) {
+                    documentSeen = true;
+                    if (probe) probe.sheetSerializations++;
+                    // Character references avoid XML parser CR/CRLF normalization.
+                    return serialized.replace(/\r/g, '&#13;');
+                }
+                if (probe) {
+                    probe.otherNodes++;
+                    assert(serialized === original.call(this, node), 'Unrelated XML serialization changed');
+                }
+                return serialized;
+            };
+            try {
+                var result = vendorAction.call(this, event, table, button, scoped);
+                assert(documentSeen, 'Vendor did not synchronously serialize the exact customized Document');
+                return result;
+            }
+            finally { prototype.serializeToString = original; }
+        };
+    }
+    return {options:options, action:action};
+}());
+
 
 let MULTI_SEEDLOT = <% $multi_seedlot %> === 1;
 let LO = new CXGN.List();
@@ -224,7 +388,7 @@ jQuery(document).ready(function() {
 
     // Add list selection, if enabled
     if ( MULTI_SEEDLOT ) {
-        jQuery('#event_filter_seedlot_list').html(LO.listSelect('event_filter_seedlot', [ 'seedlots' ], 'select', undefined, undefined));
+        jQuery('#event_filter_seedlot_list').html(LO.listSelect('event_filter_seedlot', [ 'seedlots' ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download_js.select", "select") : 'select'), undefined, undefined));
     }
 
     // Click and Change Listeners
@@ -246,21 +410,23 @@ jQuery(document).ready(function() {
  */
 function setupDataTable() {
     
-    // Set DataTables Buttons
+    // File headers are machine contracts independent of localized UI titles.
+    let canonicalHeaders = MULTI_SEEDLOT
+        ? ['Seedlot', 'Event ID', 'Event Date', 'Event Type', 'Value', 'Notes', 'Operator', 'Options']
+        : ['Event ID', 'Event Date', 'Event Type', 'Value', 'Notes', 'Operator', 'Options'];
     let DT_BUTTONS = [
         {
             extend: 'excelHtml5',
             title: 'seedlot_events',
-            exportOptions: {
-                orthogonal: 'export'
-            }
+            text: maintenanceTableHTML(maintenanceTableI18n.p('locations.table.excelHtml5', 'Excel')),
+            exportOptions: maintenanceTableExport.options(canonicalHeaders),
+            action: maintenanceTableExport.action(jQuery.fn.dataTable.ext.buttons.excelHtml5.action, MULTI_SEEDLOT ? 1 : 0)
         },
         {
             extend: 'csvHtml5',
             title: 'seedlot_events',
-            exportOptions: {
-                orthogonal: 'export'
-            }
+            text: maintenanceTableHTML(maintenanceTableI18n.p('locations.table.csvHtml5', 'CSV')),
+            exportOptions: maintenanceTableExport.options(canonicalHeaders)
         }
     ];
 
@@ -269,12 +435,12 @@ function setupDataTable() {
     if ( MULTI_SEEDLOT ) {
         columns = columns.concat([
             { 
-                title: "Seedlot", 
+                title: maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.seedlot_header", "Seedlot")),
                 data: "uniquename", 
                 render: function(data, type, row) {
                     if ( type === 'display' ) {
-                        let url = "/breeders/seedlot/" + row.stock_id;
-                        return "<a href='" + url + "'>" + data + "</a>";
+                        let url = "/breeders/seedlot/" + encodeURIComponent(row.stock_id);
+                        return "<a href='" + maintenanceTableHTML(url) + "'>" + maintenanceTableHTML(data) + "</a>";
                     }
                     return data;
                 }
@@ -282,14 +448,14 @@ function setupDataTable() {
         ]);
     }
     columns = columns.concat([
-        { title: "Event ID", data: "stockprop_id" },
+        { title: maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.event_id_header", "Event ID")), data: "stockprop_id" },
         {
-            title: "Event Date", 
+            title: maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.event_date_header", "Event Date")),
             data: "timestamp",
             render: function(data, type, row) {
                 if ( type === "display" ) {
-                    let dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                    let month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    let dow = [maintenanceTableI18n.p("seedlot_maintenance_table.ui.weekday_sun", "Sun"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.weekday_mon", "Mon"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.weekday_tue", "Tue"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.weekday_wed", "Wed"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.weekday_thu", "Thu"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.weekday_fri", "Fri"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.weekday_sat", "Sat")];
+                    let month = [maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_jan", "Jan"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_feb", "Feb"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_mar", "Mar"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_apr", "Apr"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_may", "May"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_jun", "Jun"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_jul", "Jul"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_aug", "Aug"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_sep", "Sep"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_oct", "Oct"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_nov", "Nov"), maintenanceTableI18n.p("seedlot_maintenance_table.ui.month_dec", "Dec")];
                     let d = new Date(data);
                     let h = d.getHours();
                     let m = d.getMinutes();
@@ -297,30 +463,30 @@ function setupDataTable() {
                     if ( h <= 9 ) h = '0' + h;
                     if ( m <= 9 ) m = '0' + m;
                     if ( s <= 9 ) s = '0' + s;
-                    let ts = dow[d.getDay()] + " " + month[d.getMonth()] + " " + d.getDate() + " " + h + ":" + m + ":" + s + " " + d.getFullYear();
-                    return ts;
+                    let ts = maintenanceTableI18n.p("seedlot_maintenance_table.ui.date_display", "%{weekday} %{month} %{day} %{hour}:%{minute}:%{second} %{year}", {weekday: dow[d.getDay()], month: month[d.getMonth()], day: d.getDate(), hour: h, minute: m, second: s, year: d.getFullYear()});
+                    return maintenanceTableHTML(ts);
                 }
                 return data;
             }
         },
-        { title: "Event Type", data: "cvterm_name" },
-        { title: "Value", data: "value" },
+        { title: maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.event_type_header", "Event Type")), data: "cvterm_name", render: maintenanceTableScientificText },
+        { title: maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.value_header", "Value")), data: "value", render: maintenanceTableScientificText },
         { 
-            title: "Notes", 
+            title: maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.notes_header", "Notes")),
             data: "notes",
             render: function(data, type, row) {
-                return data ? data : '';
+                return type === 'display' ? (data ? maintenanceTableHTML(data) : '') : data;
             }
         },
-        { title: "Operator", data: "operator" },
+        { title: maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.operator_header", "Operator")), data: "operator", render: maintenanceTableScientificText },
         {
-            title: "Options",
+            title: maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.options_header", "Options")),
             data: "stockprop_id",
             render: function(data, type, row) {
                 if ( type === "display" ) {
                     let html = '';
-                    if ( '<% $user_role %>' === 'curator' || ( '<% $user_role %>' === 'submitter' && '<% $user_name %>' === row.operator ) ) { 
-                        html += "<a class='event_table_remove' onclick='removeEvent(" + row.stock_id + ", " + row.stockprop_id + ")' style='cursor: pointer;'>[Remove]</a>";
+                    if ( maintenanceTableUserRole === 'curator' || ( maintenanceTableUserRole === 'submitter' && maintenanceTableUserName === row.operator ) ) {
+                        html += "<a class='event_table_remove' onclick='removeEvent(" + maintenanceTableHTML(JSON.stringify(row.stock_id)) + ", " + maintenanceTableHTML(JSON.stringify(row.stockprop_id)) + ")' style='cursor: pointer;'>" + maintenanceTableHTML(maintenanceTableI18n.p("seedlot_maintenance_table.ui.remove_action", "[Remove]")) + "</a>";
                     }
                     return html;
                 }
@@ -339,6 +505,13 @@ function setupDataTable() {
         data: [],
         columns: columns,
         order: [[ MULTI_SEEDLOT ? 2 : 1, "desc" ]],
+        language: {
+            sEmptyTable: maintenanceTableHTML(maintenanceTableI18n.p('accessions.table.empty', 'No data available in table')),
+            oAria: {
+                sSortAscending: maintenanceTableI18n.p('accessions.table.sort_ascending', ': activate to sort column ascending'),
+                sSortDescending: maintenanceTableI18n.p('accessions.table.sort_descending', ': activate to sort column descending')
+            }
+        },
         buttons: DT_BUTTONS
     });
 
@@ -354,7 +527,7 @@ function getEvents() {
     EVENTS = [];
 
     // Update status
-    jQuery("#event_filter_submit").html("Searching...");
+    jQuery("#event_filter_submit").text(maintenanceTableI18n.p("seedlot_maintenance_table.ui.searching", "Searching..."));
     jQuery("#event_filter_submit").attr("disabled", true);
     jQuery("#seedlot_maintenance_events_prev").attr('disabled', true);
     jQuery("#seedlot_maintenance_events_next").attr('disabled', true);
@@ -426,7 +599,7 @@ function getEvents() {
     }
     if ( !MULTI_SEEDLOT ) {
         names.push({
-            value: "<% $seedlot_name %>",
+            value: maintenanceTableSeedlotName,
             comp: "="
         });
     }
@@ -445,6 +618,7 @@ function getEvents() {
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/breeders/seedlot/maintenance/search',
+        headers: maintenanceTableLocaleHeaders('/ajax/breeders/seedlot/maintenance/search'),
         data: JSON.stringify(body),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -456,16 +630,16 @@ function getEvents() {
                 TOTAL = data.total;
             }
             else {
-                alert("ERROR: Could not load maintenance events!");
+                alert(maintenanceTableI18n.p("seedlot_maintenance_table.ui.load_failed", "ERROR: Could not load maintenance events!"));
             }
         },
         error: function() {
-            alert("ERROR: Could not load maintenance events!");
+            alert(maintenanceTableI18n.p("seedlot_maintenance_table.ui.load_failed", "ERROR: Could not load maintenance events!"));
         },
         complete: function() {
             displayEvents();
 
-            jQuery("#event_filter_submit").html("Filter");
+            jQuery("#event_filter_submit").text(maintenanceTableI18n.p("seedlot_maintenance_table.ui.filter", "Filter"));
             jQuery("#event_filter_submit").attr("disabled", false);
         }
     });
@@ -488,8 +662,8 @@ function displayEvents() {
     let displayed = start + " - " + end + " / " + TOTAL;
     let page_info = PAGE + " / " + MAX_PAGE;
 
-    jQuery("#seedlot_maintenance_events_status_displayed").html("<strong>EVENTS:</strong> " + displayed);
-    jQuery("#seedlot_maintenance_events_status_page").html("<strong>PAGE:</strong> " + page_info);
+    jQuery("#seedlot_maintenance_events_status_displayed").text(maintenanceTableI18n.p("seedlot_maintenance_table.ui.events_status", "EVENTS: %{start} - %{end} / %{total}", {start: start, end: end, total: TOTAL}));
+    jQuery("#seedlot_maintenance_events_status_page").text(maintenanceTableI18n.p("seedlot_maintenance_table.ui.page_status", "PAGE: %{page} / %{max_page}", {page: PAGE, max_page: MAX_PAGE}));
     jQuery("#seedlot_maintenance_events_prev").attr('disabled', PAGE === 1);
     jQuery("#seedlot_maintenance_events_next").attr('disabled', PAGE === MAX_PAGE || MAX_PAGE === 1);
 
@@ -536,17 +710,18 @@ function getOntology(callback) {
         type: 'GET',
         dataType: 'json',
         url: '/ajax/breeders/seedlot/maintenance/ontology',
+        headers: maintenanceTableLocaleHeaders('/ajax/breeders/seedlot/maintenance/ontology'),
         success: function(data) {
             if ( data && data.ontology ) {
                 ONTOLOGY = data.ontology;
                 if ( callback ) return callback();
             }
             else {
-                alert("ERROR: Could not fetch ontology terms");
+                alert(maintenanceTableI18n.p("seedlot_maintenance_table.ui.ontology_failed", "ERROR: Could not fetch ontology terms"));
             }
         },
         error: function() {
-            alert("ERROR: Could not fetch ontology terms");
+            alert(maintenanceTableI18n.p("seedlot_maintenance_table.ui.ontology_failed", "ERROR: Could not fetch ontology terms"));
         }
     });
 }
@@ -558,20 +733,20 @@ function getOntology(callback) {
  */
 function setTypeFilter() {
     
-    // Populate type select
-    let html = "<option value=''>...Select Maintenance Event Type...</option>";
+    // Scientific ontology labels and IDs remain data in DOM properties.
+    let select = jQuery("#event_filter_type").empty();
+    select.append(jQuery("<option>").attr("value", "").text(maintenanceTableI18n.p("seedlot_maintenance_table.ui.select_type", "...Select Maintenance Event Type...")));
     if ( ONTOLOGY ) {
         for ( let i = 0; i < ONTOLOGY.length; i++ ) {
-            html += "<optgroup label='" + ONTOLOGY[i].name + "'>";
+            let group = jQuery("<optgroup>").attr("label", ONTOLOGY[i].name);
             if ( ONTOLOGY[i].children ) {
                 for ( let j = 0; j < ONTOLOGY[i].children.length; j++ ) {
-                    html += "<option value='" + ONTOLOGY[i].children[j].cvterm_id + "'>" + ONTOLOGY[i].children[j].name + "</option>";
+                    group.append(jQuery("<option>").attr("value", ONTOLOGY[i].children[j].cvterm_id).text(ONTOLOGY[i].children[j].name));
                 }
             }
-            html += "</optgroup>";
+            select.append(group);
         }
     }
-    jQuery("#event_filter_type").html(html);
     jQuery("#event_filter_type").attr("disabled", false);
 
     // Set the values
@@ -588,7 +763,7 @@ function setTypeFilterValues() {
     let id = jQuery("#event_filter_type").val();
 
     // Build input based on possible values of selected event type
-    let html = "";
+    let input = null;
     let input_type;
     if ( id && id !== '' && ONTOLOGY ) {
         let values = [];
@@ -601,23 +776,22 @@ function setTypeFilterValues() {
         }
         if ( values && values.length > 0 ) {
             input_type = "select";
-            html += "<select class='form-control' id='event_filter_type_value_select' multiple>";
+            input = jQuery("<select>").attr({class: "form-control", id: "event_filter_type_value_select", multiple: "multiple"});
             for ( let i = 0; i < values.length; i++ ) {
-                html += "<option value='" + values[i].name + "'>" + values[i].name + "</option>";
+                input.append(jQuery("<option>").attr("value", values[i].name).text(values[i].name));
             }
-            html += "</select>";
         }
         else {
             input_type = "user";
-            html += "<input class='form-control' id='event_filter_type_value_user' type='text'>";
+            input = jQuery("<input>").attr({class: "form-control", id: "event_filter_type_value_user", type: "text"});
         }
     }
     else {
         input_type = "none";
     }
+    jQuery("#event_filter_type_value").data("input-type", input_type).empty();
+    if (input) jQuery("#event_filter_type_value").append(input);
 
-    jQuery("#event_filter_type_value").data("input-type", input_type);
-    jQuery("#event_filter_type_value").html(html);
 }
 
 
@@ -661,7 +835,7 @@ function addDateFilter() {
     // Check date format
     let regex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
     if ( !d.match(regex) ) {
-        alert("Incorrect date format - the date must be in the format of YYYY-MM-DD");
+        alert(maintenanceTableI18n.p("seedlot_maintenance_table.ui.date_format_error", "Incorrect date format - the date must be in the format of YYYY-MM-DD"));
         return false;
     }
 
@@ -735,19 +909,31 @@ function removeFilter(i) {
  * Update the table of added filters
  */
 function displayFilters() {
-    let html = "";
+    let body = jQuery("#event_filter_table").empty();
     for ( let i = 0; i < FILTERS.length; i++ ) {
         let v = FILTERS[i].value;
-        if ( !v ) v = "<em>Any Value</em>";
-        if ( Array.isArray(v) && v.length > 20 ) v = v.slice(0, 20).join(',') + "...";
-        html += "<tr>";
-        html += "<td>" + FILTERS[i].type_name + "</td>";
-        html += "<td>" + FILTERS[i].comp + "</td>";
-        html += "<td>" + v + "</td>";
-        html += "<td><button class='btn btn-danger btn-xs' onclick='removeFilter(" + i + ")'><span class='glyphicon glyphicon-remove'></span></button></td>";
-        html += "</tr>";
+        let row = jQuery("<tr>");
+        let property = FILTERS[i].type_name;
+        if (FILTERS[i].type_id === "name") property = maintenanceTableI18n.p("seedlot_maintenance_table.ui.property_name", "name");
+        else if (FILTERS[i].type_id === "date") property = maintenanceTableI18n.p("seedlot_maintenance_table.ui.property_date", "date");
+        else if (FILTERS[i].type_id === "operator") property = maintenanceTableI18n.p("seedlot_maintenance_table.ui.property_operator", "operator");
+        let comparison = FILTERS[i].comp;
+        if (comparison === "contains") comparison = maintenanceTableI18n.p("seedlot_maintenance_table.ui.comparison_contains", "contains");
+        else if (comparison === "includes") comparison = maintenanceTableI18n.p("seedlot_maintenance_table.ui.comparison_includes", "includes");
+        row.append(jQuery("<td>").text(property));
+        row.append(jQuery("<td>").text(comparison));
+        let value = jQuery("<td>");
+        if (!v) value.append(jQuery("<em>").text(maintenanceTableI18n.p("seedlot_maintenance_table.ui.any_value", "Any Value")));
+        else {
+            if (Array.isArray(v) && v.length > 20) v = v.slice(0, 20).join(',') + "...";
+            value.text(String(v));
+        }
+        row.append(value);
+        let remove = jQuery("<button>").attr({class: "btn btn-danger btn-xs", type: "button"}).append(jQuery("<span>").attr("class", "glyphicon glyphicon-remove"));
+        remove.click(function() { removeFilter(i); });
+        row.append(jQuery("<td>").append(remove));
+        body.append(row);
     }
-    jQuery("#event_filter_table").html(html);
 }
 
 
@@ -768,27 +954,28 @@ function removeEvent(stock_id, stockprop_id) {
     jQuery("#seedlot_maintenance_remove_modal_ok").off().click(function() {
         jQuery("#seedlot_maintenance_remove_modal_cancel").attr("disabled", true);
         jQuery("#seedlot_maintenance_remove_modal_ok").attr("disabled", true);
-        jQuery("#seedlot_maintenance_remove_modal_ok").html("Removing...");
+        jQuery("#seedlot_maintenance_remove_modal_ok").text(maintenanceTableI18n.p("seedlot_maintenance_table.ui.removing", "Removing..."));
 
         // Delete the Event
         jQuery.ajax({
             type: 'DELETE',
             url: '/ajax/breeders/seedlot/' + stock_id + '/maintenance/' + stockprop_id,
+            headers: maintenanceTableLocaleHeaders('/ajax/breeders/seedlot/' + stock_id + '/maintenance/' + stockprop_id),
             dataType: "json",
             success: function(data) {
                 if ( !data || !data.success || data.success === 0 ) {
                     console.log(data.error);
-                    alert("ERROR: Could not remove seedlot event!");
+                    alert(maintenanceTableI18n.p("seedlot_maintenance_table.ui.remove_failed", "ERROR: Could not remove seedlot event!"));
                 }
             },
             error: function() {
-                alert("ERROR: Could not remove seedlot event!");
+                alert(maintenanceTableI18n.p("seedlot_maintenance_table.ui.remove_failed", "ERROR: Could not remove seedlot event!"));
             },
             complete: function() {
                 jQuery('#seedlot_maintenance_remove_modal').modal('hide')
                 jQuery("#seedlot_maintenance_remove_modal_cancel").attr("disabled", false);
                 jQuery("#seedlot_maintenance_remove_modal_ok").attr("disabled", false);
-                jQuery("#seedlot_maintenance_remove_modal_ok").html("Remove Event");
+                jQuery("#seedlot_maintenance_remove_modal_ok").text(maintenanceTableI18n.p("seedlot_maintenance_table.ui.remove_event", "Remove Event"));
                 getEvents();
             }
         });
@@ -802,6 +989,32 @@ function removeEvent(stock_id, stockprop_id) {
 
 
 <style>
+    #seedlot-maintenance-event-table .btn,
+    #seedlot_maintenance_remove_modal .btn {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        max-width: 100%;
+    }
+    #seedlot-maintenance-event-table th,
+    #seedlot-maintenance-event-table td,
+    #seedlot-maintenance-event-table .control-label,
+    #seedlot-maintenance-event-table .panel-heading,
+    #seedlot_maintenance_remove_modal {
+        overflow-wrap: anywhere;
+    }
+    #seedlot-maintenance-event-table table {
+        table-layout: fixed;
+        max-width: 100%;
+    }
+    #seedlot-maintenance-event-table .infosectiontitle,
+    #seedlot-maintenance-event-table .infosectionsubtitle {
+        white-space: normal;
+        vertical-align: top;
+    }
+    #seedlot-maintenance-event-table .dataTables_wrapper {
+        min-width: 0;
+    }
+
     #seedlot_maintenance_remove_modal .modal-title {
         font-size: 150%;
         weight: 700;

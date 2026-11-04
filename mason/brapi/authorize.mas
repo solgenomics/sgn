@@ -6,7 +6,7 @@
     $database_name
 </%args>
 
-<& /page/page_title.mas, title=>"BrAPI Client Authorization" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("integrations.consent.title", "BrAPI Client Authorization")) &>
 
 <!-- <div class="row">
     <div class="col-lg-12">
@@ -18,8 +18,12 @@
 </div> -->
 
 <div class="row center">
-    <p>Hello <b><% $user_name |h %></b>!</p>
-    <p><b><% $client_id |h %></b> would like to access <b><% $database_name |h %></b> through your account. Use the buttons below to authorize or deny this request.</p><br>
-    <a class="btn btn-success" href="<% $authorize_url |h %>">Authorize Access</a>
-    <a class="btn btn-danger" href="<% $deny_url |h %>">Deny Access</a>
+    <p><% $c->i18n->p("integrations.consent.hello", "Hello ") |h %><b><% $user_name |h %></b>!</p>
+    <p><b><% $client_id |h %></b><% $c->i18n->p("integrations.consent.access_request", " would like to access ") |h %><b><% $database_name |h %></b><% $c->i18n->p("integrations.consent.explanation", " through your account. Use the buttons below to authorize or deny this request.") |h %></p><br>
+    <a class="btn btn-success" href="<% $authorize_url |h %>"><% $c->i18n->p("integrations.consent.authorize", "Authorize Access") |h %></a>
+    <a class="btn btn-danger" href="<% $deny_url |h %>"><% $c->i18n->p("integrations.consent.deny", "Deny Access") |h %></a>
 </div>
+
+<%once>
+use HTML::Entities ();
+</%once>

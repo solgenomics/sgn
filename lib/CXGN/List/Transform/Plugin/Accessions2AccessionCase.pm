@@ -1,5 +1,8 @@
 package CXGN::List::Transform::Plugin::Accessions2AccessionCase;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 
 sub name {
@@ -7,7 +10,8 @@ sub name {
 }
 
 sub display_name {
-    return "accessions to correct accessions case";
+    my SGN::I18N $ui_display_name_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
+    return (SGN::I18N::translate($ui_display_name_i18n, "accession.transform.case", "accessions to correct accessions case"));
 }
 
 sub can_transform {

@@ -6,49 +6,49 @@
     <div class="modal-dialog modal-xl " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="derivedAccessionUsageInfoDialog">Derived Accession</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="derivedAccessionUsageInfoDialog"><% $c->i18n->p("accession.forms.derived_accession", "Derived Accession") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <h4>
-                        What are derived accessions:
+                        <% $c->i18n->p("accession.forms.what_are_derived_accessions", "What are derived accessions:") |h %>
                     </h4>
-                    <p>In some cases, you may want to add new accession names that have special relationships to other stock types in the database. For example, after preliminary phenotypic screening of progenies derived from different crosses in a trial, you may want to add new accession names for some plants in that trial. </p>
+                    <p><% $c->i18n->p("accession.forms.in_some_cases_you_may_want_to_add_new_accession", "In some cases, you may want to add new accession names that have special relationships to other stock types in the database. For example, after preliminary phenotypic screening of progenies derived from different crosses in a trial, you may want to add new accession names for some plants in that trial.") |h %> </p>
                     <br>
                     <h4>
-                        Allowed Stock Types:
+                        <% $c->i18n->p("accession.forms.allowed_stock_types", "Allowed Stock Types:") |h %>
                     </h4>
-                    <p>The derived accession (stored as accession stock type) can be linked to another accession, or plant or tissue sample in the database. </p>
+                    <p><% $c->i18n->p("accession.forms.the_derived_accession_stored_as_accession_stock_type_can_be", "The derived accession (stored as accession stock type) can be linked to another accession, or plant or tissue sample in the database.") |h %> </p>
                     <ul>
-                        <li><b>Derived from accession</b>: e.g., new accession derived from another accession because of a mutation.</li>
-                        <li><b>Derived from plant</b>: e.g., new accessions derived from plants originated from crosses or family names in trials.</li>
-                        <li><b>Derived from tissue sample: </b> e.g., new accessions derived from tissue samples via tissue culture.</li>
+                        <li><b><% $c->i18n->p("accession.forms.derived_from_accession", "Derived from accession") |h %></b><% $c->i18n->p("accession.forms.e_g_new_accession_derived_from_another_accession_because_of", ": e.g., new accession derived from another accession because of a mutation.") |h %></li>
+                        <li><b><% $c->i18n->p("accession.forms.derived_from_plant", "Derived from plant") |h %></b><% $c->i18n->p("accession.forms.e_g_new_accessions_derived_from_plants_originated_from_crosses", ": e.g., new accessions derived from plants originated from crosses or family names in trials.") |h %></li>
+                        <li><b><% $c->i18n->p("accession.forms.derived_from_tissue_sample", "Derived from tissue sample:") |h %> </b> <% $c->i18n->p("accession.forms.e_g_new_accessions_derived_from_tissue_samples_via_tissue", "e.g., new accessions derived from tissue samples via tissue culture.") |h %></li>
                     </ul>
                     <br>
                     <h4>
-                        Linkage between derived accession, direct source and original source:
+                        <% $c->i18n->p("accession.forms.linkage_between_derived_accession_direct_source_and_original_source", "Linkage between derived accession, direct source and original source:") |h %>
                     </h4>
-                    <p>Relationship between each derived accession and its source is displayed on the accession detail page and its source detail page (accession/plant/tissue sample) </p>
+                    <p><% $c->i18n->p("accession.forms.relationship_between_each_derived_accession_and_its_source_is_displayed", "Relationship between each derived accession and its source is displayed on the accession detail page and its source detail page (accession/plant/tissue sample)") |h %> </p>
                     <ul class="a" >
-                        <li><b>Additional Info Section:</b> Both direct source of that derived accession and its origin are displayed in the Additional Info section. If the direct source is a plant or tissue sample, the original source will also be provided (e.g., if the direct source is a plant in a trial, the original source of that plant name can be accession, cross or family name).</li>
-                        <li><b>Pedigree:</b> Pedigree information of each derived accession depends on stock type of the original source (accession or cross or family name).</li>
+                        <li><b><% $c->i18n->p("accession.forms.additional_info_section", "Additional Info Section:") |h %></b> <% $c->i18n->p("accession.forms.both_direct_source_of_that_derived_accession_and_its_origin", "Both direct source of that derived accession and its origin are displayed in the Additional Info section. If the direct source is a plant or tissue sample, the original source will also be provided (e.g., if the direct source is a plant in a trial, the original source of that plant name can be accession, cross or family name).") |h %></li>
+                        <li><b><% $c->i18n->p("accession.forms.pedigree", "Pedigree:") |h %></b> <% $c->i18n->p("accession.forms.pedigree_information_of_each_derived_accession_depends_on_stock_type", "Pedigree information of each derived accession depends on stock type of the original source (accession or cross or family name).") |h %></li>
                         <ul class="b" >
-                            <li><b>Originated from an accession:</b> The original accession is used as parents (both female and male parents) of the derived accession with the "derived" cross type.</li>
-                            <li><b>Originated from a cross or a family name:</b> The female parent, male parent and cross type of the cross or family name are used as parents and cross type of the derived accession. If the derived accession is originated from a cross, the accession is also stored as a progeny of that cross.</li>
+                            <li><b><% $c->i18n->p("accession.forms.originated_from_an_accession", "Originated from an accession:") |h %></b> <% $c->i18n->p("accession.forms.the_original_accession_is_used_as_parents_both_female_and", "The original accession is used as parents (both female and male parents) of the derived accession with the \"derived\" cross type.") |h %></li>
+                            <li><b><% $c->i18n->p("accession.forms.originated_from_a_cross_or_a_family_name", "Originated from a cross or a family name:") |h %></b> <% $c->i18n->p("accession.forms.the_female_parent_male_parent_and_cross_type_of_the", "The female parent, male parent and cross type of the cross or family name are used as parents and cross type of the derived accession. If the derived accession is originated from a cross, the accession is also stored as a progeny of that cross.") |h %></li>
                         </ul>
                     </ul>
                     <br>
                     <h4>
-                        How to add derived accessions:
+                        <% $c->i18n->p("accession.forms.how_to_add_derived_accessions", "How to add derived accessions:") |h %>
                     </h4>
                     <ul>
-                        <li><b>Using a List:</b> You can add derived accessions by using a list of accessions, plants or tissue samples as the sources of new accessions. A form will be generated for you to fill out new accession names and description. Please see 'Using a List' link.</li>
-                        <li><b>Upload a File:</b> To upload derived accessions, please use a file with three columns: source_name, derived_accession_name, description. Please see 'Upload a File' link</li>
+                        <li><b><% $c->i18n->p("accession.forms.using_a_list", "Using a List:") |h %></b> <% $c->i18n->p("accession.forms.you_can_add_derived_accessions_by_using_a_list_of", "You can add derived accessions by using a list of accessions, plants or tissue samples as the sources of new accessions. A form will be generated for you to fill out new accession names and description. Please see 'Using a List' link.") |h %></li>
+                        <li><b><% $c->i18n->p("accession.forms.upload_a_file", "Upload a File:") |h %></b> <% $c->i18n->p("accession.forms.to_upload_derived_accessions_please_use_a_file_with_three", "To upload derived accessions, please use a file with three columns: source_name, derived_accession_name, description. Please see 'Upload a File' link") |h %></li>
                     </ul>
                 </div>
                 <div class="modal-footer">
-                    <button id="close_derived_accession_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="close_derived_accession_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
                 </div>
             </div>
         </div>

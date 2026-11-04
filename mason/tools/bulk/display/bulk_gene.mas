@@ -5,14 +5,14 @@
 <% $bulk_js_menu %>
 <form name="bulk_gene" action="/bulk/gene/submit/" method="post" enctype="multipart/form-data">
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
-Enter a list of gene identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_gene_identifier_or_upload_a_file_containing_one_identifer_sepa", "Enter a list of gene identifier or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):") |h %><br />
 <table summary="" width="100%" cellpadding="0"><tr><td>
 <textarea name="ids" rows="10" cols="30">
 <% $prefill_ids |h %>
 </textarea>
 </td>
 <td>
-<i>Example:</i>
+<i><% $c->i18n->p("lists_datasets.bulk.example", "Example:") |h %></i>
 <pre style="border: 1px solid gray; padding: 5px">
 Solyc01g005080.2
 AT1G56650.1
@@ -23,20 +23,20 @@ Os02g0289500
 <br />
 <br />
 
-And/or upload list file: <br /><input type="file" name="gene_file" />
+<% $c->i18n->p("lists_datasets.bulk.and_or_upload_list_file", "And/or upload list file:") |h %> <br /><input type="file" name="gene_file" />
 <br />
 <br />
 
 </td>
 <td valign="top" bgcolor="#EEEEEE" width="320">
 
-<b>Download gene information</b>:<br />
+<b><% $c->i18n->p("lists_datasets.bulk.download_gene_information", "Download gene information") |h %></b>:<br />
 <div style="padding-left: 1em">
-    <input type="radio" name="gene_type" value="cdna" checked="checked" />cDNA sequence <br />
-    <input type="radio" name="gene_type" value="cds" checked="unchecked" />CDS sequence <br />
-    <input type="radio" name="gene_type" value="protein" checked="unchecked" />Protein sequence <br />
+    <input type="radio" name="gene_type" value="cdna" checked="checked" /><% $c->i18n->p("lists_datasets.bulk.cdna_sequence", "cDNA sequence") |h %> <br />
+    <input type="radio" name="gene_type" value="cds" checked="unchecked" /><% $c->i18n->p("lists_datasets.bulk.cds_sequence", "CDS sequence") |h %> <br />
+    <input type="radio" name="gene_type" value="protein" checked="unchecked" /><% $c->i18n->p("lists_datasets.bulk.protein_sequence", "Protein sequence") |h %> <br />
 </div>
 </td></tr></table>
 
-<input type="submit" value="Submit" /><br />
+<input type="submit" value="<% $c->i18n->p("lists_datasets.bulk.submit", "Submit") |h %>" /><br />
 </form>

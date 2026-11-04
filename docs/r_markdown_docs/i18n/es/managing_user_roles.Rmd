@@ -1,0 +1,22 @@
+# Gestión de roles de usuario {#managing-user-roles}
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_user_roles_page.png')
+```
+
+## ¿Qué son los roles de usuario? {#what-are-user-roles}
+
+Cada cuenta de usuario de Breedbase tiene uno o más "roles" asociados que determinan las autorizaciones (lo que el usuario puede hacer) en la base de datos. Hay tres roles fundamentales: "curator", "submitter" y "user", que establecen los permisos básicos de lectura y escritura. El estado "curator" permite leer y modificar todos los datos de la base. El estado "submitter" permite añadir información y editar o eliminar información enviada anteriormente. El tipo "user" solo permite leer datos. Hay roles adicionales para los programas de mejoramiento, que a veces se usan para ajustar los permisos de escritura y edición, por ejemplo, para que varios usuarios de un programa puedan editar los datos de los demás.
+
+## Página de gestión de roles de usuario {#the-manage-user-roles-page}
+
+En el menú "Gestionar", seleccione "User Roles". Se mostrarán los usuarios actuales de la base de datos y sus roles. Si ha iniciado sesión como curator, la tabla mostrará los roles del sistema y los de los programas de mejoramiento; si ha iniciado sesión como submitter o user, mostrará la pertenencia a programas.
+
+Si ha iniciado sesión como "curator", puede añadir o eliminar roles.
+
+- Para eliminar un rol, haga clic en la X junto a su nombre. Aparecerá un diálogo de confirmación para evitar eliminaciones accidentales.
+- Para añadir un rol, haga clic en el signo más junto a los roles. Aparecerá un diálogo con la lista de roles. Seleccione el rol deseado y pulse "Enviar".
+- El nuevo rol debería aparecer inmediatamente junto al usuario.
+- Las adiciones y eliminaciones de roles surten efecto de inmediato.
+
+Se recomienda conceder privilegios de "curator" a pocos usuarios para evitar confusiones sobre la propiedad de los datos y sobrescrituras o eliminaciones accidentales.

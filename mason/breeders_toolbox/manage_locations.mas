@@ -9,23 +9,23 @@ $user_id => undef
     'esri-leaflet-geocoder.css'
 ] &>
 
-<& /page/page_title.mas, title=>"Manage Locations" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('locations.manage.title', 'Manage Locations')) &>
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>'Location Table',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_locations_link">Upload New Locations</a>]' &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('locations.manage.table', 'Location Table')),  collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_locations_link">' . HTML::Entities::encode_entities($c->i18n->p('locations.manage.upload', 'Upload New Locations')) . '</a>]' &>
 
 <& /breeders_toolbox/location_table.mas, user_id=>$user_id &>
 
 </&>
 
-<&| /page/info_section.mas, title => 'Copy Locations to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the location names in the table to a new or exisiting list</i>'&>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('locations.manage.copy', 'Copy Locations to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('locations.manage.copy_help', 'Copy the location names in the table to a new or existing list')) . '</i>'&>
 <br>
 <div style="text-align:right" id="locations_to_list_menu"></div>
-<div id="location_names" style="display: none;"></div>
+<textarea id="location_names" readonly style="display: none;"></textarea>
 </&>
 
-<&| /page/info_section.mas, title=>'Location Map',  collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('locations.manage.map', 'Location Map')),  collapsible=>1, collapsed=>0 &>
 
 <& /breeders_toolbox/location_map.mas, user_id=>$user_id &>
 

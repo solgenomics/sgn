@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 confirmation form of selected populations (and some metadata) before combining their dataset.
@@ -17,7 +21,7 @@ $trait_id
 
 
 <& /page/page_title.mas,
-    title => "Confirm" ,
+    title => HTML::Entities::encode_entities($c->i18n->p("global.graphical_filtering.confirm", "Confirm")) ,
 &>
 
 <& populations_list.mas,
@@ -26,6 +30,6 @@ $trait_id
 
 <div>
   <br />
-  <input class="button" type="button" id="confirm" name="confirm" value="Confirm" onclick="confirmSelections();"/>
+  <input class="button" type="button" id="confirm" name="confirm" value="<% $c->i18n->p("global.graphical_filtering.confirm", "Confirm") |h %>" onclick="confirmSelections();"/>
   <input type="hidden" id="trait_id" name="trait_id" value= "<% $trait_id %>" />
 </div>

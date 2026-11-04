@@ -18,6 +18,8 @@ Adds progenies to a cross by using existing accessions in the database. The cros
 =cut
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
@@ -35,6 +37,7 @@ has 'progeny_names' => (isa =>'ArrayRef[Str]', is => 'rw', predicate => 'has_pro
 
 sub add_progenies_existing_accessions {
     my $self = shift;
+    my SGN::I18N $ui_add_progenies_existing_accessions_i18n = SGN::I18N::translate($c);
 	my $overwrite_pedigrees = shift;
     my $chado_schema = $self->get_chado_schema();
     my @progeny_names = @{$self->get_progeny_names()};
@@ -137,7 +140,7 @@ sub add_progenies_existing_accessions {
     };
 
     if ($transaction_error) {
-		$return{error} = "Transaction error adding progenies: $transaction_error";
+		$return{error} = (SGN::I18N::translate($ui_add_progenies_existing_accessions_i18n, "cross.model.progenies_transaction_error", "Transaction error adding progenies: %{transaction_error}", {transaction_error => "" . ($transaction_error)}));
 		return \%return;
     }
 

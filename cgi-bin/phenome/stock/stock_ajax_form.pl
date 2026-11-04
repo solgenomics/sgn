@@ -17,7 +17,9 @@ use CXGN::Contact;
 
 use Try::Tiny;
 
+use SGN::I18N ();
 use JSON;
+use HTML::Entities qw(encode_entities);
 use CatalystX::GlobalContext qw( $c );
 
 
@@ -29,6 +31,7 @@ sub new {
 
 sub define_object {
     my $self = shift;
+    my SGN::I18N $ui_define_object_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my %args      = $self->get_args();
     my $stock_id  = $args{stock_id} || $args{object_id};
     my $user_type = $self->get_user()->get_user_type();
@@ -45,10 +48,10 @@ sub define_object {
 
     if ( $self->get_object()->is_obsolete() == 1 && $user_type ne 'curator' )
     {
-        $json_hash{error}="Stock $stock_id is obsolete!";
+        $json_hash{error}=(SGN::I18N::translate($ui_define_object_i18n, "accession.stock_form.obsolete", "Stock %{stock_id} is obsolete!", {stock_id => "" . ($stock_id)}));
     }
     unless ( ( $stock_id =~ m /^\d+$/ || !$stock_id  )  ) {
-        $json_hash{error}="No stock exists for identifier $stock_id";
+        $json_hash{error}=(SGN::I18N::translate($ui_define_object_i18n, "accession.stock_form.missing", "No stock exists for identifier %{stock_id}", {stock_id => "" . ($stock_id)}));
     }
     $self->set_json_hash(%json_hash);
     $self->set_primary_key("stock_id");
@@ -64,6 +67,8 @@ sub define_object {
 
 sub store {
     my $self=shift;
+    my SGN::I18N $ui_store_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
+    my $ui_store_ui_error;
 
     my $stock    = $self->get_object();
     my $stock_id = $self->get_object_id();
@@ -86,12 +91,14 @@ sub store {
     my $validate;
     if ($message) {
         $error = " Stock $args{uniquename}  already exists in the database ";
+            $ui_store_ui_error = (SGN::I18N::translate($ui_store_i18n, "accession.stock_form.duplicate", " Stock %{name}  already exists in the database ", {name => "" . ($args{uniquename})}));
     }else {
         try{
             $self->SUPER::store(); #this sets $json_hash{validate} if the form validation failed.
             $stock_id = $stock->stock_id() ;
         } catch {
             $error = " An error occurred. Cannot store to the database\n An  email message has been sent to the SGN development team";
+            $ui_store_ui_error = (SGN::I18N::translate($ui_store_i18n, "accession.stock_form.store_failed", " An error occurred. Cannot store to the database\n An  email message has been sent to the SGN development team"));
             CXGN::Contact::send_email('stock_ajax_form.pl died', $error . "\n" . $_ , 'sgn-bugs@sgn.cornell.edu');
         };
     }
@@ -99,7 +106,7 @@ sub store {
 
     %json_hash= $self->get_json_hash();
     $validate= $json_hash{validate};
-    $json_hash{error} = $error if $error;
+    $json_hash{error} = defined($ui_store_ui_error) ? $ui_store_ui_error : $error if $error;
 
     my $refering_page="/stock/$stock_id/view";
     $self->send_form_email({subject=>"[New stock details stored] stock $stock_id", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page}) if (!$validate && !$json_hash{error});
@@ -115,6 +122,7 @@ sub store {
 sub delete {
     ##Delete the stock (actually set obsolete = 't')
     my $self = shift;
+    my SGN::I18N $ui_delete_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $check = $self->check_modify_privileges();
     $self->print_json() if $check ; #error or no user privileges
 
@@ -129,7 +137,7 @@ sub delete {
             $stock->is_obsolete(1) ;
             $stock->store();
         }catch {
-            $json_hash{error} = " An error occurred. Cannot delete stock\n An  email message has been sent to the SGN development team";
+            $json_hash{error} = (SGN::I18N::translate($ui_delete_i18n, "accession.stock_form.delete_failed", " An error occurred. Cannot delete stock\n An  email message has been sent to the SGN development team"));
             $self->send_form_email({subject=>"Stock delete failed!  ($stock_name) $_", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page, action=>'delete'});
         };
         $json_hash{reload} = 1;
@@ -143,6 +151,7 @@ sub delete {
 
 sub generate_form {
     my $self = shift;
+    my SGN::I18N $ui_generate_form_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $form_id = 'edit_stock'; # a form_id is required for ajax forms
 
     $self->init_form($form_id) ; ## instantiate static/editable/confirmStore form
@@ -170,7 +179,7 @@ sub generate_form {
 
     if ( $self->get_action =~ /new|store|edit/ ) {
         $form->add_field(
-            display_name => "Organism",
+            display_name => encode_entities($c->i18n->p('stock_search.column.organism', 'Organism'), q{&<>"'}),
             field_name   => "Organism",
             id           => "species_name",
             object       => $stock,
@@ -179,7 +188,7 @@ sub generate_form {
             autocomplete => '/ajax/organism/autocomplete',
             );
         $self->get_form->add_select(
-            display_name       => "Stock type",
+            display_name       => encode_entities($c->i18n->p('stock.form.type', 'Stock type'), q{&<>"'}),
             field_name         => "type_id",
             contents           => $stock->type_id(),
             length             => 20,
@@ -192,26 +201,26 @@ sub generate_form {
     }
     if ( $stock->is_obsolete()  ) {
         $form->add_label(
-            display_name => "Status",
+            display_name => encode_entities((SGN::I18N::translate($ui_generate_form_i18n, "global.dataset_publish.status.heading", "Status")), q{&<>"'}),
             field_name   => "obsolete_stat",
-            contents     => 'OBSOLETE',
+            contents     => encode_entities((SGN::I18N::translate($ui_generate_form_i18n, "accession.stock_form.obsolete_status", "OBSOLETE")), q{&<>"'}),
             );
     }
     if ( $self->get_action =~ /view/ ) {
         $form->add_label(
-            display_name => "Organism",
+            display_name => encode_entities($c->i18n->p('stock_search.column.organism', 'Organism'), q{&<>"'}),
             field_name   => "stock_organism",
             contents => $species ? qq|<a href="/organism/$organism_id/view"> | . $species . "</a>" : '',
             );
         $form->add_label(
-            display_name => "Stock type",
+            display_name => encode_entities($c->i18n->p('stock.form.type', 'Stock type'), q{&<>"'}),
             field_name   => "stock_type",
             contents => $stock->type() ,
             );
     }
 
     $form->add_field(
-        display_name => "Uniquename ",
+        display_name => encode_entities($c->i18n->p('stock.form.uniquename', 'Uniquename '), q{&<>"'}),
         field_name   => "uniquename",
         object       => $stock,
         getter       => "uniquename",
@@ -220,7 +229,7 @@ sub generate_form {
         );
 
     $form->add_textarea(
-        display_name => "Description",
+        display_name => encode_entities($c->i18n->p('accessions.column.description', 'Description'), q{&<>"'}),
         field_name   => "description",
         object       => $stock,
         getter       => "description",

@@ -1,66 +1,66 @@
 <div class="text-center">
-    <p>Last step! Here you can edit additional layout settings and/or save your design.</p>
-    <p>When you are ready, click 'Download pdf' to generate your labels. If you are trying to download a very large set, you will be given the option to download your labels in batches.</p>
+    <p><% $c->i18n->p("barcode.mason.last_step_here_you_can_edit_additional_layout_settings_and", "Last step! Here you can edit additional layout settings and/or save your design.") |h %></p>
+    <p><% $c->i18n->p("barcode.mason.when_you_are_ready_click_download_pdf_to_generate_your", "When you are ready, click 'Download pdf' to generate your labels. If you are trying to download a very large set, you will be given the option to download your labels in batches.") |h %></p>
 </div>
 <div id="save-labels-display"></div>
 <div style="clear: both"></div>
 <div style="margin-top: 40px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px 40px">
     <div>
-        <label>Sort Labels By:</label>
+        <label><% $c->i18n->p("barcode.mason.sort_labels_by", "Sort Labels By:") |h %></label>
         <select class="form-control" id="sort_order_1" name="sort_by" style="max-width: 300px"></select>
     </div>
 
     <!-- Additional Sort Options -->
     <div id="sort_order_2_container" style="display: none">
-        <label>...Then by:<span style="font-size: 60%; margin-left: 15px; padding: 5px; border-radius: 5px; background-color: #ccc;">Optional</span></label>
+        <label><% $c->i18n->p("barcode.mason.then_by", "...Then by:") |h %><span style="font-size: 60%; margin-left: 15px; padding: 5px; border-radius: 5px; background-color: #ccc;"><% $c->i18n->p("accession.stock.optional", "Optional") |h %></span></label>
         <select class="form-control" id="sort_order_2" name="sort_by" style="max-width: 300px"></select>
     </div>
     <div id="sort_order_3_container" style="display: none">
-        <label>...Then by:<span style="font-size: 60%; margin-left: 15px; padding: 5px; border-radius: 5px; background-color: #ccc;">Optional</span></label>
+        <label><% $c->i18n->p("barcode.mason.then_by", "...Then by:") |h %><span style="font-size: 60%; margin-left: 15px; padding: 5px; border-radius: 5px; background-color: #ccc;"><% $c->i18n->p("accession.stock.optional", "Optional") |h %></span></label>
         <select class="form-control" id="sort_order_3" name="sort_by" style="max-width: 300px"></select>
     </div>
 
     <!-- Trial Layout Sort Options -->
     <div id="sort_order_layout_order_container" style="display: none">
-        <label>...Plot Order:</label>
+        <label><% $c->i18n->p("barcode.mason.plot_order", "...Plot Order:") |h %></label>
         <select class="form-control" id="sort_order_layout_order" name="sort_by" style="max-width: 300px">
-            <option value="by_col_serpentine">By Column: Serpentine</option>
-            <option value="by_col_zigzag">By Column: Zigzag</option>
-            <option value="by_row_serpentine">By Row: Serpentine</option>
-            <option value="by_row_zigzag">By Row: Zigzag</option>
+            <option value="by_col_serpentine"><% $c->i18n->p("fieldbook.export.column_serpentine", "By Column: Serpentine") |h %></option>
+            <option value="by_col_zigzag"><% $c->i18n->p("fieldbook.export.column_zigzag", "By Column: Zigzag") |h %></option>
+            <option value="by_row_serpentine"><% $c->i18n->p("fieldbook.export.row_serpentine", "By Row: Serpentine") |h %></option>
+            <option value="by_row_zigzag"><% $c->i18n->p("fieldbook.export.row_zigzag", "By Row: Zigzag") |h %></option>
         </select>
     </div>
     <div id="sort_order_layout_start_container" style="display: none">
-        <label>...Starting Plot:</label>
+        <label><% $c->i18n->p("barcode.mason.starting_plot", "...Starting Plot:") |h %></label>
         <select class="form-control" id="sort_order_layout_start" name="sort_by" style="max-width: 300px">
-            <option value="bottom_left">Bottom Left</option>
-            <option value="top_left">Top Left</option>
-            <option value="top_right">Top Right</option>
-            <option value="bottom_right">Bottom Right</option>
+            <option value="bottom_left"><% $c->i18n->p("fieldbook.export.bottom_left", "Bottom Left") |h %></option>
+            <option value="top_left"><% $c->i18n->p("fieldbook.export.top_left", "Top Left") |h %></option>
+            <option value="top_right"><% $c->i18n->p("fieldbook.export.top_right", "Top Right") |h %></option>
+            <option value="bottom_right"><% $c->i18n->p("fieldbook.export.bottom_right", "Bottom Right") |h %></option>
         </select>
     </div>
 </div>
 <div style="margin-top: 40px; margin-bottom: 40px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px 40px">
     <div>
-        <label>Set margins, # of rows/cols, etc:</label>
+        <label><% $c->i18n->p("barcode.mason.set_margins_of_rows_cols_etc", "Set margins, # of rows/cols, etc:") |h %></label>
         <div class="input-group">
-            <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
+            <button class="btn btn-primary" id="edit_additional_settings"><% $c->i18n->p("barcode.mason.edit_additional_settings", "Edit Additional Settings") |h %></button>
         </div>
     </div>
     <div>
-        <label>Save Label Design:</label>
+        <label><% $c->i18n->p("barcode.mason.save_label_design", "Save Label Design:") |h %></label>
         <div class="input-group" id="save_design_div">
-            <input type="text" id="save_design_name" class="form-control" placeholder="Enter a name" />
+            <input type="text" id="save_design_name" class="form-control" placeholder="<% $c->i18n->p("phenotype.enter_a_name", "Enter a name") |h %>" />
             <span class="input-group-btn">
-                <button class="btn btn-default" id="d3-save-button" type="button">Save</button>
+                <button class="btn btn-default" id="d3-save-button" type="button"><% $c->i18n->p("account.quick_create.save", "Save") |h %></button>
             </span>
         </div>
     </div>
     <div>
-        <label>Download Labels:</label>
+        <label><% $c->i18n->p("barcode.mason.download_labels", "Download Labels:") |h %></label>
         <div class="input-group">
-            <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none;">Download pdf</button>
-            <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none;">Download zpl file</button>
+            <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none;"><% $c->i18n->p("barcode.mason.download_pdf", "Download pdf") |h %></button>
+            <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none;"><% $c->i18n->p("barcode.mason.download_zpl_file", "Download zpl file") |h %></button>
         </div>
     </div>
 </div>

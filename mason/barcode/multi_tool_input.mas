@@ -13,40 +13,40 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 <form class="form-horizontal" role="form" method="GET" action="/barcode/multitool">
   <div class="form-group form-group-sm">
-    <label class="col-sm-2 control-label">Operator: </label>
+    <label class="col-sm-2 control-label"><% $c->i18n->p("seedlot_maintenance_table.ui.operator", "Operator:") |h %> </label>
     <div class="col-sm-10">
       <input type="text" class="form-control" id="operator" name="operator" />
     </div>
   </div>
   <div class="form-group form-group-sm">
-    <label class="col-sm-2 control-label">Date: </label>
+    <label class="col-sm-2 control-label"><% $c->i18n->p("seedlot_maintenance_table.ui.date", "Date:") |h %> </label>
     <div class="col-sm-10">
-      <input type="text" class="form-control" id="date" name="date" value="<% $date %>" placeholder="Format: YYYY/MM/DD" />
+      <input type="text" class="form-control" id="date" name="date" value="<% $date %>" placeholder="<% $c->i18n->p("barcode.mason.format_yyyy_mm_dd.8b5a42f", "Format: YYYY/MM/DD") |h %>" />
     </div>
   </div>
   <div class="form-group form-group-sm">
-    <label class="col-sm-2 control-label">Location: </label>
+    <label class="col-sm-2 control-label"><% $c->i18n->p("seedlot_record.ui.location", "Location:") |h %> </label>
     <div class="col-sm-10">
       <& /page/html_select.mas, name=>'location', choices=>\@locations &>
-      <br/>[<a href="/breeders/locations">Add New Location</a>]
+      <br/>[<a href="/breeders/locations"><% $c->i18n->p("barcode.mason.add_new_location.5fd142a", "Add New Location") |h %></a>]
     </div>
   </div>
   <div class="form-group form-group-sm">
-    <label class="col-sm-2 control-label">Project: </label>
+    <label class="col-sm-2 control-label"><% $c->i18n->p("barcode.mason.project", "Project:") |h %> </label>
     <div class="col-sm-10">
       <& /page/html_select.mas, name=>'project', choices=>\@projects &>
-      <br/>[<a href="/breeders/trials">Add New Project</a>]
+      <br/>[<a href="/breeders/trials"><% $c->i18n->p("barcode.mason.add_new_project.0a2a981", "Add New Project") |h %></a>]
     </div>
   </div>
   <div class="form-group form-group-sm">
-    <label class="col-sm-2 control-label">Trait(s): </label>
+    <label class="col-sm-2 control-label"><% $c->i18n->p("trial.card.deletion.traits", "Trait(s):") |h %> </label>
     <div class="col-sm-10">
       <select multiple class="form-control" id="cvterms" name="cvterms">
 <%perl>
 foreach my $t (@available_cvterms) {
    if ($t =~ /\#/) { next; }
    my ($cvterm, $version, $priority, $values, $description) = split /\t/, $t;
-   if ($priority) { 
+   if ($priority) {
      print qq { <option value="$cvterm">$description</option> };
    }
 }
@@ -55,7 +55,7 @@ foreach my $t (@available_cvterms) {
 
     </div>
   </div>
-  <button style="float:right" type="submit" class="btn btn-info btn-sm" type="submit" value="generate form">Generate Form</button>
+  <button style="float:right" type="submit" class="btn btn-info btn-sm" type="submit" value="generate form"><% $c->i18n->p("barcode.mason.generate_form", "Generate Form") |h %></button>
 </form>
 
 <br/>
@@ -64,12 +64,12 @@ foreach my $t (@available_cvterms) {
 <form method="GET" action="/barcode/multitool">
 <table>
 
-<tr><td>Operator </td><td><input id="operator" name="operator" /></td></tr>
-<tr><td>Date </td><td><input id="date" name="date" value="<% $date %>" /> (format: YYYY/MM/DD)</td></tr>
-<tr><td>Location</td><td>
-    <& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home">Add new location</a>]</td></tr> 
-<tr><td>Project</td><td>
-    <& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home">Add new project</a>]</td></tr>
+<tr><td><% $c->i18n->p("cross.ui.operator", "Operator") |h %> </td><td><input id="operator" name="operator" /></td></tr>
+<tr><td><% $c->i18n->p("global.file_dump_share_files.date", "Date") |h %> </td><td><input id="date" name="date" value="<% $date %>" /> <% $c->i18n->p("barcode.mason.format_yyyy_mm_dd.40165fd", "(format: YYYY/MM/DD)") |h %></td></tr>
+<tr><td><% $c->i18n->p("global.search.features.location", "Location") |h %></td><td>
+    <& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home"><% $c->i18n->p("barcode.mason.add_new_location.d1c6586", "Add new location") |h %></a>]</td></tr>
+<tr><td><% $c->i18n->p("global.search_wizard.project", "Project") |h %></td><td>
+    <& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home"><% $c->i18n->p("barcode.mason.add_new_project.39aa756", "Add new project") |h %></a>]</td></tr>
 </table>
 
 
@@ -78,7 +78,7 @@ foreach my $t (@available_cvterms) {
 foreach my $t (@available_cvterms) {
    if ($t =~ /\#/) { next; }
    my ($cvterm, $version, $priority, $values, $description) = split /\t/, $t;
-   if ($priority) { 
+   if ($priority) {
      print qq { <option value="$cvterm">$description</option> };
    }
 }

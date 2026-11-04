@@ -5,12 +5,14 @@
 </%args>
 
 
-<& /page/page_title.mas, title => 'Reports' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("jobs.interface.reports", "Reports")) &>
 
 <ul>
-  <li><a href="/reports/overview/">Overview</a></li>
-  <li><a href="/reports/trials">Trials</a></li>
+  <li><a href="/reports/overview/"><% $c->i18n->p("jobs.interface.overview", "Overview") |h %></a></li>
+  <li><a href="/reports/trials"><% $c->i18n->p("accession.stock.trials.title", "Trials") |h %></a></li>
 
 </ul>
 
-
+<%once>
+use HTML::Entities ();
+</%once>

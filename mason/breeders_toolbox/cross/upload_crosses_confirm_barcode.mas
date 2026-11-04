@@ -1,4 +1,4 @@
 <%args>
 </%args>
 
-Spreadsheet feature not implemented yet
+<% $c->i18n->p("cross.forms.spreadsheet_feature_not_implemented_yet", "Spreadsheet feature not implemented yet") |h %>

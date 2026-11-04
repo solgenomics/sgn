@@ -5,7 +5,7 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<a href="/search/download_cross_entries" class="btn btn-sm btn-default">Download All Cross Entries</a>
+<a href="/search/download_cross_entries" class="btn btn-sm btn-default"><% $c->i18n->p("cross.pages.download_all_cross_entries", "Download All Cross Entries") |h %></a>
 </br>
 </br>
 <div style="overflow:scroll">
@@ -23,26 +23,26 @@ jQuery(document).ready(function(){
             'destroy': true,
             'ajax':'/ajax/search/all_cross_entries',
             columns: [
-                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
-                { title: "Cross Type", "data": "cross_type" },
-                { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>"; } },
-                { title: "Female Ploidy", "data": "female_ploidy" },
-                { title: "Female Genome Structure", "data": "female_genome_structure" },
-                { title: "Male Parent", "data": null, "render": function ( data, type, row ) {
+                { title: jQuery("<span>").text((SGN.t("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: jQuery("<span>").text((SGN.t("accession.related_stock.header.cross_type_upper", "Cross Type"))).html(), "data": "cross_type" },
+                { title: jQuery("<span>").text((SGN.t("accession.related_stock.header.female_parent", "Female Parent"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>"; } },
+                { title: jQuery("<span>").text((SGN.t("cross.ui.female_ploidy", "Female Ploidy"))).html(), "data": "female_ploidy" },
+                { title: jQuery("<span>").text((SGN.t("cross.pages.female_genome_structure", "Female Genome Structure"))).html(), "data": "female_genome_structure" },
+                { title: jQuery("<span>").text((SGN.t("accession.related_stock.header.male_parent", "Male Parent"))).html(), "data": null, "render": function ( data, type, row ) {
                     if (row.male_parent_id === null){
                         return 'NA';
                     } else {
                         return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>";
                     }
                 }},
-                { title: "Male Ploidy", "data": "male_ploidy" },
-                { title: "Male Genome Structure", "data": "male_genome_structure" },
-                { title: "Pollination Date", "data": "pollination_date" },
-                { title: "Number of Seeds", "data": "number_of_seeds" },
-                { title: "Number of Progenies", "data": "progeny_count" },
-                { title: "Crossing Experiment", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.project_id+"'>"+row.project_name+"</a>"; } },
-                { title: "Description", "data": "project_description" },
-                { title: "Location", "data": "project_location" },
+                { title: jQuery("<span>").text((SGN.t("cross.ui.male_ploidy", "Male Ploidy"))).html(), "data": "male_ploidy" },
+                { title: jQuery("<span>").text((SGN.t("cross.pages.male_genome_structure", "Male Genome Structure"))).html(), "data": "male_genome_structure" },
+                { title: jQuery("<span>").text((SGN.t("cross.pages.pollination_date", "Pollination Date"))).html(), "data": "pollination_date" },
+                { title: jQuery("<span>").text((SGN.t("cross.ui.number_of_seeds", "Number of Seeds"))).html(), "data": "number_of_seeds" },
+                { title: jQuery("<span>").text((SGN.t("accession.usage.header.progenies", "Number of Progenies"))).html(), "data": "progeny_count" },
+                { title: jQuery("<span>").text((SGN.t("cross.ui.crossing_experiment.1594653", "Crossing Experiment"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.project_id+"'>"+row.project_name+"</a>"; } },
+                { title: jQuery("<span>").text((SGN.t("global.dataset_cxgn_dataset.table.description", "Description"))).html(), "data": "project_description" },
+                { title: jQuery("<span>").text((SGN.t("global.search.features.location", "Location"))).html(), "data": "project_location" },
             ],
         });
     });

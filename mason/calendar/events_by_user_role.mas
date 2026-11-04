@@ -17,8 +17,8 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="calendarDialog">Your Calendar</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("community.calendar.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="calendarDialog"><% $c->i18n->p("community.calendar.your_calendar", "Your Calendar") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -28,14 +28,14 @@
 
             <div class="well well-sm">
                 <center>
-                    <p><b>Having trouble viewing events on the calendar?</b> <br/>Are you associated with the breeding program you are interested in viewing?</p>
-                    <a class="btn btn-primary" id="calendar_bp_user_roles_show" href="/breeders/manage_roles/">Calendar Permissions</a>
+                    <p><b><% $c->i18n->p("community.calendar.having_trouble_viewing_events_on_the_calendar", "Having trouble viewing events on the calendar?") |h %></b> <br/><% $c->i18n->p("community.calendar.are_you_associated_with_the_breeding_program_you_are_interested_in_viewing", "Are you associated with the breeding program you are interested in viewing?") |h %></p>
+                    <a class="btn btn-primary" id="calendar_bp_user_roles_show" href="/breeders/manage_roles/"><% $c->i18n->p("community.calendar.calendar_permissions", "Calendar Permissions") |h %></a>
                 </center>
             </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("community.calendar.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -47,26 +47,26 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addEventDialog">Add New Event</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("community.calendar.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addEventDialog"><% $c->i18n->p("community.calendar.add_new_event", "Add New Event") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
   	  <form class="form-horizontal" role="form" name="day_dialog_add_event_form" id="day_dialog_add_event_form">
     	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Project: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.project", "Project:") |h %> </label>
       	      <div class="col-sm-10">
 		<select class="form-control" name="event_project_select" id="event_project_select"></select>
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Event Type: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.event_type", "Event Type:") |h %> </label>
       	      <div class="col-sm-10">
 	        <select class="form-control" name="event_type_select" id="event_type_select" ></select>
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Start: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.start", "Start:") |h %> </label>
       	      <div class="col-sm-10">
 	        <div class="input-group date">
     		  <input type="text" class="form-control datepicker" name="event_start" id="event_start">
@@ -77,10 +77,10 @@
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">End: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.end", "End:") |h %> </label>
       	      <div class="col-sm-10">
 	        <div class="input-group date">
-    		  <input type="text" class="form-control datepicker" name="event_end" id="event_end" placeholder="Leave Blank if Not Applicable">
+                  <input type="text" class="form-control datepicker" name="event_end" id="event_end" placeholder="<% $c->i18n->p("community.calendar.leave_blank_if_not_applicable", "Leave Blank if Not Applicable") |h %>">
     		  <div class="input-group-addon">
         	    <span class="glyphicon glyphicon-th"></span>
     		  </div>
@@ -88,13 +88,13 @@
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Description: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.description", "Description:") |h %> </label>
       	      <div class="col-sm-10">
 		<input class="form-control" name="event_description" id="event_description" type="text" >
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Web URL: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.web_url", "Web URL:") |h %> </label>
       	      <div class="col-sm-10">
 	        <div class="input-group">
 		  <span class="input-group-addon" id="basic-addon2">http://www.</span>
@@ -106,8 +106,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="add_event_submit" id="add_event_submit">Add Event</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("community.calendar.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="add_event_submit" id="add_event_submit"><% $c->i18n->p("community.calendar.add_event", "Add Event") |h %></button>
       </div>
     </div>
   </div>
@@ -117,44 +117,44 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="eventDialog">Event Info</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("community.calendar.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="eventDialog"><% $c->i18n->p("community.calendar.event_info", "Event Info") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 	  <table class="table table-hover">
 	    <thead>
 	      <tr>
-	        <th>Attribute</th>
-	        <th>Value</th>
+	        <th><% $c->i18n->p("community.calendar.attribute", "Attribute") |h %></th>
+	        <th><% $c->i18n->p("community.calendar.value", "Value") |h %></th>
 	      </tr>
 	    </thead>
 	    <tbody>
     	      <tr>
-      	        <td>Project Name: </td>
+                <td><% $c->i18n->p("community.calendar.project_name", "Project Name:") |h %> </td>
       	        <td id="event_info_title"></td>
     	      <tr>
     	      <tr>
-      	        <td>Start Date: </td>
+                <td><% $c->i18n->p("community.calendar.start_date", "Start Date:") |h %> </td>
       	        <td id="event_info_start_display"></td>
 		<input id="event_info_start" type="hidden" />
     	      </tr>
     	      <tr>
-      	        <td>End Date: </td>
+                <td><% $c->i18n->p("community.calendar.end_date", "End Date:") |h %> </td>
       	        <td id="event_info_end_display"></td>
 		<input id="event_info_end" type="hidden" />
     	      </tr>
     	      <tr>
-      	        <td>Event Type: </td>
+                <td><% $c->i18n->p("community.calendar.event_type", "Event Type:") |h %> </td>
       	        <td id="event_info_property"></td>
 		<input id="event_info_cvterm_id" type="hidden" />
     	      </tr>
     	      <tr>
-      	        <td>Event Description: </td>
+                <td><% $c->i18n->p("community.calendar.event_description", "Event Description:") |h %> </td>
       	        <td id="event_info_description"></td>
     	      </tr>
     	      <tr>
-      	        <td>Event Web URL: </td>
+                <td><% $c->i18n->p("community.calendar.event_web_url", "Event Web URL:") |h %> </td>
       	        <td id="event_info_url"></td>
 		<input id="event_info_url_raw" type="hidden" />
     	      </tr>
@@ -170,10 +170,10 @@
 	<form name="event_dialog_delete_event_form" id="event_dialog_delete_event_form">
           <input type="hidden" name="event_projectprop_id" id="event_projectprop_id" />
         </form>
-	<button type="button" class="btn btn-primary" name="event_edit_display" id="event_edit_display">Edit Event</button>
-	<button type="button" class="btn btn-danger" name="delete_event_submit" id="delete_event_submit">Delete Event</button>
-	<button type="button" class="btn btn-info" name="export_event_display" id="export_event_display">Export Event</button>
-	<button type="button" class="btn btn-default" data-dismiss="modal" id="event_dialog_dismiss">Close</button>
+	<button type="button" class="btn btn-primary" name="event_edit_display" id="event_edit_display"><% $c->i18n->p("community.calendar.edit_event", "Edit Event") |h %></button>
+	<button type="button" class="btn btn-danger" name="delete_event_submit" id="delete_event_submit"><% $c->i18n->p("community.calendar.delete_event", "Delete Event") |h %></button>
+	<button type="button" class="btn btn-info" name="export_event_display" id="export_event_display"><% $c->i18n->p("community.calendar.export_event", "Export Event") |h %></button>
+	<button type="button" class="btn btn-default" data-dismiss="modal" id="event_dialog_dismiss"><% $c->i18n->p("community.calendar.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -184,26 +184,26 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="editEventDialog">Edit Event</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("community.calendar.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="editEventDialog"><% $c->i18n->p("community.calendar.edit_event", "Edit Event") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
   	  <form class="form-horizontal" role="form" name="edit_event_form" id="edit_event_form">
     	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Project: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.project", "Project:") |h %> </label>
       	      <div class="col-sm-10">
 		<select class="form-control" name="edit_event_project_select" id="edit_event_project_select"></select>
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Event Type: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.event_type", "Event Type:") |h %> </label>
       	      <div class="col-sm-10">
 		<select class="form-control" name="edit_event_type_select" id="edit_event_type_select" ></select>
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Start: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.start", "Start:") |h %> </label>
       	      <div class="col-sm-10">
 	        <div class="input-group date">
     		  <input type="text" class="form-control datepicker" name="edit_event_start" id="edit_event_start">
@@ -214,10 +214,10 @@
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">End: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.end", "End:") |h %> </label>
       	      <div class="col-sm-10">
 	        <div class="input-group date">
-    		  <input type="text" class="form-control datepicker" name="edit_event_end" id="edit_event_end" placeholder="Leave Blank if Not Applicable">
+                  <input type="text" class="form-control datepicker" name="edit_event_end" id="edit_event_end" placeholder="<% $c->i18n->p("community.calendar.leave_blank_if_not_applicable", "Leave Blank if Not Applicable") |h %>">
     		  <div class="input-group-addon">
         	    <span class="glyphicon glyphicon-th"></span>
     		  </div>
@@ -225,13 +225,13 @@
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Description: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.description", "Description:") |h %> </label>
       	      <div class="col-sm-10">
 		<input class="form-control" name="edit_event_description" id="edit_event_description" type="text" >
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Web URL: </label>
+              <label class="col-sm-2 control-label"><% $c->i18n->p("community.calendar.web_url", "Web URL:") |h %> </label>
       	      <div class="col-sm-10">
 		<input type="hidden" id="edit_event_projectprop_id" name="edit_event_projectprop_id" />
   		<input type="text" name="edit_event_url" id="edit_event_url" class="form-control" placeholder="example.com">
@@ -241,8 +241,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="edit_event_submit" id="edit_event_submit">Save</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("community.calendar.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="edit_event_submit" id="edit_event_submit"><% $c->i18n->p("community.calendar.save", "Save") |h %></button>
       </div>
     </div>
   </div>
@@ -251,6 +251,20 @@
 
 
 <script>
+
+function calendarDisplayOptions() {
+    if (!window.SGN || !SGN.i18n || SGN.i18n.locale === "en") return {};
+    return {
+monthNames: [(SGN.t("community.calendar.january", "January")), (SGN.t("community.calendar.february", "February")), (SGN.t("community.calendar.march", "March")), (SGN.t("community.calendar.april", "April")), (SGN.t("community.calendar.may", "May")), (SGN.t("community.calendar.june", "June")), (SGN.t("community.calendar.july", "July")), (SGN.t("community.calendar.august", "August")), (SGN.t("community.calendar.september", "September")), (SGN.t("community.calendar.october", "October")), (SGN.t("community.calendar.november", "November")), (SGN.t("community.calendar.december", "December"))],
+        monthNamesShort: [(SGN.t("community.calendar.jan", "Jan")), (SGN.t("community.calendar.feb", "Feb")), (SGN.t("community.calendar.mar", "Mar")), (SGN.t("community.calendar.apr", "Apr")), (SGN.t("community.calendar.may", "May")), (SGN.t("community.calendar.jun", "Jun")), (SGN.t("community.calendar.jul", "Jul")), (SGN.t("community.calendar.aug", "Aug")), (SGN.t("community.calendar.sep", "Sep")), (SGN.t("community.calendar.oct", "Oct")), (SGN.t("community.calendar.nov", "Nov")), (SGN.t("community.calendar.dec", "Dec"))],
+        dayNames: [(SGN.t("community.calendar.sunday", "Sunday")), (SGN.t("community.calendar.monday", "Monday")), (SGN.t("community.calendar.tuesday", "Tuesday")), (SGN.t("community.calendar.wednesday", "Wednesday")), (SGN.t("community.calendar.thursday", "Thursday")), (SGN.t("community.calendar.friday", "Friday")), (SGN.t("community.calendar.saturday", "Saturday"))],
+        dayNamesShort: [(SGN.t("community.calendar.sun", "Sun")), (SGN.t("community.calendar.mon", "Mon")), (SGN.t("community.calendar.tue", "Tue")), (SGN.t("community.calendar.wed", "Wed")), (SGN.t("community.calendar.thu", "Thu")), (SGN.t("community.calendar.fri", "Fri")), (SGN.t("community.calendar.sat", "Sat"))],
+        buttonText: {today: (SGN.t("community.calendar.today", "today")), month: (SGN.t("community.calendar.month", "month")), week: (SGN.t("community.calendar.week", "week")), day: (SGN.t("community.calendar.day", "day")), prev: (SGN.t("community.calendar.prev", "prev")), next: (SGN.t("community.calendar.next", "next")), prevYear: (SGN.t("community.calendar.prev_year", "prev year")), nextYear: (SGN.t("community.calendar.next_year", "next year")), year: (SGN.t("community.calendar.year", "year"))},
+        allDayText: (SGN.t("community.calendar.all_day", "all-day")),
+        isRTL: SGN.i18n.dir === "rtl"
+    };
+}
+
 
 jQuery(document).ready(function() {
 
@@ -305,8 +319,7 @@ jQuery(document).ready(function() {
     };
 
     var lastView;
-    jQuery('#calendar').fullCalendar({
-        editable: true,
+    jQuery('#calendar').fullCalendar(jQuery.extend({}, calendarDisplayOptions(), {        editable: true,
         eventLimit: true,
         lazyFetching: false,
         header: {
@@ -324,7 +337,8 @@ jQuery(document).ready(function() {
         },
         eventSources: [fcSources.month_view, fcSources.agendaWeek_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
         defaultView: 'month',
-        googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q',
+        // Existing public browser API key from upstream; not a server credential.
+        googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q', // gitleaks:allow
         eventRender: function(event, element, view) {
             if (!event.url) {
                 element.find('.fc-title').html(event.title + ": " + event.property ); 
@@ -350,7 +364,7 @@ jQuery(document).ready(function() {
                     return;
                 },
                 error: function() {
-                    alert("Error preparing Day dialog!");
+                    alert((SGN.t("community.calendar.error_preparing_day_dialog", "Error preparing Day dialog!")));
                 }
             });
             jQuery('#day_dialog').modal('show');
@@ -380,10 +394,10 @@ jQuery(document).ready(function() {
         },
         eventMouseover: function(event, jsEvent) {
             if (event.url) {
-                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: 'Location: ' + event.location + '<br/>Description: ' + event.description,}).popover('show');
+                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: jQuery("<span>").text((SGN.t("community.calendar.location", "Location: "))).html() + event.location + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.description_ebc5574", "Description: "))).html() + event.description,}).popover('show');
                 return false;
             } else {
-                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: 'Start: ' + event.start_display + '<br/>End: ' + event.end_display + '<br/>Type: ' + event.property + '<br/>Description: ' + event.event_description + '<br/>URL: ' + event.event_url,}).popover('show');
+                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: jQuery("<span>").text((SGN.t("community.calendar.start_00308aa", "Start: "))).html() + event.start_display + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.end_fb3ce79", "End: "))).html() + event.end_display + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.type", "Type: "))).html() + event.property + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.description_ebc5574", "Description: "))).html() + event.event_description + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.url", "URL: "))).html() + event.event_url,}).popover('show');
                 return false;
               }
         },
@@ -392,7 +406,7 @@ jQuery(document).ready(function() {
             return false;
         },
         eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
-            if (!confirm("Are you sure about this change?")) {
+            if (!confirm((SGN.t("community.calendar.are_you_sure_about_this_change", "Are you sure about this change?")))) {
                 revertFunc();
                 return;
             }
@@ -414,9 +428,9 @@ jQuery(document).ready(function() {
                 }),
                 success: function(data) {
                     if (data.status ==3) {
-                        alert("You do not have the permissions to edit this event.");
+                        alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_edit_this_event", "You do not have the permissions to edit this event.")));
                     } else if (data.error ==1) {
-                        alert("The was a problem editing this event.");
+                        alert((SGN.t("community.calendar.the_was_a_problem_editing_this_event", "The was a problem editing this event.")));
                     } else if (data.success == 1) {
                         event.start = data.start;
                         event.start_drag = data.start_drag;
@@ -430,12 +444,12 @@ jQuery(document).ready(function() {
                 },
                 error: function() {
                     revertFunc();
-                    alert("Error! Did Not Update Event! E.001");
+                    alert((SGN.t("community.calendar.error_did_not_update_event_e_001", "Error! Did Not Update Event! E.001")));
                 }
             });
         },
         eventResize: function(event, delta, revertFunc, jsEvent, ui, view) {
-            if (!confirm("Are you sure about this change?")) {
+            if (!confirm((SGN.t("community.calendar.are_you_sure_about_this_change", "Are you sure about this change?")))) {
                 revertFunc();
                 return;
             }
@@ -457,9 +471,9 @@ jQuery(document).ready(function() {
                 }),
                 success: function(data) {
                     if (data.status ==3) {
-                        alert("You do not have the permissions to edit this event.");
+                        alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_edit_this_event", "You do not have the permissions to edit this event.")));
                     } else if (data.error ==1) {
-                        alert("The was a problem editing this event.");
+                        alert((SGN.t("community.calendar.the_was_a_problem_editing_this_event", "The was a problem editing this event.")));
                     } else if (data.success == 1) {
                         event.start = data.start;
                         event.start_drag = data.start_drag;
@@ -473,11 +487,11 @@ jQuery(document).ready(function() {
                 },
                 error: function() {
                     revertFunc();
-                    alert("Error! Did Not Update Event! E.001");
+                    alert((SGN.t("community.calendar.error_did_not_update_event_e_001", "Error! Did Not Update Event! E.001")));
                 }
             });
         },
-    });
+    }));
 
     jQuery('button#add_event_submit').click( function(event) {
         event.preventDefault();
@@ -488,17 +502,17 @@ jQuery(document).ready(function() {
             data: jQuery('form#day_dialog_add_event_form').serialize(),
             success: function(data) {
                 if(data.status == 1){
-                    alert("Event Successfully Added!");
+                    alert((SGN.t("community.calendar.event_successfully_added", "Event Successfully Added!")));
                     jQuery('#day_dialog').modal('hide');
                     jQuery('#calendar').fullCalendar('refetchEvents');
                 }else if(data.status == 2){
-                    alert("Error! Event Not Added! E.002");
+                    alert((SGN.t("community.calendar.error_event_not_added_e_002", "Error! Event Not Added! E.002")));
                 }else if(data.status == 3){
-                    alert("You do not have the permissions to add an event.");
+                    alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_add_an_event", "You do not have the permissions to add an event.")));
                 }
             },
             error: function() {
-                alert("Error! Event Not Added! E.001");
+                alert((SGN.t("community.calendar.error_event_not_added_e_001", "Error! Event Not Added! E.001")));
             }
         });
     });
@@ -506,7 +520,7 @@ jQuery(document).ready(function() {
     jQuery('button#delete_event_submit').click( function(event) {
         event.preventDefault();
         jQuery('button#export_event_display').popover('hide');
-        if (!confirm("Are you sure you want to delete this event?")) {
+        if (!confirm((SGN.t("community.calendar.are_you_sure_you_want_to_delete_this_event", "Are you sure you want to delete this event?")))) {
             return;
         }
         jQuery.ajax({
@@ -518,13 +532,13 @@ jQuery(document).ready(function() {
                 jQuery('#event_dialog').modal('hide');
                 jQuery('#calendar').fullCalendar( 'refetchEvents' );
                 if (data.status==3){
-                    alert("You do not have the permissions to delete an event.");
+                    alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_delete_an_event", "You do not have the permissions to delete an event.")));
                 } else if (data.status==0){
-                    alert("The event was not deleted!");
+                    alert((SGN.t("community.calendar.the_event_was_not_deleted", "The event was not deleted!")));
                 }
             },
             error: function() {
-                alert("Did Not Delete Event! E.001");
+                alert((SGN.t("community.calendar.did_not_delete_event_e_001", "Did Not Delete Event! E.001")));
             }
         });
     });
@@ -551,7 +565,7 @@ jQuery(document).ready(function() {
                 return;
             },
             error: function() {
-                alert("Error Preparing Edit Event Dialog!");
+                alert((SGN.t("community.calendar.error_preparing_edit_event_dialog", "Error Preparing Edit Event Dialog!")));
             }
         });
 
@@ -565,7 +579,7 @@ jQuery(document).ready(function() {
 
     jQuery('button#edit_event_submit').click( function(event) {
         event.preventDefault();
-        if (!confirm("Are you sure you want to save this edit?")) {
+        if (!confirm((SGN.t("community.calendar.are_you_sure_you_want_to_save_this_edit", "Are you sure you want to save this edit?")))) {
             return;
         }
         jQuery.ajax({
@@ -579,19 +593,19 @@ jQuery(document).ready(function() {
                     jQuery('#edit_event_dialog').modal('hide');
                     jQuery('#calendar').fullCalendar( 'refetchEvents' );
                 } else if (data.status == 0) {
-                    alert("Event Already Existed! Your Edit Was Not Saved!");
+                    alert((SGN.t("community.calendar.event_already_existed_your_edit_was_not_saved", "Event Already Existed! Your Edit Was Not Saved!")));
                 } else if (data.status == 3) {
-                    alert("You do not have the permissions to edit thie event.");
+                    alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_edit_thie_event", "You do not have the permissions to edit the event.")));
                 }
             },
             error: function() {
-                alert("Did Not Save Edit! E.001");
+                alert((SGN.t("community.calendar.did_not_save_edit_e_001", "Did Not Save Edit! E.001")));
             }
         });
     });
 
     jQuery('button#export_event_display').click( function() {
-    	jQuery(this).popover({html:true, title:"Export Event", placement:'right', container:'body', content: "Google Calendar: <a href='http://www.google.com/calendar' target='_blank' >Export</a>"}).popover('toggle');
+        jQuery(this).popover({html:true, title:(SGN.t("community.calendar.export_event", "Export Event")), placement:'right', container:'body', content: "Google Calendar: <a href='http://www.google.com/calendar' target='_blank' >" + jQuery("<span>").text((SGN.t("community.calendar.export", "Export"))).html() + "</a>"}).popover('toggle');
     });
 
     jQuery('#event_dialog').on('hide.bs.modal', function (e) {

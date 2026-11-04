@@ -1,4 +1,6 @@
-
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 
 =head1 NAME
@@ -30,6 +32,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
 #   my $cos_query = q{SELECT c.cos_marker_id, c.marker_id, c.cos_id, c.at_match, 
 # 	    c.at_position, c.bac_id, c.best_gb_prot_hit, c.at_evalue, 
@@ -58,29 +62,25 @@ $marker
     $trace_name="<a href=\"$est_read_page$trace_name\">$trace_name</a>"
   }
   else {
-    $trace_name="<span class=\"ghosted\">None</span>";
+    $trace_name=("<span class=\"ghosted\">" . SGN::I18N::translate($c->i18n, "marker.detail.cos.none", "None", undef, {entities => '<>&'}) . "</span>");
   }
 
-  my $orth = <<EOT;
-<b>Arabidopsis identities: </b>$r->{at_identities}<br />
-EOT
+  my $orth = (qq~<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.arabidopsis_identities", "Arabidopsis identities: ", undef, {entities => '<>&'}) . qq~</b>$r->{at_identities}<br />
+~);
   ;
 
-my $basic = <<HTML;
-<b><a href="/documents/markers/role_categories.txt">MIPS Category</a>: </b>$r->{mips_cat}<br />
-<b>Tomato EST read:</b> $trace_name<br />
-<b>Arabidopsis best BAC match:</b> <a href="$at_page$bac_id">$at_match</a><br />
-<b>Arabidopsis position:</b> $at_posn<br />
-HTML
+my $basic = (qq~<b><a href="/documents/markers/role_categories.txt">~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.mips_category", "MIPS Category", undef, {entities => '<>&'}) . qq~</a>: </b>$r->{mips_cat}<br />
+<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.tomato_est_read", "Tomato EST read:", undef, {entities => '<>&'}) . qq~</b> $trace_name<br />
+<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.arabidopsis_best_bac_match", "Arabidopsis best BAC match:", undef, {entities => '<>&'}) . qq~</b> <a href="$at_page$bac_id">$at_match</a><br />
+<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.arabidopsis_position", "Arabidopsis position:", undef, {entities => '<>&'}) . qq~</b> $at_posn<br />
+~);
 
-  my $genbank = <<EOT;
-<b>Best GenBank protein hit: </b><a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Protein&amp;cmd=search&amp;term=$r->{best_gb_prot_hit}">$r->{best_gb_prot_hit}</a><br />
-<b>Evalue: </b>$r->{gbprot_evalue}<br />
-<b>Identities: </b>$r->{gbprot_identities}<br />
-<b>Description: </b>$r->{description}<br />
-<b>Comment: </b>$r->{comment}<br />
-More information about COS markers can be found on the <a href="/markers/cos_markers.pl">COS markers</a> page.
-EOT
+  my $genbank = (qq~<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.best_genbank_protein_hit", "Best GenBank protein hit: ", undef, {entities => '<>&'}) . qq~</b><a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Protein&amp;cmd=search&amp;term=$r->{best_gb_prot_hit}">$r->{best_gb_prot_hit}</a><br />
+<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.evalue", "Evalue: ", undef, {entities => '<>&'}) . qq~</b>$r->{gbprot_evalue}<br />
+<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.identities", "Identities: ", undef, {entities => '<>&'}) . qq~</b>$r->{gbprot_identities}<br />
+<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.description", "Description: ", undef, {entities => '<>&'}) . qq~</b>$r->{description}<br />
+<b>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.comment", "Comment: ", undef, {entities => '<>&'}) . qq~</b>$r->{comment}<br />
+~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.more_information", "More information about COS markers can be found on the ", undef, {entities => '<>&'}) . qq~<a href="/markers/cos_markers.pl">~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.cos_markers_link", "COS markers", undef, {entities => '<>&'}) . (qq~</a>~ . SGN::I18N::translate($c->i18n, "marker.detail.cos.page_suffix", " page.") . "\n"));
   ;
 
 ### print  CXGN::Page::FormattingHelpers::blue_section_html('COS information', $basic.$orth.$genbank);
@@ -88,7 +88,7 @@ EOT
 </%perl>
 
 
-<&| /page/info_section.mas, title=>'COS information' &> <% $basic.$orth.$genbank %> </&>
+<&| /page/info_section.mas, anchor_title => 'COS information', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.cos_information", 'COS information')) &> <% $basic.$orth.$genbank %> </&>
 
 
 

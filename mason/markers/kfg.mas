@@ -22,6 +22,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
 
   # prints a link to the gene page if this marker maps to a gene 
@@ -33,7 +35,7 @@ my $html = '';
 foreach my $l (@loci) {
   my ($locus_id, $locus_name) = ($l->[0], $l->[1]);
 
-    $html .= qq{This marker is associated with the <a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_name</a> locus.<br /><br />};
+    $html .= (SGN::I18N::translate($c->i18n, "marker.detail.locus_association_sentence", "This marker is associated with the %{locus_name} locus.", {locus_name => qq|<a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_name</a>|}) . "<br /><br />");
   }
 
   

@@ -20,6 +20,7 @@ sub _validate_with_plugin {
     push @optional_columns, @$cross_additional_info;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $self->i18n,
         file => $filename,
         required_columns => [ 'cross_unique_id', 'cross_type', 'female_parent'],
         optional_columns => \@optional_columns,
@@ -48,7 +49,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            ($self->i18n ? $self->i18n->p('cross.parse.the_following_columns_are_not_recognized_columns_please_check_', 'The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.', {columns => join(', ', @$additional_columns)}) : "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns.")
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -78,7 +79,7 @@ sub _validate_with_plugin {
 
     foreach my $type (@$seen_cross_types) {
         if (!exists $supported_cross_types{$type}) {
-            push @error_messages, "Cross type not supported: $type. Cross type should be biparental, self, open, sib, bulk_self, bulk_open, backcross, polycross, doubled_haploid or dihaploid_induction";
+            push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.cross_type_not_supported_type_cross_type_should_be_biparental_', 'Cross type not supported: %{type}. Cross type should be biparental, self, open, sib, bulk_self, bulk_open, backcross, polycross, doubled_haploid or dihaploid_induction', {type => $type}) : "Cross type not supported: $type. Cross type should be biparental, self, open, sib, bulk_self, bulk_open, backcross, polycross, doubled_haploid or dihaploid_induction");
         }
     }
 
@@ -86,7 +87,7 @@ sub _validate_with_plugin {
     my @parents_missing = @{$parent_validator->validate($schema,'accessions_or_populations_or_crosses_or_plots_or_plants',\@all_parents)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as accession names, population names, cross unique ids, plot names or plant names: ".join(',',@parents_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.the_following_parents_are_not_in_the_database_or_are_not_in_th', 'The following parents are not in the database, or are not in the database as accession names, population names, cross unique ids, plot names or plant names: %{names}', {names => join(',', @parents_missing)}) : "The following parents are not in the database, or are not in the database as accession names, population names, cross unique ids, plot names or plant names: ".join(',',@parents_missing));
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -95,7 +96,7 @@ sub _validate_with_plugin {
     });
 
     while (my $r=$rs->next){
-        push @error_messages, "Cross unique id already exists in database: ".$r->uniquename;
+        push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.cross_unique_id_already_exists_in_database_name', 'Cross unique id already exists in database: %{name}', {name => $r->uniquename}) : "Cross unique id already exists in database: ".$r->uniquename);
     }
 
     foreach my $row (@$parsed_data) {
@@ -107,32 +108,32 @@ sub _validate_with_plugin {
 
         if ($female_parent eq $male_parent) {
             if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
-                push @error_messages, "Female parent and male parent are the same on line $line_number, but cross type is not self, sib, doubled_haploid or dihaploid_induction.";
+                push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.female_parent_and_male_parent_are_the_same_on_line_line_number', 'Female parent and male parent are the same on line %{line_number}, but cross type is not self, sib, doubled_haploid or dihaploid_induction.', {line_number => $line_number}) : "Female parent and male parent are the same on line $line_number, but cross type is not self, sib, doubled_haploid or dihaploid_induction.");
             }
         }
         if ($cross_type eq 'biparental') {
             if (!$male_parent){
-                push @error_messages, "For $cross_name on line number $line_number, Cross Type is biparental, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.for_cross_name_on_line_number_line_number_cross_type_is_bipare', 'For %{cross_name} on line number %{line_number}, Cross Type is biparental, but no male parent given', {cross_name => $cross_name, line_number => $line_number}) : "For $cross_name on line number $line_number, Cross Type is biparental, but no male parent given");
             }
         }
         if($cross_type eq 'backcross') {
             if (!$male_parent){
-                push @error_messages, "For $cross_name on line number $line_number, Cross Type is backcross, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.for_cross_name_on_line_number_line_number_cross_type_is_backcr', 'For %{cross_name} on line number %{line_number}, Cross Type is backcross, but no male parent given', {cross_name => $cross_name, line_number => $line_number}) : "For $cross_name on line number $line_number, Cross Type is backcross, but no male parent given");
             }
         }
         if($cross_type eq "sib") {
             if (!$male_parent){
-                push @error_messages, "For $cross_name on line number $line_number, Cross Type is sib, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.for_cross_name_on_line_number_line_number_cross_type_is_sib_bu', 'For %{cross_name} on line number %{line_number}, Cross Type is sib, but no male parent given', {cross_name => $cross_name, line_number => $line_number}) : "For $cross_name on line number $line_number, Cross Type is sib, but no male parent given");
             }
         }
         if($cross_type eq "polycross") {
             if (!$male_parent){
-                push @error_messages, "For $cross_name on line number $line_number, Cross Type is polycross, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.for_cross_name_on_line_number_line_number_cross_type_is_polycr', 'For %{cross_name} on line number %{line_number}, Cross Type is polycross, but no male parent given', {cross_name => $cross_name, line_number => $line_number}) : "For $cross_name on line number $line_number, Cross Type is polycross, but no male parent given");
             }
         }
         if($cross_type eq "bulk") {
             if (!$male_parent){
-                push @error_messages, "For $cross_name on line number $line_number, Cross Type is bulk, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('cross.parse.for_cross_name_on_line_number_line_number_cross_type_is_bulk_b', 'For %{cross_name} on line number %{line_number}, Cross Type is bulk, but no male parent given', {cross_name => $cross_name, line_number => $line_number}) : "For $cross_name on line number $line_number, Cross Type is bulk, but no male parent given");
             }
         }
     }

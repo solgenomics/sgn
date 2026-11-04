@@ -1,5 +1,7 @@
 package CXGN::Search::CannedForms;
 use Modern::Perl;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use CXGN::DB::Connection;
 use CXGN::Genomic::Search::Clone;
@@ -209,10 +211,12 @@ EOH
 sub family_search_form {
     my $page = shift;
     my $q    = shift;
+    my SGN::I18N $ui_family_form_i18n = shift;
+    my $ui_family_search_title = HTML::Entities::encode_entities(SGN::I18N::translate($ui_family_form_i18n, "cross.canned_forms.family_search", "Family search"));
     $q ||= CXGN::Searches::Family->new()->new_query();
     return <<HTML
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Family search</span>
+    <span class="search_form_title">$ui_family_search_title</span>
   </td>
   </tr>
   </table>
@@ -320,7 +324,7 @@ Automatic guessing of the input's intensional type didn't work too well.
   </tr>
   <tr>
     <td><input type="radio" name="request_type" value="9" /></td>
-    <td>SGN Chromatogram/Trace Identifer (SGN-T#)</td>
+    <td>SGN Chromatogram/Trace Identifier (SGN-T#)</td>
     <td>SGN-T123401</td>
   </tr>
   <tr>

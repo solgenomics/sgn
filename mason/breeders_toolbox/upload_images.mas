@@ -9,39 +9,39 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadImagesDialog">Upload Images</h4>
+        <h4 class="modal-title" id="uploadImagesDialog"><% $c->i18n->p("nirs.images.title", "Upload Images") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <&| /page/explanation.mas, title=>'Template Information' &>
+            <&| /page/explanation.mas, title=>$c->i18n->p("datacollector.ui.template_info", "Template Information") &>
                 <p>
-                <b>File format information</b>
+                <b><% $c->i18n->p("nirs.images.format_info", "File format information") |h %></b>
                 <br>
-                <a id="upload_images_format_info">Image File Format</a>
+                <a id="upload_images_format_info"><% $c->i18n->p("nirs.images.image_format", "Image File Format") |h %></a>
                 </p>
             </&>
 
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_images_file_form" name="upload_images_file_form">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">File Format: </label>
+                    <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.images.file_format", "File Format: ") |h %></label>
                     <div class="col-sm-9" >
                         <select class="form-control" id="upload_images_file_format" name="upload_images_file_format">
-                            <option value="images">Images</option>
-                            <option value="images_with_barcodes">Images with Barcodes</option>
-                            <option value="images_with_associated_phenotypes">Images with Associated Phenotypes</option>
+                            <option value="images"><% $c->i18n->p("drone_imaging.upload.images_format", "Images") |h %></option>
+                            <option value="images_with_barcodes"><% $c->i18n->p("drone_imaging.upload.images_barcodes_format", "Images with Barcodes") |h %></option>
+                            <option value="images_with_associated_phenotypes"><% $c->i18n->p("drone_imaging.upload.images_phenotypes_format", "Images with Associated Phenotypes") |h %></option>
                         </select>
                     </div>
                 </div>
                 <div id="upload_images_with_associated_phenotypes_div" style="display:none">
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.images.phenotype_sheet", "Phenotype Spreadsheet: ") |h %></label>
                         <div class="col-sm-9" >
                             <input type="file" id="upload_associated_phenotypes_file_input" name="upload_images_file_input" encoding="multipart/form-data" accept=".xls, .xlsx"/>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Images (.zip): </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.images.images_zip", "Images (.zip): ") |h %></label>
                         <div class="col-sm-9" >
                             <input type="file" id="upload_images_zip_file_input" name="upload_images_zip_file_input" encoding="multipart/form-data" accept=".zip"/>
                         </div>
@@ -49,7 +49,7 @@
                 </div>
                 <div id="upload_images_div">
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Image Files: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.images.image_files", "Image Files: ") |h %></label>
                         <div class="col-sm-9" >
                             <input type="file" id="upload_images_file_input" name="upload_images_file_input" multiple="multiple" accept="image/*">
                         </div>
@@ -65,9 +65,9 @@
         </div>
 
         <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-info" name="upload_images_submit_verify" id="upload_images_submit_verify">Verify</button>
-            <button disabled type="button" class="btn btn-primary" name="upload_images_submit_store" id="upload_images_submit_store" title="First Verify Your File">Store</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("nirs.ui.close", "Close") |h %></button>
+            <button type="button" class="btn btn-info" name="upload_images_submit_verify" id="upload_images_submit_verify"><% $c->i18n->p("datacollector.ui.verify", "Verify") |h %></button>
+            <button disabled type="button" class="btn btn-primary" name="upload_images_submit_store" id="upload_images_submit_store" title="<% $c->i18n->p("drone_imaging.upload.verify_before_store", "First Verify Your File") |h %>"><% $c->i18n->p("datacollector.ui.store", "Store") |h %></button>
         </div>
 
     </div>
@@ -79,28 +79,28 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadImagesInfoDialog">Template Information</h4>
+        <h4 class="modal-title" id="uploadImagesInfoDialog"><% $c->i18n->p("nirs.images.template", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h4>Images Alone:</h4>
+            <h4><% $c->i18n->p("nirs.images.images_alone", "Images Alone:") |h %></h4>
             <ul>
-                <li>Select multiple images directly for upload.</li>
-                <li>If the images being uploaded were taken using Fieldbook, they have EXIF data that contains the observationUnitName, traitname, and timestamp. They can be uploaded without needing to change the file name.</li>
-                <li>If images were NOT taken using Fieldbook, image file names should consist of the observationUnitName, traitname, number, and timestamp, all joined by underscores (the default naming system used by Fieldbook App).</li>
+                <li><% $c->i18n->p("nirs.images.select_multiple_images", "Select multiple images directly for upload.") |h %></li>
+                <li><% $c->i18n->p("drone_imaging.upload.fieldbook_exif_help", "If the images being uploaded were taken using Fieldbook, they have EXIF data that contains the observationUnitName, traitname, and timestamp. They can be uploaded without needing to change the file name.") |h %></li>
+                <li><% $c->i18n->p("drone_imaging.upload.filename_pattern_help", "If images were NOT taken using Fieldbook, image file names should consist of the observationUnitName, traitname, number, and timestamp, all joined by underscores (the default naming system used by Fieldbook App).") |h %></li>
             </ul>
             <br/>
-            <h4>Images with Barcodes:</h4>
+            <h4><% $c->i18n->p("nirs.images.images_barcodes", "Images with Barcodes:") |h %></h4>
             <ul>
-                <li>Upload multiple selected images that contain a barcode with a stock ID.</li>
-                <li>There should only be one barcode in each image, and the associated stock must already exist in the database.</li>
+                <li><% $c->i18n->p("nirs.images.barcode_image_help", "Upload multiple selected images that contain a barcode with a stock ID.") |h %></li>
+                <li><% $c->i18n->p("nirs.images.barcode_rules", "There should only be one barcode in each image, and the associated stock must already exist in the database.") |h %></li>
             </ul>
             <br/>
-            <h4>Images with Associated Phenotypes:</h4>
+            <h4><% $c->i18n->p("nirs.images.associated_phenotypes", "Images with Associated Phenotypes:") |h %></h4>
             <ul>
-                <li>The "Associated Images" format is useful for uploading a zipfile of images in association with phenotype values.</li>
-                <li>The phenotype values should be included in a .xls or .xlsx spreadsheet with the following columns:</li>
+                <li><% $c->i18n->p("drone_imaging.upload.associated_images_help", "The \"Associated Images\" format is useful for uploading a zipfile of images in association with phenotype values.") |h %></li>
+                <li><% $c->i18n->p("drone_imaging.upload.phenotype_sheet_columns_help", "The phenotype values should be included in a .xls or .xlsx spreadsheet with the following columns:") |h %></li>
                 <br/><table class="table table-hover table-bordered table-condensed table-responsive" >
                     <thead></thead>
                     <tbody>
@@ -114,13 +114,13 @@
                         </tr>
                     </tbody>
                 </table>
-                <li>The values in the <b>image_name</b> column should should match the image filenames in the zipfile.</li>
+                <li><% $c->i18n->p("drone_imaging.upload.image_column_prefix", "The values in the") |h %> <b>image_name</b> <% $c->i18n->p("drone_imaging.upload.image_column_suffix", "column should should match the image filenames in the zipfile.") |h %></li>
             </ul>
 
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
       </div>
     </div>
   </div>

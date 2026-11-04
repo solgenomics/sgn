@@ -14,18 +14,17 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 <& /page/page_title.mas, 
-   title => "QTL Data Submission Guidelines"
+   title => HTML::Entities::encode_entities($c->i18n->p("help.qtl.title", "QTL Data Submission Guidelines"))
 &>
 
 <p>
-  This document guides QTL data submitters on the process of loading the data, 
-  setting statistical parameters and finally the QTL mapping.
+  <% $c->i18n->p("help.qtl.intro", "This document guides QTL data submitters on the process of loading the data, \n  setting statistical parameters and finally the QTL mapping.") |h %>
 </p>
 
 <& /qtl/qtl_form/general_intro.mas, 
    guide => undef 
 &>
-<p> Detailed guide:</p>
+<p> <% $c->i18n->p("help.qtl.detailed_guide", "Detailed guide:") |h %></p>
 <& population_details.mas &>
 <& traits_list.mas &>
 <& phenotype_dataset.mas &>
@@ -35,3 +34,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <& further_reading.mas &>
 <& contact.mas &>
 
+<%once>
+use HTML::Entities ();
+</%once>

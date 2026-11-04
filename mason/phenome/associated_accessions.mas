@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 
 <%doc>
@@ -116,14 +119,14 @@ if (@$accessions) {
 	  my $medium_image = $image->get_image_url("medium");
 	  my $image_page   = "/image/index.pl?image_id=$image_id";
 	  my $thickbox =
-	    qq|<a href="$medium_image" title="<a href=$image_page>Go to image page </a>" class="thickbox" rel="gallery-images"><img src="$small_image" alt="" /></a> |;
+	    qq|<a href="$medium_image" title="<a href=$image_page>| . HTML::Entities::encode_entities($c->i18n->p("accession.phenome.image_page", "Go to image page")) . qq| </a>" class="thickbox" rel="gallery-images"><img src="$small_image" alt="" /></a> |;
 	  if ( $ind_count < 4 ) { $html .= qq|<td>$thickbox</td>|; }
 	  else                  { $more_html .= qq|<td>$thickbox</td>|; }
 	  $image_count--;
 	}
 	if ( $#{ $imageHoA{$stock_id} } > 4 ) {
 	  my $image_count = ( $#{ $imageHoA{$stock_id} } ) + 1;
-	  $html .= qq|<td>... (Total $image_count images)</td>|;
+	  $html .= qq|<td>| . HTML::Entities::encode_entities($c->i18n->p("accession.phenome.image_count", "... (Total %{count} images)", {count => "$image_count"})) . qq|</td>|;
 	}
 	if   ( $ind_count < 4 ) { $html      .= "</tr>"; }
 	else                    { $more_html .= "</tr>"; }
@@ -163,7 +166,7 @@ if (@$accessions) {
 if ($more) {
   $html .= html_optional_show(
 			      "Accessions",
-			      "<b>See $more more accessions</b>",
+			      '<b>' . HTML::Entities::encode_entities($c->i18n->p("accession.phenome.see_more", "See %{count} more accessions", {count => "$more"})) . '</b>',
 			      $more_html,
 			      0, #< do not show by default
 			      'abstract_optional_show', #< don't use the default button-like style

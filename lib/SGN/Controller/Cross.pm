@@ -19,6 +19,7 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Controller::Cross;
 
 use Moose;
+use HTML::Entities ();
 
 use List::MoreUtils qw /any /;
 use Try::Tiny;
@@ -53,6 +54,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
    my $basename = $upload->basename;
    my $tempfile = $upload->tempname;
    my $header_error;
+   my $ui_header_error_ui;
    my %line_errors;
    my %upload_data;
    my $file_error = 0;
@@ -64,13 +66,13 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 
      if (!$c->user()) {
        print STDERR "User not logged in... not adding crosses.\n";
-       $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+       $c->stash->{rest} = {error => $c->i18n->p("cross.server.you_need_to_be_logged_in_to_add_a_cross", "You need to be logged in to add a cross.") };
        return;
      }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	print STDERR "User does not have sufficient privileges.\n";
-	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
+	$c->stash->{rest} = {error =>  $c->i18n->p("cross.server.you_have_insufficient_privileges_to_add_a_cross", "you have insufficient privileges to add a cross.") };
 	return;
     }
 
@@ -89,6 +91,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	 $first_row[10] ne 'number_of_seeds') {
        $header_error = "<b>Error in header:</b><br>Header should contain the following tab-delimited fields:<br>cross_name<br>cross_type<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>number_of_seeds<br>";
        print STDERR "$header_error\n";
+       $ui_header_error_ui = "<b>" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.header_title", "Error in header:")) . "</b><br>" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.header_fields", "Header should contain the following tab-delimited fields:")) . "<br>cross_name<br>cross_type<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>number_of_seeds<br>";
      }
      else {
        my $line_number = 0;
@@ -96,10 +99,10 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	 $line_number++;
 	 my @row = split /\t/, $line;
 	 if (scalar(@row) < 6) {
-	   $line_errors{$line_number} = "Line $line_number has too few columns\n";
+	   $line_errors{$line_number} = $c->i18n->p("cross.controller.too_few_columns", "Line %{line_number} has too few columns\n", {line_number => "" . ($line_number)});
 	 }
 	 elsif (!$row[0] || !$row[1] || !$row[2] || !$row[3] || !$row[4] || !$row[5]) {
-	   $line_errors{$line_number} = "Line $line_number is missing a required field\n";
+	   $line_errors{$line_number} = $c->i18n->p("cross.controller.missing_required_field", "Line %{line_number} is missing a required field\n", {line_number => "" . ($line_number)});
 	 }
 	 else {
 	   my %cross;
@@ -145,7 +148,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 
      $c->stash(
 	       file_name => $basename,
-	       header_error => $header_error,
+	       header_error => (defined($ui_header_error_ui) ? $ui_header_error_ui : $header_error),
 	       line_errors_ref => \%line_errors,
 	       template => '/breeders_toolbox/cross/upload_crosses_file_error.mas',
 	       );
@@ -217,61 +220,61 @@ sub _verify_cross {
   my $max_seeds = 10000;
   #print STDERR "name: ".$cross_ref->{'cross_name'}."\n";
   if (! $schema->resultset("Stock::Stock")->find({name=>$maternal_parent,})){
-    $error_ref->{$line_number} .= "Line number $line_number, Maternal parent $maternal_parent does not exist in database\n <br>";
+    $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_maternal_parent_maternal_parent", "Line number %{line_number}, Maternal parent %{maternal_parent} does not exist in database\n <br>", {line_number => "" . ($line_number), maternal_parent => "" . ($maternal_parent)});
     }
   if ($cross_type ne "biparental" && $cross_type ne "self" && $cross_type ne "open" && $cross_type ne "bulk" && $cross_type ne "bulk_self" && $cross_type ne "bulk_open" && $cross_type ne "doubled_haploid" && $cross_type ne "dihaploid_induction") {
-    $error_ref->{$line_number} .= "Line number $line_number, Cross type $cross_type is not valid\n <br>";
+    $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_cross_type_cross_type", "Line number %{line_number}, Cross type %{cross_type} is not valid\n <br>", {line_number => "" . ($line_number), cross_type => "" . ($cross_type)});
   }
   if ($cross_type eq "self" || $cross_type eq "bulk_self" || $cross_type eq "doubled_haploid" || $cross_type eq "dihaploid_induction") {
     if ($maternal_parent ne $paternal_parent) {
-      $error_ref->{$line_number} .= "Line number $line_number, maternal and paternal parents must match for cross type $cross_type\n <br>";
+      $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_maternal_and_paternal_parents", "Line number %{line_number}, maternal and paternal parents must match for cross type %{cross_type}\n <br>", {line_number => "" . ($line_number), cross_type => "" . ($cross_type)});
     }
   }
   if (! $schema->resultset("Stock::Stock")->find({name=>$paternal_parent,})){
-    $error_ref->{$line_number} .= "Line number $line_number, Paternal parent $paternal_parent does not exist in database\n <br>";
+    $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_paternal_parent_paternal_parent", "Line number %{line_number}, Paternal parent %{paternal_parent} does not exist in database\n <br>", {line_number => "" . ($line_number), paternal_parent => "" . ($paternal_parent)});
     }
   if (! $schema->resultset("Project::Project")->find({name=>$cross_trial,})){
-    $error_ref->{$line_number} .= "Line number $line_number, Trial $cross_trial does not exist in database\n <br>";
+    $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_trial_cross_trial_does", "Line number %{line_number}, Trial %{cross_trial} does not exist in database\n <br>", {line_number => "" . ($line_number), cross_trial => "" . ($cross_trial)});
     }
   if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$cross_location,})){
-    $error_ref->{$line_number} .= "Line number $line_number, Location $cross_location does not exist in database\n <br>";
+    $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_location_cross_location_does", "Line number %{line_number}, Location %{cross_location} does not exist in database\n <br>", {line_number => "" . ($line_number), cross_location => "" . ($cross_location)});
     }
   #check that cross name does not already exist
   if ($schema->resultset("Stock::Stock")->find({name=>$cross_name})){
-    $error_ref->{$line_number} .= "Line number $line_number, Cross $cross_name already exists in database\n <br>";
+    $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_cross_cross_name_already", "Line number %{line_number}, Cross %{cross_name} already exists in database\n <br>", {line_number => "" . ($line_number), cross_name => "" . ($cross_name)});
   }
   if ($cross_ref->{'number_of_progeny'}) {
     if ($cross_ref->{'number_of_progeny'}  =~ /^[0-9]+$/) { #is an integer
       if ($cross_ref->{'number_of_progeny'} > $max_progeny || $cross_ref->{'number_of_progeny'} < 1) {
-	$error_ref->{$line_number} .= "Line number $line_number, Number of progeny ". $cross_ref->{'number_of_progeny'}." exceeds the maximum of $max_progeny or is invalid\n <br>";
+	$error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_number_of_progeny", "Line number %{line_number}, Number of progeny ", {line_number => "" . ($line_number)}). $cross_ref->{'number_of_progeny'}.$c->i18n->p("cross.controller.exceeds_the_maximum_of_max_progeny_or_is", " exceeds the maximum of %{max_progeny} or is invalid\n <br>", {max_progeny => "" . ($max_progeny)});
       }
     } else {
-      $error_ref->{$line_number} .= "Line number $line_number, Number of progeny ". $cross_ref->{'number_of_progeny'}." is not an integer\n <br>";
+      $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_number_of_progeny", "Line number %{line_number}, Number of progeny ", {line_number => "" . ($line_number)}). $cross_ref->{'number_of_progeny'}.$c->i18n->p("cross.controller.is_not_an_integer_br", " is not an integer\n <br>");
     }
   }
   if ($cross_ref->{'number_of_flowers'}) {
     if ($cross_ref->{'number_of_flowers'}  =~ /^[0-9]+$/) { #is an integer
       if ($cross_ref->{'number_of_flowers'} > $max_flowers || $cross_ref->{'number_of_flowers'} < 1) {
-	$error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." exceeds the maximum of $max_flowers or is invalid\n <br>";
+	$error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_number_of_flowers", "Line number %{line_number}, Number of flowers ", {line_number => "" . ($line_number)}). $cross_ref->{'number_of_flowers'}.$c->i18n->p("cross.controller.exceeds_the_maximum_of_max_flowers_or_is", " exceeds the maximum of %{max_flowers} or is invalid\n <br>", {max_flowers => "" . ($max_flowers)});
       }
     } else {
-      $error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." is not an integer\n <br>";
+      $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_number_of_flowers", "Line number %{line_number}, Number of flowers ", {line_number => "" . ($line_number)}). $cross_ref->{'number_of_flowers'}.$c->i18n->p("cross.controller.is_not_an_integer_br", " is not an integer\n <br>");
     }
   }
   if ($cross_ref->{'number_of_seeds'}) {
     if ($cross_ref->{'number_of_seeds'}  =~ /^[0-9]+$/) { #is an integer
       if ($cross_ref->{'number_of_seeds'} > $max_seeds || $cross_ref->{'number_of_seeds'} < 1) {
-	$error_ref->{$line_number} .= "Line number $line_number, Number of seeds ". $cross_ref->{'number_of_seeds'}." exceeds the maximum of $max_seeds or is invalid\n <br>";
+	$error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_number_of_seeds", "Line number %{line_number}, Number of seeds ", {line_number => "" . ($line_number)}). $cross_ref->{'number_of_seeds'}.$c->i18n->p("cross.controller.exceeds_the_maximum_of_max_seeds_or_is", " exceeds the maximum of %{max_seeds} or is invalid\n <br>", {max_seeds => "" . ($max_seeds)});
       }
     } else {
-      $error_ref->{$line_number} .= "Line number $line_number, Number of seeds ". $cross_ref->{'number_of_seeds'}." is not an integer\n <br>";
+      $error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_number_of_seeds", "Line number %{line_number}, Number of seeds ", {line_number => "" . ($line_number)}). $cross_ref->{'number_of_seeds'}.$c->i18n->p("cross.controller.is_not_an_integer_br", " is not an integer\n <br>");
     }
   }
   if ($cross_ref->{'prefix'} =~ m/\-/) {
-	$error_ref->{$line_number} .= "Line number $line_number, Prefix ". $cross_ref->{'prefix'}." contains an illegal character: -\n <br>";
+	$error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_prefix", "Line number %{line_number}, Prefix ", {line_number => "" . ($line_number)}). $cross_ref->{'prefix'}.$c->i18n->p("cross.controller.contains_an_illegal_character_br", " contains an illegal character: -\n <br>");
   }
   if ($cross_ref->{'suffix'} =~ m/\-/) {
-	$error_ref->{$line_number} .= "Line number $line_number, Suffix ". $cross_ref->{'suffix'}." contains an illegal character: -\n <br>";
+	$error_ref->{$line_number} .= $c->i18n->p("cross.controller.line_number_line_number_suffix", "Line number %{line_number}, Suffix ", {line_number => "" . ($line_number)}). $cross_ref->{'suffix'}.$c->i18n->p("cross.controller.contains_an_illegal_character_br", " contains an illegal character: -\n <br>");
   }
   if ($error_ref->{$line_number}) {print $error_ref->{$line_number}."\n";return;} else {return 1;}
 }
@@ -413,7 +416,7 @@ sub _add_cross {
   }
 
   if ($@) {
-      $c->stash->{rest} = { error => "An error occurred: $@"};
+      $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($@); $c->i18n->p("accession.stock.message_31", "An error occurred: %{details}", {details => $ui_error_details}) }};
   }
 
   $c->stash->{rest} = { error => '', };
@@ -593,7 +596,7 @@ sub cross_detail : Path('/cross') Args(1) {
 
     if (!$cross) {
     	$c->stash->{template} = '/generic_message.mas';
-    	$c->stash->{message} = 'The requested cross does not exist.';
+        $c->stash->{message} = $c->i18n->p('cross.server.missing_cross', 'The requested cross does not exist.');
     	return;
     } else {
         $cross_id = $cross->stock_id();
@@ -645,7 +648,7 @@ sub family_name_detail : Path('/family') Args(1) {
     my $family_type_string;
 	if (!$family) {
     	$c->stash->{template} = '/generic_message.mas';
-    	$c->stash->{message} = 'The requested family name does not exist.';
+        $c->stash->{message} = $c->i18n->p("cross.controller.the_requested_family_name_does_not_exist", "The requested family name does not exist.");
     	return;
     } else {
         $family_id = $family->stock_id();
@@ -655,9 +658,9 @@ sub family_name_detail : Path('/family') Args(1) {
         if ($family_prop){
             $family_type = $family_prop->value();
             if ($family_type eq 'same_parents'){
-                $family_type_string = 'This family includes only crosses having the same female parent and the same male parent';
+                $family_type_string = $c->i18n->p("cross.controller.this_family_includes_only_crosses_having_the_same", "This family includes only crosses having the same female parent and the same male parent");
             } elsif ($family_type eq 'reciprocal_parents'){
-                $family_type_string = 'This family includes reciprocal crosses';
+                $family_type_string = $c->i18n->p("cross.controller.this_family_includes_reciprocal_crosses", "This family includes reciprocal crosses");
             }
         }
     }

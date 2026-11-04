@@ -18,6 +18,7 @@ package SGN::Controller::AJAX::FileShareDump;
 use Moose;
 use Try::Tiny;
 use DateTime;
+use HTML::Entities ();
 use Data::Dumper;
 use CXGN::UploadFile;
 use File::Basename qw | basename dirname|;
@@ -59,7 +60,7 @@ sub filesharedump_upload_POST : Args(0) {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not store uploaded file!"};
+        $c->stash->{rest} = {error => $c->i18n->p("lists_datasets.fileshare_api.upload_store_failed", "Could not store uploaded file!")};
         return;
     }
     unlink $upload_tempfile;
@@ -95,7 +96,7 @@ sub filesharedump_list_GET : Args(0) {
     my @files;
     while (my ($file_id, $basename, $dirname, $sp_person_id, $create_date, $username) = $h->fetchrow_array()) {
         #my $options = '<a href="/breeders/phenotyping/view/'.$file_id.'">View</a> | <a href="/breeders/phenotyping/download/'.$file_id.'">Download</a>';
-        my $options = '<a href="/breeders/phenotyping/download/'.$file_id.'">Download</a>';
+        my $options = '<a href="/breeders/phenotyping/download/'.$file_id.'">' . HTML::Entities::encode_entities($c->i18n->p("lists_datasets.fileshare_api.download", "Download")) . '</a>';
         push @files, [$basename, $username, $create_date, $options];
     }
 
@@ -119,7 +120,7 @@ sub _check_user_login {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("lists_datasets.fileshare_api.login_required", "You must be logged in to do this!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -128,7 +129,7 @@ sub _check_user_login {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("lists_datasets.fileshare_api.login_required", "You must be logged in to do this!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();

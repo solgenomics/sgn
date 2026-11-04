@@ -17,6 +17,18 @@ use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 
+# Optional request-owned presentation only; never stored with project data.
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    trigger => sub {
+        my ($self, $translator) = @_;
+        die 'Presentation translator must implement p'
+            if defined($translator) && !$translator->can('p');
+    },
+);
+
 has 'chado_schema' => (isa => 'DBIx::Class::Schema',
 		 is => 'rw',
 		 required => 1,
@@ -74,7 +86,7 @@ sub store_genotyping_project {
 
     if ($self->existing_genotyping_project()){
         print STDERR "Can't create genotyping project: Genotyping project name already exists\n";
-        return {error => "Genotyping project not saved: Genotyping project name already exists"};
+        return {error => ($self->i18n ? $self->i18n->p('genotype.project.server.already_exists', 'Genotyping project not saved: Genotyping project name already exists') : "Genotyping project not saved: Genotyping project name already exists")};
     }
 
     my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project', 'project_type')->cvterm_id();

@@ -1,0 +1,53 @@
+# عارض النواقل {#vector-viewer}
+
+توفر BreedBase أداة لعرض النواقل وإنشائها وحفظها أو تحميلها إلى BreedBase.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorViewer.png')
+```
+
+يتضمن عارض النواقل العديد من الوظائف التفاعلية:
+
+- تمييز المناطق
+
+- عرض الموضع
+
+- التكبير وتحريك العرض
+
+- جدول للميزات ومواقع إنزيمات القطع يتيح التعديل أو الحذف أو الإضافة آنيًا
+
+<!-- -   Load data from GenBank (uncomment this when this feature is complete) -->
+
+<!-- -   Save data (uncomment this when this feature is complete) -->
+
+لتحديد منطقة من الناقل، انقر واسحب المؤشر باتجاه عقارب الساعة. لإزالة التحديد، ابدأ مقطعًا محددًا جديدًا بالنقر على الناقل أو انقر “تحديث/إعادة ضبط”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorHighlight.png')
+```
+
+لمعرفة موضع نقطة على الناقل، مرر المؤشر فوقها. سيظهر رقم يوضح موضع المؤشر بأزواج القواعد.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cursorLocation.png')
+```
+
+للتكبير أو التصغير، انقر زر "+" أو "-" أسفل الناقل.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/ZoomIn.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/ZoomOut.png')
+```
+
+لإضافة ميزة أو موقع قطع، انقر “إضافة”. وللتعديل، اختر الميزة أو موقع القطع المطلوب وانقر “تحرير” ثم أجرِ التغييرات. وللحذف، حدد العنصر المطلوب وانقر “حذف”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorButtons.png')
+```
+
+<!-- To load data from GenBank (fill in the instructions here when this is finished) -->
+
+<!-- To save data (fill in the instructions here when this is finished) -->

@@ -7,20 +7,20 @@ $timestamp => localtime()
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="discardSeedlotsDialog">Mark Seedlots as Discarded </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="discardSeedlotsDialog"><% $c->i18n->p('seedlots.ui.mark_seedlots_as_discarded', 'Mark Seedlots as Discarded') |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="discard_seedlots_form" name="discard_seedlots_form">
                         <div class="form-group" id="seedlot_list_section" >
-                            <label class="col-sm-4 control-label">List of Seedlots:</label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('seedlots.ui.list_of_seedlots', 'List of Seedlots:') |h %></label>
                             <div class="col-sm-8" id="select_seedlot_list" name="select_seedlot_list"></div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Reason for Discarding: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('seedlots.ui.reason_for_discarding', 'Reason for Discarding:') |h %> </label>
                             <div class="col-sm-8" >
-                                <textarea class="form-control" id="reason_for_discarding" name="reason_for_discarding" placeholder="Required"></textarea>
+                                <textarea class="form-control" id="reason_for_discarding" name="reason_for_discarding" placeholder="<% $c->i18n->p('seedlots.ui.required', 'Required') |h %>"></textarea>
 
                             </div>
                         </div>
@@ -28,8 +28,8 @@ $timestamp => localtime()
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="discard_seedlots_submit" id="discard_seedlots_submit">Submit</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-primary" name="discard_seedlots_submit" id="discard_seedlots_submit"><% $c->i18n->p('seedlots.ui.submit', 'Submit') |h %></button>
             </div>
         </div>
     </div>
@@ -39,19 +39,19 @@ $timestamp => localtime()
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="discardSeedlotSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="discardSeedlotSavedDialog"><% $c->i18n->p('seedlots.ui.success', 'Success') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The seedlots were marked as DISCARDED.
+                        <% $c->i18n->p('seedlots.ui.the_seedlots_were_marked_as_status', 'The seedlots were marked as %{status}.', {status => 'DISCARDED'}) |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_discard_seedlot_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_discard_seedlot_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close_reload', 'Close & Reload') |h %></button>
             </div>
         </div>
     </div>
@@ -59,6 +59,57 @@ $timestamp => localtime()
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 jQuery(document).ready(function(){
 
     jQuery("#discard_seedlot_link").click( function() {
@@ -66,7 +117,7 @@ jQuery(document).ready(function(){
     });
 
     var list = new CXGN.List();
-    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'Please select a list of seedlots to discard','', undefined);
+    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], seedlotI18n.p("seedlots.ui.please_select_a_list_of_seedlots_to_discard", "Please select a list of seedlots to discard"),'', undefined);
 
     jQuery('#discard_seedlots_submit').click(function(){
 
@@ -74,17 +125,18 @@ jQuery(document).ready(function(){
         var discard_reason = jQuery('#reason_for_discarding').val();
 
         if (seedlot_list_id === '') {
-            alert("Please select a list");
+            alert(seedlotI18n.p("seedlots.ui.please_select_a_list", "Please select a list"));
             return;
         }
 
         if (discard_reason === '') {
-            alert("Please provide reason for discarding these seedlots");
+            alert(seedlotI18n.p("seedlots.ui.please_provide_reason_for_discarding_these_seedlots", "Please provide reason for discarding these seedlots"));
             return;
         }
 
         jQuery.ajax({
             url: '/ajax/breeders/seedlot/discard',
+            headers: _sgnSeedlotLocaleHeaders('/ajax/breeders/seedlot/discard'),
             dataType: "json",
             data : {
                 'seedlot_list_id' : seedlot_list_id,
@@ -105,7 +157,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred discarding seedlots');
+                alert(seedlotI18n.p("seedlots.ui.an_error_occurred_discarding_seedlots", "An error occurred discarding seedlots"));
             }
         });
     });

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 $trial_name
@@ -18,100 +22,100 @@ $trial_owner
         <table class="table table-hover table-bordered" >
 
             <tr>
-                <td><b>Genotyping Project Name</b></td>
+                <td><b><% $c->i18n->p("folder.detail.genotyping_project_name", "Genotyping Project Name") |h %></b></td>
                 <td>
                     <div id="trial_name">
 % if ($trial_name) {
 %   print "$trial_name";
 % } else {
-%   print "<span class='text-danger'>[No Project Name]</span>";
+%   print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.no_project_name", "[No Project Name]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Breeding Program </b></td>
+                <td><b><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %> </b></td>
                 <td>
                     <span id="breeding_program">
 % if ($breeding_program_name) {
         <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
 % }
 % else {
-%  print "<span class='text-danger'>[No Breeding Program]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_breeding_program", "[No Breeding Program]")) . "</span>");
 % }
                     </span>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Location</b></td>
+                <td><b><% $c->i18n->p("global.search.features.location", "Location") |h %></b></td>
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
 %  print "$location_name";
 % } else {
-%  print "<span class='text-danger'>[No Location]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_location", "[No Location]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Year</b></td>
+                <td><b><% $c->i18n->p("accession.sequencing.table.year", "Year") |h %></b></td>
                 <td>
                     <div id="trial_year">
 % if ($year) {
 %  print "$year";
 % } else {
-%  print "<span class='text-danger'>[No Year]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_year", "[No Year]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Genotyping Facility</b></td>
+            <tr><td><b><% $c->i18n->p("genotype.plate.genotyping_facility", "Genotyping Facility") |h %></b></td>
                 <td>
                     <div id="trial_genotyping_facility">
 % if ($genotyping_facility) {
 %  print "$genotyping_facility";
 % } else {
-%  print "<span class='text-danger'>[No Genotyping Facility]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.no_genotyping_facility", "[No Genotyping Facility]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Data Type</b></td>
+            <tr><td><b><% $c->i18n->p("global.dataset_publish.data_type", "Data Type") |h %></b></td>
                 <td>
                     <div id="trial_data_type">
 % if ($genotype_data_type) {
 %  print "$genotype_data_type";
 % } else {
-%      print "<span class='text-danger'>[No Data Type]</span>";
+%      print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.no_data_type", "[No Data Type]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Description</b></td>
+            <tr><td><b><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></b></td>
                 <td>
                     <div id="trial_description">
 % if ($trial_description) {
 %  print "$trial_description";
 % } else {
-%  print "<span class='text-danger'>[No Description]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_description", "[No Description]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
-            <tr><td><b>Created by</b></td>
+            <tr><td><b><% $c->i18n->p("cross.ui.created_by", "Created by") |h %></b></td>
                 <td>
                     <div id="trial_owner">
 % if ($trial_owner) {
 %  print "$trial_owner";
 % } else {
-%  print "<span class='text-danger'>[N/A]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.n_a", "[N/A]")) . "</span>");
 % }
                     </div>
                 </td>

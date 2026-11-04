@@ -1,6 +1,8 @@
 
 package SGN::Controller::ActivityInfo;
 
+use SGN::I18N ();
+
 use Moose;
 use URI::FromHash 'uri';
 use Data::Dumper;
@@ -15,6 +17,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 sub activity_details :Path('/activity/details') : Args(1) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_activity_details_i18n = SGN::I18N::translate($c);
     my $identifier_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
@@ -42,10 +45,10 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $terminated_metadata;
     my $status_display;
     if ($updated_status_type eq 'terminated_metadata') {
-        $status_display = '<span style="color:red">'.'TERMINATED'.'</span>';
+        $status_display = '<span style="color:red">'.(SGN::I18N::translate($ui_activity_details_i18n, 'transformation.helper.terminated', 'TERMINATED')).'</span>';
         $terminated_metadata = 1;
     } elsif ($updated_status_type eq 'completed_metadata') {
-        $status_display = '<span style="color:red">'.'COMPLETED'.'</span>';
+        $status_display = '<span style="color:red">'.(SGN::I18N::translate($ui_activity_details_i18n, 'transformation.helper.completed', 'COMPLETED')).'</span>';
         $completed_metadata = 1;
     }
 
@@ -80,9 +83,9 @@ sub activity_details :Path('/activity/details') : Args(1) {
         my $person_id = $updated_status_info->[0];
         my $person= CXGN::People::Person->new($dbh, $person_id);
         my $person_name=$person->get_first_name()." ".$person->get_last_name();
-        my $operator_info = "Updated by". ":"."".$person_name;
-        my $date_info = "Updated Date". ":"."".$updated_status_info->[1];
-        my $reason_info = "Comments". ":"."".$updated_status_info->[2];
+        my $operator_info = (SGN::I18N::translate($ui_activity_details_i18n, 'trial.card.status.updated_by', 'Updated by')). ":"."".$person_name;
+        my $date_info = (SGN::I18N::translate($ui_activity_details_i18n, 'seedlot.updated_date', 'Updated Date')). ":"."".$updated_status_info->[1];
+        my $reason_info = (SGN::I18N::translate($ui_activity_details_i18n, 'accession.stock.section.comments', 'Comments')). ":"."".$updated_status_info->[2];
         my @all_info = ($operator_info, $date_info, $reason_info);
         my $all_info_string = join("<br>", @all_info);
         $updated_status_string = '<span style="color:red">'.$all_info_string.'</span>';
@@ -147,6 +150,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
 sub record_activity :Path('/activity/record') :Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_record_activity_i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
 
@@ -178,7 +182,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     if ($identifier_name) {
         my $identifier_rs = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name});
         if (!$identifier_rs) {
-            $c->stash->{message} = "The tracking identifier does not exist or has been deleted.";
+            $c->stash->{message} = (SGN::I18N::translate($ui_record_activity_i18n, 'transformation.helper.the_tracking_identifier_does_not_exist_or_has_been_deleted', 'The tracking identifier does not exist or has been deleted.'));
             $c->stash->{template} = 'generic_message.mas';
             return;
         } else {

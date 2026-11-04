@@ -1,3 +1,7 @@
+<%once>
+use JSON::PP ();
+</%once>
+
 
 <%args>
 $protocol_id
@@ -13,14 +17,14 @@ $assay_type
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="genotypingProtocolDetailsEditDialog">Edit Genotyping Protocol Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('global.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProtocolDetailsEditDialog"><% $c->i18n->p('genotype.protocol.edit.title', 'Edit Genotyping Protocol Details') |h %></h4>
             </div>
             <div class="modal-body" id="protocol_details_edit_body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" for="edit_protocol_name">Genotyping Protocol Name: </label>
+                            <label class="col-sm-4 control-label" for="edit_protocol_name"><% $c->i18n->p('genotype.plate.genotyping_protocol_name', 'Genotyping Protocol Name:') |h %> </label>
                             <div class="col-sm-7">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_protocol_name" title="name" type="text" value="<%$protocol_name%>" aria-describedby="edit_protocol_name_status"/>
@@ -38,7 +42,7 @@ $assay_type
                         </div>
                         -->
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" for="edit_protocol_reference_genome_name">Reference Genome Name: </label>
+                            <label class="col-sm-4 control-label" for="edit_protocol_reference_genome_name"><% $c->i18n->p('genotype.protocol.edit.reference_genome', 'Reference Genome Name: ') |h %></label>
                             <div class="col-sm-7">
                                 <div class="input-group">
                                     <input class="form-control" id="edit_protocol_reference_genome_name" title="reference_genome_name" value="<%$reference_genome_name%>"/>
@@ -46,7 +50,7 @@ $assay_type
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" for="edit_protocol_species_name">Species Name: </label>
+                            <label class="col-sm-4 control-label" for="edit_protocol_species_name"><% $c->i18n->p('genotype.protocol.edit.species_name', 'Species Name: ') |h %></label>
                             <div class="col-sm-7">
                                 <div class="input-group">
                                     <input class="form-control" id="edit_protocol_species_name" title="species_name" value="<%$species_name%>"/>
@@ -54,7 +58,7 @@ $assay_type
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" for="edit_protocol_description">Description: </label>
+                            <label class="col-sm-4 control-label" for="edit_protocol_description"><% $c->i18n->p('genotype.protocol.edit.description', 'Description: ') |h %></label>
                             <div class="col-sm-7">
                                 <div class="input-group">
                                     <textarea class="form-control" id="edit_protocol_description" title="description" rows="3"><% $protocol_description %></textarea>
@@ -65,9 +69,9 @@ $assay_type
                 </div>
             </div>
             <div class="modal-footer">
-                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_protocol_details_cancel_button">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save_protocol_details">Save Changes</button>
+                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> <% $c->i18n->p('genotype.protocol.edit.pending_change', 'Indicates pending change') |h %></p>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_protocol_details_cancel_button"><% $c->i18n->p('trial.details.cancel', 'Cancel') |h %></button>
+                <button type="button" class="btn btn-primary" id="save_protocol_details"><% $c->i18n->p('genotype.protocol.edit.save_changes', 'Save Changes') |h %></button>
             </div>
         </div>
     </div>
@@ -77,14 +81,14 @@ $assay_type
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="protocolDetailsSavedDialog">Details Saved</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('global.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="protocolDetailsSavedDialog"><% $c->i18n->p('trial.details.saved', 'Details Saved') |h %></h4>
             </div>
             <div class="modal-body" id="protocol_details_saved_body">
                 <ul class="list-group" id="protocol_details_saved_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="protocol_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="protocol_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.details.reload', 'Close & Reload') |h %></button>
             </div>
         </div>
     </div>
@@ -94,14 +98,14 @@ $assay_type
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="protocolDetailsErrorDialog">Error Saving Genotyping Protocol Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('global.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="protocolDetailsErrorDialog"><% $c->i18n->p('genotype.protocol.edit.error_title', 'Error Saving Genotyping Protocol Details') |h %></h4>
             </div>
             <div class="modal-body" id="protocol_details_error_body">
                 <ul class="list-group" id="protocol_details_error_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="protocol_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="protocol_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('global.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -128,7 +132,9 @@ jQuery(document).ready(function(){
             var new_value = changed_elements[i].value;
             categories.push(type);
             new_details[type] = new_value;
-            success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
+            var ui_changed_field = String(type);
+            var ui_changed_prefix = window.SGN && SGN.i18n ? SGN.i18n.p('genotype.protocol.edit.changed_prefix', 'Changed %{field} to:', {field: ui_changed_field}) : "Changed " + ui_changed_field + " to:";
+            success_message += "<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text(ui_changed_prefix).html() + " <b>" + new_value + "</b></li>";
         }
 
         save_protocol_details(protocol_id, categories, new_details, success_message);
@@ -176,7 +182,8 @@ function save_protocol_details (protocol_id, categories, details, success_messag
             }
         },
         error: function(response) {
-            document.getElementById('protocol_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'> Protocol detail update AJAX request failed. Update not completed.</li>";
+            var ui_update_failure = <% JSON::PP::encode_json($c->i18n->p('genotype.protocol.edit.ajax_failed', ' Protocol detail update AJAX request failed. Update not completed.')) %>;
+            document.getElementById('protocol_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>" + jQuery("<span>").text(ui_update_failure).html() + "</li>";
             jQuery('#protocol_details_error_dialog').modal("show");
         },
     });

@@ -24,7 +24,7 @@ $edit_privs
 %# <link rel="stylesheet" href="https://cdn.datatables.net/staterestore/1.4.1/css/stateRestore.dataTables.min.css" />
 %# <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css" />
 
- 
+
 <!-- <center> -->
 <div style="text-align: center;">
     <!DOCTYPE html>
@@ -34,7 +34,7 @@ $edit_privs
 <!-- p>Go wild!</p -->
 
 <!-- Add a svg shape. Note that the 'target' class is attributed to the circle -->
-<!-- svg> 
+<!-- svg>
   <circle class="target" style="fill: #69b3a2" stroke="black" cx=50 cy=50 r=40></circle>
 </svg -->
 
@@ -70,19 +70,19 @@ $edit_privs
 <!-- & /util/import_javascript.mas, entries => [ "vectorViewer" ] & -->
 <& /util/import_javascript.mas,
    classes => ["bootstrap_min", "d3.d3v4Min", "jquery", "jqueryui", "jquery.dataTables-buttons-min", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "jquery.dataTables"] , entries => [ "vectorViewer" ] &>
-  
+
 <!-- Add a svg area, empty -->
 <div id="vector_div"></div>
 
 <br />
 <!-- <button id="saveButton" style="btn"> Save Vector </button> -->
 <!-- <button id="loadButton" style="btn"> Load Vector </button> -->
-<button id="saveVector" style="btn">Save changes</button>
+<button id="saveVector" style="btn"><% $c->i18n->p("accession.sequencing.save", "Save changes") |h %></button>
 <!-- button id="loadVector" style="btn"> Load Vector </button -->
-<button id="update_vector" style="btn">Update View</button>
+<button id="update_vector" style="btn"><% $c->i18n->p("transformation.root.update_view", "Update View") |h %></button>
 <button id="zoomIn" style="btn"> + </button>
 <button id="zoomOut" style="btn"> - </button>
-<button id="vectorviewer_instructions_button">Instructions</button>
+<button id="vectorviewer_instructions_button"><% $c->i18n->p("trial.fieldmap.instructions", "Instructions") |h %></button>
 
 <br />
 <br />
@@ -90,14 +90,14 @@ $edit_privs
 
 <table width="100%"><tr><td>
 
-<h4>Feature list</h4>
+<h4><% $c->i18n->p("transformation.root.feature_list", "Feature list") |h %></h4>
 
 <!-- button id="add_feature_button">Add feature</button><br / -->
 <table id="vector_table" width="100%" class="display table table-hover table-striped">
-<thead><tr><td>No.</td><td>Feature</td><td>Start</td><td>End</td><td>Color</td><td>Orientation</td><td>Actions</td></tr></thead><tbody></tbody></table>
+<thead><tr><td><% $c->i18n->p("transformation.root.no", "No.") |h %></td><td><% $c->i18n->p("transformation.root.feature", "Feature") |h %></td><td><% $c->i18n->p("trial.entry_template.start", "Start") |h %></td><td><% $c->i18n->p("transformation.root.end", "End") |h %></td><td><% $c->i18n->p("transformation.root.color", "Color") |h %></td><td><% $c->i18n->p("transformation.root.orientation", "Orientation") |h %></td><td><% $c->i18n->p("global.dataset_cxgn_dataset.table.actions", "Actions") |h %></td></tr></thead><tbody></tbody></table>
 
 <br />
-<button type="button" id="open_add_feature_dialog_button" class="btn btn-primary" data-toggle="modal" >Add new feature</button> <!-- data-target="#add_feature_dialog">Add Feature</button -->
+<button type="button" id="open_add_feature_dialog_button" class="btn btn-primary" data-toggle="modal" ><% $c->i18n->p("transformation.root.add_new_feature", "Add new feature") |h %></button> <!-- data-target="#add_feature_dialog">Add Feature</button -->
 <br />
 <br />
 <br />
@@ -105,18 +105,18 @@ $edit_privs
 <!-- Add a svg area, empty -->
 </td><td width="160px">&nbsp;</td><td>
 
-<h4>Restriction enzyme list</h4>
+<h4><% $c->i18n->p("transformation.root.restriction_enzyme_list", "Restriction enzyme list") |h %></h4>
 
 
 <table id="re_sites_table" width="100%" class="display table table-hover table-striped">
-<thead><tr><td>#</td><td>RE Site</td><td>Cut Coord</td><td>Actions</td></tr></thead><tbody></tbody></table>
+<thead><tr><td>#</td><td><% $c->i18n->p("transformation.root.re_site", "RE Site") |h %></td><td><% $c->i18n->p("transformation.root.cut_coord.bd2974e", "Cut Coord") |h %></td><td><% $c->i18n->p("global.dataset_cxgn_dataset.table.actions", "Actions") |h %></td></tr></thead><tbody></tbody></table>
 
 <br /><br />
-<button type="button" id="add_re_site_button" class="btn btn-primary" data-toggle="modal" >Add restriction enzyme site</button>
+<button type="button" id="add_re_site_button" class="btn btn-primary" data-toggle="modal" ><% $c->i18n->p("transformation.root.add_restriction_enzyme_site", "Add restriction enzyme site") |h %></button>
 </td></tr></table>
 
 <table id="metadata_table" width="40%" class="display table table-hover table-striped">
-<thead><tr><td>Vector Name</td><td>Vector length</td></tr></thead><tbody></tbody>
+<thead><tr><td><% $c->i18n->p("transformation.root.vector_name", "Vector Name") |h %></td><td><% $c->i18n->p("transformation.root.vector_length", "Vector length") |h %></td></tr></thead><tbody></tbody>
 </table>
 
 <!-- table id="sequence_table" width="80%" class="display table table-hover table-striped">
@@ -129,20 +129,20 @@ $edit_privs
 
 </div>
 
-<div id="saveDialog" title="Save Vector!">
+<div id="saveDialog" title="<% $c->i18n->p("transformation.root.save_vector.85f55b7", "Save Vector!") |h %>">
 
 <!-- input id="saveInput" ></input -->
-To save edits, please click on the Save button.
+<% $c->i18n->p("transformation.root.to_save_edits_please_click_on_the_save_button", "To save edits, please click on the Save button.") |h %>
 
-<button id="dialogSaveButton">Save</button>
-<button id="dialogSaveCancelButton">Cancel</button>
+<button id="dialogSaveButton"><% $c->i18n->p("account.quick_create.save", "Save") |h %></button>
+<button id="dialogSaveCancelButton"><% $c->i18n->p("auth.legacy.cancel", "Cancel") |h %></button>
 </div>
 
-<div id="loadDialog" title="Load Vector">
+<div id="loadDialog" title="<% $c->i18n->p("transformation.root.load_vector", "Load Vector") |h %>">
 
 <input id="loadInput" ></input>
 
-<button id="dialogLoadButton"> Load !!! </button>
+<button id="dialogLoadButton"> <% $c->i18n->p("transformation.root.load", "Load !!!") |h %> </button>
 
 </div>
 
@@ -150,14 +150,14 @@ To save edits, please click on the Save button.
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><span id="manage_feature_dialog_title">Add a feature</span></h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <h5 class="modal-title"><span id="manage_feature_dialog_title"><% $c->i18n->p("transformation.root.add_a_feature", "Add a feature") |h %></span></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
         <table>
-	<tr><td>Name</td><td>Start coord</td><td>End coord</td><td>Color</td><td>Orientation</td></tr>
+	<tr><td><% $c->i18n->p("global.library_search.name", "Name") |h %></td><td><% $c->i18n->p("transformation.root.start_coord.fe77de8", "Start coord") |h %></td><td><% $c->i18n->p("transformation.root.end_coord.c3b2295", "End coord") |h %></td><td><% $c->i18n->p("transformation.root.color", "Color") |h %></td><td><% $c->i18n->p("transformation.root.orientation", "Orientation") |h %></td></tr>
 	<tr><td width="200"><input type="text" id="feature_name" class="form-control" /></td>
 	  <td width="200" ><input type="text" id="feature_start_coord" class="form-control" /></td>
 	  <td width="200"><input type="text" id="feature_end_coord" class="form-control"></td>
@@ -182,8 +182,8 @@ To save edits, please click on the Save button.
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>	
-        <button id="add_feature_data_submit_button" type="button" class="btn btn-primary">Store</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+        <button id="add_feature_data_submit_button" type="button" class="btn btn-primary"><% $c->i18n->p("cross.ui.store", "Store") |h %></button>
       </div>
     </div>
   </div>
@@ -193,14 +193,14 @@ To save edits, please click on the Save button.
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Add/Edit a restriction enzyme site</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <h5 class="modal-title"><% $c->i18n->p("transformation.root.add_edit_a_restriction_enzyme_site", "Add/Edit a restriction enzyme site") |h %></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
 	<table>
-	  <tr><td>Name</td><td>Cut coord</td></tr>
+	  <tr><td><% $c->i18n->p("global.library_search.name", "Name") |h %></td><td><% $c->i18n->p("transformation.root.cut_coord.d1ab7be", "Cut coord") |h %></td></tr>
 	  <tr><td width="200"><input type="text" id="re_site_name" class="form-control" /></td>
 	    <td width="200" ><input type="text" id="re_site_cut_coord" class="form-control" /></td>
 	  </tr>
@@ -208,8 +208,8 @@ To save edits, please click on the Save button.
 	<input type="hidden" id="re_site_table_row_id" />
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button id="add_restriction_site_submit_button" type="button" class="btn btn-primary">Store</button>	
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+        <button id="add_restriction_site_submit_button" type="button" class="btn btn-primary"><% $c->i18n->p("cross.ui.store", "Store") |h %></button>
       </div>
     </div>
   </div>
@@ -220,32 +220,32 @@ To save edits, please click on the Save button.
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">VectorViewer Quick Instructions</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <h5 class="modal-title"><% $c->i18n->p("transformation.root.vectorviewer_quick_instructions", "VectorViewer Quick Instructions") |h %></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-	
-	<h2>Quick Instructions for the VectorViewer</h2>
-	
+
+	<h2><% $c->i18n->p("transformation.root.quick_instructions_for_the_vectorviewer", "Quick Instructions for the VectorViewer") |h %></h2>
+
 	<ul>
-	  <li>The VectorViewer appears in a section in the vector detail page and can be used to visualize the vector, as well as edit aspects of the vector annotation.</li>
-	  
-	  <li><b>Add vector data:</b> If the VectorViewer is empty, such as on a newly created vector page, you can upload a file describing the vector structure. If you have a Genbank-formatted file (usually with a .gb extension), you can go to the "Upload Additional Files" section and upload it. Make sure it retains the .gb extension, as the vectorviewer will recognize the file by this extension. The parsed data from the file will be used to display the vector.</li>
-	  
-	  <li><b>To edit the vector annotations</b> you can add, edit or remove features from the vector using the feature and restriction enzyme tables below the vector diagram. To remove an element, click on the "delete" button in the corresponding row. To edit an element, click on the "edit" button in the corresponding row. To add new feature elements, click on the "Add Feature" button below the table. To add a new restriction enzyme, click on the "Add Restriction Enzyme" button below the restriction enzyme table.</li>
-	  
-	  <li><b>Saving your changes: </b> When you edit the vector, the changes are not saved. You can save the changes by clicking the "Save changes" button.</li>
-	  
-	  <li><b>zooming in and out</b>: you can zoom in and out of the vector using the "+" and "-" buttons.</li>
-	  
-	  <li>More information is available in the Breedbase manual.</li>
-	  
-	</ul> 
+	  <li><% $c->i18n->p("transformation.root.the_vectorviewer_appears_in_a_section_in_the_vector_detail", "The VectorViewer appears in a section in the vector detail page and can be used to visualize the vector, as well as edit aspects of the vector annotation.") |h %></li>
+
+	  <li><b><% $c->i18n->p("transformation.root.add_vector_data", "Add vector data:") |h %></b> <% $c->i18n->p("transformation.root.if_the_vectorviewer_is_empty_such_as_on_a_newly", "If the VectorViewer is empty, such as on a newly created vector page, you can upload a file describing the vector structure. If you have a Genbank-formatted file (usually with a .gb extension), you can go to the \"Upload Additional Files\" section and upload it. Make sure it retains the .gb extension, as the vectorviewer will recognize the file by this extension. The parsed data from the file will be used to display the vector.") |h %></li>
+
+	  <li><b><% $c->i18n->p("transformation.root.to_edit_the_vector_annotations", "To edit the vector annotations") |h %></b> <% $c->i18n->p("transformation.root.you_can_add_edit_or_remove_features_from_the_vector", "you can add, edit or remove features from the vector using the feature and restriction enzyme tables below the vector diagram. To remove an element, click on the \"delete\" button in the corresponding row. To edit an element, click on the \"edit\" button in the corresponding row. To add new feature elements, click on the \"Add Feature\" button below the table. To add a new restriction enzyme, click on the \"Add Restriction Enzyme\" button below the restriction enzyme table.") |h %></li>
+
+	  <li><b><% $c->i18n->p("transformation.root.saving_your_changes", "Saving your changes:") |h %> </b> <% $c->i18n->p("transformation.root.when_you_edit_the_vector_the_changes_are_not_saved", "When you edit the vector, the changes are not saved. You can save the changes by clicking the \"Save changes\" button.") |h %></li>
+
+	  <li><b><% $c->i18n->p("transformation.root.zooming_in_and_out", "zooming in and out") |h %></b><% $c->i18n->p("transformation.root.you_can_zoom_in_and_out_of_the_vector_using", ": you can zoom in and out of the vector using the \"+\" and \"-\" buttons.") |h %></li>
+
+	  <li><% $c->i18n->p("transformation.root.more_information_is_available_in_the_breedbase_manual", "More information is available in the Breedbase manual.") |h %></li>
+
+	</ul>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -263,9 +263,9 @@ jQuery(document).ready(function () {
 
       jQuery('#vectorviewer_instructions_button').click( function() {
          jQuery('#vectorviewer_instructions').modal('show');
-	 
 
-});   
+
+});
 
 });
 

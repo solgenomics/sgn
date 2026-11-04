@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -21,21 +25,19 @@ $guide
 </%args>
 
 <%perl>
-my $message = qq | <p>You are trying to upload file(s) with the same name 
-                     <b>($file1 and $file2)</b> for this step and one of the 
-                     steps before it.
+my $message = (qq | <p>| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.you_are_trying_to_upload_file_s_with_the_same", "You are trying to upload file(s) with the same name")) . qq |\x20
+                     <b>($file1 | . HTML::Entities::encode_entities($c->i18n->p("global.formatting.range.and", "and")) . qq | $file2)</b> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.for_this_step_and_one_of_the_steps_before_it", "for this step and one of the \n                     steps before it.")) . qq |
                    </p>
 
-                   <p>Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
-                     and check the file you are trying to upload or if you keep 
-                     having problem with it contact us.
+                   <p>| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.please_go", "Please go")) . qq | <a href="javascript:history.go(-1)"><b>| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.back", "back")) . qq |</b></a>\x20
+                     | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.and_check_the_file_you_are_trying_to_upload_or", "and check the file you are trying to upload or if you keep \n                     having problem with it contact us.")) . qq |
                    </p>
-                | ;
+                |) ;
 
 
 </%perl>
 
-<& /page/page_title.mas, title => 'Data files' &>
-<&| /page/info_section.mas, title => '', subtitle => $guide &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.data_files", 'Data files')) &>
+<&| /page/info_section.mas, anchor_title => '', title => '', subtitle => $guide &>
   <% $message %>  
 </&>

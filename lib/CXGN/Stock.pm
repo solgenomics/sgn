@@ -29,6 +29,8 @@ object that instantiates the correct object given the stock_id).
 package CXGN::Stock;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 
 use Carp;
 use Data::Dumper;
@@ -616,6 +618,7 @@ checks if the stock exists in the database (if a stock_id is provided), and if d
 =cut
 
 sub store {
+    my SGN::I18N $ui_stock_store_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my %return;
 
@@ -696,7 +699,7 @@ sub store {
 
         }
         else {
-            die "The entry ".$self->uniquename()." already exists in the database. Error: $exists\n";
+            die (SGN::I18N::translate($ui_stock_store_i18n, "accession.stock.duplicate", "The entry %{name} already exists in the database. Error: %{details}\n", {name => "" . ($self->uniquename()), details => "$exists"}));
         }
     }
     else {
@@ -742,6 +745,7 @@ sub store {
 =cut
 
 sub exists_in_database {
+    my SGN::I18N $ui_stock_exists_in_database_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $schema = $self->schema;
     my $stock = $self->stock;
@@ -758,7 +762,7 @@ sub exists_in_database {
     #
     if (defined($s) && !$stock ) {
 
-	return "Uniquename already exists in database with stock_id: ".$s->stock_id;
+	return (SGN::I18N::translate($ui_stock_exists_in_database_i18n, "accession.stock.duplicate_id", "Uniquename already exists in database with stock_id: %{id}", {id => "" . ($s->stock_id)}));
     #    return $s->stock_id;
     }
 
@@ -2122,13 +2126,14 @@ Example:
 =cut
 
 sub get_child_stocks {
+    my SGN::I18N $ui_stock_get_child_stocks_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $type = $self->type();
     my $stock_id = $self->stock_id();
     my $name = $self->uniquename();
 
     if (!$type) {
-        die "Cannot get child stocks without knowing stock type!\n";
+        die (SGN::I18N::translate($ui_stock_get_child_stocks_i18n, "accession.stock.child_type_missing", "Cannot get child stocks without knowing stock type!\n"));
     }
 
     my $plot_and_plant_q = "SELECT stock.stock_id, stock.name,
@@ -2336,13 +2341,14 @@ unlike in get_child_stocks where it remains at the top of the hierarchy.
 =cut
 
 sub get_child_stocks_flat_list {
+    my SGN::I18N $ui_stock_get_child_stocks_flat_list_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $type = $self->type();
     my $stock_id = $self->stock_id();
     my $name = $self->uniquename();
 
     if (!$type) {
-        die "Cannot get child stocks without knowing stock type!\n";
+        die (SGN::I18N::translate($ui_stock_get_child_stocks_flat_list_i18n, "accession.stock.child_type_missing", "Cannot get child stocks without knowing stock type!\n"));
     }
 
     my $plot_and_plant_q = "SELECT stock.stock_id, stock.name,
@@ -2850,6 +2856,7 @@ CXGN::Stock->bulk_hard_delete($schema, $stock_ids);
 =cut
 
 sub bulk_hard_delete {
+    my SGN::I18N $ui_stock_bulk_hard_delete_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $class = shift;
     my $schema = shift;
     my $stock_ids = shift;
@@ -2866,7 +2873,7 @@ sub bulk_hard_delete {
     $h->execute(@{$stock_ids});
     my ($count) = $h->fetchrow_array();
     if ($count > 0) {
-        die "There are traits observed for these stock entries - delete phenotypes before deleting stocks.\n";
+        die (SGN::I18N::translate($ui_stock_bulk_hard_delete_i18n, "accession.stock.phenotypes_exist", "There are traits observed for these stock entries - delete phenotypes before deleting stocks.\n"));
     }
 
     my $q = "DELETE FROM phenome.stock_owner WHERE stock_id IN ($placeholders)";

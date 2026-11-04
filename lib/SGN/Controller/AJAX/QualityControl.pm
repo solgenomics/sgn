@@ -2,6 +2,7 @@
 package SGN::Controller::AJAX::QualityControl;
 
 use Moose;
+use SGN::I18N ();
 
 use Data::Dumper;
 use File::Slurp;
@@ -30,10 +31,11 @@ __PACKAGE__->config(
 sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $dataset_id = $c->req->param('dataset_id');
 
     if (! $c->user()) {
-        $c->stash->{rest} = {error=>'You must be logged in first!'};
+        $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "program.identifier.login", "You must be logged in first!")};
         $c->detach;
     }
 
@@ -77,7 +79,7 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
 
     } else {
         $c->stash->{rest} = {
-            error => "No traits found in the dataset. Please select a dataset with trial(s) and trait(s).",
+            error => SGN::I18N::translate($i18n, "decision.server.no_traits_found_in_the_dataset_please_select_a_dataset_with_trial_s_", "No traits found in the dataset. Please select a dataset with trial(s) and trait(s)."),
         };
     }
 }
@@ -85,6 +87,7 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
 sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -96,7 +99,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol/".$file);
     my $F;
     if (! open($F, "<", $temppath)) {
-    $c->stash->{rest} = { error => "Can't find data." };
+    $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.can_t_find_data", "Can't find data.") };
     return;
     }
 
@@ -167,7 +170,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
 
         if (scalar(@validated_projects) > 0) {
             my $project_names_str = join(", ", @validated_projects);
-            my $message = "Trait $trait is already validated data for trials: $list_projects";
+            my $message = SGN::I18N::translate($i18n, "analysis.interface.trait_trait_is_already_validated_data_for_trials_list_projects", "Trait %{trait} is already validated data for trials: %{list_projects}", {trait => ("" . "$trait"), list_projects => ("" . "$list_projects")});
             $c->stash->{rest} = { message => $message };
         } else {
             $c->stash->{rest} = { data => \@data, trait => $trait};
@@ -183,6 +186,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
 sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -195,7 +199,7 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
 
     my $F;
     if (! open($F, "<", $temppath)) {
-    $c->stash->{rest} = { error => "Can't find data." };
+    $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.can_t_find_data", "Can't find data.") };
     return;
     }
 

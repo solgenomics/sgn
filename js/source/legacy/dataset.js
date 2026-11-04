@@ -3,7 +3,7 @@
 var datasets = new CXGN.Dataset();
 
 function datasetDelete(val) {
-    if ( confirm(`Dataset. Are you sure you would like to delete it? Deletion cannot be undone.`)) {
+    if ( confirm(window.SGN && SGN.i18n ? SGN.i18n.p("global.legacy_dataset.delete_confirm", "Dataset. Are you sure you would like to delete it? Deletion cannot be undone.") : `Dataset. Are you sure you would like to delete it? Deletion cannot be undone.`)) {
         datasets.deleteDataset(val, () => {
             window.location.reload();
         });

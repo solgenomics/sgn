@@ -12,35 +12,39 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 <&| /page/info_section.mas, 
-   title      => "Step 1:  Population details",
+   title      => HTML::Entities::encode_entities($c->i18n->p("help.qtl.population_heading", "Step 1:  Population details")),
   collapsible => 1,
   collapsed   => 1
-&>
+, anchor_title => "Step 1:  Population details" &>
 
 <ul>
   <li>
-    <strong> Select organism:</strong> fill in the common name of the species the population belongs to. Press the 'associate organism' button. Then proceed with the rest of the form.
+    <strong> <% $c->i18n->p("help.qtl.population.organism", "Select organism:") |h %></strong><% $c->i18n->p("help.qtl.population.organism_text", " fill in the common name of the species the population belongs to. Press the 'associate organism' button. Then proceed with the rest of the form.") |h %>
   </li>
   <li>
-    <strong> Cross type:</strong> at this stage only inter cross (F2), backcross, RIL (from both sibling mating and selfing) diploid populations are supported.
+    <strong> <% $c->i18n->p("help.qtl.population.cross_type", "Cross type:") |h %></strong><% $c->i18n->p("help.qtl.population.cross_type_text", " at this stage only inter cross (F2), backcross, RIL (from both sibling mating and selfing) diploid populations are supported.") |h %>
   </li>
   <li>
-    <strong> Population name:</strong> provide a concise and precise name for the population. This will also serve as the genetic map name of the population.
+    <strong> <% $c->i18n->p("help.qtl.population.name", "Population name:") |h %></strong><% $c->i18n->p("help.qtl.population.name_text", " provide a concise and precise name for the population. This will also serve as the genetic map name of the population.") |h %>
   </li>
    <li>
-     <strong> Population description:</strong> provide an abstract style characterization of the population including experimental design highlights.
+     <strong> <% $c->i18n->p("help.qtl.population.description", "Population description:") |h %></strong><% $c->i18n->p("help.qtl.population.description_text", " provide an abstract style characterization of the population including experimental design highlights.") |h %>
    </li>
    <li> 
-     <strong>Female and male parents:</strong> Include the species name and cultivar name. Eg. <i> Solanum lycopersicum</i> cv. moneymaker</it>.
+     <strong><% $c->i18n->p("help.qtl.population.parents", "Female and male parents:") |h %></strong><% $c->i18n->p("help.qtl.population.parents_text", " Include the species name and cultivar name. Eg. ") |h %><i> Solanum lycopersicum</i> cv. moneymaker</it>.
    </li>
   <li>
-    <strong> Recurrent and donor parents:</strong> In the same format as the female and male parents but required only in case of backcross population.
+    <strong> <% $c->i18n->p("help.qtl.population.backcross_parents", "Recurrent and donor parents:") |h %></strong><% $c->i18n->p("help.qtl.population.backcross_text", " In the same format as the female and male parents but required only in case of backcross population.") |h %>
   </li>
 
   <li>
-    <strong> Do you want to make the data public:</strong> Choose 'Yes' or 'No' depending on whether you want to share the QTL data with the community or not.
+    <strong> <% $c->i18n->p("help.qtl.population.public", "Do you want to make the data public:") |h %></strong><% $c->i18n->p("help.qtl.population.public_text", " Choose 'Yes' or 'No' depending on whether you want to share the QTL data with the community or not.") |h %>
   </li> 
   
 </ul>  
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

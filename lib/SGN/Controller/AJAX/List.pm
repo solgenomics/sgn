@@ -40,7 +40,7 @@ sub get_list_action :Path('/list/get') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-	$c->stash->{rest} = { error => 'You must be logged in to use lists.', };
+    $c->stash->{rest} = { error => $c->i18n->p('lists.server.sign_in_use', 'You must be logged in to use lists.'), };
 	return;
     }
 
@@ -139,7 +139,7 @@ sub update_list_name_action :Path('/list/name/update') :Args(0) {
         return;
     }
 
-    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id, i18n => $c->i18n });
     $list->name($name);
 
     $c->stash->{rest} = { success => 1 };
@@ -159,7 +159,7 @@ sub update_list_description_action :Path('/list/description/update') :Args(0) {
         return;
     }
 
-    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id, i18n => $c->i18n });
     $list->description($description);
 
     $c->stash->{rest} = { success => 1 };
@@ -179,17 +179,17 @@ sub set_type :Path('/list/type') Args(2) {
 	return;
     }
 
-    my $list = CXGN::List->new( { dbh=> $c->dbc->dbh(), list_id => $list_id });
+    my $list = CXGN::List->new( { dbh=> $c->dbc->dbh(), list_id => $list_id, i18n => $c->i18n });
 
     if ($list->owner() != $user_id) {
-	$c->stash->{rest} = { error => "Only the list owner can change the type of a list" };
+	$c->stash->{rest} = { error => $c->i18n->p('lists.server.type_owner', 'Only the list owner can change the type of a list') };
 	return;
     }
 
     $error = $list->type($type);
 
     if (!$error) {
-	$c->stash->{rest} = { error => "List type not found: ".$type };
+	$c->stash->{rest} = { error => $c->i18n->p('lists.server.type_missing', 'List type not found: %{type}', {type => $type}) };
 	return;
     }
 
@@ -206,7 +206,7 @@ sub new_list_action :Path('/list/new') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-	$c->stash->{rest} = { error => "You must be logged in to use lists", };
+	$c->stash->{rest} = { error => $c->i18n->p('lists.server.sign_in_create', 'You must be logged in to use lists'), };
 	return;
     }
 
@@ -216,7 +216,7 @@ sub new_list_action :Path('/list/new') Args(0) {
     };
 
     if ($@) {
-	$c->stash->{rest} = { error => "An error occurred, $@", };
+    $c->stash->{rest} = { error => do { my $list_api_error_detail = "$@"; $c->i18n->p("lists_datasets.server.error_comma", "An error occurred, %{detail}", {detail => $list_api_error_detail}) }, };
 	return;
     }
     else {
@@ -325,7 +325,7 @@ sub available_lists : Path('/list/available') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-	$c->stash->{rest} = { error => "You must be logged in to use lists.", };
+    $c->stash->{rest} = { error => $c->i18n->p('lists.server.sign_in_use', 'You must be logged in to use lists.'), };
 	return;
     }
 
@@ -342,7 +342,7 @@ sub available_public_lists : Path('/list/available_public') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-        $c->stash->{rest} = { error => "You must be logged in to use lists." };
+        $c->stash->{rest} = { error => $c->i18n->p('lists.server.sign_in_use', 'You must be logged in to use lists.') };
         $c->detach();
     }
 
@@ -369,12 +369,12 @@ sub add_item :Path('/list/item/add') Args(0) {
     $element =~ s/^\s*(.+?)\s*$/$1/;
 
     if (!$element) {
-	$c->stash->{rest} = { error => "You must provide an element to add to the list" };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.element_required", "You must provide an element to add to the list") };
 	return;
     }
 
     if (!$list_id) {
-	$c->stash->{rest} = { error => "Please specify a list_id." };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.list_id_required", "Please specify a list_id.") };
 	return;
     }
 
@@ -382,7 +382,7 @@ sub add_item :Path('/list/item/add') Args(0) {
 	$self->insert_element($c, $list_id, $element);
     };
     if ($@) {
-	$c->stash->{rest} = { error => "An error occurred: $@" };
+    $c->stash->{rest} = { error => do { my $list_api_error_detail = "$@"; $c->i18n->p("lists_datasets.server.error_colon", "An error occurred: %{detail}", {detail => $list_api_error_detail}) } };
 	return;
     }
     else {
@@ -459,7 +459,7 @@ sub copy_public_list : Path('/list/public/copy') Args(0) {
     my $public = $list->check_if_public();
     my $user_id = $self->get_user($c);
     if (!$user_id || $public == 0) {
-	$c->stash->{rest} = { error => 'You must be logged in to use lists and list must be public!' };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.public_login", "You must be logged in to use lists and list must be public!") };
 	return;
     }
 
@@ -494,7 +494,7 @@ sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     #print STDERR Dumper $cross_id_list;
     my $list_id = $c->req->param("list_id");
 
-    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id, i18n => $c->i18n });
 
     my %response;
     $response{'count'} = 0;
@@ -536,13 +536,13 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
     }
 
     if (!$elements) {
-        $c->stash->{rest} = { error => "You must provide one or more elements to add to the list" };
+        $c->stash->{rest} = { error => $c->i18n->p('lists.server.elements_required', 'You must provide one or more elements to add to the list') };
         return;
     }
 
     my @elements = split "\t", $elements;
 
-    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id, i18n => $c->i18n });
 
     my @duplicates = ();
     my $count = 0;
@@ -567,7 +567,7 @@ sub insert_element : Private {
     my $list_id = shift;
     my $element = shift;
 
-    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id, i18n => $c->i18n });
 
     $list->add_bulk([$element]);
 }
@@ -584,7 +584,7 @@ sub delete_list_action :Path('/list/delete') Args(0) {
 	return;
     }
 
-    $error = CXGN::List::delete_list($c->dbc->dbh(), $list_id);
+    $error = CXGN::List::delete_list($c->dbc->dbh(), $list_id, $c->i18n);
 
     if ($error) {
 	$c->stash->{rest} = { error => $error };
@@ -602,7 +602,7 @@ sub exists_list_action : Path('/list/exists') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-	$c->stash->{rest} = { error => 'You need to be logged in to use lists.' };
+	$c->stash->{rest} = { error => $c->i18n->p('lists.server.sign_in_exists', 'You need to be logged in to use lists.') };
     }
 
     my $list_info = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
@@ -627,7 +627,7 @@ sub exists_item_action : Path('/list/exists_item') :Args(0) {
     my $user_id = $self->get_user($c);
 
     if ($self->get_list_owner($c, $list_id) != $user_id) {
-	$c->stash->{rest} = { error => "You have insufficient privileges to manipulate this list.", };
+	$c->stash->{rest} = { error => $c->i18n->p('lists.server.not_allowed', 'You have insufficient privileges to manipulate this list.'), };
 	return;
     }
 
@@ -673,7 +673,7 @@ sub validate : Path('/list/validate') Args(2) {
 
     my @flat_list = map { $_->[1] } @$list;
 
-    my $lv = CXGN::List::Validate->new();
+    my $lv = CXGN::List::Validate->new(i18n => $c->i18n);
     my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, \@flat_list);
 
     print STDERR "DATA = ".Dumper($data);
@@ -698,7 +698,7 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
 	my @flat_list = map { $_->[1] } @$list;
 
 	print STDERR "LIST TYPE = ".$list_types[$n]."\n";
-	my $lv = CXGN::List::Validate->new();
+	my $lv = CXGN::List::Validate->new(i18n => $c->i18n);
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 	my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $list_types[$n], \@flat_list);
 
@@ -744,7 +744,7 @@ sub temp_validate_POST : Args(0) {
     my $type = $c->req->param("type");
     my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
 
-    my $lv = CXGN::List::Validate->new();
+    my $lv = CXGN::List::Validate->new(i18n => $c->i18n);
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, $items);
 
@@ -795,7 +795,7 @@ sub transform :Path('/list/transform/') Args(2) {
     my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $transform_name, \@list_items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
-	$result->{error}  =  "Warning. This lists contains elements that cannot be converted.";
+    $result->{error}  =  $c->i18n->p("lists_datasets.server.conversion_warning", "Warning. This lists contains elements that cannot be converted.");
     }
 
     $c->stash->{rest} = $result;
@@ -813,7 +813,7 @@ sub temp_transform :Path('/list/transform/temp') Args(0) {
     my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, $items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
-       $result->{error}  =  "Warning. This temporary list contains elements that cannot be converted.";
+       $result->{error}  =  $c->i18n->p("lists_datasets.server.temporary_conversion_warning", "Warning. This temporary list contains elements that cannot be converted.");
     }
 
     $c->stash->{rest} = $result;
@@ -944,12 +944,12 @@ sub update_element_action :Path('/list/item/update') Args(0) {
             return;
         }
 
-        my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+        my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id, i18n => $c->i18n });
         $error = $list->update_element_by_id($item_id, $content);
     }
 
     if ($error) {
-        $c->stash->{rest} = { error => "An error occurred while attempting to update item $item_id" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.update_error", "An error occurred while attempting to update item %{id}", {id => $item_id}) };
     }
     else {
         $c->stash->{rest} = { success => 1 };
@@ -1015,11 +1015,11 @@ sub remove_element : Private {
     my $item_id = shift;
 
 
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id, i18n => $c->i18n });
     my $error = $list->remove_element_by_id($item_id);
 
     if ($error) {
-	return { error => "An error occurred while attempting to delete item $item_id" };
+    return { error => $c->i18n->p("lists_datasets.server.delete_error", "An error occurred while attempting to delete item %{id}", {id => $item_id}) };
     }
     else {
 	return { success => 1 };
@@ -1072,10 +1072,10 @@ sub check_user : Private {
     my $error = "";
 
     if (!$user_id) {
-        $error = "You must be logged in to manipulate this list.";
+        $error = $c->i18n->p('lists.server.sign_in_edit', 'You must be logged in to manipulate this list.');
     }
     elsif ($c->user->get_object->get_user_type() ne 'curator' && $self->get_list_owner($c, $list_id) != $user_id) {
-        $error = "You have insufficient privileges to manipulate this list.";
+        $error = $c->i18n->p('lists.server.not_allowed', 'You have insufficient privileges to manipulate this list.');
     }
     return $error;
 }
@@ -1088,7 +1088,7 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to use lists.', };
+        $c->stash->{rest} = { error => $c->i18n->p('lists.server.sign_in_use', 'You must be logged in to use lists.'), };
     	return;
     }
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
@@ -1113,7 +1113,7 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-        $c->stash->{rest} = { error => "You must be logged in to use marker alleles.", };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.marker_login", "You must be logged in to use marker alleles."), };
         return;
     }
 
@@ -1139,7 +1139,7 @@ sub delete_markerset : Path('/markerset/delete') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to delete marker alleles.', };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.marker_delete_login", "You must be logged in to delete marker alleles."), };
     	return;
     }
 
@@ -1151,7 +1151,7 @@ sub delete_markerset : Path('/markerset/delete') Args(0) {
 	return;
     }
 
-    $error = CXGN::List::delete_list($c->dbc->dbh(), $markerset_id);
+    $error = CXGN::List::delete_list($c->dbc->dbh(), $markerset_id, $c->i18n);
 
     if (!$error){
         $c->stash->{rest} = { success => 1 };
@@ -1172,7 +1172,7 @@ sub get_markerset_items :Path('/markerset/items') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to use marker alleles.', };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.marker_login", "You must be logged in to use marker alleles."), };
     	return;
     }
 
@@ -1202,7 +1202,7 @@ sub get_markerset_type :Path('/markerset/type') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to use marker alleles.', };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.marker_login", "You must be logged in to use marker alleles."), };
     	return;
     }
 
@@ -1233,19 +1233,19 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-        $c->stash->{rest} = { error => "You must be logged in to use lists.", };
+        $c->stash->{rest} = { error => $c->i18n->p('lists.server.sign_in_use', 'You must be logged in to use lists.'), };
         return;
     }
 
-    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $list_id } );
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $list_id, i18n => $c->i18n } );
 
     if ($user_id != $list->owner()) {
-	$c->stash->{rest} = { error => "You don't own this list and you cannot modify it." };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.not_owner", "You don't own this list and you cannot modify it.") };
 	return;
     }
 
     if ($list->type() ne "accessions") {
-	$c->stash->{rest} = { error => "Only lists with type 'accessions' can be adjusted for case in the database." };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.case_type", "Only lists with type 'accessions' can be adjusted for case in the database.") };
     }
 
     my $lt = CXGN::List::Transform->new();
@@ -1260,7 +1260,7 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
     print STDERR "Converted data: ".Dumper($data);
 
     if (! $data) {
-	$c->stash->{rest} = { error => "No data!" };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.no_data", "No data!") };
 	return;
     }
     my $error_message = "";
@@ -1272,7 +1272,7 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
 	    print STDERR "  with $data->{mapping}->{$item}...\n";
 	    my $error = $list->replace_by_name($item, $data->{mapping}->{$item});
 	    if ($error) {
-		$error_message .= "Error: $item not replaced. ";
+        $error_message .= $c->i18n->p("lists_datasets.server.not_replaced", "Error: %{item} not replaced. ", {item => $item});
 	    }
 	    else {
 		$replace_count++;
@@ -1299,19 +1299,19 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-        $c->stash->{rest} = { error => "You must be logged in to use lists.", };
+        $c->stash->{rest} = { error => $c->i18n->p('lists.server.sign_in_use', 'You must be logged in to use lists.'), };
         return;
     }
 
-    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $list_id } );
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $list_id, i18n => $c->i18n } );
 
     if ($user_id != $list->owner()) {
-	$c->stash->{rest} = { error => "You don't own this list and you cannot modify it." };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.not_owner", "You don't own this list and you cannot modify it.") };
 	return;
     }
 
     if ($list->type() ne "accessions") {
-	$c->stash->{rest} = { error => "Only lists with type 'accessions' can be adjusted for synonyms in the database." };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.synonym_type", "Only lists with type 'accessions' can be adjusted for synonyms in the database.") };
     }
 
     my $lt = CXGN::List::Transform->new();
@@ -1327,7 +1327,7 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
     print STDERR Dumper($data);
 
     if (! $data) {
-	$c->stash->{rest} = { error => "No data!" };
+    $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.server.no_data", "No data!") };
 	return;
     }
     my $error_message = "";
@@ -1339,7 +1339,7 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
 	    print STDERR "  with $data->{mapping}->{$item}...\n";
 	    my $error = $list->replace_by_name($item, $data->{mapping}->{$item});
 	    if ($error) {
-		$error_message .= "Error: $item not replaced. ";
+        $error_message .= $c->i18n->p("lists_datasets.server.not_replaced", "Error: %{item} not replaced. ", {item => $item});
 	    }
 	    else {
 		$replace_count++;
@@ -1371,10 +1371,10 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
     my $type = $list->type();
     my $items = $list->elements();
 
-    my $item_validator = CXGN::List::Validate->new();
+    my $item_validator = CXGN::List::Validate->new(i18n => $c->i18n);
     my @items_missing = @{$item_validator->validate($schema, $type, $items)->{'missing'}};
     if (scalar(@items_missing) > 0){
-        $c->stash->{rest} = {error => "The following items are not in the database: ".join(',',@items_missing)};
+        $c->stash->{rest} = {error => $c->i18n->p("lists_datasets.server.missing_items", "The following items are not in the database: %{items}", {items => join(',', @items_missing)})};
         return;
     }
 

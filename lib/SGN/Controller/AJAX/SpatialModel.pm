@@ -4,6 +4,7 @@ use strict;
 package SGN::Controller::AJAX::SpatialModel;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
@@ -65,6 +66,7 @@ sub shared_phenotypes: Path('/ajax/spatial_model/shared_phenotypes') Args(0) {
 sub extract_trait_data :Path('/ajax/spatial_model/getdata') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
@@ -77,7 +79,7 @@ sub extract_trait_data :Path('/ajax/spatial_model/getdata') Args(0) {
 
     my $F;
     if (! open($F, "<", $temppath)) {
-	$c->stash->{rest} = { error => "Can't find data." };
+	$c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.can_t_find_data", "Can't find data.") };
 	return;
     }
 
@@ -529,6 +531,7 @@ sub make_R_trait_name {
 sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustments') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $trial_id = shift;
 
     my $spatial_adjustments = $c->req->param("spatial_adjustments"); # should be a JSON of plot->trait->adjustment
@@ -541,7 +544,7 @@ sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustmen
     });
 
     if (!$trial) {
-        $c->stash->{rest} = {error => "Error: no trial with ID $trial_id found.\n"};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.error_no_trial_with_id_trial_id_found", "Error: no trial with ID %{trial_id} found.\n", {trial_id => ("" . "$trial_id")})};
         return;
     }
 
@@ -564,7 +567,7 @@ sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustmen
     };
 
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred saving spatial corrections to this trial. It may still be saved as a standalone analysis. \n $@ \n"};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.an_error_occurred_saving_spatial_corrections_to_this_trial_it", "An error occurred saving spatial corrections to this trial. It may still be saved as a standalone analysis. \n %{error} \n", {error => ("" . "$@")})};
         return;
     }
 
@@ -577,6 +580,7 @@ sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustmen
 sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adjustments') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $trial_id = shift;
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -587,7 +591,7 @@ sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adj
     });
 
     if (!$trial) {
-        $c->stash->{rest} = {error => "Error: no trial with ID $trial_id found.\n"};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.error_no_trial_with_id_trial_id_found", "Error: no trial with ID %{trial_id} found.\n", {trial_id => ("" . "$trial_id")})};
         return;
     }
 
@@ -603,7 +607,7 @@ sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adj
     my $spatial_adjustments_json = $spatial_adjustments_data_row->fetchrow_array();
 
     if (!$spatial_adjustments_json) {
-        $c->stash->{rest} = {data => "", message => "No spatial corrections associated with this trial.\n"};
+        $c->stash->{rest} = {data => "", message => SGN::I18N::translate($i18n, "analysis.interface.no_spatial_corrections_associated_with_this_trial", "No spatial corrections associated with this trial.\n")};
         return;
     }
 
@@ -614,6 +618,7 @@ sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adj
 sub get_spatial_adjusted_traits: Path('/ajax/spatial_model/get_spatial_adjusted_traits/') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $trial_id = shift;
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -624,7 +629,7 @@ sub get_spatial_adjusted_traits: Path('/ajax/spatial_model/get_spatial_adjusted_
     });
 
     if (!$trial) {
-        $c->stash->{rest} = {error => "Error: no trial with ID $trial_id found.\n"};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.error_no_trial_with_id_trial_id_found", "Error: no trial with ID %{trial_id} found.\n", {trial_id => ("" . "$trial_id")})};
         return;
     }
 
@@ -640,7 +645,7 @@ sub get_spatial_adjusted_traits: Path('/ajax/spatial_model/get_spatial_adjusted_
     my $spatial_adjustments_exists = $spatial_adjustments_data_row->fetchrow_array();
 
     if (!$spatial_adjustments_exists) {
-        $c->stash->{rest} = {error => "No spatial corrections associated with this trial.\n"};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.no_spatial_corrections_associated_with_this_trial", "No spatial corrections associated with this trial.\n")};
         return;
     }
 

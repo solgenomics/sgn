@@ -9,17 +9,17 @@
                     <div class="row">
                         <div class="col-sm-6">
                             <div class="form-group form-group-sm">
-                                <label class="col-sm-6 control-label">Number of Rows: </label>
+                                <label class="col-sm-6 control-label"><% $c->i18n->p("barcode.mason.number_of_rows", "Number of Rows:") |h %> </label>
                                 <div class="col-sm-6">
-                                    <input class="form-control" id="drone_imagery_standard_process_plot_polygons_num_rows" name="drone_imagery_standard_process_plot_polygons_num_rows" type="number" placeholder="Number of rows in image section" />
+                                    <input class="form-control" id="drone_imagery_standard_process_plot_polygons_num_rows" name="drone_imagery_standard_process_plot_polygons_num_rows" type="number" placeholder="<% $c->i18n->p("drone.interface.number_of_rows_in_image_section", "Number of rows in image section") |h %>" />
                                 </div>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group form-group-sm">
-                                <label class="col-sm-6 control-label">Number of Columns: </label>
+                                <label class="col-sm-6 control-label"><% $c->i18n->p("barcode.mason.number_of_columns", "Number of Columns:") |h %> </label>
                                 <div class="col-sm-6">
-                                    <input class="form-control" id="drone_imagery_standard_process_plot_polygons_num_cols" name="drone_imagery_standard_process_plot_polygons_num_cols" type="number" placeholder="Number of columns in image section"/>
+                                    <input class="form-control" id="drone_imagery_standard_process_plot_polygons_num_cols" name="drone_imagery_standard_process_plot_polygons_num_cols" type="number" placeholder="<% $c->i18n->p("drone.interface.number_of_columns_in_image_section", "Number of columns in image section") |h %>"/>
                                 </div>
                             </div>
                         </div>
@@ -34,23 +34,23 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <h4> Either (A) click the four corners of the area of interest: </h4>
+                    <h4> <% $c->i18n->p("drone.interface.either_a_click_the_four_corners_of_the_area_of_interest_label_variant", "Either (A) click the four corners of the area of interest:") |h %> </h4>
 
-                    <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_top_left_click">Click Top Left Corner</button>
-                    <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_top_right_click">Click Top Right Corner</button>
-                    <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_bottom_left_click">Click Bottom Left Corner</button>
-                    <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_bottom_right_click">Click Bottom Right Corner</button>
+                    <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_top_left_click"><% $c->i18n->p("drone.interface.click_top_left_corner", "Click Top Left Corner") |h %></button>
+                    <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_top_right_click"><% $c->i18n->p("drone.interface.click_top_right_corner", "Click Top Right Corner") |h %></button>
+                    <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_bottom_left_click"><% $c->i18n->p("drone.interface.click_bottom_left_corner", "Click Bottom Left Corner") |h %></button>
+                    <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_bottom_right_click"><% $c->i18n->p("drone.interface.click_bottom_right_corner", "Click Bottom Right Corner") |h %></button>
                 </div>
             </div>
             <hr>
 
-            <&| /page/info_section.mas, title => 'Template Parameters', collapsible=>1, collapsed => 1, subtitle=> 'View and edit template parameters. These parameters can be filled using the above button clicks' &>
+            <&| /page/info_section.mas, anchor_title => "Template Parameters", title=>HTML::Entities::encode_entities($c->i18n->p("drone.interface.template_parameters", "Template Parameters")), collapsible=>1, collapsed => 1, subtitle=> HTML::Entities::encode_entities($c->i18n->p("drone.interface.view_and_edit_template_parameters_these_parameters_can_be_filled_using_the_abo", "View and edit template parameters. These parameters can be filled using the above button clicks")) &>
                 <div class="well well-sm">
                     <form class="form-horizontal">
                         <div class="row">
                             <div class="col-sm-6">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-6 control-label">Left-most Column Top Margin: </label>
+                                    <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.left_most_column_top_margin_label", "Left-most Column Top Margin:") |h %> </label>
                                     <div class="col-sm-6">
                                         <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_top_offset" name="drone_imagery_standard_process_plot_polygons_left_column_top_offset" type="number" value="0" placeholder="0"/>
                                     </div>
@@ -58,7 +58,7 @@
                             </div>
                             <div class="col-sm-6">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-6 control-label">Left-most Column Bottom Margin: </label>
+                                    <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.left_most_column_bottom_margin_label", "Left-most Column Bottom Margin:") |h %> </label>
                                     <div class="col-sm-6">
                                         <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" name="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" type="number" value="0" placeholder="0"/>
                                     </div>
@@ -68,7 +68,7 @@
                         <div class="row">
                             <div class="col-sm-6">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-6 control-label">Top-most Row Left Margin: </label>
+                                    <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.top_most_row_left_margin_label", "Top-most Row Left Margin:") |h %> </label>
                                     <div class="col-sm-6">
                                         <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_left_offset" name="drone_imagery_standard_process_plot_polygons_top_row_left_offset" type="number" placeholder="0" value="0" />
                                     </div>
@@ -76,7 +76,7 @@
                             </div>
                             <div class="col-sm-6">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-6 control-label">Top-most Row Right Margin: </label>
+                                    <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.top_most_row_right_margin_label", "Top-most Row Right Margin:") |h %> </label>
                                     <div class="col-sm-6">
                                         <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_right_offset" name="drone_imagery_standard_process_plot_polygons_top_row_right_offset" type="number" placeholder="0" value="0" />
                                     </div>
@@ -86,7 +86,7 @@
                         <div class="row">
                             <div class="col-sm-6">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-6 control-label">Bottom-most Row Left Margin: </label>
+                                    <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.bottom_most_row_left_margin_label", "Bottom-most Row Left Margin:") |h %> </label>
                                     <div class="col-sm-6">
                                         <input class="form-control" id="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" name="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" type="number" placeholder="0" value="0" />
                                     </div>
@@ -94,7 +94,7 @@
                             </div>
                             <div class="col-sm-6">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-6 control-label">Right-most Column Bottom Margin: </label>
+                                    <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.right_most_column_bottom_margin_label", "Right-most Column Bottom Margin:") |h %> </label>
                                     <div class="col-sm-6">
                                         <input class="form-control" id="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" name="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" type="number" placeholder="0" value="0" />
                                     </div>
@@ -106,7 +106,7 @@
             </&>
 
             <br/>
-            <button class="btn btn-sm btn-primary" id="drone_imagery_standard_process_plot_polygons_rectangles_apply">(A) Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
+            <button class="btn btn-sm btn-primary" id="drone_imagery_standard_process_plot_polygons_rectangles_apply"><% $c->i18n->p("drone.interface.a_draw_plot_polygon_template_does_not_save_apply_multiple_templates_if_needed", "(A) Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)") |h %></button>
             
         </div>
     </div>
@@ -116,17 +116,17 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <h4> Or (B) paste a previously used template: </h4>
+                    <h4> <% $c->i18n->p("drone.interface.or_b_paste_a_previously_used_template_label_variant", "Or (B) paste a previously used template:") |h %> </h4>
                 </div>
             </div>
 
-            <&| /page/info_section.mas, title => 'Previously Used Plot Polygon Templates', collapsible=>1, collapsed => 1, subtitle=> 'View and use previous plot polygon templates used on this field trial' &>
+            <&| /page/info_section.mas, anchor_title => "Previously Used Plot Polygon Templates", title=>HTML::Entities::encode_entities($c->i18n->p("drone.interface.previously_used_plot_polygon_templates", "Previously Used Plot Polygon Templates")), collapsible=>1, collapsed => 1, subtitle=> HTML::Entities::encode_entities($c->i18n->p("drone.interface.view_and_use_previous_plot_polygon_templates_used_on_this_field_trial", "View and use previous plot polygon templates used on this field trial")) &>
                 <div class="well well-sm">
                     <form class="form-horizontal">
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-6 control-label">Previously Used Plot Polygon Templates For This Field Trial: </label>
+                                    <label class="col-sm-6 control-label"><% $c->i18n->p("drone.interface.previously_used_plot_polygon_templates_for_this_field_trial_label", "Previously Used Plot Polygon Templates For This Field Trial:") |h %> </label>
                                     <div class="col-sm-6">
                                         <div id="plot_polygons_standard_process_previously_saved_plot_polygon_templates">
                                         </div>
@@ -135,7 +135,7 @@
                             </div>
                         </div>
                     </form>
-                    <button class="btn btn-primary" id="plot_polygons_standard_process_use_previously_saved_template">(B) Draw Plot Polygon Template (Does not save)</button>
+                    <button class="btn btn-primary" id="plot_polygons_standard_process_use_previously_saved_template"><% $c->i18n->p("drone.interface.b_draw_plot_polygon_template_does_not_save", "(B) Draw Plot Polygon Template (Does not save)") |h %></button>
                 </div>
             </&>
         </div>
@@ -144,3 +144,7 @@
     <div id="drone_imagery_standard_process_plot_polygons_active_templates"></div>
 
 </div>
+
+<%once>
+use HTML::Entities ();
+</%once>

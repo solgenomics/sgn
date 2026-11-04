@@ -32,6 +32,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
   if (!$marker->ssr_data()) { return; }
 
@@ -55,20 +57,20 @@ my ($ssr_id, $ssr_name, $est_trace, $start_primer, $end_primer, $pcr_length, $an
 #  my @repeat_motifs=();
 #  my @repeat_numbers=();
 
-   $html.="<br /><b>Annealing temperatures:</b> <b>Low:</b> " . $ann_low . " <b>High:</b> " . $ann_high;  
+   $html.=("<br /><b>" . SGN::I18N::translate($c->i18n, "marker.detail.ssr_annealing_temperatures", "Annealing temperatures:", undef, {entities => '<>&'}) . "</b> <b>" . SGN::I18N::translate($c->i18n, "marker.detail.low", "Low:", undef, {entities => '<>&'}) . "</b> ") . $ann_low . (" <b>" . SGN::I18N::translate($c->i18n, "marker.detail.high", "High:", undef, {entities => '<>&'}) . "</b> ") . $ann_high;
 
 my @motifs = $marker->ssr_motif_info($ssr_id);
 foreach my $m (@motifs) { 
   my ($motif, $r_nr)  = ($m->[0], $m->[1]);
   
-  $html.="<br /><b>Repeat motif:</b> <span class=\"sequence\">$motif</span>&nbsp;&nbsp;&nbsp;<b>Repeat number:</b> $r_nr";
+  $html.=("<br /><b>" . SGN::I18N::translate($c->i18n, "marker.detail.repeat_motif", "Repeat motif:", undef, {entities => '<>&'}) . "</b> <span class=\"sequence\">$motif</span>&nbsp;&nbsp;&nbsp;<b>" . SGN::I18N::translate($c->i18n, "marker.detail.repeat_number", "Repeat number:", undef, {entities => '<>&'}) . "</b> $r_nr");
 }
-$html.="<br /><b>Forward primer:</b> <span class=\"sequence\">$start_primer</span>";
-$html.="<br /><b>Reverse primer:</b> <span class=\"sequence\">$end_primer</span>";
-$html.="<br /><b>Predicted size:</b> $pcr_length";
+$html.=("<br /><b>" . SGN::I18N::translate($c->i18n, "marker.detail.ssr_forward_primer", "Forward primer:", undef, {entities => '<>&'}) . "</b> <span class=\"sequence\">$start_primer</span>");
+$html.=("<br /><b>" . SGN::I18N::translate($c->i18n, "marker.detail.ssr_reverse_primer", "Reverse primer:", undef, {entities => '<>&'}) . "</b> <span class=\"sequence\">$end_primer</span>");
+$html.=("<br /><b>" . SGN::I18N::translate($c->i18n, "marker.detail.predicted_size", "Predicted size:", undef, {entities => '<>&'}) . "</b> $pcr_length");
 
 if($html) {
-  $html =  CXGN::Page::FormattingHelpers::info_section_html(title=>'SSR info',contents=>$html)
+  $html =  CXGN::Page::FormattingHelpers::info_section_html(title=>SGN::I18N::translate($c->i18n, "marker.detail.ssr_info", "SSR info", undef, {entities => '<>&'}), anchor_title => "SSR info",contents=>$html)
 }
 else {
   $html = '';

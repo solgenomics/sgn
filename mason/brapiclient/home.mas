@@ -25,13 +25,13 @@
 </ul>
 </div>
 
-<&| /page/info_section.mas, title=>'Calls Testing', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("integrations.settings.calls_panel", "Calls Testing")), anchor_title=>'Calls Testing', collapsible=>1, collapsed=>1 &>
 
 <div id="brapi_home_url_select_div">
 
-    <h4>URL Select</h4>
+    <h4><% $c->i18n->p("integrations.settings.url_select", "URL Select") |h %></h4>
     <select name="brapi_home_url_select" id="brapi_home_url_select" class="form-control" />
-        <option value="">local</option>
+        <option value=""><% $c->i18n->p("integrations.settings.local", "local") |h %></option>
         <option value="https://cassbase.org">cassbase.org</option>
         <option value="https://cassavabase.org">cassavabase.org</option>
         <option value="https://musabase.org">musabase.org</option>
@@ -154,3 +154,7 @@
 <br/>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

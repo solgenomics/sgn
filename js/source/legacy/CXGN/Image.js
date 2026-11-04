@@ -43,7 +43,7 @@ CXGN.Image.prototype = {
 		    } 
 		},
 		onError: function() {
-		    alert('An error occurred! ');
+		    alert((SGN.t("community.image.an_error_occurred_b5da5a8", "An error occurred! ")));
 		},
 	    });
     }

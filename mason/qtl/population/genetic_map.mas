@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -20,10 +24,10 @@ $genetic_map
 </%args>
 
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Genetic map",
       collapsible => 1, 
       collapsed   => 1, 
-      title       => "Genetic map" 
+      title       => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.genetic_map", "Genetic map"))
 &> 
 
   <% $genetic_map %>

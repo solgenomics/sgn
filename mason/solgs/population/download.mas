@@ -19,10 +19,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <& /util/import_javascript.mas, classes => ['solGS.download'] &>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Download data",
     collapsible => 1,
     collapsed   => 0,
-    title       => "Download data"
+    title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.download_data", "Download data"))
 &>
 
     <div id="training_pop_download"></div>
@@ -30,3 +30,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <div id="selection_pop_download"></div>
     <div id="download_message"  class="message"></div>
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

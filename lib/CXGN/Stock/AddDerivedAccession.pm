@@ -7,6 +7,9 @@ CXGN::Stock::AddDerivedAccession - a module for adding new accession derived fro
 
 package CXGN::Stock::AddDerivedAccession;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
@@ -72,6 +75,7 @@ sub existing_accession_name {
 
 
 sub add_derived_accession {
+    my SGN::I18N $ui_add_derived_accession_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
@@ -83,7 +87,7 @@ sub add_derived_accession {
     my %return;
 
     if ($self->existing_accession_name()){
-        return {error => "Error: Accession name: $derived_accession_name already exists in the database."};
+        return {error => (SGN::I18N::translate($ui_add_derived_accession_i18n, "accession.derived.duplicate", "Error: Accession name: %{derived_accession_name} already exists in the database.", {derived_accession_name => "" . ($derived_accession_name)}))};
     }
 
     my $coderef = sub {

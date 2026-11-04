@@ -2,8 +2,78 @@
 $error
 </%args>
 
+<%init>
+# Keep the raw diagnostic and all auth/protocol decisions unchanged; translate known authored display explanations only.
+my $display_error = $error;
+if (defined($error) && !ref($error)) {
+    if (index($error, "Failed to fetch well known url. ") == 0) {
+        $display_error = $c->i18n->p("integrations.oidc.fetch_configuration", "Failed to fetch well known url. ") . substr($error, 32);
+    }
+    elsif (index($error, "Received error in the callback params. ") == 0) {
+        $display_error = $c->i18n->p("integrations.oidc.callback_error", "Received error in the callback params. ") . substr($error, 39);
+    }
+    elsif (index($error, "Failed to fetch provider's certificate. ") == 0) {
+        $display_error = $c->i18n->p("integrations.oidc.fetch_certificate", "Failed to fetch provider's certificate. ") . substr($error, 40);
+    }
+    elsif (index($error, "Failed to fetch access token. ") == 0) {
+        $display_error = $c->i18n->p("integrations.oidc.fetch_token", "Failed to fetch access token. ") . substr($error, 30);
+    }
+    elsif (index($error, "Failed to fetch  userinfo. ") == 0) {
+        $display_error = $c->i18n->p("integrations.oidc.fetch_userinfo", "Failed to fetch  userinfo. ") . substr($error, 27);
+    }
+    elsif ($error =~ m{\AThe provider '([^'\r\n]*)' is not configured for this instance\.(\n?)\z}) {
+        my ($provider_value, $error_newline) = ($1, $2);
+        $display_error = $c->i18n->p("integrations.oidc.provider_not_configured", "The provider '%{provider}' is not configured for this instance.", { provider => $provider_value }) . $error_newline;
+    }
+    elsif ($error =~ m{\AThe well known url is not configured for '([^'\r\n]*)'\.(\n?)\z}) {
+        my ($provider_value, $error_newline) = ($1, $2);
+        $display_error = $c->i18n->p("integrations.oidc.configuration_url_missing", "The well known url is not configured for '%{provider}'.", { provider => $provider_value }) . $error_newline;
+    }
+    elsif ($error =~ m{\A The client ID is not configured for '([^'\r\n]*)'\.(\n?)\z}) {
+        my ($provider_value, $error_newline) = ($1, $2);
+        $display_error = $c->i18n->p("integrations.oidc.client_id_missing", " The client ID is not configured for '%{provider}'.", { provider => $provider_value }) . $error_newline;
+    }
+    elsif ($error =~ m{\AThe state verifier could not be found\. Please try to login again, or contact your system administrator\.(\n?)\z}) {
+        my ($error_newline) = ($1);
+        $display_error = $c->i18n->p("integrations.oidc.state_verifier_missing", "The state verifier could not be found. Please try to login again, or contact your system administrator.") . $error_newline;
+    }
+    elsif ($error =~ m{\AThe state returned by the provider does not match the initiating state\. Please try to login again, or contact your system administrator for more help\.(\n?)\z}) {
+        my ($error_newline) = ($1);
+        $display_error = $c->i18n->p("integrations.oidc.state_mismatch", "The state returned by the provider does not match the initiating state. Please try to login again, or contact your system administrator for more help.") . $error_newline;
+    }
+    elsif ($error =~ m{\AYour email is not verified with the external provider\. Please verify your email with ([^\r\n]*) first\.(\n?)\z}) {
+        my ($provider_value, $error_newline) = ($1, $2);
+        $display_error = $c->i18n->p("integrations.oidc.email_not_verified", "Your email is not verified with the external provider. Please verify your email with %{provider} first.", { provider => $provider_value }) . $error_newline;
+    }
+    elsif ($error =~ m{\AMultiple users were found to have the email: '([^'\r\n]*)'\. Please contact your system administrator for more help\.(\n?)\z}) {
+        my ($email_value, $error_newline) = ($1, $2);
+        $display_error = $c->i18n->p("integrations.oidc.multiple_email_users", "Multiple users were found to have the email: '%{email}'. Please contact your system administrator for more help.", { email => $email_value }) . $error_newline;
+    }
+    elsif ($error =~ m{\AThe provided email '([^'\r\n]*)' is associated with a different user '([^'\r\n]*)'\. Please contact your system administrator for more help\.(\n?)\z}) {
+        my ($email_value, $other_username_value, $error_newline) = ($1, $2, $3);
+        $display_error = $c->i18n->p("integrations.oidc.email_other_user", "The provided email '%{email}' is associated with a different user '%{other_username}'. Please contact your system administrator for more help.", { email => $email_value, other_username => $other_username_value }) . $error_newline;
+    }
+    elsif ($error =~ m{\ANo system user was found with the email '([^'\r\n]*)'\. If you have not yet registered for an account, please do so first\. Otherwise, please contact your system administrator\.(\n?)\z}) {
+        my ($email_value, $error_newline) = ($1, $2);
+        $display_error = $c->i18n->p("integrations.oidc.email_user_missing", "No system user was found with the email '%{email}'. If you have not yet registered for an account, please do so first. Otherwise, please contact your system administrator.", { email => $email_value }) . $error_newline;
+    }
+    elsif ($error =~ m{\AThis site is a mirror site and does not support adding users\. Please go to the main site to create an account\.(\n?)\z}) {
+        my ($error_newline) = ($1);
+        $display_error = $c->i18n->p("integrations.oidc.mirror_site", "This site is a mirror site and does not support adding users. Please go to the main site to create an account.") . $error_newline;
+    }
+    elsif ($error =~ m{\AThe username '([^'\r\n]*)' is too short\. Username must be 7 or more characters\.(\n?)\z}) {
+        my ($username_value, $error_newline) = ($1, $2);
+        $display_error = $c->i18n->p("integrations.oidc.username_short", "The username '%{username}' is too short. Username must be 7 or more characters.", { username => $username_value }) . $error_newline;
+    }
+    elsif ($error =~ m{\AThe username '([^'\r\n]*)' contains spaces\.(\n?)\z}) {
+        my ($username_value, $error_newline) = ($1, $2);
+        $display_error = $c->i18n->p("integrations.oidc.username_spaces", "The username '%{username}' contains spaces.", { username => $username_value }) . $error_newline;
+    }
+}
+</%init>
+
 <script>
   $(document).ready(function(){
-    alert(`<% $error %>`);
+    alert(`<% $display_error %>`);
   });
 </script>

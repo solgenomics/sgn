@@ -1,0 +1,130 @@
+# إدارة صور الطائرات المسيّرة {#managing-drone-imagery}
+
+## لوحة التنميط الظاهري بالصور {#image-phenotyping-dashboard}
+
+1. حمّل اللقطات الخام في ملف مضغوط (.zip) لإنشاء فسيفساء متعامدة، أو حمّل صورًا نقطية (.PNG, .JPG) لفسيفساء جُمعت مسبقًا.
+2. تعرض لوحة المعلومات جميع التجارب الحقلية وأحداث التصوير المحمّلة ضمن أقسام قابلة للطي.
+3. اتبع الإجراءات القياسية لإنشاء قوالب يدويًا لربط صور مضلعات القطع بتصميم التجربة الحقلية.
+4. تُعرض الصور حسب الفئة الطيفية ضمن أقسام قابلة للطي. يوضح الشكل صور قناة NIR.
+5. طبّق Fourier transform filtering وthresholding وأقنعة مؤشرات الغطاء النباتي. تُعرض صور مضلعات القطع لجميع عمليات معالجة الصور.
+6. استخرج القيم الظاهرية من صور مضلعات القطع وصدّرها للتحليل وتدريب النماذج.
+
+## إدخال الصور {#image-input}
+
+يؤدي النقر على “تحميل الصور” إلى فتح نافذة الحوار التالية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_intro.png')
+```
+
+يمكن تحميل اللقطات الخام في ملف مضغوط (.zip) لتجميعها في فسيفساء متعامدة. وإذا لم يكن التجميع مطلوبًا، فيمكن تحميل الصور النقطية (.PNG, .JPG). تتوفر بيانات مثال للقطات Micasense RedEdge متعددة الأطياف ذات 5 نطاقات وللفسيفساء المجمعة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_field_trial.png')
+```
+
+لبدء تحميل الصور، يجب اختيار تجربة حقلية محفوظة مسبقًا في قاعدة البيانات. لمعرفة كيفية إضافة تجربة، راجع وثائق التجارب الحقلية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_drone_run.png')
+```
+
+تُضاف بيانات الصور إلى حدث تصوير (رحلة طائرة مسيّرة). يمكنك اختيار حدث محفوظ مسبقًا أو إنشاء حدث جديد بتحديد الاسم والوصف والتاريخ.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_1.png')
+```
+
+قد تكون البيانات المحمّلة لقطات خامًا أو صورًا نقطية مكتملة. ويمكنك هنا تحديد ما إذا كان تجميع الفسيفساء المتعامدة مطلوبًا.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_2.png')
+```
+
+إذا كان تجميع الفسيفساء المتعامدة مطلوبًا، فاختر 'yes'. في الخطوة التالية حمّل ملف zip يتضمن اللقطات الخام. وعند تحميل لقطات Micasense RedEdge، أضف أيضًا صور لوحات المعايرة Micasense إلى ملف zip.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_images_zipfile.png')
+```
+
+إذا لم يكن تجميع الفسيفساء مطلوبًا، فحمّل الصور النقطية مباشرةً. حدد عدد نطاقات الصورة؛ مثلًا اختر 5 لكاميرا متعددة الأطياف بخمسة نطاقات.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_3.png')
+```
+
+إذا لم يكن تجميع الفسيفساء المتعامدة مطلوبًا، فاختر 'no'. في الخطوة التالية ستظهر الخيارات التالية:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_images_rasters.png')
+```
+
+حمّل صورة لكل نطاق مع تحديد اسم ووصف ونوع طيفي فريد.
+
+## العملية القياسية {#standard-process}
+
+بعد تحميل الصور، ستظهر في لوحة المعلومات أسفل التجربة الحقلية. انقر “تشغيل العملية القياسية” لبدء استخراج القيم الظاهرية لمضلعات القطع من الصور.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_button.png')
+```
+
+يؤدي النقر على الزر إلى فتح نافذة الحوار التالية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_intro.png')
+```
+
+اختر نطاق رحلة الطائرة المسيّرة المستخدم في العملية. ستظهر 5 نطاقات لكاميرا Micasense متعددة الأطياف ذات 5 نطاقات؛ اختر NIR لأنه الأعلى تباينًا. أما الصور الملونة القياسية، فلن يتوفر سوى خيار RGB Color Image.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_drone_run_band.png')
+```
+
+أدر الصورة بحيث تصطف القطع على شكل شبكة. قد يكون تخطيط الحقل مائلًا كما في المثال التالي.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_rotate.png')
+```
+
+أجرِ قصًا أوليًا للصورة بالنقر على زوايا الحقل الأربع. يساعد القص على إزالة الأجزاء غير الضرورية من الصورة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_cropping.png')
+```
+
+تعرض هذه الخطوة مدرجًا تكراريًا للصورة المقصوصة. وتطبق العملية القياسية magnitude threshold على الطرفين الأعلى والأدنى للتوزيع.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_threshold_hist.png')
+```
+
+في هذه الخطوة يُربط قالب مضلعات القطع بتصميم التجربة على الصورة. أولًا، حدد عدد الصفوف والأعمدة. ثم انقر زوايا الصورة الأربع وفق المواضع top right وtop left وbottom left وbottom right. انقر “رسم قالب مضلعات القطع”. راجع القالب وامسحه أو أعد الخطوات حتى يطابق التخطيط. ويمكن “نسخ/لصق” القوالب عند وجود فواصل كبيرة في تصميم الحقل. بعد ذلك انتقل إلى قسم “إسناد مضلعات القطع إلى كيانات التجربة الحقلية”. حدد موقع Plot Number 1 إما “top left” أو “top right”، وما إذا كان التخطيط serpentine أو zigzag. انقر “إنشاء الإسنادات” وتحقق من ظهور أسماء القطع بشكل صحيح فوق الصورة. أخيرًا، بعد تأكيد الإسنادات، انقر “إنهاء وحفظ المضلعات للقطع”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_plot_polygon.png')
+```
+
+بعد ذلك، توضح نافذة الحوار أن العملية القياسية ستُكرر لجميع نطاقات الصور المحمّلة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_apply.png')
+```
+
+بعد ذلك، اختر مؤشرات الغطاء النباتي المراد تطبيقها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_vegetation_index.png')
+```
+
+بعد ذلك، اختر القيم الظاهرية المراد استخراجها وحدد النقطة الزمنية للصفة. إذا كان للتجربة تاريخ زراعة، تُحسب النقطة الزمنية تلقائيًا بطرح تاريخ الزراعة من تاريخ الصورة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_phenotypes.png')
+```
+
+بعد إكمال إعداد العملية القياسية، ستستمر المهمة في الخلفية حتى تنتهي. ويمكنك التحقق من حالتها في لوحة المعلومات.
+
+## نقاط التحكم الأرضية {#ground-control-points}
+
+يمكن حفظ نقاط التحكم الأرضية بعد تنفيذ العملية القياسية على فسيفساء حدث التصوير. ويمكن إعادة استخدامها عبر أحداث التصوير للتجربة الحقلية نفسها لأتمتة العملية القياسية بالكامل.

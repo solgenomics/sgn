@@ -1,6 +1,7 @@
 package SGN::Controller::AJAX::Analytics;
 
 use Moose;
+use SGN::I18N ();
 
 use File::Slurp;
 use Data::Dumper;
@@ -64,6 +65,7 @@ sub list_analytics_protocols_by_user_table :Path('/ajax/analytics_protocols/by_u
 sub list_analytics_protocols_result_files :Path('/ajax/analytics_protocols/result_files') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
@@ -74,7 +76,7 @@ sub list_analytics_protocols_result_files :Path('/ajax/analytics_protocols/resul
     my $analytics_protocol_id = $c->req->param('analytics_protocol_id');
 
     if (!$analytics_protocol_id) {
-        $c->stash->{rest} = { error => "No ID given!" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.no_id_given", "No ID given!") };
         $c->detach();
     }
 
@@ -109,6 +111,7 @@ sub list_analytics_protocols_result_files :Path('/ajax/analytics_protocols/resul
 
 sub _check_user_login {
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $role_check = shift;
     my $user_id;
     my $user_name;
@@ -119,7 +122,7 @@ sub _check_user_login {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "lists_datasets.fileshare_api.login_required", "You must be logged in to do this!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -128,7 +131,7 @@ sub _check_user_login {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "lists_datasets.fileshare_api.login_required", "You must be logged in to do this!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -136,7 +139,7 @@ sub _check_user_login {
         $user_role = $c->user->get_object->get_user_type();
     }
     if ($role_check && $user_role ne $role_check) {
-        $c->stash->{rest} = {error=>'You must have permission to do this! Please contact us!'};
+        $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "analysis.interface.you_must_have_permission_to_do_this_please_contact_us", "You must have permission to do this! Please contact us!")};
         $c->detach();
     }
     return ($user_id, $user_name, $user_role);

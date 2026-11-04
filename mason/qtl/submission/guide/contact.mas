@@ -13,11 +13,15 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%doc>
 
 <&| /page/info_section.mas, 
-   title      => "Contact us",
+   title      => HTML::Entities::encode_entities($c->i18n->p("help.qtl.contact.heading", "Contact us")),
   collapsible => 1,
   collapsed   => 1
-&>
+, anchor_title => "Contact us" &>
 
-If you have any questions or feedback, please contact the <a href="/contact/form">development team</a>.
+<% $c->i18n->p("help.qtl.contact.text", "If you have any questions or feedback, please contact the ") |h %><a href="/contact/form"><% $c->i18n->p("help.qtl.contact.link", "development team") |h %></a>.
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

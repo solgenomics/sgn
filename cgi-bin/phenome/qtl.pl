@@ -26,6 +26,7 @@ use List::Util qw / max min/;
 use File::Slurp qw / read_file /;
 use Number::Format;
 use SGN::Exception;
+use SGN::I18N ();
 
 
 use CatalystX::GlobalContext qw( $c );
@@ -39,6 +40,7 @@ our $lg        = $params{chr};
 our $p_m       = $params{peak_marker};
 our $lod       = $params{lod};
 our $qtl_image = $params{qtl};
+my $ui_qtl_detail_i18n = SGN::I18N::translate($c);
 
 if (    !$pop_id
      || !$trait_id
@@ -46,7 +48,7 @@ if (    !$pop_id
      || !$p_m   
      || !$qtl_image )
 {
-    die 'QTL detail page error:  A required argument is missing';
+    die SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.missing_required_argument", "QTL detail page error:  A required argument is missing");
 }
 
 
@@ -105,8 +107,9 @@ sub marker_positions
     my $p_m_pos = $marker_details->{$p_m}{position};
     my $r_m_pos = $marker_details->{$r_m}{position};
     
+    my $chromosome_label = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.chromosome_link", "Chromosome %{linkage_group} (%{left_marker}, %{right_marker})", {linkage_group => "" . ($lg), left_marker => "" . ($l_m), right_marker => "" . ($r_m)});
     my $fl_markers
-        = qq |<a href="../cview/view_chromosome.pl?map_version_id=$mapv_id&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_m_pos&cM_end=$r_m_pos">Chromosome $lg ($l_m, $r_m)</a> |;
+        = qq |<a href="../cview/view_chromosome.pl?map_version_id=$mapv_id&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_m_pos&cM_end=$r_m_pos">$chromosome_label</a> |;
 
     return $fl_markers;
 }
@@ -255,8 +258,8 @@ sub confidence_interval
 	    if ($m_pos == $left_position) { $marker_details_of{$m}{orientation} = 'left'; }
 		
 	    my $m_id    = $marker->marker_id();
-	    my $remark1 = "<i>Highest LOD score is $highest_lod at $peak_position cM</i>."  if $m_lod == $peak_marker_lod;
-	    my $remark2 = "<i>The closest marker to the peak position ($peak_position cM)</i>."  if $m eq $p_m;
+	    my $remark1 = "<i>" . SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.highest_lod_score", "Highest LOD score is %{score} at %{position} cM", {score => "" . ($highest_lod), position => "" . ($peak_position)}) . "</i>." if $m_lod == $peak_marker_lod; ## no critic (Variables::ProhibitConditionalDeclarations) # Preserve the original conditional declaration lifetime; only the message text is localized.
+	    my $remark2 = "<i>" . SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.closest_marker_to_peak", "The closest marker to the peak position (%{position} cM)", {position => "" . ($peak_position)}) . "</i>." if $m eq $p_m; ## no critic (Variables::ProhibitConditionalDeclarations) # Preserve the original conditional declaration lifetime; only the message text is localized.
       				
 	    push @marker_html,
 	    [
@@ -342,34 +345,34 @@ sub legend
 
         if ( $parameter =~ /qtl_method/ )
         {
-            $parameter = 'Mapping method';
+            $parameter = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.mapping_method", "Mapping method");
         }
         if ( $parameter =~ /qtl_model/ )
         {
-            $parameter = 'Mapping model';
+            $parameter = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.mapping_model", "Mapping model");
         }
         if ( $parameter =~ /prob_method/ )
         {
-            $parameter = 'QTL genotype probability method';
+            $parameter = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.genotype_probability_method", "QTL genotype probability method");
         }
         if ( $parameter =~ /step_size/ )
         {
-            $parameter = 'Genome scan size (cM)';
+            $parameter = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.genome_scan_size", "Genome scan size (cM)");
         }
         if ( $parameter =~ /permu_level/ )
         {
-            $parameter = 'Permutation significance level';
+            $parameter = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.permutation_significance_level", "Permutation significance level");
         }
         if ( $parameter =~ /permu_test/ ) {
-            $parameter = 'No. of permutations';
+            $parameter = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.permutation_count", "No. of permutations");
         }
         if ( $parameter =~ /prob_level/ )
         {
-            $parameter = 'QTL genotype significance level';
+            $parameter = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.genotype_significance_level", "QTL genotype significance level");
         }
         if ( $parameter =~ /stat_no_draws/ )
         {
-            $parameter = 'No. of imputations';
+            $parameter = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.imputation_count", "No. of imputations");
         }
         if ( $value eq 'zero' || $value eq 'Marker Regression' )
         {
@@ -406,16 +409,16 @@ sub legend
 
     if ( !$lod )
     {
-        $lod = qq |<i>Not calculated</i>|;
+        $lod = qq |<i>| . SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.not_calculated", "Not calculated") . qq |</i>|;
     }
 
-    push @stat, [ map {$_} ( 'LOD threshold', $lod ) ];
+    push @stat, [ map {$_} ( SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.lod_threshold", "LOD threshold"), $lod ) ];
 
     unless ($ci)
     {
         push @stat,
-            [ map {$_} ( 'Confidence interval',
-                         'Based on 95% Bayesian Credible Interval'
+            [ map {$_} ( SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.confidence_interval", "Confidence interval"),
+                         SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.bayesian_credible_interval", "Based on 95% Bayesian Credible Interval")
               )
             ];
     }
@@ -427,9 +430,11 @@ sub legend
 
 sub download_qtl_region 
 {
-my $link = qq | <a href="https://www.eu-sol.wur.nl/marker2seq/marker2seq.do?marker1=$l_m&marker2=$r_m">View/download</a> genetic markers in the tomato F2.2000 reference map region (+5cM) matching the QTL region and gene models from the ITAG annotated tomato genome. |;
+my $link_label = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.external_marker_link_label", "View/download");
+my $link_description = SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.external_marker_link_description", "genetic markers in the tomato F2.2000 reference map region (+5cM) matching the QTL region and gene models from the ITAG annotated tomato genome.");
+my $link = qq | <a href="https://www.eu-sol.wur.nl/marker2seq/marker2seq.do?marker1=$l_m&marker2=$r_m">$link_label</a> $link_description |;
 
-$link  .=   qq | <p><i>Courtesy of</i> <a href="http://www.eu-sol.wur.nl"><img src ="/img/eusol_logo_small.jpg"/></a></p> |;
+$link  .=   qq | <p><i>| . SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.courtesy_of", "Courtesy of") . qq |</i> <a href="http://www.eu-sol.wur.nl"><img src ="/img/eusol_logo_small.jpg"/></a></p> |;
 
     return $link;
 

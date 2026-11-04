@@ -6,9 +6,9 @@ $analytics_protocol_name
 <table class="table table-hover table-bordered" id="analytics_protocols_result_files_table">
     <thead>
         <tr>
-            <th>File Name</th>
-            <th>File Type</th>
-            <th>Download</th>
+            <th><% $c->i18n->p("global.file_dump_share_files.file_name", "File Name") |h %></th>
+            <th><% $c->i18n->p("file_viewer.ui.type", "File Type") |h %></th>
+            <th><% $c->i18n->p("global.download", "Download") |h %></th>
         </tr>
     </thead>
     <tbody>

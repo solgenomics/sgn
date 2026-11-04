@@ -36,7 +36,7 @@ my $form = $q->to_html;
 <& /util/import_javascript.mas, classes=>"CXGN.Page.FormattingHelpers" &> 
 
 <table class="search_form_title" summary=""><tr><td>
-  <h4><span class="search_form_title">Gene search</span></h4>
+  <h4><span class="search_form_title"><% $c->i18n->p('global.search.forms.gene_tab.gene_search', 'Gene search') |h %></span></h4>
   </td>
   </tr></table>
   

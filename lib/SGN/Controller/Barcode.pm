@@ -1,6 +1,9 @@
 
 package SGN::Controller::Barcode;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use GD;
 
@@ -469,10 +472,11 @@ sub dna_tool   : Path('/barcode/tool/dna/') {
 sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_generate_unique_barcode_labels_i18n = SGN::I18N::translate($c);
 
     if (! $c->user()) {
 	$c->stash->{template} = 'generic_message.mas';
-	$c->stash->{message} = 'You must be logged in to use the unique barcode tool.';
+	$c->stash->{message} = (SGN::I18N::translate($ui_generate_unique_barcode_labels_i18n, 'barcode.server.you_must_be_logged_in_to_use_the_unique_barcode_tool', 'You must be logged in to use the unique barcode tool.'));
 	return;
     }
 

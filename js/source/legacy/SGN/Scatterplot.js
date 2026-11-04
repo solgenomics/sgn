@@ -77,7 +77,8 @@ function SGND3ScatterPlot(data, div_id, x_label) {
         .style("text-anchor", "middle")
         .attr("dy", -10)
         .text(function (d) {
-            return d.label;
+            // Keep d.label as the canonical data-join key above.
+            return d.displayLabel === undefined ? d.label : d.displayLabel;
     });
 }
 

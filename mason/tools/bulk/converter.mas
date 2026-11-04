@@ -1,21 +1,24 @@
+<%init>
+use HTML::Entities ();
+</%init>
 
-<& /page/page_title.mas, title=>"Bulk Converter" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("lists_datasets.bulk.bulk_converter", "Bulk Converter")) &>
 
-Paste the identifiers you would like to convert
+<% $c->i18n->p("lists_datasets.bulk.paste_the_identifiers_you_would_like_to_convert", "Paste the identifiers you would like to convert") |h %>
 
 <textarea id="converter_input" >
 
 </textarea>
 <br />
 <br />
-Input is:<br />
+<% $c->i18n->p("lists_datasets.bulk.input_is", "Input is:") |h %><br />
 
-Output<br />
+<% $c->i18n->p("lists_datasets.bulk.output", "Output") |h %><br />
 <select id="converter_output_select" name="converter_output_select" >
-<option value="unigenes"> Unigenes</option>
-<option value="gene_models"> Gene models (ITAG 2.3)</option>
-<option value="tom_microarray"> TOM Microarray Identifiers</option>
-<option value="affymetrix"> Affymetrix Chip Identifiers</option>
+<option value="unigenes"> <% $c->i18n->p("lists_datasets.bulk.unigenes", "Unigenes") |h %></option>
+<option value="gene_models"> <% $c->i18n->p("lists_datasets.bulk.gene_models_itag_2_3", "Gene models (ITAG 2.3)") |h %></option>
+<option value="tom_microarray"> <% $c->i18n->p("lists_datasets.bulk.tom_microarray_identifiers", "TOM Microarray Identifiers") |h %></option>
+<option value="affymetrix"> <% $c->i18n->p("lists_datasets.bulk.affymetrix_chip_identifiers", "Affymetrix Chip Identifiers") |h %></option>
 </select>
 
 

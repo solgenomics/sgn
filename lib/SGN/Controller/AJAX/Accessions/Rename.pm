@@ -44,7 +44,7 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("accession.rename_server.login", "You must be logged in to upload seedlots!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -54,7 +54,7 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
     } else{
 	print STDERR "We do not have a session id...\n";
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("accession.rename_server.login", "You must be logged in to upload seedlots!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -65,7 +65,7 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
     }
     
     if ($user_role ne "curator") {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to rename accessions." };
+	$c->stash->{rest} = {error =>  $c->i18n->p("accession.rename_server.privileges", "You have insufficient privileges to rename accessions.") };
 	return;
     }
     
@@ -83,7 +83,7 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
     # check file type by file name extension
     #
     if ($upload_original_name =~ /\.xls$|\.xlsx/) {
-	$c->stash->{rest} = { error => "The rename accessions funtion requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.rename_server.file_type", "The rename accessions function requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again.") };
 	return;
     }
     
@@ -108,7 +108,7 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
     my $archived_filename_with_path = $uploader->archive();
     
     if (!$archived_filename_with_path) {
-	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+	$c->stash->{rest} = {error => $c->i18n->p("accession.rename_server.archive", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}),};
 	return;
     }
     
@@ -125,12 +125,12 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
     if (ref($info->{must_exist_missing}) eq "ARRAY" && scalar(@{ $info->{must_exist_missing}}) > 0) {
 	$success = 0;
 	print STDERR "There are missing accessions in the left column! That's an error!\n";
-	push @errors, scalar(@{$info->{must_exist_missing}})." accession(s) to be renamed do not exist in the database. ". join("<br />", @{$info->{must_exist_missing}});
+	push @errors, scalar(@{$info->{must_exist_missing}}).$c->i18n->p("accession.rename_server.missing", " accession(s) to be renamed do not exist in the database. "). join("<br />", @{$info->{must_exist_missing}});
     }
 
     if (@{$info->{must_not_exist_present}}>0)  {
 	$success = 0;
-	push @errors, scalar(@{$info->{must_not_exist_present}})." accessions that are target of renames are already in the database. ".join("<br />", @{$info->{must_not_exist_present}});
+	push @errors, scalar(@{$info->{must_not_exist_present}}).$c->i18n->p("accession.rename_server.present", " accessions that are target of renames are already in the database. ").join("<br />", @{$info->{must_not_exist_present}});
     }
     
     $info->{archived_filename_with_path} = $archived_filename_with_path;
@@ -161,7 +161,7 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("accession.rename_server.login", "You must be logged in to upload seedlots!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -171,7 +171,7 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
     } else{
 	print STDERR "We do not have a session id...\n";
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("accession.rename_server.login", "You must be logged in to upload seedlots!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -180,7 +180,7 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
     }
     
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to rename accessions." };
+	$c->stash->{rest} = {error =>  $c->i18n->p("accession.rename_server.privileges", "You have insufficient privileges to rename accessions.") };
 	return;
     }
 
@@ -275,10 +275,10 @@ sub validate_rename_accessions {
     my $error = "";
     
     if ($header->[0] ne "old_name") {
-	$error = "Column 1 header must be old_name. "; 
+	$error = $c->i18n->p("accession.rename_server.old_header", "Column 1 header must be old_name. ");
     }
     if ($header->[1] ne "new_name") {
-	$error .= "Column 2 header must be new_name. ";
+	$error .= $c->i18n->p("accession.rename_server.new_header", "Column 2 header must be new_name. ");
     }
     
     my @must_exist = map { $_->[0] } @$rename;

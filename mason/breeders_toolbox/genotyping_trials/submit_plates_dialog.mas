@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 $trial_id
@@ -9,8 +13,8 @@ $genotyping_facility
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="SendPlateToFacilityDialog">Submit genotyping plates to facility</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SendPlateToFacilityDialog"><% $c->i18n->p("genotype.plate.submit_genotyping_plates_to_facility", "Submit genotyping plates to facility") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -18,20 +22,20 @@ $genotyping_facility
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="submit_plate_form" name="submit_plate_form">
 
                         <&| /util/workflow.mas, id=> "plates_to_facilities_workflow" &>
-                            <&| /util/workflow.mas:step, title=> "Plate info" &>
-                                                        <& /page/page_title.mas, title=>"Plate information" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.plate_info", "Plate info")) &>
+                                                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.plate_information", "Plate information")) &>
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Plate ID: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.plate.plate_id", "Plate ID:") |h %> </label>
                         <div class="col-sm-9" id="plate_id">
                         </div>
                       </div>
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Genotyping Plate: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.plate.genotyping_plate_f90c5d", "Genotyping Plate:") |h %> </label>
                         <div class="col-sm-9" id="plate_name">
                         </div>
                       </div>
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Plate format: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.plate.plate_format_4fd50b", "Plate format:") |h %> </label>
                         <div class="col-sm-9" id="plate_format">
                         </div>
                       </div>
@@ -41,52 +45,52 @@ $genotyping_facility
                         </div>
                       </div> -->
                         <div style="text-align: center">
-                            <button class="btn btn-primary" id="facility_info_link" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            <button class="btn btn-primary" id="facility_info_link" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Facility" &>
-                    <& /page/page_title.mas, title=>"Facility information" &>
+                    <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.facility", "Facility")) &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.facility_information", "Facility information")) &>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Genotyping Facility: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.plate.genotyping_facility_733343", "Genotyping Facility:") |h %> </label>
                             <div class="col-sm-9" id="genotyping_facility">
                             </div>
                         </div>
                         <div class="form-group">
-                        <label class="col-sm-3 control-label">Organism name: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.organism_name", "Organism name:") |h %> </label>
                         <div class="col-sm-9">
                             <select class="form-control" id="organism_name">
                             </select>
                         </div>
                       </div>
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Facility Service ID: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.plate.facility_service_id", "Facility Service ID:") |h %> </label>
                         <div class="col-sm-9">
                             <select class="form-control" id="service_id_select" multiple>
                             </select>
                         </div>
                       </div>
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Client ID: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.plate.client_id", "Client ID:") |h %> </label>
                         <div class="col-sm-9">
                             <input class="form-control" id="client_id" name="client_id"></input>
                         </div>
                       </div>
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Sample type: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.plate.sample_type_d39c8c", "Sample type:") |h %> </label>
                         <div class="col-sm-9" id="sample_type">
                         </div>
                       </div>
                       <div class="form-group" id="required_services">
-                        <label class="col-sm-4 control-label">Required Service Info: </label>
+                        <label class="col-sm-4 control-label"><% $c->i18n->p("genotype.plate.required_service_info", "Required Service Info:") |h %> </label>
                       </div>
                       <div style="text-align: center">
-                            <button class="btn btn-primary" id="review_order_link" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            <button class="btn btn-primary" id="review_order_link" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                       </div>
                       <br/><br/>
                        </&>
-                       <&| /util/workflow.mas:step, title=> "Review" &>
-                        <& /page/page_title.mas, title=>"Review order" &>
+                       <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.review", "Review")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.review_order", "Review order")) &>
 
                         <div class="panel panel-default">
                             <div class="panel-body">
@@ -94,42 +98,42 @@ $genotyping_facility
                             </div>
                         </div>
                         <div style="text-align: center">
-                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Confirm" &>
-                        <& /page/page_title.mas, title=>"Submit your genotyping plate" &>
+                    <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("global.graphical_filtering.confirm", "Confirm")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.submit_your_genotyping_plate", "Submit your genotyping plate")) &>
 
                         <div class="form-group">
-                            <label class="col-sm-12">I want to automatically submit to the Genotyping Facility: </label><label class="col-sm-12" id="facility_url_lbl"></label>
+                            <label class="col-sm-12"><% $c->i18n->p("genotype.plate.i_want_to_automatically_submit_to_the_genotyping_facility", "I want to automatically submit to the Genotyping Facility:") |h %> </label><label class="col-sm-12" id="facility_url_lbl"></label>
                             <div class="col-sm-12" align="center">
                                 <select class="form-control" style="width: 200px" id="genotyping_trial_facility_submit_select">
-                                    <option value="1" selected="">No</option>
-                                    <option value="0">Yes</option>
+                                    <option value="1" selected=""><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                    <option value="0"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                 </select>
                             </div>
                         </div>
                         <hr>
                         <div style="text-align: center">
-                            <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="submit_plate_btn" id="submit_plate_btn" disabled>Submit genotyping plate</button>
+                            <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="submit_plate_btn" id="submit_plate_btn" disabled><% $c->i18n->p("genotype.plate.submit_genotyping_plate", "Submit genotyping plate") |h %></button>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Finalize" &>
-                        <& /page/page_title.mas, title=>"Finalize your order" &>
-                        <p>Submission Id: <b><label id="submission_lbl"></label></b></p>
-                        <p>Please click <a id="facility_href" target="_blank">HERE</a> to complete your order. </p><br><br>
-                        <p>After order has been complete click continue.</p>
+                    <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.finalize", "Finalize")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.finalize_your_order", "Finalize your order")) &>
+                        <p><% $c->i18n->p("genotype.plate.submission_id", "Submission Id:") |h %> <b><label id="submission_lbl"></label></b></p>
+                        <p><% $c->i18n->p("genotype.plate.please_click", "Please click") |h %> <a id="facility_href" target="_blank"><% $c->i18n->p("genotype.plate.here", "HERE") |h %></a> <% $c->i18n->p("genotype.plate.to_complete_your_order", "to complete your order.") |h %> </p><br><br>
+                        <p><% $c->i18n->p("genotype.plate.after_order_has_been_complete_click_continue", "After order has been complete click continue.") |h %></p>
                         <div style="text-align: center">
-                            <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="continue_submission_btn" id="continue_submission_btn">Continue</button>
+                            <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="continue_submission_btn" id="continue_submission_btn"><% $c->i18n->p("accessions.common.continue", "Continue") |h %></button>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:complete, title=> "Complete" &>
-                        <& /page/page_title.mas, title=>"Complete!" &>
+                    <&| /util/workflow.mas:complete, title=> HTML::Entities::encode_entities($c->i18n->p("cross.ui.complete", "Complete")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("shared.workflow.complete", "Complete!")) &>
 
                             <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                            <p>Order complete.</p>
+                            <p><% $c->i18n->p("genotype.plate.order_complete", "Order complete.") |h %></p>
                             <!-- Facility Order Id: <b><label id="order_lbl"></label></b><br><br> -->
-                            <li>You may want to proceed to the genotyping plate detail page to check order status.</li>
+                            <li><% $c->i18n->p("genotype.plate.you_may_want_to_proceed_to_the_genotyping_plate_detail", "You may want to proceed to the genotyping plate detail page to check order status.") |h %></li>
 
                         <br/>
                     </&>
@@ -139,7 +143,7 @@ $genotyping_facility
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="submit_plate_dialog" type="button" class="btn btn-default" data-dismiss="modal" onclick="location.reload();">Close</button>
+                <button id="submit_plate_dialog" type="button" class="btn btn-default" data-dismiss="modal" onclick="location.reload();"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -149,18 +153,18 @@ $genotyping_facility
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="HmDialog"><b>Submit genotyping plate</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmDialog"><b><% $c->i18n->p("genotype.plate.submit_genotyping_plate", "Submit genotyping plate") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Genotyping plates was submit successfully...</p3>
+                    <p3> <% $c->i18n->p("genotype.plate.genotyping_plates_was_submit_successfully", "Genotyping plates was submit successfully...") |h %></p3>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_message_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 
             </div>
         </div>

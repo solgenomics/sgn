@@ -10,19 +10,19 @@ $family_type
         <thead>
             <tr>
 % if ($family_type eq 'same_parents') {
-                        <th>Female Parent</th>
-                        <th>Female Stock Type</th>
-                        <th>Female Ploidy</th>
-                        <th>Male Parent</th>
-                        <th>Male Stock Type</th>
-                        <th>Male Ploidy</th>
+                        <th><% $c->i18n->p("accession.related_stock.header.female_parent", "Female Parent") |h %></th>
+                        <th><% $c->i18n->p("cross.pages.female_stock_type", "Female Stock Type") |h %></th>
+                        <th><% $c->i18n->p("cross.ui.female_ploidy", "Female Ploidy") |h %></th>
+                        <th><% $c->i18n->p("accession.related_stock.header.male_parent", "Male Parent") |h %></th>
+                        <th><% $c->i18n->p("cross.pages.male_stock_type", "Male Stock Type") |h %></th>
+                        <th><% $c->i18n->p("cross.ui.male_ploidy", "Male Ploidy") |h %></th>
 % } elsif ($family_type eq 'reciprocal_parents') {
-                        <th>Parent 1</th>
-                        <th>Parent 1 Stock Type</th>
-                        <th>Parent 1 Ploidy</th>
-                        <th>Parent 2</th>
-                        <th>Parent 2 Stock Type</th>
-                        <th>Parent 2 Ploidy</th>
+                        <th><% $c->i18n->p("cross.pages.parent_1", "Parent 1") |h %></th>
+                        <th><% $c->i18n->p("cross.pages.parent_1_stock_type", "Parent 1 Stock Type") |h %></th>
+                        <th><% $c->i18n->p("cross.pages.parent_1_ploidy", "Parent 1 Ploidy") |h %></th>
+                        <th><% $c->i18n->p("cross.pages.parent_2", "Parent 2") |h %></th>
+                        <th><% $c->i18n->p("cross.pages.parent_2_stock_type", "Parent 2 Stock Type") |h %></th>
+                        <th><% $c->i18n->p("cross.pages.parent_2_ploidy", "Parent 2 Ploidy") |h %></th>
 %}
             </tr>
         </thead>

@@ -54,7 +54,7 @@ solGS.gebvs = {
       canvas: this.histoCanvasId,
       plot_id: this.histoPlotId,
       x_label: "GEBVs",
-      y_label: "Counts",
+      y_label: (SGN.t("solgs.browser.gebv_count_axis", "Counts")),
       named_values: gebvsData,
       download_links: downloadLinks,
 
@@ -99,9 +99,9 @@ solGS.gebvs = {
 
       var gebvsHistoPlotDivId = this.histoPlotId.replace(/#/, '');
       var histoDownloadBtn = "download_" + gebvsHistoPlotDivId;
-      var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'> Histogram (GEBVs)</a>";
+      var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'>" + (SGN.t("solgs.browser.gebv_histogram_link", " Histogram (GEBVs)")) + "</a>";
     
-      var downloadLinks = `Download:  ${gebvsFileLink} | ${histoPlotLink}`;
+      var downloadLinks = `${(SGN.t("solgs.browser.download_prefix", "Download:  "))}${gebvsFileLink} | ${histoPlotLink}`;
       return downloadLinks;
 
   },
@@ -114,7 +114,7 @@ solGS.gebvs = {
       '" download=' +
       geneticValuesFileName +
       '">' +
-      "Genetic values" +
+      (SGN.t("solgs.browser.genetic_values_link", "Genetic values")) +
       "</a>";
     
       return geneticValuesFileLink;
@@ -139,7 +139,7 @@ jQuery(document).ready(function () {
             });
 
             solGS.gebvs.getGebvsFiles().fail(function (res) {
-                var errorMsg = "Error occured getting training gebvs files.";
+                var errorMsg = (SGN.t("solgs.browser.gebv_files_error", "Error occurred getting training gebvs files."));
                 jQuery("#gebvs_output_message").html(errorMsg);
             });
         }

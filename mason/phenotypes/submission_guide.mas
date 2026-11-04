@@ -11,72 +11,67 @@ Naama Menda (nm249@cornell.edu)
 =cut
 
 </%doc>
-<h2>SGN phenotype submission guide</h2>
-<p>For submitting phenotyping experiments to SGN you will be asked to fill in a few steps.
-Phenotypes are linked with plant accessions.
-If the accession is already in the database, you will have to make sure the accession in your file has exactly the same name.
-Search the <a href="/search/stocks/">phenotype database</a> for existing accessions.
-Since phenotypes are scored on single plants in the field or a greenhouse, or on plots of several plants,
-you will need to assign in each experiment unique identifiers for each one of your experimental units (a single plant or a plot).
+<h2><% $c->i18n->p("phenotype.sgn_phenotype_submission_guide", "SGN phenotype submission guide") |h %></h2>
+<p><% $c->i18n->p("phenotype.for_submitting_phenotyping_experiments_to_sgn_you_will_be_asked", "For submitting phenotyping experiments to SGN you will be asked to fill in a few steps.\nPhenotypes are linked with plant accessions.\nIf the accession is already in the database, you will have to make sure the accession in your file has exactly the same name.\nSearch the") |h %> <a href="/search/stocks/"><% $c->i18n->p("phenotype.phenotype_database", "phenotype database") |h %></a> <% $c->i18n->p("phenotype.for_existing_accessions_since_phenotypes_are_scored_on_single_plants", "for existing accessions.\nSince phenotypes are scored on single plants in the field or a greenhouse, or on plots of several plants,\nyou will need to assign in each experiment unique identifiers for each one of your experimental units (a single plant or a plot).") |h %>
 </p>
 
-<&| /page/info_section.mas,
-   title      => "Define experiment metadata",
+<&| /page/info_section.mas, anchor_title => "Define experiment metadata",
+   title      => HTML::Entities::encode_entities($c->i18n->p("phenotype.define_experiment_metadata", "Define experiment metadata")),
   collapsible => 1,
   collapsed   => 0
 &>
 
 <ul>
   <li>
-    <strong>Organism name:</strong> Start typing the species scientific name. An autocomplete list should pop up. If your organism is not in the list, please <a href="mailto:sgn-feedback@solgenomics.net">contact us</a>.
+    <strong><% $c->i18n->p("phenotype.organism_name", "Organism name:") |h %></strong> <% $c->i18n->p("phenotype.start_typing_the_species_scientific_name_an_autocomplete_list_should", "Start typing the species scientific name. An autocomplete list should pop up. If your organism is not in the list, please") |h %> <a href="mailto:sgn-feedback@solgenomics.net"><% $c->i18n->p("phenotype.contact_us", "contact us") |h %></a>.
   </li>
   <li>
-    <strong>Population name</strong><br />
-    Provide a name for the population in this experiment. Your population may or may not have a known structure, and its name can be arbitrary. If you are adding accessions to an existing population, start typing its name and select the appropriate one from the autocomplete list.
+    <strong><% $c->i18n->p("phenotype.population_name", "Population name") |h %></strong><br />
+    <% $c->i18n->p("phenotype.provide_a_name_for_the_population_in_this_experiment_your", "Provide a name for the population in this experiment. Your population may or may not have a known structure, and its name can be arbitrary. If you are adding accessions to an existing population, start typing its name and select the appropriate one from the autocomplete list.") |h %>
   </li>
   <li>
-    <strong> Population description</strong><br />
-    (optional) provide an abstract style characterization of the population including experimental design highlights.
+    <strong> <% $c->i18n->p("phenotype.population_description", "Population description") |h %></strong><br />
+    <% $c->i18n->p("phenotype.optional_provide_an_abstract_style_characterization_of_the_population_including", "(optional) provide an abstract style characterization of the population including experimental design highlights.") |h %>
    </li>
   <li>
-    <strong> Project name</strong></br >
-    provide a name for your project which reflects the scope of your phenotyping experiments. For adding experiments to an existing projects, start typing and select the appropriate project name for the autocomplete list.
+    <strong> <% $c->i18n->p("phenotype.project_name", "Project name") |h %></strong></br >
+    <% $c->i18n->p("phenotype.provide_a_name_for_your_project_which_reflects_the_scope", "provide a name for your project which reflects the scope of your phenotyping experiments. For adding experiments to an existing projects, start typing and select the appropriate project name for the autocomplete list.") |h %>
   </li>
   <li>
-    <strong> Year</strong><br />
-    Date string denoting when the data was collected. Can be year only (i.e. 2012), month and year (March 2012 or 3/2012), or a full date. This will be recorded as the date for the project.
+    <strong> <% $c->i18n->p("accession.sequencing.table.year", "Year") |h %></strong><br />
+    <% $c->i18n->p("phenotype.date_string_denoting_when_the_data_was_collected_can_be", "Date string denoting when the data was collected. Can be year only (i.e. 2012), month and year (March 2012 or 3/2012), or a full date. This will be recorded as the date for the project.") |h %>
   </li>
   <li>
-    <strong> Location</strong><br />
-    Where the experiment was performed. We also support <a href="http://en.wikipedia.org/wiki/WGS84">WGS84 geodetic datum</a>. For a full geolocation fill in the longitude, latitide, and altitude fields.
+    <strong> <% $c->i18n->p("global.search.features.location", "Location") |h %></strong><br />
+    <% $c->i18n->p("phenotype.where_the_experiment_was_performed_we_also_support", "Where the experiment was performed. We also support") |h %> <a href="http://en.wikipedia.org/wiki/WGS84"><% $c->i18n->p("phenotype.wgs84_geodetic_datum", "WGS84 geodetic datum") |h %></a><% $c->i18n->p("phenotype.for_a_full_geolocation_fill_in_the_longitude_latitide_and", ". For a full geolocation fill in the longitude, latitude, and altitude fields.") |h %>
   </li>
   </ul>
 </&>
 
-<&| /page/info_section.mas,
-    title      => "Upload phenotyping data file",
+<&| /page/info_section.mas, anchor_title => "Upload phenotyping data file",
+    title      => HTML::Entities::encode_entities($c->i18n->p("phenotype.upload_phenotyping_data_file", "Upload phenotyping data file")),
   collapsible => 1,
   collapsed   => 0
 &>
 <ul>
-  <li><strong>Format</strong><br />
-    Save your data file in tab-delimited format. Make sure there is only one column header row. Both row and column headers should be unique. You can save your spreadsheet as text, and choose tab-delimited format (tab-delimited text in MS Excel).
+  <li><strong><% $c->i18n->p("global.search_wizard.format", "Format") |h %></strong><br />
+    <% $c->i18n->p("phenotype.save_your_data_file_in_tab_delimited_format_make_sure", "Save your data file in tab-delimited format. Make sure there is only one column header row. Both row and column headers should be unique. You can save your spreadsheet as text, and choose tab-delimited format (tab-delimited text in MS Excel).") |h %>
   </li>
-  <li><strong>Row headers</strong><br />
-    First column has the row headers. These must be unique. It can be the accession name or number only if you have one row of measurements for each.<br />
-    If you have more than one row of data for each accession (e.g. several repeats or plots of the same accession) then row headers could be just incremented row numbers.
+  <li><strong><% $c->i18n->p("phenotype.row_headers", "Row headers") |h %></strong><br />
+    <% $c->i18n->p("phenotype.first_column_has_the_row_headers_these_must_be_unique", "First column has the row headers. These must be unique. It can be the accession name or number only if you have one row of measurements for each.") |h %><br />
+    <% $c->i18n->p("phenotype.if_you_have_more_than_one_row_of_data_for", "If you have more than one row of data for each accession (e.g. several repeats or plots of the same accession) then row headers could be just incremented row numbers.") |h %>
   <li>
-  <li><strong>Accession name column</strong><br />
-    Second column should be names of the plant accessions - this will be loaded literally into the database. If the accession already exists in SGN, please make sure to use exactly the same name (case insensitive, but spaces, hyphens, and other special characters are important).
+  <li><strong><% $c->i18n->p("phenotype.accession_name_column", "Accession name column") |h %></strong><br />
+    <% $c->i18n->p("phenotype.second_column_should_be_names_of_the_plant_accessions_this", "Second column should be names of the plant accessions - this will be loaded literally into the database. If the accession already exists in SGN, please make sure to use exactly the same name (case insensitive, but spaces, hyphens, and other special characters are important).") |h %>
   </li>
-  <li><strong>Plot names or numbers</strong><br />
-    Usually phenotping data is assayed on plants in plots. We load each plot as subject of the plant accession, meaning any number of plots from any number of different experiments can be loaded, allowing to keep track of when and where the data came from. If you have multiple phenotyping repeats for each plots, write each in a new row. If only some of the traits were score in each phenotyping repeat, keep those cells empty (do not write 0, since it will be loaded as a measurement with a value of zero).
-  <li><strong>Repeat number</strong> (optional)<br />
-    If you have multiple repeats, the loading software will automatically increment the repeat number each time it sees a row of data for a plot or accession. If you provide repeat number (or fruit/plant/leaf number etc.) it will be used instead.
+  <li><strong><% $c->i18n->p("phenotype.plot_names_or_numbers", "Plot names or numbers") |h %></strong><br />
+    <% $c->i18n->p("phenotype.usually_phenotping_data_is_assayed_on_plants_in_plots_we", "Usually phenotping data is assayed on plants in plots. We load each plot as subject of the plant accession, meaning any number of plots from any number of different experiments can be loaded, allowing to keep track of when and where the data came from. If you have multiple phenotyping repeats for each plots, write each in a new row. If only some of the traits were score in each phenotyping repeat, keep those cells empty (do not write 0, since it will be loaded as a measurement with a value of zero).") |h %>
+  <li><strong><% $c->i18n->p("phenotype.repeat_number", "Repeat number") |h %></strong> <% $c->i18n->p("cross.ui.optional.87e6ca1", "(optional)") |h %><br />
+    <% $c->i18n->p("phenotype.if_you_have_multiple_repeats_the_loading_software_will_automatically", "If you have multiple repeats, the loading software will automatically increment the repeat number each time it sees a row of data for a plot or accession. If you provide repeat number (or fruit/plant/leaf number etc.) it will be used instead.") |h %>
   </li>
-  <li><strong>Traits</strong><br />
-    following columns should have trait scored values. Headers should be ontology IDs. These terms <b>must</b> be pre-loaded in the database (e.g. the  <a href="http://solgenomics.net/search/phenotypes/traits">Solanaceae Phenotype Ontology</a> ). If your ontology does not exist in the database, or if you have terms that need to be added to an existing ontology,<a href="mailto:sgn-feedback@solgenomics.net"> contact us</a> first.<br />
-    Units may also be attached to ontology IDs using a pipe ("|") followed by "unit:unit_name" (e.g. SP:0000123|unit:cm). Number of data columns is unlimited.
+  <li><strong><% $c->i18n->p("lists_datasets.download.traits", "Traits") |h %></strong><br />
+    <% $c->i18n->p("phenotype.following_columns_should_have_trait_scored_values_headers_should_be", "following columns should have trait scored values. Headers should be ontology IDs. These terms") |h %> <b><% $c->i18n->p("phenotype.must", "must") |h %></b> <% $c->i18n->p("phenotype.be_pre_loaded_in_the_database_e_g_the", "be pre-loaded in the database (e.g. the") |h %>  <a href="http://solgenomics.net/search/phenotypes/traits">Solanaceae Phenotype Ontology</a> <% $c->i18n->p("phenotype.if_your_ontology_does_not_exist_in_the_database_or", "). If your ontology does not exist in the database, or if you have terms that need to be added to an existing ontology,") |h %><a href="mailto:sgn-feedback@solgenomics.net"> <% $c->i18n->p("phenotype.contact_us", "contact us") |h %></a> <% $c->i18n->p("phenotype.first", "first.") |h %><br />
+    <% $c->i18n->p("phenotype.units_may_also_be_attached_to_ontology_ids_using_a", "Units may also be attached to ontology IDs using a pipe (\"|\") followed by \"unit:unit_name\" (e.g. SP:0000123|unit:cm). Number of data columns is unlimited.") |h %>
 
     <pre>
       row_header   accession  plot  repeat  SP:0000085|unit:cm^2  SP:0000086|unit:cm   SP:0000106
@@ -88,6 +83,10 @@ you will need to assign in each experiment unique identifiers for each one of yo
     </pre>
 </ul>
 
-<h3><a href="/phenotype/upload">Upload phenotyping data</a></h3>
+<h3><a href="/phenotype/upload"><% $c->i18n->p("phenotype.upload_phenotyping_data", "Upload phenotyping data") |h %></a></h3>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

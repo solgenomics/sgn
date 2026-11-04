@@ -1,0 +1,53 @@
+# Переглядач векторів {#vector-viewer}
+
+BreedBase надає інструмент перегляду векторів, за допомогою якого можна створювати вектори, зберігати їх або завантажувати до BreedBase.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorViewer.png')
+```
+
+Інструмент перегляду векторів має багато інтерактивних функцій:
+
+- Виділення областей
+
+- Відображення позиції
+
+- Збільшення й панорамування
+
+- Таблиця елементів і сайтів рестрикції з підтримкою редагування, видалення й додавання в реальному часі
+
+<!-- -   Load data from GenBank (uncomment this when this feature is complete) -->
+
+<!-- -   Save data (uncomment this when this feature is complete) -->
+
+Щоб виділити область вектора, натисніть і перетягніть курсор за годинниковою стрілкою. Щоб прибрати виділення, створіть новий сегмент на векторі або натисніть “Оновити/Скинути”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorHighlight.png')
+```
+
+Щоб дізнатися позицію ділянки на векторі, наведіть на нього курсор. З’явиться число — позиція курсора в парах основ.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cursorLocation.png')
+```
+
+Щоб наблизити або віддалити зображення, натисніть кнопку "+" або "-" під вектором.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/ZoomIn.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/ZoomOut.png')
+```
+
+Щоб додати елемент або сайт рестрикції, натисніть “Додати”. Щоб змінити їх, виберіть потрібний елемент чи сайт рестрикції та натисніть “Редагувати”. Щоб видалити його, виберіть відповідний елемент і натисніть “Видалити”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/vectorButtons.png')
+```
+
+<!-- To load data from GenBank (fill in the instructions here when this is finished) -->
+
+<!-- To save data (fill in the instructions here when this is finished) -->

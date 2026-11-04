@@ -23,6 +23,8 @@ Adds an array of pedigrees. The stock names used in the pedigree must already ex
 package CXGN::Pedigree::AddGrafts;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 
 use Try::Tiny;
 use Data::Dumper;
@@ -53,6 +55,7 @@ has 'rootstock' => (isa => 'Str', is => 'rw');
 
 sub add_grafts {
     my $self = shift;
+    my SGN::I18N $ui_add_grafts_i18n = SGN::I18N::translate($c);
     my $separator_string = shift || "+";
     my $schema = $self->schema();
 
@@ -78,7 +81,7 @@ sub add_grafts {
 	    my $graft_row = $schema->resultset('Stock::Stock')->find( { uniquename => $graft });
 
 	    if ($graft_row) {
-		push @errors, "The name for the graft $graft already exists in the database, not storing.\n";
+		push @errors, (SGN::I18N::translate($ui_add_grafts_i18n, "cross.model.graft_name_exists", "The name for the graft %{graft} already exists in the database, not storing.\n", {graft => "" . ($graft)}));
 	    }
 	    else {
 	        $graft_row = $self->schema->resultset('Stock::Stock')->create(
@@ -125,7 +128,7 @@ sub add_grafts {
     };
 
     if ($transaction_error) {
-        $return_errors{error} = "Transaction error creating pedigrees: $transaction_error";
+        $return_errors{error} = (SGN::I18N::translate($ui_add_grafts_i18n, "cross.model.graft_transaction_error", "Transaction error creating pedigrees: %{transaction_error}", {transaction_error => "" . ($transaction_error)}));
         print STDERR "Transaction error creating pedigrees: $transaction_error\n";
         return { errors => \%return_errors };
     }
@@ -135,6 +138,7 @@ sub add_grafts {
 
 sub validate_grafts {
     my $self = shift;
+    my SGN::I18N $ui_validate_grafts_i18n = SGN::I18N::translate($c);
     my $separator_string = shift || '+';
     
     my $schema = $self->schema();
@@ -147,14 +151,14 @@ sub validate_grafts {
 
     if (!$scion_row) {
 	push @missing_accessions, $self->scion();
-	push @errors, "Parental accession ".$self->scion(), " does not exist in the database\n";
+	push @errors, (SGN::I18N::translate($ui_validate_grafts_i18n, "cross.model.graft_parent_missing_prefix", "Parental accession %{name}", {name => "" . ($self->scion())})), (SGN::I18N::translate($ui_validate_grafts_i18n, "cross.model.graft_parent_missing_suffix", " does not exist in the database\n"));
     }
     
     my $rootstock_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->rootstock() });
 
     if (!$rootstock_row) {
 	push @missing_accessions, $self->rootstock();
-	push @errors, "Parental accession ".$self->rootstock(), " does not exist in the database\n";
+	push @errors, (SGN::I18N::translate($ui_validate_grafts_i18n, "cross.model.graft_parent_missing_prefix", "Parental accession %{name}", {name => "" . ($self->rootstock())})), (SGN::I18N::translate($ui_validate_grafts_i18n, "cross.model.graft_parent_missing_suffix", " does not exist in the database\n"));
     }
     
     my @messages;
@@ -166,7 +170,7 @@ sub validate_grafts {
 	
 	if ($graft_row) {
 	    push @grafts_already_present, $graft_row->uniquename();
-	    push @messages, "The name for the graft $graft already exists in the database, not storing.\n";
+	    push @messages, (SGN::I18N::translate($ui_validate_grafts_i18n, "cross.model.graft_name_exists", "The name for the graft %{graft} already exists in the database, not storing.\n", {graft => "" . ($graft)}));
 	}
 
 	return { errors => \@errors, messages => \@messages, missing_accessions => \@missing_accessions, grafts_already_present => \@grafts_already_present  };

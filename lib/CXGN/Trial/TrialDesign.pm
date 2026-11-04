@@ -29,6 +29,8 @@ This module uses the the R CRAN package "Agricolae" to calculate experimental de
 =cut
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
@@ -39,6 +41,13 @@ use List::Util 'max';
 use JSON;
 
 with 'MooseX::Object::Pluggable';
+
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    default => sub { $c && $c->can('i18n') ? $c->i18n : undef }
+);
 
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', clearer => 'clear_trial_name');
 
@@ -195,11 +204,12 @@ sub isint {
 
 sub validate_field_colNumber {
     my $colNum = shift;
+    my SGN::I18N $field_columns_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     if (isint($colNum)){
 
 	return $colNum;
     } else {
-	die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
+	die (($field_columns_i18n ? $field_columns_i18n->p("trial.design.field_rows_integer", "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer") : "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer") . "\n");
 	return;
     }
 

@@ -1,0 +1,69 @@
+# إدارة عينات الأنسجة {#managing-tissue-samples}
+
+للوصول إلى هذه الصفحة، انتقل إلى “إدارة” ثم “عينات الأنسجة”.
+
+## عينات الأنسجة من التجارب الحقلية {#tissue-samples-from-field-trials}
+
+يتكون التجريب الحقلي من قطع مزروعة بعينة محددة. وقد تضم كل قطعة نباتات عديدة، ويمكن أخذ عدة عينات أنسجة من كل نبات.
+تعرض صفحة إدارة عينات الأنسجة التجارب الحقلية التي جُمعت منها عينات بالفعل. ويمكنك تنزيل مخطط العينات كما هو موضح أدناه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_download.png')
+```
+
+إذا لم يظهر التجريب الحقلي المطلوب في الجدول، فانقر الزر المميز أدناه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_button.png')
+```
+
+بعد النقر على الزر، ستبدأ خطوات العمل برسالة المقدمة التالية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_intro.png')
+```
+
+انقر “التالي” لاختيار التجربة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_select.png')
+```
+
+بعد ذلك، إذا كان المحفوظ في التجربة هو القطع فقط، فسيُطلب منك تحديد عدد النباتات في كل قطعة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_num_plants.png')
+```
+
+أخيرًا، حدد عدد عينات الأنسجة لكل نبات. ويمكنك إضافة نص إلى اسم العينة، مثل “ورقة” أو “جذر”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_num_tissues.png')
+```
+
+بعد ذلك ستظهر رسالة نجاح تفيد بحفظ عينات الأنسجة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_submit.png')
+```
+
+## عينات الأنسجة لصفائح التنميط الجيني (96 أو 384 بئرًا) {#genotyping-plate-tissue-samples-96-or-384-well-plates}
+
+تضم صفيحة التنميط الجيني 96 أو 384 بئرًا. يمكنك إنشاء مخططها باستخدام تطبيق Coordinate على Android، أو تحميل مخطط Excel خاص بك، أو جعل قاعدة البيانات تنشئه.
+يُفضل استخدام اسم عينة نسيج من تجربة حقلية بوصفه "المصدر" لكل عينة في البئر، لكن يمكن أيضًا استخدام اسم نبات أو قطعة أو عينة.
+
+في صفحة إدارة عينات الأنسجة يمكنك رؤية صفائح التنميط المحفوظة في قاعدة البيانات وتنزيل مخططاتها كما هو موضح أدناه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_genotyping_trial_download.png')
+```
+
+لإنشاء صفيحة تنميط جيني جديدة، انقر الزر أدناه. ستظهر خطوات تحميل مخطط الصفيحة أو إنشائه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_genotyping_trial_button.png')
+```
+
+يشترط مزودو خدمات التنميط الجيني إرسال مخطط الصفيحة عند تقديم العينات. يمكنك تنزيله كما سبق أو فتح صفحة تفاصيل الصفيحة وتنزيل الملف بتنسيق Intertek.
+
+سيكون بإمكانك مستقبلًا تصدير مخطط صفيحة التنميط مباشرة إلى مزودي الخدمة.

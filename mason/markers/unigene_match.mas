@@ -1,4 +1,6 @@
-
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 
 =head1 NAME
@@ -48,6 +50,6 @@ if (!$html) { return; }
 
 </%perl>
 
-<&| /page/info_section.mas, title=>'Unigene blast matches for primers' &>
+<&| /page/info_section.mas, anchor_title => 'Unigene blast matches for primers', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.unigene_blast_matches_for_primers", 'Unigene blast matches for primers')) &>
   <% $html %>
 </&>

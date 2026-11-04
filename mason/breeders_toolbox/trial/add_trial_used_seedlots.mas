@@ -7,24 +7,24 @@ $trial_stock_type
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="upload_trial_used_seedlot_dialog">Upload Used Seedlots in Trial</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="upload_trial_used_seedlot_dialog"><% $c->i18n->p('seedlots.ui.upload_used_seedlots_in_trial', 'Upload Used Seedlots in Trial') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.template_information', 'Template information')) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('seedlots.ui.file_format_information', 'File format information') |h %></b>
                             <br>
-                            <a id="trial_seedlot_used_upload_spreadsheet_info_format">Spreadsheet format</a>
+                            <a id="trial_seedlot_used_upload_spreadsheet_info_format"><% $c->i18n->p('seedlots.ui.spreadsheet_format', 'Spreadsheet format') |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_upload_used_seedlot_form" name="trial_upload_used_seedlot_form">
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File:</label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('seedlots.ui.upload_file.476d793', 'Upload File:') |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_used_seedlot_file" id="trial_upload_used_seedlot_file" encoding="multipart/form-data" />
                             </div>
@@ -34,8 +34,8 @@ $trial_stock_type
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="trial_upload_used_seedlot_submit" type="button" class="btn btn-default" >Submit</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
+                <button id="trial_upload_used_seedlot_submit" type="button" class="btn btn-default" ><% $c->i18n->p('seedlots.ui.submit', 'Submit') |h %></button>
             </div>
         </div>
     </div>
@@ -45,17 +45,17 @@ $trial_stock_type
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialUploadUsedSeedlotInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialUploadUsedSeedlotInfoDialog"><% $c->i18n->p('seedlots.ui.upload_template_information', 'Upload Template Information') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording which seedlots were planted in which plots in this trial.</b>
+                    <b><% $c->i18n->p('seedlots.ui.this_is_for_recording_which_seedlots_were_planted_in_which_plots', 'This is for recording which seedlots were planted in which plots in this trial.') |h %></b>
                     <br/>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('seedlots.ui.header', 'Header:') |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('seedlots.ui.the_first_row_header_should_contain_the_following', 'The first row (header) should contain the following:') |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -71,29 +71,29 @@ $trial_stock_type
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('seedlots.ui.required_fields', 'Required fields:') |h %></b>
                     <ul>
-                    <li>seedlot_name (must exist in the database. the seedlot that was planted in the plot)</li>
-                    <li>plot_name (must exist in the database. the plot that the seedlot was planted in)</li>
+                    <li><% $c->i18n->p('seedlots.ui.column_seedlot_name_must_exist_in_the_database_the_seedlot_that_', '%{column_seedlot_name} (must exist in the database. the seedlot that was planted in the plot)', {column_seedlot_name => 'seedlot_name'}) |h %></li>
+                    <li><% $c->i18n->p('seedlots.ui.column_plot_name_must_exist_in_the_database_the_plot_that_the_se', '%{column_plot_name} (must exist in the database. the plot that the seedlot was planted in)', {column_plot_name => 'plot_name'}) |h %></li>
                     <li>
-                        num_seed_per_plot (number of seeds transferred from seedlot to the plot)
-                        <br/><b>AND/OR</b></br>
-                        weight_gram_seed_per_plot (weight in grams of seed transferred from seedlot to the plot)
+                        <% $c->i18n->p('seedlots.ui.column_num_seed_per_plot_number_of_seeds_transferred_from_seedlo', '%{column_num_seed_per_plot} (number of seeds transferred from seedlot to the plot)', {column_num_seed_per_plot => 'num_seed_per_plot'}) |h %>
+                        <br/><b><% $c->i18n->p('seedlots.ui.and_or', 'AND/OR') |h %></b></br>
+                        <% $c->i18n->p('seedlots.ui.column_weight_gram_seed_per_plot_weight_in_grams_of_seed_transfe', '%{column_weight_gram_seed_per_plot} (weight in grams of seed transferred from seedlot to the plot)', {column_weight_gram_seed_per_plot => 'weight_gram_seed_per_plot'}) |h %>
                     </li>
                     </ul>
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p('seedlots.ui.optional_fields', 'Optional fields:') |h %></b>
                     <ul>
-                    <li>description (any additional information)</li>
+                    <li><% $c->i18n->p('seedlots.ui.column_description_any_additional_information', '%{column_description} (any additional information)', {column_description => 'description'}) |h %></li>
                     </ul>
-                    <b>Notes:</b>
+                    <b><% $c->i18n->p('seedlots.ui.notes', 'Notes:') |h %></b>
                     <ul>
-                    <li>For plots of family name stock type, seedlots of cross members in the family can be used.</li>
+                    <li><% $c->i18n->p('seedlots.ui.for_plots_of_family_name_stock_type_seedlots_of_cross_members_in', 'For plots of family name stock type, seedlots of cross members in the family can be used.') |h %></li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
             </div>
             <div class="modal-footer">
-                <button id="close_seedlot_info_trial_upload_used_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_seedlot_info_trial_upload_used_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -103,19 +103,19 @@ $trial_stock_type
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTrialUsedSeedlotSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialUsedSeedlotSavedDialog"><% $c->i18n->p('seedlots.ui.success', 'Success') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        File uploaded successfully.
+                        <% $c->i18n->p('seedlots.ui.file_uploaded_successfully', 'File uploaded successfully.') |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_upload_trial_used_seedlot_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_upload_trial_used_seedlot_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -123,6 +123,57 @@ $trial_stock_type
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 
 jQuery(document).ready(function(){
 
@@ -137,9 +188,9 @@ jQuery(document).ready(function(){
     });
     function trial_upload_used_seedlot_submit() {
         var uploadFile = jQuery("#trial_upload_used_seedlot_file").val();
-        jQuery('#trial_upload_used_seedlot_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_used_seedlots?trial_stock_type=<% $trial_stock_type %>");
+        jQuery('#trial_upload_used_seedlot_form').attr("action", _sgnSeedlotLocaleURL("/ajax/breeders/trial/<% $trial_id %>/upload_used_seedlots?trial_stock_type=<% $trial_stock_type %>"));
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert(seedlotI18n.p("seedlots.ui.please_select_a_file", "Please select a file"));
             return;
         }
         jQuery("#trial_upload_used_seedlot_form").submit();
@@ -153,7 +204,7 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal("show");
             if (uploadedSeedlotFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert(seedlotI18n.p("seedlots.ui.no_file_selected", "No file selected"));
             }
         },
         complete: function (response) {

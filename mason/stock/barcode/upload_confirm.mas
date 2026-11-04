@@ -40,12 +40,12 @@ if (!@errors) {
 
 </%perl>
 
-<& /page/page_title.mas, title => "Confirm barcode data upload" &>
-<&| /page/info_section.mas, title => "Confirm upload" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.confirm_barcode_data_upload", "Confirm barcode data upload")) &>
+<&| /page/info_section.mas, anchor_title => "Confirm upload", title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.confirm_upload", "Confirm upload")) &>
  <form action="/barcode/stock/store" method="POST" >
-   <h4>Warnings</h4><div> <% $warning_string %> </div>
+   <h4><% $c->i18n->p("barcode.helper.warnings", "Warnings") |h %></h4><div> <% $warning_string %> </div>
    <br />
-   <h4>Errors</h4><div> <% $err_string %> </div>
+   <h4><% $c->i18n->p("barcode.helper.errors", "Errors") |h %></h4><div> <% $err_string %> </div>
    <br />
    <input type="hidden" name="type" value="confirm">
    <input type="hidden" name="tempfile" value="<% $tempfile %>">
@@ -55,3 +55,7 @@ if (!@errors) {
 %}
  </form>
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

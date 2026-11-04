@@ -1,6 +1,7 @@
 package SGN::Controller::Folder;
 
 use Moose;
+use HTML::Entities ();
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
@@ -25,7 +26,7 @@ sub folder_page :Path("/folder") Args(1) {
 
     my $folder_project = $self->schema->resultset("Project::Project")->find( { project_id => $folder_id } );
     if (!$folder_project) {
-        $c->stash->{message} = "The requested folder ($folder_id) does not exist or has been deleted.";
+        $c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p("trial.server.folder_missing", "The requested folder (%{id}) does not exist or has been deleted.", {id => "$folder_id"}));
         $c->stash->{template} = 'generic_message.mas';
         return;
     }
@@ -105,7 +106,7 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{folder_description} = $folder_project->description();
     $c->stash->{has_child_folders} = $has_child_folders;
     if (!$folder->breeding_program) {
-        $c->stash->{message} = "The requested folder does not exist or has been deleted.";
+        $c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p("trial.server.folder_deleted", "The requested folder does not exist or has been deleted."));
         $c->stash->{template} = 'generic_message.mas';
         return;
     }

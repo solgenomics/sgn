@@ -1,0 +1,130 @@
+# Gestión de imágenes de drones {#managing-drone-imagery}
+
+## Panel de fenotipado por imágenes {#image-phenotyping-dashboard}
+
+1. Cargue las capturas originales en un archivo comprimido (.zip) para ensamblar un ortofotomosaico o cargue imágenes rasterizadas (.PNG, .JPG) de un ortofotomosaico ya ensamblado.
+2. El panel muestra todos los ensayos de campo y eventos de imagen cargados en secciones desplegables.
+3. Siga los procesos estándar para crear manualmente plantillas que asignen las imágenes de polígonos de parcelas al diseño del ensayo de campo.
+4. Las imágenes se muestran por categoría espectral en secciones desplegables. La figura muestra imágenes NIR.
+5. Aplique Fourier transform filtering, thresholding y máscaras de índices de vegetación. Se muestran las imágenes de polígonos de parcela para todos los procesos.
+6. Extraiga y exporte valores fenotípicos de las imágenes de polígonos de parcela para análisis y entrenamiento de modelos.
+
+## Entrada de imágenes {#image-input}
+
+Al pulsar “Cargar imágenes” se abrirá el siguiente diálogo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_intro.png')
+```
+
+Las capturas originales pueden cargarse en un archivo comprimido (.zip) para ensamblar un ortofotomosaico. Si no hace falta ensamblarlo, puede cargar imágenes rasterizadas (.PNG, .JPG). Se ofrecen datos de ejemplo de capturas multiespectrales de 5 bandas Micasense RedEdge y ortofotomosaicos ensamblados.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_field_trial.png')
+```
+
+Para comenzar a cargar imágenes, seleccione un ensayo de campo que ya esté guardado en la base de datos. Consulte la documentación de ensayos de campo para saber cómo añadirlo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_drone_run.png')
+```
+
+Los datos de imagen se añaden a un evento de imagen (vuelo del dron). Puede seleccionar uno ya guardado o crear otro indicando un nombre, una descripción y una fecha.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_1.png')
+```
+
+Los datos cargados pueden ser capturas originales o imágenes rasterizadas completas. Aquí puede indicar si es necesario ensamblar un ortofotomosaico.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_2.png')
+```
+
+Si es necesario ensamblar el ortofotomosaico, seleccione 'yes'. En el paso siguiente, cargue un archivo zip con las capturas originales. Para Micasense RedEdge, incluya también en el zip las imágenes de los paneles de calibración Micasense.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_images_zipfile.png')
+```
+
+Si no hace falta ensamblar el ortofotomosaico, cargue las imágenes rasterizadas. Seleccione el número de bandas; por ejemplo, elija 5 para una cámara multiespectral de cinco bandas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_3.png')
+```
+
+Si no se requiere ensamblar el ortofotomosaico, seleccione 'no'. En el siguiente paso verá lo siguiente:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_images_rasters.png')
+```
+
+Cargue una imagen de cada banda con un nombre, descripción y tipo espectral únicos.
+
+## Proceso estándar {#standard-process}
+
+Una vez cargadas, las imágenes aparecerán en el panel, bajo el ensayo de campo. Pulse “Ejecutar proceso estándar” para comenzar a extraer fenotipos de los polígonos de parcela.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_button.png')
+```
+
+Al pulsar el botón, se abrirá el siguiente diálogo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_intro.png')
+```
+
+Seleccione la banda del vuelo del dron que se usará en el proceso. Para la cámara multiespectral Micasense de 5 bandas aparecerán 5 bandas; en este caso, seleccione NIR porque tiene el mayor contraste. Para imágenes en color estándar, solo estará disponible RGB Color Image.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_drone_run_band.png')
+```
+
+Gire la imagen hasta que las parcelas queden orientadas en forma de cuadrícula. La distribución del campo puede estar inclinada, como en el ejemplo siguiente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_rotate.png')
+```
+
+Realice un recorte aproximado pulsando las cuatro esquinas del campo. El recorte elimina las partes innecesarias de la imagen.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_cropping.png')
+```
+
+Este paso muestra un histograma de la imagen recortada. El proceso estándar aplica magnitude threshold a los extremos superior e inferior de la distribución.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_threshold_hist.png')
+```
+
+En este paso se asocia a la imagen la plantilla de polígonos de parcelas del diseño del ensayo. Primero, indique el número de filas y columnas. Después, marque las cuatro esquinas de la imagen en las posiciones top right, top left, bottom left y bottom right. Pulse “Dibujar plantilla de polígonos de parcela”. Revise la plantilla y borre o repita el proceso hasta que coincida. Si hay grandes separaciones en el diseño, puede “copiar/pegar” plantillas. Luego vaya a “Asignar polígonos de parcela a entidades del ensayo”. Indique si Plot Number 1 está en “top left” o “top right” y si el diseño es serpentine o zigzag. Pulse “Generar asignaciones” y compruebe que los nombres de parcela aparezcan correctamente sobre la imagen. Por último, cuando confirme las asignaciones, pulse “Finalizar y guardar polígonos en parcelas”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_plot_polygon.png')
+```
+
+A continuación, el diálogo indica que el proceso estándar se repetirá para todas las bandas de imagen cargadas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_apply.png')
+```
+
+A continuación, elija los índices de vegetación que desea aplicar.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_vegetation_index.png')
+```
+
+A continuación, elija los valores fenotípicos que desea extraer y defina su punto temporal. Si el ensayo tiene fecha de plantación, el punto temporal se calcula automáticamente como la fecha de la imagen menos la fecha de plantación.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_phenotypes.png')
+```
+
+Al completar el proceso estándar, la tarea seguirá ejecutándose en segundo plano hasta finalizar. Puede consultar su estado en el panel.
+
+## Puntos de control terrestre {#ground-control-points}
+
+Los puntos de control terrestre se pueden guardar después de aplicar el proceso estándar a los ortofotomosaicos de un evento de imagen. Luego pueden reutilizarse en otros eventos del mismo ensayo de campo para automatizar todo el proceso estándar.

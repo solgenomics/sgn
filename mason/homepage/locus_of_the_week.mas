@@ -2,10 +2,11 @@
 <%perl>
 
 use strict;
+use HTML::Entities ();
 use File::Spec;
 use CXGN::Tools::File;
 
-my $loci = qq { The locus of the week is currently unavailable. <br /><br /> };
+my $loci = HTML::Entities::encode_entities($c->i18n->p('global.locus_of_the_week.unavailable', 'The locus of the week is currently unavailable.')) . " <br /><br /> ";
 
 eval { 
   $loci = CXGN::Tools::File::get_sections(File::Spec->catfile($c->get_conf("homepage_files_dir"), "loci.txt"));
@@ -23,6 +24,6 @@ eval {
 </div>
 -->
 
-<h4>Featured Locus</h4>
+<h4><% $c->i18n->p('global.locus_of_the_week.heading', 'Featured Locus') |h %></h4>
 <% $loci %>
-<button class="btn btn-info btn-sm" onclick='location.href="/oldloci.pl"'>See previous...</button>    <button class="btn btn-primary btn-sm" onclick=location.href="/search/direct_search.pl?search=loci">Search other loci...</button>
+<button class="btn btn-info btn-sm" onclick='location.href="/oldloci.pl"'><% $c->i18n->p('global.locus_of_the_week.previous', 'See previous...') |h %></button>    <button class="btn btn-primary btn-sm" onclick=location.href="/search/direct_search.pl?search=loci"><% $c->i18n->p('global.locus_of_the_week.search', 'Search other loci...') |h %></button>

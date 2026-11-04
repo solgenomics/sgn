@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -22,25 +26,22 @@ $guide
 
 <%perl>
 
-my $message = qq |<p> It appears that SGN currently does not support 
-                  this species (<b><i>$species</i>$cultivar</b>).<br/> 
-                  As a first step, please make sure you have spelled 
-                  the species correctly.</p>
+my $message = (qq |<p> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.it_appears_that_sgn_currently_does_not_support_this_species", "It appears that SGN currently does not support \n                  this species (")) . qq |<b><i>$species</i>$cultivar</b>).<br/>\x20
+                  | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.as_a_first_step_please_make_sure_you_have_spelled", "As a first step, please make sure you have spelled \n                  the species correctly.")) . qq |</p>
                         
-                  <p> Read also the guidline for the nomenclature format 
-                  you have to use to submit the parental lines.</p>
+                  <p> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.read_also_the_guidline_for_the_nomenclature_format_you_have", "Read also the guideline for the nomenclature format \n                  you have to use to submit the parental lines.")) . qq |</p>
 
-                  <p> Please go <a href="javascript:history.go(-1)">back</a> 
-                  and check.</p>
+                  <p> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.please_go", "Please go")) . qq | <a href="javascript:history.go(-1)">| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.back", "back")) . qq |</a>\x20
+                  | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.and_check", "and check.")) . qq |</p>
                         
-                  <p> if you keep having the same problem with it
-                  <a href=mailto:sgn-feedback\@sgn.cornell.edu> contact us.</a></p> 
-                 |;
+                  <p> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.if_you_keep_having_the_same_problem_with_it", "if you keep having the same problem with it")) . qq |
+                  <a href=mailto:sgn-feedback\@sgn.cornell.edu> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.contact_us", "contact us.")) . qq |</a></p>\x20
+                 |);
 
 
 </%perl>
 
-<& /page/page_title.mas, title => 'Check parental accession(s)' &>
-<&| /page/info_section.mas, title => '', subtitle => $guide &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.check_parental_accession_s", 'Check parental accession(s)')) &>
+<&| /page/info_section.mas, anchor_title => '', title => '', subtitle => $guide &>
   <% $message %>  
 </&>

@@ -98,13 +98,10 @@
 <& /page/page_title.mas, title=>'SGN Breeders Toolbox' &>
  
 <div class="page_introduction">
-<p>The purpose of this page is to give breeders direct links to
-breeder-relevant tools and data on SGN. It is a work in progress and
-your feedback or suggestions are welcome to build this into a
-comprehensive, easy to use and breeder-friendly resource.</p>
+<p><% $c->i18n->p("widgets.breeder_tools.index_intro", "The purpose of this page is to give breeders direct links to\nbreeder-relevant tools and data on SGN. It is a work in progress and\nyour feedback or suggestions are welcome to build this into a\ncomprehensive, easy to use and breeder-friendly resource.") |h %></p>
 
-<p>We love feedback!  Please contact <a href="mailto:jv27\@cornell.edu">Joyce van Eck</a>
-with suggestions for improvements!</p>
+<p><% $c->i18n->p("widgets.breeder_tools.feedback_love", "We love feedback!") |h %>  <% $c->i18n->p("widgets.breeder_tools.feedback_contact", "Please contact") |h %> <a href="mailto:jv27\@cornell.edu">Joyce van Eck</a>
+<% $c->i18n->p("widgets.breeder_tools.feedback_suggestions", "with suggestions for improvements!") |h %></p>
 </div>
 
 <div id="icon_nav">
@@ -112,7 +109,7 @@ with suggestions for improvements!</p>
 
 	
     
-	<li class="SNPTool"><!-- a href="#" --><img src="/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool (coming soon)" ><!-- /a -->
+	<li class="SNPTool"><!-- a href="#" --><img src="/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="<% $c->i18n->p('widgets.breeder_tools.snp_tool_coming_soon', 'SNP Tool (coming soon)') |h %>" ><!-- /a -->
     	<!--
 		<ul>
             <div class="SNPToolSubMenu">
@@ -124,7 +121,7 @@ with suggestions for improvements!</p>
         -->
 	</li>
     
-     <li class="Markers"><a href="/search/direct_search.pl?search=markers"><img src="/img/breedericonmenu/Markers.png" alt="Markers" title="Maps &amp; Markers"  /></a>
+     <li class="Markers"><a href="/search/direct_search.pl?search=markers"><img src="/img/breedericonmenu/Markers.png" alt="Markers" title="<% $c->i18n->p('widgets.breeder_tools.maps_markers', 'Maps & Markers') |h %>"  /></a>
     	<!--
 		<ul>
             <div class="MarkersSubMenu">
@@ -137,7 +134,7 @@ with suggestions for improvements!</p>
 	</li>
 	
 
-	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes"><img src="/img/soliconmenu/Phenotypes.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
+	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes"><img src="/img/soliconmenu/Phenotypes.png" alt="Traits" title="<% $c->i18n->p('widgets.breeder_tools.traits_phenotypes', 'Traits & Phenotypes') |h %>" /></a>
     	<!--
 		<ul>
             <div class="TraitsSubMenu">
@@ -149,7 +146,7 @@ with suggestions for improvements!</p>
         -->
 	</li>
     
-	<li class="QTLTool"><a href="/search/direct_search.pl?search=qtl"><img src="/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="Access QTL data" /></a>
+	<li class="QTLTool"><a href="/search/direct_search.pl?search=qtl"><img src="/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="<% $c->i18n->p('widgets.breeder_tools.qtl_access', 'Access QTL data') |h %>" /></a>
     	<!--
    		<ul>
             <div class="QTLToolSubMenu">
@@ -161,7 +158,7 @@ with suggestions for improvements!</p>
         -->
 	</li>
 
-		<li class="Genes"><a href="/search/direct_search.pl?search=loci"><img src="/img/soliconmenu/Genes.png" alt="Genes" title="Genes" ></a>
+		<li class="Genes"><a href="/search/direct_search.pl?search=loci"><img src="/img/soliconmenu/Genes.png" alt="Genes" title="<% $c->i18n->p('global.iconmenu.genes', 'Genes') |h %>" ></a>
     	<!--
 		<ul>
             <div class="SNPToolSubMenu">
@@ -178,7 +175,7 @@ with suggestions for improvements!</p>
 </div>
 
 
-<&| /page/info_section.mas, title=>'Tutorials' &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('widgets.breeder_tools.tutorials', 'Tutorials')), anchor_title=>'Tutorials' &>
 <ul>
   <li>The SGN Breeders Toolbox <a href="http://www.extension.org/pages/61208">webinar</a> by Joyce Van Eck</li>
   <li>Plant Breeding and Genomics at the <a href="http://www.extension.org/plant_breeding_genomics">eXtension</a> site</li>
@@ -188,27 +185,27 @@ with suggestions for improvements!</p>
 </ul>
 </&>
 
-<&| /page/info_section.mas, title=>'SGN tools' &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('widgets.breeder_tools.sgn_tools', 'SGN tools')), anchor_title=>'SGN tools' &>
 <ul>
-  <li>Browse the SGN <a href="/search/direct_search.pl?search=markers/">Markers database</a></li>
-  <li>Browse available controlled vocabularies using the SGN <a href="/tools/onto/">Ontology browser</a></li>
-  <li>Develop CAPS markers using the <a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
-  <li>Check intron locations in transript data using the <a href="/tools/intron_detection/find_introns.pl">Intron Finder</a></li>
-  <li><a href="/phenome/qtl_form.pl">QTL data submssion</a> and on-the-fly QTL analysis <a href="/search/direct_search.pl?search=qtl/">for Solanaceae traits</a></li>
-  <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li>
+  <li><% $c->i18n->p("widgets.breeder_tools.browse_sgn", "Browse the SGN ") |h %><a href="/search/direct_search.pl?search=markers/"><% $c->i18n->p("widgets.breeder_tools.markers_database", "Markers database") |h %></a></li>
+  <li><% $c->i18n->p("widgets.breeder_tools.browse_vocabularies", "Browse available controlled vocabularies using the SGN ") |h %><a href="/tools/onto/"><% $c->i18n->p("widgets.breeder_tools.ontology_browser", "Ontology browser") |h %></a></li>
+  <li><% $c->i18n->p("widgets.breeder_tools.develop_caps_markers", "Develop CAPS markers using the ") |h %><a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
+  <li><% $c->i18n->p("widgets.breeder_tools.intron_locations", "Check intron locations in transript data using the ") |h %><a href="/tools/intron_detection/find_introns.pl">Intron Finder</a></li>
+  <li><a href="/phenome/qtl_form.pl"><% $c->i18n->p("widgets.breeder_tools.qtl_submission", "QTL data submssion") |h %></a><% $c->i18n->p("widgets.breeder_tools.qtl_analysis", " and on-the-fly QTL analysis ") |h %><a href="/search/direct_search.pl?search=qtl/"><% $c->i18n->p("widgets.breeder_tools.for_solanaceae_traits", "for Solanaceae traits") |h %></a></li>
+  <li><% $c->i18n->p("widgets.breeder_tools.gene_phenotype", "SGN gene and phenotype ") |h %><a href="/phenome/"><% $c->i18n->p("widgets.breeder_tools.submission_guide", "submission guide") |h %></a> </li>
 </ul>
 </&>
 
-<&| /page/info_section.mas, title=>'Tools in development' &>
-<ul><li>SNP discovery tool. This will be part of the <a href="https://www.msu.edu/~douchesd/solcapwebpage.htm">SolCAP</a> project.</li></ul>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('widgets.breeder_tools.tools_in_development', 'Tools in development')), anchor_title=>'Tools in development' &>
+<ul><li><% $c->i18n->p("widgets.breeder_tools.snp_development", "SNP discovery tool. This will be part of the ") |h %><a href="https://www.msu.edu/~douchesd/solcapwebpage.htm">SolCAP</a><% $c->i18n->p("widgets.breeder_tools.project_word", " project.") |h %></li></ul>
 </&>
 
-<&| /page/info_section.mas, title=>'Links' &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('widgets.breeder_tools.links', 'Links')), anchor_title=>'Links' &>
 <ul>
 <li><b>Potato</b>
  <ul>
   <li><a href="/organism/Solanum_tuberosum/genome">Potato genome</a></li>
-  <li><a href="https://spreadsheets.google.com/spreadsheet/ccc?key=0AglmOi1fE8ZYdEtWaUV3S1FzUjNFVmt4X29fNU9HLXc&hl=en_US">Potato marker list</a> (work in progres by David Douches)</li>
+  <li><a href="https://spreadsheets.google.com/spreadsheet/ccc?key=0AglmOi1fE8ZYdEtWaUV3S1FzUjNFVmt4X29fNU9HLXc&hl=en_US">Potato marker list</a> (work in progress by David Douches)</li>
  </ul>
 </li>
 <li><b>Tomato</b>

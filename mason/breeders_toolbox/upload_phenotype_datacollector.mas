@@ -3,41 +3,160 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch' ] &>
 
-<div class="modal fade" id="upload_datacollector_phenotypes_dialog" name="upload_datacollector_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="addDatacollectorPhenotypeDialog">
+<style type="text/css">
+#upload_phenotype_datacollector_verify_status .list-group-item {
+    padding-inline-start: 15px;
+    padding-inline-end: 3.5em;
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+#upload_phenotype_datacollector_verify_status .list-group-item > .badge {
+    float: none;
+    position: absolute;
+    inset-inline-end: 15px;
+    inset-block-start: 10px;
+}
+@media (max-width: 767px) {
+    #upload_datacollector_phenotypes_dialog .sgn-datacollector-file-row {
+        display: block;
+    }
+    #upload_datacollector_phenotypes_dialog .sgn-datacollector-file-row > .col-sm-6 {
+        float: none;
+        inline-size: 100%;
+        min-inline-size: 0;
+    }
+    #upload_datacollector_phenotypes_dialog .sgn-datacollector-file-row > label {
+        margin-inline: 0;
+        display: block;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: start;
+    }
+    #upload_datacollector_phenotypes_dialog .sgn-datacollector-file-row input[type="file"] {
+        inline-size: 100%;
+        min-inline-size: 0;
+        max-inline-size: 100%;
+    }
+}
+/* DataCollector dialogs only: keep long labels and example data reachable. */
+.sgn-datacollector-modal .modal-header {
+    position: relative;
+    padding-inline-end: 3.5em;
+}
+.sgn-datacollector-modal .modal-header > .close {
+    float: none;
+    position: absolute;
+    inset-inline-end: 15px;
+    inset-block-start: 15px;
+    margin: 0;
+}
+.sgn-datacollector-modal .modal-title,
+.sgn-datacollector-modal .modal-body {
+    overflow-wrap: anywhere;
+}
+.sgn-datacollector-modal .sgn-datacollector-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+.sgn-datacollector-modal .sgn-datacollector-form-row > .col-sm-6 {
+    float: none;
+    min-inline-size: 0;
+}
+.sgn-datacollector-modal .sgn-datacollector-form-row > label {
+    margin-inline: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: start;
+}
+.sgn-datacollector-modal .modal-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+.sgn-datacollector-modal .modal-footer::before,
+.sgn-datacollector-modal .modal-footer::after {
+    display: none;
+}
+.sgn-datacollector-modal .modal-footer > .btn {
+    margin: 0;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.sgn-datacollector-modal .sgn-datacollector-help-trigger {
+    padding: 0;
+    max-inline-size: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: start;
+    vertical-align: baseline;
+}
+.sgn-datacollector-modal .sgn-datacollector-scientific-region {
+    direction: ltr;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-x: auto;
+}
+.sgn-datacollector-modal .sgn-datacollector-scientific-region > table {
+    direction: ltr;
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+.sgn-datacollector-modal .sgn-datacollector-scientific-region:focus {
+    outline: 2px solid #66afe9;
+    outline-offset: 2px;
+}
+@media (max-width: 767px) {
+    .sgn-datacollector-modal .sgn-datacollector-form-row {
+        display: block;
+    }
+    .sgn-datacollector-modal .sgn-datacollector-form-row > .col-sm-6 {
+        inline-size: 100%;
+    }
+    .sgn-datacollector-modal .sgn-datacollector-form-row > label {
+        display: block;
+    }
+}
+</style>
+
+<div class="modal fade sgn-datacollector-modal" id="upload_datacollector_phenotypes_dialog" name="upload_datacollector_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="addDatacollectorPhenotypeDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addDatacollectorPhenotypeDialog">Upload Data Collector File</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('datacollector.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addDatacollectorPhenotypeDialog"><% $c->i18n->p('datacollector.ui.title', 'Upload Data Collector File') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
         
-            <&| /page/explanation.mas, title=>'Template Information' &>
+            <&| /page/explanation.mas, title=>$c->i18n->p('datacollector.ui.template_info', 'Template Information') &>
                 <p>
-                <b>File format information</b>
+                <b><% $c->i18n->p('datacollector.ui.format_info', 'File format information') |h %></b>
                 <br>
-                <a id="phenotype_upload_datacollector_format_info">Datacollector Format</a>
+                <button type="button" class="btn btn-link sgn-datacollector-help-trigger" id="phenotype_upload_datacollector_format_info" aria-controls="phenotype_upload_datacollector_info_dialog"><% $c->i18n->p('datacollector.ui.format', 'Datacollector Format') |h %></button>
                 </p>
             </&>
         
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_datacollector_phenotype_file_form" name="upload_datacollector_phenotype_file_form">
-                <div class="form-group">
-                    <label class="col-sm-6 control-label">Timestamps Included: </label>
+                <div class="form-group sgn-datacollector-form-row">
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('datacollector.ui.timestamp_included', 'Timestamps Included: ') |h %></label>
                     <div class="col-sm-6" >
                         <input type="checkbox" id="upload_datacollector_phenotype_timestamp_checkbox" name="upload_datacollector_phenotype_timestamp_checkbox" />
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-6 control-label">Data Level: </label>
+                <div class="form-group sgn-datacollector-form-row">
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('datacollector.ui.data_level', 'Data Level: ') |h %></label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="upload_phenotype_datacollector_data_level">
-                            <option value="plots">Plots</option>
+                            <option value="plots"><% $c->i18n->p('datacollector.ui.plots', 'Plots') |h %></option>
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-6 control-label">Data Collector File: </label>
+                <div class="form-group sgn-datacollector-file-row sgn-datacollector-form-row">
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('datacollector.ui.file', 'Data Collector File: ') |h %></label>
                     <div class="col-sm-6" >
                         <input type="file" id="upload_datacollector_phenotype_file_input" name="upload_datacollector_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
@@ -50,9 +169,9 @@
       </div>
       
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-info" name="upload_datacollector_phenotype_submit_verify" id="upload_datacollector_phenotype_submit_verify">Verify</button>
-        <button disabled type="button" class="btn btn-primary" name="upload_datacollector_phenotype_submit_store" id="upload_datacollector_phenotype_submit_store" title="First Verify Your File">Store</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('datacollector.ui.close', 'Close') |h %></button>
+        <button type="button" class="btn btn-info" name="upload_datacollector_phenotype_submit_verify" id="upload_datacollector_phenotype_submit_verify"><% $c->i18n->p('datacollector.ui.verify', 'Verify') |h %></button>
+        <button disabled type="button" class="btn btn-primary" name="upload_datacollector_phenotype_submit_store" id="upload_datacollector_phenotype_submit_store" title="<% $c->i18n->p('datacollector.ui.verify_first', 'First Verify Your File') |h %>"><% $c->i18n->p('datacollector.ui.store', 'Store') |h %></button>
       </div>
       
     </div>
@@ -60,23 +179,24 @@
 </div>
 
 
-<div class="modal fade" id="phenotype_upload_datacollector_info_dialog" name="phenotype_upload_datacollector_info_dialog" tabindex="-1" role="dialog" aria-labelledby="datacollectorUploadInfoDialog">
+<div class="modal fade sgn-datacollector-modal" id="phenotype_upload_datacollector_info_dialog" name="phenotype_upload_datacollector_info_dialog" tabindex="-1" role="dialog" aria-labelledby="datacollectorUploadInfoDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="datacollectorUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('datacollector.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="datacollectorUploadInfoDialog"><% $c->i18n->p('datacollector.ui.template_info', 'Template Information') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
         
-            <h4>Must be in .xls or .xlsx excel file format</h4>
-            <p>(tab-delimited text formats are NOT supported)</p>
+            <h4><% $c->i18n->p('datacollector.ui.excel_required', 'Must be in %{xls} or %{xlsx} excel file format', {xls => '.xls', xlsx => '.xlsx'}) |h %></h4>
+            <p><% $c->i18n->p('datacollector.ui.no_text', '(tab-delimited text formats are NOT supported)') |h %></p>
             <hr>
-            <h4>"Field Book" Sheet Header: (8th Sheet in Workbook)</h4>
-            <p>The first row (header) should contain the following:</p>
+            <h4 id="datacollector_sheet_header_description"><% $c->i18n->p('datacollector.ui.sheet_header', '%{sheet} Sheet Header: (%{number}th Sheet in Workbook)', {sheet => '"Field Book"', number => 8}) |h %></h4>
+            <p><% $c->i18n->p('datacollector.ui.header_intro', 'The first row (header) should contain the following:') |h %></p>
 
-            <table class="table table-hover table-bordered">
+            <div class="table-responsive sgn-datacollector-scientific-region" role="region" tabindex="0" dir="ltr" aria-labelledby="datacollector_sheet_header_description">
+            <table class="table table-hover table-bordered" dir="ltr">
                 <body>
                     <tr>
                         <td>plot_name</td>
@@ -89,27 +209,29 @@
                     </tr>
                 </body>
             </table>
+            </div>
 
-            <h4>Required fields:</h4>
+            <h4><% $c->i18n->p('datacollector.ui.required', 'Required fields:') |h %></h4>
             <ul>
-                <li>plot_name (must exist in the database)</li>
-                <li>trait name|trait id (must exist in the trait ontology)</li>
+                <li><% $c->i18n->p('datacollector.ui.plot_required', '%{column} (must exist in the database)', {column => 'plot_name'}) |h %></li>
+                <li><% $c->i18n->p('datacollector.ui.trait_required', '%{column} (must exist in the trait ontology)', {column => 'trait name|trait id'}) |h %></li>
             </ul>
 
-            <h4>Notes</h4>
+            <h4><% $c->i18n->p('datacollector.ui.notes', 'Notes') |h %></h4>
             <ul>
-                <li>For <i>"sprouting proportion"</i> in cassava, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO_334:0000008"</i>.</li>
-                <li>If trait file was not generated from the database, </br> consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
-                <li>Two or more traits can be uploaded at the same time.</li>
+                <li><% $c->i18n->p('datacollector.ui.trait_example', 'For %{trait} in cassava, %{column} should be written as %{example}.', {trait => '"sprouting proportion"', column => '"trait name|trait id"', example => '"sprouting proportion|CO_334:0000008"'}) |h %></li>
+                <li><% $c->i18n->p('datacollector.ui.ontology_note', 'If trait file was not generated from the database, consult the Trait Ontology to ensure you have the correct trait id.') |h %></li>
+                <li><% $c->i18n->p('datacollector.ui.multiple_traits', 'Two or more traits can be uploaded at the same time.') |h %></li>
             </ul>
 
-            <h4>Timestamps:</h4>
+            <h4><% $c->i18n->p('datacollector.ui.timestamps', 'Timestamps:') |h %></h4>
             <ul>
-                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
-                <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
-                <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
-                <li>Example with timestamps: <br/><br/>
-                <table class="table table-hover table-bordered">
+                <li><% $c->i18n->p('datacollector.ui.timestamp_help', 'To include timestamp information for your measurements, click the checkbox "Includes Timestamps".') |h %></li>
+                <li><% $c->i18n->p('datacollector.ui.timestamp_values', 'For timestamps, values should be recorded as %{with_timestamp}. For no timestamps, values should be recorded as %{without_timestamp}.', {with_timestamp => '"Value,Timestamp"', without_timestamp => '"Value"'}) |h %></li>
+                <li><% $c->i18n->p('datacollector.ui.timestamp_format', 'Timestamp format must be %{negative} or %{positive}', {negative => 'YYYY-MM-DD HH:MM:SS-0000', positive => 'YYYY-MM-DD HH:MM:SS+0000'}) |h %></li><br/>
+                <li><span id="datacollector_timestamp_example_description"><% $c->i18n->p('datacollector.ui.timestamp_example', 'Example with timestamps: ') |h %></span><br/><br/>
+                <div class="table-responsive sgn-datacollector-scientific-region" role="region" tabindex="0" dir="ltr" aria-labelledby="datacollector_timestamp_example_description">
+                <table class="table table-hover table-bordered" dir="ltr">
                     <thead>
                         <tr>
                             <th>plot_name</th>
@@ -133,9 +255,11 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
                 </li>
-                <li>Example without timestamps: <br/><br/>
-                <table class="table table-hover table-bordered">
+                <li><span id="datacollector_plain_example_description"><% $c->i18n->p('datacollector.ui.plain_example', 'Example without timestamps: ') |h %></span><br/><br/>
+                <div class="table-responsive sgn-datacollector-scientific-region" role="region" tabindex="0" dir="ltr" aria-labelledby="datacollector_plain_example_description">
+                <table class="table table-hover table-bordered" dir="ltr">
                     <thead>
                         <tr>
                             <th>plot_name</th>
@@ -159,13 +283,14 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
                 </li>
             </ul>
 
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('datacollector.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -183,6 +308,22 @@ jQuery(document).ready(function() {
     jQuery("#phenotype_upload_datacollector_format_info").click( function () { 
         jQuery("#phenotype_upload_datacollector_info_dialog" ).modal("show");
     });
+
+    // Restore the still-open upload dialog after its nested help is closed.
+    jQuery("#phenotype_upload_datacollector_info_dialog")
+        .off("hidden.bs.modal.sgnDataCollector")
+        .on("hidden.bs.modal.sgnDataCollector", function () {
+            var parentModal = jQuery("#upload_datacollector_phenotypes_dialog");
+            if (!parentModal.hasClass("in") || jQuery(".modal.in").not(parentModal).length) {
+                return;
+            }
+            jQuery(document.body).addClass("modal-open");
+            var controller = parentModal.data("bs.modal");
+            if (controller && typeof controller.enforceFocus === "function") {
+                controller.enforceFocus();
+            }
+            jQuery("#phenotype_upload_datacollector_format_info").trigger("focus");
+        });
 
 });
 

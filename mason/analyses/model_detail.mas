@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%doc>
 
@@ -32,11 +36,11 @@ $identifier_prefix
 
 <& /page/page_title.mas, title => "Model <span id=\"model_name_title\">$model_name</span>" &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Model Details</h4>", info_section_subtitle => 'View basic information about the model.', buttons_html => '', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "analysis_model_details", model_id => $model_id, model_name => $model_name, model_description => $model_description, model_properties => $model_properties, model_file_ids => $model_file_ids, model_type_name => $model_type_name, model_files => $model_files, identifier_prefix => $identifier_prefix &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Model Details</h4>", info_section_collapsed => 0, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.model_details", "Model Details")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.view_basic_information_about_the_model", 'View basic information about the model.')), buttons_html => '', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "analysis_model_details", model_id => $model_id, model_name => $model_name, model_description => $model_description, model_properties => $model_properties, model_file_ids => $model_file_ids, model_type_name => $model_type_name, model_files => $model_files, identifier_prefix => $identifier_prefix &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Analyses Results</h4>", info_section_subtitle => 'View analyses derived from this model.', buttons_html => '', icon_class => "glyphicon glyphicon-option-horizontal", info_section_id => "model_analyses", model_id => $model_id &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Analyses Results</h4>", info_section_collapsed => 0, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.analyses_results", "Analyses Results")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.view_analyses_derived_from_this_model", 'View analyses derived from this model.')), buttons_html => '', icon_class => "glyphicon glyphicon-option-horizontal", info_section_id => "model_analyses", model_id => $model_id &>
 
-<& /page/detail_page_2_col_section.mas, model_id => $model_id, info_section_title => "<h4 style='display:inline'>Delete Model</h4>", info_section_subtitle => 'Delete model from the database.', icon_class => "glyphicon glyphicon-trash", info_section_id => "model_deletion_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Delete Model</h4>", model_id => $model_id, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.delete_model", "Delete Model")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.delete_model_from_the_database", 'Delete model from the database.')), icon_class => "glyphicon glyphicon-trash", info_section_id => "model_deletion_section" &>
 
 <script>
 jQuery(document).ready(function(){

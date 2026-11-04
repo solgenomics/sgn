@@ -18,6 +18,7 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
+        i18n => $self->i18n,
         required_columns => [ 'from_seedlot_name', 'to_seedlot_name', 'operator_name'],
         optional_columns => ['amount', 'weight_gram', 'transaction_description'],
         column_aliases => {
@@ -44,7 +45,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            ($self->i18n ? $self->i18n->p('seedlots.parse.unrecognized_columns', 'The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.', {columns => join(', ', @$additional_columns)}) : "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns.")
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -59,7 +60,7 @@ sub _validate_with_plugin {
         my $weight = $row->{'weight_gram'};
 
         if ((!$amount || $amount eq '') && (!$weight || $weight eq '')) {
-            push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.row_weight_or_amount_required', 'On row:%{row} you must provide either a weight in grams or a seed count amount.', {row => '' . $row_num}) : "On row:$row_num you must provide either a weight in grams or a seed count amount.");
         }
 
         push @from_seedlot_to_seedlot_pairs, [$from_seedlot_name, $to_seedlot_name];
@@ -83,11 +84,11 @@ sub _validate_with_plugin {
     }
 
     if (scalar(@from_seedlots_missing) > 0) {
-        push @error_messages, "The following from seedlot names are not in the database: ".join(',',@from_seedlots_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.from_seedlots_not_found', 'The following from seedlot names are not in the database: %{names}', {names => join(',', @from_seedlots_missing)}) : "The following from seedlot names are not in the database: ".join(',',@from_seedlots_missing));
     }
 
     if (scalar(@from_seedlots_discarded) > 0) {
-        push @error_messages, "The following from seedlot names are marked as DISCARDED: ".join(',',@from_seedlots_discarded);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.from_seedlots_discarded', 'The following from seedlot names are marked as %{status}: %{names}', {status => 'DISCARDED', names => join(',', @from_seedlots_discarded)}) : "The following from seedlot names are marked as DISCARDED: ".join(',',@from_seedlots_discarded));
     }
 
 
@@ -107,15 +108,15 @@ sub _validate_with_plugin {
     }
 
     if (scalar(@to_seedlots_missing) > 0) {
-        push @error_messages, "The following to seedlot names are not in the database: ".join(',',@to_seedlots_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.to_seedlots_not_found', 'The following to seedlot names are not in the database: %{names}', {names => join(',', @to_seedlots_missing)}) : "The following to seedlot names are not in the database: ".join(',',@to_seedlots_missing));
     }
 
     if (scalar(@to_seedlots_discarded) > 0) {
-        push @error_messages, "The following to seedlot names are marked as DISCARDED: ".join(',',@to_seedlots_discarded);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.to_seedlots_discarded', 'The following to seedlot names are marked as %{status}: %{names}', {status => 'DISCARDED', names => join(',', @to_seedlots_discarded)}) : "The following to seedlot names are marked as DISCARDED: ".join(',',@to_seedlots_discarded));
     }
 
     if ((scalar @all_from_seedlots_missing == 0) && (scalar @all_to_seedlots_missing == 0)) {
-        my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, \@from_seedlot_to_seedlot_pairs);
+        my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, \@from_seedlot_to_seedlot_pairs, $self->i18n);
         if (exists($pairs_error->{error})){
             push @error_messages, $pairs_error->{error};
         }

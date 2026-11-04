@@ -1,25 +1,25 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Search</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown"><% $c->i18n->p('navigation.search.menu', 'Search') |h %></a>
   <ul class="dropdown-menu">
-    <li><a href="/breeders/search">Wizard</a></li>
-    <li><a href="/search/bulk">Bulk Search</a></li>
-    <li><a href="/search/stocks">Accessions and Plots</a></li>
-    <li><a href="/search/organisms">Organisms</a></li>
-    <li><a href="/search/cross">Progenies, Parents, Crosses</a></li>
-    <li><a href="/search/trials">Field Trials</a></li>
+    <li><a href="/breeders/search"><% $c->i18n->p('navigation.search.wizard', 'Wizard') |h %></a></li>
+    <li><a href="/search/bulk"><% $c->i18n->p('navigation.search.bulk', 'Bulk Search') |h %></a></li>
+    <li><a href="/search/stocks"><% $c->i18n->p('navigation.search.accessions_plots', 'Accessions and Plots') |h %></a></li>
+    <li><a href="/search/organisms"><% $c->i18n->p('navigation.search.organisms', 'Organisms') |h %></a></li>
+    <li><a href="/search/cross"><% $c->i18n->p('navigation.search.crosses', 'Progenies, Parents, Crosses') |h %></a></li>
+    <li><a href="/search/trials"><% $c->i18n->p('navigation.search.field_trials', 'Field Trials') |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li><a href="/search/genotyping_trials">Genotyping Plates</a></li>
-    <li><a href="/search/genotyping_data_projects">Genotyping Projects</a></li>
-    <li><a href="/search/genotyping_protocols">Genotyping Protocols</a></li>
-    <li><a href="/search/stocks_using_genotypes">Accessions Using Genotypes</a></li>    
-    <li><a href="/search/vectors">Vector Constructs</a></li>
+    <li><a href="/search/genotyping_trials"><% $c->i18n->p('navigation.search.genotyping_plates', 'Genotyping Plates') |h %></a></li>
+    <li><a href="/search/genotyping_data_projects"><% $c->i18n->p('navigation.search.genotyping_projects', 'Genotyping Projects') |h %></a></li>
+    <li><a href="/search/genotyping_protocols"><% $c->i18n->p('navigation.search.genotyping_protocols', 'Genotyping Protocols') |h %></a></li>
+    <li><a href="/search/stocks_using_genotypes"><% $c->i18n->p('navigation.search.accessions_genotypes', 'Accessions Using Genotypes') |h %></a></li>
+    <li><a href="/search/vectors"><% $c->i18n->p('navigation.search.vectors', 'Vector Constructs') |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li><a href="/search/traits">Traits</a></li>
-    <li><a href="/search/treatments">Treatments</a></li>
+    <li><a href="/search/traits"><% $c->i18n->p('navigation.search.traits', 'Traits') |h %></a></li>
+    <li><a href="/search/treatments"><% $c->i18n->p('navigation.search.treatments', 'Treatments') |h %></a></li>
     <!--<li><a href="/search/markers">Markers</a></li>-->
-    <li><a href="/search/images">Images</a></li>
-    <li><a href="/search/people">People</a></li>
-    <li><a href="/help/faq.pl">FAQ</a></li>
+    <li><a href="/search/images"><% $c->i18n->p('navigation.search.images', 'Images') |h %></a></li>
+    <li><a href="/search/people"><% $c->i18n->p('navigation.search.people', 'People') |h %></a></li>
+    <li><a href="/help/faq.pl"><% $c->i18n->p('navigation.search.faq', 'FAQ') |h %></a></li>
   </ul>
 </li>

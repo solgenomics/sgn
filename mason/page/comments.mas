@@ -50,6 +50,7 @@ $referer
 
 our %urlencode;
 use Tie::UrlEncoder;
+use HTML::Entities ();
 use CXGN::Page::FormattingHelpers qw / info_section_html / ;
 
 if ($object_id!~/^\d+$/) { return; }
@@ -58,11 +59,17 @@ if ($object_id!~/^\d+$/) { return; }
     # object_type would be something like "marker" or "bac"
     # object_id would be the marker_id or the clone_id
 
+    my $comments_title = HTML::Entities::encode_entities($c->i18n->p('global.page.comments.title', 'User comments'));
+    my $comments_wait = $c->i18n->p('global.page.comments.wait', 'Please wait, checking for comments.  (If comments do not show up, access them %{link})', {link => '__SGN_COMMENTS_LINK__'});
+    $comments_wait = HTML::Entities::encode_entities($comments_wait);
+    my $comments_link_text = HTML::Entities::encode_entities($c->i18n->p('global.page.comments.link_here', 'here'));
+    my $comments_link = '<a href="/forum/return_comments.pl?type=' . HTML::Entities::encode_entities($object_type) . '&amp;id=' . HTML::Entities::encode_entities($object_id) . '">' . $comments_link_text . '</a>';
+    $comments_wait =~ s/__SGN_COMMENTS_LINK__/$comments_link/;
     my $placeholder = info_section_html(
-        title=>"User comments",
+        title=>$comments_title,
         contents=>qq{<!-- check for comments only shows up when AJAX is not enabled
      (old browsers, buggy ajax) -->
-Please wait, checking for comments.  (If comments do not show up, access them <a href="/forum/return_comments.pl?type=$object_type&amp;id=$object_id">here</a>)}
+$comments_wait}
     );
 
 my $encoded_referer = $urlencode{ $referer || '' };

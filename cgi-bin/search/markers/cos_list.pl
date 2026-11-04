@@ -9,6 +9,9 @@
 ######################################################################
 
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext qw( $c );
+my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
 use CXGN::Page;
 use CXGN::DB::Connection;
 
@@ -34,11 +37,11 @@ while (my ($cos_id, $cos_mrkr_id, $mrkr_id, $est_read_id, $at_match, $at_posn, $
     } else {
 	$at_match =~ s/\.\S+//;
 	push @cos_list, "<tr>\n<td><a href='$cos_page$mrkr_id'>$cos_id</a></td>\n" . 
-	    ($trace_name ? "<td><a href='$est_read_page$trace_name'>$trace_name</a></td>\n" : "<td>No trace</td>\n") .
+	    ($trace_name ? "<td><a href='$est_read_page$trace_name'>$trace_name</a></td>\n" : ("<td>" . SGN::I18N::translate($ui_i18n, "genotype.marker.no_trace", "No trace", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</td>\n")) .
 		"<td><a href=\"$at_page$bac_id\">$at_match</a></td>\n" .
 		    "<td>$at_posn</td>\n" .
-			($mapped ? "<td>mapped</td>\n"
-			 : "<td>not mapped</td>\n") .
+			($mapped ? ("<td>" . SGN::I18N::translate($ui_i18n, "genotype.marker.mapped", "mapped", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</td>\n")
+			 : ("<td>" . SGN::I18N::translate($ui_i18n, "genotype.marker.not_mapped", "not mapped", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</td>\n")) .
 			     "</tr>\n";
 	$old_cos_mrkr_id = $cos_mrkr_id;
     }
@@ -47,15 +50,15 @@ while (my ($cos_id, $cos_mrkr_id, $mrkr_id, $est_read_id, $at_match, $at_posn, $
 $cos_sth->finish;
 
 # Print the page.
-$page->header("Conserved Ortholog Set Markers on SGN");
+$page->header(SGN::I18N::translate($ui_i18n, "genotype.marker.conserved_ortholog_set_markers_on_sgn", "Conserved Ortholog Set Markers on SGN", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}));
 
-print "<center><h2>Conserved Ortholog Set Markers available on SGN</h2></center>\n";
+print ("<center><h2>" . SGN::I18N::translate($ui_i18n, "genotype.marker.conserved_ortholog_set_markers_available_on_sgn", "Conserved Ortholog Set Markers available on SGN", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</h2></center>\n");
 print "\n<table summary=\"\" width=\"90%\" align=\"center\" border=\"2\">\n<tr>\n";
-print "<td><b>CU ID \#</b></td>\n";
-print "<td><b>Tomato EST Read</b></td>\n";
-print "<td><b>A.t. Best BAC match</b></td>\n";
-print "<td><b>A.t. position</b></td>\n";
-print "<td><b>Mapped</b></td>\n";
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.cu_id", "CU ID #", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.tomato_est_read", "Tomato EST Read", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.a_t_best_bac_match", "A.t. Best BAC match", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.a_t_position", "A.t. position", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.mapped_879a69", "Mapped", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
 print "</tr>\n";
 
 print @cos_list;

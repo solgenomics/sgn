@@ -11,7 +11,7 @@ $debug => ''
   Args: n/a
   Ret : BAC tab format
 
-  Defines the format of the BAC tab using html & perl. Speicfies
+  Defines the format of the BAC tab using html & perl. Specifies
   information fields available for searching BACs. Prints the debug
   checkbox when debug parameter is set to one.
 
@@ -26,12 +26,12 @@ $debug => ''
 
 
 <br />
-Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):<br />
+<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b", "Enter a list of identifiers or upload a file containing identifiers separated by whitespace (returns, spaces or tabs):") |h %><br />
 <table summary="" width="100%"><tr><td>
 <textarea name="ids" rows="5" cols="20"></textarea>
 </td>
 <td>
-<i>Example:</i>
+<i><% $c->i18n->p("lists_datasets.bulk.example", "Example:") |h %></i>
 <pre style="border: 1px solid gray; width: 10em; height: 5em">
 LE_HBa0033F11
 SL_MboI0001A07
@@ -41,22 +41,22 @@ SL_EcoRI0022A07
 </td></tr></table>
 <br />
 <br />
-And/or upload list file: <br /><input type="file" name="file" />
+<% $c->i18n->p("lists_datasets.bulk.and_or_upload_list_file", "And/or upload list file:") |h %> <br /><input type="file" name="file" />
 <br />
 <br />
 
 </td><td valign="top" bgcolor="#EEEEEE" width="320">
-<b>Download BAC information:</b> <br />
+<b><% $c->i18n->p("lists_datasets.bulk.download_bac_information", "Download BAC information:") |h %></b> <br />
 <div style="margin: 1em; white-space: nowrap">
-  <input type="checkbox" name="arizona_clone_name" checked="checked"  /> Arizona-style clone name (LE_HBa0001A01) <br />
-  <input type="checkbox" name="cornell_clone_name" checked="checked"  /> Old Cornell-style clone name (P001A01)<br />
-  <input type="checkbox" name="chr_clone_name" checked="checked"  /> Clone name with chromosome (C01HBa0001A01)<br />
-  <input type="checkbox" name="clone_type" checked="checked" /> clone type <br />
-  <input type="checkbox" name="org_name" checked="checked" /> organism name <br />
-  <input type="checkbox" name="accession_name" checked="checked" /> accession name <br />
-  <input type="checkbox" name="library_name" checked="checked" /> library name <br />
-  <input type="checkbox" name="estimated_length" checked="checked" /> estimated length <br />
-  <input type="checkbox" name="genbank_accession" checked="checked" /> genbank accession<br />
+  <input type="checkbox" name="arizona_clone_name" checked="checked"  /> <% $c->i18n->p("lists_datasets.bulk.arizona_style_clone_name_le_hba0001a01", "Arizona-style clone name (LE_HBa0001A01)") |h %> <br />
+  <input type="checkbox" name="cornell_clone_name" checked="checked"  /> <% $c->i18n->p("lists_datasets.bulk.old_cornell_style_clone_name_p001a01", "Old Cornell-style clone name (P001A01)") |h %><br />
+  <input type="checkbox" name="chr_clone_name" checked="checked"  /> <% $c->i18n->p("lists_datasets.bulk.clone_name_with_chromosome_c01hba0001a01", "Clone name with chromosome (C01HBa0001A01)") |h %><br />
+  <input type="checkbox" name="clone_type" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.clone_type", "clone type") |h %> <br />
+  <input type="checkbox" name="org_name" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.organism_name", "organism name") |h %> <br />
+  <input type="checkbox" name="accession_name" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.accession_name", "accession name") |h %> <br />
+  <input type="checkbox" name="library_name" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.library_name", "library name") |h %> <br />
+  <input type="checkbox" name="estimated_length" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.estimated_length", "estimated length") |h %> <br />
+  <input type="checkbox" name="genbank_accession" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.genbank_accession", "genbank accession") |h %><br />
 <!--	<input type="checkbox" name="overgo_matches" checked="checked" DISABLED /> overgo matches<br /> -->
 </div>
 
@@ -67,7 +67,7 @@ And/or upload list file: <br /><input type="file" name="file" />
 %    }
 
 <input type="hidden" name="idType" value="bac" />
-<input type="reset" />&nbsp;&nbsp;
-<input type="submit" value="Submit"><br />
+<input type="reset"  value="<% $c->i18n->p("lists_datasets.bulk.reset", "Reset") |h %>"/>&nbsp;&nbsp;
+<input type="submit" value="<% $c->i18n->p("lists_datasets.bulk.submit", "Submit") |h %>"><br />
 </form>
 

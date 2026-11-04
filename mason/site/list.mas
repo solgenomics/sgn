@@ -5,8 +5,8 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header" style="text-align:center">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h3 class="modal-title" id="listDialog">Your Lists</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h3 class="modal-title" id="listDialog"><% $c->i18n->p('lists_datasets.shared.your_lists', 'Your Lists') |h %></h3>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -14,8 +14,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button id="view_public_lists_button" type="button" class="btn btn-primary" >View Public Lists</button>
-        <button id="close_list_dialog_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="view_public_lists_button" type="button" class="btn btn-primary" ><% $c->i18n->p('lists_datasets.shared.view_public_lists', 'View Public Lists') |h %></button>
+        <button id="close_list_dialog_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -25,8 +25,8 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header" style="text-align:center">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="publicListDialog">Public Lists</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="publicListDialog"><% $c->i18n->p('lists_datasets.shared.public_lists', 'Public Lists') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button id="close_public_list_item_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="close_public_list_item_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -44,8 +44,8 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header" style="text-align:center">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="listItemDialog">List Contents</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="listItemDialog"><% $c->i18n->p('lists_datasets.shared.list_contents', 'List Contents') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -53,7 +53,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button id="close_list_item_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="close_list_item_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -64,8 +64,8 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="listValidationErrorDialog">List Validation Report: Failed</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="listValidationErrorDialog"><% $c->i18n->p('lists_datasets.shared.list_validation_report_failed', 'List Validation Report: Failed') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -73,14 +73,14 @@
         </div>
         <div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div>
         <div class="well">
-          <h3>Elements not found:</h3>
+          <h3><% $c->i18n->p('lists_datasets.shared.elements_not_found', 'Elements not found:') |h %></h3>
           <div id="elements_not_found_stats"></div>
           <table id="missing_accessions_table" style="margin:0pt"></table>
           <br />
           <div id="validate_stock_add_missing_accessions"></div>
 
           <div class='well well-sm'>
-            <h3>Optional: Add Missing Accessions to A List</h3>
+            <h3><% $c->i18n->p('lists_datasets.shared.optional_add_missing_accessions_to_a_list', 'Optional: Add Missing Accessions to A List') |h %></h3>
             <div id='validate_stock_add_missing_accessions_for_list_div'></div>
             <div id='stocks_with_wrong_case'></div>
           </div>
@@ -88,7 +88,7 @@
           <div id="validate_stock_missing_accessions"></div>
 
           <div id="adjust_case_div">
-            <h3>Mismatched case</h3>
+            <h3><% $c->i18n->p('lists_datasets.shared.mismatched_case', 'Mismatched case') |h %></h3>
             <table id="wrong_case_table" style="margin:0pt"></table>
             <br />
           </div>
@@ -96,45 +96,45 @@
           <div id="wrong_case_message_div"></div>
           <br />
 
-          <button class="btn btn-default" id="adjust_case_action_button" disabled>Adjust Case</button>
+          <button class="btn btn-default" id="adjust_case_action_button" disabled><% $c->i18n->p('lists_datasets.shared.adjust_case', 'Adjust Case') |h %></button>
           <br /><br />
           <div>
-            Click the Adjust Case button to align the case in the list with what is in the database.
+            <% $c->i18n->p('lists_datasets.shared.click_the_adjust_case_button_to_align_the_case_in_the_list_with_what_is_in_the_database', 'Click the Adjust Case button to align the case in the list with what is in the database.') |h %>
           </div>
 
-          <h3>Multiple mismatched case</h3>
+          <h3><% $c->i18n->p('lists_datasets.shared.multiple_mismatched_case', 'Multiple mismatched case') |h %></h3>
           <div id="multiple_case_match_message_div">
             <br />
-            Items listed here have mulitple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly.
+            <% $c->i18n->p('lists_datasets.shared.items_listed_here_have_mulitple_case_mismatches_and_must_be_fixed_manually_if_accessions_need_to_be_', 'Items listed here have multiple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly.') |h %>
           </div>
 
           <table id="multiple_wrong_case_table" style="margin:0pt"></table>
 
           <div id="multiple_case_match_div"><br /><br /></div>
 
-          <h3>List elements matching a synonym</h3>
+          <h3><% $c->i18n->p('lists_datasets.shared.list_elements_matching_a_synonym', 'List elements matching a synonym') |h %></h3>
           <div id="synonym_matches_div">
 
             <table id="element_matches_synonym"  style="margin:0pt"></table>
             <br />
-            <button class="btn btn-default" id="replace_synonyms_with_uniquenames_button">Replace synonyms with corresponding DB name</button>
+            <button class="btn btn-default" id="replace_synonyms_with_uniquenames_button"><% $c->i18n->p('lists_datasets.shared.replace_synonyms_with_corresponding_db_name', 'Replace synonyms with corresponding DB name') |h %></button>
 
           </div>
 
           <div id="synonym_message"></div>
           <br />
 
-          <h3>Multiple synonym matches</h3>
+          <h3><% $c->i18n->p('lists_datasets.shared.multiple_synonym_matches', 'Multiple synonym matches') |h %></h3>
           <div id="multiple_synonym_matches_div">
             <table id="element_matches_multiple_synonyms_table" style="margin:0pt"></table>
-            Multiple synonym matches have to be resolved manually. Contact database administrators if necessary.
+            <% $c->i18n->p('lists_datasets.shared.multiple_synonym_matches_have_to_be_resolved_manually_contact_database_administrators_if_necessary', 'Multiple synonym matches have to be resolved manually. Contact database administrators if necessary.') |h %>
           </div>
         </div>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button id="close_missing_accessions_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      <button id="close_missing_accessions_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %></button>
     </div>
   </div>
 </div>
@@ -144,8 +144,8 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="fuzzySearchResultDialog">Fuzzy Search Results</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="fuzzySearchResultDialog"><% $c->i18n->p('lists_datasets.shared.fuzzy_search_results', 'Fuzzy Search Results') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -153,8 +153,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button id="download_fuzzy_search_result" type="button" class="btn btn-primary" onclick="javascript:downloadFuzzyResponse()" >Download</button>
-        <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="download_fuzzy_search_result" type="button" class="btn btn-primary" onclick="javascript:downloadFuzzyResponse()" ><% $c->i18n->p('lists_datasets.shared.download', 'Download') |h %></button>
+        <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -164,8 +164,8 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="synonymSearchResultDialog">Synonym Search Results</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="synonymSearchResultDialog"><% $c->i18n->p('lists_datasets.shared.synonym_search_results', 'Synonym Search Results') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -174,12 +174,12 @@
       </div>
       <div class="modal-footer">
         <form id="new-list-from-unames" class="form-inline" style="float:left">
-          <label>Create a New List from Unique Names:</label>
-          <input name="name" type="text" class="form-control" placeholder="List Name...">
-          <button class="btn btn-primary" type="submit">Save</button>
+          <label><% $c->i18n->p('lists_datasets.shared.create_a_new_list_from_unique_names', 'Create a New List from Unique Names:') |h %></label>
+          <input name="name" type="text" class="form-control" placeholder="<% $c->i18n->p('lists_datasets.shared.list_name', 'List Name...') |h %>">
+          <button class="btn btn-primary" type="submit"><% $c->i18n->p('lists_datasets.shared.save', 'Save') |h %></button>
         </form>
         <form class="form-inline" style="float:right">
-          <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %></button>
         </form>
       </div>
     </div>
@@ -190,8 +190,8 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4>Available Seedlots</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4><% $c->i18n->p('lists_datasets.shared.available_seedlots', 'Available Seedlots') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -200,13 +200,13 @@
       </div>
       <div class="modal-footer">
         <form id="new-list-from-seedlots" class="form-inline" style="float:left">
-          <label>Create a New List from Selected Seedlots:</label>
-          <input name="name" type="text" class="form-control" placeholder="List Name...">
-          <button class="btn btn-primary" type="submit">Save</button>
+          <label><% $c->i18n->p('lists_datasets.shared.create_a_new_list_from_selected_seedlots', 'Create a New List from Selected Seedlots:') |h %></label>
+          <input name="name" type="text" class="form-control" placeholder="<% $c->i18n->p('lists_datasets.shared.list_name', 'List Name...') |h %>">
+          <button class="btn btn-primary" type="submit"><% $c->i18n->p('lists_datasets.shared.save', 'Save') |h %></button>
         </form>
         <form class="form-inline" style="float:right">
-          <a href="/breeders/seedlots/" class="btn btn-primary">Manage Seedlots</a>
-          <button id="close_availible_seedlots_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <a href="/breeders/seedlots/" class="btn btn-primary"><% $c->i18n->p('lists_datasets.shared.manage_seedlots', 'Manage Seedlots') |h %></a>
+          <button id="close_availible_seedlots_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %></button>
         </form>
       </div>
     </div>
@@ -217,8 +217,8 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4>List Comparison</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4><% $c->i18n->p('lists_datasets.shared.list_comparison', 'List Comparison') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -227,13 +227,13 @@
       </div>
       <div class="modal-footer">
         <form class="form-inline" style="float:left">
-          <label>Download column:</label>
+          <label><% $c->i18n->p('lists_datasets.shared.download_column', 'Download column:') |h %></label>
           <select id="comparison_column_select" class="form-control input-sm">
           </select>
-          <button id="download_comparison_column" type="button" class="btn btn-primary btn-sm">Download</button>
+          <button id="download_comparison_column" type="button" class="btn btn-primary btn-sm"><% $c->i18n->p('lists_datasets.shared.download', 'Download') |h %></button>
         </form>
         <form class="form-inline" style="float:right">
-          <button id="close_list_comparison_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button id="close_list_comparison_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('lists_datasets.shared.close', 'Close') |h %></button>
         </form>
       </div>
     </div>

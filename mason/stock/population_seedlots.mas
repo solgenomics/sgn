@@ -7,7 +7,7 @@ $stock_id
 
 <div class = "well well-sm">
     <form id="download_population_seedlots_action" action="/breeders/download_population_seedlots_action" method="POST">
-        <button class="btn btn-primary" type="button" id="population_seedlots_download_button">Download Seedlot Info</button>
+        <button class="btn btn-primary" type="button" id="population_seedlots_download_button" style="max-inline-size:100%;max-width:100%;white-space:normal;overflow-wrap:anywhere"><% $c->i18n->p('seedlots.ui.download_seedlot_info', 'Download Seedlot Info') |h %></button>
         <input name="population_stock_id" id="population_stock_id" type="hidden" value="<% $stock_id %>">
         <input type="hidden" id="population_seedlots_download_token" name="population_seedlots_download_token"/>
     </form>
@@ -20,34 +20,86 @@ $stock_id
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 
 jQuery(document).ready(function(){
 
     var population_id = "<%$stock_id%>";
     var table = jQuery(population_seedlots_table).DataTable({
-        ajax: '/ajax/manage_accessions/population_seedlots/'+population_id,
+        ajax: {url: '/ajax/manage_accessions/population_seedlots/'+population_id, headers: _sgnSeedlotLocaleHeaders('/ajax/manage_accessions/population_seedlots/'+population_id)},
         'autoWidth': false,
         destroy: true,
         columns: [
-            { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.member_id+"/view'>"+row.member_name+"</a>"; } },
-            { title: "Member Type", "data": "member_type" },
-            { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) {
+            { title: seedlotHTML(seedlotI18n.p("seedlots.ui.member_name", "Member Name")), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.member_id+"/view'>"+seedlotHTML(row.member_name)+"</a>"; } },
+            { title: seedlotHTML(seedlotI18n.p("seedlots.ui.member_type", "Member Type")), "data": "member_type" },
+            { title: seedlotHTML(seedlotI18n.p("seedlots.ui.seedlot_name.8bbaf6d", "Seedlot Name")), "data": null, "render": function ( data, type, row ) {
                 if (row.seedlot_id === null){
-                    return 'No Seedlot'
+                    return seedlotHTML(seedlotI18n.p("seedlots.ui.no_seedlot", "No Seedlot"))
                 } else {
-                    return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
+                    return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+seedlotHTML(row.seedlot_name)+"</a>"
                 }
             }},
-            { title: "Current Count", "data": "current_count" },
-            { title: "Current Weight (g) ", "data": "current_weight_gram" },
-            { title: "Box Name", "data": "box_name" },
-            { title: "Location", "data": "location" },
+            { title: seedlotHTML(seedlotI18n.p("seedlots.ui.current_count.726d526", "Current Count")), "data": "current_count" },
+            { title: seedlotHTML(seedlotI18n.p("seedlots.ui.current_weight_g.a44deea", "Current Weight (g)")), "data": "current_weight_gram" },
+            { title: seedlotHTML(seedlotI18n.p("seedlots.ui.box_name.95fff30", "Box Name")), "data": "box_name" },
+            { title: seedlotHTML(seedlotI18n.p("seedlots.ui.location.5cf58de", "Location")), "data": "location" },
         ],
     });
 
     jQuery('#population_seedlots_download_button').click(function() {
         var token = new Date().getTime(); //use the current timestamp as the token name and value
         jQuery('#population_seedlots_download_token').val(token);
+        jQuery('#download_population_seedlots_action').attr('action', _sgnSeedlotLocaleURL('/breeders/download_population_seedlots_action'));
         jQuery('#download_population_seedlots_action').submit();
     });
 

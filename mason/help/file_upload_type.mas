@@ -1,5 +1,5 @@
 <%args>
-  $type => 'Data'
+  $type => undef
   $optional_column => undef
 </%args>
 
@@ -7,13 +7,11 @@
   <span class="file_icon glyphicon glyphicon-file"></span>
   <div>
     <p>
-      <% $type %> may be uploaded using any of the supported file types: MS Excel (<strong>.xls or .xlsx</strong>),
-      comma-separated file (<strong>.csv</strong>), LibreOffice / OpenOffice OpenDocument spreadsheet (<strong>.ods</strong>), 
-      tab-delimited file (<strong>.txt or .tsv</strong>), or semicolon-separated file (<strong>.ssv</strong>).
+      <% $c->i18n->p('upload.formats.supported', "%{type} may be uploaded using any of the supported file types: MS Excel (%{xls} or %{xlsx}), comma-separated file (%{csv}), LibreOffice / OpenOffice OpenDocument spreadsheet (%{ods}), tab-delimited file (%{txt} or %{tsv}), or semicolon-separated file (%{ssv}).", {type => $upload_type, xls => '.xls', xlsx => '.xlsx', csv => '.csv', ods => '.ods', txt => '.txt', tsv => '.tsv', ssv => '.ssv'}) |h %>
     </p>
 % if ($optional_column) {
     <p>
-      Optional columns may be left out, if not used in your data.
+      <% $c->i18n->p('upload.formats.optional_columns', 'Optional columns may be left out, if not used in your data.') |h %>
     </p>
 % }
   </div>
@@ -35,3 +33,7 @@
     font-size: 200%;
   }
 </style>
+
+<%init>
+my $upload_type = defined($type) ? $type : $c->i18n->p('upload.formats.default_type', 'Data');
+</%init>

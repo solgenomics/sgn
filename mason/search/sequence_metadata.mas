@@ -1,6 +1,9 @@
+<%init>
+use HTML::Entities ();
+</%init>
 <div class="container-fluid">
 
-    <& /page/page_title.mas, title=>'Search Sequence Metadata' &>
+    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('global.sequence_metadata.title', 'Search Sequence Metadata')) &>
 
     <& /tools/sequence_metadata/query_sequence_metadata.mas &>
 

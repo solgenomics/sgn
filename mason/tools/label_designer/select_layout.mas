@@ -1,14 +1,14 @@
 <div class="text-center">
-    <p>Now, define your layout. You may retrieve these settings from a saved design, or you can start a new design by selecting a page and label format.<p>
+    <p><% $c->i18n->p("barcode.mason.now_define_your_layout_you_may_retrieve_these_settings_from", "Now, define your layout. You may retrieve these settings from a saved design, or you can start a new design by selecting a page and label format.") |h %><p>
 </div>
 </br></br>
 <div class="col-md-12" style="margin-bottom:20px;">
     <div class="col-md-2 col-md-offset-3 text-center">
-        <label> New or Saved:</label>
+        <label> <% $c->i18n->p("barcode.mason.new_or_saved", "New or Saved:") |h %></label>
     </div>
     <div class="col-md-4">
-        <label class="radio-inline"><input type="radio" name="optradio" value="new" checked>New</label>
-        <label class="radio-inline"><input type="radio" name="optradio" value="saved">Saved</label>
+        <label class="radio-inline"><input type="radio" name="optradio" value="new" checked><% $c->i18n->p("global.tomato_genome_release.new", "New") |h %></label>
+        <label class="radio-inline"><input type="radio" name="optradio" value="saved"><% $c->i18n->p("decision.js.saved", "Saved") |h %></label>
     </div>
 </div>
 
@@ -18,13 +18,13 @@
 
 <div id="format_options" class="col-md-12" style="margin-bottom:20px;" >
    <div class="col-md-2">
-       <label>Page Format:</label>
+       <label><% $c->i18n->p("barcode.mason.page_format", "Page Format:") |h %></label>
    </div>
    <div class="col-md-4">
        <select class="form-control" id="page_format" ></select>
    </div>
    <div class="col-md-2">
-       <label>Label Format:</label>
+       <label><% $c->i18n->p("barcode.mason.label_format", "Label Format:") |h %></label>
    </div>
    <div class="col-md-4">
        <select class="form-control" id="label_format"></select>
@@ -35,13 +35,13 @@
        <div class="col-md-12">
            <div class="col-md-5">
                <center>
-                   <label>Page Width:</label><br>
+                   <label><% $c->i18n->p("barcode.mason.page_width", "Page Width:") |h %></label><br>
                    <input class="form-control"   type="number" id="page_width" style="max-width: 100%;">
                </center>
            </div>
            <div class="col-md-5">
                <center>
-                   <label>Page Height:</label><br>
+                   <label><% $c->i18n->p("barcode.mason.page_height", "Page Height:") |h %></label><br>
                    <input class="form-control"  type="number" id="page_height" style="max-width: 100%;">
                </center>
            </div>
@@ -52,23 +52,23 @@
        <div class="col-md-12">
            <div class="col-md-5">
                <center>
-                   <label>Label Width:</label><br>
+                   <label><% $c->i18n->p("barcode.mason.label_width", "Label Width:") |h %></label><br>
                    <input class="form-control"  type="number" id="label_width" style="max-width: 100%;">
                </center>
            </div>
            <div class="col-md-5">
                <center>
-                   <label>Label Height:</label><br>
+                   <label><% $c->i18n->p("barcode.mason.label_height", "Label Height:") |h %></label><br>
                    <input class="form-control"  type="number" id="label_height" style="max-width: 100%;">
                </center>
            </div>
            <div class="col-md-2">
-                <label class='radio'><input type="radio" name="dimoptradio" id="dim_inches" class="radio-select-imperial" value="inch">Imperial (inches)</label>
-                <label class='radio'><input type="radio" name="dimoptradio" id="dim_cm" class="radio-select-metric" value="cm" checked>Metric (cm)</label>
+                <label class='radio'><input type="radio" name="dimoptradio" id="dim_inches" class="radio-select-imperial" value="inch"><% $c->i18n->p("barcode.mason.imperial_inches", "Imperial (inches)") |h %></label>
+                <label class='radio'><input type="radio" name="dimoptradio" id="dim_cm" class="radio-select-metric" value="cm" checked><% $c->i18n->p("barcode.mason.metric_cm", "Metric (cm)") |h %></label>
            </div>
            <div class="col-md-2">
                <br>
-               <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
+               <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary"><% $c->i18n->p("language.apply", "Apply") |h %></button>
            </div>
        </div>
        <!--<center><i style="margin-top:10px;">(72 pixels/inch - approx. 28.35 pixels/cm)</i></center>-->

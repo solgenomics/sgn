@@ -28,6 +28,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
 use CXGN::Tools::Text;
 use CXGN::Marker::Tools;
@@ -45,7 +47,7 @@ my $collections = $marker->collections();
 if($collections and @{$collections}) {
     $collections_string=CXGN::Tools::Text::list_to_string(@{$collections})." ";
     for my $collection(@{$collections}) {
-        $collections_description.="$collection markers are ".CXGN::Marker::Tools::collection_name_to_description($dbh,$collection)."<br />";
+        $collections_description.=SGN::I18N::translate($c->i18n, "marker.detail.collection_markers_are", "%{collection} markers are ", {collection => ("" . $collection)}).CXGN::Marker::Tools::collection_name_to_description($dbh,$collection)."<br />";
     }
 }
 

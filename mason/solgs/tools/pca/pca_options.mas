@@ -32,7 +32,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
   <div class=" form-group col-sm-2">
     <input class="btn btn-success"
 	   type="submit"
-	   value="Run PCA"
+	   value="<% $c->i18n->p("solgs.interface.run_pca", "Run PCA") |h %>"
 	   id="run_pca"/>
 
   </div>

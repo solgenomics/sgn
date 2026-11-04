@@ -8,6 +8,8 @@ CXGN::Propagation::AddInventoryIdentifier - a module for adding propagation Inve
 package CXGN::Propagation::AddInventoryIdentifier;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
@@ -68,6 +70,7 @@ sub existing_inventory_identifier {
 
 sub add {
     my $self = shift;
+    my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
     my $inventory_identifier = $self->get_inventory_identifier();
@@ -77,7 +80,7 @@ sub add {
     my $inventory_stock_id;
 
     if ($self->existing_inventory_identifier()){
-        return {error => "Error: inventory identifier already exists, please use another inventory identifier!"};
+        return {error => (SGN::I18N::translate($ui_i18n, "seedlot.server.error_inventory_identifier_already_exists_please_use_another", "Error: inventory identifier already exists, please use another inventory identifier!"))};
     }
 
     my $coderef = sub {

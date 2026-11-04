@@ -3,6 +3,8 @@ package CXGN::Trial::FieldMap;
 
 use CXGN::Chado::Cvterm;
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Trial;
@@ -295,6 +297,7 @@ sub delete_fieldmap {
 
 sub update_fieldmap_precheck {
     my $self = shift;
+    my SGN::I18N $ui_fieldmap_update_fieldmap_precheck_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $error;
     my $trial_id = $self->trial_id;
 
@@ -306,18 +309,19 @@ sub update_fieldmap_precheck {
     #print STDERR Dumper($triat_name);
 
     if (scalar(@{$triat_name}) != 0)  {
-        $error = "One or more traits have been assayed for this trial; Map/Layout can not be modified. Please contact us.";
+        $error = (SGN::I18N::translate($ui_fieldmap_update_fieldmap_precheck_i18n, "trial.model.map_has_traits", "One or more traits have been assayed for this trial; Map/Layout can not be modified. Please contact us."));
         return $error;
     }
     my $seedlots = $trial->get_seedlots();
     if (scalar(@$seedlots) != 0){
-        $error = "Seedlots have already been saved as the source material for the plots in this trial. Map/Layout can not be modified. Please contact us.";
+        $error = (SGN::I18N::translate($ui_fieldmap_update_fieldmap_precheck_i18n, "trial.model.map_has_seedlots", "Seedlots have already been saved as the source material for the plots in this trial. Map/Layout can not be modified. Please contact us."));
     }
     return $error;
 }
 
 sub substitute_accession_precheck {
     my $self = shift;
+    my SGN::I18N $ui_fieldmap_substitute_accession_precheck_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $error;
     my @plots;
     my @ids;
@@ -338,7 +342,7 @@ sub substitute_accession_precheck {
     }
 
     if (scalar(@plots) != 0)  {
-        $error = "Accessions used as control/check can't be substituted between plots...";
+        $error = (SGN::I18N::translate($ui_fieldmap_substitute_accession_precheck_i18n, "trial.model.map_controls", "Accessions used as control/check can't be substituted between plots..."));
     }
     return $error;
 }
@@ -381,6 +385,7 @@ sub substitute_accession_fieldmap {
 
 sub replace_plot_accession_fieldMap {
     my $self = shift;
+    my SGN::I18N $ui_fieldmap_replace_plot_accession_fieldmap_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $plot_id = shift;
     my $old_accession_id = shift;
     my $new_accession_id = shift;
@@ -401,9 +406,9 @@ sub replace_plot_accession_fieldMap {
         });
     }
     elsif ($stockprop_rs->count > 1) {
-        $error = "There should only be one accession linked to the plot via plot_of\n";
+        $error = (SGN::I18N::translate($ui_fieldmap_replace_plot_accession_fieldmap_i18n, "trial.model.plot_accession_count", "There should only be one accession linked to the plot via plot_of\n"));
     } else {
-        $error = "Plot entry does not exist in database.\n";
+        $error = (SGN::I18N::translate($ui_fieldmap_replace_plot_accession_fieldmap_i18n, "trial.model.plot_absent", "Plot entry does not exist in database.\n"));
     }
 
     my $plot = CXGN::Stock->new({
@@ -426,7 +431,7 @@ sub replace_plot_accession_fieldMap {
                     object_id => $new_accession_id
                 });
             } else {
-                $error = "Strange: plant with id $stock_id has either no accession or multiple accessions.\n";
+                $error = (SGN::I18N::translate($ui_fieldmap_replace_plot_accession_fieldmap_i18n, "trial.model.linked_plant", "Strange: plant with id %{id} has either no accession or multiple accessions.\n", {id => "$stock_id"}));
             }
         }
         if ($child->{type} eq "subplot") {
@@ -448,7 +453,7 @@ sub replace_plot_accession_fieldMap {
                     object_id => $new_accession_id
                 });
             } else {    
-                $error = "Strange: tissue sample with id $stock_id has either no accession or multiple accessions.\n";
+                $error = (SGN::I18N::translate($ui_fieldmap_replace_plot_accession_fieldmap_i18n, "trial.model.linked_tissue_sample", "Strange: tissue sample with id %{id} has either no accession or multiple accessions.\n", {id => "$stock_id"}));
             }
         }
     }
@@ -461,6 +466,7 @@ sub replace_plot_accession_fieldMap {
 
 sub replace_plot_name_fieldMap {
     my $self = shift;
+    my SGN::I18N $ui_fieldmap_replace_plot_name_fieldmap_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $plot_id = shift;
     my $old_plot_name = shift;
     my $new_plot_name = shift;
@@ -470,7 +476,7 @@ sub replace_plot_name_fieldMap {
     my $new_plot_name_validator = CXGN::List::Validate->new();
     my $valid_new_plot_name = @{$new_plot_name_validator->validate($schema,'plots',[$new_plot_name])->{'missing'}};
     if (!$valid_new_plot_name) {
-        $error .= "Plot name $new_plot_name already exists in the database";
+        $error .= (SGN::I18N::translate($ui_fieldmap_replace_plot_name_fieldmap_i18n, "trial.model.plot_name_used", "Plot name %{name} already exists in the database", {name => "$new_plot_name"}));
     } else {
         my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         my $stock_rs = $schema->resultset("Stock::Stock")->search(

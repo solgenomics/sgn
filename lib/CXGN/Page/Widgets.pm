@@ -1,8 +1,11 @@
 #!/usr/bin/perl
 
 package CXGN::Page::Widgets;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use strict;
+use CatalystX::GlobalContext '$c';
 use Carp;
 #use CXGN::Login;
 use CXGN::Cookie;
@@ -270,11 +273,13 @@ Note: You can only print one notifier per page, as there is a pair of standard e
 
 sub notifier {
 	my $args = shift;
+    my SGN::I18N $notifier_i18n = $args->{i18n} || ($c && $c->can('i18n') ? $c->i18n : undef);
 	my $style= $args->{style};
 	$style ||= "width:350px; display:none; background-color:#fd6;border: #fa0 2px solid; text-align:left; padding:3px;";
 	my $append_style = $args->{append_style};
 	$append_style ||= "";
 
+    my $notification_caption = HTML::Entities::encode_entities($notifier_i18n ? $notifier_i18n->p("shared.widget.notification_area", "Notification Area") : "Notification Area");
 	return <<HTML;	
 <div id='SGN_NOTIFY_BOX' style='${style}$append_style'>
 <table style='width:100%; margin:0px; padding:0px;'><tr>
@@ -283,7 +288,7 @@ sub notifier {
 	document.getElementById("SGN_NOTIFY_BOX").style.display = "none";
 	document.getElementById("SGN_NOTIFY_CONTENT").innerHTML = "";'>(X)</a></td>
 <td style='text-align:center'>
-<span id='SGN_NOTIFY_CONTENT'>Notification Area</span>
+<span id='SGN_NOTIFY_CONTENT'>$notification_caption</span>
 </td>
 <td style='text-align:right;visibility:hidden'>(X)</span> <!--balances close tick on left side so text appears centered-->
 </tr></table>

@@ -1,0 +1,67 @@
+# Gestión de metadatos de secuencias {#managing-sequence-metadata}
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/sequence_metadata_manage.png')
+```
+
+## ¿Qué son los metadatos de secuencias? {#what-is-sequence-metadata}
+
+La función Sequence Metadata permite almacenar y recuperar eficazmente anotaciones de secuencia para regiones concretas de un genoma de referencia. Las anotaciones pueden incluir un valor principal "score" y cualquier número de atributos secundarios clave/valor. Por ejemplo, puede almacenar puntuaciones de cromatina abierta MNase cada 10 pares de bases del genoma de referencia, así como estadísticas de estudios de asociación del genoma completo (GWAS), incluida la información del rasgo asociado. Después, los datos pueden filtrarse por posición, puntuaciones o atributos y compararse con marcadores de la base de datos.
+
+
+## Cargar metadatos de secuencias {#loading-sequence-metadata}
+
+Los metadatos de secuencias pueden cargarse en la base de datos desde un archivo con formato gff3. Se utilizan las siguientes columnas:
+
+- **#1 / seqid:** Nombre de la característica de la base de datos (por ejemplo, un cromosoma) a la que se asocian los metadatos. La característica debe existir en la base.
+- **#4 / start:** Posición inicial de los metadatos
+- **#5 / end:** Posición final de los metadatos
+- **#6 / score:** (opcional) Atributo principal de puntuación de los metadatos
+- **#9 / attributes:** (opcional) Atributos secundarios clave//valor que se guardan con la puntuación. Deben tener el formato gff3 (key1=value1;key2=value2). La clave no puede ser <em>score</em>, <em>start</em> ni <em>end</em>.
+
+Para cargar el archivo gff3:
+
+1. Vaya a la página **Gestionar &gt; Sequence Metadata**
+2. Pulse el botón **Cargar Sequence Metadata**
+3. En el paso 2 del asistente, seleccione el tipo de datos que va a cargar
+    - Esto agrupa conjuntos de datos similares en la misma categoría de tipo de datos.
+4. En el paso 3 del asistente, seleccione un protocolo existente o cree uno nuevo
+    - El protocolo describe cómo se generaron los datos y define el valor de score y los atributos secundarios. Al añadir los atributos y sus descripciones al protocolo, las consultas de Sequence Metadata pueden filtrar los datos por el valor de uno o varios atributos. Los atributos no definidos en el protocolo se seguirán guardando y mostrando al recuperar los datos, pero no podrán usarse como filtros de búsqueda.
+5. Por último, seleccione y cargue el archivo gff3. La base de datos verificará su formato antes de guardar el contenido.
+
+
+## Buscar metadatos de secuencias {#searching-sequence-metadata}
+
+Para consultar los metadatos guardados, vaya a la página **Buscar &gt; Sequence Metadata**.
+
+
+### Búsqueda básica {#basic-search}
+
+La búsqueda básica permite seleccionar el genoma de referencia, la especie, el cromosoma y, opcionalmente, las posiciones inicial y final en el genoma de referencia. También puede seleccionar uno o varios protocolos para limitar los resultados.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/sequence_metadata_search_basic.png')
+```
+
+Los resultados de Sequence Metadata aparecen en una tabla con el cromosoma, las posiciones inicial y final de la anotación, la puntuación principal y otros atributos clave/valor. La columna de marcadores incluye los nombres de los marcadores guardados que se encuentran dentro de esas posiciones. Los datos pueden descargarse como tabla Excel o CSV, o como archivo JSON legible por máquina. Si está configurado Sequence Metadata JBrowse, los resultados filtrados pueden mostrarse como una pista dinámica de JBrowse.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/sequence_metadata_search_results.png')
+```
+
+### Búsqueda avanzada {#advanced-search}
+
+Puede aplicar cualquier número de filtros avanzados. Estos permiten limitar los resultados por el valor de la puntuación principal o por cualquiera de los atributos secundarios.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/sequence_metadata_search_advanced.png')
+```
+
+
+## Integración con marcadores {#marker-integration}
+
+La página de detalles del marcador o variante incluye una tabla de anotaciones de Sequence Metadata. La tabla muestra las anotaciones que abarcan la posición del marcador para datos del mismo genoma de referencia y especie.
+
+## API de metadatos de secuencias {#sequence-metadata-api}
+
+Hay una API REST pública que permite consultar Sequence Metadata directamente desde su entorno de programación (R, python, etc.) para usar los datos en análisis. Los datos se devuelven en formato JSON. La documentación de la API está en la página **Gestionar &gt; Sequence Metadata**.

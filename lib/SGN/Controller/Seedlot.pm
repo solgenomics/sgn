@@ -8,6 +8,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 use CXGN::Stock::Seedlot;
 use CXGN::Onto;
 use Data::Dumper;
+use HTML::Entities qw(encode_entities);
 use JSON::XS;
 use CXGN::Stock::Seedlot::Discard;
 use CXGN::People::Person;
@@ -66,7 +67,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     }
 
     my $sl = CXGN::Stock::Seedlot->new(
-        schema => $schema,
+        i18n => $c->i18n, schema => $schema,
         phenome_schema => $phenome_schema,
         seedlot_id => $seedlot_id
     );
@@ -75,25 +76,25 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $accessions = $sl->accession();
     my $accessions_html = '';
     if ($accessions){
-        $accessions_html .= '<a href="/stock/'.$accessions->[0].'/view">'.$accessions->[1].'</a> (accession)';
+        $accessions_html .= '<a href="/stock/'.$accessions->[0].'/view">'._sgn_seedlot_html($accessions->[1]).'</a> ('._sgn_seedlot_html($c->i18n->p('seedlots.server.accession', 'accession')).')';
         push @content_accession_names, $accessions->[1];
     }
     my $crosses = $sl->cross();
     my $crosses_html = '';
     if ($crosses){
-        $crosses_html .= '<a href="/cross/'.$crosses->[0].'">'.$crosses->[1].'</a> (cross)';
+        $crosses_html .= '<a href="/cross/'.$crosses->[0].'">'._sgn_seedlot_html($crosses->[1]).'</a> ('._sgn_seedlot_html($c->i18n->p('seedlots.server.cross', 'cross')).')';
         push @content_cross_names, $crosses->[1];
     }
     my $populations = $sl->populations();
     my $populations_html = '';
     foreach (@$populations){
-        $populations_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
+        $populations_html .= '<a href="/stock/'.$_->[0].'/view">'._sgn_seedlot_html($_->[1]).'</a> ';
     }
     my $owners = $sl->owners;
     my $owners_string = '';
     foreach (@$owners){
         my $p = $people_schema->resultset("SpPerson")->find({sp_person_id=>$_});
-        $owners_string .= ' <a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'.$p->username.'</a>';
+        $owners_string .= ' <a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'._sgn_seedlot_html($p->username).'</a>';
     }
 
     my $page_current_count;
@@ -120,9 +121,9 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
         my $person_id = $discard_info->[0];
         my $person= CXGN::People::Person->new($dbh, $person_id);
         my $person_name=$person->get_first_name()." ".$person->get_last_name();
-        my $operator_info = "Discarded by". ":"."".$person_name;
-        my $date_info = "Discarded Date". ":"."".$discard_info->[1];
-        my $reason_info = "Reason". ":"."".$discard_info->[2];
+        my $operator_info = _sgn_seedlot_html($c->i18n->p('seedlots.server.discarded_by_value', 'Discarded by:%{value}', {value => '' . ($person_name)}));
+        my $date_info = _sgn_seedlot_html($c->i18n->p('seedlots.server.discarded_date_value', 'Discarded Date:%{value}', {value => '' . ($discard_info->[1])}));
+        my $reason_info = _sgn_seedlot_html($c->i18n->p('seedlots.server.reason_value', 'Reason:%{value}', {value => '' . ($discard_info->[2])}));
         my @all_info = ($operator_info, $date_info, $reason_info);
         my $all_info_string = join("<br>", @all_info);
         $page_discard_info = '<span style="color:red">'.$all_info_string.'</span>';
@@ -162,7 +163,7 @@ sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
     # Make sure the seedlot maintenance event ontology is set
     if ( !defined $c->config->{seedlot_maintenance_event_ontology_root} || $c->config->{seedlot_maintenance_event_ontology_root} eq '' ) {
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'Seedlot Maintenance Events are not enabled on this server!';
+        $c->stash->{message} = _sgn_seedlot_html($c->i18n->p('seedlot_maintenance.server.disabled', 'Seedlot Maintenance Events are not enabled on this server!'));
         return;
     }
 
@@ -188,14 +189,14 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
     # Make sure the user has submitter or curator privileges
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'Your account must have either submitter or curator privileges to add seedlot maintenance events.';
+        $c->stash->{message} = _sgn_seedlot_html($c->i18n->p('seedlot_record.server.page_privileges', 'Your account must have either submitter or curator privileges to add seedlot maintenance events.'));
         return;
     }
 
     # Make sure the seedlot maintenance event ontology is set
     if ( !defined $c->config->{seedlot_maintenance_event_ontology_root} || $c->config->{seedlot_maintenance_event_ontology_root} eq '' ) {
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'Seedlot Maintenance Events are not enabled on this server!';
+        $c->stash->{message} = _sgn_seedlot_html($c->i18n->p('seedlot_maintenance.server.disabled', 'Seedlot Maintenance Events are not enabled on this server!'));
         return;
     }
 
@@ -223,3 +224,9 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
 }
 
 1;
+
+# Display escaping only; raw names and stock values stay canonical.
+sub _sgn_seedlot_html {
+    my $value = shift;
+    return encode_entities(defined($value) ? "$value" : '', q{&<>"'});
+}

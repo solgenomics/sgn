@@ -10,36 +10,36 @@
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <div class="modal-header" style="text-align: center">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title" id="discardUsageInfoDialog">Marking Seedlots as DISCARDED and Undo Options</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="discardUsageInfoDialog"><% $c->i18n->p('seedlots.ui.marking_seedlots_as_status_and_undo_options', 'Marking Seedlots as %{status} and Undo Options', {status => 'DISCARDED'}) |h %></h4>
                         </div>
                         <div class="modal-body">
                             <div class="container-fluid">
-                                <p> Only users with curator role can mark seedlots as "DISCARDED" or undo discarding seedlots.</p>
+                                <p> <% $c->i18n->p('seedlots.ui.only_users_with_role_role_can_mark_seedlots_as_status_or_undo_di', 'Only users with %{role} role can mark seedlots as "%{status}" or undo discarding seedlots.', {status => 'DISCARDED', role => 'curator'}) |h %></p>
                                 <hr class ="solid">
                                 <h4>
-                                    Discarding vs. Deleting Seedlots:
+                                    <% $c->i18n->p('seedlots.ui.discarding_vs_deleting_seedlots', 'Discarding vs. Deleting Seedlots:') |h %>
                                 </h4>
-                                <p> Discarding a seedlot is different from deleting a seedlot.
-                                <li>Deleting a seedlot permanently removes that seedlot and all associated transactions from database. Discarding a seedlot inactivates the seedlot, but information related to that seedlot is still kept in the database.</li>
-                                <li>Amount/Weight of discarded seedlot is labeled as "DISCARDED".</li>
-                                <li>Discarding a seedlot can be reversed with UNDO function, but deletion a seedlot cannot be undone.</li>
-                                <li>Discarded seedlots still can be viewed in seedlot details pages and are searchable. However, links for adding new transaction, editing details and transaction are removed.</li>
-                                <li>Discarded seedlots are excluded from dropdown list for adding new transactions.</li>
+                                <p> <% $c->i18n->p('seedlots.ui.discarding_a_seedlot_is_different_from_deleting_a_seedlot', 'Discarding a seedlot is different from deleting a seedlot.') |h %>
+                                <li><% $c->i18n->p('seedlots.ui.deleting_a_seedlot_permanently_removes_that_seedlot_and_all_asso', 'Deleting a seedlot permanently removes that seedlot and all associated transactions from database. Discarding a seedlot inactivates the seedlot, but information related to that seedlot is still kept in the database.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.amount_weight_of_discarded_seedlot_is_labeled_as_status', 'Amount/Weight of discarded seedlot is labeled as "%{status}".', {status => 'DISCARDED'}) |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.discarding_a_seedlot_can_be_reversed_with_undo_function_but_dele', 'Discarding a seedlot can be reversed with UNDO function, but deletion a seedlot cannot be undone.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.discarded_seedlots_still_can_be_viewed_in_seedlot_details_pages_', 'Discarded seedlots still can be viewed in seedlot details pages and are searchable. However, links for adding new transaction, editing details and transaction are removed.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.discarded_seedlots_are_excluded_from_dropdown_list_for_adding_ne', 'Discarded seedlots are excluded from dropdown list for adding new transactions.') |h %></li>
                                 <hr class ="solid">
                                 <h4>
-                                    How to Mark Seedlot as DISCARDED:
+                                    <% $c->i18n->p('seedlots.ui.how_to_mark_seedlot_as_status', 'How to Mark Seedlot as %{status}:', {status => 'DISCARDED'}) |h %>
                                 </h4>
-                                <li>Using a List: Several seedlots can be discarded at once by using a list with seedlots list type. The link can be found at the buttom of Manage Seedlots (Available Seedlots) page.</li>
-                                <li>Discarding single seedlot: The link can be found at the buttom of Seedlot Details page.</li>
+                                <li><% $c->i18n->p('seedlots.ui.using_a_list_several_seedlots_can_be_discarded_at_once_by_using_', 'Using a List: Several seedlots can be discarded at once by using a list with seedlots list type. The link can be found at the bottom of Manage Seedlots (Available Seedlots) page.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.discarding_single_seedlot_the_link_can_be_found_at_the_buttom_of', 'Discarding single seedlot: The link can be found at the bottom of Seedlot Details page.') |h %></li>
                                 <hr class ="solid">
                                 <h4>
-                                    UNDO Discarding seedlots:
+                                    <% $c->i18n->p('seedlots.ui.undo_discarding_seedlots', 'UNDO Discarding seedlots:') |h %>
                                 </h4>
-                                <p>Discarded seedlot can be reversed by using UNDO option at the buttom of Seedlot Details page </p>
+                                <p><% $c->i18n->p('seedlots.ui.discarded_seedlot_can_be_reversed_by_using_undo_option_at_the_bu', 'Discarded seedlot can be reversed by using UNDO option at the bottom of Seedlot Details page') |h %> </p>
                             </div>
                             <div class="modal-footer">
-                                <button id="close_discarded_seedlot_usage_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                <button id="close_discarded_seedlot_usage_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
                             </div>
                         </div>
                     </div>
@@ -57,6 +57,57 @@ hr.solid { border-top: 3px solid #bbb; }
 </style>
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 
 jQuery(document).ready(function(){
 

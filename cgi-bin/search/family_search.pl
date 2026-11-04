@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+use HTML::Entities ();
+my SGN::I18N $ui_family_search_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/ 
@@ -10,10 +14,10 @@ use CXGN::Page::FormattingHelpers qw/
 use CXGN::Search::CannedForms;
 use CXGN::Searches::Family;
 
-my $page = CXGN::Page->new("SGN Family Search Results", "Chris");
+my $page = CXGN::Page->new(HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "cross.gene_family.page_title", "SGN Family Search Results"))), "Chris");
 $page->header();
 
-print page_title_html("Family Search Results");
+print page_title_html(HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "cross.gene_family.heading", "Family Search Results"))));
 
 my $search = CXGN::Searches::Family->new();
 my $query = $search->new_query();
@@ -37,18 +41,18 @@ if(%params){
 
 	my $results_html = '<div id="searchresults">';
 
-	$results_html .= columnar_table_html(headings => ['Family Number', 'Number of Members', 'I-Value', 'Build #', 'Family ID', 'Annotation'], 
+	$results_html .= columnar_table_html(headings => [HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "cross.gene_family.number", "Family Number"))), HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "cross.gene_family.members", "Number of Members"))), 'I-Value', HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "cross.gene_family.build", "Build #"))), HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "cross.gene_family.id", "Family ID"))), HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "global.family.annotation", "Annotation")))],
 														data => \@results, __alt_freq => 2);
 
 	$results_html .= "</div>\n$pagination_html\n";
 
 	if(@results) {
-		print blue_section_html('Results', , sprintf('<span class="paginate_summary">%s matches </span>', $result->total_results(), $result->time), $results_html);
+		print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "global.gem_experiment_search.results", "Results"))), anchor_title => 'Results', subtitle => sprintf('<span class="paginate_summary">%s</span>', HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "global.gem_experiment_search.results_summary", "%{count} matches ", {count => "" . ($result->total_results())}))), $result->time), contents => $results_html);
 	}
 	else {
-		print '<span class=""><h4>No matches found</h4></span>';
+		print '<span class=""><h4>' . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "global.gem_experiment_search.no_matches", "No matches found"))) . '</h4></span>';
 	}
-	print info_section_html(title => 'Search again', contents =>CXGN::Search::CannedForms::family_search_form($page, $query));
+	print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_search_i18n, "global.gem_experiment_search.search_again", "Search again"))), anchor_title => 'Search again', contents =>CXGN::Search::CannedForms::family_search_form($page, $query, $ui_family_search_i18n));
 }
 
 $page->footer();

@@ -1,6 +1,8 @@
 
 package SGN::Controller::AJAX::VectorViewer;
 
+use SGN::I18N ();
+
 use Moose;
 use Data::Dumper;
 use File::Spec;
@@ -29,19 +31,20 @@ sub store :Chained('vector') PathPart('store') ActionClass('REST') {}
 sub store_POST : Args(0) { 
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_store_POST_i18n = SGN::I18N::translate($c);
 
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
 	
     if (! $c->user()) {
-	$c->stash->{rest} = { error => 'You need to be logged in with corresponding privileges to store vectors.' };
+	$c->stash->{rest} = { error => (SGN::I18N::translate($ui_store_POST_i18n, 'transformation.helper.you_need_to_be_logged_in_with_corresponding_privileges_to_store_vect', 'You need to be logged in with corresponding privileges to store vectors.'))};
 	return;
     }
     
     if ($c->user && ! ($c->user->check_roles('submitter') || $c->user->check_roles('curator'))) {
 
-	$c->stash->{rest} = { error => 'You do not have the privileges to store vectors.' };
+	$c->stash->{rest} = { error => (SGN::I18N::translate($ui_store_POST_i18n, 'transformation.helper.you_do_not_have_the_privileges_to_store_vectors', 'You do not have the privileges to store vectors.'))};
 	return;
     }
     
@@ -56,7 +59,7 @@ sub store_POST : Args(0) {
     my $vector_check_row = $schema->resultset("Stock::Stock")->find( { type_id => $vector_construct_cvterm_id, stock_id => $c->stash->{vector_stock_id} });
     
     if (!$vector_check_row) {
-	$c->stash->{rest} = { error => 'The vector construct with id ".$c->stash->{vector_stock_id}." does not seem to exist' };
+	$c->stash->{rest} = { error => (SGN::I18N::translate($ui_store_POST_i18n, 'transformation.helper.the_vector_construct_with_id_c_stash_vector_stock_id_does_not_seem_t', 'The vector construct with id ".$c->stash->{vector_stock_id}." does not seem to exist'))};
 	return;
     }
 
@@ -92,6 +95,7 @@ sub store_POST : Args(0) {
 sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_retrieve_i18n = SGN::I18N::translate($c);
 
     print STDERR "RETRIEVING VECTOR... ".$c->stash->{vector_stock_id}."\n";
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
@@ -106,7 +110,7 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
 	$genbank_record_id = $genbank_record_term->cvterm_id();
     }
     if (! $c->user()) {
-	$c->stash->{rest} = { error => 'You need to be logged in to view vector data.' };
+	$c->stash->{rest} = { error => (SGN::I18N::translate($ui_retrieve_i18n, 'transformation.helper.you_need_to_be_logged_in_to_view_vector_data', 'You need to be logged in to view vector data.'))};
 	return;
     }
 
@@ -207,13 +211,14 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
 sub import :Chained('vector') PathPart('import') Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_import_i18n = SGN::I18N::translate($c);
 
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
     
     if (! $c->user()) {
-	$c->stash->{rest} = { error => 'You need to be logged in to store vectors.' };
+	$c->stash->{rest} = { error => (SGN::I18N::translate($ui_import_i18n, 'transformation.helper.you_need_to_be_logged_in_to_store_vectors', 'You need to be logged in to store vectors.'))};
 	return;
     }
 
@@ -224,7 +229,7 @@ sub import :Chained('vector') PathPart('import') Args(0) {
     my $vector_check_row = $schema->resultset("Stock::Stock")->find( { type_id => $vector_construct_cvterm_id, stock_id => $c->stash->{vector_stock_id} });
 
     if (!$vector_check_row) {
-	$c->stash->{rest} = { error => 'The vector construct with id ".$c->stash->{vector_stock_id}." does not seem to exist' };
+	$c->stash->{rest} = { error => (SGN::I18N::translate($ui_import_i18n, 'transformation.helper.the_vector_construct_with_id_c_stash_vector_stock_id_does_not_seem_t', 'The vector construct with id ".$c->stash->{vector_stock_id}." does not seem to exist'))};
 	return;
     }
 
@@ -244,7 +249,7 @@ sub import :Chained('vector') PathPart('import') Args(0) {
 	    
 	}
 	else {
-	    $c->stash->{rest} = { error => "Unknown data format for vector: $format" };
+	    $c->stash->{rest} = { error => (SGN::I18N::translate($ui_import_i18n, 'transformation.helper.unknown_data_format_for_vector_format', 'Unknown data format for vector: %{format}', {format => ("" . ("$format"))}))};
 	    return;
 	}
 	
@@ -252,7 +257,7 @@ sub import :Chained('vector') PathPart('import') Args(0) {
 	
 	$c->stash->{rest} = { sequence => $sequence, re_sites => $vv->re_sites(), features => $parsed, metadata => $metadata };
     }
-    else { $c->stash->{rest} = { error => "You do not have the privileges to import vector data." };
+    else { $c->stash->{rest} = { error => (SGN::I18N::translate($ui_import_i18n, 'transformation.helper.you_do_not_have_the_privileges_to_import_vector_data', 'You do not have the privileges to import vector data.'))};
 	   
     }
 }

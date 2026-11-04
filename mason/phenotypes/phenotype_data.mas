@@ -129,7 +129,7 @@ foreach my $method(sort keys %info ) {
                           ( (tooltipped_text(qq|<a href="/cvterm/$term_id/view">$term_name</a>|, $definition) )  , join(', ' , @qual_values ) ) ];
     }
   }
-     @ { $data{$method}{headings} } = ("$method" , "Average", "Min", "Max", "Lines/repeats");
+     @ { $data{$method}{headings} } = ("$method" , $c->i18n->p("accession.stock.phenotype.header.average", "Average"), $c->i18n->p("accession.usage.header.min", "Min"), $c->i18n->p("accession.usage.header.max", "Max"), $c->i18n->p("phenotype.lines_repeats", "Lines/repeats"));
      push @ { $data{$method}{headings} } , 'QTL(s)' if $has_qtl;
 }      
 
@@ -163,7 +163,7 @@ foreach my $method(sort keys %info ) {
 % if(@qual_data) {
 
 <& /page/columnar_table.mas,
-  headings => ["Qualitative Trait", "Value"],
+  headings => [$c->i18n->p("phenotype.qualitative_trait", "Qualitative Trait"), $c->i18n->p("seedlot_maintenance_table.ui.value_header", "Value")],
     data     => \@qual_data ,
       __alt_freq   =>2,
       __alt_width  =>1,

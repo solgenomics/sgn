@@ -1,7 +1,7 @@
 <div class="text-center">
-    <p>Time to design! Start by selecting a type and field. Then click 'Add' to generate your new label element in the draw area.</p>
-    <p>Add, drag, customize, resize, and delete as many elements as you like. A barcode containing your unique identifier (plot_name, plant_name, etc) is strongly recommended.</p>
-    <p><em><strong>NOTE:</strong> The property values displayed here in the design tool may not be from the same plot, list item, etc.  The longest value is displayed here to aid in the positioning and sizing of the element.  The values will be correctly associated when all of the labels are printed in the next step.</em></p>
+    <p><% $c->i18n->p("barcode.mason.time_to_design_start_by_selecting_a_type_and_field", "Time to design! Start by selecting a type and field. Then click 'Add' to generate your new label element in the draw area.") |h %></p>
+    <p><% $c->i18n->p("barcode.mason.add_drag_customize_resize_and_delete_as_many_elements_as", "Add, drag, customize, resize, and delete as many elements as you like. A barcode containing your unique identifier (plot_name, plant_name, etc) is strongly recommended.") |h %></p>
+    <p><em><strong><% $c->i18n->p("trial.create.help.note_title", "NOTE:") |h %></strong> <% $c->i18n->p("barcode.mason.the_property_values_displayed_here_in_the_design_tool_may", "The property values displayed here in the design tool may not be from the same plot, list item, etc.  The longest value is displayed here to aid in the positioning and sizing of the element.  The values will be correctly associated when all of the labels are printed in the next step.") |h %></em></p>
 </div>
 </br>
 <div class="col-md-12" id="d3-draw-div" style="margin-bottom:20px;">
@@ -9,46 +9,46 @@
 </div>
 <div class="col-md-12">
     <center>
-        <h4>Add Elements:</h4>
+        <h4><% $c->i18n->p("barcode.mason.add_elements", "Add Elements:") |h %></h4>
     </center>
 </div>
 <div class="col-md-12" style="margin-bottom:20px;">
     <div class="col-md-3" id="d3-add-type-div">
         <center>
-            <label>Type:</label><br>
+            <label><% $c->i18n->p("global.search.features.type.3e685b2", "Type:") |h %></label><br>
             <select id="d3-add-type-input" class="form-control"></select>&nbsp&nbsp
             <br>
             <div style="text-align:left;">
-                <label class='radio'><input type="radio" name="alignmentradio" id="align_left" value="left">Left-align text elements</label>
-                <label class='radio'><input type="radio" name="alignmentradio" id="align_middle" value="middle" checked>Center-align text elements</label>
+                <label class='radio'><input type="radio" name="alignmentradio" id="align_left" value="left"><% $c->i18n->p("barcode.mason.left_align_text_elements", "Left-align text elements") |h %></label>
+                <label class='radio'><input type="radio" name="alignmentradio" id="align_middle" value="middle" checked><% $c->i18n->p("barcode.mason.center_align_text_elements", "Center-align text elements") |h %></label>
             </div>
         </center>
     </div>
     <div class="col-md-3" id="d3-add-field-div">
         <center>
-            <label>Field:</label><br>
+            <label><% $c->i18n->p("barcode.mason.field", "Field:") |h %></label><br>
             <select id="d3-add-field-input" class="form-control"></select><br>
-            <button class="btn btn-primary" id="d3-custom-field">Create Custom Field</button>
+            <button class="btn btn-primary" id="d3-custom-field"><% $c->i18n->p("barcode.mason.create_custom_field", "Create Custom Field") |h %></button>
         </center>
         &nbsp&nbsp
     </div>
     <div class="col-md-2" id="d3-add-size-div">
         <center>
-            <label>Size:</label><br>
+            <label><% $c->i18n->p("barcode.mason.size", "Size:") |h %></label><br>
             <input class="form-control" id="d3-add-size-input" type="number"></input>
             <input class="form-control" id="d3-add-size-slider" type="range"></input>
         </center>
     </div>
     <div class="col-md-3" id="d3-add-font-div">
         <center>
-            <label>Font:</label><br>
+            <label><% $c->i18n->p("barcode.mason.font", "Font:") |h %></label><br>
             <select id="d3-add-font-input" class="form-control"></select>&nbsp
         </center>
     </div>
     <div class="col-md-1">
         <center>
             <br>
-            <button class="btn btn-primary d3-add" id="d3-add">Add</button>
+            <button class="btn btn-primary d3-add" id="d3-add"><% $c->i18n->p("global.search_wizard.add", "Add") |h %></button>
         </center>
     </div>
 </div>

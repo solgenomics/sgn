@@ -2,6 +2,7 @@
 package CXGN::List::Validate;
 
 use Moose;
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 
 use Module::Pluggable require => 1;
 

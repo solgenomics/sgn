@@ -11,18 +11,18 @@ $odk_service => undef
 <%perl>
     my $subtitle;
     if ($odk_service eq 'ONA') {
-        $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_crossingtrial_link">Add Crossing Experiment</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="create_cross_link">Add Cross</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_crosses_link">Upload Crosses</button> <button class="btn btn-sm btn-primary" style="margin:3px" id="create_cross_wishlist">Add Cross Wishlist</button>';
+        $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_crossingtrial_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_crossing_experiment', 'Add Crossing Experiment')) . '</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="create_cross_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_cross', 'Add Cross')) . '</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_crosses_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.upload_crosses', 'Upload Crosses')) . '</button> <button class="btn btn-sm btn-primary" style="margin:3px" id="create_cross_wishlist">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_cross_wishlist', 'Add Cross Wishlist')) . '</button>';
     } else {
-        $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_crossingtrial_link">Add Crossing Experiment</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="create_cross_link">Add Cross</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_crosses_link">Upload Crosses</button>';
+        $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_crossingtrial_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_crossing_experiment', 'Add Crossing Experiment')) . '</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="create_cross_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_cross', 'Add Cross')) . '</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_crosses_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.upload_crosses', 'Upload Crosses')) . '</button>';
     }
 </%perl>
 
 <br />
-<& /page/page_title.mas, title => "Manage Crosses" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.manage_crosses', 'Manage Crosses')) &>
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
+<&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Crosses'), title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.crosses', 'Crosses')) , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
 
 <& /breeders_toolbox/crossing_experiment_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles, odk_service=>$odk_service &>
 

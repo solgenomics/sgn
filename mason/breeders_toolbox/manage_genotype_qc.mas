@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 $data => 'Default'
@@ -5,7 +9,7 @@ $facilities
 </%args>
 
 
-<& /page/page_title.mas, title=>"<b>Quality Control Genotyping using the Intertek QC KASP marker sets of 20 or 40</b>" &>
+<& /page/page_title.mas, title=>"<b>".HTML::Entities::encode_entities($c->i18n->p('genotype.qc.page.title', 'Quality Control Genotyping using the Intertek QC KASP marker sets of 20 or 40'))."</b>" &>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
@@ -13,11 +17,11 @@ $facilities
 <p>
     <ul>
         
-    <li>The intertek quality control marker sets can be used in 2 ways:</li>
-    <ol>1. <b>Storing new fingerprint of your germplasm </b> that has been genotyped using the qc marker sets as a new protocol. This requires two files for the storage: <em>Intertek grid file</em> which has allele calls for each genotype. Download sample file <a href="docs/intertek_grid.csv" title="sample grid file"> here.</a> The second file is a <em>Map file</em> which has all the SNP information. Download sample file <a href="docs/SNP_file.csv" title="sample SNP file"> here.</a> </ol><br/>
-    <ol>2.<b> Run genotype quality control</b> with the qc markers by comparing with existing protocol in the database. This requries just the <a href="docs/intertek_grid.csv" title="sample grid file">grid file</a>
+    <li><% $c->i18n->p('genotype.qc.intro', 'The intertek quality control marker sets can be used in 2 ways:') |h %></li>
+    <ol>1. <b><% $c->i18n->p('genotype.qc.step1.title', 'Storing new fingerprint of your germplasm ') |h %></b> <% $c->i18n->p('genotype.qc.step1.body', ' that has been genotyped using the qc marker sets as a new protocol. This requires two files for the storage: ') |h %> <em><% $c->i18n->p('genotype.qc.grid_file', 'Intertek grid file') |h %></em> <% $c->i18n->p('genotype.qc.grid_file.explanation', ' which has allele calls for each genotype. Download sample file ') |h %><a href="docs/intertek_grid.csv" title="<% $c->i18n->p('genotype.qc.sample_grid_title', 'sample grid file') |h %>"><% $c->i18n->p('genotype.qc.link_here', ' here.') |h %></a> <% $c->i18n->p('genotype.qc.map_file_intro', ' The second file is a ') |h %><em><% $c->i18n->p('genotype.qc.map_file', 'Map file') |h %></em> <% $c->i18n->p('genotype.qc.map_file.explanation', ' which has all the SNP information. Download sample file ') |h %><a href="docs/SNP_file.csv" title="<% $c->i18n->p('genotype.qc.sample_snp_title', 'sample SNP file') |h %>"><% $c->i18n->p('genotype.qc.link_here', ' here.') |h %></a> </ol><br/>
+    <ol>2.<b><% $c->i18n->p('genotype.qc.step2.title', ' Run genotype quality control') |h %></b> <% $c->i18n->p('genotype.qc.step2.body', ' with the qc markers by comparing with existing protocol in the database. This requires just the ') |h %><a href="docs/intertek_grid.csv" title="<% $c->i18n->p('genotype.qc.sample_grid_title', 'sample grid file') |h %>"><% $c->i18n->p('genotype.qc.grid_file_link', 'grid file') |h %></a>
     </ol><br/>
-    <li>The steps below will guide you through uploading a new fingerprint or performing a quality control.</li>
+    <li><% $c->i18n->p('genotype.qc.workflow_help', 'The steps below will guide you through uploading a new fingerprint or performing a quality control.') |h %></li>
     </ul>
     </p>
 </div>
@@ -34,14 +38,14 @@ $facilities
     <div>  -->
 <ul>
       <p>
-      <li><font size="2" color="green"> Upload QC assay</font> </li>
-      <li><font size="2" color="green">Only CSV file format is supported </font></li>
+      <li><font size="2" color="green"><% $c->i18n->p('genotype.qc.upload_assay', ' Upload QC assay') |h %></font> </li>
+      <li><font size="2" color="green"><% $c->i18n->p('genotype.qc.csv_only', 'Only CSV file format is supported ') |h %></font></li>
   </ul>
 </div>
   <br/><br/><br/><br/>
   <center>
-        <button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotyping Data (VCF or Intertek Format)</button>
-        <button class="btn btn-primary" name="upload_genotyping_data_qc_link">Run Genotype Quality Control</button>
+        <button class="btn btn-primary" name="upload_genotyping_data_link"><% $c->i18n->p('genotype.qc.upload_button', 'Upload Genotyping Data (VCF or Intertek Format)') |h %></button>
+        <button class="btn btn-primary" name="upload_genotyping_data_qc_link"><% $c->i18n->p('genotype.qc.run_button', 'Run Genotype Quality Control') |h %></button>
     </center>
      
     

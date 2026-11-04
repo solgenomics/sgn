@@ -4,10 +4,49 @@
   (global.GraphicalFilter = factory());
 }(this, (function () { 'use strict';
 
-function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_order,group_key_accessor){
+function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_order,group_key_accessor,displayOptions){
   "use strict";
   
-  //statics
+  var graphicalI18n = (globalThis.SGN && globalThis.SGN.i18n) || {p: function (context, source, variables) {
+    return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+      return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+    });
+  }};
+  localizeGraphicalFilterOperators(document.documentElement);
+  var displayColumnLabels = displayOptions && displayOptions.columnLabels || {};
+  function graphicalHTML(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+  }
+  function graphicalTableText(value, type) {
+    return type === 'display' ? graphicalHTML(value == null ? '' : value) : value;
+  }
+function graphicalTableLanguage() {
+    return {
+        sEmptyTable: graphicalHTML(graphicalI18n.p("accessions.table.empty", "No data available in table")),
+        sInfo: graphicalHTML(graphicalI18n.p("accessions.table.info", "Showing %{start} to %{end} of %{total} entries", {start: '_START_', end: '_END_', total: '_TOTAL_'})),
+        sInfoEmpty: graphicalHTML(graphicalI18n.p("accessions.table.info_empty", "Showing 0 to 0 of 0 entries")),
+        sInfoFiltered: graphicalHTML(graphicalI18n.p("accessions.table.filtered", "(filtered from %{maximum} total entries)", {maximum: '_MAX_'})),
+        sLengthMenu: graphicalHTML(graphicalI18n.p("accessions.table.length", "Show %{menu} entries", {menu: '_MENU_'})),
+        sLoadingRecords: graphicalHTML(graphicalI18n.p("accessions.table.loading", "Loading...")),
+        sProcessing: graphicalHTML(graphicalI18n.p("accessions.table.processing", "Processing...")),
+        sSearch: graphicalHTML(graphicalI18n.p("accessions.table.search", "Search:")),
+        sZeroRecords: graphicalHTML(graphicalI18n.p("accessions.table.zero", "No matching records found")),
+        oPaginate: {
+            sFirst: graphicalHTML(graphicalI18n.p("accessions.table.first", "First")),
+            sLast: graphicalHTML(graphicalI18n.p("accessions.table.last", "Last")),
+            sNext: graphicalHTML(graphicalI18n.p("accessions.table.next", "Next")),
+            sPrevious: graphicalHTML(graphicalI18n.p("accessions.table.previous", "Previous"))
+        },
+        oAria: {
+            sSortAscending: graphicalI18n.p("accessions.table.sort_ascending", ": activate to sort column ascending"),
+            sSortDescending: graphicalI18n.p("accessions.table.sort_descending", ": activate to sort column descending")
+        }
+    };
+}
+
+  // statics; codespell:ignore statics (Leaflet API concept)
   var gfilter = {};
   var colors = ["#ffffff","#b3e2cd","#f1e2cc","#fff2ae","#f4cae4","#e6f5c9","#cbd5e8","#fdcdac"];
   var color = d3.scaleOrdinal()
@@ -19,7 +58,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   
   // parse data
   var tableCols = table_col_order.map(function(key){
-        return {title:key,data:"meta."+key.replace(".","\\.")}
+        return {title:graphicalHTML(Object.prototype.hasOwnProperty.call(displayColumnLabels,key) ? displayColumnLabels[key] : key),data:"meta."+key.replace(".","\\."),render:graphicalTableText}
       }),
       allTraits = {},
       rangeTraits = [];
@@ -47,7 +86,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   });
   
   if (group_key_accessor!=undefined){
-    tableCols.push({title:"Count",data:"count"});
+    tableCols.push({title:graphicalHTML(graphicalI18n.p("stock_search.graphical.count", "Count")),data:"count"});
     const reduce_func = function(a,d){ return a.concat(d)};
     data_node = data_node.reduce(reduce_func).fork(function(all){
       var key_map = {};
@@ -99,7 +138,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   data_node.all(function(data){
     for (var key in allTraits) {
       if (allTraits.hasOwnProperty(key)) {
-        tableCols.push({title:key,data:"traits."+key.replace(".","\\.")});
+        tableCols.push({title:graphicalHTML(key),data:"traits."+key.replace(".","\\."),render:graphicalTableText});
       }
     }
   });
@@ -126,6 +165,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       if (buttons) {
         gfilter.results_table = $(table_selector).DataTable({
               data: data,
+              language: graphicalTableLanguage(),
               dom: 'Bfrtip',
               "columns": tableCols,
               "buttons": buttons
@@ -133,6 +173,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       } else {
         gfilter.results_table = $(table_selector).DataTable({
             data: data,
+              language: graphicalTableLanguage(),
             "columns": tableCols,
         });
       }
@@ -203,7 +244,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   Filter.prototype.updateData = function(data){};
   
   /**  
-   * Filter.prototype.draw - redraws componants shared by both filter groups and range filters (all filter types).
+   * Filter.prototype.draw - redraws components shared by both filter groups and range filters (all filter types).
    *    
    * @param  {DOM node} node where to draw   
    */   
@@ -339,7 +380,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       .classed("dropdown-menu",true)
       .attr("aria-labelledby",dropID);
 
-    newFilterMenuContents.append("li").append("a").text("New Range")
+    newFilterMenuContents.append("li").append("a").text(graphicalI18n.p("stock_search.graphical.new_range", "New Range"))
       .attr("href","")
       .classed("dropdown-item",true)
       .on("click",function(d){
@@ -350,7 +391,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
         gfilter.redraw();
         return false;
       });
-    newFilterMenuContents.append("li").append("a").text("New Group")
+    newFilterMenuContents.append("li").append("a").text(graphicalI18n.p("stock_search.graphical.new_group", "New Group"))
       .attr("href","")
       .classed("dropdown-item",true)
       .on("click",function(d){
@@ -466,7 +507,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
     opsE.filter(function(d,i){return !i;})
       .attr("selected",true);
     opsE.merge(ops)
-      .text(function(d,i){return d;})
+      .text(function(d,i){return i ? d : graphicalI18n.p("stock_search.graphical.choose_trait", "Select a Trait...");})
       .property("value",function(d,i){return d;})
       .filter(function(d,i){return !i;})
       .property("value",null)
@@ -708,7 +749,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       // console.log(brushExtent);
       this.brush.move(transition,brushExtent);
     } else {
-      status.text("Nothing");
+      status.text(graphicalI18n.p("stock_search.graphical.nothing", "Nothing"));
     }
 
     var d = this.x.domain();
@@ -739,7 +780,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
               .map(function(d){return d-hist.margin.left;})
               .map(hist.x.invert);
             }
-            //if there arent enough items in the selection (2) expand the selection to include the nearest ones.
+            //if there aren't enough items in the selection (2) expand the selection to include the nearest ones.
             if (hist.getFilter()&&hist.data.filter(hist.getFilter()).length<2){
               console.log("adjusted");
               var values = hist.data.map(hist.valueAccessor);
@@ -756,6 +797,26 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
     }
   };
   return gfilter;
+}
+
+
+// Set only owned pseudo-caption properties; never change filter operators or data.
+function localizeGraphicalFilterOperators(root) {
+  if (!root || !root.style) return;
+  var properties = ['--sgn-filter-and-caption', '--sgn-filter-or-caption', '--sgn-filter-where-caption', '--sgn-filter-not-caption'];
+  function clearCaptions() {
+    properties.forEach(function (name) { root.style.removeProperty(name); });
+    if (!root.style.length) root.removeAttribute('style');
+  }
+  if (!globalThis.SGN || !globalThis.SGN.i18n || globalThis.SGN.i18n.locale === 'en') { clearCaptions(); return; }
+  var captions = [
+    SGN.i18n.p("widgets.operators.and", "AND"),
+    SGN.i18n.p("widgets.operators.or", "OR"),
+    SGN.i18n.p("widgets.operators.where", "WHERE"),
+    SGN.i18n.p("widgets.operators.not", "NOT")
+  ];
+  if (captions[0] === 'AND' && captions[1] === 'OR' && captions[2] === 'WHERE' && captions[3] === 'NOT') { clearCaptions(); return; }
+  captions.forEach(function (caption, index) { root.style.setProperty(properties[index], JSON.stringify(caption)); });
 }
 
 return GraphicalFilter;

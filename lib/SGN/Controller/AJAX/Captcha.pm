@@ -34,7 +34,7 @@ sub captcha : Path("/ajax/captcha") Args(0) {
 
     # Check the captcha config
     if ( !defined $config || !defined $config->{server} || !defined $config->{client_id} || !defined $config->{client_secret} || !defined $config->{signing_key} ) {
-        $c->stash->{rest} = { error => 'Missing server captcha config' };
+        $c->stash->{rest} = { error => $c->i18n->p('global.captcha.missing_config', 'Missing server captcha config') };
         return;
     }
 

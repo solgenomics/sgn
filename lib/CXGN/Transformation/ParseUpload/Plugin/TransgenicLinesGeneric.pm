@@ -16,6 +16,7 @@ sub _validate_with_plugin {
     my %errors;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $self->i18n,
         file => $filename,
         required_columns => [ 'transformation_identifier', 'transgenic_line_name' ],
         column_aliases => {
@@ -40,7 +41,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            ($self->i18n ? $self->i18n->p('transformation.transgenic_lines.unrecognized_columns', 'The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.', {columns => join(', ', @$additional_columns)}) : "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns.")
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -52,14 +53,14 @@ sub _validate_with_plugin {
     my $transformation_identifier_validator = CXGN::List::Validate->new();
     my @transformation_identifiers_missing = @{$transformation_identifier_validator->validate($schema,'transformation_identifiers', $seen_transformation_identifiers)->{'missing'}};
     if (scalar(@transformation_identifiers_missing) > 0) {
-        push @error_messages, "The following transformation identifiers are not in the database: ".join(',',@transformation_identifiers_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('transformation.transgenic_lines.identifiers_not_found', 'The following transformation identifiers are not in the database: %{identifiers}', {identifiers => join(',', @transformation_identifiers_missing)}) : "The following transformation identifiers are not in the database: ".join(',',@transformation_identifiers_missing));
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
         'uniquename' => { -in => $seen_transgenic_line_names }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Transgenic Line name already exists in database: ".$r->uniquename;
+        push @error_messages, ($self->i18n ? $self->i18n->p('transformation.transgenic_lines.name_exists', 'Transgenic Line name already exists in database: %{name}', {name => '' . $r->uniquename}) : "Transgenic Line name already exists in database: ".$r->uniquename);
     }
 
     if (scalar(@error_messages) >= 1) {

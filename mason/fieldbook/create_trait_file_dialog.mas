@@ -3,46 +3,46 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <center><h4 class="modal-title" id="createTraitFileDialog">Create a Trait File for the Android Fieldbook App</h4></center>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('fieldbook.trait.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <center><h4 class="modal-title" id="createTraitFileDialog"><% $c->i18n->p('fieldbook.trait.ui.title', 'Create a Trait File for the Android Fieldbook App') |h %></h4></center>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" >
             <div class="form-group">
-              <label class="col-sm-3 control-label" for="select_list_list_select">Select a list of traits: </label>
+              <label class="col-sm-3 control-label" for="select_list_list_select"><% $c->i18n->p('fieldbook.trait.ui.select_list', 'Select a list of traits: ') |h %></label>
               <div class="col-sm-9">
                 <span id="select_list_div"></span>
               </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-3 control-label" for="select_traits_for_trait_file">Or select traits directly: </label>
+              <label class="col-sm-3 control-label" for="select_traits_for_trait_file"><% $c->i18n->p('fieldbook.trait.ui.select_traits', 'Or select traits directly: ') |h %></label>
               <div class="col-sm-9">
                 <div id="select_traits_for_trait_file">
-                  [Loading...]
+                  <% $c->i18n->p('fieldbook.trait.ui.loading', '[Loading...]') |h %>
                 </div>
                 <hr style="margin-top:4px;margin-bottom:4px" />
-                <div class="well well-sm"><div id="trait_select_count">No Selection</div></div>
+                <div class="well well-sm"><div id="trait_select_count"><% $c->i18n->p('fieldbook.trait.ui.no_selection', 'No Selection') |h %></div></div>
               </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Include Notes Trait </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('fieldbook.trait.ui.include_notes', 'Include Notes Trait ') |h %></label>
                 <div class="col-sm-9" >
                     <input type="checkbox" id="include_notes_trait" name="include_notes_trait" />
                 </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-3 control-label" for="trait_file_name">File name:</label>
+              <label class="col-sm-3 control-label" for="trait_file_name"><% $c->i18n->p('fieldbook.trait.ui.file_name', 'File name:') |h %></label>
               <div class="col-sm-9">
-                <input id="trait_file_name" type="text" class="form-control" placeholder="Type name here">
+                <input id="trait_file_name" type="text" class="form-control" placeholder="<% $c->i18n->p('fieldbook.trait.ui.file_name_placeholder', 'Type name here') |h %>">
               </div>
             </div>
           </form><br/>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="create_trait_file_cancel_button" id="create_trait_file_cancel_button" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="create_trait_file_ok_button" id="create_trait_file_ok_button" title="Submit">Create File</button>
+        <button type="button" class="btn btn-default" name="create_trait_file_cancel_button" id="create_trait_file_cancel_button" data-dismiss="modal"><% $c->i18n->p('fieldbook.trait.ui.close', 'Close') |h %></button>
+        <button type="button" class="btn btn-primary" name="create_trait_file_ok_button" id="create_trait_file_ok_button" title="<% $c->i18n->p('fieldbook.trait.ui.submit_title', 'Submit') |h %>"><% $c->i18n->p('fieldbook.trait.ui.create', 'Create File') |h %></button>
       </div>
     </div>
   </div>
@@ -52,23 +52,38 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="createTraitFileSavedDialog">Trait File Created</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('fieldbook.trait.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="createTraitFileSavedDialog"><% $c->i18n->p('fieldbook.trait.ui.created_title', 'Trait File Created') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
             <p>
               <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-              The trait file was created successfully.
+              <% $c->i18n->p('fieldbook.trait.ui.created', 'The trait file was created successfully.') |h %>
             </p>
             <p>
-              <a id="trait_file_download_link">Download File</a>
+              <a id="trait_file_download_link"><% $c->i18n->p('fieldbook.trait.ui.download', 'Download File') |h %></a>
             </p>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="trait_file_close_button" id="trait_file_close_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" name="trait_file_close_button" id="trait_file_close_button" data-dismiss="modal"><% $c->i18n->p('fieldbook.trait.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+#create_trait_file_dialog .btn,
+#trait_file_saved_dialog_message .btn {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+}
+#create_trait_file_dialog .modal-title,
+#trait_file_saved_dialog_message .modal-title,
+#create_trait_file_dialog .control-label,
+#create_trait_file_dialog #trait_select_count {
+    overflow-wrap: anywhere;
+}
+</style>

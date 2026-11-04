@@ -1,0 +1,51 @@
+# Gestión de datos fenotípicos de alta dimensión {#managing-high-dimensional-phenotyping-data}
+
+## Gestión de datos transcriptómicos {#managing-transcriptomic-data}
+
+### Cargar datos transcriptómicos {#uploading-transcriptomic-data}
+
+Para cargar datos transcriptómicos, abra la página de transcriptómica pulsando “Transcriptómica” en la pestaña Gestionar.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/transcriptomics_menu.png')
+```
+
+Pulse “Cargar datos transcriptómicos” para abrir el flujo de carga. En el segundo paso, “Muestras”, compruebe que las muestras ya estén en la base de datos. Consulte el capítulo “Gestión de muestras de tejido” para crear un ensayo de muestreo. Después de crearlo o confirmar que las muestras existen, vaya a “Información del protocolo”. Seleccione un protocolo existente o pulse “Protocolo no mostrado. Crear un protocolo nuevo”. Complete los datos y pulse “Ir al paso siguiente”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/create_transcriptomics_protocol.png')
+```
+
+Para cargar datos transcriptómicos necesita dos archivos csv. El primero es la matriz de datos y debe tener estos encabezados:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/data_matrix_headers.png')
+```
+
+Los nombres de la columna sample_name deben coincidir con los que creó en el archivo del ensayo de muestreo. Sustituya el encabezado transcript_name_columns por los nombres de los transcritos que desea cargar: cada uno en su propia columna, con su valor de expresión debajo. Ejemplo:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/data_matrix_example.png')
+```
+
+El segundo archivo contiene los detalles de los transcritos y debe tener estos encabezados:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/transcript_details_headers.png')
+```
+
+Cada fila de la columna transcript_name debe contener uno de los nombres de transcrito del archivo de matriz. Por ejemplo:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/transcript_details_example.png')
+```
+
+Después de cargar los dos archivos, pulse “Verificar” para comprobar el formato y que existan las muestras. Si no hay errores, pulse “Guardar” para almacenar los datos transcriptómicos.
+
+### Descargar datos transcriptómicos {#downloading-transcriptomics-data}
+
+Para descargar sus datos, abra el menú desplegable “Datos transcriptómicos cargados” en la página de Transcriptómica. Luego despliegue “Sus datos transcriptómicos cargados”, localice los datos y pulse el botón “Descargar” correspondiente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/download_transcriptomics.png')
+```

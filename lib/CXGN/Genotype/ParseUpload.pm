@@ -7,6 +7,9 @@ use Moose::Util::TypeConstraints;
 
 with 'MooseX::Object::Pluggable';
 
+# Optional request language for authored validation messages; CLI callers fall back to English.
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]', reader => 'i18n', writer => 'set_i18n');
+
 
 has 'chado_schema' => (
     is => 'ro',

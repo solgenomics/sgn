@@ -6,11 +6,11 @@ $phenotype_files => undef
     <div class="row">
         <div class="col-sm-12">
             <div class="panel panel-default">
-                <div class="panel-heading">Phenotype Files Uploaded</div>
+                <div class="panel-heading"><% $c->i18n->p("phenotype.phenotype_files_uploaded", "Phenotype Files Uploaded") |h %></div>
                     <div class="panel-body">
                         <table class="table table-bordered" id="homepage_phenotype_uploads" alt="">
                             <thead>
-                                <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th><th>Trial</th></tr>
+                                <tr><th><% $c->i18n->p("global.search.images.filename", "Filename") |h %></th><th><% $c->i18n->p("accession.files.files.header.date", "Date Uploaded") |h %></th><th><% $c->i18n->p("accession.files.files.header.uploader", "Uploaded By") |h %></th><th><% $c->i18n->p("file_viewer.ui.type", "File Type") |h %></th><th><% $c->i18n->p("global.file_dump_share_files.options", "Options") |h %></th><th><% $c->i18n->p("global.index_logged_in_user.trial", "Trial") |h %></th></tr>
                             </thead>
                             <tbody>
 % foreach my $f (@$phenotype_files) {
@@ -19,7 +19,7 @@ $phenotype_files => undef
                                     <td><% $f->{metadata}->[1] %></td>
                                     <td><a href="/solpeople/profile/<% $f->{metadata}->[2] %>"><% $f->{metadata}->[3] %></a></td>
                                     <td><% $f->{metadata}->[6] %></td>
-                                    <td><a href="/breeders/phenotyping/view/<% $f->{metadata}->[0] %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->{metadata}->[0] %>">Download</a></td>
+                                    <td><a href="/breeders/phenotyping/view/<% $f->{metadata}->[0] %>"><% $c->i18n->p("global.dataset_cxgn_dataset.view", "View") |h %></a> | <a href="/breeders/phenotyping/download/<% $f->{metadata}->[0] %>"><% $c->i18n->p("global.est.download", "Download") |h %></a></td>
                                     <td>
 % foreach my $p (keys %{$f->{project_ids}}) {
                                         <a href='/breeders/trial/<% $p %>'><% $f->{project_ids}->{$p} %></a>&nbsp;&nbsp;

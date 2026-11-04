@@ -6,39 +6,39 @@
     <div class="modal-dialog modal-lg " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="manageCatalogUsageInfoDialog">How to Add and Manage Catalog</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="manageCatalogUsageInfoDialog"><% $c->i18n->p("barcode.helper.how_to_add_and_manage_catalog", "How to Add and Manage Catalog") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p> Only users with vendor role can see Manage Catalog section. This section is hidden for other users</p>
+                    <p> <% $c->i18n->p("barcode.helper.only_users_with_vendor_role_can_see_manage_catalog_section", "Only users with vendor role can see Manage Catalog section. This section is hidden for other users") |h %></p>
                     <hr class ="solid">
                     <h4>
-                        How to Add Catalog Items:
+                        <% $c->i18n->p("barcode.helper.how_to_add_catalog_items", "How to Add Catalog Items:") |h %>
                     </h4>
-                    <p>You can choose one of the three methods for adding catalog item(s) based on the number of items and details.
-                    <li><b>Add Single Item</b>: If you would like to add only one item to the catalog, you can use "Add Single Item" dialog</li>
-                    <li><b>Add Multiple Items using List</b>: For adding many items with the same stock type and the same catalog info, using "Add Multiple Items Using List" dialog is the most convenient method.</li>
-                    <li><b>Upload Multiple Items</b>: For adding many items with different stock types and each item may have different catalog info, you can use "Upload Multiple Items" dialog.</li>
+                    <p><% $c->i18n->p("barcode.helper.you_can_choose_one_of_the_three_methods_for_adding", "You can choose one of the three methods for adding catalog item(s) based on the number of items and details.") |h %>
+                    <li><b><% $c->i18n->p("barcode.helper.add_single_item", "Add Single Item") |h %></b><% $c->i18n->p("barcode.helper.if_you_would_like_to_add_only_one_item_to", ": If you would like to add only one item to the catalog, you can use \"Add Single Item\" dialog") |h %></li>
+                    <li><b><% $c->i18n->p("barcode.helper.add_multiple_items_using_list.56347bb", "Add Multiple Items using List") |h %></b><% $c->i18n->p("barcode.helper.for_adding_many_items_with_the_same_stock_type_and", ": For adding many items with the same stock type and the same catalog info, using \"Add Multiple Items Using List\" dialog is the most convenient method.") |h %></li>
+                    <li><b><% $c->i18n->p("barcode.helper.upload_multiple_items", "Upload Multiple Items") |h %></b><% $c->i18n->p("barcode.helper.for_adding_many_items_with_different_stock_types_and_each", ": For adding many items with different stock types and each item may have different catalog info, you can use \"Upload Multiple Items\" dialog.") |h %></li>
                     <br>
                     <hr class ="solid">
                     <h4>
-                        Important Notes:
+                        <% $c->i18n->p("global.dataset_publish.important_notes", "Important Notes:") |h %>
                     </h4>
-                    <li>Item Name: This version of catalog allows only accesssion, seedlot, population, vector_construct stock type. If you would like to add more stock types, please contact us.</li>
-                    <li>Category: This field can be customized. Currently there are four categories for catalog items (released variety, pathogen assay, control, transgenic line), please contact us if you would like to add more categories.</li>
-                    <li>Contact Person Username: Each catalog item is associated with a vendor (please use username). When a user requests this item. The vendor is notified by email. Ordering details can be viewd on the Manage Orders page
-                    <li>When you add new items, 'Item Type', 'Material Type', 'Species' and 'Variety' fields will be filled automatically based on item stock type and associated info stored in the database.</li>
+                    <li><% $c->i18n->p("barcode.helper.item_name_this_version_of_catalog_allows_only_accesssion_seedlot", "Item Name: This version of catalog allows only accesssion, seedlot, population, vector_construct stock type. If you would like to add more stock types, please contact us.") |h %></li>
+                    <li><% $c->i18n->p("barcode.helper.category_this_field_can_be_customized_currently_there_are_four", "Category: This field can be customized. Currently there are four categories for catalog items (released variety, pathogen assay, control, transgenic line), please contact us if you would like to add more categories.") |h %></li>
+                    <li><% $c->i18n->p("barcode.helper.contact_person_username_each_catalog_item_is_associated_with_a", "Contact Person Username: Each catalog item is associated with a vendor (please use username). When a user requests this item. The vendor is notified by email. Ordering details can be viewd on the Manage Orders page") |h %>
+                    <li><% $c->i18n->p("barcode.helper.when_you_add_new_items_item_type_material_type_species", "When you add new items, 'Item Type', 'Material Type', 'Species' and 'Variety' fields will be filled automatically based on item stock type and associated info stored in the database.") |h %></li>
                     <br>
                     <hr class ="solid">
                     <h4>
-                        Availability of Catalog Items:
+                        <% $c->i18n->p("barcode.helper.availability_of_catalog_items", "Availability of Catalog Items:") |h %>
                     </h4>
-                    <p>Each item in the catalog has 'available' status by default. Vendors can change the status to 'unavailable' by using editing catalog info dialog on each Catalog Item Details page. Once the item becomes unavailable, the request/shopping cart link is hidden and users are not able to order the item. </p>
+                    <p><% $c->i18n->p("barcode.helper.each_item_in_the_catalog_has_available_status_by_default", "Each item in the catalog has 'available' status by default. Vendors can change the status to 'unavailable' by using editing catalog info dialog on each Catalog Item Details page. Once the item becomes unavailable, the request/shopping cart link is hidden and users are not able to order the item.") |h %> </p>
                     <br>
                 </div>
                 <div class="modal-footer">
-                    <button id="close_target_numbers_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="close_target_numbers_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
                 </div>
             </div>
         </div>

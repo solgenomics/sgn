@@ -1,3 +1,7 @@
+<%once>
+use JSON::PP ();
+</%once>
+
 <%args>
     $protocol_id => undef
 </%args>
@@ -12,7 +16,7 @@
 <& /util/import_javascript.mas, entries => [], classes => [ 'jquery', 'jquery.dataTables','jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
 <div id="marker_metadata_loading">
-    <p>Loading...</p>
+    <p><% $c->i18n->p('shared.datatables.loading', 'Loading...') |h %></p>
 </div>
 
 <div id="marker_metadata_table_container" style="display: none">
@@ -21,36 +25,36 @@
 
 <div id="marker_metadata_upload" style="display:none">
     <p>
-        To upload metadata and alleles for markers in this protocol, go to the 
-        <a href="/breeders/genotyping_projects">Manage Genotyping Projects</a>
-        page and select the <strong>Add Marker Metadata</strong> button.
+        <% $c->i18n->p('genotype.protocol.marker_metadata_ui.upload_intro', 'To upload metadata and alleles for markers in this protocol, go to the ') |h %>
+        <a href="/breeders/genotyping_projects"><% $c->i18n->p('genotype.projects.title', 'Manage Genotyping Projects') |h %></a>
+        <% $c->i18n->p('genotype.protocol.marker_metadata_ui.page_and_select', ' page and select the ') |h %><strong><% $c->i18n->p('genotype.protocol.marker_metadata_ui.add_button', 'Add Marker Metadata') |h %></strong><% $c->i18n->p('genotype.protocol.marker_metadata_ui.button_suffix', ' button.') |h %>
     </p>
 </div>
 
 <div id="marker_metadata_delete" style="margin-top: 15px; display:none">
-    <button class="btn btn-danger" <% $curator ? '' : 'disabled' %> onclick="deleteMetadata()"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete All Marker Metadata</button>
+    <button class="btn btn-danger" <% $curator ? '' : 'disabled' %> onclick="deleteMetadata()"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;<% $c->i18n->p('genotype.protocol.marker_metadata_ui.delete_all', 'Delete All Marker Metadata') |h %></button>
 </div>
 
 <div class="modal fade" id="edit_marker_metadata_dialog" name="edit_marker_metadata_dialog" tabindex="-1" role="dialog" aria-labelledby="EditMarkerMetadataDialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="EditMarkerMetadataDialog">Edit Marker Metadata</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('global.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="EditMarkerMetadataDialog"><% $c->i18n->p('genotype.protocol.marker_metadata_ui.edit_title', 'Edit Marker Metadata') |h %></h4>
             </div>
             <div class="modal-body">
 
-                <p><strong>Marker Name:</strong><input class="form-control" id="edit_marker_metadata_marker" name="Marker" /></p>
-                <p><strong>Alias:</strong><input class="form-control" id="edit_marker_metadata_alias" name="Alias" /></p>
-                <p><strong>Description:</strong><textarea class="form-control" id="edit_marker_metadata_description" name="Description" rows="3"></textarea></p>
-                <p><strong>Alleles (one per line):</strong><textarea class="form-control" id="edit_marker_metadata_alleles" name="Alleles" rows="5"></textarea></p>
-                <p><strong>References (one per line):</strong><textarea class="form-control" id="edit_marker_metadata_references" name="References" rows="5"></textarea></p>
-                <span>The references include the associated trait categories and external database references.  The format of each reference is <code>{database name}:{entity name}</code></span>
+                <p><strong><% $c->i18n->p('genotype.protocol.marker_metadata_ui.form.marker_name', 'Marker Name:') |h %></strong><input class="form-control" id="edit_marker_metadata_marker" name="Marker" /></p>
+                <p><strong><% $c->i18n->p('genotype.protocol.marker_metadata_ui.form.alias', 'Alias:') |h %></strong><input class="form-control" id="edit_marker_metadata_alias" name="Alias" /></p>
+                <p><strong><% $c->i18n->p('genotype.protocol.marker_metadata_ui.form.description', 'Description:') |h %></strong><textarea class="form-control" id="edit_marker_metadata_description" name="Description" rows="3"></textarea></p>
+                <p><strong><% $c->i18n->p('genotype.protocol.marker_metadata_ui.form.alleles', 'Alleles') |h %> (<% $c->i18n->p('genotype.protocol.marker_metadata_ui.form.one_per_line', 'one per line') |h %>):</strong><textarea class="form-control" id="edit_marker_metadata_alleles" name="Alleles" rows="5"></textarea></p>
+                <p><strong><% $c->i18n->p('genotype.protocol.marker_metadata_ui.form.references', 'References') |h %> (<% $c->i18n->p('genotype.protocol.marker_metadata_ui.form.one_per_line', 'one per line') |h %>):</strong><textarea class="form-control" id="edit_marker_metadata_references" name="References" rows="5"></textarea></p>
+                <span><% $c->i18n->p('genotype.protocol.marker_metadata_ui.form.reference_help', 'The references include the associated trait categories and external database references.  The format of each reference is ') |h %><code>{database name}:{entity name}</code></span>
                 <input type="hidden" id="edit_marker_metadata_locus_id" />
             </div>
             <div class="modal-footer">
-                <button id="close_delete_model_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="edit_marker_metadata_dialog_submit" id="edit_marker_metadata_dialog_submit">Save</button>
+                <button id="close_delete_model_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('global.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-primary" name="edit_marker_metadata_dialog_submit" id="edit_marker_metadata_dialog_submit"><% $c->i18n->p('global.save', 'Save') |h %></button>
             </div>
         </div>
     </div>
@@ -131,7 +135,8 @@
 
         // No Metadata found, show upload information...
         else {
-            let html = "<p style='font-style: italic; padding-bottom: 10px'>There are no metadata or allele values set for the markers in this protocol.</p>";
+            let noMetadataText = <% JSON::PP::encode_json($c->i18n->p('genotype.protocol.marker_metadata_ui.no_data', 'There are no metadata or allele values set for the markers in this protocol.')) %>;
+            let html = "<p style='font-style: italic; padding-bottom: 10px'>" + jQuery("<span>").text(noMetadataText).html() + "</p>";
             jQuery("#marker_metadata_table_container").html(html);
             jQuery("#marker_metadata_upload").show();
             jQuery("#marker_metadata_delete").hide();
@@ -143,7 +148,9 @@
     }
 
     function displayError() {
-        let html = "<p><strong>ERROR:</strong> There was an error getting the marker metadata for this protocol.</p>";
+        let errorLabel = <% JSON::PP::encode_json($c->i18n->p('genotype.protocol.marker_metadata_ui.error_label', 'ERROR')) %>;
+        let errorText = <% JSON::PP::encode_json($c->i18n->p('genotype.protocol.marker_metadata_ui.error_get', 'There was an error getting the marker metadata for this protocol.')) %>;
+        let html = "<p><strong>" + jQuery("<span>").text(errorLabel).html() + ":</strong> " + jQuery("<span>").text(errorText).html() + "</p>";
         jQuery("#marker_metadata_table_container").html(html);
 
         jQuery("#marker_metadata_loading").hide();
@@ -190,7 +197,8 @@
             success: (response) => {
                 jQuery("#working_modal").modal("hide");
                 if ( response?.error ) {
-                    alert("Could not update marker metadata: " + response.error);
+                    const updateError = ("" + response.error);
+                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.protocol.marker_metadata_ui.update_error', 'Could not update marker metadata: %{error}', {error: updateError}) : "Could not update marker metadata: " + updateError);
                 }
                 else {
                     jQuery('#edit_marker_metadata_dialog').modal('hide');
@@ -199,19 +207,23 @@
             },
             error: () => {
                 jQuery("#working_modal").modal("hide");
-                alert("Could not update marker metadata");
+                alert(<% JSON::PP::encode_json($c->i18n->p('genotype.protocol.marker_metadata_ui.update_failed', 'Could not update marker metadata')) %>);
             }
         });
     }
 
     function deleteMetadata(locus_id) {
-        if ( confirm(`Are you sure you want to delete ${locus_id ? "this marker's metadata" : "all of the marker metadata for this protocol"}?  This cannot be undone!`) ) {
+        const deleteConfirmation = locus_id
+            ? <% JSON::PP::encode_json($c->i18n->p('genotype.protocol.marker_metadata_ui.delete_one_confirm', 'Are you sure you want to delete this marker\'s metadata?  This cannot be undone!')) %>
+            : <% JSON::PP::encode_json($c->i18n->p('genotype.protocol.marker_metadata_ui.delete_all_confirm', 'Are you sure you want to delete all of the marker metadata for this protocol?  This cannot be undone!')) %>;
+        if ( confirm(deleteConfirmation) ) {
             jQuery.ajax({
                 url: `/ajax/genotyping_protocol/delete_marker_metadata/<% $protocol_id %>?${locus_id ? "locus_id=" + locus_id : ""}`,
                 method: 'DELETE',
                 success: (resp) => {
                     if ( resp?.error ) {
-                        alert("Could not delete marker meatadata: " + resp.error);
+                        const deleteError = ("" + resp.error);
+                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.protocol.marker_metadata_ui.delete_error', 'Could not delete marker metadata: %{error}', {error: deleteError}) : "Could not delete marker metadata: " + deleteError);
                     }
                     else {
                         loadMetadata();
@@ -219,7 +231,8 @@
                 },
                 error: (err) => {
                     console.log(err);
-                    alert("Could not delete marker metadata: " + err?.statusText);
+                    const deleteStatus = ("" + err?.statusText);
+                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.protocol.marker_metadata_ui.delete_transport_error', 'Could not delete marker metadata: %{status}', {status: deleteStatus}) : "Could not delete marker metadata: " + deleteStatus);
                 }
             });
         }

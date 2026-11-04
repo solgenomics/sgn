@@ -1,5 +1,7 @@
 package SGN::Controller::Transformation;
 
+use SGN::I18N ();
+
 use Moose;
 use URI::FromHash 'uri';
 use SGN::Model::Cvterm;
@@ -14,6 +16,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 sub transformation_page : Path('/transformation') Args(1) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_transformation_page_i18n = SGN::I18N::translate($c);
     my $id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $c->dbc->dbh;
@@ -36,7 +39,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $transformation_name;
 	if (!$transformation) {
     	$c->stash->{template} = '/generic_message.mas';
-    	$c->stash->{message} = 'The requested transformation does not exist.';
+        $c->stash->{message} = (SGN::I18N::translate($ui_transformation_page_i18n, 'transformation.helper.the_requested_transformation_does_not_exist', 'The requested transformation does not exist.'));
     	return;
     } else {
         $transformation_id = $transformation->stock_id();
@@ -65,7 +68,7 @@ sub transformation_page : Path('/transformation') Args(1) {
 
     my $is_a_control = $info->[0]->[5];
     if ($is_a_control) {
-        $is_a_control = 'is a control';
+        $is_a_control = (SGN::I18N::translate($ui_transformation_page_i18n, 'transformation.helper.is_a_control', 'is a control'));
     }
 
     my $control_id = $info->[0]->[6];
@@ -80,10 +83,10 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $terminated_metadata;
     my $status_display;
     if ($updated_status_type eq 'terminated_metadata') {
-        $status_display = '<span style="color:red">'.'TERMINATED'.'</span>';
+        $status_display = '<span style="color:red">'.(SGN::I18N::translate($ui_transformation_page_i18n, 'transformation.helper.terminated', 'TERMINATED')).'</span>';
         $terminated_metadata = 1;
     } elsif ($updated_status_type eq 'completed_metadata') {
-        $status_display = '<span style="color:red">'.'COMPLETED'.'</span>';
+        $status_display = '<span style="color:red">'.(SGN::I18N::translate($ui_transformation_page_i18n, 'transformation.helper.completed', 'COMPLETED')).'</span>';
         $completed_metadata = 1;
     }
 
@@ -94,9 +97,9 @@ sub transformation_page : Path('/transformation') Args(1) {
         my $person_id = $updated_status_info->[0];
         my $person= CXGN::People::Person->new($dbh, $person_id);
         my $person_name=$person->get_first_name()." ".$person->get_last_name();
-        my $operator_info = "Updated by". ":"."".$person_name;
-        my $date_info = "Updated Date". ":"."".$updated_status_info->[1];
-        my $reason_info = "Comments". ":"."".$updated_status_info->[2];
+        my $operator_info = (SGN::I18N::translate($ui_transformation_page_i18n, 'trial.card.status.updated_by', 'Updated by')). ":"."".$person_name;
+        my $date_info = (SGN::I18N::translate($ui_transformation_page_i18n, 'seedlot.updated_date', 'Updated Date')). ":"."".$updated_status_info->[1];
+        my $reason_info = (SGN::I18N::translate($ui_transformation_page_i18n, 'accession.stock.section.comments', 'Comments')). ":"."".$updated_status_info->[2];
         my @all_info = ($operator_info, $date_info, $reason_info);
         my $all_info_string = join("<br>", @all_info);
         $updated_status_string = '<span style="color:red">'.$all_info_string.'</span>';

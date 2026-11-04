@@ -1,3 +1,9 @@
+<%once>
+use SGN::I18N;
+</%once>
+<%perl>
+my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
+</%perl>
 
 
 <%doc>
@@ -49,7 +55,7 @@ Naama Menda <nm249@cornell.edu>
   <span class="title"> <% $doi %> <% $pub->get_title |h%> </span>  <a href="/publication/<% $pub->get_pub_id |h%>/view">
     <% $pub->get_series_name |h%> (<% $pub->get_pyear |h%>) </a>
   <br />
-  <a class="toggle_abstract" href="#">Show / hide abstract</a>
+  <a class="toggle_abstract" href="#"><% SGN::I18N::translate($ui_i18n, "community.publication_summary.abstract_toggle", "Show / hide abstract") |h %></a>
   <div class="detail">
     <div class="abstract">
        <% $pub->get_abstract |h%>

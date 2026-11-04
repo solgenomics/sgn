@@ -8,9 +8,9 @@ $dataset_name
 
 <div class="row">
     <div id="trait_selections" style="margin: 15px">
-        <label for="trait_selection">Select a Trait: </label>
+        <label for="trait_selection"><% $c->i18n->p("lists_datasets.pages.select_a_trait", "Select a Trait: ") |h %></label>
         <select id="trait_selection" class="form-control" name="trait_selection">
-            <option value="default">Select Trait</option>
+            <option value="default"><% $c->i18n->p("lists_datasets.pages.select_trait", "Select Trait") |h %></option>
         </select>
     </div>
 
@@ -23,13 +23,13 @@ $dataset_name
 
         <div class="input-group">
             <span class="input-group-addon">
-                <input type="radio" aria-label="median" id="median" value="median" name="dataset_metric" checked="true">
+                <input type="radio" aria-label="<% $c->i18n->p("lists_datasets.pages.median_accessibility", "median") |h %>" id="median" value="median" name="dataset_metric" checked="true">
             </span>
-            <label for="median" class="form-control" aria-label="median">Median</label>
+            <label for="median" class="form-control" aria-label="<% $c->i18n->p("lists_datasets.pages.median_accessibility", "median") |h %>"><% $c->i18n->p("lists_datasets.pages.median", "Median") |h %></label>
             <span class="input-group-addon">
-                <input type="radio" aria-label="mean" id="mean" value="mean" name="dataset_metric" >
+                <input type="radio" aria-label="<% $c->i18n->p("lists_datasets.pages.mean_accessibility", "mean") |h %>" id="mean" value="mean" name="dataset_metric" >
             </span>
-            <label for="mean" class="form-control" aria-label="mean">Mean</label>
+            <label for="mean" class="form-control" aria-label="<% $c->i18n->p("lists_datasets.pages.mean_accessibility", "mean") |h %>"><% $c->i18n->p("lists_datasets.pages.mean", "Mean") |h %></label>
             <span class="input-group-addon">
                 <input type="radio" aria-label="IQR" id="iqr" value="iqr" name="dataset_metric" >
             </span>
@@ -41,16 +41,16 @@ $dataset_name
 <div style="margin: 15px 0;">
     <div id="trait_graph"></div>
     <div class="hide_until_trait_selected" style="display: none; flex-wrap: wrap; gap: 5px; justify-content: space-around">
-        <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
-        <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
-        <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
-        <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without outliers</button>
-        <button class="btn btn-sm btn-primary btn-dataset" id="rosner_test">Make Rosner outlier test</button>
+        <button class="btn btn-sm btn-success btn-dataset" id="store_outliers"><% $c->i18n->p("lists_datasets.pages.add_selection_to_outliers", "Add selection to outliers") |h %></button>
+        <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait"><% $c->i18n->p("lists_datasets.pages.reset_outliers_for_current_trait", "Reset outliers for current trait") |h %></button>
+        <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers"><% $c->i18n->p("lists_datasets.pages.reset_all_outliers", "Reset all outliers") |h %></button>
+        <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download"><% $c->i18n->p("lists_datasets.pages.download_phenotype_table_without_outliers", "Download Phenotype Table without outliers") |h %></button>
+        <button class="btn btn-sm btn-primary btn-dataset" id="rosner_test"><% $c->i18n->p("lists_datasets.pages.make_rosner_outlier_test", "Make Rosner outlier test") |h %></button>
     </div>
 </div>
 
 <div class="row well" style="margin: 5px 10px;">
-    Rosner's test is calculated by the R function rosnerTest{EnvStats} from package EnvStats.<br>
+    <% $c->i18n->p("lists_datasets.pages.rosner_s_test_is_calculated_by_the_r_function_rosnertest_envstats_from_package_envstats", "Rosner's test is calculated by the R function rosnerTest{EnvStats} from package EnvStats.") |h %><br>
     <a href="https://cran.r-project.org/web/packages/EnvStats/index.html">https://cran.r-project.org/web/packages/EnvStats/index.html</a>
 </div>
 

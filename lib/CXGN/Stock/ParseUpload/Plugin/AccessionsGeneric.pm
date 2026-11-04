@@ -11,6 +11,7 @@ use CXGN::BreedersToolbox::OrganismFuzzySearch;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my $i18n = $self->i18n();
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -26,6 +27,7 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new(
       file => $filename,
+      i18n => $i18n,
       required_columns => [ 'accession_name', 'species_name' ],
       optional_columns => \@optional_columns,
       column_aliases => {
@@ -80,7 +82,7 @@ sub _validate_with_plugin {
     # return if unknown columns (neither required nor optional)
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
       $errors{'error_messages'} = [
-        "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+        ($i18n ? $i18n->p('accessions.parse.unknown_columns', 'The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.', {columns => join(', ', @$additional_columns)}) : "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns.")
       ];
       $self->_set_parse_errors(\%errors);
       return;
@@ -91,7 +93,7 @@ sub _validate_with_plugin {
     my $species_validator = CXGN::List::Validate->new();
     my @species_missing = @{$species_validator->validate($schema,'species',$seen_species_names)->{'missing'}};
     if (scalar(@species_missing) > 0) {
-        push @error_messages, "The following species are not in the database as species in the organism table: ".join(',',@species_missing);
+        push @error_messages, ($i18n ? $i18n->p('accessions.parse.missing_species', 'The following species are not in the database as species in the organism table: %{species}', {species => join(',', @species_missing)}) : "The following species are not in the database as species in the organism table: ".join(',',@species_missing));
         $errors{'missing_species'} = \@species_missing;
     }
 
@@ -104,7 +106,7 @@ sub _validate_with_plugin {
       push @stocks_existing, $r->uniquename;
     }
     if ( scalar(@stocks_existing) > 0 ) {
-      push @error_messages, "The following accession names are already used in the database (as different stock types): " . join(',', @stocks_existing);
+      push @error_messages, ($i18n ? $i18n->p('accessions.parse.other_stock_names', 'The following accession names are already used in the database (as different stock types): %{names}', {names => join(',', @stocks_existing)}) : "The following accession names are already used in the database (as different stock types): " . join(',', @stocks_existing));
     }
 
     #store any errors found in the parsed file to parse_errors accessor

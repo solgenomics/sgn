@@ -8,11 +8,11 @@ $map_html => undef
 <table class="table table-hover table-bordered" id="stock_direct_genotypes_datatable">
     <thead>
         <tr>
-            <th>Genotyping Project Name</th>
-            <th>Genotyping Project Description</th>
-            <th>Protocol Name</th>
-            <th>Genotype Description</th>
-            <th>Download</th>
+            <th><% $c->i18n->p("folder.detail.genotyping_project_name", "Genotyping Project Name") |h %></th>
+            <th><% $c->i18n->p("genotype.marker.genotyping_project_description", "Genotyping Project Description") |h %></th>
+            <th><% $c->i18n->p("genotype.plate.protocol_name", "Protocol Name") |h %></th>
+            <th><% $c->i18n->p("genotype.marker.genotype_description", "Genotype Description") |h %></th>
+            <th><% $c->i18n->p("global.download", "Download") |h %></th>
         </tr>
     </thead>
 </table>

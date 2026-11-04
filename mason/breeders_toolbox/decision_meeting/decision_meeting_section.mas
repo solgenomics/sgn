@@ -2,10 +2,10 @@
 
 <div class="well">
 
-  <&| /page/info_section.mas,
-       title=>'Meeting Tracker',
+  <&| /page/info_section.mas, anchor_title => 'Meeting Tracker',
+       title=>HTML::Entities::encode_entities($c->i18n->p("decision.root.meeting_tracker", 'Meeting Tracker')),
        is_subsection=>1, collapsible=>1, collapsed=>0,
-       subtitle=>'View Meetings Record'
+       subtitle=>HTML::Entities::encode_entities($c->i18n->p("decision.root.view_meetings_record", 'View Meetings Record'))
   &>
     <div class="panel panel-default">
       <div class="panel-body">
@@ -13,13 +13,13 @@
           <table id="meeting_table" class="table table-striped table-bordered" width="100%">
             <thead>
               <tr>
-                <th>Select</th>
-                <th>Meeting</th>
-                <th>Programs</th>
-                <th>Date</th>
-                <th>Location</th>
-                <th>Attendees</th>
-                <th>Download</th>
+                <th><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></th>
+                <th><% $c->i18n->p("decision.root.meeting", "Meeting") |h %></th>
+                <th><% $c->i18n->p("decision.root.programs", "Programs") |h %></th>
+                <th><% $c->i18n->p("global.file_dump_share_files.date", "Date") |h %></th>
+                <th><% $c->i18n->p("global.search.features.location", "Location") |h %></th>
+                <th><% $c->i18n->p("decision.root.attendees", "Attendees") |h %></th>
+                <th><% $c->i18n->p("global.est.download", "Download") |h %></th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -29,3 +29,7 @@
     </div>
   </&>
 </div>
+
+<%once>
+use HTML::Entities ();
+</%once>

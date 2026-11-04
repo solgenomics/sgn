@@ -12,10 +12,13 @@ Lukas Mueller
 package CXGN::Trial::ParseUpload::Plugin::ParseIGDFile;
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use File::Slurp "read_file";
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_parseigdfile_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my @lines = read_file($filename);
@@ -44,10 +47,10 @@ sub _validate_with_plugin {
     my %errors;
     my @error_messages;
     if (!$blank_well) { 
-        push @error_messages, "No blank well found in spreadsheet";
+        push @error_messages, (SGN::I18N::translate($ui_parseigdfile_i18n, "trial.parse.blank_well", "No blank well found in spreadsheet"));
     }
     if (keys(%trial_names)>1) {
-	push @error_messages, "All trial names in the trial column must be identical";
+	push @error_messages, (SGN::I18N::translate($ui_parseigdfile_i18n, "trial.parse.same_trial.5f796dc", "All trial names in the trial column must be identical"));
     }
     
     my @distinct_users = keys(%user_ids);

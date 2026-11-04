@@ -235,7 +235,7 @@ sub index :Path('/breeders/meeting') :Args(0) {
   if (!$can_access) {
     $c->res->status(403);
     $c->res->content_type('text/plain; charset=utf-8');
-    $c->res->body('You are not authorized to access the decision meeting page.');
+    $c->res->body($c->i18n->p("trial.server.decision_forbidden", "You are not authorized to access the decision meeting page."));
     return;
   }
 
@@ -300,7 +300,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query, lang => $c->i18n->requested_locale } ) );
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -526,7 +526,7 @@ sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if (!$c->user()) {
-        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query, lang => $c->i18n->requested_locale } ) );
         return;
     }
     $c->stash->{odk_crossing_data_service_name} = $c->config->{odk_crossing_data_service_name};
@@ -888,7 +888,7 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query, lang => $c->i18n->requested_locale } ) );
 	return;
     }
 
@@ -973,7 +973,7 @@ sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query, lang => $c->i18n->requested_locale } ) );
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -1107,7 +1107,7 @@ sub manage_propagations : Path("/breeders/propagations") Args(0) {
 
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query, lang => $c->i18n->requested_locale } ) );
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');

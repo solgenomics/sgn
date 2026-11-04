@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME 
@@ -25,17 +29,17 @@ $comment
 
 <%perl>
 
-$qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_name"> |;
+$qtl_image = (qq |<img src="$qtl_image" width=320 height=320 alt="| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.qtl_for", "QTL for ")) . qq |$trait_name"> |);
 
 </%perl>
 
 
 
 <& /page/page_title.mas, 
-   title => "QTL for $trait_name in $pop_name" 
+   title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.qtl_for_trait_in_population", "QTL for %{trait} in %{population}", {trait => "" . ($trait_name // ""), population => "" . ($pop_name // "")}))
 &>
-<&| /page/info_section.mas, 
-    title => "QTL map for $trait_name" 
+<&| /page/info_section.mas, anchor_title => "QTL map for $trait_name",
+    title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.qtl_map_for_trait", "QTL map for %{trait}", {trait => "" . ($trait_name // "")}))
 &>
   <table cellpadding=20>
     <tr>
@@ -56,14 +60,14 @@ $qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_
   </table>
 </&>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "QTL 95% Confidence Interval",
     collapsible => 1, 
     collapsed   => 1, 
-    title       => "QTL 95% Confidence Interval" 
+    title       => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.qtl_95_confidence_interval", "QTL 95% Confidence Interval"))
 &>  
 
 <& /page/columnar_table.mas,
-     headings    => ["Marker", " Position (cM)", "LOD", "Remark"],
+     headings    => [HTML::Entities::encode_entities($c->i18n->p("genotype.marker.marker", "Marker")), (" " . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.position_cm", "Position (cM)")) . ""), "LOD", ("" . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.remark", "Remark")) . "")],
     data         => $marker_link,
     __alt_freq   => 2,
     __alt_width  => 1,
@@ -72,10 +76,10 @@ $qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_
     &>
 </&>
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "QTL markers' genetic positions and Comparative Map Viewer",
     collapsible => 1, 
     collapsed   => 1, 
-    title       => "QTL markers' genetic positions and Comparative Map Viewer" 
+    title       => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.qtl_markers_genetic_positions_and_comparative_map_viewer", "QTL markers' genetic positions and Comparative Map Viewer"))
  &>
 
 <% $cmv_link %>
@@ -84,10 +88,10 @@ $qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_
 <& genome_positions.mas,
    markers => $markers 
 &>
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Browse QTL region",
     collapsible => 1, 
     collapsed   => 1, 
-    title       => "Browse QTL region" 
+    title       => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.browse_qtl_region", "Browse QTL region"))
 &>
 
 <% $download %>

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%perl>
 
@@ -10,19 +14,19 @@ my $population_names_ref = [];
 eval { 
   $population_names_ref = CXGN::Phenome::Population::get_all_populations( CXGN::DB::Connection->new );
   #add an empty entry to the front of the list
-  unshift @$population_names_ref, ['', '--select a population name--'];
+  unshift @$population_names_ref, ['', $c->i18n->p("phenotype.select_a_population_name", "--select a population name--")];
 };
 
 my $population = "";
-if ($@) { $population = "(The database is currently not available. Please try again later)"; }
+if ($@) { $population = $c->i18n->p("phenotype.the_database_is_currently_not_available_please_try_again_later", "(The database is currently not available. Please try again later)"); }
 else { 
   $population = simple_selectbox_html( choices  => $population_names_ref,
 					name     => 'wee9_population_id',
-					) . qq { <input type="submit" value="Submit"/> };
+					) . (" <input type=\"submit\" value=\"" . HTML::Entities::encode_entities($c->i18n->p("global.manage_file_share_dump.submit", "Submit")) . "\"/> ");
 }
 </%perl>
 
 <div class="boxbgcolor1" style="margin:0px;">
-  <div class="boxheading">Phenotypes</div>
-  <div class="boxcontent">Browse Solanaceae phenotypes<br /><form style="margin-bottom:0px" name="population" action="/search/phenotype_search.pl"><% $population %></form></div>
+  <div class="boxheading"><% $c->i18n->p("global.search.advanced_search.phenotypes", "Phenotypes") |h %></div>
+  <div class="boxcontent"><% $c->i18n->p("phenotype.browse_solanaceae_phenotypes", "Browse Solanaceae phenotypes") |h %><br /><form style="margin-bottom:0px" name="population" action="/search/phenotype_search.pl"><% $population %></form></div>
 </div>

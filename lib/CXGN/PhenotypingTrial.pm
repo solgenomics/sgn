@@ -2,6 +2,9 @@
 package CXGN::PhenotypingTrial;
 
 use Moose;
+use SGN::I18N ();
+use HTML::Entities ();
+use CatalystX::GlobalContext '$c';
 
 extends 'CXGN::Project';
 
@@ -232,6 +235,7 @@ sub get_stock_entry_summary {
 
 sub remove_treatment { #TODO REFACTOR
     my $self = shift;
+    my SGN::I18N $ui_remove_treatment_i18n = SGN::I18N::translate($c);
     my $schema = $self->bcs_schema;
     my $treatment_id =shift;
 
@@ -239,7 +243,7 @@ sub remove_treatment { #TODO REFACTOR
 
     my $treatment_rs = $schema->resultset('Project::Project')->find({ project_id => $treatment_id });
     if (!$treatment_rs) {
-        return { error => "Treatment not found" };
+        return { error => ("" . SGN::I18N::translate($ui_remove_treatment_i18n, "phenotype.root.treatment_not_found", "Treatment not found", undef, { entities => '<>&', decode => 1 }) . "") };
     }
 
     eval {
@@ -262,6 +266,7 @@ sub remove_treatment { #TODO REFACTOR
 
 sub remove_treatment_project {
     my $self = shift;
+    my SGN::I18N $ui_remove_treatment_project_i18n = SGN::I18N::translate($c);
     my $schema = $self->bcs_schema;
     my $treatment_id =shift;
 
@@ -269,7 +274,7 @@ sub remove_treatment_project {
 
     my $treatment_rs = $schema->resultset('Project::Project')->find({ project_id => $treatment_id });
     if (!$treatment_rs) {
-        return { error => "Treatment not found" };
+        return { error => ("" . SGN::I18N::translate($ui_remove_treatment_project_i18n, "phenotype.root.treatment_not_found", "Treatment not found", undef, { entities => '<>&', decode => 1 }) . "") };
     }
 
     eval {
@@ -353,6 +358,7 @@ sub get_crossing_experiments_from_field_trial {
 
 sub add_additional_stocks_for_greenhouse { 
     my $self = shift;
+    my SGN::I18N $ui_add_additional_stocks_for_greenhouse_i18n = SGN::I18N::translate($c);
     my $schema = $self->bcs_schema;
     my $stock_list = shift;
     my $number_of_plants_list = shift;
@@ -383,7 +389,7 @@ sub add_additional_stocks_for_greenhouse {
 
     if (scalar @invalid_stocks > 0) {
         my $invalid_stocks_string = join(",", @invalid_stocks);
-        return {error=>"Error: accessions or crosses or families already in this trial: $invalid_stocks_string"};
+        return {error=>("" . SGN::I18N::translate($ui_add_additional_stocks_for_greenhouse_i18n, "phenotype.root.error_accessions_or_crosses_or_families_already_in_this_trial", "Error: accessions or crosses or families already in this trial: ", undef, { entities => '<>&', decode => 1 }) . "$invalid_stocks_string" . "" . "")};
     }
 
     my $coderef = sub {
@@ -428,7 +434,7 @@ sub add_additional_stocks_for_greenhouse {
         my $validate_design_error = $trial_design_store->validate_design();
         if ($validate_design_error) {
             print STDERR "ERROR: $validate_design_error\n";
-            return { error => "Error validating trial design: $validate_design_error." };
+            return { error => ("" . SGN::I18N::translate($ui_add_additional_stocks_for_greenhouse_i18n, "phenotype.root.error_validating_trial_design", "Error validating trial design: ", undef, { entities => '<>&', decode => 1 }) . "$validate_design_error" . "." . "") };
         } else {
             my $new_design = $trial_design_store->store();
         }
@@ -469,6 +475,7 @@ sub add_additional_stocks_for_greenhouse {
 
 sub add_additional_plants_for_greenhouse {
     my $self = shift;
+    my SGN::I18N $ui_add_additional_plants_for_greenhouse_i18n = SGN::I18N::translate($c);
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $stock_list = shift;
@@ -502,7 +509,7 @@ sub add_additional_plants_for_greenhouse {
 
     if (scalar @invalid_stocks > 0) {
         my $invalid_stocks_string = join(",", @invalid_stocks);
-        return {error=>"Error: accessions or crosses or families are not in this trial: $invalid_stocks_string"};
+        return {error=>("" . SGN::I18N::translate($ui_add_additional_plants_for_greenhouse_i18n, "phenotype.root.error_accessions_or_crosses_or_families_are_not_in_this", "Error: accessions or crosses or families are not in this trial: ", undef, { entities => '<>&', decode => 1 }) . "$invalid_stocks_string" . "" . "")};
     }
 
     my $coderef = sub {

@@ -1,5 +1,8 @@
 package CXGN::TrackingActivity::AddTrackingIdentifier;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 =head1 NAME
 
 CXGN::TrackingActivity::AddTrackingIdentifier - a module to add tracking identifier.
@@ -60,6 +63,7 @@ has 'user_id' => (
 
 sub store {
     my $self = shift;
+    my SGN::I18N $ui_store_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_schema();
     my $phenome_schema = $self->get_phenome_schema();
     my $tracking_identifier = $self->get_tracking_identifier();
@@ -80,7 +84,7 @@ sub store {
         uniquename => $tracking_identifier,
     });
     if ($check_id_rs->count() > 0){
-        return { error => "$tracking_identifier already used in the database! " };
+        return { error => (SGN::I18N::translate($ui_store_i18n, 'transformation.tracking_identifier_already_used_in_the_database', '%{tracking_identifier} already used in the database! ', {tracking_identifier => ("" . ("$tracking_identifier"))}))};
     }
 
     my $coderef = sub {
@@ -122,7 +126,8 @@ sub store {
     };
 
     if ($error) {
-        return { error => "Error creating a tracking identifier: $error\n" };
+        return { error => (SGN::I18N::translate($ui_store_i18n, 'transformation.error_creating_a_tracking_identifier_error', 'Error creating a tracking identifier: %{error}
+', {error => ("" . ("$error"))}))};
     }
 
     $phenome_schema->resultset("StockOwner")->find_or_create({

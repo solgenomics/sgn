@@ -9,13 +9,13 @@ $trial_id
     <table class="table table-hover table-bordered" id="inactive_transformation_ids_in_project_table">
         <thead>
             <tr>
-                <th>Transformation ID</th>
-                <th>Status</th>
-                <th>Plant Material</th>
-                <th>Vector Construct</th>
-                <th>Notes</th>
-                <th>Control</th>
-                <th>No of Transformants (Accessions)</th>
+                <th><% $c->i18n->p("transformation.transformation_id.6f39808", "Transformation ID") |h %></th>
+                <th><% $c->i18n->p("global.dataset_publish.status.heading", "Status") |h %></th>
+                <th><% $c->i18n->p("transformation.plant_material", "Plant Material") |h %></th>
+                <th><% $c->i18n->p("transformation.vector_construct.d77fa05", "Vector Construct") |h %></th>
+                <th><% $c->i18n->p("cross.ui.notes", "Notes") |h %></th>
+                <th><% $c->i18n->p("transformation.control", "Control") |h %></th>
+                <th><% $c->i18n->p("transformation.root.no_of_transformants_accessions", "No of Transformants (Accessions)") |h %></th>
             </tr>
         </thead>
     </table>

@@ -1,0 +1,27 @@
+/* Shared presentation for authored manual locale copies. */
+.manual-language-nav {display:flex;gap:12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #ddd;padding:8px 0;margin-bottom:18px;font-size:14px;direction:ltr}
+.manual-language-nav a[aria-current="page"] {font-weight:700;text-decoration:underline}
+html[dir="rtl"] .book-summary {direction:rtl;text-align:right}
+html[dir="rtl"] :is(.markdown-section,.normal) {direction:rtl;text-align:right}
+html[dir="rtl"] :is(.markdown-section,.normal) pre,html[dir="rtl"] :is(.markdown-section,.normal) code,html[dir="rtl"] :is(.markdown-section,.normal) kbd,html[dir="rtl"] :is(.markdown-section,.normal) math {direction:ltr;unicode-bidi:isolate;text-align:left}
+html[dir="rtl"] :is(.markdown-section,.normal) table {direction:ltr}
+html[dir="rtl"] :is(.markdown-section,.normal) td,html[dir="rtl"] :is(.markdown-section,.normal) th {unicode-bidi:plaintext}
+@media print {
+ @page {size:A4;margin:18mm}
+ [show-in="html"],iframe,.book-summary,.book-header,.navigation,.manual-language-nav,.dropdown-menu,.anchor-section-link,.book-search {display:none!important}
+ .book,.book-body,.body-inner,.page-wrapper,.page-inner,:is(.markdown-section,.normal) {position:static!important;transform:none!important;margin:0!important;padding:0!important;width:auto!important;max-width:none!important;height:auto!important;overflow:visible!important}
+ :is(.markdown-section,.normal) {font-family:"DejaVu Sans",sans-serif;font-size:10pt;line-height:1.4;color:#111}
+ :is(.markdown-section,.normal) h1 {font-size:22pt}:is(.markdown-section,.normal) h2 {font-size:17pt}:is(.markdown-section,.normal) h3 {font-size:13pt}
+ .section.level1 {break-before:page}.section.level1 h1 {break-after:avoid}
+ h1,h2,h3,h4,h5,h6 {break-after:avoid}p,li {orphans:3;widows:3}
+ img {max-width:100%!important;max-height:240mm;object-fit:contain;break-inside:avoid}
+ table {max-width:100%;font-size:8.5pt}tr {break-inside:avoid}th,td {overflow-wrap:anywhere}
+ pre {white-space:pre-wrap;overflow-wrap:anywhere;font-size:8pt}a {color:#111}
+}
+
+@media print {
+ html,body {width:174mm!important;min-width:0!important;max-width:174mm!important;height:auto!important;overflow:visible!important;margin:0!important;padding:0!important}
+ .book,.book-body,.body-inner,.page-wrapper,.page-inner,section.normal {width:174mm!important;min-width:0!important;max-width:174mm!important;box-sizing:border-box!important;left:auto!important;right:auto!important;float:none!important;overflow:visible!important}
+ section.normal,section.normal p,section.normal li {font-size:10pt!important;line-height:1.4!important}
+ section.normal h1 {font-size:22pt!important}section.normal h2 {font-size:17pt!important}section.normal h3 {font-size:13pt!important}section.normal h4 {font-size:11pt!important}
+}

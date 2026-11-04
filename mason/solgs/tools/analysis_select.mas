@@ -26,8 +26,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <div id='analysis_select_div' class="col-xs-12 col-sm-6 col-md-4" style="margin-top: 18px;">
     <select id="analysis_select" class="form-control">
-        <option value="" disabled selected>Select an analysis</option>
-        <option value="pearson_correlation">Pearson Phenotype Correlation</option>        
+        <option value="" disabled selected><% $c->i18n->p("solgs.interface.select_an_analysis", "Select an analysis") |h %></option>
+        <option value="pearson_correlation"><% $c->i18n->p("solgs.interface.pearson_phenotype_correlation", "Pearson Phenotype Correlation") |h %></option><% "        " %>
     </select>
 </div>
 

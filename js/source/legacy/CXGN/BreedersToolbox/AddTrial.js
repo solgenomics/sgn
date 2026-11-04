@@ -20,6 +20,27 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
+    // Optional locale assets must not prevent native metadata validation.
+    var creationI18n = (window.SGN && window.SGN.i18n) || {
+        p: function (context, source, variables) {
+            return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+                return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+            });
+        }
+    };
+
+    // Catalog strings are plain text; this helper covers HTML text and quoted attributes.
+    function escapeCreationHTML(value) {
+        return String(value).replace(/[&<>"']/g, function (character) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+        });
+    }
+
+    function creationDesignDescription(message) {
+        jQuery('#create_trial_design_description_div').empty().append(jQuery('<br>'))
+            .append(jQuery('<div class="well">').append(jQuery('<p>').text(message)));
+    }
+
     var list = new CXGN.List();
 
     var design_json;
@@ -89,51 +110,51 @@ jQuery(document).ready(function ($) {
             include_plant_coordinates = 1;
 
             if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
-                alert("You need to specify the number of rows and columns to give plant coordinates within plots.");
+                alert(creationI18n.p("trial.create.validation.plant_coordinates_required", "You need to specify the number of rows and columns to give plant coordinates within plots."));
                 return;
             }
             if (num_rows * num_cols < plants_per_plot) {
-                alert("Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.");
+                alert(creationI18n.p("trial.create.validation.plant_positions_exceeded", "Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns."));
                 return;
             }
         }
         inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
         if (trial_name === '') {
-            alert("Please supply a trial name");
+            alert(creationI18n.p("trial.create.validation.name_required", "Please supply a trial name"));
         }
         else if (breeding_program === '') {
-            alert("Please select a breeding program");
+            alert(creationI18n.p("trial.create.validation.program_required", "Please select a breeding program"));
         }
         else if (location === '') {
-            alert("Please select at least one location");
+            alert(creationI18n.p("trial.create.validation.location_required", "Please select at least one location"));
         }
         else if (trial_year === '') {
-            alert("Please select a trial year");
+            alert(creationI18n.p("trial.create.validation.year_required", "Please select a trial year"));
         }
         else if (plot_width < 0 ){
-            alert("Please check the plot width");
+            alert(creationI18n.p("trial.create.validation.width_negative", "Please check the plot width"));
         }
         else if (plot_width > 13){
-            alert("Please check the plot width is too high");
+            alert(creationI18n.p("trial.create.validation.width_exceeded", "Please check the plot width is too high"));
         }
         else if (plot_length < 0){
-            alert("Please check the plot length");
+            alert(creationI18n.p("trial.create.validation.length_negative", "Please check the plot length"));
         }
         else if (plot_length > 13){
-            alert("Please check the plot length is too high");
+            alert(creationI18n.p("trial.create.validation.length_exceeded", "Please check the plot length is too high"));
         }
         else if (plants_per_plot > 500) {
-            alert("Please no more than 500 plants per plot.");
+            alert(creationI18n.p("trial.create.validation.plants_exceeded", "Please no more than 500 plants per plot."));
         }
         else if (description === '') {
-            alert("Please supply a description!");
+            alert(creationI18n.p("trial.create.validation.description_required", "Please supply a description!"));
         }
         else if (design_type === '') {
-            alert("Please select a design type");
+            alert(creationI18n.p("trial.create.validation.design_required", "Please select a design type"));
         }
         else if (stock_type === '') {
-            alert("Please select a stock type");
+            alert(creationI18n.p("trial.create.validation.stock_required", "Please select a stock type"));
         }
         else {
             verify_create_trial_name(trial_name);
@@ -142,7 +163,9 @@ jQuery(document).ready(function ($) {
 
     function verify_create_trial_name(trial_name){
         jQuery.ajax( {
-            url: '/ajax/trial/verify_trial_name?trial_name='+trial_name,
+            url: '/ajax/trial/verify_trial_name',
+            data: {trial_name: trial_name},
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -158,7 +181,7 @@ jQuery(document).ready(function ($) {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred checking trial name');
+                alert(creationI18n.p("trial.create.validation.name_network_error", "An error occurred checking trial name"));
             }
         });
     }
@@ -315,7 +338,7 @@ jQuery(document).ready(function ($) {
             if(stock_list && seedlot_list){
                 verify_seedlot_list(stock_list, seedlot_list, 'stock_list');
             } else {
-                alert('Please make sure to select an accession list above!');
+                alert(creationI18n.p("trial.create.design.validation.accession_list_required", "Please make sure to select an accession list above!"));
             }
             if(check_stock_list && seedlot_list){
                 verify_seedlot_list(check_stock_list, seedlot_list, 'check_stock_list');
@@ -345,7 +368,7 @@ jQuery(document).ready(function ($) {
 
     $(document).on('click', 'button[name="convert_accessions_to_seedlots"]', function(){
         if (!stock_list_id){
-            alert('Please first select a list of accessions above!');
+            alert(creationI18n.p("trial.create.design.validation.accession_list_first", "Please first select a list of accessions above!"));
         } else {
             var list = new CXGN.List();
             list.seedlotSearch(stock_list_id);
@@ -358,6 +381,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             timeout: 3000000,
             url: '/ajax/trial/verify_stock_list',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
@@ -378,7 +402,7 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred. sorry');
+                alert(creationI18n.p("trial.create.design.validation.list_network_error", "An error occurred. sorry"));
                 stock_list_verified = 0;
             }
         });
@@ -390,6 +414,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             timeout: 3000000,
             url: '/ajax/trial/verify_seedlot_list',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
@@ -426,7 +451,7 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred. sorry');
+                alert(creationI18n.p("trial.create.design.validation.list_network_error", "An error occurred. sorry"));
                 seedlot_list_verified = 0;
             }
         });
@@ -438,6 +463,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             timeout: 3000000,
             url: '/ajax/trial/verify_cross_list',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
@@ -458,7 +484,7 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred. sorry');
+                alert(creationI18n.p("trial.create.design.validation.list_network_error", "An error occurred. sorry"));
                 cross_list_verified = 0;
             }
         });
@@ -470,6 +496,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             timeout: 3000000,
             url: '/ajax/trial/verify_family_name_list',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
@@ -490,7 +517,7 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred. sorry');
+                alert(creationI18n.p("trial.create.design.validation.list_network_error", "An error occurred. sorry"));
                 family_name_list_verified = 0;
             }
         });
@@ -511,9 +538,9 @@ jQuery(document).ready(function ($) {
         var html = '';
         for (var i=0; i<new_count; i++){
             var display_count = i + 5;
-            html = html + '<div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Treatment '+display_count+ ': </label><div class="col-sm-5" ><input class="form-control  treatment-name-input-box" id="create_trial_with_treatment_name_input'+display_count+'" name="create_trial_with_treatment_name_input'+display_count+'" type="text" placeholder="Optional Treatment '+display_count+'"/><input class="form-control treatment-value-input-box" id="create_trial_with_treatment_value_input'+display_count+'" name="create_trial_with_treatment_value_input'+display_count+'" type="text" placeholder="treatment value"/></div></div>';
+            html = html + '<div class="form-group form-group-sm" ><label class="col-sm-7 control-label">' + escapeCreationHTML(creationI18n.p("trial.create.treatment.numbered_label", "Treatment %{number}: ", {number: display_count})) + '</label><div class="col-sm-5" ><input class="form-control  treatment-name-input-box" id="create_trial_with_treatment_name_input'+display_count+'" name="create_trial_with_treatment_name_input'+display_count+'" type="text" placeholder="' + escapeCreationHTML(creationI18n.p("trial.create.treatment.numbered_placeholder", "Optional Treatment %{number}", {number: display_count})) + '"/><input class="form-control treatment-value-input-box" id="create_trial_with_treatment_value_input'+display_count+'" name="create_trial_with_treatment_value_input'+display_count+'" type="text" placeholder="' + escapeCreationHTML(creationI18n.p("trial.create.treatment.value_placeholder", "treatment value")) + '"/></div></div>';
         }
-        html = html + '<input type="hidden" id="create_trial_with_treatment_additional_count" value='+return_count+'><div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Add Another Treatment: </label><div class="col-sm-5" ><button class="btn btn-info btn-sm" id="create_trial_with_treatment_additional_treatment_buton">+ Treatment</button></div></div>';
+        html = html + '<input type="hidden" id="create_trial_with_treatment_additional_count" value='+return_count+'><div class="form-group form-group-sm" ><label class="col-sm-7 control-label">' + escapeCreationHTML(creationI18n.p("trial.create.treatment.add_another", "Add Another Treatment: ")) + '</label><div class="col-sm-5" ><button class="btn btn-info btn-sm" id="create_trial_with_treatment_additional_treatment_buton">' + escapeCreationHTML(creationI18n.p("trial.create.treatment.add_button", "+ Treatment")) + '</button></div></div>';
         jQuery('#create_trial_with_treatment_additional_treatment').html(html);
         apply_treatment_autocomplete();
         return false;
@@ -633,7 +660,7 @@ jQuery(document).ready(function ($) {
         seedlot_hash_combined = extend_obj(seedlot_hash_combined, rep_list_seedlot_hash);
         if (!jQuery.isEmptyObject(seedlot_hash_combined)){
             if (num_seed_per_plot == ''){
-                alert('Number of seeds per plot is required if you have selected a seedlot list!');
+                alert(creationI18n.p("trial.create.design.validation.seed_count_required", "Number of seeds per plot is required if you have selected a seedlot list!"));
                 return;
             }
         }
@@ -678,7 +705,7 @@ jQuery(document).ready(function ($) {
             if (num_plants_per_treatment){
                 num_plants_per_plot = num_plants_per_treatment*num_subplots_per_plot;
             } else {
-                alert("You must supply the number of plants per treatment.");
+                alert(creationI18n.p("trial.create.design.validation.plants_per_treatment_required", "You must supply the number of plants per treatment."));
                 return;
             }
         }
@@ -702,7 +729,7 @@ jQuery(document).ready(function ($) {
             num_rows_per_plot * num_cols_per_plot < Math.max(...greenhouse_num_plants.map(Number)) ||
             num_rows_per_plot * num_cols_per_plot < num_plants_per_treatment
         )) {
-            alert("You specified in-plot coordinates, but the number of plants per plot is greater than the number of positions available in each plot. Please decrease the number of plants per plot or increase the number of available positions. If this is a greenhouse trial, make sure no accession is specified to have more plants than the number of allowed spaces. If this is a splitplot design, please make sure that the number of plants per plot specified in section (2) matches the number of plants per treatment.");
+            alert(creationI18n.p("trial.create.design.validation.plant_positions_invalid", "You specified in-plot coordinates, but the number of plants per plot is greater than the number of positions available in each plot. Please decrease the number of plants per plot or increase the number of available positions. If this is a greenhouse trial, make sure no accession is specified to have more plants than the number of allowed spaces. If this is a splitplot design, please make sure that the number of plants per plot specified in section (2) matches the number of plants per treatment."));
             return;
         }
 
@@ -733,6 +760,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             timeout: 3000000,
             url: '/ajax/trial/generate_experimental_design',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             dataType: "json",
             beforeSend: function() {
                 $('#working_modal').modal("show");
@@ -797,7 +825,9 @@ jQuery(document).ready(function ($) {
                     Workflow.focus("#trial_design_workflow", 6); //Go to review page
 
                     if(response.warning_message){
-                        jQuery('#trial_design_warning_message').html("<center><div class='well'><h4 class='text-warning'>Warning: "+response.warning_message+"</h4></div></center>");
+                        jQuery('#trial_design_warning_message').empty().append(jQuery('<center>').append(
+                            jQuery('<div class="well">').append(jQuery('<h4 class="text-warning">').text(
+                                creationI18n.p("trial.create.design.warning", "Warning: %{warning}", {warning: response.warning_message})))));
                     } else {
                         jQuery('#trial_design_warning_message').html('');
                     }
@@ -989,7 +1019,7 @@ jQuery(document).ready(function ($) {
 
                       heatmapChart(datasets);
                       if (false_coord){
-                          alert("Row and column numbers were generated on the fly for displaying the physical layout or map. The plots are displayed in zigzag format. These row and column numbers will not be saved in the database. Click 'ok' to continue...");
+                          alert(creationI18n.p("trial.create.design.validation.generated_map_coordinates", "Row and column numbers were generated on the fly for displaying the physical layout or map. The plots are displayed in zigzag format. These row and column numbers will not be saved in the database. Click 'ok' to continue..."));
                       }
                   }else {
                       jQuery("#d3_legend").css("display", "none");
@@ -1001,7 +1031,7 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 $('#working_modal').modal("hide");
-                alert('An error occurred. sorry.');
+                alert(creationI18n.p("trial.create.design.validation.design_network_error", "An error occurred. sorry."));
             }
        });
     }
@@ -1015,15 +1045,15 @@ jQuery(document).ready(function ($) {
         var planting_date = $('#add_project_planting_date').val();
         var desc = $('textarea#add_project_description').val();
         if (name == '') {
-            alert('Trial name required');
+            alert(creationI18n.p("trial.create.design.validation.trial_name_required", "Trial name required"));
             return;
         }
         if (year === '' || desc === '') {
-            alert('Year and description are required.');
+            alert(creationI18n.p("trial.create.design.validation.year_description_required", "Year and description are required."));
             return;
         }
         if(desc === '') {
-            alert('Description is required.');
+            alert(creationI18n.p("trial.create.design.validation.description_required", "Description is required."));
             return;
         }
         if (stock_list_verified == 1 && seedlot_list_verified == 1){
@@ -1033,7 +1063,7 @@ jQuery(document).ready(function ($) {
         } else if (family_name_list_verified == 1 && cross_list_verified == 0 && stock_list_verified == 0){
             generate_experimental_design();
         } else {
-            alert('Accession list, seedlot list, cross list or family name list is not valid!');
+            alert(creationI18n.p("trial.create.design.validation.invalid_stock_lists", "Accession list, seedlot list, cross list or family name list is not valid!"));
             return;
         }
     });
@@ -1044,24 +1074,24 @@ jQuery(document).ready(function ($) {
 
         //add lists to the list select and list of checks select dropdowns based on stock type.
         if (stock_type == "accession"){
-            document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], 'select a list', 'refresh', undefined);
-            document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh', undefined);
-            document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
-            document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
-            document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
-            document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
+            document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], creationI18n.p("trial.create.list.choose", "select a list"), 'refresh', undefined);
+            document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], creationI18n.p("trial.create.list.none", "none"), 'refresh', undefined);
+            document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], creationI18n.p("trial.create.list.optional_checks", "select optional check list"), 'refresh', undefined);
+            document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], creationI18n.p("trial.create.list.optional_checks", "select optional check list"), 'refresh', undefined);
+            document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], creationI18n.p("trial.create.list.required_unreplicated", "Required: e.g. 200"), 'refresh', undefined);
+            document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], creationI18n.p("trial.create.list.required_replicated", "Required: e.g. 119"), 'refresh', undefined);
         } else if (stock_type == "cross") {
-            document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], 'select a list', 'refresh', undefined);
-            document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
-            document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
-            document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
-            document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
+            document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], creationI18n.p("trial.create.list.choose", "select a list"), 'refresh', undefined);
+            document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], creationI18n.p("trial.create.list.optional_checks", "select optional check list"), 'refresh', undefined);
+            document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'accessions' ], creationI18n.p("trial.create.list.optional_checks", "select optional check list"), 'refresh', undefined);
+            document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], creationI18n.p("trial.create.list.required_unreplicated", "Required: e.g. 200"), 'refresh', undefined);
+            document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], creationI18n.p("trial.create.list.required_replicated", "Required: e.g. 119"), 'refresh', undefined);
         } else if (stock_type == "family_name") {
-            document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], 'select a list', 'refresh', undefined);
-            document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
-            document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
-            document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
-            document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
+            document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], creationI18n.p("trial.create.list.choose", "select a list"), 'refresh', undefined);
+            document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], creationI18n.p("trial.create.list.optional_checks", "select optional check list"), 'refresh', undefined);
+            document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'accessions' ], creationI18n.p("trial.create.list.optional_checks", "select optional check list"), 'refresh', undefined);
+            document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], creationI18n.p("trial.create.list.required_unreplicated", "Required: e.g. 200"), 'refresh', undefined);
+            document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], creationI18n.p("trial.create.list.required_replicated", "Required: e.g. 119"), 'refresh', undefined);
         }
 
     });
@@ -1072,31 +1102,31 @@ jQuery(document).ready(function ($) {
         var stock_type = jQuery('#select_stock_type').val();
         console.log("The method is: ", design_method);
         if (design_method == "CRD"){
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Completely Randomized design (CRD) with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.crd", "Generates a Completely Randomized design (CRD) with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database."));
         } else if (design_method == "RCBD") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Randomized Complete Block design (RCBD), using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.rcbd", "Generates a Randomized Complete Block design (RCBD), using the methods of random number generation in R. Creates plot entities in the database."));
         } else if (design_method == "RRC") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Resolvable Row-Column design (RRC), using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.rrc", "Generates a Resolvable Row-Column design (RRC), using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block."));
         } else if (design_method == "DRRC") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Doubly-Resolvable Row-Column design (DRRC), using the blocksdesign package in R. It creates complete blocks in columns and rows. The number of accessions must be divisible by the number of columns and rows.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.drrc", "Generates a Doubly-Resolvable Row-Column design (DRRC), using the blocksdesign package in R. It creates complete blocks in columns and rows. The number of accessions must be divisible by the number of columns and rows."));
         } else if (design_method == "URDD") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Un-Replicated Diagonal Design (URDD), using the FieldHub package in R. It is an Un-Replicateddesign with an option to create blocks. All checks are distributed in diagonals.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.urdd", "Generates an Un-Replicated Diagonal Design (URDD), using the FieldHub package in R. It is an Un-Replicateddesign with an option to create blocks. All checks are distributed in diagonals."));
         } else if (design_method == "Alpha") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Alpha design starting from design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.alpha", "Generates an Alpha design starting from design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database."));
         } else if (design_method == "Lattice") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates SIMPLE and TRIPLE lattice designs using the design.lattice function from the agricolae R package. Randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.lattice", "Generates SIMPLE and TRIPLE lattice designs using the design.lattice function from the agricolae R package. Randomizes treatments in K x K lattice. Creates plot entities in the database."));
         } else if (design_method == "Augmented") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Augmented design. Some treatments (checks) are replicated r times and other treatments (new) are replicated once. Creates plot entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.augmented", "Generates an Augmented design. Some treatments (checks) are replicated r times and other treatments (new) are replicated once. Creates plot entities in the database."));
         } else if (design_method == "MAD") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Adjustments are calculated using data from all checks. Creates plot entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.mad", "Adjustments are calculated using data from all checks. Creates plot entities in the database."));
         } else if (design_method == "greenhouse") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.greenhouse", "A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database."));
         } else if (design_method == "splitplot") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Split plot designs are useful for applying treatments to subplots of a plot. If you give two treatments with two levels each, there will be four subplots with the four treatment combinations distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.splitplot", "Split plot designs are useful for applying treatments to subplots of a plot. If you give two treatments with two levels each, there will be four subplots with the four treatment combinations distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database."));
         } else if (design_method == "p-rep") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Has some treatments that are unreplicated and relies on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.p_rep", "Has some treatments that are unreplicated and relies on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database."));
         } else if (design_method == "Westcott") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a fieldplan for an unreplicated design with genotypes randomly allocated within a field with checks following the method described by Westcott (1981).</p></div>');
+            creationDesignDescription(creationI18n.p("trial.create.design.description.westcott", "Generates a fieldplan for an unreplicated design with genotypes randomly allocated within a field with checks following the method described by Westcott (1981)."));
         } else {
             jQuery('#create_trial_design_description_div').html('');
         }
@@ -2184,7 +2214,7 @@ jQuery(document).ready(function ($) {
         }
 
         else {
-            alert("Unsupported design method");
+            alert(creationI18n.p("trial.create.design.validation.unsupported_design", "Unsupported design method"));
         }
     });
 
@@ -2238,7 +2268,7 @@ jQuery(document).ready(function ($) {
         e.preventDefault();
         var breeding_program_id = jQuery('#select_breeding_program').val();
         if (!breeding_program_id) {
-            alert("Please select a breeding program first");
+            alert(creationI18n.p("trial.create.design.validation.program_first", "Please select a breeding program first"));
             return;
         }
         jQuery('#autogenerated_name_metadata_program').val(breeding_program_id);
@@ -2250,13 +2280,14 @@ jQuery(document).ready(function ($) {
     function load_plot_name_templates() {
         var breeding_program_id = jQuery('#select_breeding_program').val();
         if (!breeding_program_id) {
-            jQuery('#plot_template_radios').html('<p><em>Please select a breeding program first.</em></p>');
+            jQuery('#plot_template_radios').empty().append(jQuery('<p>').append(jQuery('<em>').text(creationI18n.p("trial.create.plot_template.program_required", "Please select a breeding program first."))));
             return;
         }
-        jQuery('#plot_template_radios').html('<p><em>Loading available templates...</em></p>');
+        jQuery('#plot_template_radios').empty().append(jQuery('<p>').append(jQuery('<em>').text(creationI18n.p("trial.create.plot_template.loading", "Loading available templates..."))));
         var templates = {};
         jQuery.ajax({
             url: '/ajax/breeders/program/' + breeding_program_id + '/autogenerated_name_metadata',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             type: 'GET',
             success: function(response) {
                 var $container = jQuery('#plot_template_radios').empty();
@@ -2295,15 +2326,15 @@ jQuery(document).ready(function ($) {
                         $container.append($radio);
                     });
                     if (!has_plot_templates) {
-                        $container.html('<p><em>No plot name templates available for this breeding program.</em></p>');
+                        $container.empty().append(jQuery('<p>').append(jQuery('<em>').text(creationI18n.p("trial.create.plot_template.empty", "No plot name templates available for this breeding program."))));
                     }
                 } else {
-                    $container.html('<p><em>No plot name templates available for this breeding program.</em></p>');
+                    $container.empty().append(jQuery('<p>').append(jQuery('<em>').text(creationI18n.p("trial.create.plot_template.empty", "No plot name templates available for this breeding program."))));
                 }
                 jQuery('#plot_template_radios').data('templates', templates);
             },
             error: function() {
-                jQuery('#plot_template_radios').html('<p class="text-danger">Error loading templates.</p>');
+                jQuery('#plot_template_radios').empty().append(jQuery('<p class="text-danger">').text(creationI18n.p("trial.create.plot_template.error", "Error loading templates.")));
             }
         });
     }
@@ -2322,6 +2353,7 @@ jQuery(document).ready(function ($) {
         if (plants_per_plot && plants_per_plot != 0) {
             jQuery.ajax( {
                 url: '/ajax/breeders/trial/'+trial_id+'/create_plant_entries/',
+                headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
                 type: 'POST',
                 data: {
                   'plants_per_plot' : plants_per_plot,
@@ -2340,7 +2372,7 @@ jQuery(document).ready(function ($) {
                   }
                 },
                 error: function(response) {
-                  alert(response);
+                  alert(creationI18n.p("trial.create.plants.network_error", "An error occurred creating plant entries."));
                 },
               });
         }
@@ -2442,6 +2474,7 @@ jQuery(document).ready(function ($) {
            type: 'POST',
            timeout: 3000000,
            url: '/ajax/trial/save_experimental_design',
+           headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
            dataType: "json",
            beforeSend: function() {
                jQuery('#working_modal').modal("show");
@@ -2505,7 +2538,7 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 jQuery('#working_modal').modal("hide");
-                alert('An error occurred saving the trial.');
+                alert(creationI18n.p("trial.create.design.validation.save_network_error", "An error occurred saving the trial."));
             }
         });
     }
@@ -2528,13 +2561,13 @@ jQuery(document).ready(function ($) {
     function open_project_dialog() {
         $('#add_project_dialog').modal("show");
 
-        //add a blank line to location select dropdown that dissappears when dropdown is opened
+        //add a blank line to location select dropdown that disappears when dropdown is opened
         $("#add_project_location").prepend("<option value=''></option>").val('');
         $("#add_project_location").one('mousedown', function () {
             $("option:first", this).remove();
         });
 
-        //add a blank line to list select dropdown that dissappears when dropdown is opened
+        //add a blank line to list select dropdown that disappears when dropdown is opened
         $("#select_list_list_select").prepend("<option value=''></option>").val('');
         $("#select_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
@@ -2550,14 +2583,14 @@ jQuery(document).ready(function ($) {
             $("option:first", this).remove();
         });
 
-        //add a blank line to list select dropdown that dissappears when dropdown is opened
+        //add a blank line to list select dropdown that disappears when dropdown is opened
         $("#select_seedlot_list_list_select").prepend("<option value=''></option>").val('');
         $("#select_seedlot_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
         });
 
 
-        //add a blank line to list of checks select dropdown that dissappears when dropdown is opened
+        //add a blank line to list of checks select dropdown that disappears when dropdown is opened
         $("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
         $("#list_of_checks_section_list_select").one('mousedown', function () {
             $("option:first", this).remove();
@@ -2588,7 +2621,7 @@ jQuery(document).ready(function ($) {
             $("option:first", this).remove();
         });
 
-        //add a blank line to design method select dropdown that dissappears when dropdown is opened
+        //add a blank line to design method select dropdown that disappears when dropdown is opened
         $("#select_design_method").prepend("<option value=''></option>").val('');
         $("#select_design_method").one('mousedown', function () {
             $("option:first", this).remove();
@@ -2630,7 +2663,7 @@ jQuery(document).ready(function ($) {
         var html = "";
         var design_array = JSON.parse(design_json);
         for (var i=0; i<design_array.length; i++){
-            html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
+            html += "<table class='table table-hover'><thead><tr><th>" + escapeCreationHTML(creationI18n.p("trial.create.review.plot_name", "Plot name")) + "</th><th>" + escapeCreationHTML(creationI18n.p("trial.create.review.accession", "Accession")) + "</th><th>" + escapeCreationHTML(creationI18n.p("trial.create.review.plot_number", "Plot number")) + "</th><th>" + escapeCreationHTML(creationI18n.p("trial.create.review.block_number", "Block number")) + "</th><th>" + escapeCreationHTML(creationI18n.p("trial.create.review.rep_number", "Replicate number")) + "</th><th>" + escapeCreationHTML(creationI18n.p("trial.create.review.is_a_control", "Is a control")) + "</th><th>" + escapeCreationHTML(creationI18n.p("trial.create.review.row_number", "Row number")) + "</th><th>" + escapeCreationHTML(creationI18n.p("trial.create.review.col_number", "Column number")) + "</th><th class='table-success'>"+escapeCreationHTML(treatment_name)+" [" + escapeCreationHTML(creationI18n.p("trial.create.review.select_all", "Select all")) + " <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
             var design_hash = JSON.parse(design_array[i]);
             //console.log(design_hash);
             var keys = Object.keys(design_hash);
@@ -2639,7 +2672,7 @@ jQuery(document).ready(function ($) {
                 if (key != 'treatments'){
                     var plot_obj = design_hash[key];
                     //console.log(plot_obj);
-                    html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"'  data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' data-subplot_names='"+JSON.stringify(plot_obj.subplots_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
+                    html += "<tr><td>"+escapeCreationHTML(plot_obj.plot_name)+"</td><td>"+escapeCreationHTML(plot_obj.stock_name)+"</td><td>"+escapeCreationHTML(plot_obj.plot_number)+"</td><td>"+escapeCreationHTML(plot_obj.block_number)+"</td><td>"+escapeCreationHTML(plot_obj.rep_number)+"</td><td>"+escapeCreationHTML(plot_obj.is_a_control)+"</td><td>"+escapeCreationHTML(plot_obj.row_number)+"</td><td>"+escapeCreationHTML(plot_obj.col_number)+"</td><td><input data-plot_name='"+escapeCreationHTML(plot_obj.plot_name)+"' data-trial_index='"+i+"' data-trial_treatment='"+escapeCreationHTML(treatment_name)+"'  data-plant_names='"+escapeCreationHTML(JSON.stringify(plot_obj.plant_names))+"' data-subplot_names='"+escapeCreationHTML(JSON.stringify(plot_obj.subplots_names))+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
                 }
             });
             html += "</tbody></table>";
@@ -2744,9 +2777,8 @@ jQuery(document).ready(function ($) {
             var treatments = design_hash['treatments'];
             //html += "Trial "+i+"<br/>";
             for (var key in treatments){
-                html += "Treatment: <b>"+key+"</b> Plots: ";
                 var plot_array = treatments[key]['new_treatment_stocks'];
-                html += plot_array.join(', ') + "<br/>";
+                html += escapeCreationHTML(creationI18n.p("trial.create.review.treatment_summary", "Treatment: %{treatment}. Plots: %{plots}", {treatment: key, plots: plot_array.join(", ")})) + "<br/>";
             }
         }
         jQuery('#trial_design_confirm_treatments').html(html);

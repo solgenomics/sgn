@@ -1,11 +1,15 @@
 
 package CXGN::Trial::TrialDesign::Plugin::Westcott;
 
+use CXGN::Trial::TrialDesign::ROutput qw(read_rbase_utf8);
+
 use Moose::Role;
+use SGN::I18N ();
 use List::Util qw | max |;
 
 sub create_design {
     my $self = shift;
+    my SGN::I18N $design_i18n = $self->i18n;
     my %westcott_design;
     my $rbase = R::YapRI::Base->new();
     my @stock_list;
@@ -26,7 +30,7 @@ sub create_design {
     if ($self->has_stock_list()) {
       @stock_list = @{$self->get_stock_list()};
     } else {
-      die "No stock list specified\n";
+      die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
     }
     if ($self->has_control_list_crbd()) {
       @control_list = @{$self->get_control_list_crbd()};
@@ -70,7 +74,7 @@ sub create_design {
     $r_block->add_command('westcott<-westcott$book');
     $r_block->add_command('westcott<-as.matrix(westcott)');
     $r_block->run_block();
-    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','westcott');
+    $result_matrix = read_rbase_utf8( $rbase,'r_block','westcott');
     my @colnames = @{$result_matrix->get_colnames() || []};
     my $plot_col = (grep { $_ eq 'plot.num' } @colnames) ? 'plot.num' : 'plot';
     @plot_numbers = $result_matrix->get_column($plot_col);

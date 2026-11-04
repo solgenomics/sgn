@@ -15,6 +15,7 @@ Uploading Genotype VCF
 package SGN::Controller::AJAX::GenotypesVCFUpload;
 
 use Moose;
+use SGN::I18N ();
 use Try::Tiny;
 use DateTime;
 use File::Slurp;
@@ -45,6 +46,7 @@ __PACKAGE__->config(
 sub upload_genotype_verify :  Path('/ajax/genotype/upload') : ActionClass('REST') { }
 sub upload_genotype_verify_POST : Args(0) {
     my ($self, $c) = @_;
+    my $i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -62,7 +64,7 @@ sub upload_genotype_verify_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "genotype.file.you_must_be_logged_in_to_upload_this_vcf_genotype_info", "You must be logged in to upload this VCF genotype info!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -71,7 +73,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "genotype.file.you_must_be_logged_in_to_upload_this_vcf_genotype_info", "You must be logged in to upload this VCF genotype info!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -80,7 +82,7 @@ sub upload_genotype_verify_POST : Args(0) {
     }
 
     if ($user_role ne 'submitter' && $user_role ne 'curator') {
-        $c->stash->{rest} = { error => 'Must have correct permissions to upload VCF genotypes! Please contact us.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.must_have_correct_permissions_to_upload_vcf_genotypes_please_contact_us", "Must have correct permissions to upload VCF genotypes! Please contact us.") };
         $c->detach();
     }
     my $is_curator = $user_role eq 'curator' ? 1 : 0;
@@ -138,12 +140,12 @@ sub upload_genotype_verify_POST : Args(0) {
         my $associated_protocol  = $protocol_info->get_associated_protocol();
         my @info;
         if ((defined $associated_protocol) && (scalar(@$associated_protocol)>1)) {
-            $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.each_genotyping_project_should_be_associated_with_only_one_protocol", "Each genotyping project should be associated with only one protocol") };
             $c->detach();
         } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
             my $stored_protocol_id = $associated_protocol->[0]->[0];
             if ($stored_protocol_id != $protocol_id) {
-                $c->stash->{rest} = { error => "The selected genotyping project is already associated with different protocol. Each project should be associated with only one protocol" };
+                $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.the_selected_genotyping_project_is_already_associated_with_different_protocol_each_project", "The selected genotyping project is already associated with different protocol. Each project should be associated with only one protocol") };
                 $c->detach();
             }
         }
@@ -154,7 +156,7 @@ sub upload_genotype_verify_POST : Args(0) {
         });
         my $associated_protocol  = $protocol_info->get_associated_protocol();
         if ((defined $associated_protocol) && (scalar(@$associated_protocol) > 0)) {
-            $c->stash->{rest} = { error => "The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol" };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.the_selected_genotyping_project_is_already_associated_with_a_protocol_each_project", "The selected genotyping project is already associated with a protocol. Each project should be associated with only one protocol") };
             $c->detach();
         }
     }
@@ -175,19 +177,19 @@ sub upload_genotype_verify_POST : Args(0) {
     }
 
     if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
-        $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.do_not_try_to_upload_both_vcf_and_intertek_at_the_same", "Do not try to upload both VCF and Intertek at the same time!") };
         $c->detach();
     }
     if (defined($upload_vcf) && defined($upload_tassel_hdf5)) {
-        $c->stash->{rest} = { error => 'Do not try to upload both VCF and Tassel HDF5 at the same time!' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.do_not_try_to_upload_both_vcf_and_tassel_hdf5_at_the", "Do not try to upload both VCF and Tassel HDF5 at the same time!") };
         $c->detach();
     }
     if (defined($upload_intertek_genotypes) && defined($upload_tassel_hdf5)) {
-        $c->stash->{rest} = { error => 'Do not try to upload both Intertek and Tassel HDF5 at the same time!' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.do_not_try_to_upload_both_intertek_and_tassel_hdf5_at_the", "Do not try to upload both Intertek and Tassel HDF5 at the same time!") };
         $c->detach();
     }
     if ((defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) || (!defined($upload_intertek_genotypes) && defined($upload_inteterk_marker_info))) {
-        $c->stash->{rest} = { error => 'To upload Intertek genotype data please provide both the Grid Genotypes File and the Marker Info File.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.to_upload_intertek_genotype_data_please_provide_both_the_grid_genotypes_file", "To upload Intertek genotype data please provide both the Grid Genotypes File and the Marker Info File.") };
         $c->detach();
     }
 
@@ -221,7 +223,7 @@ sub upload_genotype_verify_POST : Args(0) {
             });
             my $archived_original_vcf = $original_uploader->archive();
             if (!$archived_original_vcf) {
-                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")}) };
                 $c->detach();
             }
 
@@ -288,7 +290,7 @@ sub upload_genotype_verify_POST : Args(0) {
         my $archived_tassel_hdf5_file = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_tassel_hdf5_file);
         if (!$archived_tassel_hdf5_file) {
-            $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")}) };
             $c->detach();
         }
         unlink $upload_tempfile;
@@ -363,10 +365,10 @@ sub upload_genotype_verify_POST : Args(0) {
         $archived_marker_info_file = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_marker_info_file);
         if (!$archived_marker_info_file) {
-            push @error_status, "Could not save file $upload_inteterk_marker_info_original_name in archive.";
+            push @error_status, SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_inteterk_marker_info_original_name_in_archive", "Could not save file %{upload_inteterk_marker_info_original_name} in archive.", {upload_inteterk_marker_info_original_name => ("" . "$upload_inteterk_marker_info_original_name")});
             return (\@success_status, \@error_status);
         } else {
-            push @success_status, "File $upload_inteterk_marker_info_original_name saved in archive.";
+            push @success_status, SGN::I18N::translate($i18n, "genotype.file.file_upload_inteterk_marker_info_original_name_saved_in_archive", "File %{upload_inteterk_marker_info_original_name} saved in archive.", {upload_inteterk_marker_info_original_name => ("" . "$upload_inteterk_marker_info_original_name")});
         }
         unlink $upload_inteterk_marker_info_tempfile;
     }
@@ -399,10 +401,10 @@ sub upload_genotype_verify_POST : Args(0) {
         $archived_marker_info_file = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_marker_info_file);
         if (!$archived_marker_info_file) {
-            push @error_status, "Could not save file $upload_kasp_marker_info_original_name in archive.";
+            push @error_status, SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_kasp_marker_info_original_name_in_archive", "Could not save file %{upload_kasp_marker_info_original_name} in archive.", {upload_kasp_marker_info_original_name => ("" . "$upload_kasp_marker_info_original_name")});
             return (\@success_status, \@error_status);
         } else {
-            push @success_status, "File $upload_kasp_marker_info_original_name saved in archive.";
+            push @success_status, SGN::I18N::translate($i18n, "genotype.file.file_upload_kasp_marker_info_original_name_saved_in_archive", "File %{upload_kasp_marker_info_original_name} saved in archive.", {upload_kasp_marker_info_original_name => ("" . "$upload_kasp_marker_info_original_name")});
         }
         unlink $upload_kasp_marker_info_tempfile;
     }
@@ -421,10 +423,10 @@ sub upload_genotype_verify_POST : Args(0) {
       $archived_filename_with_path = $uploader->archive();
       my $md5 = $uploader->get_md5($archived_filename_with_path);
       if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
+        push @error_status, SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")});
         return (\@success_status, \@error_status);
       } else {
-        push @success_status, "File $upload_original_name saved in archive.";
+        push @success_status, SGN::I18N::translate($i18n, "genotype.file.file_upload_original_name_saved_in_archive", "File %{upload_original_name} saved in archive.", {upload_original_name => ("" . "$upload_original_name")});
       }
     }
     unlink $upload_tempfile;
@@ -452,11 +454,11 @@ sub upload_genotype_verify_POST : Args(0) {
             push @found_organisms, $organism_id;
         }
         if (scalar(@found_organisms) == 0){
-            $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.the_organism_species_you_provided_is_not_in_the_database_please_contact", "The organism species you provided is not in the database! Please contact us.") };
             $c->detach();
         }
         if (scalar(@found_organisms) > 1){
-            $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.the_organism_species_you_provided_is_not_unique_in_the_database_please", "The organism species you provided is not unique in the database! Please contact us.") };
             $c->detach();
         }
         $organism_id = $found_organisms[0];
@@ -467,6 +469,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $parser;
     if ($upload_original_name) {
       $parser = CXGN::Genotype::ParseUpload->new({
+          i18n => $i18n,
         chado_schema => $schema,
         filename => $archived_filename_with_path,
         filename_marker_info => $archived_marker_info_file,
@@ -558,7 +561,7 @@ sub upload_genotype_verify_POST : Args(0) {
             $store_args->{protocol_info} = $protocol;
             $store_args->{genotype_info} = $genotype_info;
 
-            $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+            $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({%$store_args, i18n => $c->i18n});
             my $verified_errors = $store_genotypes->validate();
 
             if (scalar(@{$verified_errors->{error_messages}}) > 0){
@@ -566,7 +569,7 @@ sub upload_genotype_verify_POST : Args(0) {
                 foreach my $error (@{$verified_errors->{error_messages}}) {
                     $error_string .= $error."<br>";
                 }
-                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
+                $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.there_exist_errors_in_your_file_error_string", "There exist errors in your file. %{error_string}", {error_string => ("" . "$error_string")}), missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
                 $c->detach();
             }
 
@@ -639,7 +642,7 @@ sub upload_genotype_verify_POST : Args(0) {
 			    print STDERR "Adding new markers\n";
 			    $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
 			} else {
-			    $c->stash->{rest} = { error => "Too many new markers"};
+			    $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.too_many_new_markers", "Too many new markers")};
                             $c->detach();
 		        }
 		    } else {
@@ -647,7 +650,7 @@ sub upload_genotype_verify_POST : Args(0) {
                         foreach my $error ( sort @mismatch_marker_names) {
                             $marker_name_error .= $error."<br>";
                         }
-			$c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error", missing_markers => \@mismatch_marker_names };
+			$c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.these_marker_names_in_your_file_are_not_in_the_selected_protocol", "These marker names in your file are not in the selected protocol. %{marker_name_error}", {marker_name_error => ("" . "$marker_name_error")}), missing_markers => \@mismatch_marker_names };
                         $c->detach();
                     }
                 }
@@ -731,7 +734,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $store_args->{genotype_info} = $genotype_info;
         $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
 
-        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({%$store_args, i18n => $c->i18n});
         my $verified_errors = $store_genotypes->validate();
 
         if (scalar(@{$verified_errors->{error_messages}}) > 0){
@@ -739,7 +742,7 @@ sub upload_genotype_verify_POST : Args(0) {
             foreach my $error (@{$verified_errors->{error_messages}}) {
                 $error_string .= $error."<br>";
             }
-            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.there_exist_errors_in_your_file_error_string", "There exist errors in your file. %{error_string}", {error_string => ("" . "$error_string")}), missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
             $c->detach();
         }
 
@@ -812,7 +815,7 @@ sub upload_genotype_verify_POST : Args(0) {
                         $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
                     } else {
 			print STDERR "Too many new markers, should be less than 20\n";
-		        $c->stash->{rest} = { error => "Too many new markers, should be less than 20"};
+		        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.too_many_new_markers_should_be_less_than_20", "Too many new markers, should be less than 20")};
                         $c->detach();
                     }
 		} else {
@@ -820,7 +823,7 @@ sub upload_genotype_verify_POST : Args(0) {
                     foreach my $error ( sort @mismatch_marker_names) {
                         $marker_name_error .= $error."<br>";
                     }
-		    $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
+		    $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.these_marker_names_in_your_file_are_not_in_the_selected_protocol", "These marker names in your file are not in the selected protocol. %{marker_name_error}", {marker_name_error => ("" . "$marker_name_error")})};
                     $c->detach();
                 }
             }
@@ -896,7 +899,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $store_args->{observation_unit_type_name} = 'accession';
         $store_args->{genotyping_data_type} = 'ssr';
 
-        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({%$store_args, i18n => $c->i18n});
         my $verified_errors = $store_genotypes->validate();
 
         if (scalar(@{$verified_errors->{error_messages}}) > 0){
@@ -904,7 +907,7 @@ sub upload_genotype_verify_POST : Args(0) {
             foreach my $error (@{$verified_errors->{error_messages}}) {
                 $error_string .= $error."<br>";
             }
-            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.there_exist_errors_in_your_file_error_string", "There exist errors in your file. %{error_string}", {error_string => ("" . "$error_string")}), missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
             $c->detach();
         }
 

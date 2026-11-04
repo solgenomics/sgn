@@ -9,11 +9,14 @@ $traits_list
 
 </%args>
 <%perl>
-my $table;	
+my $table;
+my $trait_header = $c->i18n->p("solgs.interface.trait", "Trait");
+my $definition_header = $c->i18n->p("solgs.interface.definition", "Definition");
+
 
 if (@$traits_list) {
   $table  = qq | <table id="traits_starting_with_index_table" class="table table-condensed table-striped"> |;
-  $table .= qq | <thead><tr><td>Trait</td><td>Definition</td></tr></thead><tbody> |;
+  $table .= qq | <thead><tr><td>$trait_header</td><td>$definition_header</td></tr></thead><tbody> |;
 	
   foreach my $trait (@$traits_list) {
     $table .= qq | <tr> |;
@@ -26,18 +29,18 @@ if (@$traits_list) {
   $table .= qq | </table> |;
 
 } else {
-  $table = qq | <p>There are no traits starting with $index </p> |; 
+  $table = qq | <p>| . $c->i18n->p("solgs.interface.there_are_no_traits_starting_with_index", "There are no traits starting with %{index} ", {index => "" . ($index // "")}) . qq |</p> |;
 }
 
 </%perl>
 
 <div class="container">
   <& /page/page_title.mas, 
-     title=>'List of traits with GS data'
+     title=>HTML::Entities::encode_entities($c->i18n->p("solgs.interface.list_of_traits_with_gs_data", "List of traits with GS data"))
     &>
 
-    <&| /page/info_section.mas, 
-	title => qq |Traits beginning with "$index" |
+    <&| /page/info_section.mas, anchor_title => qq |Traits beginning with "$index" |,
+	title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.traits_beginning_with_index", "Traits beginning with \"%{index}\" ", {index => "" . ($index // "")}))
       &>
 
       <div id="traits_starting_with_index_div">
@@ -46,3 +49,7 @@ if (@$traits_list) {
 
  </&>
 </div>
+
+<%once>
+use HTML::Entities ();
+</%once>
