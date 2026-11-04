@@ -54,6 +54,9 @@ my $rdata = JSON::Any->decode($mech->content());
 
 print STDERR "RDATA: ".Dumper($rdata);
 
+ok(!$rdata->{error}, "numeric trait ID selects a declared phenotype column")
+    or diag($rdata->{error});
+
 ok($rdata->{h2Table}, "h2TableJson returned");
 ok($rdata->{h2CsvTable}, "h2CsvTable returned");
 

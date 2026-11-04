@@ -49,19 +49,38 @@ my $sgn_session_id = $response->{access_token};
 
 my $test_file = 't/data/multi_image_analysis_test.jpg';
 
-my $rs = $f->bcs_schema()->resultset('Stock::Stock')->search( undef, { columns => [ { stock_id => { max => "stock_id" }} ]} );
-my $row = $rs->next();
-my $stock_id = $row->stock_id();
+# Choose a parent by its declared field study and germplasm, not sequence state.
+my ($stock_id) = $schema->storage->dbh->selectrow_array(q{
+    SELECT DISTINCT s.stock_id FROM stock s
+    JOIN cvterm st ON st.cvterm_id=s.type_id
+    JOIN stock_relationship r ON r.subject_id=s.stock_id
+    JOIN cvterm rt ON rt.cvterm_id=r.type_id
+    JOIN nd_experiment_stock nes ON nes.stock_id=s.stock_id
+    JOIN nd_experiment ne USING(nd_experiment_id)
+    JOIN cvterm et ON et.cvterm_id=ne.type_id
+    JOIN nd_experiment_project nep USING(nd_experiment_id)
+    WHERE nep.project_id=165 AND r.object_id=41281
+      AND st.name='plot' AND rt.name='plot_of' AND et.name='field_layout'
+    ORDER BY s.stock_id LIMIT 1
+});
+ok($stock_id, 'fixture provides a plot in study 165 for germplasm 41281')
+    or BAIL_OUT('No matching fixture plot; do not infer a parent from a generated stock ID.');
 
 # Create test plant
 $data = '[{"germplasmDbId":"41281","locationDbId":"23","observationUnitName":"Testing Plant","programDbId":"134","studyDbId":"165","trialDbId":"165","observationUnitPosition":{"observationLevel":{"levelName":"plant","levelCode":"plant_1"},"observationLevelRelationships":[{"levelCode":"' . $stock_id. '","levelName":"plot"}],"positionCoordinateX":"74","positionCoordinateXType":"GRID_COL","positionCoordinateY":"03","positionCoordinateYType":"GRID_ROW"}, "additionalInfo" : {"observationUnitParent":"' . $stock_id. '"} }]';
-$mech->post('http://localhost:3010/brapi/v2/observationunits/', Content => $data);
+$mech->post('http://localhost:3010/brapi/v2/observationunits/',
+    'Content-Type' => 'application/json', 'Authorization' => "Bearer $sgn_session_id",
+    Content => $data);
+ok($mech->success, 'create the plant with its explicit field parent')
+    or diag($mech->content);
 my $plant_response = decode_json $mech->content;
 
-$rs = $f->bcs_schema()->resultset('Stock::Stock')->search( undef, { columns => [ { stock_id => { max => "stock_id" }} ]} );
-$row = $rs->next();
-
-my $plant_id = $row->stock_id();
+my $plant_unit = $plant_response->{result}{data}[0];
+my $plant_id = $plant_unit ? $plant_unit->{observationUnitDbId} : undef;
+ok($plant_id, 'created plant ID comes from the successful API response')
+    or BAIL_OUT('Plant creation failed; do not attach images to an unrelated stock.');
+is($plant_unit->{studyDbId}, '165', 'created plant remains in its declared field study');
+is($plant_unit->{germplasmDbId}, '41281', 'created plant retains its parent germplasm');
 
 $mech->get_ok("/image/add?type=stock&type_id=$plant_id");
 $mech->get_ok("/image/add?action=new&type=stock&type_id=$plant_id");
@@ -196,7 +215,6 @@ my $table_data = $group_result->{results}{table_data};
 # --- Tissue samples ---
 my @tissue_sample_ids;
 
-my $plant_unit   = $plant_response->{result}{data}[0];
 my $study_id     = $plant_unit->{studyDbId};
 my $germplasm_id = $plant_unit->{germplasmDbId};
 
@@ -211,7 +229,7 @@ foreach my $n (1, 2) {
         observationUnitPosition => {
             observationLevel => {
                 levelName  => 'tissue_sample',
-                levelCode  => "sample$n",
+                levelCode  => "$n",
                 levelOrder => 4,
             },
             observationLevelRelationships => [
@@ -223,12 +241,14 @@ foreach my $n (1, 2) {
         },
     }]);
 
-    $mech->post_ok(
+    # post_ok expects an options reference; raw named arguments are discarded.
+    $mech->post(
         'http://localhost:3010/brapi/v2/observationunits',
         'Content-Type'  => 'application/json',
         'Authorization' => "Bearer $sgn_session_id",
         Content         => $payload,
     );
+    ok($mech->success, "tissue sample $n JSON request succeeds") or diag($mech->content);
     my $resp = decode_json $mech->content;
     my $ts_id = $resp->{result}{data}[0]{observationUnitDbId};
     ok($ts_id, "tissue sample $n created") or diag(Dumper($resp->{metadata}));

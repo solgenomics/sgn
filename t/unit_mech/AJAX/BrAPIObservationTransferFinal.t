@@ -6,7 +6,9 @@ use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use JSON::XS;
 use SGN::Test::Fixture;
+use SGN::Test::OwnedTrialCleanup;
 use SGN::Model::Cvterm;
+use CXGN::Trial::TrialCreate;
 my $f=SGN::Test::Fixture->new;
 my $schema=$f->bcs_schema;
 my $base='http://localhost:3010';
@@ -15,7 +17,31 @@ $m->post_ok("$base/brapi/v1/token",[username=>'janedoe',password=>'secretpw',gra
 my $ua=LWP::UserAgent->new(timeout=>60);
 $ua->default_header('Content-Type'=>'application/json');
 $ua->default_header('Authorization'=>'Bearer '.decode_json($m->content)->{access_token});
-my %plot=map {$_=>$schema->resultset('Stock::Stock')->find({uniquename=>"test_trial2$_"})->stock_id} (1..15);
+
+my $tag = 'observation_transfer_'.$$.'_'.time();
+my $owned = SGN::Test::OwnedTrialCleanup->new(
+    schema => $schema, label => 'transfer',
+    trial_name => $tag.'_trial', stock_names => [map { $tag.'_plot'.$_ } 1..15],
+    %{SGN::Test::OwnedTrialCleanup->cutoffs($schema)},
+);
+
+# Own all units: successful uploads and rejected requests cannot contaminate
+# test_trial's original layout, measurements, or file history.
+my %design = map { $_ => {
+    stock_name => 'test_accession1', plot_name => $tag.'_plot'.$_,
+    plot_number => $_, block_number => 1, rep_number => 1,
+    row_number => 1, col_number => $_,
+} } 1..15;
+my $saved = CXGN::Trial::TrialCreate->new({
+    chado_schema => $schema, dbh => $f->dbh, owner_id => 41,
+    design => \%design, program => 'test', trial_year => '2026',
+    trial_description => 'Disposable observation transfer regression',
+    trial_location => 'test_location', trial_name => $tag.'_trial',
+    design_type => 'CRD', operator => 'janedoe',
+})->save_trial;
+ok($saved->{trial_id}, 'own observation transfer trial created') or BAIL_OUT(encode_json($saved));
+$owned->checkpoint('after_creation');
+my %plot = map { $_ => $schema->resultset('Stock::Stock')->find({uniquename=>$tag.'_plot'.$_})->stock_id } 1..15;
 my $trait=70666;
 sub count_values {my($id)=@_; return($schema->storage->dbh->selectrow_array('SELECT count(*) FROM nd_experiment_stock nes JOIN nd_experiment_phenotype nep USING(nd_experiment_id) JOIN phenotype p USING(phenotype_id) WHERE nes.stock_id=? AND p.cvalue_id=?',undef,$id,$trait))[0]}
 sub send_values {
@@ -45,6 +71,7 @@ for my $case(['v1',13],['v2',14]) {
   my $id=$plot{$n};my $before=count_values($id);
   my($r,$j)=send_values($version,[[$id,'15']]);
   ok($r->is_success,'valid upload accepted') or diag($r->decoded_content);
+  $owned->checkpoint('after_http_store');
   is(count_values($id),$before+1,'one value actually stored');
   ($operator{$version})=$schema->storage->dbh->selectrow_array('SELECT p.operator FROM nd_experiment_stock nes JOIN nd_experiment_phenotype nep USING(nd_experiment_id) JOIN phenotype p USING(phenotype_id) WHERE nes.stock_id=? AND p.cvalue_id=? ORDER BY p.phenotype_id DESC LIMIT 1',undef,$id,$trait);
   is($operator{$version},'janedoe','omitted collector falls back to username');
@@ -82,4 +109,6 @@ subtest 'A stored ID crosses versions without losing metadata or changing units'
  is($r->code,400,'v1 bulk request cannot repeat one persistent ID with different times');
  ($value)=$schema->storage->dbh->selectrow_array('SELECT value FROM phenotype WHERE phenotype_id=?',undef,$id);is($value,'16','duplicate-ID bulk error makes no partial change');
 };
+$owned->checkpoint('before_cleanup');
+ok($owned->cleanup, 'test-owned committed observation data removed');
 done_testing;
