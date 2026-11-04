@@ -102,7 +102,7 @@ sub add_synonym {
 sub synonyms_of {
     my $name = shift;
     my $cvterm = $f->bcs_schema->resultset('Cv::Cvterm')->find({ name => $name });
-    return undef if !$cvterm;
+    return if !$cvterm;
     return [ sort map { $_->synonym() } $cvterm->cvtermsynonyms()->all() ];
 }
 
