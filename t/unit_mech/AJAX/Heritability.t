@@ -149,6 +149,18 @@ subtest 'mixed study designs return no partial successful analysis' => sub {
     is_deeply($json, [], 'failed analysis JSON contains no partial successful traits');
 };
 
+# A homogeneous label alone cannot identify genotype and residual variance.
+my $unreplicated = own_dataset([141], [70666], undef);
+subtest 'unreplicated genotypes return no successful variance estimate' => sub {
+    my $response = request_json('generate_results', $unreplicated, '70666', undef);
+    like($response->{error}, qr/number of levels.*number of observations.*germplasmName/s,
+        'one observation per genotype is explicitly refused');
+    my ($table, $json) = output_table($response);
+    return if !$table;
+    is(scalar(@$table), 1, 'nonidentifiable analysis has header-only CSV');
+    is_deeply($json, [], 'nonidentifiable analysis has no successful JSON rows');
+};
+
 # Dataset 1 is read only: copy its outlier list into a newly owned Alpha subset.
 # Trial 139 is a single Alpha trial, year and location with recorded design
 # replicates, actual blocks, repeated genotypes, and real dataset outliers.
@@ -196,6 +208,12 @@ for my $case (
         return if !$table;
         is_deeply($table->[0], ['', 'trait', 'Hert', 'Vg', 'Ve', 'Vres'], 'existing CSV schema retained');
         is(scalar(@$table), 2, 'exactly the requested dataset trait is analyzed');
+        # Independent ordinary Alpha REML (lme4 and nlme): recorded replicate
+        # and physical block fixed, genotype random; preserve CSV precision.
+        my $expected = defined($case->[2]) && $case->[2] == 1
+            ? [1, $trait_name, 0.522, 6.69, 0, 6.127]
+            : [1, $trait_name, 0.384, 10.105, 0, 16.217];
+        is_deeply($table->[1], $expected, 'reported components match the independent replicated Alpha reference');
         is($table->[1][1], $trait_name, 'output retains the existing trait name');
         is($table->[1][4], 0, 'one-location Alpha has no added location variance');
         is(scalar(@$json), 1, 'JSON contains one successful trait');
