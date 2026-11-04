@@ -1366,12 +1366,11 @@ sub _store_units_legacy {
     };
     if ($error_resp) { return $error_resp; }
 
-    # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution
-    my @observationUnitNames;
-    foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; }
-    my $search_params = {observationUnitNames => \@observationUnitNames};
+    # The transactional wrapper resolves the requested identities and performs
+    # the final read after applying all metadata. An intermediate search would
+    # add a duplicate response status before that authoritative read.
     $self->page_size(scalar @{$data});
-    return $self->search($search_params, $c);
+    return {result => {}};
 }
 
 sub _order {

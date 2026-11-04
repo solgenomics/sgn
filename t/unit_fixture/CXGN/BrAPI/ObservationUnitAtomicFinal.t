@@ -166,6 +166,8 @@ my $all=eval {
   ok($parent,'the new parent identity comes from the API DTO');
   return if !$parent;
   is(scalar @{$created->{result}{data}},1,'the creation response returns only the requested plant');
+  my @constructed=grep {($_->{message}//'') eq 'Observation Units search result constructed'} @{$created->{status} || []};
+  is(scalar @constructed,1,'creation reports one final response read');
   is($created->{result}{data}[0]{observationUnitName},$plant_name,'the DTO returns the exact requested plant name');
   is($s->resultset('Stock::Stock')->find($parent)->type->name,'plant','the returned ID belongs to the created plant level');
   my $root_parents=$dbh->selectcol_arrayref(
