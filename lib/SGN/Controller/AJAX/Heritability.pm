@@ -11,6 +11,7 @@ use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
+use CXGN::Cvterm;
 use SGN::Model::Cvterm;
 use CXGN::Tools::Run;
 use CXGN::Job;
@@ -270,10 +271,14 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
 sub _resolve_trait_header {
     my ($schema, $traits, $headers, $selected) = @_;
     die "A selected trait is required.\n" if !defined($selected) || $selected eq '';
-    my %matches;
+    my (%matches, %seen);
     for my $trait (@$traits) {
-        my ($id, $name) = @$trait;
-        next if !defined($id);
+        my $id = $trait->[0];
+        next if !defined($id) || $seen{$id}++;
+        # Derived datasets return extended labels; the browser uses Cvterm::name.
+        # Resolve the canonical name just as shared_phenotypes does, rather than
+        # interpreting the dataset label or stripping a composed-name suffix.
+        my $name = CXGN::Cvterm->new({ schema => $schema, cvterm_id => $id })->name();
         if ($selected eq "$id" || (defined($name) && $selected eq $name)) {
             $matches{$id} = 1;
         }
