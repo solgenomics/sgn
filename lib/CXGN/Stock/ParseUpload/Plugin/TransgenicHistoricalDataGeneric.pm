@@ -54,7 +54,8 @@ sub _validate_with_plugin {
 
     my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_vector_constructs = $parsed_values->{'vector_construct'};
-    my $is_existing_accessions = $parsed_values->{'existing_accession'};
+    my $existing_accessions = $parsed_values->{'existing_accession'};
+    my $FEC_batches = $parsed_values->{'FEC_batch'};
 
     my $vector_construct_validator = CXGN::List::Validate->new();
     my @vector_constructs_missing = @{$vector_construct_validator->validate($schema,'vector_constructs', $seen_vector_constructs)->{'missing'}};
@@ -66,18 +67,26 @@ sub _validate_with_plugin {
     my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'male_parent', 'stock_relationship')->cvterm_id();
 
-    if ($is_existing_accessions) {
-        if (scalar(@$is_existing_accessions) > 0) {
-            my $accession_validator = CXGN::List::Validate->new();
-            my @accessions_missing = @{$accession_validator->validate($schema,'accessions_and_obsoleted_accessions', $seen_accession_names)->{'missing'}};
-            if (scalar(@accessions_missing) > 0) {
-                push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+    if (scalar(@$existing_accessions) > 0) {
+        my $accession_validator = CXGN::List::Validate->new();
+        my @accessions_missing = @{$accession_validator->validate($schema,'accessions_and_obsoleted_accessions', $seen_accession_names)->{'missing'}};
+        if (scalar(@accessions_missing) > 0) {
+            push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+        }
+    }
+
+    my %associated_FEC_batch;
+    if ((scalar @$existing_accessions > 0) || (scalar @$FEC_batches > 0)) {
+        foreach my $row (@$parsed_data) {
+            my $accession_name = $row->{'accession_name'};
+            my $vector_construct = $row->{'vector_construct'};
+            my $batch_number = $row->{'batch_number'};
+            my $FEC_batch = $row->{'FEC_batch'};
+            if ($FEC_batch) {
+                $associated_FEC_batch{$batch_number}{$vector_construct}{$FEC_batch} = 1;
             }
 
-            foreach my $row (@$parsed_data) {
-                my $accession_name = $row->{'accession_name'};
-                my $vector_construct = $row->{'vector_construct'};
-
+            if (scalar @$existing_accessions > 0) {
                 my $accession_stock = $schema->resultset("Stock::Stock")->find ({
                     uniquename => $accession_name,
                     type_id => $accession_type_id,
@@ -109,6 +118,25 @@ sub _validate_with_plugin {
                 }
             }
         }
+
+        print STDERR "ASSOCIATED FEC BATCH =".Dumper(\%associated_FEC_batch)."\n";
+        if (scalar @$FEC_batches > 0) {
+            foreach my $batch (keys %associated_FEC_batch) {
+                my $batch_info = {}
+                $batch_info = $associated_FEC_batch{$batch}
+                foreach my $vector (keys %$batch_info) {
+                    my @check_FEC_batch = ();
+                    my $vector_info = {};
+                    $vector_info = $associated_FEC_batch{$batch}{$vector};
+                    @check_FEC_batch = keys %$vector_info;
+                    print STDERR "CHECK FEC BATCH =".Dumper(\@check_FEC_batch)."\n";
+                    if (scalar @check_FEC_batch > 0) {
+                        push @error_messages, "Vector construct: $vector in Batch Number: $batch is associated with more than one FEC batch!";
+                    }
+                }
+            }
+        }
+
     } else {
         my $rs = $schema->resultset("Stock::Stock")->search({
             'uniquename' => { -in => $seen_accession_names }
