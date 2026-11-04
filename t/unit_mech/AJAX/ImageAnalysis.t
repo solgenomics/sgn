@@ -253,7 +253,7 @@ foreach my $n (1, 2) {
     my $ts_id = $resp->{result}{data}[0]{observationUnitDbId};
     ok($ts_id, "tissue sample $n created")
         or BAIL_OUT('Tissue creation failed; do not submit unrelated observation units.');
-    isnt($ts_id, $plant_id, "tissue sample $n has its own identity");
+    isnt($ts_id, $plant_id, "tissue sample $n has its own identity"); # codespell:ignore isnt
     ok(!(grep { $_ eq $ts_id } @tissue_sample_ids), "tissue sample $n is distinct from earlier samples");
     is($resp->{result}{data}[0]{studyDbId}, $study_id, "tissue sample $n retains the parent field study");
     is($resp->{result}{data}[0]{germplasmDbId}, $germplasm_id, "tissue sample $n retains the parent germplasm");
@@ -579,8 +579,8 @@ $mech->submit_form_ok({form_name => 'store_image'},
 my ($image_id_3) = $mech->uri() =~ m{/(\d+)$};
 ok($image_id_3, "the second-study image has its returned identity")
     or BAIL_OUT('Second-study image storage did not return an image ID.');
-isnt($image_id_3, $image_id, "second-study image is distinct from the first source image");
-isnt($image_id_3, $image_id_2, "second-study image is distinct from the second plant image");
+isnt($image_id_3, $image_id, "second-study image is distinct from the first source image"); # codespell:ignore isnt
+isnt($image_id_3, $image_id_2, "second-study image is distinct from the second plant image"); # codespell:ignore isnt
 
 $mech->post('http://localhost:3010/brapi/v2/observationunits',
     'Content-Type' => 'application/json', 'Authorization' => "Bearer $sgn_session_id",
