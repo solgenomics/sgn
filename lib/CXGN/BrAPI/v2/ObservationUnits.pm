@@ -1287,29 +1287,9 @@ sub _store_units_legacy {
                 if ($error) {
                     die {error => sprintf('ERROR store: ' . $error), errorCode => 500};
                 }
-                # Refresh the trial layout property
-                my %param = ( schema => $schema, trial_id => $study_id );
-                if ($design_type eq 'genotyping_plate'){
-                    $param{experiment_type} = 'genotyping_layout';
-                } else {
-                    $param{experiment_type} = 'field_layout';
-                }
-                my $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
-                my $design = $trial_layout->generate_and_cache_layout();
-
-                foreach my $plot_num (keys %{$design}) {
-                    my $observationUnit_x_ref = $study->{$plot_num}->{external_refs};
-                    if ($observationUnit_x_ref){
-                        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-                            bcs_schema => $self->bcs_schema,
-                            table_name => 'stock',
-                            table_id_key => 'stock_id',
-                            external_references => $observationUnit_x_ref,
-                            id => $design->{$plot_num}->{plot_id}
-                        });
-                        my $reference_result = $references->store();
-                    }
-                }
+                # Exact requested IDs are resolved by the owning wrapper. It
+                # applies external references and rebuilds the final layout
+                # after all metadata writes; child indexes are not plot keys.
             }
         }
     };

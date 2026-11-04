@@ -142,9 +142,14 @@ my $all=eval {
    undef,$trial,term('accession_occurrence_version','project_property'))};
   my $original_versions=$version_rows->();
   my $plant_name=$prefix.'sample_parent';
+  my $seeded=api()->observationunits_update([request_unit($plots[0],externalReferences=>[
+   {referenceSource=>$prefix.'parent_reference',referenceId=>'parent-only:original'}])],$context,41);
+  ok(defined($seeded->{result}),'the parent has its own existing external reference before child creation');
+  my $parent_refs_before=$dbh->selectall_arrayref('SELECT stock_dbxref_id,dbxref_id,is_current FROM stock_dbxref WHERE stock_id=? ORDER BY stock_dbxref_id',undef,$plots[0]);
   my $created=api()->observationunits_store([{studyDbId=>"$trial",germplasmDbId=>"$germplasm",
    observationUnitName=>$plant_name,additionalInfo=>{observationUnitParent=>"$plots[0]"},
-   observationUnitPosition=>{observationLevel=>{levelName=>'plant',levelCode=>'1'},observationLevelRelationships=>[]}}],$context,41);
+   externalReferences=>[{referenceSource=>$prefix.'child_reference',referenceId=>'child-only:1'}],
+   observationUnitPosition=>{observationLevel=>{levelName=>'plant',levelCode=>'10'},observationLevelRelationships=>[]}}],$context,41);
   ok(defined($created->{result}),'the parent plant is created through the owning BrAPI writer') or diag(encode_json($created));
   my $parent=$created->{result}{data}[0]{observationUnitDbId};
   ok($parent,'the new parent identity comes from the API DTO');
@@ -153,6 +158,10 @@ my $all=eval {
   my @constructed=grep {($_->{message}//'') eq 'Observation Units search result constructed'} @{$created->{status} || []};
   is(scalar @constructed,1,'creation reports one final response read');
   is($created->{result}{data}[0]{observationUnitName},$plant_name,'the DTO returns the exact requested plant name');
+  is_deeply($created->{result}{data}[0]{externalReferences},
+   [{referenceSource=>$prefix.'child_reference',referenceId=>'child-only:1'}],'the external reference belongs to the requested child');
+  is_deeply($dbh->selectall_arrayref('SELECT stock_dbxref_id,dbxref_id,is_current FROM stock_dbxref WHERE stock_id=? ORDER BY stock_dbxref_id',undef,$plots[0]),
+   $parent_refs_before,'a child index matching its parent plot number cannot attach child references to the parent');
   is($s->resultset('Stock::Stock')->find($parent)->type->name,'plant','the returned ID belongs to the created plant level');
   my $root_parents=$dbh->selectcol_arrayref(
    'SELECT r.subject_id FROM stock_relationship r JOIN stock p ON p.stock_id=r.subject_id
