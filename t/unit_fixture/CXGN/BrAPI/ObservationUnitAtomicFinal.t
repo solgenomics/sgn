@@ -8,6 +8,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::AccessionChange;
+use CXGN::Trial::DesignReplication;
 use CXGN::BrAPI::v2::ObservationUnits;
 use CXGN::BrAPI::v1::ObservationUnits;
 
@@ -142,6 +143,51 @@ my $all=eval {
   my $v2=api()->detail($plots[2],$context)->{result};my $v1=api_v1()->detail($plots[2],$context)->{result};
   is($v2->{observations}[0]{observationTimeStamp},'2026-11-02T10:00:00Z','v2 included observation has one ISO UTC suffix');
   is($v1->{observations}[0]{observationTimeStamp},'2026-11-02T10:00:00Z','v1 included observation uses the same timestamp mapping');
+ };
+ scenario 'Tissue creation preserves a plant parent while enforcing study, germplasm and level'=>sub {
+  my $parent=child($plots[0],$prefix.'sample_parent');
+  my $germplasm=accession($plots[0]);
+  my $request={studyDbId=>"$trial",germplasmDbId=>"$germplasm",observationUnitName=>$prefix.'plant_tissue',
+   additionalInfo=>{observationUnitParent=>"$parent"},
+   observationUnitPosition=>{observationLevel=>{levelName=>'tissue_sample',levelCode=>'1'},observationLevelRelationships=>[]}};
+  my $r=api()->observationunits_store([$request],$context,41);
+  ok(defined($r->{result}),'a tissue sample can be collected from a plant') or diag(encode_json($r));
+  my $id=$r->{result}{data}[0]{observationUnitDbId};
+  ok($id,'the created tissue sample has its own returned ID');
+  return if !$id;
+  my $parents=$dbh->selectcol_arrayref('SELECT object_id FROM stock_relationship WHERE subject_id=? AND type_id=? ORDER BY object_id',undef,$id,term('tissue_sample_of','stock_relationship'));
+  is_deeply($parents,[sort {$a<=>$b} ($parent,$plots[0],$germplasm)],'native storage preserves the plant, root plot and germplasm ancestry');
+  my $groups=CXGN::Trial::DesignReplication::read($s,[$id,$parent]);
+  is_deeply([@{$groups->{$id}}{qw(value block occurrence)}],[@{$groups->{$parent}}{qw(value block occurrence)}],
+   'the tissue sample inherits its actual parent design, block and occurrence');
+  for my $case (
+   ['plant_of_plant',{observationUnitPosition=>{observationLevel=>{levelName=>'plant',levelCode=>'1'},observationLevelRelationships=>[]}}],
+   ['different_study',{studyDbId=>'165'}],
+   ['different_germplasm',{germplasmDbId=>''.$new->stock_id}],
+  ) {
+   my $invalid={%$request,%{$case->[1]},observationUnitName=>$prefix.$case->[0]};
+   my $bad=api()->observationunits_store([$invalid],$context,41);
+   is($bad->{http_code},400,"$case->[0] remains a controlled rejection");
+   is($s->resultset('Stock::Stock')->search({uniquename=>$invalid->{observationUnitName}})->count,0,
+    "$case->[0] creates no partial stock");
+  }
+ };
+ scenario 'BrAPI literal plot codes roundtrip without weakening child indexes'=>sub {
+  for my $code ('Plot_123','007') {
+   my $r=api()->observationunits_update([request_unit($plots[0],observationUnitPosition=>{
+    observationLevel=>{levelName=>'plot',levelCode=>$code}})],$context,41);
+   ok(defined($r->{result}),"literal plot code $code is accepted") or diag(encode_json($r));
+   is(value($plots[0],'plot number'),$code,"literal plot code $code is stored without coercion");
+   is($r->{result}{data}[0]{observationUnitDbId},$plots[0],'changing the plot code preserves its stock identity');
+   is($r->{result}{data}[0]{observationUnitPosition}{observationLevel}{levelCode},$code,
+    "literal plot code $code roundtrips through the owning DTO");
+  }
+  my $parent=child($plots[1],$prefix.'numbered_plant');
+  my $old_index=value($parent,'plant_index_number');
+  my $bad=api()->observationunits_update([request_unit($parent,observationUnitPosition=>{
+   observationLevel=>{levelName=>'plant',levelCode=>'Plant_ABC'}})],$context,41);
+  is($bad->{http_code},400,'a literal label does not become a child numeric index');
+  is(value($parent,'plant_index_number'),$old_index,'the invalid child index leaves its raw value intact');
  };
  scenario 'Unknown unit reads and writes are controlled not-found errors'=>sub {
   is(api()->detail(2147483000,$context)->{http_code},404,'GET unknown unit returns404');

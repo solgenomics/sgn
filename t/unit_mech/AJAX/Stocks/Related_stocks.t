@@ -26,6 +26,10 @@ $mech->get_ok("http://localhost:3010/stock/$accession_1_id/datatables/trial_rela
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 
+# The owning UNION ALL query does not promise row order. Preserve the complete
+# original row set independently of relationship insertion order.
+@{$response->{data}} = sort {$a->[1] cmp $b->[1]} @{$response->{data}};
+
 is_deeply($response, {'data'=> [
 ['plot', '<a href = "/stock/38857/view">test_trial21</a>', 'test_trial21'],
 ['plot', '<a href = "/stock/38862/view">test_trial26</a>', 'test_trial26'],
