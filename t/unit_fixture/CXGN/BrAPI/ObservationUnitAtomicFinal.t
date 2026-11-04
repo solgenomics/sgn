@@ -237,6 +237,25 @@ my $all=eval {
    'the actual native data error reaches the caller');
   is($s->resultset('Stock::Stock')->search({uniquename=>$name})->count,0,'the failed native layout rebuild retains no partial child');
  };
+ scenario 'Scalar metadata updates preserve original row identity and reject ambiguity'=>sub {
+  my $type=term('row_number','stock_property');
+  $s->resultset('Stock::Stockprop')->search({stock_id=>$plots[0],type_id=>$type})->delete;
+  my $row=$s->resultset('Stock::Stockprop')->create({stock_id=>$plots[0],type_id=>$type,value=>'before',rank=>0});
+  my $id=$row->stockprop_id;
+  my $r=api()->observationunits_update([request_unit($plots[0],observationUnitPosition=>{positionCoordinateY=>'007'})],$context,41);
+  ok(defined($r->{result}),'a scalar coordinate update succeeds');
+  my $changed=$s->resultset('Stock::Stockprop')->find($id);
+  ok($changed,'the original stock-property row still exists');
+  is($changed ? $changed->value : undef,'007','the original row stores the exact literal coordinate');
+  is($s->resultset('Stock::Stockprop')->search({stock_id=>$plots[0],type_id=>$type})->count,1,'the update creates no replacement property');
+  $s->resultset('Stock::Stockprop')->create({stock_id=>$plots[0],type_id=>$type,value=>'ambiguous',rank=>1});
+  my $before=$dbh->selectall_arrayref('SELECT stockprop_id,value,rank FROM stockprop WHERE stock_id=? AND type_id=? ORDER BY stockprop_id',undef,$plots[0],$type);
+  my $bad=api()->observationunits_update([request_unit($plots[0],observationUnitPosition=>{positionCoordinateY=>'8'})],$context,41);
+  is($bad->{http_code},400,'ambiguous scalar rows are refused');
+  like(join(' ',map {$_->{message}//''} @{$bad->{status}||[]}),qr/multiple row_number values/,'the refusal identifies the ambiguous field');
+  is_deeply($dbh->selectall_arrayref('SELECT stockprop_id,value,rank FROM stockprop WHERE stock_id=? AND type_id=? ORDER BY stockprop_id',undef,$plots[0],$type),$before,
+   'refusal preserves both source row IDs, ranks and values');
+ };
  scenario 'Unknown unit reads and writes are controlled not-found errors'=>sub {
   is(api()->detail(2147483000,$context)->{http_code},404,'GET unknown unit returns404');
   is(api()->observationunits_update([request_unit(2147483000,additionalInfo=>{control=>JSON::false})],$context,41)->{http_code},404,'PUT unknown unit returns404');

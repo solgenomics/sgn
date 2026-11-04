@@ -624,12 +624,17 @@ sub _unit_prop {
     my $type = SGN::Model::Cvterm->get_cvterm_row($schema, $name, 'stock_property');
     _unit_fail("The database does not know stock property $name.") if !$type;
     my $rs = $schema->resultset('Stock::Stockprop')->search({stock_id => $stock_id, type_id => $type->cvterm_id});
+    my @old = $rs->all;
+    _unit_fail("Observation unit $stock_id has multiple $name values; correct its layout metadata first.") if @old > 1;
     if (@value) {
-        my @old = $rs->all;
         return undef if !@old && !defined($value[0]); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
-        return $old[0]->value if @old == 1 && defined($value[0]) && defined($old[0]->value) && $old[0]->value eq $value[0];
-        $rs->delete;
-        $schema->resultset('Stock::Stockprop')->create({stock_id => $stock_id, type_id => $type->cvterm_id, value => $value[0], rank => 0}) if defined($value[0]);
+        return $old[0]->value if @old && defined($value[0]) && defined($old[0]->value) && $old[0]->value eq $value[0];
+        if (defined($value[0])) {
+            if (@old) { $old[0]->update({value => $value[0]}); }
+            else { $schema->resultset('Stock::Stockprop')->create({stock_id => $stock_id, type_id => $type->cvterm_id, value => $value[0], rank => 0}); }
+        } else {
+            $old[0]->delete if @old;
+        }
         $self->{_unit_writes}++;
     }
     my $row = $rs->first;
