@@ -119,7 +119,7 @@ sub get_active_transformations_in_project {
     $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $is_a_transformation_control_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $FEC_batch_type_id, $project_id);
 
     my @transformations = ();
-    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control) = $h->fetchrow_array()){
+    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $FEC_batch) = $h->fetchrow_array()){
         push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $FEC_batch]
     }
 

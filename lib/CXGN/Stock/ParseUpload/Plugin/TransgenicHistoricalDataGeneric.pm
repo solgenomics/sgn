@@ -18,15 +18,17 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'accession_name', 'vector_construct', 'batch_number'],
-        optional_columns => [ 'is_a_control', 'existing_accession', 'number_of_insertions' ],
+        optional_columns => [ 'is_a_control', 'existing_accession', 'number_of_insertions', 'FEC_batch' ],
         column_aliases => {
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
             'batch_number' => ['batch number'],
+            'FEC_batch' => ['FEC batch', 'FEC BATCH'],
             'is_a_control' => ['is a control'],
             'existing_accession' => ['existing accession'],
             'number_of_insertions' => ['number of insertions'],
-        }
+        },
+        unique_only_columns => [ 'accession_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
@@ -113,18 +115,6 @@ sub _validate_with_plugin {
         });
         while (my $r=$rs->next){
             push @error_messages, "Accession name already exists in database: ".$r->uniquename;
-        }
-    }
-
-    my %duplicated_accession_names;
-    foreach my $row (@$parsed_data) {
-        my $row_num = $row->{_row};
-        my $accession_name = $row->{'accession_name'};
-
-        if ($duplicated_accession_names{$accession_name}) {
-            push @error_messages, "Cell A$row_num: duplicate accession name: $accession_name. Accession name must be unique.";
-        } else {
-            $duplicated_accession_names{$accession_name}++;
         }
     }
 
