@@ -1307,16 +1307,8 @@ sub _store_units_legacy {
         }
     };
 
-    my $error_resp;
-    try {
-        $schema->txn_do($coderef);
-    }
-    catch {
-        print "Error: :". Dumper($_);
-        # print Dumper("Error: $_\n");
-        $error_resp = CXGN::BrAPI::JSONResponse->return_error($self->status, $_->{error}, $_->{errorCode} || 500);
-    };
-    if ($error_resp) { return $error_resp; }
+    # The owning transaction formats native hash and string errors consistently.
+    $schema->txn_do($coderef);
 
     # The transactional wrapper resolves the requested identities and performs
     # the final read after applying all metadata. An intermediate search would

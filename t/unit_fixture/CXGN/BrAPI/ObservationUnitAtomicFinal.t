@@ -225,6 +225,18 @@ my $all=eval {
   is($bad->{http_code},400,'a literal label does not become a child numeric index');
   is(value($parent,'plant_index_number'),$old_index,'the invalid child index leaves its raw value intact');
  };
+ scenario 'An invalid stored layout reports its native cause and rolls child writes back'=>sub {
+  my $germplasm=accession($plots[0]);
+  $s->resultset('Stock::Stockprop')->search({stock_id=>$plots[0],type_id=>term('plot number','stock_property')})->delete;
+  my $name=$prefix.'invalid_native_layout';
+  my $r=api()->observationunits_store([{studyDbId=>"$trial",germplasmDbId=>"$germplasm",observationUnitName=>$name,
+   additionalInfo=>{observationUnitParent=>"$plots[0]"},
+   observationUnitPosition=>{observationLevel=>{levelName=>'plant',levelCode=>'1'},observationLevelRelationships=>[]}}],$context,41);
+  ok(($r->{http_code} || 0)>=400,'the invalid stored layout is a controlled refusal');
+  like(join(' ',map {$_->{message}//''} @{$r->{status} || []}),qr/no plot number stockprop found/,
+   'the actual native data error reaches the caller');
+  is($s->resultset('Stock::Stock')->search({uniquename=>$name})->count,0,'the failed native layout rebuild retains no partial child');
+ };
  scenario 'Unknown unit reads and writes are controlled not-found errors'=>sub {
   is(api()->detail(2147483000,$context)->{http_code},404,'GET unknown unit returns404');
   is(api()->observationunits_update([request_unit(2147483000,additionalInfo=>{control=>JSON::false})],$context,41)->{http_code},404,'PUT unknown unit returns404');
