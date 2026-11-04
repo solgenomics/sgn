@@ -309,12 +309,12 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         }
 
         $q = "
-        SELECT sp_person_id, user_prefs
+        SELECT sp_person_id, user_prefs, disabled
         FROM sgn_people.sp_person
         WHERE UPPER(private_email)=UPPER(?) OR UPPER(pending_email)=UPPER(?)";
         $h = $schema->storage->dbh()->prepare($q);
         $h->execute($email, $email);
-        my ($person_id, $user_prefs) = $h->fetchrow_array();
+        my ($person_id, $user_prefs, $disabled) = $h->fetchrow_array();
 
         # ---------------------------------------------------------------------
         # 4. Auto-provision
@@ -376,6 +376,15 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         }
 
         # ---------------------------------------------------------------------
+        # Refuse a session for a disabled or deactivated account, the same
+        # check CXGN::Login::login_user applies to a username/password or
+        # BrAPI token login. An auto-provisioned account is always new and
+        # never disabled or deactivated, so this only matters for a match
+        # found in step 3.
+
+        __PACKAGE__->_refuse_disabled_or_deactivated($schema->storage->dbh(), $person_id, $disabled);
+
+        # ---------------------------------------------------------------------
         # Log the user in
 
         my $login             = CXGN::Login->new($c->dbc->dbh());
@@ -393,6 +402,33 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         $c->stash->{error} = $_;
     }
 
+}
+
+=head2 _refuse_disabled_or_deactivated
+
+Dies with a user-facing message if the account identified by $person_id
+has the 'deactivated' role or a non-empty sp_person.disabled value, the
+same check CXGN::Login::login_user applies before creating a session for
+a username/password or BrAPI token login. Called as a class method so it
+can be unit-tested against a database handle without going through the
+OIDC provider round trip.
+
+=cut
+
+sub _refuse_disabled_or_deactivated {
+    my ($class, $dbh, $person_id, $disabled) = @_;
+
+    my $sth = $dbh->prepare("SELECT count(*) FROM sgn_people.sp_person_roles JOIN sgn_people.sp_roles USING(sp_role_id) WHERE sp_person_id=? AND sp_roles.name='deactivated'");
+    $sth->execute($person_id);
+    my ($has_deactivated_role) = $sth->fetchrow_array();
+
+    if ($has_deactivated_role) {
+        die "Your account has been deactivated by an administrator. Please contact your system administrator for more help.\n";
+    }
+    if ($disabled) {
+        die "Your account has been deactivated due to $disabled. Please log in with a username and password for more information, or contact your system administrator for more help.\n";
+    }
+    return;
 }
 
 # A randomly generated and SHA256 encrypted string

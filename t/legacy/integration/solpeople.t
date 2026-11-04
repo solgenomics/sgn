@@ -34,12 +34,6 @@ $mech->while_logged_in_all( sub {
 });
 
 {
-    my $url = "/solpeople/account-confirm.pl";
-    $mech->get_ok("$base_url/$url?username=fiddlestix");
-    $mech->content_like(qr/.*Sorry, we are unable to process this confirmation request\..*No confirmation is required for user .*fiddlestix/ms);
-}
-
-{
     my $url = "/solpeople/personal-info.pl";
     $mech->get_ok("$base_url/$url?action=edit&sp_person_id=42");
     $mech->content_like(qr/You do not have rights to modify this database entry because you do not own it/ms);

@@ -14,6 +14,7 @@ $number_of_insertions => undef
                         <tr>
                             <th>Vector Construct</th>
                             <th>Plant Material</th>
+                            <th>FEC Batch</th>
                             <th>Transformation ID</th>
                             <th>Project</th>
                         </tr>

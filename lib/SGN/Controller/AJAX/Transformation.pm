@@ -167,6 +167,7 @@ sub add_transformation_identifier_POST :Args(0){
     my $program_name = $c->req->param('program_name');
     my $transformation_project_id = $c->req->param('transformation_project_id');
     my $is_a_control = $c->req->param('is_a_control');
+    my $FEC_batch = $c->req->param('FEC_batch');
     $transformation_identifier =~ s/^\s+|\s+$//g;
 
     if (!$c->user()) {
@@ -221,7 +222,8 @@ sub add_transformation_identifier_POST :Args(0){
             vector_construct => $vector_construct,
             notes => $notes,
             owner_id => $user_id,
-            is_a_control => $is_a_control
+            is_a_control => $is_a_control,
+            FEC_batch => $FEC_batch
         });
 
         my $add = $add_transformation->add_transformation_identifier();
@@ -301,7 +303,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload transformation identifers!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload transformation identifiers!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -350,7 +352,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -432,7 +434,7 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
 
     my @transformations;
     foreach my $r (@$result){
-        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control) =@$r;
+        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $FEC_batch) =@$r;
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
         my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
@@ -455,7 +457,7 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
         } elsif ($control_string) {
             $control_column_info = $control_string
         }
-        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $FEC_batch, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };
@@ -476,7 +478,7 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
 
     my @transformations;
     foreach my $r (@$result){
-        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $status_type) =@$r;
+        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $FEC_batch, $control_id, $control_name, $status_type) =@$r;
 
         if ($status_type eq 'terminated_metadata') {
             $status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
@@ -494,7 +496,7 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
             $control_column_info = qq{<a href="/transformation/$control_id">$control_name</a>}
         }
 
-        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $FEC_batch, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };
@@ -1084,6 +1086,7 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$stock_id});
     my $vector_construct = $transformant_obj->vector_construct();
     my $plant_material = $transformant_obj->plant_material();
+    my $FEC_batch = $transformant_obj->FEC_batch();
     my $transformation_identifier = $transformant_obj->transformation_identifier();
 
     if (@$vector_construct) {
@@ -1112,7 +1115,7 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     }
 
     my @transformant_experiment_info;
-    push @transformant_experiment_info, [$vector_link, $plant_link, $transformation_link, $project_link];
+    push @transformant_experiment_info, [$vector_link, $plant_link, $FEC_batch, $transformation_link, $project_link];
 
     $c->stash->{rest} = { data => \@transformant_experiment_info };
 
@@ -1287,7 +1290,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1394,7 +1397,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         my $response = $add_transformants->add_transformant();
                         my $add_transformant_error = $response->{error};
                         if ($add_transformant_error){
-                            $c->stash->{rest} = {error => "Error adding new accessions for vector contruct: $vector_construct in batch $batch_number."};
+                            $c->stash->{rest} = {error => "Error adding new accessions for vector construct: $vector_construct in batch $batch_number."};
                             return;
                         }
                     } elsif ($accession_type eq 'existing_accession') {
@@ -1408,7 +1411,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         my $response = $add_transformants->link_info();
                         my $add_transformant_error = $response->{error};
                         if ($add_transformant_error){
-                            $c->stash->{rest} = {error => "Error linking accession names with tansformation info for vector contruct: $vector_construct in batch $batch_number."};
+                            $c->stash->{rest} = {error => "Error linking accession names with transformation info for vector construct: $vector_construct in batch $batch_number."};
                             return;
                         }
                     }
@@ -1604,7 +1607,7 @@ sub upload_qPCR_data_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1940,6 +1943,147 @@ sub get_control_transgenic_line_details :Path('/ajax/transformation/control_tran
     }
 
     $c->stash->{rest} = { data => \@transformant_details };
+
+}
+
+sub upload_transgenic_lines : Path('/ajax/transformation/upload_transgenic_lines') : ActionClass('REST'){ }
+
+sub upload_transgenic_lines_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $breeding_program_name = $c->req->param('project_breeding_program_name');
+    my $upload = $c->req->upload('transgenic_lines_upload_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "transgenic_lines_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $upload_date = $time->ymd();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+    my @error_messages;
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload transgenic lines!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+
+        if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+            $c->stash->{rest} = {error=>'Only a submitter or a curator can upload transgenic lines'};
+            $c->detach();
+        }
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload transgenic lines!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+
+        my @user_roles = $c->user->roles();
+        my %has_roles = ();
+        map { $has_roles{$_} = 1; } @user_roles;
+
+        if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+          $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload transgenic lines." };
+          return;
+        }
+
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+        ## Store uploaded temporary file in archive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+
+    $parser->load_plugin('TransgenicLinesGeneric');
+    $parsed_data = $parser->parse();
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    if ($parsed_data){
+        foreach my $transformation_identifier (keys %$parsed_data) {
+            my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation', 'stock_type')->cvterm_id();
+            my $transformation_stock_id;
+            my $transformation_identifier_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $transformation_identifier, type_id => $transformation_type_id });
+            my $transformation_stock_id = $transformation_identifier_rs->stock_id();
+            my $new_transformant_names = $parsed_data->{$transformation_identifier};
+            my @new_names = keys %$new_transformant_names;
+
+            eval {
+                my $add_transformants = CXGN::Transformation::AddTransformant->new({
+                    schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    dbh => $dbh,
+                    transformation_stock_id => $transformation_stock_id,
+                    transformant_names => \@new_names,
+                    owner_id => $user_id,
+                });
+
+                $add_transformants->add_transformant();
+            };
+
+            if ($@) {
+                $c->stash->{rest} = { success => 0, error => $@ };
+                print STDERR "An error condition occurred, was not able to create new transformants. ($@).\n";
+                return;
+            }
+        }
+    };
+
+    $c->stash->{rest} = {success => "1",};
 
 }
 

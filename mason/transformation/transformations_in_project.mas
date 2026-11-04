@@ -11,6 +11,7 @@ $trial_id
             <tr>
                 <th>Transformation ID</th>
                 <th>Plant Material</th>
+                <th>FEC Batch</th>
                 <th>Vector Construct</th>
                 <th>Notes</th>
                 <th>Control</th>

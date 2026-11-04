@@ -63,6 +63,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $plant_material = qq{<a href="/stock/$plant_material_id/view">$plant_material_name</a>};
     my $vector_construct = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
     my $transformation_notes = $info->[0]->[4];
+    my $FEC_batch = $info->[0]->[9];
 
     my $is_a_control = $info->[0]->[5];
     if ($is_a_control) {
@@ -208,6 +209,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{vector_analyzed_tissue_types} = $vector_analyzed_tissue_types;
     $c->stash->{vector_id} = $vector_id;
     $c->stash->{vector_name} = $vector_name;
+    $c->stash->{FEC_batch} = $FEC_batch;    
 
     $c->stash->{template} = '/transformation/transformation.mas';
 

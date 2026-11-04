@@ -74,6 +74,11 @@ has 'is_a_control' => (
     default => 0,
 );
 
+has 'FEC_batch' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    default => 0,
+);
 
 sub existing_transformation_id {
     my $self = shift;
@@ -98,6 +103,7 @@ sub add_transformation_identifier {
     my $transformation_notes = $self->get_notes();
     my $transformation_project_id = $self->get_transformation_project_id();
     my $is_a_control = $self->get_is_a_control();
+    my $FEC_batch = $self->get_FEC_batch();
     my $plant_material_stock_id;
     my $vector_construct_stock_id;
     my %return;
@@ -119,6 +125,7 @@ sub add_transformation_identifier {
         my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
         my $vector_construct_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
         my $is_a_transformation_control_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property');
+        my $FEC_batch_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'FEC_batch', 'stock_property');
 
         my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
         my $geolocation_rs = $schema->resultset("Project::Projectprop")->find({project_id => $transformation_project_id, type_id => $project_location_cvterm_id});
@@ -180,6 +187,10 @@ sub add_transformation_identifier {
 
         if ($is_a_control) {
             $transformation_identifier_stock->create_stockprops({$is_a_transformation_control_cvterm->name() => $is_a_control});
+        }
+
+        if ($FEC_batch) {
+            $transformation_identifier_stock->create_stockprops({$FEC_batch_cvterm->name() => $FEC_batch});
         }
 
         $transformation_stock_id = $transformation_identifier_stock->stock_id();

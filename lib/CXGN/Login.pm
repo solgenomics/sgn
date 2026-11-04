@@ -329,12 +329,9 @@ sub login_user {
     if ( $self->login_allowed() ) {
         my $sth = $self->get_sql("user_from_uname_pass");
 
-	print STDERR "NOW LOGGING IN USER $username\n";
         my $num_rows = $sth->execute( $username, $password );
 
         my ( $person_id, $disabled, $user_prefs, $first_name, $last_name ) = $sth->fetchrow_array();
-
-	print STDERR "FOUND: $person_id\n";
 
 	#check if user has "deactivated" role
 	$sth = $self->get_sql("deactivated_role_sp_person_id");
@@ -342,18 +339,19 @@ sub login_user {
 
 	my ($has_deactivated_role) = $sth->fetchrow_array();
 
-	print STDERR "Deactivated account? $has_deactivated_role!\n";
-
         if ( $num_rows > 1 ) {
             die "Duplicate entries found for username '$username'";
         }
-        if ($disabled) {
-            $login_info->{account_disabled} = $disabled;
-        }
+
+	# a session is only created for accounts that are neither
+	# deactivated nor disabled (for example, not yet confirmed)
+	#
 	if ($has_deactivated_role) {
 	    $login_info->{account_disabled} = "administrator action";
 	}
-
+        elsif ($disabled) {
+            $login_info->{account_disabled} = $disabled;
+        }
         else {
             $login_info->{user_prefs} = $user_prefs;
             if ($person_id) {
