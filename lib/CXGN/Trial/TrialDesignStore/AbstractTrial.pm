@@ -515,6 +515,7 @@ sub store {
         #print STDERR Dumper \%design;
         my %new_stock_ids_hash;
         my $stock_rs = $chado_schema->resultset("Stock::Stock");
+        my $field_layout_changed = 0;
 
         foreach my $key (keys %design) {
             if ($key eq 'treatments'){
@@ -682,9 +683,44 @@ sub store {
                 $organism_id_checked = $parent_stock->organism_id();
             }
 
-            #create the plot, if plot given
+            # A BrAPI child request identifies its existing physical parent.
+            # Reuse that row; a plant name must never fabricate a new field plot.
+            my $existing_parent_id = $design{$key}->{_existing_parent_stock_id};
+            $field_layout_changed = 1 if !defined($existing_parent_id);
             my $new_plot_id;
-            if (defined($plot_name) && $plot_name ne '') {
+            if (defined($existing_parent_id)) {
+                die "An existing child parent must be a positive stock ID.\n"
+                    if ref($existing_parent_id) || $existing_parent_id !~ /^[1-9]\d*$/;
+                die "An existing parent is only valid for plant or tissue-sample creation.\n"
+                    if (!$plant_names && !$tissue_sample_names) || $subplot_names;
+                my $parent = $stock_rs->find({stock_id=>$existing_parent_id});
+                die "The existing child parent does not match its recorded name.\n"
+                    if !$parent || !defined($plot_name) || $parent->uniquename ne $plot_name;
+                my $parent_type = $parent->type_id;
+                die "A child requires a plot parent, or a plant parent for tissue samples.\n"
+                    if $parent_type != $self->get_plot_cvterm_id
+                        && !($tissue_sample_names && !$plant_names && $parent_type == $self->get_plant_cvterm_id);
+                my $parents_projects = $chado_schema->storage->dbh->selectcol_arrayref(
+                    'SELECT DISTINCT nep.project_id FROM nd_experiment_stock nes
+                     JOIN nd_experiment ne USING(nd_experiment_id)
+                     JOIN nd_experiment_project nep USING(nd_experiment_id)
+                     WHERE nes.stock_id=? AND ne.type_id=?',
+                    undef, $existing_parent_id, $self->get_nd_experiment_type_id);
+                die "The existing child parent must belong to this field layout only.\n"
+                    if @$parents_projects != 1 || $parents_projects->[0] != $trial_id;
+                my $parent_germplasm = $chado_schema->storage->dbh->selectcol_arrayref(q{
+                    SELECT DISTINCT r.object_id FROM stock_relationship r
+                    JOIN cvterm rt ON rt.cvterm_id=r.type_id
+                    JOIN stock g ON g.stock_id=r.object_id JOIN cvterm gt ON gt.cvterm_id=g.type_id
+                    WHERE r.subject_id=? AND rt.name IN ('plot_of','plant_of')
+                      AND gt.name IN ('accession','cross','family_name')
+                }, undef, $existing_parent_id);
+                die "The existing child parent must have the requested germplasm.\n"
+                    if @$parent_germplasm != 1 || $parent_germplasm->[0] != $stock_id_checked;
+                $new_plot_id = $existing_parent_id;
+                $new_stock_ids_hash{$plot_name} = $existing_parent_id;
+            }
+            elsif (defined($plot_name) && $plot_name ne '') {
                 my @plot_stock_props = (
                     { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
                     { type_id => $self->get_block_cvterm_id, value => $block_number },
@@ -1083,7 +1119,8 @@ sub store {
                     }
 
                     #print STDERR "stock id checked: $stock_id_checked, stock name checked: $stock_name_checked";
-                    my $parent_plant_stock = $chado_schema->resultset("Stock::Stock")->find({ uniquename => $plot_name });
+                    my $parent_plant_stock = $chado_schema->resultset("Stock::Stock")->find(
+                        defined($existing_parent_id) ? {stock_id=>$existing_parent_id} : {uniquename=>$plot_name});
                     my $parent_plant_id;
                     if ($parent_plant_stock) {
                         $parent_plant_id = $parent_plant_stock->stock_id;
@@ -1293,7 +1330,7 @@ sub store {
 #             }
 #         }
 
-        if (defined($design_rep_type) && !$self->get_is_genotyping && !$self->get_is_analysis && !$self->get_is_sampling_trial) {
+        if ($field_layout_changed && defined($design_rep_type) && !$self->get_is_genotyping && !$self->get_is_analysis && !$self->get_is_sampling_trial) {
             require CXGN::Trial::AccessionChange;
             CXGN::Trial::AccessionChange->new({schema=>$chado_schema,trial_id=>$trial_id})
                 ->apply([],{normalize_occurrences=>1,rename_plots=>'none'});

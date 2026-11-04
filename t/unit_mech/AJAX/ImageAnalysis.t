@@ -7,8 +7,12 @@ use SGN::Test::Fixture;
 use Test::LWP::UserAgent;
 use SGN::Test::WWW::Mechanize;
 use CXGN::Image;
+use SGN::Image;
+use File::Temp qw(tempdir);
+use File::Copy qw(copy);
 use CXGN::Stock;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 use JSON;
 use Data::Dumper;
@@ -36,6 +40,184 @@ my $mech = SGN::Test::WWW::Mechanize->new();
 my $data;
 my $submit_result;
 
+
+# Use unique request names to recover an owned row even if an HTTP response
+# fails after commit. ID cutoffs alone do not establish ownership.
+my $owned_prefix = 'image_analysis_http_'.$$.'_'.time();
+my %owned_run_names = map { ($owned_prefix.'_'.$_) => undef } qw(single multi same duplicate);
+my (%owned_images, %upload_sources, %original_trials);
+my $before_image_id = $f->dbstats_start->{images} || 0;
+my $before_project_id = $f->dbstats_start->{projects} || 0;
+my $cleanup_done = 0;
+my $upload_dir = tempdir('sgn-image-analysis-XXXXXX', TMPDIR => 1, CLEANUP => 1);
+my $test_file = $upload_dir.'/'.$owned_prefix.'.jpg';
+copy('t/data/multi_image_analysis_test.jpg', $test_file) or die "Cannot copy synthetic image: $!";
+
+# Fixture cleanup deletes new rows; it cannot undo updates to existing flags,
+# recorded design tags, occurrence versions or layout caches.
+my $remember_trial = sub {
+    my ($trial_id) = @_;
+    return if exists $original_trials{$trial_id};
+    my $db = $schema->storage->dbh;
+    my $unit_ids = $db->selectcol_arrayref(q{
+        SELECT DISTINCT es.stock_id FROM nd_experiment_project ep
+        JOIN nd_experiment ne USING(nd_experiment_id)
+        JOIN cvterm et ON et.cvterm_id=ne.type_id
+        JOIN nd_experiment_stock es USING(nd_experiment_id)
+        WHERE ep.project_id=? AND et.name='field_layout'
+    }, undef, $trial_id);
+    $original_trials{$trial_id} = {
+        unit_ids => $unit_ids,
+        projectprops => $db->selectall_arrayref(
+            'SELECT projectprop_id,project_id,type_id,value,rank FROM projectprop WHERE project_id=? ORDER BY projectprop_id', undef, $trial_id),
+        stockprops => @$unit_ids ? $db->selectall_arrayref(
+            'SELECT stockprop_id,stock_id,type_id,value,rank FROM stockprop WHERE stock_id=ANY(?) ORDER BY stockprop_id', undef, $unit_ids) : [],
+    };
+};
+my $restore_trial = sub {
+    my ($trial_id, $restore_stockprops) = @_;
+    my $db = $schema->storage->dbh;
+    my $snapshot = $original_trials{$trial_id};
+    my @tables = (['projectprop', 'projectprop_id', 'project_id', [$trial_id], $snapshot->{projectprops}]);
+    push @tables, ['stockprop', 'stockprop_id', 'stock_id', $snapshot->{unit_ids}, $snapshot->{stockprops}]
+        if $restore_stockprops && @{$snapshot->{unit_ids}};
+    for my $table (@tables) {
+        my ($name, $key, $parent, $parent_ids, $rows) = @$table;
+        my @ids = map { $_->[0] } @$rows;
+        $db->do("DELETE FROM $name WHERE $parent=ANY(?) AND NOT ($key=ANY(?))", undef, $parent_ids, \@ids);
+        for my $row (@$rows) {
+            $db->do("INSERT INTO $name ($key,$parent,type_id,value,rank) VALUES (?,?,?,?,?) " .
+                "ON CONFLICT ($key) DO UPDATE SET $parent=EXCLUDED.$parent,type_id=EXCLUDED.type_id,value=EXCLUDED.value,rank=EXCLUDED.rank " .
+                "WHERE ($name.$parent,$name.type_id,$name.value,$name.rank) IS DISTINCT FROM (EXCLUDED.$parent,EXCLUDED.type_id,EXCLUDED.value,EXCLUDED.rank)",
+                undef, @$row);
+        }
+    }
+};
+
+my $remember_image = sub {
+    my ($id, $stock_id) = @_;
+    return unless defined($id) && $id =~ /^[1-9]\d*$/;
+    die "Refusing baseline image $id" unless $id > $before_image_id;
+    $owned_images{$id} = $stock_id;
+};
+my $remember_run = sub {
+    my ($name, $id) = @_;
+    return unless defined($id) && $id =~ /^[1-9]\d*$/;
+    die "Refusing baseline run project $id" unless $id > $before_project_id;
+    die "Unregistered run name $name" unless exists $owned_run_names{$name};
+    $owned_run_names{$name} = $id;
+};
+my $checkpoint = sub {
+    my ($stage) = @_;
+    die "Deliberate ImageAnalysis failure: $stage\n"
+        if ($ENV{SGN_TEST_IMAGE_ANALYSIS_FAIL} // '') eq $stage;
+};
+
+my $cleanup = sub {
+    return 1 if $cleanup_done;
+    my $db = $schema->storage->dbh;
+    my @names = keys %owned_run_names;
+    my $runs = $db->selectall_arrayref(q{
+        SELECT project_id, name FROM project WHERE project_id>? AND name=ANY(?)
+    }, {Slice => {}}, $before_project_id, \@names);
+    my %run_ids;
+    for my $run (@$runs) {
+        my ($id, $name) = @{$run}{qw(project_id name)};
+        die "Run identity changed for $name" if defined($owned_run_names{$name}) && $owned_run_names{$name} != $id;
+        $run_ids{$id} = 1;
+    }
+    # The unique upload name, declared owner and new ID recover a
+    # committed upload whose returned page could not be decoded by the test.
+    my $images = $db->selectcol_arrayref(q{
+        SELECT image_id FROM metadata.md_image
+        WHERE image_id>? AND name=ANY(?) AND sp_person_id=41
+    }, undef, $before_image_id, [basename($test_file), $test_file]);
+    $owned_images{$_} //= undef for @$images;
+    for my $id (@{$db->selectcol_arrayref('SELECT image_id FROM metadata.md_image WHERE image_id>?', undef, $before_image_id)}) {
+        die "Unowned new image $id prevents fixture cleanup" unless exists $owned_images{$id};
+    }
+    for my $row (@{$db->selectall_arrayref('SELECT project_id,name FROM project WHERE project_id>?', undef, $before_project_id)}) {
+        die "Unowned new project $row->[0] prevents fixture cleanup" unless $run_ids{$row->[0]};
+    }
+    my @image_ids = sort {$a <=> $b} keys %owned_images;
+    my @run_ids = sort {$a <=> $b} keys %run_ids;
+    $schema->txn_do(sub {
+        # Verify the complete link boundary before native hard_delete removes
+        # any files or stock/tag/locus links. Unknown consumers remain intact.
+        my $foreign_keys = $db->selectall_arrayref(q{
+            SELECT ns.nspname, cl.relname, att.attname
+            FROM pg_constraint fk
+            JOIN pg_class cl ON cl.oid=fk.conrelid
+            JOIN pg_namespace ns ON ns.oid=cl.relnamespace
+            JOIN pg_attribute att ON att.attrelid=fk.conrelid AND att.attnum=fk.conkey[1]
+            WHERE fk.contype='f' AND fk.confrelid='metadata.md_image'::regclass
+        });
+        for my $id (@image_ids) {
+            my $image = $db->selectrow_hashref('SELECT name,sp_person_id FROM metadata.md_image WHERE image_id=?', undef, $id);
+            next unless $image; # An END retry may follow an already deleted image.
+            die "Image $id no longer matches the synthetic upload"
+                unless basename($image->{name}) eq basename($test_file) && $image->{sp_person_id} == 41;
+            for my $stock_id (@{$db->selectcol_arrayref('SELECT stock_id FROM phenome.stock_image WHERE image_id=?', undef, $id)}) {
+                die "Image $id is shared with stock $stock_id"
+                    unless $upload_sources{$stock_id} && (!defined($owned_images{$id}) || $owned_images{$id} == $stock_id);
+            }
+            for my $project_id (@{$db->selectcol_arrayref('SELECT project_id FROM phenome.project_md_image WHERE image_id=?', undef, $id)}) {
+                die "Image $id is shared with project $project_id" unless $run_ids{$project_id};
+            }
+            for my $fk (@$foreign_keys) {
+                my ($namespace, $table, $column) = @$fk;
+                next if "$namespace.$table" =~ /^(?:phenome\.(?:stock_image|project_md_image)|metadata\.md_tag_image)$/;
+                my $table_sql = $db->quote_identifier($namespace, $table);
+                my $column_sql = $db->quote_identifier($column);
+                die "Image $id has another consumer in $namespace.$table"
+                    if $db->selectrow_array("SELECT count(*) FROM $table_sql WHERE $column_sql=?", undef, $id);
+            }
+        }
+        for my $id (@run_ids) {
+            for my $image_id (@{$db->selectcol_arrayref('SELECT image_id FROM phenome.project_md_image WHERE project_id=?', undef, $id)}) {
+                die "Run project $id refers to an unowned image $image_id" unless exists $owned_images{$image_id};
+            }
+        }
+        for my $id (@image_ids) {
+            $db->do('DELETE FROM phenome.project_md_image WHERE image_id=? AND project_id=ANY(?)', undef, $id, \@run_ids);
+        }
+    });
+    for my $id (@image_ids) {
+        next unless $db->selectrow_array('SELECT count(*) FROM metadata.md_image WHERE image_id=?', undef, $id);
+        SGN::Image->new($db, $id, $mech->context)->hard_delete;
+        die "Native deletion retained image $id"
+            if $db->selectrow_array('SELECT count(*) FROM metadata.md_image WHERE image_id=?', undef, $id);
+    }
+    # Native image deletion must precede Fixture's stock-before-metadata order.
+    # Keep the original fixture cutoffs; creating another Fixture would lose them.
+    $f->clean_up_db;
+    $schema->txn_do(sub {
+        for my $trial_id (sort {$a <=> $b} keys %original_trials) {
+            $restore_trial->($trial_id, 1);
+            CXGN::Trial::TrialLayout->new({
+                schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout',
+            })->generate_and_cache_layout;
+            # Cache generation replaces its projectprop. Restore original cache
+            # IDs/bytes after rebuilding from the restored original source rows.
+            $restore_trial->($trial_id, 0);
+        }
+    });
+    die 'Owned run projects remain after fixture cleanup'
+        if @run_ids && $db->selectrow_array('SELECT count(*) FROM project WHERE project_id=ANY(?)', undef, \@run_ids);
+    $cleanup_done = 1;
+    return 1;
+};
+END {
+    my $status = $?;
+    if ($cleanup && !$cleanup_done) {
+        eval { $cleanup->(); 1 } or do {
+            warn "ImageAnalysis cleanup failed: $@";
+            $status = 1 unless $status;
+        };
+    }
+    $? = $status;
+}
+
 # Return mocked HTTP client
 {
     no warnings 'redefine';
@@ -47,7 +229,6 @@ $mech->post_ok('http://localhost:3010/brapi/v2/token', [ "username"=> "janedoe",
 my $response = decode_json $mech->content;
 my $sgn_session_id = $response->{access_token};
 
-my $test_file = 't/data/multi_image_analysis_test.jpg';
 
 # Choose a parent by its declared field study and germplasm, not sequence state.
 my ($stock_id) = $schema->storage->dbh->selectrow_array(q{
@@ -66,6 +247,8 @@ my ($stock_id) = $schema->storage->dbh->selectrow_array(q{
 ok($stock_id, 'fixture provides a plot in study 165 for germplasm 41281')
     or BAIL_OUT('No matching fixture plot; do not infer a parent from a generated stock ID.');
 
+$remember_trial->(165);
+
 # Create test plant
 $data = '[{"germplasmDbId":"41281","locationDbId":"23","observationUnitName":"Testing Plant","programDbId":"134","studyDbId":"165","trialDbId":"165","observationUnitPosition":{"observationLevel":{"levelName":"plant","levelCode":"plant_1"},"observationLevelRelationships":[{"levelCode":"' . $stock_id. '","levelName":"plot"}],"positionCoordinateX":"74","positionCoordinateXType":"GRID_COL","positionCoordinateY":"03","positionCoordinateYType":"GRID_ROW"}, "additionalInfo" : {"observationUnitParent":"' . $stock_id. '"} }]';
 $mech->post('http://localhost:3010/brapi/v2/observationunits/',
@@ -81,7 +264,19 @@ ok($plant_id, 'created plant ID comes from the successful API response')
     or BAIL_OUT('Plant creation failed; do not attach images to an unrelated stock.');
 is($plant_unit->{studyDbId}, '165', 'created plant remains in its declared field study');
 is($plant_unit->{germplasmDbId}, '41281', 'created plant retains its parent germplasm');
+is(scalar @{$plant_response->{result}{data}}, 1, 'plant creation returns only the requested unit');
+is($plant_unit->{observationUnitName}, 'Testing Plant', 'plant DTO retains the exact requested name');
+is($schema->resultset('Stock::Stock')->find($plant_id)->type->name, 'plant',
+    'the returned plant ID resolves to the requested stock level');
+my $actual_parent_plots = $schema->storage->dbh->selectcol_arrayref(q{
+    SELECT r.subject_id FROM stock_relationship r
+    JOIN cvterm rt ON rt.cvterm_id=r.type_id
+    JOIN stock p ON p.stock_id=r.subject_id JOIN cvterm pt ON pt.cvterm_id=p.type_id
+    WHERE r.object_id=? AND rt.name='plant_of' AND pt.name='plot' ORDER BY r.subject_id
+}, undef, $plant_id);
+is_deeply($actual_parent_plots, [$stock_id], 'the returned plant has the exact selected parent plot');
 
+$upload_sources{$plant_id} = 1;
 $mech->get_ok("/image/add?type=stock&type_id=$plant_id");
 $mech->get_ok("/image/add?action=new&type=stock&type_id=$plant_id");
 
@@ -107,6 +302,8 @@ my $image_id = "";
 if ($uri =~ /\/(\d+)$/) {
     $image_id = $1;
 }
+$remember_image->($image_id, $plant_id);
+$checkpoint->('after_first_image');
 
 # --- Navigate back to the upload form before uploading the second image ---
 $mech->get_ok("/image/add?type=stock&type_id=$plant_id");
@@ -134,6 +331,7 @@ my $image_id_2 = "";
 if ($uri2 =~ /\/(\d+)$/) {
     $image_id_2 = $1;
 }
+$remember_image->($image_id_2, $plant_id);
 # Image analysis submit
 $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit', ["selected_image_ids"=> $image_id, 'service'=> 'plantcv_citrus_app', 'trait'=> 'Fruit Diameter|INV:0000118']);
 $submit_result = decode_json $mech->content;
@@ -297,7 +495,7 @@ my $analysis_info_json = encode_json({
     }
 });
 
-my $run_name = 'ImageAnalysisRun_test_' . time();
+my $run_name = $owned_prefix.'_single';
 
 # --- Single image via images_json ------------------------
 
@@ -324,6 +522,8 @@ $mech->post_ok(
 );
 
 my $create_result = decode_json $mech->content;
+$remember_run->($run_name, $create_result->{run_project_id});
+$checkpoint->('after_first_run');
 ok($create_result->{success}, "create_run_project returned success");
 ok($create_result->{run_project_id}, "run_project_id returned");
 is($create_result->{run_name}, $run_name, "run_name echoed back");
@@ -565,6 +765,8 @@ ok($trial_id_2 && $source_stock_id_2 && $germplasm_id_2,
 
 # Keep both original plant images for the same-source regression. This third
 # image and sample belong to the second study used by the multi-trial run.
+$remember_trial->($trial_id_2);
+$upload_sources{$source_stock_id_2} = 1;
 $mech->get_ok("/image/add?type=stock&type_id=$source_stock_id_2");
 $mech->get_ok("/image/add?action=new&type=stock&type_id=$source_stock_id_2");
 $mech->submit_form_ok({
@@ -577,6 +779,7 @@ $mech->submit_form_ok({
 $mech->submit_form_ok({form_name => 'store_image'},
     "store the second-study source image");
 my ($image_id_3) = $mech->uri() =~ m{/(\d+)$};
+$remember_image->($image_id_3, $source_stock_id_2);
 ok($image_id_3, "the second-study image has its returned identity")
     or BAIL_OUT('Second-study image storage did not return an image ID.');
 isnt($image_id_3, $image_id, "second-study image is distinct from the first source image"); # codespell:ignore isnt
@@ -606,7 +809,7 @@ is($sample_unit_2->{germplasmDbId}, $germplasm_id_2, "second-study sample retain
 ok(!$uniq{$sample_id_2} && $sample_id_2 ne $source_stock_id_2,
    "second-study sample is distinct from both source units and the first-study samples");
 
-my $multi_run_name = 'ImageAnalysisRun_multi_' . time();
+my $multi_run_name = $owned_prefix.'_multi';
 
 $mech->post_ok(
     'http://localhost:3010/ajax/image_analysis/create_run_project',
@@ -628,6 +831,7 @@ $mech->post_ok(
 );
 
 my $multi = decode_json $mech->content;
+$remember_run->($multi_run_name, $multi->{run_project_id});
 ok($multi->{success}, "multi-image run created");
 is($multi->{image_count}, 2, "two images reported");
 
@@ -682,7 +886,7 @@ is_deeply($multi_stock_ids,
 $mech->post_ok(
     'http://localhost:3010/ajax/image_analysis/create_run_project',
     [
-        run_name    => 'same_plot_' . time(),
+        run_name    => $owned_prefix.'_same',
         images_json => encode_json([
             { source_image_id => $image_id,   source_stock_id => $source_stock_id,
               trial_id => $trial_id, tissue_samples => [ { stock_id => $tissue_sample_ids[0] } ] },
@@ -692,6 +896,7 @@ $mech->post_ok(
     ]
 );
 my $same = decode_json $mech->content;
+$remember_run->($owned_prefix.'_same', $same->{run_project_id});
 ok($same->{success}, "two images of the same plot save without constraint violation");
 is($same->{stock_count}, scalar(keys %uniq), "shared source counted once, both samples counted");
 my $same_stock_ids = $schema->storage->dbh->selectcol_arrayref(q{
@@ -708,7 +913,7 @@ is_deeply($same_stock_ids, [sort { $a <=> $b } keys %uniq],
 $mech->post_ok(
     'http://localhost:3010/ajax/image_analysis/create_run_project',
     [
-        run_name    => 'dup_image_' . time(),
+        run_name    => $owned_prefix.'_duplicate',
         images_json => encode_json([
             { source_image_id => $image_id, source_stock_id => $source_stock_id,
               trial_id => $trial_id, tissue_samples => [ { stock_id => $tissue_sample_ids[0] } ] },
@@ -718,12 +923,8 @@ $mech->post_ok(
     ]
 );
 my $dup = decode_json $mech->content;
+$remember_run->($owned_prefix.'_duplicate', $dup->{run_project_id});
 is($dup->{image_count}, 1, "duplicate source_image_id deduped");
 
-# Delete test image
-$dbh = SGN::Test::Fixture->new()->dbh();
-my $i = CXGN::Image->new(dbh => $dbh, image_id => $image_id, image_dir => $mech->context->config->{'image_dir'});
-$i->hard_delete();
-
-$f->clean_up_db();
+ok($cleanup->(), 'all owned images and run projects removed before fixture stocks');
 done_testing();
