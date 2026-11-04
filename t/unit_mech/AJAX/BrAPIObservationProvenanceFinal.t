@@ -3,6 +3,7 @@ use warnings;
 use lib 't/lib';
 use Test::More;
 use SGN::Test::Fixture;
+use SGN::Test::OwnedTrialCleanup;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trial::TrialCreate;
@@ -22,13 +23,20 @@ use CXGN::Phenotypes::StorePhenotypes;
 # One synthetic experiment contains A and untouched B. Files are experiment-
 # level history, so a file associated with that experiment does NOT assert that
 # it supplied every cell. No application source changes or provenance redesign.
-# Committed fixture rows must be visible to the real HTTP server; retain only
-# this test's rows and archive until the coordinator removes its owned volume.
+# Committed fixture rows must be visible to the real HTTP server. Clean the
+# exact test-owned graph before another test uses the shared fixture.
 my $f=SGN::Test::Fixture->new;
 my $s=$f->bcs_schema;
 my $dbh=$s->storage->dbh;
 my $dir=tempdir('sgn-observation-provenance-XXXXXX',TMPDIR=>1,CLEANUP=>0);
 my $tag='observation_file_provenance_'.$$.'_'.time();
+
+my $owned = SGN::Test::OwnedTrialCleanup->new(
+    schema => $s, label => 'provenance',
+    trial_name => $tag.'_trial', stock_names => [$tag.'_plot'],
+    %{SGN::Test::OwnedTrialCleanup->cutoffs($s)}, phenotype_names => [$tag.'_A', $tag.'_B'],
+);
+
 my $native=$ENV{AUDIT_NATIVE_PROVENANCE} ? 1 : 0;
 my $base=$ENV{SGN_TEST_SERVER} || 'http://localhost:3010';
 my $ua=LWP::UserAgent->new(timeout=>45);
@@ -42,6 +50,7 @@ ok($s->resultset('Cv::Cvterm')->find($trait_a) && $s->resultset('Cv::Cvterm')->f
 my $saved=CXGN::Trial::TrialCreate->new({chado_schema=>$s,dbh=>$f->dbh,owner_id=>41,design=>{1=>{stock_name=>'test_accession1',plot_name=>$tag.'_plot',plot_number=>1,block_number=>1,rep_number=>1,row_number=>1,col_number=>1}},program=>'test',trial_year=>'2026',trial_description=>'Disposable existing-observation file provenance regression',trial_location=>'test_location',trial_name=>$tag.'_trial',design_type=>'RCBD',operator=>'janedoe'})->save_trial;
 my $trial=$saved->{trial_id};
 ok($trial,'own one-plot trial created') or BAIL_OUT(encode_json($saved));
+$owned->checkpoint('after_creation');
 my $plot=$s->resultset('Stock::Stock')->find({uniquename=>$tag.'_plot'})->stock_id;
 my $geo=$dbh->selectrow_array('SELECT ne.nd_geolocation_id FROM nd_experiment ne JOIN nd_experiment_project nep USING(nd_experiment_id) WHERE nep.project_id=? AND ne.type_id=?',undef,$trial,cv('field_layout','experiment_type'));
 my $type=cv('phenotyping_experiment','experiment_type');
@@ -107,6 +116,7 @@ if ($native) {
     $json=eval{decode_json($response->decoded_content)} || {};
     diag('HTTP response: '.encode_json($json));
 }
+$owned->checkpoint('after_http_store');
 is($status_code,200,$native ? 'owning parse/archive/store pipeline accepted the existing-ID request' : 'real existing-ID PUT accepted');
 ok(!(grep {($_->{messageType}//'') eq 'ERROR'} @{$json->{metadata}{status}||[]}), 'API response has no ERROR status');
 my $a=$s->resultset('Phenotype::Phenotype')->find($observation{A});
@@ -138,8 +148,10 @@ ok($visible->()->{$new_file->{file_id}},'new input appears in the owning project
 ok($visible->()->{$old_file_id},'old input remains visible because experiment-level history still contains untouched B');
 my ($old_active)=$dbh->selectrow_array('SELECT m.obsolete=0 FROM metadata.md_files f JOIN metadata.md_metadata m USING(metadata_id) WHERE f.file_id=?',undef,$old_file_id);
 ok($old_active,'the shared old input is not blanket-obsoleted after updating only A');
-my $report={scope=>'One existing-ID update; files are per-experiment many-file history, not authoritative per-cell ownership',execution_mode=>$native ? 'native ParseUpload/FileRequest/StorePhenotypes; HTTP auth bridge excluded' : 'real HTTP PUT',trial_id=>$trial,plot_id=>$plot,observation_ids=>\%observation,actual_observation_experiments=>$phenotype_experiments,old_file_id=>$old_file_id,new_file=>$new_file,new_file_links=>$links,request_status=>$status_code,response=>$json,own_temp_archive=>$dir,server_archive=>$new_path,retained_for_owned_volume_teardown=>1};
+my $report={scope=>'One existing-ID update; files are per-experiment many-file history, not authoritative per-cell ownership',execution_mode=>$native ? 'native ParseUpload/FileRequest/StorePhenotypes; HTTP auth bridge excluded' : 'real HTTP PUT',trial_id=>$trial,plot_id=>$plot,observation_ids=>\%observation,actual_observation_experiments=>$phenotype_experiments,old_file_id=>$old_file_id,new_file=>$new_file,new_file_links=>$links,request_status=>$status_code,response=>$json,own_temp_archive=>$dir,server_archive=>$new_path,retained_for_owned_volume_teardown=>0};
 open($fh,'>:raw',"$dir/provenance.json") or die$!;print $fh encode_json($report);close$fh;
 diag(encode_json($report));
 diag('Own synthetic archive evidence retained at '.$dir.'; API used its normal configured archive without configuration changes.');
+$owned->checkpoint('before_cleanup');
+ok($owned->cleanup, 'test-owned committed observation data removed');
 done_testing;
