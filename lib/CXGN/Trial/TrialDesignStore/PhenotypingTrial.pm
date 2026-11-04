@@ -26,6 +26,7 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'intercrop_stock_name',
         'tissue_sample_names',
         'plot_name',
+        '_existing_parent_stock_id', # Internal child-writer identity; validated by AbstractTrial.
         'plot_number',
         'block_number',
         'rep_number',
