@@ -609,12 +609,12 @@ sub _validate_with_plugin {
             }
         }
 
-        # check assigments by entry number
+        # check assignments by entry number
         foreach my $en (keys %{$seen_entry_numbers{$tk}{'by_num'}} ) {
-            my @ans = uniq @{$seen_entry_numbers{$tk}{'by_num'}{$en}};
-            my $count = scalar(@ans);
-            if ( scalar(@ans) > 1 ) {
-                push @error_messages, "Entry Number mismatch: Entry number <strong>$en</strong> has multiple accessions (" . join(', ', @ans) . ") assigned to it in trial <strong>$tk</strong>.";
+            my @assignments = uniq @{$seen_entry_numbers{$tk}{'by_num'}{$en}};
+            my $count = scalar(@assignments);
+            if ( scalar(@assignments) > 1 ) {
+                push @error_messages, "Entry Number mismatch: Entry number <strong>$en</strong> has multiple accessions (" . join(', ', @assignments) . ") assigned to it in trial <strong>$tk</strong>.";
             }
         }
 
