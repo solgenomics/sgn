@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Text::CSV;
 use JSON::XS;
+use Time::HiRes qw(time sleep);
 
 my @pending;
 
@@ -41,6 +42,11 @@ LABEL:before_cleanup for deliberate failure injection. Set
 SGN_TEST_OWNED_TRIAL_EVIDENCE to an existing directory to record before/after
 row counts and the original trial137 layout/observations/file links as JSON.
 END cleanup runs after failure and preserves the original nonzero exit status.
+After database deletion commits, cleanup synchronously refreshes the three
+all_but_genoview views in the standard order under advisory lock67895. It waits
+at most10seconds for that lock and allows at most60seconds per REFRESH. A failed
+refresh keeps cleanup incomplete; END can retry without requiring deleted rows.
+Original fixture cache rows are rebuilt from their unchanged owning data.
 
 =cut
 
@@ -65,7 +71,7 @@ sub new {
     for my $name (@{$args{stock_names}}) {
         die "Owned stock name already exists: $name" if $db->selectrow_array('SELECT count(*) FROM stock WHERE uniquename=?', undef, $name);
     }
-    my $self = bless {%args, archive_paths => [], done => 0}, $class;
+    my $self = bless {%args, archive_paths => [], owned_stock_ids => {}, done => 0}, $class;
     push @pending, $self;
     $self->record_evidence('before');
     return $self;
@@ -95,7 +101,7 @@ sub record_evidence {
         files => $db->selectall_arrayref('SELECT DISTINCT f.file_id,f.nd_experiment_id FROM nd_experiment_project p JOIN phenome.nd_experiment_md_files f USING(nd_experiment_id) WHERE p.project_id=137 ORDER BY f.file_id,f.nd_experiment_id'),
     };
     open(my $fh, '>:raw', "$dir/$self->{label}-$stage.json") or die "Cannot write cleanup evidence: $!";
-    print {$fh} JSON::XS->new->canonical->encode({counts=>\%counts, original_trial137=>$snapshot});
+    print {$fh} JSON::XS->new->canonical->encode({counts=>\%counts, original_trial137=>$snapshot, owned_cache_rows=>$self->owned_cache_rows});
     close($fh) or die "Cannot close cleanup evidence: $!";
 }
 
@@ -109,6 +115,7 @@ sub cleanup {
         my $placeholders = join(',', ('?') x @names);
         my $plot_ids = $db->selectcol_arrayref("SELECT stock_id FROM stock WHERE uniquename IN ($placeholders)", undef, @names);
         my %owned_plots = map { $_ => 1 } @$plot_ids;
+        $self->{owned_stock_ids}{$_} = 1 for @$plot_ids;
         return if !$trial_id && !@$plot_ids;
         die 'Own plot exists without its trial' if !$trial_id;
         my $experiment_ids = $db->selectcol_arrayref('SELECT nd_experiment_id FROM nd_experiment_project WHERE project_id=?', undef, $trial_id);
@@ -189,9 +196,58 @@ sub cleanup {
         unlink($path) or die "Cannot remove owned archive $path: $!" if -f $path;
     }
 
+    $self->refresh_owned_caches;
     $self->{done} = 1;
     $self->record_evidence('after');
     return 1;
+}
+
+
+# Match bin/refresh_matviews.pl's all_but_genoview selection and ordering.
+# Keep this synchronous: a detached refresh can leave deleted units visible to
+# the next BrAPI test. PG errors must propagate instead of a caught CLI error
+# being mistaken for a successfully exited worker.
+sub refresh_owned_caches {
+    my ($self) = @_;
+    return unless keys %{$self->{owned_stock_ids}};
+    $self->{schema}->txn_do(sub {
+        my $db = $self->{schema}->storage->dbh;
+        $db->do("SET LOCAL lock_timeout='10s'");
+        $db->do("SET LOCAL statement_timeout='60s'");
+        my $deadline = time() + 10;
+        while (!$db->selectrow_array('SELECT pg_try_advisory_xact_lock(67895)')) {
+            die "Timed out waiting to refresh owned-trial analytical caches\n" if time() >= $deadline;
+            sleep(0.1);
+        }
+        for my $view (qw(materialized_stockprop materialized_phenoview materialized_phenotype_jsonb_table)) {
+            $db->do('UPDATE public.matviews SET currently_refreshing=TRUE,refresh_start=statement_timestamp() WHERE mv_name=?', undef, $view);
+            $db->do("REFRESH MATERIALIZED VIEW public.$view");
+            $db->do('UPDATE public.matviews SET currently_refreshing=FALSE,last_refresh=statement_timestamp() WHERE mv_name=?', undef, $view);
+        }
+        my $counts = $self->owned_cache_rows;
+        for my $view (sort keys %$counts) {
+            die "Owned-trial cache $view retains $counts->{$view} deleted rows\n" if $counts->{$view};
+        }
+    });
+}
+
+sub owned_cache_rows {
+    my ($self) = @_;
+    my @ids = sort {$a <=> $b} keys %{$self->{owned_stock_ids}};
+    my %counts;
+    my $db = $self->{schema}->storage->dbh;
+    my %columns = (
+        materialized_stockprop => 'stock_id',
+        materialized_phenoview => 'stock_id',
+        materialized_phenotype_jsonb_table => 'observationunit_stock_id',
+    );
+    for my $view (sort keys %columns) {
+        $counts{$view} = 0;
+        next unless @ids;
+        my $placeholders = join(',', ('?') x @ids);
+        $counts{$view} = $db->selectrow_array("SELECT count(*) FROM public.$view WHERE $columns{$view} IN ($placeholders)", undef, @ids);
+    }
+    return \%counts;
 }
 
 END {
