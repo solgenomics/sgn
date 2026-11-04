@@ -251,20 +251,20 @@ foreach my $n (1, 2) {
     ok($mech->success, "tissue sample $n JSON request succeeds") or diag($mech->content);
     my $resp = decode_json $mech->content;
     my $ts_id = $resp->{result}{data}[0]{observationUnitDbId};
-    ok($ts_id, "tissue sample $n created") or diag(Dumper($resp->{metadata}));
+    ok($ts_id, "tissue sample $n created")
+        or BAIL_OUT('Tissue creation failed; do not submit unrelated observation units.');
+    isnt($ts_id, $plant_id, "tissue sample $n has its own identity");
+    ok(!(grep { $_ eq $ts_id } @tissue_sample_ids), "tissue sample $n is distinct from earlier samples");
+    is($resp->{result}{data}[0]{studyDbId}, $study_id, "tissue sample $n retains the parent field study");
+    is($resp->{result}{data}[0]{germplasmDbId}, $germplasm_id, "tissue sample $n retains the parent germplasm");
     push @tissue_sample_ids, $ts_id;
 }
 
 # create_run_project tests
 
-# A trial to attach the run to. Use an existing fixture trial id.
-my $trial_rs = $schema->resultset('Project::Project')->search(
-    undef, { rows => 1, order_by => { -desc => 'project_id' } }
-);
-my $trial_id = $trial_rs->first->project_id();
-
-# Source stock (reuse the stock from the submit test)
-my $source_stock_id = $stock_id;
+# Use the analyzed-image unit and its declared field study, as the browser does.
+my $trial_id = $study_id;
+my $source_stock_id = $plant_id;
 
 
 # Trait ids to associate (use real cvterm ids from the fixture)
@@ -421,8 +421,11 @@ my %uniq = map { $_ => 1 } ($source_stock_id, @tissue_sample_ids);
 diag("distinct stocks expected: " . scalar(keys %uniq));
 diag("linked in db: " . join(',', map { $_->stock_id } $nes_rs->all));
 
-is($nes_rs->count, scalar(@tissue_sample_ids),
-   "nd_experiment links source stock and tissue samples");
+is($nes_rs->count, scalar(keys %uniq),
+   "nd_experiment links the distinct source stock and both tissue samples");
+is_deeply([sort { $a <=> $b } map { $_->stock_id } $nes_rs->all],
+          [sort { $a <=> $b } keys %uniq],
+          "the stored observation units are exactly the submitted source and samples");
 
 # source stock is among the linked stocks
 my %linked_stocks = map { $_->stock_id => 1 } $nes_rs->all;
@@ -536,10 +539,72 @@ is(scalar(@{ $ror_empty->{table_data} }), 0, "table_data is empty");
 
 # --- Multi-image, multi-trial ---------------------------------------
 
-my @trial_rows = $schema->resultset('Project::Project')->search(
-    undef, { rows => 2, order_by => { -desc => 'project_id' } }
-)->all;
-my $trial_id_2 = $trial_rows[1] ? $trial_rows[1]->project_id() : $trial_id;
+# Resolve another real field source through its owning layout and germplasm.
+my ($trial_id_2, $source_stock_id_2, $germplasm_id_2) =
+    $schema->storage->dbh->selectrow_array(q{
+        SELECT DISTINCT p.project_id, s.stock_id, r.object_id
+        FROM project p
+        JOIN nd_experiment_project ep ON ep.project_id=p.project_id
+        JOIN nd_experiment ne USING(nd_experiment_id)
+        JOIN cvterm et ON et.cvterm_id=ne.type_id
+        JOIN nd_experiment_stock es USING(nd_experiment_id)
+        JOIN stock s USING(stock_id)
+        JOIN cvterm st ON st.cvterm_id=s.type_id
+        JOIN stock_relationship r ON r.subject_id=s.stock_id
+        JOIN cvterm rt ON rt.cvterm_id=r.type_id
+        JOIN stock g ON g.stock_id=r.object_id
+        JOIN cvterm gt ON gt.cvterm_id=g.type_id
+        WHERE p.name='test_trial' AND p.project_id<>?
+          AND et.name='field_layout' AND st.name='plot' AND rt.name='plot_of'
+          AND gt.name IN ('accession','cross','family_name')
+        ORDER BY p.project_id, s.stock_id, r.object_id LIMIT 1
+    }, undef, $trial_id);
+ok($trial_id_2 && $source_stock_id_2 && $germplasm_id_2,
+   "a distinct fixture field study has a declared plot and germplasm")
+    or BAIL_OUT('No second field-study source; do not infer membership from project sequence state.');
+
+# Keep both original plant images for the same-source regression. This third
+# image and sample belong to the second study used by the multi-trial run.
+$mech->get_ok("/image/add?type=stock&type_id=$source_stock_id_2");
+$mech->get_ok("/image/add?action=new&type=stock&type_id=$source_stock_id_2");
+$mech->submit_form_ok({
+    form_name => 'upload_image_form',
+    fields => {
+        file => $test_file, type => 'stock', type_id => $source_stock_id_2,
+        refering_page => 'http://google.com',
+    },
+}, "upload a separate image for the second field study");
+$mech->submit_form_ok({form_name => 'store_image'},
+    "store the second-study source image");
+my ($image_id_3) = $mech->uri() =~ m{/(\d+)$};
+ok($image_id_3, "the second-study image has its returned identity")
+    or BAIL_OUT('Second-study image storage did not return an image ID.');
+isnt($image_id_3, $image_id, "second-study image is distinct from the first source image");
+isnt($image_id_3, $image_id_2, "second-study image is distinct from the second plant image");
+
+$mech->post('http://localhost:3010/brapi/v2/observationunits',
+    'Content-Type' => 'application/json', 'Authorization' => "Bearer $sgn_session_id",
+    Content => encode_json([{
+        observationUnitName => $run_name.'_second_study_sample1',
+        studyDbId => "$trial_id_2", germplasmDbId => "$germplasm_id_2",
+        additionalInfo => {observationUnitParent => "$source_stock_id_2"},
+        observationUnitPosition => {
+            observationLevel => {levelName => 'tissue_sample', levelCode => '1'},
+            observationLevelRelationships => [],
+        },
+    }]),
+);
+ok($mech->success, "create the second-study tissue sample with its actual source parent")
+    or diag($mech->content);
+my $sample_response_2 = decode_json $mech->content;
+my $sample_unit_2 = $sample_response_2->{result}{data}[0];
+my $sample_id_2 = $sample_unit_2 ? $sample_unit_2->{observationUnitDbId} : undef;
+ok($sample_id_2, "second-study tissue sample has its returned identity")
+    or BAIL_OUT('Second-study tissue creation failed.');
+is($sample_unit_2->{studyDbId}, $trial_id_2, "second-study sample retains its actual field study");
+is($sample_unit_2->{germplasmDbId}, $germplasm_id_2, "second-study sample retains its parent germplasm");
+ok(!$uniq{$sample_id_2} && $sample_id_2 ne $source_stock_id_2,
+   "second-study sample is distinct from both source units and the first-study samples");
 
 my $multi_run_name = 'ImageAnalysisRun_multi_' . time();
 
@@ -555,9 +620,9 @@ $mech->post_ok(
             { source_image_id => $image_id,   source_stock_id => $source_stock_id,
               trial_id => $trial_id,   overlay_image_id => $image_id,
               tissue_samples => [ { stock_id => $tissue_sample_ids[0] } ] },
-            { source_image_id => $image_id_2, source_stock_id => $plant_id,
+            { source_image_id => $image_id_3, source_stock_id => $source_stock_id_2,
               trial_id => $trial_id_2, overlay_image_id => undef,
-              tissue_samples => [ { stock_id => $tissue_sample_ids[1] } ] },
+              tissue_samples => [ { stock_id => $sample_id_2 } ] },
         ]),
     ]
 );
@@ -567,7 +632,7 @@ ok($multi->{success}, "multi-image run created");
 is($multi->{image_count}, 2, "two images reported");
 
 my $multi_run_id = $multi->{run_project_id};
-my $expected_exp = ($trial_id_2 == $trial_id) ? 1 : 2;
+my $expected_exp = 2;
 
 is($schema->resultset('NaturalDiversity::NdExperimentProject')
      ->search({ project_id => $multi_run_id })->count,
@@ -578,7 +643,7 @@ is($schema->resultset('Project::ProjectRelationship')
    $expected_exp, "each trial linked to the run");
 
 # Both source images linked
-foreach my $iid ($image_id, $image_id_2) {
+foreach my $iid ($image_id, $image_id_3) {
     $img_check->execute($multi_run_id, $iid, $src_img_type_id);
     my ($cnt) = $img_check->fetchrow_array();
     is($cnt, 1, "source image $iid linked to run");
@@ -595,6 +660,20 @@ my $map = decode_json($map_prop->value);
 is(scalar(@$map), 2, "map has one entry per image");
 is($map->[0]{trial_id}, $trial_id, "map entry carries trial_id");
 ok(scalar(@{ $map->[0]{tissue_sample_ids} }), "map entry carries tissue samples");
+is_deeply([map { [$_->{source_image_id}, $_->{source_stock_id}, $_->{trial_id},
+                  @{$_->{tissue_sample_ids}}] } @$map],
+          [[$image_id, $source_stock_id, $trial_id, $tissue_sample_ids[0]],
+           [$image_id_3, $source_stock_id_2, $trial_id_2, $sample_id_2]],
+          "each image map retains its exact source, field study and tissue sample");
+my $multi_stock_ids = $schema->storage->dbh->selectcol_arrayref(q{
+    SELECT es.stock_id FROM nd_experiment_project ep
+    JOIN nd_experiment_stock es USING(nd_experiment_id)
+    WHERE ep.project_id=? ORDER BY es.stock_id
+}, undef, $multi_run_id);
+is_deeply($multi_stock_ids,
+          [sort { $a <=> $b } ($source_stock_id, $tissue_sample_ids[0],
+                              $source_stock_id_2, $sample_id_2)],
+          "multi-trial storage contains exactly the two real sources and their samples");
 
 # --- Regression: two images of the SAME plot --------------------------
 # This is what crashed the original code on nd_experiment_stock's
@@ -614,7 +693,15 @@ $mech->post_ok(
 );
 my $same = decode_json $mech->content;
 ok($same->{success}, "two images of the same plot save without constraint violation");
-is($same->{stock_count}, 2, "shared plot counted once, both samples counted");
+is($same->{stock_count}, scalar(keys %uniq), "shared source counted once, both samples counted");
+my $same_stock_ids = $schema->storage->dbh->selectcol_arrayref(q{
+    SELECT DISTINCT es.stock_id
+    FROM nd_experiment_project ep
+    JOIN nd_experiment_stock es USING(nd_experiment_id)
+    WHERE ep.project_id=? ORDER BY es.stock_id
+}, undef, $same->{run_project_id});
+is_deeply($same_stock_ids, [sort { $a <=> $b } keys %uniq],
+          "two images of the same source retain exactly the source and both samples");
 
 # --- Duplicate image id is deduped ----------------------------------
 
