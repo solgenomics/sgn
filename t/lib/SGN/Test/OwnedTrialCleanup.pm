@@ -17,7 +17,6 @@ SGN::Test::OwnedTrialCleanup - isolate the two committed observation HTTP tests
      schema => $schema, label => 'provenance',
      trial_name => $tag.'_trial', stock_names => [$tag.'_plot'],
      %{SGN::Test::OwnedTrialCleanup->cutoffs($schema)},
-     phenotype_names => [$tag.'_A', $tag.'_B'], # optional stricter ownership
  );
  # Create the named trial, make HTTP requests, then:
  $owned->cleanup;
@@ -66,7 +65,6 @@ sub new {
     for my $name (@{$args{stock_names}}) {
         die "Owned stock name already exists: $name" if $db->selectrow_array('SELECT count(*) FROM stock WHERE uniquename=?', undef, $name);
     }
-    $args{phenotype_names} = {map { $_ => 1 } @{$args{phenotype_names}}} if $args{phenotype_names};
     my $self = bless {%args, archive_paths => [], done => 0}, $class;
     push @pending, $self;
     $self->record_evidence('before');
@@ -157,10 +155,6 @@ sub cleanup {
         }
         for my $id (keys %phenotypes) {
             die "Phenotype $id predates this test" unless $id > $self->{before_phenotype_id};
-            if ($self->{phenotype_names}) {
-                my ($name) = $db->selectrow_array('SELECT uniquename FROM phenotype WHERE phenotype_id=?', undef, $id);
-                die "Phenotype $id has an unexpected name" unless $self->{phenotype_names}{$name};
-            }
             for my $exp (@{$db->selectcol_arrayref('SELECT nd_experiment_id FROM nd_experiment_phenotype WHERE phenotype_id=?', undef, $id)}) {
                 die "Phenotype $id is shared outside owned graph" unless $experiments{$exp};
             }

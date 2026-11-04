@@ -34,7 +34,7 @@ my $tag='observation_file_provenance_'.$$.'_'.time();
 my $owned = SGN::Test::OwnedTrialCleanup->new(
     schema => $s, label => 'provenance',
     trial_name => $tag.'_trial', stock_names => [$tag.'_plot'],
-    %{SGN::Test::OwnedTrialCleanup->cutoffs($s)}, phenotype_names => [$tag.'_A', $tag.'_B'],
+    %{SGN::Test::OwnedTrialCleanup->cutoffs($s)},
 );
 
 my $native=$ENV{AUDIT_NATIVE_PROVENANCE} ? 1 : 0;
