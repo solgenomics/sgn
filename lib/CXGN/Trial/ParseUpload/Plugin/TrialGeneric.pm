@@ -53,15 +53,9 @@ sub _validate_with_plugin {
 
     my $validate = $trait_validator->validate($schema, "traits", $treatments);
 
-    foreach my $treatment (@{$treatments}) {
-        if ($treatment !~ m/_TREATMENT:/) {
-            push @error_messages, "Column $treatment is not formatted like a treatment. Use only full, valid treatment names.\n";
-        }
-    }
-
     if (@{$validate->{missing}}>0) {
         foreach my $missing (@{$validate->{missing}}) {
-            push @error_messages, "Treatment $missing does not exist in the database.\n";
+            push @error_messages, "Trait/treatment term $missing does not exist in the database.\n";
         }
     }
 

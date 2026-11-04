@@ -3,6 +3,7 @@ package CXGN::List::Validate::Plugin::Traits;
 
 use Moose;
 use Data::Dumper;
+use CXGN::Onto;
 
 sub name {
     return "traits";
@@ -17,6 +18,7 @@ sub validate {
     my @missing;
     my @wrong_ids;
     my @not_variables;
+    my $default_trait_db_name;
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
@@ -41,7 +43,11 @@ sub validate {
         $trait_name =~ s/^\s+//;
 
         if (!$context->get_conf('list_trait_require_id') && ($db_name eq '' || $db_name eq $trait_name)) {
-          $db_name = $context->get_conf('trait_ontology_db_name');
+          if (!defined $default_trait_db_name) {
+              my @root_nodes = CXGN::Onto->new({ schema => $schema })->get_root_nodes('trait_ontology');
+              ($default_trait_db_name) = $root_nodes[0] ? split(/:/, $root_nodes[0]->[1]) : ('');
+          }
+          $db_name = $default_trait_db_name;
         }
 
         my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
