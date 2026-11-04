@@ -4,6 +4,7 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
+use SGN::Test::OwnedTrialCleanup;
 use Test::LWP::UserAgent;
 use SGN::Test::WWW::Mechanize;
 use CXGN::Image;
@@ -204,6 +205,9 @@ my $cleanup = sub {
     });
     die 'Owned run projects remain after fixture cleanup'
         if @run_ids && $db->selectrow_array('SELECT count(*) FROM project WHERE project_id=ANY(?)', undef, \@run_ids);
+    # Source restoration is committed. Remove deleted own plants/images from
+    # the same three analytical views used by the observation HTTP tests.
+    SGN::Test::OwnedTrialCleanup->refresh_analytical_caches($schema);
     $cleanup_done = 1;
     return 1;
 };
