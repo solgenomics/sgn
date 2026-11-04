@@ -1200,6 +1200,7 @@ sub _store_units_legacy {
 
             $plot_hash = {
                 plot_name       => $plot_parent_name,
+                _existing_parent_stock_id => $plot_parent_id,
                 plant_names     => [ $plot_name ],
                 # accession_name => $accession_name,
                 stock_name      => $accession_name,
@@ -1229,6 +1230,7 @@ sub _store_units_legacy {
 
             $plot_hash = {
                 plot_name       =>  $plot_parent_name,
+                _existing_parent_stock_id => $plot_parent_id,
                 tissue_sample_names => [ $plot_name ],                
                 stock_name => $accession_name,
                 plot_number => $plot_number,

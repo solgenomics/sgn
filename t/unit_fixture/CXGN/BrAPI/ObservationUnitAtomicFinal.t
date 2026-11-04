@@ -145,8 +145,34 @@ my $all=eval {
   is($v1->{observations}[0]{observationTimeStamp},'2026-11-02T10:00:00Z','v1 included observation uses the same timestamp mapping');
  };
  scenario 'Tissue creation preserves a plant parent while enforcing study, germplasm and level'=>sub {
-  my $parent=child($plots[0],$prefix.'sample_parent');
   my $germplasm=accession($plots[0]);
+  my $plot_type=term('plot','stock_type');
+  my $plot_count=$s->resultset('Stock::Stock')->search({type_id=>$plot_type})->count;
+  my $plot_rows=sub {$dbh->selectall_arrayref(
+   'SELECT sp.stock_id,sp.type_id,sp.value,sp.rank FROM stockprop sp
+    JOIN stock st ON st.stock_id=sp.stock_id WHERE st.type_id=? ORDER BY sp.stock_id,sp.type_id,sp.rank',
+   undef,$plot_type)};
+  my $original_plot_metadata=$plot_rows->();
+  my $version_rows=sub {$dbh->selectall_arrayref(
+   'SELECT value,rank FROM projectprop WHERE project_id=? AND type_id=? ORDER BY rank',
+   undef,$trial,term('accession_occurrence_version','project_property'))};
+  my $original_versions=$version_rows->();
+  my $plant_name=$prefix.'sample_parent';
+  my $created=api()->observationunits_store([{studyDbId=>"$trial",germplasmDbId=>"$germplasm",
+   observationUnitName=>$plant_name,additionalInfo=>{observationUnitParent=>"$plots[0]"},
+   observationUnitPosition=>{observationLevel=>{levelName=>'plant',levelCode=>'1'},observationLevelRelationships=>[]}}],$context,41);
+  ok(defined($created->{result}),'the parent plant is created through the owning BrAPI writer') or diag(encode_json($created));
+  my $parent=$created->{result}{data}[0]{observationUnitDbId};
+  ok($parent,'the new parent identity comes from the API DTO');
+  return if !$parent;
+  is(scalar @{$created->{result}{data}},1,'the creation response returns only the requested plant');
+  is($created->{result}{data}[0]{observationUnitName},$plant_name,'the DTO returns the exact requested plant name');
+  is($s->resultset('Stock::Stock')->find($parent)->type->name,'plant','the returned ID belongs to the created plant level');
+  my $root_parents=$dbh->selectcol_arrayref(
+   'SELECT r.subject_id FROM stock_relationship r JOIN stock p ON p.stock_id=r.subject_id
+    WHERE r.object_id=? AND r.type_id=? AND p.type_id=? ORDER BY r.subject_id',
+   undef,$parent,term('plant_of','stock_relationship'),$plot_type);
+  is_deeply($root_parents,[$plots[0]],'the exact returned plant has the requested existing root plot');
   my $request={studyDbId=>"$trial",germplasmDbId=>"$germplasm",observationUnitName=>$prefix.'plant_tissue',
    additionalInfo=>{observationUnitParent=>"$parent"},
    observationUnitPosition=>{observationLevel=>{levelName=>'tissue_sample',levelCode=>'1'},observationLevelRelationships=>[]}};
@@ -160,6 +186,30 @@ my $all=eval {
   my $groups=CXGN::Trial::DesignReplication::read($s,[$id,$parent]);
   is_deeply([@{$groups->{$id}}{qw(value block occurrence)}],[@{$groups->{$parent}}{qw(value block occurrence)}],
    'the tissue sample inherits its actual parent design, block and occurrence');
+  my $root_request={%$request,observationUnitName=>$prefix.'plot_tissue',
+   additionalInfo=>{observationUnitParent=>"$plots[0]"}};
+  my $root_result=api()->observationunits_store([$root_request],$context,41);
+  ok(defined($root_result->{result}),'a tissue sample can still be collected directly from the existing plot') or diag(encode_json($root_result));
+  my $root_id=$root_result->{result}{data}[0]{observationUnitDbId};
+  ok($root_id,'the direct-plot tissue sample has a distinct returned identity');
+  is($s->resultset('Stock::Stock')->search({type_id=>$plot_type})->count,$plot_count,
+   'plant and tissue creation fabricate no field plots');
+  is($s->resultset('Stock::Stock')->search({uniquename=>$plant_name,type_id=>$plot_type})->count,0,
+   'the plant name is never reused for a placeholder plot');
+  is_deeply($plot_rows->(),$original_plot_metadata,'all original plot properties, including replicate and design tags, are unchanged');
+  is_deeply($version_rows->(),$original_versions,'child creation does not normalize or mark the whole field layout');
+  my $untrusted={%$request,observationUnitName=>$prefix.'client_internal_marker',
+   additionalInfo=>{observationUnitParent=>"$parent",_existing_parent_stock_id=>"$plots[1]"}};
+  my $untrusted_result=api()->observationunits_store([$untrusted],$context,41);
+  ok(defined($untrusted_result->{result}),'ordinary additionalInfo cannot configure the internal native parent')
+   or diag(encode_json($untrusted_result));
+  my $untrusted_id=$untrusted_result->{result}{data}[0]{observationUnitDbId};
+  if ($untrusted_id) {
+   my $actual=$dbh->selectcol_arrayref(
+    'SELECT r.object_id FROM stock_relationship r JOIN stock st ON st.stock_id=r.object_id WHERE r.subject_id=? AND r.type_id=? AND st.type_id=? ORDER BY r.object_id',
+    undef,$untrusted_id,term('tissue_sample_of','stock_relationship'),term('plant','stock_type'));
+   is_deeply($actual,[$parent],'a user-supplied internal-looking metadata key cannot redirect the real plant parent');
+  }
   for my $case (
    ['plant_of_plant',{observationUnitPosition=>{observationLevel=>{levelName=>'plant',levelCode=>'1'},observationLevelRelationships=>[]}}],
    ['different_study',{studyDbId=>'165'}],
