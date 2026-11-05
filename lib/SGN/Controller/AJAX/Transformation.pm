@@ -392,6 +392,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
                 my $vector_construct = $parsed_data->{$row}->{'vector_construct'};
                 my $notes = $parsed_data->{$row}->{'notes'};
                 my $is_a_control = $parsed_data->{$row}->{'is_a_control'};
+                my $FEC_batch = $parsed_data->{$row}->{'FEC_batch'};
                 my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
                     chado_schema => $schema,
                     phenome_schema => $phenome_schema,
@@ -403,6 +404,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
                     notes => $notes,
                     owner_id => $user_id,
                     is_a_control => $is_a_control,
+                    FEC_batch => $FEC_batch
                 });
 
                 $add_transformation->add_transformation_identifier();

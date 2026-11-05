@@ -19,12 +19,13 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'transformation_identifier', 'accession_name', 'vector_construct' ],
-        optional_columns => [ 'notes', 'is_a_control' ],
+        optional_columns => [ 'notes', 'is_a_control', 'FEC_batch' ],
         column_aliases => {
             'transformation_identifier' => ['transformation identifier'],
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
             'is_a_control' => ['is a control'],
+            'FEC_batch' => ['FEC batch'],
         }
     );
     my $parsed = $parser->parse();
@@ -109,11 +110,13 @@ sub _parse_with_plugin {
         my $vector_construct = $row->{'vector_construct'};
         my $notes = $row->{'notes'};
         my $is_a_control = $row->{'is_a_control'};
+        my $FEC_batch = $row->{'FEC_batch'};
         $transformation_id_info{$row_number}{'transformation_identifier'} = $transformation_identifier;
         $transformation_id_info{$row_number}{'accession_name'} = $accession_name;
         $transformation_id_info{$row_number}{'vector_construct'} = $vector_construct;
         $transformation_id_info{$row_number}{'notes'} = $notes;
         $transformation_id_info{$row_number}{'is_a_control'} = $is_a_control;
+        $transformation_id_info{$row_number}{'FEC_batch'} = $FEC_batch;
     }
 
     $self->_set_parsed_data(\%transformation_id_info);

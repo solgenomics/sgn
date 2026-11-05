@@ -102,6 +102,7 @@ $trial_name
                                 <td>transformation_identifier</td>
                                 <td>accession_name</td>
                                 <td>vector_construct</td>
+                                <td>FEC_batch</td>
                                 <td>notes</td>
                                 <td>is_a_control</td>
                             </tr>
@@ -117,6 +118,7 @@ $trial_name
 
                     <b>Optional fields:</b>
                     <ul>
+                        <li>FEC_batch (Batch Number of Friable Embryogenic Calli used in the transformation)</li>
                         <li>notes (additional information about transformation identifier)</li>
                         <li>is_a_control (if you would like to set any transformation identifier <b>as a control</b>, please indicate "1" for the "is_a_control" column. To <b>set a control</b> for any transformation ID, please use the link "Set Transformation Control" on the transformation ID detail page.)</li>
                     </ul>
