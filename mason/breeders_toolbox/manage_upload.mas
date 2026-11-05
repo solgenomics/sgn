@@ -317,6 +317,18 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery(document).on('click', '.obsolete-file-btn', function() {
+        let file_id = jQuery(this).attr('id').replace('obsolete_file_', '');
+        let file_name = jQuery('#file_name_'+file_id).text();
+        if (!confirm("Obsolete file "+file_name+"? It will no longer appear in your archived files.")) {
+            return;
+        }
+        jsMod["upload_factory"].obsolete_file(file_id, function() {
+            let interval = jQuery('#file_time_interval_select option:selected').val();
+            jsMod["upload_factory"].load_archived_files_table('<% $sp_person_id %>', interval);
+        });
+    });
+
     jQuery('#upload_factory_check_file_format').html(upload_type_options());
 
     jQuery(document).on('change', '#upload_factory_check_file_format', function() {

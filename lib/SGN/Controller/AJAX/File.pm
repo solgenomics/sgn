@@ -73,4 +73,31 @@ sub set_file_type : Chained('file') PathPart('set_file_type') Args(1) {
     $c->stash->{rest} = {success => 1};
 }
 
+sub obsolete_file : Chained('file') PathPart('obsolete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $file = $c->stash->{archived_file};
+    my $note = $c->req->param('note');
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    if (!($c->user()->check_roles('curator') || $user_id == $file->user_id())) {
+        $c->stash->{rest} = {error => "You do not have permission to obsolete this file. You must either be the uploader or a curator."};
+        return;
+    }
+
+    my $error;
+    try {
+        $file->obsolete_file($note);
+    } catch {
+        $error = $_;
+    };
+
+    if ($error) {
+        $c->stash->{rest} = {error => "Could not obsolete file: $error"};
+        return;
+    }
+
+    $c->stash->{rest} = {success => 1};
+}
+
 1;

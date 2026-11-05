@@ -482,6 +482,40 @@ sub delete_file {
     };
 }
 
+=head2 obsolete_file($note)
+
+Marks this file as obsolete by setting md_metadata.obsolete = 1 on the metadata row
+linked to this file, and records $note in md_metadata.obsolete_note. The file itself
+and its md_files row are left untouched. Obsolete files are excluded from
+get_user_archived_files() and get_all_archived_files().
+
+=cut
+
+sub obsolete_file {
+    my $self = shift;
+    my $note = shift;
+    my $metadata_schema = _prepare_metadata_schema($self->metadata_schema());
+    my $file_id = $self->file_id();
+    my $metadata_id = $self->metadata_id();
+
+    if (!$metadata_id) {
+        die "File ID $file_id has no associated metadata ID, so it cannot be obsoleted.\n";
+    }
+
+    try {
+        my $metadata_row = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
+        if (!$metadata_row) {
+            die "No md_metadata row found with metadata ID $metadata_id!\n";
+        }
+        $metadata_row->update({
+            obsolete => 1,
+            obsolete_note => $note
+        });
+    } catch {
+        die "Error obsoleting file: $_";
+    };
+}
+
 =head1 CLASS METHODS
 
 =head2 get_user_archived_files($bcs_schema, $user_id)
@@ -500,7 +534,8 @@ sub get_user_archived_files {
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
         WHERE sp_person_id=? 
-        AND basename != 'none'";
+        AND basename != 'none'
+        AND COALESCE(md_metadata.obsolete::int, 0) = 0";
 
     my $time_restrict_q = " AND create_timestamp > NOW() - ? :: interval";
 
@@ -545,7 +580,8 @@ sub get_all_archived_files {
     my $q = "SELECT file_id, basename, sp_person_id, first_name, last_name, filetype, tags FROM metadata.md_files
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
-        WHERE basename != 'none'";
+        WHERE basename != 'none'
+        AND COALESCE(md_metadata.obsolete::int, 0) = 0";
 
     my $time_restrict_q = " AND create_timestamp > NOW() - ? :: interval";
 

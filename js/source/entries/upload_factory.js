@@ -122,6 +122,7 @@ export function load_archived_files_table(user_id, interval) {
                 //header_row.append(jQuery('<th>').text("Check formatting rules"));
                 //header_row.append(jQuery('<th>').text("Delete"));
                 header_row.append(jQuery('<th>').text("Process File"));
+                header_row.append(jQuery('<th>').text("Obsolete"));
 
                 jQuery('#upload_factory_archived_files_table').html('<thead></thead><tbody></tbody><tfoot></tfoot>')
 
@@ -155,6 +156,7 @@ export function load_archived_files_table(user_id, interval) {
                         // }
                         //tr.append(jQuery("<td>").html("<button class='btn btn-danger'><span class="glyphicon glyphicon-trash"></span></button>"));
                         tr.append(jQuery("<td>").html("<button class='btn btn-success process-file-btn' id='process_file_"+row.file_id+"'><span class='glyphicon glyphicon-play-circle'></span></button>"));
+                        tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-danger obsolete-file-btn' id='obsolete_file_"+row.file_id+"'><span class='glyphicon glyphicon-trash'></span></button>"));
                         file_tbody.append(tr);
                     });
                 } 
@@ -2037,7 +2039,7 @@ function populate_nirs_validate_submit_data(event) {
 function populate_metabolomics_validate_submit_data(event) {
     let file_data = event.data.file_data;
     let selected_protocols = [];
-    jQuery('input[name="upload_metabolomics_protocol_select"]:checked').each(function() {
+    jQuery('input[name="upload_metabolomics_protocol_id"]:checked').each(function() {
             selected_protocols.push({id : jQuery(this).val(), name : jQuery(this).attr('protocol_name')});
         });
     if (selected_protocols.length > 1){
@@ -2066,7 +2068,7 @@ function populate_metabolomics_validate_submit_data(event) {
 function populate_transcriptomics_validate_submit_data(event) {
     let file_data = event.data.file_data;
     let selected_protocols = [];
-    jQuery('input[name="upload_transcriptomics_protocol_select"]:checked').each(function() {
+    jQuery('input[name="upload_transcriptomics_protocol_id"]:checked').each(function() {
             selected_protocols.push({id : jQuery(this).val(), name : jQuery(this).attr('protocol_name')});
         });
     if (selected_protocols.length > 1){
@@ -3373,6 +3375,27 @@ export function commit_upload_job(job_id) {
     setTimeout(function() {
         refresh_upload_tables();
     }, 1500);
+}
+
+export function obsolete_file(file_id, on_success) {
+
+    jQuery.ajax({
+        url : `/ajax/file/${file_id}/obsolete`,
+        type : 'POST',
+        data : {
+            'note' : "File obsoleted from upload factory"
+        },
+        success : function(response) {
+            if (response.error) {
+                alert(response.error);
+            } else if (on_success) {
+                on_success();
+            }
+        },
+        error : function() {
+            alert("An error occurred obsoleting a file, check console.");
+        }
+    });
 }
 
 export function save_file_type(file_id, type) {
