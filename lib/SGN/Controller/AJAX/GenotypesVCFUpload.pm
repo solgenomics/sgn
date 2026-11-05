@@ -31,6 +31,7 @@ use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::GenotypingProject;
 use File::Basename qw | basename dirname|;
+use IO::Compress::Gzip qw(gzip $GzipError);
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -210,6 +211,7 @@ sub upload_genotype_verify_POST : Args(0) {
             #version that gets archived (and used for loading) below. It is archived using
             #the same archive_filename/timestamp as the transposed file, so that it can be
             #found later by swapping the genotype_vcf_upload directory for genotype_vcf_archive.
+            #The archived original is gzipped, so it is stored as <basename>.gz.
             my $original_uploader = CXGN::UploadFile->new({
                 tempfile => $upload_tempfile,
                 subdirectory => "genotype_vcf_archive",
@@ -224,6 +226,12 @@ sub upload_genotype_verify_POST : Args(0) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
                 $c->detach();
             }
+            if (!gzip($archived_original_vcf => "$archived_original_vcf.gz")) {
+                print STDERR "Could not gzip $archived_original_vcf: $GzipError\n";
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
+            }
+            unlink $archived_original_vcf;
 
             my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
             my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
