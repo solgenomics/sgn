@@ -285,6 +285,11 @@ function edit_trial_details(){
         highlight_changed_details(harvest_date_element);
     });
 
+    jQuery('#clear_second_harvest_date').click(function(){
+        second_harvest_date_element.val('');
+        highlight_changed_details(second_harvest_date_element);
+    });
+
     jQuery('[id^="edit_trial_"]').change(function (){
         var this_element = jQuery(this);
         highlight_changed_details(this_element);
@@ -322,7 +327,7 @@ function edit_trial_details(){
     var default_type = document.getElementById("edit_trial_plan_to_cross").getAttribute("value");
     jQuery('#edit_trial_plan_to_cross option[value="'+default_type+'"]').attr('selected','selected');
 
-    //create bootstrap daterangepickers for planting, transplanting and harvest dates
+    //create bootstrap daterangepickers for trial dates
 
     jQuery(document).on('focusin', function(e) {
         if (jQuery(e.target).closest('.daterangepicker').length) {
@@ -368,6 +373,20 @@ function edit_trial_details(){
         highlight_changed_details(harvest_date_element);
     }
     );
+
+    var second_harvest_date_element = jQuery("#edit_trial_second_harvest_date");
+    if (second_harvest_date_element.length) {
+        set_daterangepicker_default(second_harvest_date_element);
+        second_harvest_date_element.daterangepicker({
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            second_harvest_date_element.val(start.format('MM/DD/YYYY'));
+            highlight_changed_details(second_harvest_date_element);
+        });
+    }
 
     jQuery('#edit_trial_details_cancel_button').click(function(){
         reset_dialog_body('trial_details_edit_body', edit_details_body_html);
