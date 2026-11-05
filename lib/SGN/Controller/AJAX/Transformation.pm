@@ -1325,12 +1325,17 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     my @all_batch_info = ();
     if ($parsed_data){
         foreach my $batch_number (sort keys %$parsed_data) {
+            my $batch_info = {};
             my @control_transformation_ids = ();
             my @transformation_ids = ();
-            my $batch_info = $parsed_data->{$batch_number};
+            $batch_info = $parsed_data->{$batch_number};
             foreach my $vector_construct (sort keys %$batch_info) {
-                my $vector_construct_info = $batch_info->{$vector_construct};
-                my @check_type = keys %$vector_construct_info;
+                my $vector_type_info = {};
+                my $vector_FEC_batch_info;
+                $vector_type_info = $batch_info->{$vector_construct}->{'type'};
+                $vector_FEC_batch_info = $batch_info->{$vector_construct}->{'FEC_batch'};
+
+                my @check_type = keys %$vector_type_info;
                 if (scalar(@check_type) > 1) {
                     $c->stash->{rest} = { error => "Error! Vector construct: $vector_construct in batch: $batch_number is assigned as both a control and a construct. Please check is_a_control column."};
                     return;
@@ -1343,7 +1348,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     $is_a_control = 1;
                 }
 
-                my $transformant_info = $vector_construct_info->{$type};
+                my $transformant_info = $vector_type_info->{$type};
                 my @check_accession_type = keys %$transformant_info;
                 if (scalar(@check_accession_type) > 1) {
                     $c->stash->{rest} = { error => "Error! All accessions in the same file should have the same accession type (either an existing accession in the database or new accession)."};
@@ -1366,7 +1371,8 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     plant_material => $default_plant_material_name,
                     vector_construct => $vector_construct,
                     owner_id => $user_id,
-                    is_a_control => $is_a_control
+                    is_a_control => $is_a_control,
+                    FEC_batch => $vector_FEC_batch_info
                 });
 
                 my $add = $add_transformation->add_transformation_identifier();

@@ -67,7 +67,7 @@ sub _validate_with_plugin {
     my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'male_parent', 'stock_relationship')->cvterm_id();
 
-    if (scalar(@$existing_accessions) > 0) {
+    if ($existing_accessions) {
         my $accession_validator = CXGN::List::Validate->new();
         my @accessions_missing = @{$accession_validator->validate($schema,'accessions_and_obsoleted_accessions', $seen_accession_names)->{'missing'}};
         if (scalar(@accessions_missing) > 0) {
@@ -76,7 +76,7 @@ sub _validate_with_plugin {
     }
 
     my %associated_FEC_batch;
-    if ((scalar @$existing_accessions > 0) || (scalar @$FEC_batches > 0)) {
+    if ($existing_accessions || $FEC_batches) {
         foreach my $row (@$parsed_data) {
             my $accession_name = $row->{'accession_name'};
             my $vector_construct = $row->{'vector_construct'};
@@ -86,7 +86,7 @@ sub _validate_with_plugin {
                 $associated_FEC_batch{$batch_number}{$vector_construct}{$FEC_batch} = 1;
             }
 
-            if (scalar @$existing_accessions > 0) {
+            if ($existing_accessions) {
                 my $accession_stock = $schema->resultset("Stock::Stock")->find ({
                     uniquename => $accession_name,
                     type_id => $accession_type_id,
@@ -119,18 +119,16 @@ sub _validate_with_plugin {
             }
         }
 
-        print STDERR "ASSOCIATED FEC BATCH =".Dumper(\%associated_FEC_batch)."\n";
-        if (scalar @$FEC_batches > 0) {
+        if ($FEC_batches) {
             foreach my $batch (keys %associated_FEC_batch) {
-                my $batch_info = {}
-                $batch_info = $associated_FEC_batch{$batch}
+                my $batch_info = {};
+                $batch_info = $associated_FEC_batch{$batch};
                 foreach my $vector (keys %$batch_info) {
                     my @check_FEC_batch = ();
                     my $vector_info = {};
                     $vector_info = $associated_FEC_batch{$batch}{$vector};
                     @check_FEC_batch = keys %$vector_info;
-                    print STDERR "CHECK FEC BATCH =".Dumper(\@check_FEC_batch)."\n";
-                    if (scalar @check_FEC_batch > 0) {
+                    if (scalar @check_FEC_batch > 1) {
                         push @error_messages, "Vector construct: $vector in Batch Number: $batch is associated with more than one FEC batch!";
                     }
                 }
@@ -178,8 +176,8 @@ sub _parse_with_plugin {
         } else {
             $accession_type = 'new';
         }
-
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}->{'number_of_insertions'} = $row->{'number_of_insertions'};
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{'FEC_batch'} = $row->{'FEC_batch'};
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{'type'}->{$type}->{$accession_type}->{$row->{'accession_name'}}->{'number_of_insertions'} = $row->{'number_of_insertions'};
     }
 
     $self->_set_parsed_data($transgenic_data);
