@@ -300,7 +300,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
 	basename => basename($file_destination),
-	dirname => dirname($file_destination),
+	dirname => dirname($archived_file_name),
 	filetype => 'tablet trait file',
 	md5checksum => $md5->hexdigest(),
 	metadata_id => $md_row->metadata_id(),

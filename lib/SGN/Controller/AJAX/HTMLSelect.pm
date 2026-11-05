@@ -1,7 +1,7 @@
 
 =head1 SGN::Controller::AJAX::HTMLSelect - a resource to dynamically obtain html selects for a number of widely used data types
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
 get_location_select()
 
@@ -324,7 +324,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
                 push @all_projects, @trials;
             }
             if ($excluded_plates_in_project_id && scalar(@genotyping_plate_ids)>0) {
-                print STDERR "SUBSTRACTING..."."\n";
+                print STDERR "SUBTRACTING..."."\n";
                 foreach my $project (@all_projects) {
                     next if ($project->[0] ~~ @genotyping_plate_ids);
                     push @projects, $project;
@@ -960,7 +960,7 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
 
     while (my ($nd_protocol_id, $name, $description, $create_date, $props_json) = $h->fetchrow_array()) {
         my $props = decode_json $props_json;
-        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$create_date.'</td><td>';
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'" protocol_name="'.$name.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$create_date.'</td><td>';
         while (my($k,$v) = each %$props) {
             if ($k ne 'header_column_details' && $k ne 'header_column_names') {
                 $html .= "$k: $v<br/>";

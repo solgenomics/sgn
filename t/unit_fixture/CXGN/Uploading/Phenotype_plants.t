@@ -9,6 +9,9 @@ use SGN::Test::Fixture;
 use CXGN::Trial;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::UploadFile;
+use DateTime;
+use File::Basename qw | basename |;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -57,6 +60,22 @@ my $pre_exp_md_files_count = $exp_md_files_rs->count();
 #
 my $parser = CXGN::Phenotypes::ParseUpload->new();
 my $filename = "t/data/trial/upload_phenotypin_spreadsheet_plants.xlsx";
+my $subdirectory = "phenotype_upload_tests";
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+my $uploader = CXGN::UploadFile->new({
+	tempfile => $filename, #UploadFile will try to copy the test file to the archive, so this should work
+	subdirectory => $subdirectory,
+	archive_path => $f->config->{archive_path},
+	archive_filename => basename($filename),
+	timestamp => $timestamp,
+	user_id => 41, #41 for janedoe
+	user_role => 'curator',
+	file_type => 'phenotyping_spreadsheet',
+	metadata_schema => $f->metadata_schema
+});
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive(); #we need the archived file ID to properly associate the file with the phenotype metadata
+
 my $validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate plot fails for plant spreadsheet file");
 
@@ -73,6 +92,7 @@ is_deeply($parsed_file,
 {'units' => ['test_trial210_plant_1','test_trial210_plant_2','test_trial211_plant_1','test_trial211_plant_2','test_trial212_plant_1','test_trial212_plant_2','test_trial213_plant_1','test_trial213_plant_2','test_trial214_plant_1','test_trial214_plant_2','test_trial215_plant_1','test_trial215_plant_2','test_trial21_plant_1','test_trial21_plant_2','test_trial22_plant_1','test_trial22_plant_2','test_trial23_plant_1','test_trial23_plant_2','test_trial24_plant_1','test_trial24_plant_2','test_trial25_plant_1','test_trial25_plant_2','test_trial26_plant_1','test_trial26_plant_2','test_trial27_plant_1','test_trial27_plant_2','test_trial28_plant_1','test_trial28_plant_2','test_trial29_plant_1','test_trial29_plant_2'],'variables' => ['dry matter content percentage|CO_334:0000092','fresh root weight|CO_334:0000012'],'data' => {'test_trial23_plant_2' => {'fresh root weight|CO_334:0000012' => [['25','']],'dry matter content percentage|CO_334:0000092' => [['15','']]},'test_trial21_plant_2' => {'dry matter content percentage|CO_334:0000092' => [['11','']],'fresh root weight|CO_334:0000012' => [['21','']]},'test_trial22_plant_1' => {'fresh root weight|CO_334:0000012' => [['22','']],'dry matter content percentage|CO_334:0000092' => [['12','']]},'test_trial21_plant_1' => {'dry matter content percentage|CO_334:0000092' => [['10','']],'fresh root weight|CO_334:0000012' => [['20','']]},'test_trial22_plant_2' => {'fresh root weight|CO_334:0000012' => [['23','']],'dry matter content percentage|CO_334:0000092' => [['13','']]},'test_trial211_plant_2' => {'dry matter content percentage|CO_334:0000092' => [['31','']],'fresh root weight|CO_334:0000012' => [['41','']]},'test_trial23_plant_1' => {'fresh root weight|CO_334:0000012' => [['24','']],'dry matter content percentage|CO_334:0000092' => [['14','']]},'test_trial28_plant_2' => {'dry matter content percentage|CO_334:0000092' => [['25','']],'fresh root weight|CO_334:0000012' => [['35','']]},'test_trial215_plant_1' => {'fresh root weight|CO_334:0000012' => [['48','']],'dry matter content percentage|CO_334:0000092' => [['38','']]},'test_trial214_plant_1' => {'fresh root weight|CO_334:0000012' => [['46','']],'dry matter content percentage|CO_334:0000092' => [['36','']]},'test_trial29_plant_1' => {'dry matter content percentage|CO_334:0000092' => [['26','']],'fresh root weight|CO_334:0000012' => [['36','']]},'test_trial25_plant_1' => {'dry matter content percentage|CO_334:0000092' => [['18','']],'fresh root weight|CO_334:0000012' => [['28','']]},'test_trial29_plant_2' => {'fresh root weight|CO_334:0000012' => [['37','']],'dry matter content percentage|CO_334:0000092' => [['27','']]},'test_trial25_plant_2' => {'dry matter content percentage|CO_334:0000092' => [['','']],'fresh root weight|CO_334:0000012' => [['29','']]},'test_trial28_plant_1' => {'dry matter content percentage|CO_334:0000092' => [['0','']],'fresh root weight|CO_334:0000012' => [['34','']]},'test_trial213_plant_2' => {'dry matter content percentage|CO_334:0000092' => [['35','']],'fresh root weight|CO_334:0000012' => [['45','']]},'test_trial212_plant_1' => {'fresh root weight|CO_334:0000012' => [['42','']],'dry matter content percentage|CO_334:0000092' => [['32','']]},'test_trial210_plant_2' => {'fresh root weight|CO_334:0000012' => [['','']],'dry matter content percentage|CO_334:0000092' => [['29','']]},'test_trial211_plant_1' => {'fresh root weight|CO_334:0000012' => [['40','']],'dry matter content percentage|CO_334:0000092' => [['30','']]},'test_trial26_plant_1' => {'dry matter content percentage|CO_334:0000092' => [['20','']],'fresh root weight|CO_334:0000012' => [['30','']]},'test_trial210_plant_1' => {'dry matter content percentage|CO_334:0000092' => [['28','']],'fresh root weight|CO_334:0000012' => [['38','']]},'test_trial212_plant_2' => {'fresh root weight|CO_334:0000012' => [['43','']],'dry matter content percentage|CO_334:0000092' => [['33','']]},'test_trial213_plant_1' => {'dry matter content percentage|CO_334:0000092' => [['34','']],'fresh root weight|CO_334:0000012' => [['44','']]},'test_trial24_plant_1' => {'dry matter content percentage|CO_334:0000092' => [['16','']],'fresh root weight|CO_334:0000012' => [['26','']]},'test_trial27_plant_2' => {'fresh root weight|CO_334:0000012' => [['33','']],'dry matter content percentage|CO_334:0000092' => [['23','']]},'test_trial24_plant_2' => {'dry matter content percentage|CO_334:0000092' => [['17','']],'fresh root weight|CO_334:0000012' => [['27','']]},'test_trial215_plant_2' => {'fresh root weight|CO_334:0000012' => [['49','']],'dry matter content percentage|CO_334:0000092' => [['39','']]},'test_trial214_plant_2' => {'fresh root weight|CO_334:0000012' => [['47','']],'dry matter content percentage|CO_334:0000092' => [['37','']]},'test_trial27_plant_1' => {'fresh root weight|CO_334:0000012' => [['32','']],'dry matter content percentage|CO_334:0000092' => [['22','']]},'test_trial26_plant_2' => {'fresh root weight|CO_334:0000012' => [['0','']],'dry matter content percentage|CO_334:0000092' => [['21','']]}}},  "check plant spreadsheet file was parsed");
 
 $phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_05:15:21";
@@ -188,6 +208,19 @@ is_deeply(\@pheno_for_trait_sorted, [], "check pheno trait 70727 after plant upl
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/fieldbook/fieldbook_phenotype_plants_file.csv";
 
+$uploader = CXGN::UploadFile->new({
+	tempfile => $filename, #UploadFile will try to copy the test file to the archive, so this should work
+	subdirectory => $subdirectory,
+	archive_path => $f->config->{archive_path},
+	archive_filename => basename($filename),
+	timestamp => $timestamp,
+	user_id => 41, #41 for janedoe
+	user_role => 'curator',
+	file_type => 'phenotyping_spreadsheet',
+	metadata_schema => $f->metadata_schema
+});
+($archived_file_id, $archived_filename_with_path) = $uploader->archive(); #we need the archived file ID to properly associate the file with the phenotype metadata
+
 $validate_file = $parser->validate('field book', $filename, 1, 'plants', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for plant fieldbook file");
 
@@ -199,6 +232,7 @@ print STDERR Dumper $parsed_file;
 is_deeply($parsed_file, {'units' => ['test_trial21_plant_1','test_trial21_plant_2','test_trial22_plant_1','test_trial22_plant_2','test_trial23_plant_1','test_trial23_plant_2'],'data' => {'test_trial23_plant_2' => {'dry matter content|CO_334:0000092' => [['41','2016-01-07 12:08:27-0500','johndoe','']]},'test_trial23_plant_1' => {'dry matter content|CO_334:0000092' => [['41','2016-01-07 12:08:27-0500','johndoe','']]},'test_trial22_plant_1' => {'dry matter content|CO_334:0000092' => [['45','2016-01-07 12:08:26-0500','johndoe','']],'dry yield|CO_334:0000014' => [['45','2016-01-07 12:08:26-0500','johndoe','']]},'test_trial22_plant_2' => {'dry yield|CO_334:0000014' => [['0','2016-01-07 12:08:26-0500','johndoe','']],'dry matter content|CO_334:0000092' => [['45','2016-01-07 12:08:26-0500','johndoe','']]},'test_trial21_plant_1' => {'dry yield|CO_334:0000014' => [['42','2016-01-07 12:08:24-0500','johndoe','']],'dry matter content|CO_334:0000092' => [['42','2016-01-07 12:08:24-0500','johndoe','']]},'test_trial21_plant_2' => {'dry matter content|CO_334:0000092' => [['42','2016-01-07 12:08:24-0500','johndoe','']],'dry yield|CO_334:0000014' => [['0','2016-01-07 12:08:24-0500','johndoe','']]}},'variables' => ['dry matter content|CO_334:0000092','dry yield|CO_334:0000014']}, "check parse fieldbook plant file");
 
 $phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_05:55:17";

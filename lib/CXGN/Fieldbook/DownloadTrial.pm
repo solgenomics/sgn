@@ -293,7 +293,7 @@ sub download {
 
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($file_destination),
-        dirname => dirname($file_destination),
+        dirname => dirname($archived_file_name),
         filetype => 'tablet field layout '. ($extension eq '.xlsx' ? "xlsx" : "xls"),
         md5checksum => $md5->hexdigest(),
         metadata_id => $md_row->metadata_id(),

@@ -78,13 +78,11 @@ $user_can_modify
 		<td>
 			<div class="form-group">
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="
-				The site will automatically refresh
-				materialized views periodically, but
-				you can do this manually to ensure 
-				views are updated before analyses or
-				data downloads.
-				"></span> &nbsp;
+				<span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="The site will automatically refresh
+materialized views periodically, but
+you can do this manually to ensure 
+views are updated before analyses or
+data downloads."></span> &nbsp;
 				<button id="refresh_phenoview_btn" class="btn btn-primary btn-sm">Refresh Materialized Phenotype View</button>
 			</div>
 		</td>
@@ -206,15 +204,16 @@ jQuery(window).ready( function() {
 			}
 		).then(resp => resp.json())
 		.then(json => {
+			jQuery('#working_modal').modal("hide");
 			if (json.error) {
 				throw new Error(json.error);
 			} else {
 				jQuery('#refresh_phenoview_btn').prop("disabled", false);
-				jQuery('#working_modal').modal("hide");
 			}
 		})
 		.catch(err => {
 			alert(err.message);
+			jQuery('#working_modal').modal("hide");
 		});
 	});
 

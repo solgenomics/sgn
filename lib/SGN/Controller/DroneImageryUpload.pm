@@ -7,7 +7,7 @@
 
 =cut
 
-package SGN::Controller::DroneImagery::DroneImageryUpload;
+package SGN::Controller::DroneImageryUpload;
 
 use Moose;
 use Data::Dumper;
@@ -187,7 +187,7 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
         }
         my $drone_run_date_obj = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
         if (exists($seen_field_trial_drone_run_dates{$drone_run_date_obj->epoch})) {
-            $c->stash->{rest} = { error => "An imaging event has already occured on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
+            $c->stash->{rest} = { error => "An imaging event has already occurred on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
             $c->detach();
         }
 
@@ -502,9 +502,10 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
                 archive_filename => $upload_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path = $uploader->archive();
+            my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
             my $md5 = $uploader->get_md5($archived_filename_with_path);
             if (!$archived_filename_with_path) {
                 $c->stash->{message} = "Could not save file $upload_original_name in archive.";
@@ -553,9 +554,10 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{message} = "Could not save file $upload_original_name in archive.";
@@ -587,9 +589,10 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
                 timestamp => $timestamp,
                 user_id => $user_id,
                 user_role => $user_role,
-                include_timestamp => 0
+                include_timestamp => 0,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path_odm_img = $uploader_odm_dir->archive();
+            my ($archived_file_id_odm_img, $archived_filename_with_path_odm_img) = $uploader_odm_dir->archive();
             my $md5 = $uploader_odm_dir->get_md5($archived_filename_with_path_odm_img);
             if (!$archived_filename_with_path_odm_img) {
                 $c->stash->{message} = "Could not save file $i in archive.";
@@ -602,7 +605,7 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
 
         my $current_odm_image_count = $new_drone_run_band_stitching_odm_current_image_count+scalar(@$image_paths);
         if ($current_odm_image_count < 25) {
-            $c->stash->{message} = "Upload more than $current_odm_image_count images! Atleast 25 are required for OpenDroneMap to stitch.";
+            $c->stash->{message} = "Upload more than $current_odm_image_count images! At least 25 are required for OpenDroneMap to stitch.";
             $c->stash->{template} = 'generic_message.mas';
             return;
         }
@@ -642,9 +645,10 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
                     archive_filename => $upload_panel_original_name,
                     timestamp => $timestamp,
                     user_id => $user_id,
-                    user_role => $user_role
+                    user_role => $user_role,
+                    metadata_schema => $metadata_schema
                 });
-                my $archived_filename_panel_with_path = $uploader_panel->archive();
+                my ($archived_file_id_panel, $archived_filename_panel_with_path) = $uploader_panel->archive();
                 my $md5_panel = $uploader_panel->get_md5($archived_filename_panel_with_path);
                 if (!$archived_filename_panel_with_path) {
                     $c->stash->{message} = "Could not save file $archived_filename_panel_with_path in archive.";
@@ -739,9 +743,10 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
                     archive_filename => $upload_original_name,
                     timestamp => $timestamp,
                     user_id => $user_id,
-                    user_role => $user_role
+                    user_role => $user_role,
+                    metadata_schema => $metadata_schema
                 });
-                my $archived_filename_with_path = $uploader->archive();
+                my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
                 my $md5 = $uploader->get_md5($archived_filename_with_path);
                 if (!$archived_filename_with_path) {
                     $c->stash->{message} = "Could not save file $upload_original_name in archive.";
@@ -816,9 +821,10 @@ sub upload_drone_imagery_bulk : Path("/drone_imagery/upload_drone_imagery_bulk")
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{message} = "Could not save file $upload_original_name in archive.";
@@ -1126,7 +1132,7 @@ sub upload_drone_imagery_bulk : Path("/drone_imagery/upload_drone_imagery_bulk")
     #     my $field_trial_name = $v->{field_trial_name};
     #     my $field_trial_id = $v->{field_trial_id};
     #     if (exists($seen_field_trial_drone_run_dates{$time})) {
-    #         $c->stash->{message} = "An imaging event has already occured on this field trial ($field_trial_name) at the same date and time ($date)! Please give a unique date/time for each imaging event!";
+    #         $c->stash->{message} = "An imaging event has already occurred on this field trial ($field_trial_name) at the same date and time ($date)! Please give a unique date/time for each imaging event!";
     #         $c->stash->{template} = 'generic_message.mas';
     #         return;
     #     }
@@ -1292,9 +1298,10 @@ sub upload_drone_imagery_bulk : Path("/drone_imagery/upload_drone_imagery_bulk")
                 archive_filename => $upload_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path = $uploader->archive();
+            my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
             my $md5 = $uploader->get_md5($archived_filename_with_path);
             if (!$archived_filename_with_path) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -1412,9 +1419,10 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -1479,9 +1487,10 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
         archive_filename => $upload_geojson_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema
     });
-    my $geojson_archived_filename_with_path = $uploader_geojson->archive();
+    my ($geojson_archived_file_id, $geojson_archived_filename_with_path) = $uploader_geojson->archive();
     my $md5_geojson = $uploader_geojson->get_md5($geojson_archived_filename_with_path);
     if (!$geojson_archived_filename_with_path) {
         $c->stash->{message} = "Could not save file $upload_geojson_original_name in archive.";
@@ -1745,7 +1754,7 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
         my $imaging_event_date_time_object = Time::Piece->strptime($imaging_event_date, "%Y/%m/%d %H:%M:%S");
 
         if (exists($seen_field_trial_drone_run_dates{$imaging_event_date_time_object->epoch})) {
-            $c->stash->{message} = "An imaging event has already occured on this field trial at the same date and time ($imaging_event_date)! Please give a unique date/time for each imaging event!";
+            $c->stash->{message} = "An imaging event has already occurred on this field trial at the same date and time ($imaging_event_date)! Please give a unique date/time for each imaging event!";
             $c->stash->{template} = 'generic_message.mas';
             return;
         }
@@ -2004,9 +2013,10 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
                 archive_filename => $upload_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path = $uploader->archive();
+            my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
             my $md5 = $uploader->get_md5($archived_filename_with_path);
             if (!$archived_filename_with_path) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };

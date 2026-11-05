@@ -17,6 +17,7 @@ use Data::Dumper;
 use JSON;
 use File::Slurp qw | read_file |;
 use File::Basename;
+use File::Spec;
 use CXGN::People::Login;
 use CXGN::Trial::Search;
 use CXGN::Genotype::GenotypingProject;
@@ -182,6 +183,7 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
     my @project_ids = split(',', $c->req->param('genotyping_project_id'));
     my @protocol_ids = split(',', $c->req->param('genotyping_protocol_id'));
     my $limit = defined $c->req->param('limit');
+    my $archive_path = $c->config->{archive_path};
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     # Get projects that match the provided protocol(s)
@@ -210,11 +212,11 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
     # Get metadata about the archived vcf files for all of the requested projects 
     my $ph = join ( ',', ('?') x @project_ids );
     my $q = "SELECT genotyping_protocol_id, genotyping_protocol_name, genotyping_project_id, genotyping_project_name,
-                dirname, basename, create_date, uploader_id, uploader_name, uploader_username
+                dirname, basename, file_id, create_date, uploader_id, uploader_name, uploader_username
             FROM (
                 SELECT genotyping_protocols.genotyping_protocol_id, genotyping_protocols.genotyping_protocol_name, 
                     genotyping_projects.genotyping_project_id, genotyping_projects.genotyping_project_name,
-                    md_files.dirname, md_files.basename, md_metadata.create_date,
+                    md_files.dirname, md_files.basename, md_files.file_id, md_metadata.create_date,
                     sp_person.sp_person_id AS uploader_id,
                     CONCAT(sp_person.first_name, ' ', sp_person.last_name) AS uploader_name,
                     sp_person.username AS uploader_username
@@ -229,7 +231,7 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
                 WHERE nd_experiment_project.project_id IN ($ph)
                 GROUP BY genotyping_projects.genotyping_project_id, genotyping_project_name, 
                     genotyping_protocols.genotyping_protocol_id, genotyping_protocol_name, 
-                    dirname, basename, create_date, sp_person_id, first_name, last_name, username
+                    dirname, basename, md_files.file_id, create_date, sp_person_id, first_name, last_name, username
             ) AS t
             WHERE t.create_date IS NOT NULL
             ORDER BY t.genotyping_protocol_name, t.genotyping_project_name, t.create_date DESC";
@@ -238,7 +240,7 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
 
     # Parse the results for all of the archived files
     my %seen_projects;
-    while (my ($geno_proto_id, $geno_proto_name, $geno_proj_id, $geno_proj_name, $dirname, $basename, $create_date, $uploader_id, $uploader_name, $uploader_username) = $h->fetchrow_array()) {
+    while (my ($geno_proto_id, $geno_proto_name, $geno_proj_id, $geno_proj_name, $dirname, $basename, $file_id, $create_date, $uploader_id, $uploader_name, $uploader_username) = $h->fetchrow_array()) {
         
         # When limit is defined (to only return the most recent file for each project),
         # skip processing the file if one was already found (newer files are processed first since the query is sorted by date DESC)
@@ -250,7 +252,7 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
 
         # Check if the file actually exists
         my $exists = "false";
-        if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
+        if ( defined $dirname && defined $basename && -s File::Spec->catfile($archive_path, $dirname, $basename) ) {
             $exists = "true";
         }
 
@@ -262,6 +264,7 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
             genotyping_project_name => $geno_proj_name,
             dirname => $dirname,
             basename => $basename,
+            file_id => $file_id,
             create_date => $create_date,
             uploader_id => $uploader_id,
             uploader_name => $uploader_name,
@@ -284,7 +287,7 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $project_id = $c->req->param('genotyping_project_id');
-    my $requested_basename = $c->req->param('basename');
+    my $requested_file_id = $c->req->param('file_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     # Get the file information
@@ -292,23 +295,24 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
             FROM public.nd_experiment_project
             LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id = nd_experiment_md_files.nd_experiment_id)
             LEFT JOIN metadata.md_files ON (nd_experiment_md_files.file_id = md_files.file_id)
-            WHERE nd_experiment_project.project_id = ? AND md_files.basename = ?
+            WHERE nd_experiment_project.project_id = ? AND md_files.file_id = ?
             GROUP BY dirname, basename;";
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($project_id, $requested_basename);
+    $h->execute($project_id, $requested_file_id);
     my ($dirname, $basename) = $h->fetchrow_array();
 
     # Return the file, if it exists
-    if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
-        my $filepath = "$dirname/$basename";
+    my $archive_path = $c->config->{archive_path};
+    if ( defined $dirname && defined $basename && -s File::Spec->catfile($archive_path, $dirname, $basename) ) {
+        my $filepath = File::Spec->catfile($archive_path, $dirname, $basename);
 
         # The original (non-transposed) VCF file is archived alongside the transposed
         # file, in a sibling genotype_vcf_archive directory, under the same basename.
         # If it is found there, use it directly. Otherwise, fall back to un-transposing
         # the (transposed) file in genotype_vcf_upload.
         (my $archive_dirname = $dirname) =~ s/genotype_vcf_upload$/genotype_vcf_archive/;
-        if ( $archive_dirname ne $dirname && -s "$archive_dirname/$basename" ) {
-            $filepath = "$archive_dirname/$basename";
+        if ( $archive_dirname ne $dirname && -s File::Spec->catfile($archive_path, $archive_dirname, $basename) ) {
+            $filepath = File::Spec->catfile($archive_path, $archive_dirname, $basename);
         } else {
 
             # Check if the file is a vcf (.vcf extension of ##filformat=VCF header on first line)

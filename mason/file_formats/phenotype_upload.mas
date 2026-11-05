@@ -1,0 +1,190 @@
+<div class="modal fade" id="phenotype_upload_spreadsheet_info_dialog" name="phenotype_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="phenotypeUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="phenotypeUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h4>Phenotype spreadsheet must be uploaded in .xls or .xlsx excel file format</h4>
+            <p>(tab-delimited text formats are NOT supported)</p>
+
+            <hr>
+            <button class="btn btn-primary" name="create_spreadsheet_link">Create Phenotyping Spreadsheet for Trial</button>
+            <hr>
+
+            <h4>Required Data:</h4>
+            <ul>
+                <li>Please click the above button to generate the required phenotype spreadsheet.</li>
+            </ul>
+
+            <h4>Notes:</h4>
+            <ul>
+                <li>For <i>"sprouting proportion"</i>, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO_334:0000008"</i>.</li>
+                <li>If spreadsheet file was not generated from the database, </br>consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
+                <li>Two or more traits can be uploaded at the same time.</li>
+            </ul>
+
+            <h4>Simple and Detailed Spreadsheet Format:</h4>
+            <ul>
+                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.  Other acceptable headers for the first column include: 'plot_name', 'subplot_name', 'plant_name', 'observationUnitName', 'plotName', 'sublotName', 'plantName'</li>
+                <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
+                <li>The "NIRS" format is built on top of the simple format - a column called 'observationunit_name' followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves. Trait column names must come form the trait ontology but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.</li>
+            </ul>
+
+            <h4>Timestamps:</h4>
+            <ul>
+                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
+                <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
+                <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
+                <li>Example with timestamps: <br/><br/>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>sprouting proportion|CO_334:0000008</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>20,2016-04-28 16:30:40-0500</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </li>
+                <li>Example without timestamps: <br/><br/>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>sprouting proportion|CO_334:0000008</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>20</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </li>
+            </ul>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="phenotype_upload_datacollector_info_dialog" name="phenotype_upload_datacollector_info_dialog" tabindex="-1" role="dialog" aria-labelledby="datacollectorUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="datacollectorUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+        
+            <h4>Must be in .xls or .xlsx excel file format</h4>
+            <p>(tab-delimited text formats are NOT supported)</p>
+            <hr>
+            <h4>"Field Book" Sheet Header: (8th Sheet in Workbook)</h4>
+            <p>The first row (header) should contain the following:</p>
+
+            <table class="table table-hover table-bordered">
+                <body>
+                    <tr>
+                        <td>plot_name</td>
+                        <td>accession_name</td>
+                        <td>plot_number</td>
+                        <td>block_number</td>
+                        <td>is_a_control</td>
+                        <td>rep_number</td>
+                        <td>trait name|trait id</td>
+                    </tr>
+                </body>
+            </table>
+
+            <h4>Required fields:</h4>
+            <ul>
+                <li>plot_name (must exist in the database)</li>
+                <li>trait name|trait id (must exist in the trait ontology)</li>
+            </ul>
+
+            <h4>Notes</h4>
+            <ul>
+                <li>For <i>"sprouting proportion"</i> in cassava, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO_334:0000008"</i>.</li>
+                <li>If trait file was not generated from the database, </br> consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
+                <li>Two or more traits can be uploaded at the same time.</li>
+            </ul>
+
+            <h4>Timestamps:</h4>
+            <ul>
+                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
+                <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
+                <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
+                <li>Example with timestamps: <br/><br/>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>plot_name</th>
+                            <th>accession_name</th>
+                            <th>plot_number</th>
+                            <th>block_number</th>
+                            <th>is_a_control</th>
+                            <th>rep_number</th>
+                            <th>sprouting proportion|CO_334:0000008</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Plot1</td>
+                            <td>Germplasm1</td>
+                            <td>2</td>
+                            <td>1</td>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>20,2016-04-28 16:30:40-0500</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </li>
+                <li>Example without timestamps: <br/><br/>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>plot_name</th>
+                            <th>accession_name</th>
+                            <th>plot_number</th>
+                            <th>block_number</th>
+                            <th>is_a_control</th>
+                            <th>rep_number</th>
+                            <th>sprouting proportion|CO_334:0000008</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Plot1</td>
+                            <td>Germplasm1</td>
+                            <td>2</td>
+                            <td>1</td>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>20</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </li>
+            </ul>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
