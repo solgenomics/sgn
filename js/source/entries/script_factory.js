@@ -1,0 +1,1414 @@
+/*
+ * Script Factory - front end for /tools/script_factory
+ *
+ * Builds an analysis "recipe" step by step (data, quality control, model,
+ * selection index, environmental zones), runs it as a background job through
+ * /ajax/script_factory/*, shows the results and lets the user store the
+ * analysis, save accessions as a list and save / export the recipe as a
+ * reusable script.
+ *
+ * Plots are drawn as plain SVG so no extra library is needed.
+ *
+ * Author: Chris Simoes <ccs263@cornell.edu>
+ */
+
+const VERSION = '1.0';
+const SVGNS = 'http://www.w3.org/2000/svg';
+const ZONE_COLORS = ['#2b7a4b', '#2563eb', '#d97706', '#9333ea', '#dc2626', '#0891b2', '#65a30d', '#db2777', '#4b5563', '#b45309'];
+const DESIGNS = {
+    auto: 'Detected',
+    rcbd: 'RCBD',
+    alpha_lattice: 'Alpha-lattice',
+    row_column: 'Row-column',
+    augmented: 'Augmented',
+    crd: 'CRD',
+    unreplicated: 'Unreplicated'
+};
+
+let $;
+let cfg = {};
+const state = {
+    step: 1,
+    dataset: null,          // response of /prepare
+    traits: [],             // selected full trait names
+    plotData: null,         // response of /plot_data
+    plotDataKey: '',
+    exclusions: {},         // "unit|trait" -> {unit, trait, trial, accession, value}
+    madrFlags: {},          // "unit|trait" -> true (from a preview run)
+    indexCfg: {},           // full trait -> {weight, direction}
+    zoneTargets: { index: true },
+    designOverrides: {},    // trial -> design
+    pendingRecipe: null,    // recipe loaded before a dataset
+    script: { id: null, name: null, description: '', is_public: 0, is_owner: 1 },
+    scriptLoaded: false,    // a saved or imported script was applied (enables "Run whole script")
+    missingTraits: [],      // script traits not found in the loaded dataset
+    job: null,
+    results: null,
+    pollTimer: null,
+    elapsedTimer: null
+};
+
+// ---------------------------------------------------------------------------
+// small helpers
+// ---------------------------------------------------------------------------
+
+function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function arr(x) {
+    if (x === null || x === undefined) return [];
+    return Array.isArray(x) ? x : [x];
+}
+
+function fmt(x, d) {
+    if (d === undefined) d = 3;
+    if (x === null || x === undefined || x === '' || !isFinite(Number(x))) return '&ndash;';
+    const v = Number(x);
+    if (Math.abs(v) >= 1000) return v.toFixed(0);
+    if (Math.abs(v) >= 100) return v.toFixed(1);
+    return v.toFixed(d);
+}
+
+function shortTrait(t) {
+    return String(t).replace(/\|.*$/, '');
+}
+
+function alertBox(type, html) {
+    return '<div class="alert alert-' + type + '" style="margin-top:12px">' + html + '</div>';
+}
+
+function post(url, data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({ url: url, type: 'POST', data: data, dataType: 'json' })
+            .done(r => {
+                if (r && r.error) reject(new Error(r.error)); else resolve(r);
+            })
+            .fail((xhr, status, err) => reject(new Error('Server error: ' + (err || status))));
+    });
+}
+
+function download(filename, content, type) {
+    const blob = new Blob([content], { type: type || 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+}
+
+function svgEl(name, attrs, parent) {
+    const el = document.createElementNS(SVGNS, name);
+    Object.keys(attrs || {}).forEach(k => el.setAttribute(k, attrs[k]));
+    if (parent) parent.appendChild(el);
+    return el;
+}
+
+function quantile(sorted, p) {
+    // R type 7
+    if (!sorted.length) return NaN;
+    const h = (sorted.length - 1) * p;
+    const lo = Math.floor(h);
+    const hi = Math.ceil(h);
+    return sorted[lo] + (h - lo) * (sorted[hi] - sorted[lo]);
+}
+
+function hash(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return (Math.abs(h) % 1000) / 1000;
+}
+
+function niceTicks(min, max, n) {
+    if (!isFinite(min) || !isFinite(max)) return [];
+    if (min === max) { min -= 1; max += 1; }
+    const span = max - min;
+    const step0 = Math.pow(10, Math.floor(Math.log10(span / n)));
+    const err = span / n / step0;
+    const step = step0 * (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1);
+    const ticks = [];
+    for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) ticks.push(Number(v.toPrecision(12)));
+    return ticks;
+}
+
+function dataTable(selector, opts) {
+    if ($.fn.DataTable) {
+        $(selector).DataTable(Object.assign({ pageLength: 25, autoWidth: false }, opts || {}));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// recipe
+// ---------------------------------------------------------------------------
+
+function radio(name) {
+    return $('input[name=' + name + ']:checked').val();
+}
+
+function setRadio(name, value) {
+    const el = $('input[name=' + name + '][value=' + value + ']');
+    if (el.length) { el.prop('checked', true); }
+    refreshOptionCards();
+}
+
+function buildRecipe() {
+    const index = { enabled: $('#sf_index_enabled').is(':checked'), method: radio('sf_index_method'), selection_pct: Number($('#sf_selection_pct').val()), traits: {} };
+    state.traits.forEach(t => {
+        const c = state.indexCfg[t] || { weight: 0, direction: 'increase' };
+        if (Number(c.weight) !== 0) index.traits[t] = { weight: Number(c.weight), direction: c.direction };
+    });
+    const overrides = {};
+    Object.keys(state.designOverrides).forEach(k => { if (state.designOverrides[k] && state.designOverrides[k] !== 'auto') overrides[k] = state.designOverrides[k]; });
+    const targets = [];
+    if (state.zoneTargets.index) targets.push('index');
+    state.traits.forEach(t => { if (state.zoneTargets[t]) targets.push(t); });
+
+    return {
+        script_factory_version: VERSION,
+        name: state.script.name || '',
+        traits: state.traits.slice(),
+        outliers: {
+            method: radio('sf_outlier_method'),
+            group_by: $('#sf_iqr_group').val(),
+            k: Number($('#sf_iqr_k').val()),
+            alpha: Number($('#sf_madr_alpha').val())
+        },
+        strategy: radio('sf_strategy'),
+        stage1: { model: radio('sf_stage1_model'), design_overrides: overrides },
+        stage2: { genotype: $('#sf_stage2_genotype').val(), weighting: $('#sf_stage2_weighting').val() },
+        single: { genotype: $('#sf_single_genotype').val(), include_gxe: $('#sf_single_gxe').is(':checked') },
+        index: index,
+        zones: {
+            enabled: $('#sf_zones_enabled').is(':checked'),
+            unit: $('#sf_zones_unit').val(),
+            method: radio('sf_zones_method'),
+            threshold: Number($('#sf_zones_threshold').val()),
+            alpha: Number($('#sf_zones_alpha').val()),
+            top_n: Number($('#sf_zones_top').val()),
+            targets: targets
+        }
+    };
+}
+
+// match a recipe trait to a dataset trait: full name first, then short name
+function matchTrait(t) {
+    if (!state.dataset) return null;
+    const names = state.dataset.traits.map(x => x.name);
+    if (names.indexOf(t) >= 0) return t;
+    const s = shortTrait(t);
+    const m = names.filter(n => shortTrait(n) === s);
+    return m.length ? m[0] : null;
+}
+
+function applyRecipe(r) {
+    if (!r) return;
+    const o = r.outliers || {};
+    setRadio('sf_outlier_method', o.method || 'none');
+    if (o.group_by) $('#sf_iqr_group').val(o.group_by);
+    if (o.k) $('#sf_iqr_k').val(o.k);
+    if (o.alpha) $('#sf_madr_alpha').val(o.alpha);
+
+    setRadio('sf_strategy', r.strategy || 'two_stage');
+    const s1 = r.stage1 || {};
+    setRadio('sf_stage1_model', s1.model || 'auto');
+    state.designOverrides = Object.assign({}, s1.design_overrides || {});
+    const s2 = r.stage2 || {};
+    if (s2.genotype) $('#sf_stage2_genotype').val(s2.genotype);
+    if (s2.weighting) $('#sf_stage2_weighting').val(s2.weighting);
+    const ss = r.single || {};
+    if (ss.genotype) $('#sf_single_genotype').val(ss.genotype);
+    $('#sf_single_gxe').prop('checked', ss.include_gxe !== false);
+
+    const ix = r.index || {};
+    $('#sf_index_enabled').prop('checked', !!ix.enabled);
+    setRadio('sf_index_method', ix.method || 'zscore');
+    if (ix.selection_pct) { $('#sf_selection_pct').val(ix.selection_pct); $('#sf_selection_pct_label').text(ix.selection_pct); }
+
+    const z = r.zones || {};
+    $('#sf_zones_enabled').prop('checked', !!z.enabled);
+    if (z.unit) $('#sf_zones_unit').val(z.unit);
+    setRadio('sf_zones_method', z.method || 'correlation');
+    if (z.threshold !== undefined) $('#sf_zones_threshold').val(z.threshold);
+    if (z.alpha) $('#sf_zones_alpha').val(z.alpha);
+    if (z.top_n) $('#sf_zones_top').val(z.top_n);
+
+    if (state.dataset) {
+        applyRecipeTraits(r);
+    } else {
+        state.pendingRecipe = r;
+    }
+    refreshAll();
+}
+
+function applyRecipeTraits(r) {
+    const missing = [];
+    const traits = [];
+    arr(r.traits).forEach(t => {
+        const m = matchTrait(t);
+        if (m) traits.push(m); else missing.push(shortTrait(t));
+    });
+    if (arr(r.traits).length) state.traits = traits;
+
+    state.indexCfg = {};
+    const it = (r.index || {}).traits || {};
+    Object.keys(it).forEach(t => {
+        const m = matchTrait(t);
+        if (m) state.indexCfg[m] = { weight: Number(it[t].weight), direction: it[t].direction || 'increase' };
+    });
+
+    state.zoneTargets = {};
+    arr((r.zones || {}).targets).forEach(t => {
+        if (t === 'index') state.zoneTargets.index = true;
+        else { const m = matchTrait(t); if (m) state.zoneTargets[m] = true; }
+    });
+
+    state.missingTraits = missing;
+    $('#sf_recipe_trait_warning').html(missing.length
+        ? alertBox('warning', '<span class="glyphicon glyphicon-warning-sign"></span> The script uses trait(s) that are not in this dataset: <b>' + missing.map(esc).join(', ') + '</b>. They will be skipped.')
+        : '');
+    renderTraits();
+    renderQuickRun();
+}
+
+// "Run whole script": shown when a saved script and a dataset are both loaded
+function renderQuickRun() {
+    const box = $('#sf_quick_run');
+    if (!state.scriptLoaded || !state.dataset) { box.hide(); return; }
+    const r = buildRecipe();
+    const chip = (label, text, on) => '<span class="' + (on ? '' : 'off') + '"><b>' + label + '</b>' + text + '</span>';
+    const o = r.outliers;
+    $('#sf_quick_run_title').text(state.script.name || 'Loaded script');
+    $('#sf_quick_run_text').html('Apply every step of this script to <b>' + esc(state.dataset.dataset_name) + '</b> (' +
+        state.dataset.trials.length + ' trial(s), ' + r.traits.length + ' trait(s)) in one click, or review the steps first.');
+    $('#sf_quick_run_steps').html(
+        chip('Traits', r.traits.map(t => esc(shortTrait(t))).join(', ') || 'none', r.traits.length > 0) +
+        chip('QC', o.method === 'iqr' ? 'IQR k = ' + o.k : o.method === 'madr' ? 'BH-MADR' : 'none', o.method !== 'none') +
+        chip('Model', r.strategy === 'two_stage' ? 'two stages' : 'single stage', true) +
+        chip('Index', r.index.enabled ? (r.index.method === 'rank_sum' ? 'rank sum' : 'Z-score') + ', top ' + r.index.selection_pct + '%' : 'off', r.index.enabled) +
+        chip('Zones', r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin test' : 'correlation') : 'off', r.zones.enabled));
+    const problems = validateRecipe(r);
+    let warn = '';
+    if (state.missingTraits.length) warn += 'Not in this dataset, skipped: <b>' + state.missingTraits.map(esc).join(', ') + '</b>. ';
+    if (problems.length) warn += problems.map(esc).join(' ');
+    $('#sf_quick_run_warning').html(warn ? alertBox(problems.length ? 'danger' : 'warning', warn) : '');
+    $('#sf_quick_run_btn').prop('disabled', problems.length > 0 || !!state.job);
+    box.show();
+}
+
+function quickRun() {
+    goTo(6);
+    if (state.step === 6 && !validateRecipe(buildRecipe()).length && !state.job) runAnalysis();
+}
+
+// ---------------------------------------------------------------------------
+// navigation and generic UI
+// ---------------------------------------------------------------------------
+
+function goTo(step) {
+    step = Number(step);
+    if (step > 1 && !state.dataset) {
+        $('#sf_dataset_message').html(alertBox('info', 'Please load a dataset first.'));
+        step = 1;
+    }
+    if (step > 1 && !state.traits.length) {
+        $('#sf_dataset_message').html(alertBox('warning', 'Please select at least one trait.'));
+        step = 1;
+    }
+    state.step = step;
+    $('.sf-step').hide();
+    $('.sf-step[data-step=' + step + ']').show();
+    $('#sf_stepper li').each(function() {
+        const s = Number($(this).data('step'));
+        $(this).toggleClass('active', s === step).toggleClass('done', s < step);
+    });
+    if (step === 2) renderExplorer();
+    if (step === 3) { renderDesignTable(); renderModelPreview(); }
+    if (step === 4) renderIndexTable();
+    if (step === 5) renderZoneTargets();
+    if (step === 6) renderRunReview();
+    window.scrollTo({ top: $('#sf_stepper').offset().top - 70, behavior: 'smooth' });
+}
+
+function refreshOptionCards() {
+    $('.sf-option').each(function() {
+        $(this).toggleClass('on', $(this).find('input').is(':checked'));
+    });
+}
+
+function refreshToggles() {
+    const om = radio('sf_outlier_method');
+    $('#sf_iqr_opts').toggle(om === 'iqr');
+    $('#sf_madr_opts').toggle(om === 'madr');
+    $('#sf_preview_madr').toggle(om === 'madr');
+
+    const two = radio('sf_strategy') === 'two_stage';
+    $('#sf_stage1_card, #sf_stage2_card').toggle(two);
+    $('#sf_single_card').toggle(!two);
+
+    $('#sf_index_body').toggleClass('sf-disabled', !$('#sf_index_enabled').is(':checked'));
+    $('#sf_zones_body').toggleClass('sf-disabled', !$('#sf_zones_enabled').is(':checked'));
+    const lin = radio('sf_zones_method') === 'lin';
+    $('#sf_zones_threshold_wrap').toggle(!lin);
+    $('#sf_zones_alpha_wrap').toggle(lin);
+    $('#sf_stepper li[data-step=4]').toggleClass('off', !$('#sf_index_enabled').is(':checked'));
+    $('#sf_stepper li[data-step=5]').toggleClass('off', !$('#sf_zones_enabled').is(':checked'));
+}
+
+function refreshAll() {
+    refreshOptionCards();
+    refreshToggles();
+    renderPipeline();
+    if (state.step === 2) renderExplorer();
+    if (state.step === 3) { renderDesignTable(); renderModelPreview(); }
+    if (state.step === 4) renderIndexTable();
+    if (state.step === 5) renderZoneTargets();
+    if (state.step === 6) renderRunReview();
+}
+
+function setScriptName() {
+    const s = state.script;
+    $('#sf_script_name').text(s.name ? s.name + (s.is_owner ? '' : ' (shared, read only)') : 'New script (unsaved)');
+}
+
+// ---------------------------------------------------------------------------
+// step 1 - dataset
+// ---------------------------------------------------------------------------
+
+function selectedDatasetId() {
+    const checked = $('input[name=sf_dataset_checkbox]:checked');
+    return checked.length ? checked.first().val() : null;
+}
+
+function loadDataset() {
+    const id = selectedDatasetId();
+    if (!id) {
+        $('#sf_dataset_message').html(alertBox('warning', 'Please tick one dataset in the table above.'));
+        return;
+    }
+    if ($('input[name=sf_dataset_checkbox]:checked').length > 1) {
+        $('#sf_dataset_message').html(alertBox('warning', 'Please select only one dataset.'));
+        return;
+    }
+    $('#sf_dataset_message').html('<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh sf-spin"></span> Retrieving phenotypes. Large datasets can take a minute...</div>');
+    $('#sf_load_dataset').prop('disabled', true);
+
+    post('/ajax/script_factory/prepare', { dataset_id: id, dataset_trait_outliers: $('#sf_dataset_outliers').is(':checked') ? 1 : 0 })
+        .then(r => {
+            const keepTraits = state.dataset ? state.traits.map(shortTrait) : null;
+            state.dataset = r;
+            state.plotData = null;
+            state.plotDataKey = '';
+            state.exclusions = {};
+            state.madrFlags = {};
+            state.results = null;
+            $('#sf_results').hide();
+            if (state.pendingRecipe) {
+                applyRecipeTraits(state.pendingRecipe);
+                state.pendingRecipe = null;
+            } else if (keepTraits && keepTraits.length) {
+                state.traits = r.traits.map(t => t.name).filter(n => keepTraits.indexOf(shortTrait(n)) >= 0);
+                $('#sf_recipe_trait_warning').html('');
+            } else {
+                state.traits = r.traits.map(t => t.name);
+                $('#sf_recipe_trait_warning').html('');
+            }
+            state.traits.forEach(t => { if (!state.indexCfg[t]) state.indexCfg[t] = { weight: 0, direction: 'increase' }; });
+            $('#sf_dataset_message').html(r.traits.length ? '' : alertBox('warning', 'No numeric trait was found in this dataset.'));
+            renderDatasetOverview();
+            renderExclusions();
+            renderPipeline();
+            renderQuickRun();
+        })
+        .catch(e => $('#sf_dataset_message').html(alertBox('danger', esc(e.message))))
+        .finally(() => $('#sf_load_dataset').prop('disabled', false));
+}
+
+function detectDesign(t) {
+    const txt = String(t.design || '').toLowerCase();
+    let d;
+    if (/row.?col|rowcol|spatial|p-rep|prep/.test(txt)) d = 'row_column';
+    else if (/augmented|madii|aug/.test(txt)) d = 'augmented';
+    else if (/alpha|lattice|incomplete/.test(txt) || (t.n_reps > 1 && t.n_blocks > t.n_reps)) d = 'alpha_lattice';
+    else if (/rcbd|randomi[sz]ed complete block/.test(txt) || t.n_reps > 1 || t.n_blocks > 1) d = 'rcbd';
+    else if (/crd|completely random/.test(txt) || t.replicated) d = 'crd';
+    else d = 'unreplicated';
+    if (!t.replicated && d !== 'augmented') d = 'unreplicated';
+    return d;
+}
+
+function renderDatasetOverview() {
+    const r = state.dataset;
+    const stat = (v, l) => '<div class="sf-stat"><div class="v">' + esc(v) + '</div><div class="l">' + esc(l) + '</div></div>';
+    $('#sf_dataset_stats').html(
+        stat(r.trials.length, 'Trials') + stat(r.n_locations, 'Locations') + stat(r.n_years, 'Years') +
+        stat(r.n_accessions, 'Accessions') + stat(r.n_plots, 'Plots') + stat(r.traits.length, 'Numeric traits'));
+
+    let h = '<table class="table table-condensed table-hover"><thead><tr><th>Trial</th><th>Location</th><th>Year</th><th>Design</th><th>Plots</th><th>Accessions</th><th>Reps</th><th>Blocks</th><th>Layout</th></tr></thead><tbody>';
+    r.trials.forEach(t => {
+        const d = detectDesign(t);
+        h += '<tr><td>' + (t.trial_id ? '<a href="/breeders/trial/' + esc(t.trial_id) + '" target="_blank">' + esc(t.trial) + '</a>' : esc(t.trial)) + '</td>' +
+            '<td>' + esc(t.location) + '</td><td>' + esc(t.year) + '</td>' +
+            '<td><span class="label label-default">' + esc(DESIGNS[d]) + '</span>' + (t.design ? ' <small class="sf-muted">(' + esc(t.design) + ')</small>' : '') + '</td>' +
+            '<td>' + t.n_plots + '</td><td>' + t.n_accessions + '</td><td>' + t.n_reps + '</td><td>' + t.n_blocks + '</td>' +
+            '<td>' + (t.has_rowcol ? '<span class="glyphicon glyphicon-th" title="Row and column coordinates available"></span> ' + t.n_rows + '&times;' + t.n_cols : '<span class="sf-muted">no row/col</span>') + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    $('#sf_trials_table').html(h);
+    renderTraits();
+    $('#sf_dataset_overview').show();
+}
+
+function renderTraits() {
+    if (!state.dataset) return;
+    let h = '';
+    state.dataset.traits.forEach(t => {
+        const on = state.traits.indexOf(t.name) >= 0;
+        h += '<label class="sf-trait' + (on ? ' on' : '') + '" title="' + esc(t.name) + '"><input type="checkbox" class="sf-trait-cb" value="' + esc(t.name) + '"' + (on ? ' checked' : '') + ' />' +
+            '<span><b>' + esc(t.short) + '</b><small>n = ' + t.n + ' &middot; mean ' + fmt(t.mean) + ' &middot; ' + fmt(t.min) + ' to ' + fmt(t.max) + '</small></span></label>';
+    });
+    $('#sf_traits').html(h || '<p class="sf-muted">No numeric traits.</p>');
+}
+
+function onTraitsChanged() {
+    const sel = [];
+    $('.sf-trait-cb:checked').each(function() { sel.push($(this).val()); });
+    // keep dataset order
+    state.traits = state.dataset.traits.map(t => t.name).filter(n => sel.indexOf(n) >= 0);
+    state.traits.forEach(t => { if (!state.indexCfg[t]) state.indexCfg[t] = { weight: 0, direction: 'increase' }; });
+    $('.sf-trait').each(function() { $(this).toggleClass('on', $(this).find('input').is(':checked')); });
+    renderPipeline();
+    renderQuickRun();
+}
+
+// ---------------------------------------------------------------------------
+// step 2 - outliers
+// ---------------------------------------------------------------------------
+
+function ensurePlotData() {
+    const key = state.dataset.token + '|' + state.traits.join('\t');
+    if (state.plotData && state.plotDataKey === key) return Promise.resolve(state.plotData);
+    return post('/ajax/script_factory/plot_data', { token: state.dataset.token, traits: JSON.stringify(state.traits) })
+        .then(r => { state.plotData = r; state.plotDataKey = key; return r; });
+}
+
+// client-side mirror of the IQR rule in the R pipeline
+function iqrFlags(trait) {
+    const pd = state.plotData;
+    const ti = pd.columns.indexOf(trait);
+    if (ti < 0) return {};
+    const k = Number($('#sf_iqr_k').val()) || 1.5;
+    const by = $('#sf_iqr_group').val();
+
+    // effective replicate per trial: rep if it has >1 levels, else block
+    const repLevels = {}, blockLevels = {};
+    pd.rows.forEach(r => {
+        (repLevels[r[1]] = repLevels[r[1]] || {})[r[3]] = 1;
+        (blockLevels[r[1]] = blockLevels[r[1]] || {})[r[4]] = 1;
+    });
+    const effRep = r => Object.keys(repLevels[r[1]]).filter(x => x && x !== 'null').length > 1 ? r[3]
+        : Object.keys(blockLevels[r[1]]).filter(x => x && x !== 'null').length > 1 ? r[4] : '1';
+
+    const groups = {};
+    pd.rows.forEach(r => {
+        const v = r[ti];
+        if (v === null || v === undefined) return;
+        let g;
+        if (by === 'trial_rep') g = r[1] + ' ' + effRep(r);
+        else if (by === 'trial_accession') g = r[1] + ' ' + r[2];
+        else if (by === 'all') g = 'all';
+        else g = r[1];
+        (groups[g] = groups[g] || []).push(r);
+    });
+    const flags = {};
+    Object.keys(groups).forEach(g => {
+        const rows = groups[g];
+        if (rows.length < 4) return;
+        const s = rows.map(r => r[ti]).sort((a, b) => a - b);
+        const q1 = quantile(s, 0.25), q3 = quantile(s, 0.75), iqr = q3 - q1;
+        rows.forEach(r => { if (r[ti] < q1 - k * iqr || r[ti] > q3 + k * iqr) flags[r[0]] = true; });
+    });
+    return flags;
+}
+
+function ruleFlags(trait) {
+    const m = radio('sf_outlier_method');
+    if (m === 'iqr') return iqrFlags(trait);
+    if (m === 'madr') {
+        const out = {};
+        const s = shortTrait(trait);
+        Object.keys(state.madrFlags).forEach(k => {
+            const i = k.lastIndexOf('|');
+            if (k.slice(i + 1) === s) out[k.slice(0, i)] = true;
+        });
+        return out;
+    }
+    return {};
+}
+
+function renderExplorer() {
+    if (!state.dataset) return;
+    const sel = $('#sf_explorer_trait');
+    const cur = sel.val();
+    sel.html(state.traits.map(t => '<option value="' + esc(t) + '">' + esc(shortTrait(t)) + '</option>').join(''));
+    if (cur && state.traits.indexOf(cur) >= 0) sel.val(cur);
+    $('#sf_explorer_plot').html('<div class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Loading observations...</div>');
+    ensurePlotData()
+        .then(() => drawExplorer())
+        .catch(e => $('#sf_explorer_plot').html(alertBox('danger', esc(e.message))));
+}
+
+function drawExplorer() {
+    const trait = $('#sf_explorer_trait').val();
+    const pd = state.plotData;
+    const box = document.getElementById('sf_explorer_plot');
+    box.innerHTML = '';
+    if (!trait || !pd) return;
+    const ti = pd.columns.indexOf(trait);
+    const flags = ruleFlags(trait);
+
+    const byTrial = {};
+    const all = [];
+    pd.rows.forEach(r => {
+        if (r[ti] === null || r[ti] === undefined) return;
+        (byTrial[r[1]] = byTrial[r[1]] || []).push(r);
+        all.push(r[ti]);
+    });
+    const trials = Object.keys(byTrial).sort();
+    if (!trials.length) { box.innerHTML = '<p class="sf-muted">No observations for this trait.</p>'; return; }
+
+    const minV = Math.min.apply(null, all), maxV = Math.max.apply(null, all);
+    const pad = (maxV - minV) * 0.05 || 1;
+    const y0 = minV - pad, y1 = maxV + pad;
+    const M = { l: 60, r: 16, t: 14, b: 90 };
+    const bw = Math.max(46, Math.min(110, 820 / trials.length));
+    const W = M.l + M.r + bw * trials.length;
+    const H = 380;
+    const ys = v => M.t + (H - M.t - M.b) * (1 - (v - y0) / (y1 - y0));
+
+    const svg = svgEl('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, 'font-family': 'sans-serif', 'font-size': 11 }, box);
+    niceTicks(y0, y1, 6).forEach(v => {
+        svgEl('line', { x1: M.l, x2: W - M.r, y1: ys(v), y2: ys(v), stroke: '#eef1f4' }, svg);
+        const tx = svgEl('text', { x: M.l - 6, y: ys(v) + 4, 'text-anchor': 'end', fill: '#6b7280' }, svg);
+        tx.textContent = v;
+    });
+    const yl = svgEl('text', { x: 14, y: (H - M.b + M.t) / 2, transform: 'rotate(-90 14 ' + ((H - M.b + M.t) / 2) + ')', 'text-anchor': 'middle', fill: '#374151', 'font-weight': 600 }, svg);
+    yl.textContent = shortTrait(trait);
+
+    let nFlag = 0, nExcl = 0;
+    trials.forEach((tr, i) => {
+        const rows = byTrial[tr];
+        const cx = M.l + bw * i + bw / 2;
+        const kept = rows.filter(r => !flags[r[0]] && !state.exclusions[r[0] + '|' + trait]).map(r => r[ti]).sort((a, b) => a - b);
+        if (kept.length) {
+            const q1 = quantile(kept, 0.25), q2 = quantile(kept, 0.5), q3 = quantile(kept, 0.75);
+            const w = bw * 0.55;
+            svgEl('line', { x1: cx, x2: cx, y1: ys(kept[0]), y2: ys(kept[kept.length - 1]), stroke: '#94a3b8' }, svg);
+            svgEl('rect', { x: cx - w / 2, y: ys(q3), width: w, height: Math.max(1, ys(q1) - ys(q3)), fill: '#e8f4ec', stroke: '#2b7a4b', rx: 3 }, svg);
+            svgEl('line', { x1: cx - w / 2, x2: cx + w / 2, y1: ys(q2), y2: ys(q2), stroke: '#1f5f3a', 'stroke-width': 2 }, svg);
+        }
+        rows.forEach(r => {
+            const key = r[0] + '|' + trait;
+            const excl = !!state.exclusions[key];
+            const flag = !!flags[r[0]];
+            if (excl) nExcl++;
+            if (flag) nFlag++;
+            const c = svgEl('circle', {
+                cx: cx + (hash(r[0]) - 0.5) * bw * 0.6, cy: ys(r[ti]), r: (excl || flag) ? 4 : 2.6,
+                fill: excl ? '#111' : flag ? '#e11d48' : '#2b7a4b', 'fill-opacity': (excl || flag) ? 0.95 : 0.45,
+                stroke: excl ? '#fff' : 'none'
+            }, svg);
+            c.setAttribute('data-unit', r[0]);
+            const title = svgEl('title', {}, c);
+            title.textContent = r[0] + '\n' + r[2] + '\nvalue: ' + r[ti] + (r[3] ? '\nrep ' + r[3] : '') + (r[5] !== null && r[5] !== undefined ? '\nrow ' + r[5] + ', col ' + r[6] : '') + (flag ? '\nflagged by the rule' : '') + (excl ? '\nexcluded by you (click to restore)' : '\nclick to exclude');
+            c.addEventListener('click', () => toggleExclusion(r, trait));
+        });
+        const lab = svgEl('text', { x: cx, y: H - M.b + 12, 'text-anchor': 'end', transform: 'rotate(-40 ' + cx + ' ' + (H - M.b + 12) + ')', fill: '#374151' }, svg);
+        lab.textContent = tr.length > 22 ? tr.slice(0, 21) + '…' : tr;
+        svgEl('title', {}, lab).textContent = tr;
+    });
+
+    const method = radio('sf_outlier_method');
+    let msg = '<b>' + all.length + '</b> observations';
+    if (method === 'iqr') msg += ', <b style="color:#e11d48">' + nFlag + '</b> flagged by the IQR rule';
+    if (method === 'madr') msg += Object.keys(state.madrFlags).length || state.madrPreviewDone
+        ? ', <b style="color:#e11d48">' + nFlag + '</b> flagged by BH-MADR'
+        : ' &middot; BH-MADR needs a model fit: click <i>Flag with BH-MADR</i> to preview the flagged points (it is applied anyway when you run the analysis).';
+    msg += ', <b>' + nExcl + '</b> excluded by you.';
+    $('#sf_explorer_summary').html('<p class="sf-help">' + msg + '</p>');
+}
+
+function toggleExclusion(r, trait) {
+    const key = r[0] + '|' + trait;
+    if (state.exclusions[key]) delete state.exclusions[key];
+    else state.exclusions[key] = { unit: r[0], trait: trait, trial: r[1], accession: r[2], value: r[state.plotData.columns.indexOf(trait)] };
+    drawExplorer();
+    renderExclusions();
+    renderPipeline();
+}
+
+function renderExclusions() {
+    const keys = Object.keys(state.exclusions);
+    $('#sf_exclusion_count').text(keys.length);
+    if (!keys.length) {
+        $('#sf_exclusion_table').html('<p class="sf-muted">None. Click points in the plot to exclude them.</p>');
+        return;
+    }
+    let h = '<table class="table table-condensed"><thead><tr><th>Plot</th><th>Trial</th><th>Accession</th><th>Trait</th><th>Value</th><th></th></tr></thead><tbody>';
+    keys.forEach(k => {
+        const e = state.exclusions[k];
+        h += '<tr><td>' + esc(e.unit) + '</td><td>' + esc(e.trial) + '</td><td>' + esc(e.accession) + '</td><td>' + esc(shortTrait(e.trait)) + '</td><td>' + fmt(e.value) + '</td>' +
+            '<td><button class="btn btn-link btn-xs sf-restore" data-key="' + esc(k) + '">restore</button></td></tr>';
+    });
+    h += '</tbody></table><button class="btn btn-default btn-xs" id="sf_restore_all">Restore all</button>';
+    $('#sf_exclusion_table').html(h);
+}
+
+function exclusionsPayload() {
+    return Object.keys(state.exclusions).map(k => ({ unit: state.exclusions[k].unit, trait: state.exclusions[k].trait }));
+}
+
+function previewMadr() {
+    const btn = $('#sf_preview_madr');
+    btn.prop('disabled', true).html('<span class="glyphicon glyphicon-refresh sf-spin"></span> Fitting models...');
+    const recipe = buildRecipe();
+    recipe.zones.enabled = false;
+    recipe.index.enabled = false;
+    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: '[]', mode: 'preview' })
+        .then(job => pollJob(job, null))
+        .then(res => {
+            state.madrFlags = {};
+            state.madrPreviewDone = true;
+            arr(res.outliers).forEach(o => { state.madrFlags[o.unit + '|' + o.trait] = true; });
+            drawExplorer();
+        })
+        .catch(e => $('#sf_explorer_summary').html(alertBox('danger', esc(e.message))))
+        .finally(() => btn.prop('disabled', false).html('<span class="glyphicon glyphicon-flash"></span> Flag with BH-MADR'));
+}
+
+// ---------------------------------------------------------------------------
+// step 3 - model
+// ---------------------------------------------------------------------------
+
+function trialModel(t) {
+    const s1 = radio('sf_stage1_model');
+    const override = state.designOverrides[t.trial];
+    const design = override && override !== 'auto' ? override : detectDesign(t);
+    if (t.has_rowcol && (s1 === 'spats' || s1 === 'auto')) {
+        return { design: design, text: 'SpATS: y ~ accession' + (t.n_reps > 1 ? ' + rep' : '') + ' + PSANOVA(col, row) + (1|row) + (1|col)', spats: true };
+    }
+    let terms = [];
+    if (design === 'rcbd' && t.n_reps > 1) terms = ['(1|rep)'];
+    if (design === 'alpha_lattice') terms = (t.n_reps > 1 ? ['(1|rep)'] : []).concat(t.n_blocks > 1 ? ['(1|rep:block)'] : []);
+    if (design === 'augmented' && t.n_blocks > 1) terms = ['(1|block)'];
+    if (design === 'row_column') terms = (t.n_reps > 1 ? ['(1|rep)'] : []).concat(['(1|rep:row)', '(1|rep:col)']);
+    if (design === 'unreplicated') return { design: design, text: 'raw values (no replication, no error estimate)', warn: true };
+    return { design: design, text: 'y ~ accession' + (terms.length ? ' + ' + terms.join(' + ') : ''), note: s1 === 'spats' && !t.has_rowcol ? 'no row/col: design model used' : '' };
+}
+
+function renderDesignTable() {
+    if (!state.dataset) return;
+    let h = '<table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Stage 1 model</th></tr></thead><tbody>';
+    state.dataset.trials.forEach(t => {
+        const m = trialModel(t);
+        const det = detectDesign(t);
+        let opts = '';
+        Object.keys(DESIGNS).forEach(k => {
+            const label = k === 'auto' ? 'Detected: ' + DESIGNS[det] : DESIGNS[k];
+            opts += '<option value="' + k + '"' + ((state.designOverrides[t.trial] || 'auto') === k ? ' selected' : '') + '>' + label + '</option>';
+        });
+        h += '<tr><td>' + esc(t.trial) + '<br/><small class="sf-muted">' + esc(t.location) + ' ' + esc(t.year) + '</small></td>' +
+            '<td><select class="form-control input-sm sf-design-override" data-trial="' + esc(t.trial) + '">' + opts + '</select></td>' +
+            '<td><code>' + esc(m.text) + '</code>' + (m.spats ? ' <span class="label label-success">spatial</span>' : '') +
+            (m.warn ? ' <span class="label label-warning">unreplicated</span>' : '') + (m.note ? ' <small class="sf-muted">' + esc(m.note) + '</small>' : '') + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    $('#sf_design_table').html(h);
+}
+
+function renderModelPreview() {
+    const two = radio('sf_strategy') === 'two_stage';
+    let txt;
+    if (two) {
+        const random = $('#sf_stage2_genotype').val() === 'random';
+        const w = $('#sf_stage2_weighting').val() === 'inverse_se2';
+        txt = '# Stage 1 (per trial, per trait)\n' +
+            (state.dataset ? state.dataset.trials.map(t => '  ' + t.trial + ':  ' + trialModel(t).text).join('\n') : '') +
+            '\n\n# Stage 2 (across trials)\n  BLUE_ij ~ trial_j + ' + (random ? '(1|accession_i)' : 'accession_i') + ' + e_ij' + (w ? ',  weights = 1 / SE_ij^2' : '') +
+            '\n  -> ' + (random ? 'BLUPs (genotype random)' : 'BLUEs (genotype fixed)');
+    } else {
+        const random = $('#sf_single_genotype').val() === 'random';
+        const gxe = $('#sf_single_gxe').is(':checked');
+        const anyRC = state.dataset && state.dataset.trials.some(t => t.has_rowcol);
+        txt = 'y ~ ' + (random ? '(1|accession)' : 'accession') + ' + trial + (1|trial:rep) + (1|trial:rep:block)' +
+            (anyRC ? ' + (1|trial:row) + (1|trial:col)' : '') + (gxe ? ' + (1|accession:trial)' : '') +
+            '\n  -> ' + (random ? 'BLUPs' : 'BLUEs') + '\n# terms that do not apply to the data are dropped automatically';
+    }
+    $('#sf_model_preview').html('<div class="sf-formula">' + esc(txt) + '</div>');
+}
+
+// ---------------------------------------------------------------------------
+// step 4 - selection index
+// ---------------------------------------------------------------------------
+
+function renderIndexTable() {
+    let h = '';
+    state.traits.forEach(t => {
+        const c = state.indexCfg[t] || (state.indexCfg[t] = { weight: 0, direction: 'increase' });
+        h += '<tr><td title="' + esc(t) + '">' + esc(shortTrait(t)) + '</td>' +
+            '<td><input type="number" step="0.1" class="form-control input-sm sf-index-weight" style="width:100px" data-trait="' + esc(t) + '" value="' + esc(c.weight) + '" /></td>' +
+            '<td><div class="btn-group btn-group-sm" data-trait="' + esc(t) + '">' +
+            '<button class="btn sf-index-dir ' + (c.direction !== 'decrease' ? 'btn-success' : 'btn-default') + '" data-dir="increase"><span class="glyphicon glyphicon-arrow-up"></span> Higher is better</button>' +
+            '<button class="btn sf-index-dir ' + (c.direction === 'decrease' ? 'btn-success' : 'btn-default') + '" data-dir="decrease"><span class="glyphicon glyphicon-arrow-down"></span> Lower is better</button>' +
+            '</div></td></tr>';
+    });
+    $('#sf_index_traits').html(h);
+    renderIndexFormula();
+}
+
+function renderIndexFormula() {
+    const parts = state.traits.filter(t => Number((state.indexCfg[t] || {}).weight) !== 0).map(t => {
+        const c = state.indexCfg[t];
+        const sign = (c.direction === 'decrease' ? -1 : 1) * Number(c.weight);
+        return (sign < 0 ? '- ' : '+ ') + Math.abs(sign) + ' * ' + (radio('sf_index_method') === 'rank_sum' ? 'rank(' + shortTrait(t) + ')' : 'z(' + shortTrait(t) + ')');
+    });
+    let f;
+    if (!parts.length) f = '# give a non-zero weight to at least one trait';
+    else if (radio('sf_index_method') === 'rank_sum') f = 'I = -(' + parts.map(p => p.replace(/^[+-] /, '')).join(' + ') + ')    # rank 1 = best in the desired direction';
+    else f = 'I = ' + parts.join(' ').replace(/^\+ /, '');
+    $('#sf_index_formula').text(f + '\nselect the top ' + $('#sf_selection_pct').val() + '% of accessions');
+}
+
+// ---------------------------------------------------------------------------
+// step 5 - zones
+// ---------------------------------------------------------------------------
+
+function renderZoneTargets() {
+    const item = (value, label, sub, disabled) => {
+        const on = !!state.zoneTargets[value] && !disabled;
+        return '<label class="sf-trait' + (on ? ' on' : '') + '"' + (disabled ? ' style="opacity:.5"' : '') + '><input type="checkbox" class="sf-zone-target" value="' + esc(value) + '"' + (on ? ' checked' : '') + (disabled ? ' disabled' : '') + ' />' +
+            '<span><b>' + esc(label) + '</b><small>' + sub + '</small></span></label>';
+    };
+    const indexOn = $('#sf_index_enabled').is(':checked');
+    let h = item('index', 'Selection index', indexOn ? 'index computed in each environment' : 'enable the selection index first', !indexOn);
+    state.traits.forEach(t => { h += item(t, shortTrait(t), 'genotype means per environment'); });
+    $('#sf_zones_targets').html(h);
+}
+
+// ---------------------------------------------------------------------------
+// pipeline summary
+// ---------------------------------------------------------------------------
+
+function renderPipeline() {
+    const r = buildRecipe();
+    const items = [];
+    items.push({ t: 'Data', d: state.dataset ? esc(state.dataset.dataset_name) + '<br/>' + state.traits.length + ' trait(s), ' + state.dataset.trials.length + ' trial(s)' : 'no dataset loaded', off: !state.dataset });
+    const o = r.outliers;
+    const nEx = Object.keys(state.exclusions).length;
+    items.push({ t: 'Quality control', d: (o.method === 'iqr' ? 'IQR k = ' + o.k + ' by ' + o.group_by.replace('_', ' &times; ') : o.method === 'madr' ? 'BH-MADR, &alpha; = ' + o.alpha : 'no automatic rule') + (nEx ? '<br/>' + nEx + ' individual exclusion(s)' : ''), off: o.method === 'none' && !nEx });
+    if (r.strategy === 'two_stage') {
+        items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] });
+        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? 'BLUPs' : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') });
+    } else {
+        items.push({ t: 'Single stage', d: (r.single.genotype === 'random' ? 'BLUPs' : 'BLUEs') + (r.single.include_gxe ? ' with G&times;E' : '') });
+    }
+    const nIdx = Object.keys(r.index.traits).length;
+    items.push({ t: 'Selection index', d: r.index.enabled ? (r.index.method === 'rank_sum' ? 'rank sum' : 'weighted Z-score') + ', ' + nIdx + ' trait(s), top ' + r.index.selection_pct + '%' : 'off', off: !r.index.enabled });
+    items.push({ t: 'Environmental zones', d: r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin G&times;E test' : 'correlation clustering') + ' by ' + r.zones.unit.replace('_', ' &times; ') + '<br/>' + r.zones.targets.map(x => x === 'index' ? 'index' : esc(shortTrait(x))).join(', ') : 'off', off: !r.zones.enabled });
+
+    $('#sf_pipeline').html('<ul class="sf-flow">' + items.map(i => '<li class="' + (i.off ? 'off' : '') + '"><b>' + i.t + '</b>' + i.d + '</li>').join('') + '</ul>');
+}
+
+// ---------------------------------------------------------------------------
+// step 6 - run
+// ---------------------------------------------------------------------------
+
+function validateRecipe(r) {
+    const problems = [];
+    if (!r.traits.length) problems.push('Select at least one trait (step 1).');
+    if (r.index.enabled && !Object.keys(r.index.traits).length) problems.push('The selection index is on but no trait has a non-zero weight (step 4).');
+    if (r.zones.enabled && !r.zones.targets.length) problems.push('Choose what to group environments on (step 5).');
+    if (r.zones.enabled && r.zones.targets.indexOf('index') >= 0 && !r.index.enabled) problems.push('Zoning on the index requires the selection index (step 4).');
+    if (r.zones.enabled && state.dataset && state.dataset.trials.length < 2) problems.push('Environmental zoning needs at least two trials.');
+    return problems;
+}
+
+function renderRunReview() {
+    const r = buildRecipe();
+    const problems = validateRecipe(r);
+    const cell = (l, v) => '<div><b>' + l + '</b>' + v + '</div>';
+    let h = '<div class="sf-review">' +
+        cell('Dataset', state.dataset ? esc(state.dataset.dataset_name) : '&ndash;') +
+        cell('Traits', r.traits.map(t => esc(shortTrait(t))).join(', ')) +
+        cell('Outliers', r.outliers.method === 'none' ? 'none' : r.outliers.method.toUpperCase()) +
+        cell('Model', r.strategy === 'two_stage' ? 'Two stages' : 'Single stage') +
+        cell('Index', r.index.enabled ? 'on' : 'off') +
+        cell('Zones', r.zones.enabled ? 'on' : 'off') + '</div>';
+    if (problems.length) h += alertBox('warning', problems.map(esc).join('<br/>'));
+    $('#sf_run_review').html(h);
+    $('#sf_run').prop('disabled', problems.length > 0 || !!state.job);
+}
+
+function pollJob(job, onProgress) {
+    return new Promise((resolve, reject) => {
+        const tick = () => {
+            $.ajax({ url: '/ajax/script_factory/status', data: { job_id: job.job_id, run_id: job.run_id }, dataType: 'json' })
+                .done(r => {
+                    if (r.error) { reject(new Error(r.error)); return; }
+                    if (r.status === 'finished') { resolve(r.results); return; }
+                    if (onProgress && r.progress) onProgress(r.progress);
+                    state.pollTimer = setTimeout(tick, 3000);
+                })
+                .fail(() => { state.pollTimer = setTimeout(tick, 6000); });
+        };
+        state.pollTimer = setTimeout(tick, 1500);
+    });
+}
+
+function runAnalysis() {
+    const recipe = buildRecipe();
+    if (validateRecipe(recipe).length) return;
+    $('#sf_run').prop('disabled', true);
+    $('#sf_results').hide();
+    $('#sf_run_status').show();
+    $('#sf_run_progress_text').text('Submitting...');
+    const t0 = Date.now();
+    state.elapsedTimer = setInterval(() => {
+        const s = Math.round((Date.now() - t0) / 1000);
+        $('#sf_run_elapsed').text('(' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + ')');
+    }, 1000);
+
+    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full' })
+        .then(job => {
+            state.job = job;
+            $('#sf_run_progress_text').text('Queued. The analysis runs in the background; you can follow it in your jobs list too.');
+            return pollJob(job, p => $('#sf_run_progress_text').text(p));
+        })
+        .then(res => {
+            state.results = res;
+            state.resultsRecipe = recipe;
+            renderResults();
+        })
+        .catch(e => $('#sf_run_review').append(alertBox('danger', '<b>The analysis failed.</b><pre style="white-space:pre-wrap;margin-top:6px">' + esc(e.message) + '</pre>')))
+        .finally(() => {
+            clearInterval(state.elapsedTimer);
+            state.job = null;
+            $('#sf_run_status').hide();
+            $('#sf_run').prop('disabled', false);
+        });
+}
+
+// ---------------------------------------------------------------------------
+// results
+// ---------------------------------------------------------------------------
+
+function simpleTable(rows, cols, opts) {
+    opts = opts || {};
+    rows = arr(rows);
+    if (!rows.length) return '<p class="sf-muted">' + (opts.empty || 'Nothing to show.') + '</p>';
+    let h = '<table class="table table-condensed table-hover sf-dt"' + (opts.id ? ' id="' + opts.id + '"' : '') + ' style="width:100%"><thead><tr>' +
+        cols.map(c => '<th>' + c.l + '</th>').join('') + '</tr></thead><tbody>';
+    rows.forEach(r => {
+        h += '<tr' + (opts.rowClass ? ' class="' + opts.rowClass(r) + '"' : '') + '>' + cols.map(c => {
+            const v = r[c.k];
+            return '<td>' + (c.f ? c.f(v, r) : typeof v === 'number' ? fmt(v) : esc(v)) + '</td>';
+        }).join('') + '</tr>';
+    });
+    return h + '</tbody></table>';
+}
+
+function renderResults() {
+    const res = state.results;
+    const s = res.summary || {};
+    const label = res.value_label || 'BLUP';
+    $('#sf_results').show();
+
+    // downloads
+    const dl = { genotype_values: 'Genotype values (' + label + 's)', stage1_means: 'Stage 1 means per trial', outliers: 'Removed outliers', index: 'Selection index ranking', zones: 'Environmental zones' };
+    $('#sf_downloads').html(Object.keys(res.files || {}).map(k => '<li><a href="' + esc(res.files[k]) + '" download>' + esc(dl[k] || k) + ' (.csv)</a></li>').join('') || '<li class="disabled"><a>No files</a></li>');
+    $('#sf_warnings').html(arr(res.warnings).length ? alertBox('warning', '<b>' + arr(res.warnings).length + ' note(s):</b><ul style="margin:4px 0 0">' + arr(res.warnings).map(w => '<li>' + esc(w) + '</li>').join('') + '</ul>') : '');
+    $('#sf_save_list').prop('disabled', !res.index);
+
+    // overview
+    const stat = (v, l) => '<div class="sf-stat"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
+    let ov = '<div class="sf-stats">' + stat(s.n_trials, 'Trials') + stat(s.n_environments, 'Environments') + stat(s.n_accessions, 'Accessions') +
+        stat(s.n_plots, 'Plots') + stat(arr(res.outliers).length, 'Values removed') + stat(label + 's', 'Genotype values') + '</div>';
+    ov += '<h4>Heritability and variance components</h4>' + simpleTable(res.stage2, [
+        { k: 'trait', l: 'Trait' }, { k: 'n_trials', l: 'Trials' }, { k: 'n_accessions', l: 'Accessions' }, { k: 'mean', l: 'Mean' },
+        { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' }, { k: 'var_ge', l: res.strategy === 'two_stage' ? '&sigma;&sup2;<sub>GE+e</sub>' : '&sigma;&sup2;<sub>GE</sub>' },
+        { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status', f: v => v === 'OK' ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '<small>' + esc(v) + '</small>' }
+    ]);
+    $('#sf_tab_overview').html(ov);
+
+    // outliers
+    $('#sf_tab_outliers').html('<h4>Summary</h4>' + simpleTable(res.outlier_summary, [
+        { k: 'trait', l: 'Trait' }, { k: 'n_observations', l: 'Observations', f: v => v }, { k: 'n_removed', l: 'Removed', f: v => v }, { k: 'pct_removed', l: '% removed', f: v => fmt(v, 2) + '%' }
+    ]) + '<h4>Removed values</h4>' + simpleTable(res.outliers, [
+        { k: 'unit', l: 'Plot' }, { k: 'trial', l: 'Trial' }, { k: 'accession', l: 'Accession' }, { k: 'trait', l: 'Trait' }, { k: 'value', l: 'Value' }, { k: 'reason', l: 'Reason' }
+    ], { id: 'sf_dt_outliers', empty: 'No values were removed.' }));
+    dataTable('#sf_dt_outliers');
+
+    // stage 1
+    $('#sf_tab_stage1_li').toggle(res.strategy === 'two_stage');
+    $('#sf_tab_model_link').text(res.strategy === 'two_stage' ? 'Stage 2' : 'Model');
+    $('#sf_tab_stage1').html(simpleTable(res.stage1, [
+        { k: 'trial', l: 'Trial' }, { k: 'trait', l: 'Trait' }, { k: 'design', l: 'Design' }, { k: 'n', l: 'n', f: v => v },
+        { k: 'mean', l: 'Mean' }, { k: 'cv', l: 'CV %', f: v => fmt(v, 1) }, { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) },
+        { k: 'model', l: 'Model', f: v => '<code style="font-size:11px">' + esc(v) + '</code>' }, { k: 'message', l: 'Status', f: v => v === 'OK' ? '' : '<small>' + esc(v) + '</small>' }
+    ], { id: 'sf_dt_stage1' }));
+    dataTable('#sf_dt_stage1');
+
+    // stage 2 / model
+    $('#sf_tab_model').html(simpleTable(res.stage2, [
+        { k: 'trait', l: 'Trait' }, { k: 'model', l: 'Model', f: v => '<code style="font-size:11px">' + esc(v) + '</code>' },
+        { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' }, { k: 'var_ge', l: '&sigma;&sup2;<sub>GE</sub>' }, { k: 'var_e', l: '&sigma;&sup2;<sub>e</sub>' },
+        { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status' }
+    ]) + '<p class="sf-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
+
+    // genotype values
+    const gv = arr(res.genotype_values);
+    const traitCols = gv.length ? Object.keys(gv[0]).filter(k => k !== 'accession') : [];
+    $('#sf_tab_values').html('<p class="sf-help">' + label + 's of each accession for each trait.</p>' + simpleTable(gv,
+        [{ k: 'accession', l: 'Accession', f: v => '<a href="/stock/' + encodeURIComponent(v) + '/view" target="_blank">' + esc(v) + '</a>' }].concat(traitCols.map(t => ({ k: t, l: esc(t) }))),
+        { id: 'sf_dt_values' }));
+    dataTable('#sf_dt_values');
+
+    // index
+    $('#sf_tab_index_li').toggle(!!res.index);
+    if (res.index) renderIndexResults(res.index, label);
+    // zones
+    $('#sf_tab_zones_li').toggle(arr(res.zones).length > 0);
+    if (arr(res.zones).length) renderZoneResults(arr(res.zones));
+
+    $('#sf_result_tabs a[href="#sf_tab_overview"]').tab('show');
+    $('html, body').animate({ scrollTop: $('#sf_results').offset().top - 70 }, 300);
+}
+
+function h2Badge(v) {
+    if (v === null || v === undefined || !isFinite(Number(v))) return '&ndash;';
+    const x = Number(v);
+    const c = x >= 0.6 ? '#2b7a4b' : x >= 0.3 ? '#d97706' : '#dc2626';
+    return '<span style="display:inline-block;min-width:44px;padding:1px 6px;border-radius:10px;color:#fff;background:' + c + ';text-align:center">' + x.toFixed(2) + '</span>';
+}
+
+function renderIndexResults(ix, label) {
+    const table = arr(ix.table);
+    const traitCols = table.length ? Object.keys(table[0]).filter(k => ['accession', 'index', 'rank', 'selected'].indexOf(k) < 0) : [];
+    let h = '<div class="sf-stats">' +
+        '<div class="sf-stat"><div class="v">' + ix.n_selected + ' / ' + ix.n_ranked + '</div><div class="l">Selected accessions</div></div>' +
+        '<div class="sf-stat"><div class="v">' + ix.selection_pct + '%</div><div class="l">Selection intensity</div></div>' +
+        '<div class="sf-stat"><div class="v">' + (ix.method === 'rank_sum' ? 'Rank sum' : 'Z-score') + '</div><div class="l">Method</div></div></div>';
+    h += '<h4>Expected response to selection</h4>' + simpleTable(ix.gains, [
+        { k: 'trait', l: 'Trait' }, { k: 'in_index', l: 'In index', f: v => v ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '' },
+        { k: 'weight', l: 'Weight', f: (v, r) => r.in_index ? fmt(v, 2) + (r.direction === 'decrease' ? ' &darr;' : ' &uarr;') : '' },
+        { k: 'mean_population', l: 'Population mean' }, { k: 'mean_selected', l: 'Selected mean' },
+        { k: 'selection_differential', l: 'Selection differential' },
+        { k: 'selection_differential_pct', l: 'S %', f: v => '<b style="color:' + (Number(v) >= 0 ? '#2b7a4b' : '#dc2626') + '">' + fmt(v, 1) + '%</b>' },
+        { k: 'expected_gain', l: 'Expected gain' }
+    ]) + '<p class="sf-help">' + esc(ix.note) + '</p>';
+    h += '<h4>Top accessions</h4><div id="sf_index_chart" class="sf-plot"></div>';
+    h += '<h4>Ranking</h4>' + simpleTable(table, [
+        { k: 'rank', l: 'Rank', f: v => v }, { k: 'accession', l: 'Accession', f: v => '<a href="/stock/' + encodeURIComponent(v) + '/view" target="_blank">' + esc(v) + '</a>' },
+        { k: 'index', l: 'Index' }].concat(traitCols.map(t => ({ k: t, l: esc(t) + ' (' + label + ')' })))
+        .concat([{ k: 'selected', l: 'Selected', f: v => v ? '<span class="label label-success">selected</span>' : '' }]),
+        { id: 'sf_dt_index', rowClass: r => r.selected ? 'sf-selected' : '' });
+    $('#sf_tab_index').html(h);
+    dataTable('#sf_dt_index', { order: [[0, 'asc']] });
+    drawIndexChart(table.slice(0, Math.min(30, Math.max(ix.n_selected, 15))));
+}
+
+function drawIndexChart(rows) {
+    const box = document.getElementById('sf_index_chart');
+    if (!box || !rows.length) return;
+    const vals = rows.map(r => Number(r.index));
+    const mn = Math.min(0, Math.min.apply(null, vals)), mx = Math.max(0, Math.max.apply(null, vals));
+    const M = { l: 170, r: 60, t: 6, b: 6 }, bh = 18, W = 760, H = M.t + M.b + rows.length * bh;
+    const xs = v => M.l + (W - M.l - M.r) * (v - mn) / ((mx - mn) || 1);
+    const svg = svgEl('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, 'font-family': 'sans-serif', 'font-size': 11 }, box);
+    svgEl('line', { x1: xs(0), x2: xs(0), y1: M.t, y2: H - M.b, stroke: '#94a3b8' }, svg);
+    rows.forEach((r, i) => {
+        const y = M.t + i * bh;
+        const v = Number(r.index);
+        svgEl('rect', { x: Math.min(xs(0), xs(v)), y: y + 3, width: Math.max(1, Math.abs(xs(v) - xs(0))), height: bh - 6, rx: 2, fill: r.selected ? '#2b7a4b' : '#9cc9ac' }, svg);
+        const t = svgEl('text', { x: M.l - 8, y: y + bh / 2 + 4, 'text-anchor': 'end', fill: '#111' }, svg);
+        t.textContent = r.rank + '. ' + (r.accession.length > 24 ? r.accession.slice(0, 23) + '…' : r.accession);
+        const tv = svgEl('text', { x: Math.max(xs(0), xs(v)) + 4, y: y + bh / 2 + 4, fill: '#6b7280' }, svg);
+        tv.textContent = v.toFixed(2);
+    });
+}
+
+function corColor(r) {
+    if (r === null || r === undefined || !isFinite(r)) return '#f3f4f6';
+    const a = Math.min(1, Math.abs(r));
+    return r >= 0 ? 'rgba(43,122,75,' + (0.1 + 0.85 * a) + ')' : 'rgba(217,119,6,' + (0.1 + 0.85 * a) + ')';
+}
+
+function renderZoneResults(zones) {
+    let h = '';
+    if (zones.length > 1) {
+        h += '<ul class="nav nav-pills" style="margin-bottom:12px">' + zones.map((z, i) => '<li' + (i === 0 ? ' class="active"' : '') + '><a data-toggle="pill" href="#sf_zone_' + i + '">' + esc(z.target) + '</a></li>').join('') + '</ul>';
+    }
+    h += '<div class="tab-content">';
+    zones.forEach((z, i) => {
+        const zoneNames = [];
+        arr(z.membership).forEach(m => { if (zoneNames.indexOf(m.zone) < 0) zoneNames.push(m.zone); });
+        const color = zn => ZONE_COLORS[(zoneNames.indexOf(zn)) % ZONE_COLORS.length];
+        h += '<div class="tab-pane' + (i === 0 ? ' active' : '') + '" id="sf_zone_' + i + '">';
+        h += '<p><b>' + esc(z.target) + '</b>: <b>' + z.n_zones + '</b> zone(s) using ' + (z.method === 'lin' ? 'the Lin (1982) G&times;E test' : 'genetic correlation clustering') + '.</p>';
+
+        h += '<div class="row">';
+        zoneNames.forEach(zn => {
+            const envs = arr(z.membership).filter(m => m.zone === zn);
+            const top = arr(z.top).filter(t => t.zone === zn);
+            h += '<div class="col-md-6"><div class="sf-card" style="border-top:4px solid ' + color(zn) + '">' +
+                '<h4 style="margin-top:0"><span class="sf-zone-chip" style="background:' + color(zn) + '">' + esc(zn) + '</span> ' + envs.length + ' environment(s)</h4>' +
+                '<p class="sf-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
+                simpleTable(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions' }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: 'No accession tested in all environments of this zone.' }) +
+                '</div></div>';
+        });
+        h += '</div>';
+
+        if (z.correlation && arr(z.correlation.environments).length) {
+            const envs = arr(z.correlation.environments);
+            const mat = arr(z.correlation.matrix);
+            const zoneOf = {};
+            arr(z.membership).forEach(m => { zoneOf[m.env] = m.zone; });
+            h += '<h4>Genetic correlation between environments</h4><div class="table-responsive"><table class="table table-bordered sf-heat"><thead><tr><th></th>' +
+                envs.map(e => '<th title="' + esc(e) + '" style="border-bottom:3px solid ' + color(zoneOf[e]) + '">' + esc(e.length > 12 ? e.slice(0, 11) + '…' : e) + '</th>').join('') + '</tr></thead><tbody>';
+            envs.forEach((e, a) => {
+                const row = arr(mat[a]);
+                h += '<tr><th style="text-align:left;border-left:3px solid ' + color(zoneOf[e]) + '">' + esc(e) + '</th>' +
+                    envs.map((e2, b) => { const v = row[b]; return '<td style="background:' + corColor(v) + ';color:' + (v !== null && Math.abs(v) > 0.55 ? '#fff' : '#111') + '">' + (v === null || v === undefined ? '' : Number(v).toFixed(2)) + '</td>'; }).join('') + '</tr>';
+            });
+            h += '</tbody></table></div>';
+        }
+        if (arr(z.pairwise).length) {
+            h += '<h4>Pairwise G&times;E tests</h4>' + simpleTable(z.pairwise, [
+                { k: 'env1', l: 'Environment 1' }, { k: 'env2', l: 'Environment 2' }, { k: 'n_genotypes', l: 'Common accessions', f: v => v },
+                { k: 'f', l: 'F' }, { k: 'p_value', l: 'p', f: v => fmt(v, 4) },
+                { k: 'compatible', l: 'Same zone?', f: v => v ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '<span class="glyphicon glyphicon-remove" style="color:#dc2626"></span>' }
+            ]);
+        }
+        h += '</div>';
+    });
+    h += '</div>';
+    $('#sf_tab_zones').html(h);
+}
+
+// ---------------------------------------------------------------------------
+// store analysis / list
+// ---------------------------------------------------------------------------
+
+function openStoreAnalysis() {
+    const res = state.results;
+    if (!res || !res.store) { alert('There are no genotype values to store.'); return; }
+    const random = res.genotype_effect === 'random';
+    const recipe = state.resultsRecipe || buildRecipe();
+    const protocol = 'Script Factory ' + (res.strategy === 'two_stage' ? 'two-stage' : 'single-stage') + ' analysis: ' +
+        arr(res.stage2).map(s => s.trait + ': ' + s.model).join('; ');
+    const summary = {
+        method: 'Breedbase Script Factory',
+        strategy: res.strategy,
+        genotype_effect: res.genotype_effect,
+        outlier_method: recipe.outliers.method,
+        values_removed: arr(res.outliers).length,
+        heritability: {}
+    };
+    arr(res.stage2).forEach(s => { summary.heritability[s.trait] = s.h2; });
+
+    $('#generic_save_analysis_dialog').modal('show');
+    $('#generic_save_analysis_protocol').val(protocol);
+    $('#generic_save_analysis_dataset_id').val(state.dataset.dataset_id);
+    $('#generic_save_analysis_accession_names').val(JSON.stringify(res.store.accession_names));
+    $('#generic_save_analysis_trait_names').val(JSON.stringify(res.store.trait_names));
+    $('#generic_save_analysis_statistical_ontology_term').val(random
+        ? 'Adjusted means from BLUPs using LMER R|SGNSTAT:0000034'
+        : 'Adjusted means from BLUEs using LMER R|SGNSTAT:0000036');
+    $('#generic_save_analysis_result_values').val(JSON.stringify(res.store.result_values));
+    $('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
+    $('#generic_save_analysis_result_summary_values').val(JSON.stringify(summary));
+    $('#generic_save_analysis_model_language').val('R');
+    $('#generic_save_analysis_model_type').val('mixed_model_lmer');
+    $('#generic_save_analysis_model_properties').val(JSON.stringify(recipe));
+    $('#generic_save_analysis_model_application_name').val('Breedbase Script Factory');
+    $('#generic_save_analysis_model_application_version').val(VERSION);
+    $('#generic_save_analysis_model_training_data_file').val(state.dataset.phenotype_file);
+    $('#generic_save_analysis_model_archived_training_data_file_type').val('script_factory_input_phenotype_file');
+    if (state.script.name) {
+        $('#generic_save_analysis_model_name').val(state.script.name);
+        $('#generic_save_analysis_model_description').val(state.script.description || '');
+    }
+}
+
+function openSaveList() {
+    const ix = state.results && state.results.index;
+    if (!ix) return;
+    const sel = arr(ix.table).filter(r => r.selected).map(r => r.accession);
+    const d = new Date();
+    $('#sf_list_name').val('Selected ' + (state.dataset.dataset_name || 'accessions') + ' ' + d.toISOString().slice(0, 10));
+    $('#sf_list_info').text(sel.length + ' accession(s): the top ' + ix.selection_pct + '% of the selection index.');
+    $('#sf_list_modal').data('items', sel).modal('show');
+}
+
+function createList() {
+    const name = $('#sf_list_name').val().trim();
+    const items = $('#sf_list_modal').data('items') || [];
+    if (!name) { alert('Please enter a list name.'); return; }
+    if (typeof CXGN === 'undefined' || !CXGN.List) { alert('The list tools are not available on this page.'); return; }
+    const lo = new CXGN.List();
+    const id = lo.newList(name, 'Selected with the Script Factory');
+    if (!id) return;   // newList already alerts when the name exists
+    lo.addBulk(id, items);
+    lo.setListType(id, 'accessions');
+    $('#sf_list_modal').modal('hide');
+    alert('List "' + name + '" created with ' + items.length + ' accessions.');
+}
+
+// ---------------------------------------------------------------------------
+// saved scripts
+// ---------------------------------------------------------------------------
+
+function openLibrary() {
+    $('#sf_library_modal').modal('show');
+    $('#sf_library_list').html('<p class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Loading...</p>');
+    post('/ajax/script_factory/recipes', {})
+        .then(r => {
+            const list = arr(r.recipes);
+            if (!list.length) { $('#sf_library_list').html('<p class="sf-muted">You have no saved scripts yet. Build a pipeline and click <b>Save script</b>.</p>'); return; }
+            $('#sf_library_list').html(simpleTable(list, [
+                { k: 'name', l: 'Name', f: (v, x) => '<b>' + esc(v) + '</b>' + (x.description ? '<br/><small class="sf-muted">' + esc(x.description) + '</small>' : '') },
+                { k: 'strategy', l: 'Steps', f: (v, x) => '<small>' + (v === 'single_stage' ? 'single stage' : 'two stages') + ', ' + x.n_traits + ' trait(s)' + (x.index ? ', index' : '') + (x.zones ? ', zones' : '') + '</small>' },
+                { k: 'owner', l: 'Owner', f: (v, x) => esc(v) + (x.is_public ? ' <span class="label label-info">shared</span>' : '') },
+                { k: 'modified', l: 'Modified' },
+                { k: 'recipe_id', l: '', f: (v, x) => '<span style="white-space:nowrap">' + (state.dataset ? '<button class="btn btn-success btn-xs sf-lib-run" data-id="' + v + '" title="Apply to ' + esc(state.dataset.dataset_name) + ' and run every step"><span class="glyphicon glyphicon-play"></span> Load &amp; run</button> ' : '') +
+                    '<button class="btn btn-primary btn-xs sf-lib-load" data-id="' + v + '">Load</button> ' + (x.is_owner ? '<button class="btn btn-default btn-xs sf-lib-delete" data-id="' + v + '" data-name="' + esc(x.name) + '"><span class="glyphicon glyphicon-trash"></span></button>' : '') + '</span>' }
+            ]));
+        })
+        .catch(e => $('#sf_library_list').html(alertBox('warning', esc(e.message))));
+}
+
+function loadScript(id, andRun) {
+    return post('/ajax/script_factory/recipe/get', { recipe_id: id })
+        .then(r => {
+            state.script = { id: r.is_owner ? r.recipe_id : null, name: r.name, description: r.description, is_public: r.is_public, is_owner: r.is_owner };
+            state.scriptLoaded = true;
+            applyRecipe(r.recipe);
+            setScriptName();
+            $('#sf_library_modal').modal('hide');
+            if (!state.dataset) {
+                $('#sf_dataset_message').html(alertBox('success', 'Script <b>' + esc(r.name) + '</b> loaded. Choose a dataset and click <b>Load dataset</b>: you can then run the whole script in one click.'));
+                goTo(1);
+            } else {
+                $('#sf_dataset_message').html('');
+                renderQuickRun();
+                if (andRun) quickRun(); else goTo(1);
+            }
+        })
+        .catch(e => alert(e.message));
+}
+
+function saveScript(asNew) {
+    const name = $('#sf_save_name').val().trim();
+    if (!name) { alert('Please give the script a name.'); return; }
+    state.script.name = name;
+    const data = {
+        name: name,
+        description: $('#sf_save_description').val(),
+        is_public: $('#sf_save_public').is(':checked') ? 1 : 0,
+        recipe: JSON.stringify(buildRecipe())
+    };
+    if (!asNew && state.script.id && state.script.is_owner) data.recipe_id = state.script.id;
+    post('/ajax/script_factory/recipe/save', data)
+        .then(r => {
+            state.script = { id: r.recipe_id, name: name, description: data.description, is_public: data.is_public, is_owner: 1 };
+            setScriptName();
+            $('#sf_save_modal').modal('hide');
+        })
+        .catch(e => alert(e.message));
+}
+
+function exportR() {
+    const name = state.script.name || 'script_factory_analysis';
+    post('/ajax/script_factory/export_r', { recipe: JSON.stringify(buildRecipe()), name: name })
+        .then(r => download(r.filename, r.script, 'text/x-r'))
+        .catch(e => alert(e.message));
+}
+
+function exportJSON() {
+    const name = state.script.name || 'script_factory_analysis';
+    const obj = { script_factory: VERSION, name: name, description: state.script.description || '', recipe: buildRecipe() };
+    download(name.replace(/[^A-Za-z0-9_-]+/g, '_') + '.json', JSON.stringify(obj, null, 2), 'application/json');
+}
+
+function importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const obj = JSON.parse(reader.result);
+            const recipe = obj.recipe || obj;
+            if (!recipe.strategy && !recipe.traits) throw new Error('This file is not a Script Factory script.');
+            state.script = { id: null, name: obj.name || recipe.name || file.name.replace(/\.json$/, ''), description: obj.description || '', is_public: 0, is_owner: 1 };
+            state.scriptLoaded = true;
+            applyRecipe(recipe);
+            setScriptName();
+            renderQuickRun();
+            $('#sf_library_modal').modal('hide');
+            goTo(1);
+        } catch (e) {
+            alert('Could not read the script: ' + e.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function newScript() {
+    if (!confirm('Start a new script? Your current settings will be reset (the loaded dataset is kept).')) return;
+    state.script = { id: null, name: null, description: '', is_public: 0, is_owner: 1 };
+    state.scriptLoaded = false;
+    state.missingTraits = [];
+    $('#sf_recipe_trait_warning').html('');
+    renderQuickRun();
+    state.exclusions = {};
+    state.madrFlags = {};
+    state.designOverrides = {};
+    state.indexCfg = {};
+    state.zoneTargets = { index: true };
+    applyRecipe({ strategy: 'two_stage', outliers: { method: 'none', group_by: 'trial', k: 1.5, alpha: 0.05 }, stage1: { model: 'auto' }, stage2: { genotype: 'random', weighting: 'inverse_se2' }, single: { genotype: 'random', include_gxe: true }, index: { enabled: false, method: 'zscore', selection_pct: 10 }, zones: { enabled: false, unit: 'trial', method: 'correlation', threshold: 0.5, alpha: 0.05, top_n: 10, targets: ['index'] } });
+    if (state.dataset) { state.traits = state.dataset.traits.map(t => t.name); renderTraits(); }
+    renderExclusions();
+    setScriptName();
+    refreshAll();
+    goTo(1);
+}
+
+// ---------------------------------------------------------------------------
+// init
+// ---------------------------------------------------------------------------
+
+export function init(options) {
+    $ = window.jQuery;
+    cfg = options || {};
+
+    if (String(cfg.check_outliers) !== '1') $('#sf_dataset_outliers').closest('label').hide();
+
+    get_select_box('datasets', 'sf_dataset_select', {
+        checkbox_name: 'sf_dataset_checkbox',
+        after_load: () => {
+            if (cfg.dataset_id) {
+                $('input[name=sf_dataset_checkbox][value=' + cfg.dataset_id + ']').prop('checked', true);
+                loadDataset();
+            }
+        }
+    });
+
+    // navigation
+    $(document).on('click', '.sf-next', function() { goTo($(this).data('goto')); });
+    $('#sf_stepper').on('click', 'li', function() { goTo($(this).data('step')); });
+
+    // step 1
+    $('#sf_load_dataset').on('click', loadDataset);
+    $('#sf_traits').on('change', '.sf-trait-cb', onTraitsChanged);
+    $('#sf_traits_all').on('click', () => { $('.sf-trait-cb').prop('checked', true); onTraitsChanged(); });
+    $('#sf_traits_none').on('click', () => { $('.sf-trait-cb').prop('checked', false); onTraitsChanged(); });
+
+    // generic option cards
+    $(document).on('change', '.sf-app input[type=radio], .sf-app input[type=checkbox], .sf-app select, .sf-app input[type=number]', () => {
+        refreshOptionCards();
+        refreshToggles();
+        renderPipeline();
+        renderQuickRun();
+    });
+
+    // step 2
+    $('input[name=sf_outlier_method], #sf_iqr_k, #sf_iqr_group').on('change', () => { if (state.plotData) drawExplorer(); });
+    $('#sf_explorer_trait').on('change', drawExplorer);
+    $('#sf_preview_madr').on('click', previewMadr);
+    $('#sf_madr_alpha').on('change', () => { state.madrFlags = {}; state.madrPreviewDone = false; if (state.plotData) drawExplorer(); });
+    $('#sf_exclusion_table').on('click', '.sf-restore', function() {
+        delete state.exclusions[$(this).data('key')];
+        renderExclusions(); drawExplorer(); renderPipeline();
+    });
+    $('#sf_exclusion_table').on('click', '#sf_restore_all', () => {
+        state.exclusions = {};
+        renderExclusions(); drawExplorer(); renderPipeline();
+    });
+
+    // step 3
+    $('input[name=sf_strategy], input[name=sf_stage1_model], #sf_stage2_genotype, #sf_stage2_weighting, #sf_single_genotype, #sf_single_gxe').on('change', () => { renderDesignTable(); renderModelPreview(); });
+    $('#sf_design_table').on('change', '.sf-design-override', function() {
+        state.designOverrides[$(this).data('trial')] = $(this).val();
+        renderDesignTable(); renderModelPreview();
+    });
+
+    // step 4
+    $('#sf_index_traits').on('input change', '.sf-index-weight', function() {
+        const t = $(this).data('trait');
+        (state.indexCfg[t] = state.indexCfg[t] || { direction: 'increase' }).weight = Number($(this).val()) || 0;
+        renderIndexFormula(); renderPipeline();
+    });
+    $('#sf_index_traits').on('click', '.sf-index-dir', function() {
+        const t = $(this).closest('.btn-group').data('trait');
+        (state.indexCfg[t] = state.indexCfg[t] || { weight: 0 }).direction = $(this).data('dir');
+        renderIndexTable(); renderPipeline();
+    });
+    $('input[name=sf_index_method]').on('change', renderIndexFormula);
+    $('#sf_selection_pct').on('input change', function() { $('#sf_selection_pct_label').text($(this).val()); renderIndexFormula(); renderPipeline(); });
+    $('#sf_index_enabled').on('change', () => {
+        // a sensible start: equal weights on all traits when nothing was set
+        if ($('#sf_index_enabled').is(':checked') && !state.traits.some(t => Number((state.indexCfg[t] || {}).weight) !== 0)) {
+            state.traits.forEach(t => { state.indexCfg[t] = Object.assign({ direction: 'increase' }, state.indexCfg[t], { weight: 1 }); });
+            renderIndexTable();
+        }
+    });
+
+    // step 5
+    $('#sf_zones_targets').on('change', '.sf-zone-target', function() {
+        state.zoneTargets[$(this).val()] = $(this).is(':checked');
+        $(this).closest('.sf-trait').toggleClass('on', $(this).is(':checked'));
+        renderPipeline();
+    });
+
+    // step 6
+    $('#sf_run').on('click', runAnalysis);
+    $('#sf_save_analysis').on('click', openStoreAnalysis);
+    $('#sf_save_list').on('click', openSaveList);
+    $('#sf_list_submit').on('click', createList);
+    $('#sf_export_r').on('click', e => { e.preventDefault(); exportR(); });
+    $('#sf_export_json').on('click', e => { e.preventDefault(); exportJSON(); });
+
+    // scripts
+    $('#sf_new_script').on('click', newScript);
+    $('#sf_open_library').on('click', openLibrary);
+    $('#sf_library_list').on('click', '.sf-lib-load', function() { loadScript($(this).data('id'), false); });
+    $('#sf_library_list').on('click', '.sf-lib-run', function() { loadScript($(this).data('id'), true); });
+    $('#sf_quick_run_btn').on('click', quickRun);
+    $('#sf_quick_review').on('click', () => goTo(2));
+    $('#sf_library_list').on('click', '.sf-lib-delete', function() {
+        if (!confirm('Delete the script "' + $(this).data('name') + '"?')) return;
+        post('/ajax/script_factory/recipe/delete', { recipe_id: $(this).data('id') })
+            .then(() => {
+                if (state.script.id === $(this).data('id')) { state.script.id = null; setScriptName(); }
+                openLibrary();
+            })
+            .catch(e => alert(e.message));
+    });
+    $('#sf_import_json').on('change', function() { if (this.files && this.files[0]) importJSON(this.files[0]); this.value = ''; });
+    $('#sf_open_save_script').on('click', () => {
+        $('#sf_save_name').val(state.script.name || '');
+        $('#sf_save_description').val(state.script.description || '');
+        $('#sf_save_public').prop('checked', !!state.script.is_public);
+        $('#sf_save_update').text(state.script.id && state.script.is_owner ? 'Save changes' : 'Save');
+        $('#sf_save_as_new').toggle(!!(state.script.id && state.script.is_owner));
+        $('#sf_save_modal').modal('show');
+    });
+    $('#sf_save_update').on('click', () => saveScript(false));
+    $('#sf_save_as_new').on('click', () => saveScript(true));
+
+    window.addEventListener('beforeunload', () => { if (state.pollTimer) clearTimeout(state.pollTimer); });
+
+    refreshAll();
+    setScriptName();
+    if (cfg.recipe_id) loadScript(cfg.recipe_id);
+}
