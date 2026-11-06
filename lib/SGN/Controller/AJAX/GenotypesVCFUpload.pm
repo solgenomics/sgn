@@ -33,6 +33,7 @@ use CXGN::Genotype::GenotypingProject;
 use File::Basename qw | basename dirname|;
 use IO::Compress::Gzip qw(gzip $GzipError);
 use JSON;
+use Encode qw(decode FB_CROAK);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -202,6 +203,11 @@ sub upload_genotype_verify_POST : Args(0) {
     if ($upload_vcf) {
         $upload_original_name = $upload_vcf->filename();
         $upload_tempfile = $upload_vcf->tempname;
+        my $utf8_error = _check_utf8_file($upload_tempfile);
+        if ($utf8_error) {
+            $c->stash->{rest} = { error => "The uploaded file $upload_original_name $utf8_error" };
+            $c->detach();
+        }
         $subdirectory = "genotype_vcf_upload";
         $parser_plugin = 'VCF';
 
@@ -276,6 +282,11 @@ sub upload_genotype_verify_POST : Args(0) {
     if ($upload_transposed_vcf) {
         $upload_original_name = $upload_transposed_vcf->filename();
         $upload_tempfile = $upload_transposed_vcf->tempname;
+        my $utf8_error = _check_utf8_file($upload_tempfile);
+        if ($utf8_error) {
+            $c->stash->{rest} = { error => "The uploaded file $upload_original_name $utf8_error" };
+            $c->detach();
+        }
         $subdirectory = "genotype_transposed_vcf_upload";
         $parser_plugin = 'transposedVCF';
     }
@@ -949,6 +960,21 @@ sub upload_genotype_verify_POST : Args(0) {
     $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
 
     $c->stash->{rest} = $return;
+}
+
+#Returns an error message if the file contains bytes that are not valid UTF-8, otherwise undef.
+sub _check_utf8_file {
+    my $filename = shift;
+    open(my $F, "<:raw", $filename) || die "Can't open file $filename\n";
+    while (my $line = <$F>) {
+        if (!eval { decode('UTF-8', $line, FB_CROAK); 1 }) {
+            my $line_number = $.;
+            close($F);
+            return "is not valid UTF-8 (line $line_number). Please save it with UTF-8 encoding and upload again.";
+        }
+    }
+    close($F);
+    return;
 }
 
 1;
