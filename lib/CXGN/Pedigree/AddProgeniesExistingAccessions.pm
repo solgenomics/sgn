@@ -23,6 +23,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -34,116 +35,84 @@ has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', req
 has 'progeny_names' => (isa =>'ArrayRef[Str]', is => 'rw', predicate => 'has_progeny_names', required => 1,);
 
 sub add_progenies_existing_accessions {
-    my $self = shift;
-	my $overwrite_pedigrees = shift;
-    my $chado_schema = $self->get_chado_schema();
-    my @progeny_names = @{$self->get_progeny_names()};
-    my $cross_stock;
-    my $female_parent;
-    my $male_parent;
-    my $transaction_error;
-	my %return;
-
-    #add all progeny in a single transaction
-    my $coderef = sub {
-
-        my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
-
-        my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'male_parent', 'stock_relationship');
-
-        my $offspring_of_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'offspring_of', 'stock_relationship');
-
-        my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
-
-        my $cross_name_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
-
-       #Get stock of type cross matching cross name
-        $cross_stock = $self->_get_cross($self->get_cross_name());
-        if (!$cross_stock) {
-            print STDERR "Cross could not be found\n";
-            return;
-        }
-
-        $female_parent = $chado_schema->resultset("Stock::StockRelationship")
-            ->find ({
-                object_id => $cross_stock->stock_id(),
-                type_id => $female_parent_cvterm->cvterm_id(),
-            });
-
-        $male_parent = $chado_schema->resultset("Stock::StockRelationship")
-            ->find ({
-                object_id => $cross_stock->stock_id(),
-                type_id => $male_parent_cvterm->cvterm_id(),
-            });
-
-        foreach my $progeny_name (@progeny_names) {
-            my $progeny_rs = $self->_get_progeny_name($progeny_name);
-            if (!$progeny_rs) {
-                print STDERR "Progeny name could not be found\n";
-                return;
-            }
-
-            if ($female_parent) {
-                if ($overwrite_pedigrees) {
-				    my $previous_female_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
-				        type_id => $female_parent_cvterm->cvterm_id(),
-				        object_id => $progeny_rs->stock_id(),
-			        });
-				    while(my $r = $previous_female_parent->next()){
-					    print STDERR "Deleted female parent stock_relationship_id: ".$r->stock_relationship_id."\n";
-					    $r->delete();
-				    }
-                }
-		        $progeny_rs->find_or_create_related('stock_relationship_objects', {
-                    type_id => $female_parent_cvterm->cvterm_id(),
-                    object_id => $progeny_rs->stock_id(),
-                    subject_id => $female_parent->subject_id(),
-                    value => $female_parent->value(),
-                });
-            }
-
-			if ($male_parent) {
-                if ($overwrite_pedigrees) {
-				    my $previous_male_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
-				        type_id => $male_parent_cvterm->cvterm_id(),
-				        object_id => $progeny_rs->stock_id(),
-			        });
-				    while(my $r = $previous_male_parent->next()){
-					    print STDERR "Deleted male parent stock_relationship_id: ".$r->stock_relationship_id."\n";
-					    $r->delete();
-				    }
-                }
-	       	    $progeny_rs->find_or_create_related('stock_relationship_objects', {
-	                type_id => $male_parent_cvterm->cvterm_id(),
-	                object_id => $progeny_rs->stock_id(),
-	                subject_id => $male_parent->subject_id(),
-	            });
-            }
-
-			#create relationship to cross
-            $progeny_rs->find_or_create_related('stock_relationship_objects', {
-                type_id => $offspring_of_cvterm->cvterm_id(),
-                object_id => $cross_stock->stock_id(),
-                subject_id => $progeny_rs->stock_id(),
-            });
-        }
-    };
-
-    #try to add all crosses in a transaction
-    try {
-        $chado_schema->txn_do($coderef);
-    } catch {
-        $transaction_error =  $_;
-    };
-
-    if ($transaction_error) {
-		$return{error} = "Transaction error adding progenies: $transaction_error";
-		return \%return;
-    }
-
-	return \%return;
+    my ($self, $overwrite) = @_;
+    return __PACKAGE__->add_batch($self->get_chado_schema,
+        {$self->get_cross_name => $self->get_progeny_names}, $overwrite);
 }
 
+=head2 add_batch($schema, $cross_progenies, $overwrite)
+
+Resolve all requested cross/progeny identities together. The complete parentage
+batch commits or rolls back as one operation, and duplicate target IDs cannot
+be hidden by aliases or different cross groups. The upload controller can use returned canonical cross IDs to journal the same
+transaction without resolving aliases again.
+
+=cut
+
+sub add_batch {
+    my ($class, $schema, $groups, $overwrite) = @_;
+    my ($error, @canonical_crosses);
+    eval {
+        $schema->txn_do(sub {
+            CXGN::Pedigree::Parentage->lock($schema);
+            my $v = CXGN::Pedigree::Parentage->vocabulary($schema);
+            my @cross_names = sort keys %$groups;
+            die "No cross/progeny rows were supplied.\n" unless @cross_names;
+            my @names = (@cross_names, map {@{$groups->{$_}}} @cross_names);
+            my $matches = CXGN::Pedigree::Parentage->resolve_names($schema, \@names, $v);
+            my %crosses = map {$_ => CXGN::Pedigree::Parentage->choose($matches, $_, ['cross'], $v)} @cross_names;
+            my %cross_seen;
+            @canonical_crosses = map {{id => $crosses{$_}{stock_id}, name => $crosses{$_}{uniquename}}}
+                grep {!$cross_seen{$crosses{$_}{stock_id}}++} @cross_names;
+            my %role_for = reverse %{$v->{roles}};
+            my %source;
+            my $rs = $schema->resultset('Stock::StockRelationship')->search({
+                object_id => {-in => [map {$crosses{$_}{stock_id}} @cross_names]},
+                type_id => {-in => [values %{$v->{roles}}]},
+            });
+            while (my $row = $rs->next) {
+                my ($cross_id, $role) = ($row->object_id, $role_for{$row->type_id});
+                die "Cross has more than one $role parent. Review its pedigree first.\n" if $source{$cross_id}{$role};
+                $source{$cross_id}{$role} = $row;
+            }
+            my (@plans, %seen);
+            for my $cross_name (@cross_names) {
+                my $cross_id = $crosses{$cross_name}{stock_id};
+                my $parents = $source{$cross_id} || {};
+                die "Cross $cross_name has no female parent.\n" unless $parents->{female};
+                for my $name (@{$groups->{$cross_name}}) {
+                    my $child = CXGN::Pedigree::Parentage->choose($matches, $name, ['accession'], $v);
+                    die "Progeny $name occurs more than once, including cross $cross_name.\n" if $seen{$child->{stock_id}}++;
+                    push @plans, {child_id => $child->{stock_id}, female => $parents->{female}->subject_id,
+                        male => $parents->{male} ? $parents->{male}->subject_id : undef,
+                        type => $parents->{female}->value, cross_id => $cross_id};
+                }
+            }
+            my $offspring = SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id;
+            my %links;
+            if (@plans) {
+                my $links = $schema->resultset('Stock::StockRelationship')->search({
+                    'me.subject_id' => {-in => [map {$_->{child_id}} @plans]}, 'me.type_id' => $offspring,
+                    'object.type_id' => $v->{stock_type}{cross},
+                }, {join => 'object'});
+                while (my $link = $links->next) {$links{$link->subject_id}{$link->object_id} = 1}
+            }
+            for my $plan (@plans) {
+                die "Progeny is already associated with another cross. Review its provenance first.\n"
+                    if grep {$_ != $plan->{cross_id}} keys %{$links{$plan->{child_id}} || {}};
+            }
+            CXGN::Pedigree::Parentage->apply($schema, \@plans, $overwrite, $v);
+            for my $plan (@plans) {
+                next if $links{$plan->{child_id}}{$plan->{cross_id}};
+                $schema->resultset('Stock::StockRelationship')->create({
+                    type_id => $offspring, object_id => $plan->{cross_id}, subject_id => $plan->{child_id},
+                });
+            }
+        });
+    };
+    $error = $@;
+    return $error ? {error => "Transaction error adding progenies: $error"} : {crosses => \@canonical_crosses};
+}
 
 sub _get_cross {
     my $self = shift;

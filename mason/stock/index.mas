@@ -443,10 +443,10 @@ function jqueryStuff() {
             $collapsible = 1;
         }
         my $add_parent_link = '<button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" disabled>Add parent</button>';
-        if ($person_id && ($submitter || $curator || $sequencer)) { $add_parent_link = qq | <button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" >Add parent</button> |; }
+        if ($person_id && ($submitter || $curator)) { $add_parent_link = qq | <button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" >Add parent</button> |; }
 
         my $remove_parent_link = '<button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link" disabled>Remove parent</button>';
-        if ($person_id && ($submitter || $curator || $sequencer)) { $remove_parent_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link">Remove parent</button> |; }
+        if ($person_id && ($submitter || $curator)) { $remove_parent_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link">Remove parent</button> |; }
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Pedigree</h4>", info_section_subtitle => 'View and edit pedigree information.', icon_class => "glyphicon glyphicon-random", info_section_id => "stock_pedigree_section", buttons_html => $add_parent_link.$remove_parent_link, has_pedigree => $has_pedigree, info_section_collapsed => 1 &>
