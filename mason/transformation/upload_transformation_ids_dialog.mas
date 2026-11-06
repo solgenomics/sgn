@@ -180,6 +180,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#dismiss_transformation_ids_saved_dialog").click(function(){
+        jQuery('#transformation_ids_file').val('');
         location.reload();
     });
 
