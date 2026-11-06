@@ -1,0 +1,103 @@
+<%doc>
+
+=head1 NAME
+
+/collection/message_modal.mas
+
+=head1 DESCRIPTION
+
+    collection_notify_error(message);    // red-topped "Error" modal
+    collection_notify_success(message);  // green-topped "Success" modal
+    collection_notify(message, is_error);
+
+and instead of confirm(), callback-based:
+
+    collection_confirm(message, on_ok, on_cancel);
+
+=head1 AUTHORS
+
+=cut
+
+</%doc>
+
+<script>
+(function () {
+    if (window.collection_notify_initialized) { return; }
+    window.collection_notify_initialized = true;
+
+    function ensure_dialog() {
+        var $dlg = jQuery('#collection_notify_dialog');
+        if (!$dlg.length) {
+            jQuery('body').append(
+                '<div class="modal fade" id="collection_notify_dialog" tabindex="-1" role="dialog">' +
+                  '<div class="modal-dialog" role="document"><div class="modal-content">' +
+                    '<div class="modal-header">' +
+                      '<button type="button" class="close" data-dismiss="modal">&times;</button>' +
+                      '<h4 class="modal-title"></h4>' +
+                    '</div>' +
+                    '<div class="modal-body"><p style="white-space:pre-line;"></p></div>' +
+                    '<div class="modal-footer">' +
+                      '<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>' +
+                    '</div>' +
+                  '</div></div>' +
+                '</div>'
+            );
+        }
+        return $dlg;
+    }
+
+    window.collection_notify = function (message, is_error) {
+        var $dlg = ensure_dialog();
+        $dlg.find('.modal-body p').text(message == null ? '' : message);
+        $dlg.find('h4.modal-title').text(is_error ? 'Error' : 'Success');
+        $dlg.find('.modal-content').css(
+            'border-top', is_error ? '4px solid #d9534f' : '4px solid #5cb85c'
+        );
+        $dlg.modal('show');
+    };
+
+    window.collection_notify_error   = function (message) { window.collection_notify(message, true); };
+    window.collection_notify_success = function (message) { window.collection_notify(message, false); };
+
+    // Callback-based replacement for confirm(); unlike alert() modals this
+    // must be invoked with an on_ok callback because the modal does not
+    // block script execution:
+    //   collection_confirm('Delete it?', function () { ... do it ... });
+    var ensure_confirm_dialog = function () {
+        var $dlg = jQuery('#collection_confirm_dialog');
+        if (!$dlg.length) {
+            jQuery('body').append(
+                '<div class="modal fade" id="collection_confirm_dialog" tabindex="-1" role="dialog">' +
+                  '<div class="modal-dialog" role="document"><div class="modal-content">' +
+                    '<div class="modal-body"><p style="white-space:pre-line;"></p></div>' +
+                    '<div class="modal-footer">' +
+                      '<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>' +
+                      '<button type="button" class="btn btn-danger" id="collection_confirm_ok">OK</button>' +
+                    '</div>' +
+                  '</div></div>' +
+                '</div>'
+            );
+        }
+        return $dlg;
+    };
+
+    window.collection_confirm = function (message, on_ok, on_cancel) {
+        var $dlg = ensure_confirm_dialog();
+        $dlg.find('.modal-body p').text(message == null ? '' : message);
+
+        var confirmed = false;
+        $dlg.off('click', '#collection_confirm_ok')
+            .on('click', '#collection_confirm_ok', function () {
+                confirmed = true;
+                $dlg.modal('hide');
+                if (on_ok) { on_ok(); }
+            });
+        $dlg.off('hidden.bs.modal')
+            .on('hidden.bs.modal', function () {
+                if (!confirmed && on_cancel) { on_cancel(); }
+            });
+
+        $dlg.modal('show');
+    };
+})();
+</script>
