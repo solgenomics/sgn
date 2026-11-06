@@ -17,6 +17,10 @@ $identifier_prefix
 $plot_width
 $plot_length
 $field_size
+$show_field_number => 0
+$field_number => undef
+$show_second_harvest_date => 0
+$second_harvest_date => undef
 $field_trial_is_planned_to_be_genotyped
 $field_trial_is_planned_to_cross
 $trial_stock_type
@@ -344,6 +348,32 @@ if ($plot_name_template) {
                     </div>
                 </td>
             </tr>
+% if ($show_field_number) {
+            <tr><td><b>Field Number</b></td>
+                <td>
+                    <div id="field_number">
+% if (defined $field_number && $field_number ne '') {
+                        <% $field_number |h %>
+% } else {
+                        <span class="text-default">[No Field Number]</span>
+% }
+                    </div>
+                </td>
+            </tr>
+% }
+% if ($show_second_harvest_date) {
+            <tr><td><b>Second Harvest Date</b></td>
+                <td>
+                    <div id="second_harvest_date">
+% if ($second_harvest_date) {
+                        <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $second_harvest_date %>"><% $second_harvest_date |h %></a>
+% } else {
+                        <span class="text-default">[No Second Harvest Date]</span>
+% }
+                    </div>
+                </td>
+            </tr>
+% }
             <tr><td><b>Trial Will Be Genotyped</b></td>
                 <td>
                     <div id="planned_to_be_genotyped">
