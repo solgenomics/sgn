@@ -728,6 +728,7 @@ $design_types => ()
                     <b>Optional fields:</b>
                     <ul>
                     <li>plot_name (must be unique across entire database. If not provided in the file, it will be automatically generated as <code>{trial_name}-PLOT_{plot_number}</code>, or according to a plot name template if specified.)</li>
+                    <li>plot_name_template (The name of a saved plot name template. Must be coherent with the breeding program supplied, and only one is allowed per trial. Can be used in place of plot_name.)</li>
                     <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions/cross unique ids/family names that are controls, so you should indicate the plots of those accessions/cross unique ids/family names as a control.)</li>
                     <li>rep_number (replicate number, numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, numeric)</li>
@@ -740,9 +741,9 @@ $design_types => ()
                     <li>intercrop_accession_name (the name(s) of additional accessions that are planted in this plot along with the primary accession. the name(s) must already exist in the database. if you have more than one intercropped accession, you can include each name separated by a comma in one column or include additional columns with this header.)</li>
                     </ul>
 
-                    <b>Treatments:</b>
+                    <b>Traits & Treatments:</b>
                     <ul>
-                    <li>Experimental treatments are handled in much the same way as phenotypes, and can be uploaded from the trial detail page after trial creation. They may also be included as additional columns in a trial upload, formatted as <code>experimental treatment|EXPERIMENT_TREATMENT:0000001</code></li>
+                    <li>Phenotypic data can be uploaded along with treatments. They may be included as additional columns in a trial upload, formatted as <code>experimental treatment|EXPERIMENT_TREATMENT:0000001</code> or <code>dry matter content percentage|CO_334:0000092</code>. Both can also be uploaded from the trial detail page after trial creation. </li>
                     </ul>
 
                     <hr />
@@ -853,9 +854,9 @@ $design_types => ()
                     <li>intercrop_accession_name (the name(s) of additional accessions that are planted in this plot along with the primary accession. the name(s) must already exist in the database. if you have more than one intercropped accession, you can include each name separated by a comma in one column or include additional columns with this header.)</li>
                     </ul>
 
-                    <b>Treatments:</b>
+                    <b>Traits & Treatments:</b>
                     <ul>
-                    <li>Experimental treatments are handled in much the same way as phenotypes, and can be uploaded from the trial detail page after trial creation. They may also be included as additional columns in a trial upload, formatted as <code>experimental treatment|EXPERIMENT_TREATMENT:0000001</code></li>
+                    <li>Phenotypic data can be uploaded along with treatments. They may be included as additional columns in a trial upload, formatted as <code>experimental treatment|EXPERIMENT_TREATMENT:0000001</code> or <code>dry matter content percentage|CO_334:0000092</code>. Both can also be uploaded from the trial detail page after trial creation. </li>
                     </ul>
 
                     <hr />

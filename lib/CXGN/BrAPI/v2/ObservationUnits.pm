@@ -612,6 +612,28 @@ sub _get_existing_germplasm {
     return {name => $accession_name};
 }
 
+# Returns true if the stock is linked to the study through any nd_experiment
+sub _stock_in_study {
+    my ($self, $schema, $stock_id, $study_id) = @_;
+    return $schema->resultset("NaturalDiversity::NdExperimentStock")->search(
+        { 'me.stock_id' => $stock_id, 'nd_experiment_projects.project_id' => $study_id },
+        { join => { 'nd_experiment' => 'nd_experiment_projects' } }
+    )->count() > 0;
+}
+
+# Returns the uniquename of the accession, cross or family_name linked to a plot, subplot or plant
+sub _get_parent_accession_name {
+    my ($self, $schema, $parent_id) = @_;
+    my @relationship_type_ids = map { SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_relationship')->cvterm_id() } ('plot_of', 'subplot_of', 'plant_of');
+    my @germplasm_type_ids = map { SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_type')->cvterm_id() } ('accession', 'cross', 'family_name');
+    my $rs = $schema->resultset("Stock::StockRelationship")->search(
+        { 'me.subject_id' => $parent_id, 'me.type_id' => \@relationship_type_ids, 'object.type_id' => \@germplasm_type_ids },
+        { join => 'object', '+select' => ['object.uniquename'], '+as' => ['germplasm_name'] }
+    );
+    return if $rs->count() != 1;
+    return $rs->first->get_column('germplasm_name');
+}
+
 sub observationunits_store {
     my $self = shift;
     my $data = shift;
@@ -625,6 +647,10 @@ sub observationunits_store {
 
     my %study_plots;
     my %seen_plot_numbers;
+    # Plants and tissue samples are created under existing parents with CXGN::Trial methods so they inherit the parent's treatments
+    my %study_plants;          # study_id => plot_stock_id => { plot_name, plant_names, plant_index_numbers, plant_coords }
+    my %study_tissue_samples;  # study_id => tissue_sample_name => { parent_stock_id, tissue_index_number, additional_info }
+    my %child_details;         # study_id => plant/tissue_sample name => { additional_info, external_refs }
     foreach my $params (@{$data}) {
         my $study_id = $params->{studyDbId} || undef;
         my $plot_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
@@ -693,63 +719,52 @@ sub observationunits_store {
             }
         }
 
-        # The trial designer expects a list of plant names, this object is a plant, so add to single item list
         my $plot_hash;
-        if ($ou_level eq 'plant') {
-            # Check that the parent already exists
-            my $plot_parent_name;
-            if ($plot_parent_id) {
-                my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$plot_parent_id});
-                if ($rs->count() eq 0){
-                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Plot with id %s does not exist.', $plot_parent_id), 404);
-                }
-                $plot_parent_name = $rs->first()->uniquename();
-            } else {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('addtionalInfo.observationUnitParent for observation unit with level "plant" is required'), 404);
+        if ($ou_level eq 'plant' || $ou_level eq 'tissue_sample') {
+            # Check that the parent already exists, belongs to this study, and has the same germplasm
+            if (!$plot_parent_id) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('addtionalInfo.observationUnitParent for observation unit with level "%s" is required', $ou_level), 404);
+            }
+            my $parent_row = $schema->resultset("Stock::Stock")->find({stock_id=>$plot_parent_id});
+            if (!$parent_row) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Observation unit parent with id %s does not exist.', $plot_parent_id), 404);
+            }
+            my $parent_name = $parent_row->uniquename();
+            if (!$self->_stock_in_study($schema, $plot_parent_id, $study_id)) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Observation unit parent %s is not part of study %s.', $parent_name, $study_id), 400);
+            }
+            my $parent_accession_name = $self->_get_parent_accession_name($schema, $plot_parent_id);
+            if (!defined $parent_accession_name || $parent_accession_name ne $accession_name) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm %s does not match the germplasm of observation unit parent %s.', $accession_name, $parent_name), 400);
             }
 
-            $plot_hash = {
-                plot_name       => $plot_parent_name,
-                plant_names     => [ $plot_name ],
-                # accession_name => $accession_name,
-                stock_name      => $accession_name,
-                plot_number     => $plot_number,
-                block_number    => $block_number,
-                is_a_control    => $is_a_control,
-                rep_number      => $rep_number,
-                range_number    => $range_number,
-                row_number      => $row_number,
-                col_number      => $col_number,
-                # plot_geo_json => $plot_geo_json,
+            if ($ou_level eq 'plant') {
+                my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+                if ($parent_row->type_id() != $plot_type_id) {
+                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('The parent of a plant must be a plot; %s is not a plot.', $parent_name), 400);
+                }
+                my $plot_entry = $study_plants{$study_id}{$plot_parent_id} //= {
+                    plot_name => $parent_name,
+                    plant_names => [],
+                    plant_index_numbers => [],
+                    plant_coords => []
+                };
+                push @{$plot_entry->{plant_names}}, $plot_name;
+                # Only numeric level codes are used as plant index numbers; otherwise the next free index is used
+                push @{$plot_entry->{plant_index_numbers}}, (defined $plot_number && $plot_number =~ /^\d+$/) ? $plot_number : undef;
+                push @{$plot_entry->{plant_coords}}, (defined $row_number && defined $col_number) ? "$row_number,$col_number" : undef;
+            } else {
+                $study_tissue_samples{$study_id}{$plot_name} = {
+                    parent_stock_id => $plot_parent_id,
+                    tissue_index_number => (defined $plot_number && $plot_number =~ /^\d+$/) ? $plot_number : undef,
+                    additional_info => \%additional_info
+                };
+            }
+            $child_details{$study_id}{$plot_name} = {
                 additional_info => \%additional_info,
-                external_refs   => $observationUnit_x_ref
+                external_refs => $observationUnit_x_ref
             };
-        } elsif ($ou_level eq 'tissue_sample') {
-            my $plot_parent_name;
-            if ($plot_parent_id) {
-                my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$plot_parent_id});
-                if ($rs->count() eq 0){
-                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Plot with id %s does not exist.', $plot_parent_id), 404);
-                }
-                $plot_parent_name = $rs->first()->uniquename();
-            } else {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('addtionalInfo.observationUnitParent for observation unit with level "tissue_sample" is required'), 404);
-            }
-
-            $plot_hash = {
-                plot_name       =>  $plot_parent_name,
-                tissue_sample_names => [ $plot_name ],                
-                stock_name => $accession_name,
-                plot_number => $plot_number,
-                block_number    => $block_number,
-                is_a_control    => $is_a_control,
-                rep_number      => $rep_number,
-                range_number    => $range_number,
-                row_number      => $row_number,
-                col_number      => $col_number,
-                additional_info => \%additional_info,
-                external_refs   => $observationUnit_x_ref
-            }
+            next;
         } else {
             $plot_hash = {
                 plot_name => $plot_name,
@@ -781,6 +796,21 @@ sub observationunits_store {
         }
     }
 
+    # Plant coordinates are only usable if every new plant in a plot has them
+    foreach my $plots (values %study_plants) {
+        foreach my $plot_entry (values %$plots) {
+            if (grep { !defined $_ } @{$plot_entry->{plant_coords}}) {
+                delete $plot_entry->{plant_coords};
+            }
+        }
+    }
+
+    my $phenotype_store_config;
+    if (%study_plants || %study_tissue_samples) {
+        $phenotype_store_config = $self->phenotype_store_config($c, $user_id, $user_name);
+    }
+
+    # Plots are stored in a single transaction
     my $coderef = sub {
         foreach my $study_id (keys %study_plots) {
 
@@ -862,7 +892,7 @@ sub observationunits_store {
 
     my $error_resp;
     try {
-        $schema->txn_do($coderef);
+        $schema->txn_do($coderef) if %study_plots;
     }
     catch {
         print "Error: :". Dumper($_);
@@ -870,6 +900,76 @@ sub observationunits_store {
         $error_resp = CXGN::BrAPI::JSONResponse->return_error($self->status, $_->{error}, $_->{errorCode} || 500);
     };
     if ($error_resp) { return $error_resp; }
+
+    # Plants and tissue samples are created after the plots are committed, outside any enclosing transaction.
+    # save_plant_entries and save_tissue_sample_entries commit the new stocks and then store the inherited treatments
+    # with StorePhenotypes, which writes to the phenome schema over a separate database connection that cannot
+    # see rows from an uncommitted chado transaction.
+    my %child_study_ids = map { $_ => 1 } (keys %study_plants, keys %study_tissue_samples);
+    foreach my $study_id (keys %child_study_ids) {
+        try {
+            my $trial = CXGN::Trial->new({
+                bcs_schema => $schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                trial_id => $study_id
+            });
+
+            # Plants inherit their plot's treatments
+            if ($study_plants{$study_id}) {
+                my $plants = $study_plants{$study_id};
+                my $has_plants_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
+                my $add_additional_plants = $schema->resultset("Project::Projectprop")->search({ project_id => $study_id, type_id => $has_plants_cvterm_id })->count() > 0 ? 1 : 0;
+                my ($plants_per_plot) = sort { $b <=> $a } map { scalar(@{$_->{plant_names}}) } values %$plants;
+
+                if (!$trial->save_plant_entries($plants, $plants_per_plot, 1, $user_id, $phenotype_store_config, $add_additional_plants)) {
+                    die {error => 'Error creating plant observation units or inheriting plot treatments.', errorCode => 500};
+                }
+            }
+
+            # Tissue samples inherit their parent's treatments
+            if ($study_tissue_samples{$study_id}) {
+                my $result = $trial->save_tissue_sample_entries($study_tissue_samples{$study_id}, 1, $user_id, $user_name, $phenotype_store_config);
+                if ($result->{error}) {
+                    die {error => $result->{error}, errorCode => 500};
+                }
+            }
+
+            # save_plant_entries does not store additional info; external references are stored for both plants and tissue samples
+            my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_additional_info', 'stock_property')->cvterm_id();
+            foreach my $child_name (keys %{$child_details{$study_id}}) {
+                my $details = $child_details{$study_id}{$child_name};
+                my $child = $schema->resultset("Stock::Stock")->find({ uniquename => $child_name });
+                if (!$child) {
+                    die {error => "Observation unit $child_name was not created.", errorCode => 500};
+                }
+                if (!$study_tissue_samples{$study_id}{$child_name} && %{$details->{additional_info}}) {
+                    $schema->resultset("Stock::Stockprop")->create({
+                        stock_id => $child->stock_id(),
+                        type_id => $additional_info_type_id,
+                        value => encode_json($details->{additional_info})
+                    });
+                }
+                if ($details->{external_refs}) {
+                    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                        bcs_schema => $self->bcs_schema,
+                        table_name => 'stock',
+                        table_id_key => 'stock_id',
+                        external_references => $details->{external_refs},
+                        id => $child->stock_id()
+                    });
+                    $references->store();
+                }
+            }
+        }
+        catch {
+            print "Error: :". Dumper($_);
+            my $error = ref($_) eq 'HASH' ? $_->{error} : "$_";
+            my $code = ref($_) eq 'HASH' ? ($_->{errorCode} || 500) : 500;
+            $error_resp = CXGN::BrAPI::JSONResponse->return_error($self->status, $error, $code);
+        };
+        if ($error_resp) { return $error_resp; }
+    }
 
     # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution
     my @observationUnitNames;

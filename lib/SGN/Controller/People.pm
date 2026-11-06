@@ -141,7 +141,7 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
         my $ontology_obj = CXGN::Onto->new({
             schema => $schema
         });
-        my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
+        my @root_nodes = $ontology_obj->get_root_nodes(['trait_ontology']);
 
         my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
         my $db_name = $root_nodes[0]->[1] =~ s/:.*//r;
