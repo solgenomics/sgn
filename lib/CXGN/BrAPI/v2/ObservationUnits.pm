@@ -630,7 +630,7 @@ sub _get_parent_accession_name {
         { 'me.subject_id' => $parent_id, 'me.type_id' => \@relationship_type_ids, 'object.type_id' => \@germplasm_type_ids },
         { join => 'object', '+select' => ['object.uniquename'], '+as' => ['germplasm_name'] }
     );
-    return undef if $rs->count() != 1;
+    return if $rs->count() != 1;
     return $rs->first->get_column('germplasm_name');
 }
 
