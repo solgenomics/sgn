@@ -48,6 +48,7 @@ use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::People::Person;
+use CXGN::Onto;
 
 =head2 accessor bcs_schema()
 
@@ -4567,6 +4568,252 @@ sub create_tissue_samples {
     return 1;
 }
 
+=head2 function save_tissue_sample_entries()
+
+ Usage:        my $result = $trial->save_tissue_sample_entries(\%data, $inherits_parent_treatments, $owner_id, $owner_username, $phenotype_store_config);
+ Desc:         Saves individually named tissue samples under explicit parent observation units
+               (plot, subplot or plant) that already exist in this trial. Unlike create_tissue_samples,
+               which generates samples for every plant in the trial, this creates exactly the samples given.
+               If $inherits_parent_treatments is set, each sample receives the treatment values of its parent.
+ Ret:          { success => 1 } or { error => $message }
+ Args:         \%data is a hashref keyed by tissue sample name:
+                 { 'sample_name' => {
+                       parent_stock_id     => 123,          # required; plot, subplot or plant in this trial
+                       tissue_type         => 'leaf',       # optional
+                       tissue_index_number => 1,            # optional; defaults to the next index for the parent
+                       additional_info     => { ... },      # optional; stored as stock_additional_info
+                 }, ... }
+               $phenotype_store_config is the same hashref used by save_plant_entries.
+ Side Effects: creates stocks, stockprops, stock_relationships and nd_experiment_stocks; stores inherited treatment phenotypes
+ Example:
+
+=cut
+
+sub save_tissue_sample_entries {
+    my $self = shift;
+    my $parsed_data = shift;
+    my $inherits_parent_treatments = shift;
+    my $owner_id = shift;
+    my $owner_username = shift;
+    my $phenotype_store_config = shift;
+
+    my $chado_schema = $self->bcs_schema();
+
+    my %phenostore_stocks = ();
+    my $phenostore_data_hash = {};
+    my $treatments = $self->get_treatments();
+    my %treatment_name_by_id = map { $_->{trait_id} => $_->{trait_name} } @{$treatments};
+
+    my $create_tissue_sample_entries_txn = sub {
+        my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+        my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
+        my $family_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id();
+        my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+        my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
+        my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+        my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+        my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        my $subplot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+        my $plant_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        my $plant_subplot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship')->cvterm_id();
+        my $tissue_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+        my $tissue_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_index_number', 'stock_property')->cvterm_id();
+        my $tissue_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property')->cvterm_id();
+        my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
+        my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
+        my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
+        my $has_tissues_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id();
+        my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
+
+        my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
+        if (!$field_layout_experiment) {
+            die "Trial ".$self->get_trial_id()." does not have a field layout experiment. Cannot create tissue samples.\n";
+        }
+        my $field_layout_experiment_id = $field_layout_experiment->nd_experiment_id();
+
+        my %parent_type_name = ($plot_cvterm => 'plot', $subplot_cvterm => 'subplot', $plant_cvterm => 'plant');
+        my %next_index_by_parent;
+        my %parent_names_by_id;
+
+        foreach my $tissue_sample_name (sort keys %$parsed_data) {
+            my $val = $parsed_data->{$tissue_sample_name};
+            my $parent_id = $val->{parent_stock_id};
+
+            if ($chado_schema->resultset("Stock::Stock")->search({ uniquename => $tissue_sample_name })->count() > 0) {
+                die "A stock named $tissue_sample_name already exists.\n";
+            }
+
+            my $parent_row = $parent_id ? $chado_schema->resultset("Stock::Stock")->find({ stock_id => $parent_id }) : undef;
+            if (!$parent_row) {
+                die "The parent observation unit for tissue sample $tissue_sample_name does not exist.\n";
+            }
+            my $parent_name = $parent_row->uniquename();
+            my $parent_type = $parent_type_name{$parent_row->type_id()};
+            if (!$parent_type) {
+                die "The parent of tissue sample $tissue_sample_name must be a plot, subplot or plant; $parent_name is not.\n";
+            }
+            my $parent_in_trial = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->search({
+                stock_id => $parent_id,
+                nd_experiment_id => $field_layout_experiment_id
+            })->count();
+            if (!$parent_in_trial) {
+                die "The parent $parent_name of tissue sample $tissue_sample_name is not part of this trial.\n";
+            }
+            $parent_names_by_id{$parent_id} = $parent_name;
+
+            # All tissue samples link to their parent, the plot (and subplot) the parent sits in, and the accession
+            my @linked_stock_ids = ($parent_id);
+
+            my $accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                'me.subject_id' => $parent_id,
+                'me.type_id' => [$plot_relationship_cvterm, $subplot_relationship_cvterm, $plant_relationship_cvterm],
+                'object.type_id' => [$accession_cvterm, $cross_cvterm, $family_name_cvterm]
+            }, { join => 'object' });
+            if ($accession_rs->count != 1) {
+                die "The parent $parent_name is not linked to exactly one accession, cross or family_name.\n";
+            }
+            my $accession_id = $accession_rs->first->object_id();
+
+            if ($parent_type ne 'plot') {
+                # plots are the subject of plant_of/subplot_of relationships to their plants/subplots
+                my $plot_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                    'me.object_id' => $parent_id,
+                    'me.type_id' => [$plant_relationship_cvterm, $subplot_relationship_cvterm],
+                    'subject.type_id' => $plot_cvterm
+                }, { join => 'subject' });
+                if ($plot_rs->count > 1) {
+                    die "The parent $parent_name is linked to more than one plot.\n";
+                }
+                push @linked_stock_ids, $plot_rs->first->subject_id() if $plot_rs->count == 1;
+            }
+            if ($parent_type eq 'plant') {
+                my $subplot_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                    'me.subject_id' => $parent_id,
+                    'me.type_id' => $plant_subplot_relationship_cvterm
+                });
+                push @linked_stock_ids, $subplot_rs->first->object_id() if $subplot_rs->count == 1;
+            }
+            push @linked_stock_ids, $accession_id;
+
+            # Index numbers default to the next free index among the parent's existing tissue samples
+            if (!exists $next_index_by_parent{$parent_id}) {
+                $next_index_by_parent{$parent_id} = $chado_schema->resultset("Stock::StockRelationship")->search({
+                    'me.object_id' => $parent_id,
+                    'me.type_id' => $tissue_relationship_cvterm,
+                    'subject.type_id' => $tissue_sample_cvterm
+                }, { join => 'subject' })->count() + 1;
+            }
+            my $tissue_index_number = $val->{tissue_index_number} || $next_index_by_parent{$parent_id};
+            $next_index_by_parent{$parent_id}++;
+
+            my @tissue_stockprops = ( { type_id => $tissue_index_number_cvterm, value => $tissue_index_number } );
+            push @tissue_stockprops, { type_id => $tissue_type_cvterm, value => $val->{tissue_type} } if $val->{tissue_type};
+            if ($val->{additional_info} && ref($val->{additional_info}) eq 'HASH' && %{$val->{additional_info}}) {
+                push @tissue_stockprops, { type_id => $additional_info_cvterm, value => encode_json($val->{additional_info}) };
+            }
+            # The tissue sample inherits the block, plot number and replicate of its parent
+            my $parent_props = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $parent_id, type_id => [$block_cvterm, $plot_number_cvterm, $replicate_cvterm] });
+            while (my $prop = $parent_props->next()) {
+                push @tissue_stockprops, { type_id => $prop->type_id(), value => $prop->value() };
+            }
+
+            my $tissue = $chado_schema->resultset("Stock::Stock")->create({
+                organism_id => $parent_row->organism_id(),
+                name => $tissue_sample_name,
+                uniquename => $tissue_sample_name,
+                type_id => $tissue_sample_cvterm,
+                stockprops => \@tissue_stockprops,
+                stock_relationship_subjects => [ map { { type_id => $tissue_relationship_cvterm, object_id => $_ } } @linked_stock_ids ],
+                nd_experiment_stocks => [ { nd_experiment_id => $field_layout_experiment_id, type_id => $field_layout_cvterm } ],
+            });
+
+            if ($owner_id) {
+                my $stock = CXGN::Stock->new({ schema => $chado_schema, stock_id => $tissue->stock_id() });
+                $stock->associate_owner($owner_id, $owner_id, $owner_username, "");
+            }
+        }
+
+        if (scalar(keys %$parsed_data) > 0) {
+            my $has_tissues = $chado_schema->resultset("Project::Projectprop")->search({ type_id => $has_tissues_cvterm, project_id => $self->get_trial_id() });
+            if ($has_tissues->count == 0) {
+                $chado_schema->resultset("Project::Projectprop")->create({ type_id => $has_tissues_cvterm, project_id => $self->get_trial_id(), value => 1 });
+            }
+        }
+
+        # Collect the parents' treatment values so each new sample can inherit them.
+        # Ordered by phenotype_id so that the most recent value wins if a parent has several.
+        if ($inherits_parent_treatments && %treatment_name_by_id && %parent_names_by_id) {
+            my $q = "SELECT nd_experiment_stock.stock_id, phenotype.cvalue_id, phenotype.value
+                FROM phenotype
+                JOIN nd_experiment_phenotype USING(phenotype_id)
+                JOIN nd_experiment_stock USING(nd_experiment_id)
+                WHERE nd_experiment_stock.stock_id = ANY(?) AND phenotype.cvalue_id = ANY(?)
+                ORDER BY phenotype.phenotype_id";
+            my $h = $chado_schema->storage->dbh()->prepare($q);
+            $h->execute([keys %parent_names_by_id], [keys %treatment_name_by_id]);
+            my %parent_treatment_values;
+            while (my ($stock_id, $cvterm_id, $value) = $h->fetchrow_array()) {
+                $parent_treatment_values{$stock_id}->{$treatment_name_by_id{$cvterm_id}} = $value;
+            }
+
+            foreach my $tissue_sample_name (keys %$parsed_data) {
+                my $parent_values = $parent_treatment_values{$parsed_data->{$tissue_sample_name}->{parent_stock_id}} || {};
+                foreach my $treatment_name (keys %$parent_values) {
+                    $phenostore_data_hash->{$tissue_sample_name}->{$treatment_name} = [
+                        $parent_values->{$treatment_name},
+                        $phenotype_store_config->{metadata_hash}->{date},
+                        $phenotype_store_config->{metadata_hash}->{operator},
+                        '',
+                        ''
+                    ];
+                    $phenostore_stocks{$tissue_sample_name} = 1;
+                }
+            }
+        }
+
+        my $layout = CXGN::Trial::TrialLayout->new({ schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type => 'field_layout' });
+        $layout->generate_and_cache_layout();
+    };
+
+    eval {
+        $chado_schema->txn_do($create_tissue_sample_entries_txn);
+
+        if ($inherits_parent_treatments && %phenostore_stocks) {
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $phenotype_store_config->{basepath},
+                dbhost => $phenotype_store_config->{dbhost},
+                dbname => $phenotype_store_config->{dbname},
+                dbuser => $phenotype_store_config->{dbuser},
+                dbpass => $phenotype_store_config->{dbpass},
+                temp_file_nd_experiment_id => $phenotype_store_config->{temp_file_nd_experiment_id},
+                bcs_schema => $chado_schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                user_id => $phenotype_store_config->{user_id},
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => [ map { $_->{trait_name} } @{$treatments} ],
+                values_hash => $phenostore_data_hash,
+                metadata_hash => $phenotype_store_config->{metadata_hash}
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+            warn $verified_warning if $verified_warning;
+            die "$verified_error\n" if $verified_error;
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+            die "An error occurred inheriting treatments: $stored_phenotype_error\n" if $stored_phenotype_error;
+        }
+    };
+    if ($@) {
+        print STDERR "An error occurred creating the tissue sample entries. $@\n";
+        return { error => "An error occurred creating the tissue sample entries: $@" };
+    }
+
+    print STDERR "Tissue sample entries created.\n";
+    return { success => 1 };
+}
+
 =head2 function has_col_and_row_numbers()
 
 	Usage:        $trial->has_col_and_row_numbers();
@@ -5653,7 +5900,19 @@ sub get_treatments {
 
     my $all_traits = $self->get_traits_assayed(); #[$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
 
-    my @treatment_traits = grep {$_->[1] =~ /_TREATMENT:/} @{$all_traits};
+    # Treatment db names come from the root nodes of the treatment ontologies, e.g. "EXPERIMENT_TREATMENT:0000000 experiment_treatment"
+    my @root_nodes = CXGN::Onto->new({ schema => $self->bcs_schema })->get_root_nodes(['experiment_treatment_ontology', 'composed_experiment_treatment_ontology']);
+    my %treatment_db_names;
+    foreach my $node (@root_nodes) {
+        my ($db_name) = split /:/, $node->[1];
+        $treatment_db_names{$db_name} = 1 if $db_name;
+    }
+
+    # Trait names are formatted as "name|DB:accession"
+    my @treatment_traits = grep {
+        my ($db_name) = $_->[1] =~ /\|([^|:]+):[^|]*$/;
+        defined($db_name) && $treatment_db_names{$db_name};
+    } @{$all_traits};
 
     my @return_data;
 

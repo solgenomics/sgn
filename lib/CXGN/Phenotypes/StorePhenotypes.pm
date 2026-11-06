@@ -446,6 +446,8 @@ sub verify {
     my @traits_missing = @{$traits_validation->{'missing'}};
     my @traits_wrong_ids = @{$traits_validation->{'wrong_ids'}};
     my @traits_not_variables = @{$traits_validation->{'not_variables'}};
+    my @traits_wrong_ontology = @{$traits_validation->{'wrong_ontology'} || []};
+    my @traits_ambiguous = @{$traits_validation->{'ambiguous'} || []};
     my $error_message = '';
     my $warning_message = '';
 
@@ -471,6 +473,24 @@ sub verify {
             $error_message .= "<br /><br />The following traits are not ontology variables (they do not have associated method and scale information).  Use the Search &gt; Traits page to find the proper Trait Name and Trait ID to use.  The following suggestions include related ontology variables to the terms used in your data.";
             foreach my $m (@traits_not_variables) {
                 $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />could be<br />" . $m->{'matching_term'};
+            }
+        }
+
+        # Display traits that are not in an allowed trait or treatment ontology
+        if ( scalar(@traits_wrong_ontology) > 0 ) {
+            $error_message .= "<br /><br /><strong>Traits Not In A Trait Or Treatment Ontology:</strong>";
+            $error_message .= "<br /><br />Traits must belong to one of these ontologies: " . join(', ', @{$traits_wrong_ontology[0]->{'allowed_db_names'}});
+            foreach my $m (@traits_wrong_ontology) {
+                $error_message .= "<br />" . $m->{'original_term'};
+            }
+        }
+
+        # Display trait names that match terms in more than one ontology
+        if ( scalar(@traits_ambiguous) > 0 ) {
+            $error_message .= "<br /><br /><strong>Ambiguous Traits:</strong>";
+            $error_message .= "<br /><br />The following trait names exist in more than one ontology. Include the trait ID (e.g. name|DB:0000001) to specify which one is meant.";
+            foreach my $m (@traits_ambiguous) {
+                $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />found in: " . join(', ', @{$m->{'matching_db_names'}});
             }
         }
 
