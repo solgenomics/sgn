@@ -37,6 +37,7 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
 use JSON;
 use CXGN::Phenotypes::HighDimensionalPhenotypeProtocol;
+use CXGN::Phenotypes::RejectedUnits;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -85,6 +86,13 @@ has 'plant_list' => (
 has 'instance_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
+);
+
+# rejected plots (CXGN::Trial::AccessionChange) and their plants and samples are left out unless asked otherwise
+has 'exclude_rejected' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 1
 );
 
 sub search {
@@ -190,6 +198,7 @@ sub search {
 
     # print STDERR Dumper \@all_stock_ids;
     my $stock_ids_sql = join ',', @all_stock_ids;
+    my $rejected_sql = $self->exclude_rejected ? " AND stock.stock_id NOT IN (SELECT stock_id FROM ".CXGN::Phenotypes::RejectedUnits->sql($schema)." r)" : '';
 
     my %data_matrix;
     my $protocol_type_cvterm_id;
@@ -204,7 +213,7 @@ sub search {
             JOIN metadata.md_json USING(json_id)
             JOIN phenome.nd_experiment_md_files ef USING(nd_experiment_id)
             JOIN metadata.md_files m ON ef.file_id = m.file_id
-            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'nirs_spectra' $instance_sql;";
+            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'nirs_spectra' $instance_sql $rejected_sql;";
         print STDERR Dumper $q;
         my $h = $dbh->prepare($q);
         $h->execute($nd_protocol_id);
@@ -227,7 +236,7 @@ sub search {
             JOIN nd_experiment_protocol USING(nd_experiment_id)
             JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
             JOIN metadata.md_json USING(json_id)
-            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'transcriptomics';";
+            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'transcriptomics' $rejected_sql;";
         print STDERR Dumper $q;
         my $h = $dbh->prepare($q);
         $h->execute($nd_protocol_id);
@@ -248,7 +257,7 @@ sub search {
             JOIN nd_experiment_protocol USING(nd_experiment_id)
             JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
             JOIN metadata.md_json USING(json_id)
-            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'metabolomics';";
+            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'metabolomics' $rejected_sql;";
         print STDERR Dumper $q;
         my $h = $dbh->prepare($q);
         $h->execute($nd_protocol_id);

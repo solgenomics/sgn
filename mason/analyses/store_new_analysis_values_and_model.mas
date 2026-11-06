@@ -691,7 +691,8 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
                 if (response.success) {
-                    alert('Analysis and/or model saved!');
+                    var warning_message = Array.isArray(response.warnings) ? response.warnings.join('\n') : (response.warnings || '');
+                    alert('Analysis and/or model saved!' + (warning_message ? '\n\n' + warning_message : ''));
                     var html = '<center>';
                     if (response.analysis_id) {
                         html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >analysis</a></p>';

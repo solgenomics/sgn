@@ -144,7 +144,7 @@
                             <hr>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Inversion Tolerance: </label>
+                                    <label class="col-sm-3 control-label">Sommer Inversion Tolerance (native F90 uses standard solver settings): </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="analysis_calculate_statistics_tolparinv_select">
                                             <option value="0.000001">0.000001</option>
@@ -168,7 +168,7 @@
                                     <label class="col-sm-3 control-label">Fixed Effects: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_div">
-                                            <option value="replicate">Replicate</option>
+                                            <option value="replicate">Recorded design effects (CRD: none; RCBD: block; Alpha/Lattice: replicate + nested block)</option>
                                             <option value="fixed_effect_trait">Select a continuous trait (e.g. soil elevation curvature)</option>
                                         </select>
                                     </div>
@@ -526,6 +526,7 @@ jQuery(document).ready(function() {
 
         var analysis_stats_parameters = {};
         var analysis_stats_protocol = '';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
         var analysis_stats_auxiliary_files = [];
         var analysis_stats_result_summary = {};
         var analysis_statistical_ontology_term = '';
@@ -546,9 +547,15 @@ jQuery(document).ready(function() {
         if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
 
             analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
 
             analysis_stats_parameters = {
                 'tolparinv':analysis_stats_tolparinv_param,
+                'native_rr_summary':analysis_calculate_statistics_response.native_rr_summary,
+                'native_convergence_criterion':analysis_calculate_statistics_response.native_convergence_criterion,
+                'native_solver':analysis_calculate_statistics_response.native_solver,
+                'native_residual_initial_coefficients':analysis_calculate_statistics_response.native_residual_initial_coefficients,
+                'native_residual_initial_variance_range':analysis_calculate_statistics_response.native_residual_initial_variance_range,
                 'genotyping_protocol_id':analysis_genotyping_protocol_id,
                 'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
                 'protocol':analysis_stats_protocol
@@ -563,9 +570,15 @@ jQuery(document).ready(function() {
         if (analysis_calculate_statistics_select == 'sommer_grm_genetic_blups') {
 
             analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
 
             analysis_stats_parameters = {
                 'tolparinv':analysis_stats_tolparinv_param,
+                'native_rr_summary':analysis_calculate_statistics_response.native_rr_summary,
+                'native_convergence_criterion':analysis_calculate_statistics_response.native_convergence_criterion,
+                'native_solver':analysis_calculate_statistics_response.native_solver,
+                'native_residual_initial_coefficients':analysis_calculate_statistics_response.native_residual_initial_coefficients,
+                'native_residual_initial_variance_range':analysis_calculate_statistics_response.native_residual_initial_variance_range,
                 'genotyping_protocol_id':analysis_genotyping_protocol_id,
                 'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
                 'protocol':analysis_stats_protocol
@@ -582,6 +595,7 @@ jQuery(document).ready(function() {
 
         if (analysis_calculate_statistics_select == 'lmer_germplasmname_replicate') {
             analysis_stats_protocol = 'lmer(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
             analysis_stats_parameters = {
                 'protocol':analysis_stats_protocol
             };
@@ -787,6 +801,7 @@ jQuery(document).ready(function() {
 
         var analysis_stats_parameters = {};
         var analysis_stats_protocol = '';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
         var analysis_stats_auxiliary_files = [];
         var analysis_stats_result_summary = {};
         var analysis_statistical_ontology_term = '';
@@ -806,9 +821,15 @@ jQuery(document).ready(function() {
         if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
 
             analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
 
             analysis_stats_parameters = {
                 'tolparinv':analysis_stats_tolparinv_param,
+                'native_rr_summary':analysis_calculate_statistics_response.native_rr_summary,
+                'native_convergence_criterion':analysis_calculate_statistics_response.native_convergence_criterion,
+                'native_solver':analysis_calculate_statistics_response.native_solver,
+                'native_residual_initial_coefficients':analysis_calculate_statistics_response.native_residual_initial_coefficients,
+                'native_residual_initial_variance_range':analysis_calculate_statistics_response.native_residual_initial_variance_range,
                 'genotyping_protocol_id':analysis_genotyping_protocol_id,
                 'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
                 'protocol':analysis_stats_protocol
@@ -823,9 +844,15 @@ jQuery(document).ready(function() {
         if (analysis_calculate_statistics_select == 'sommer_grm_genetic_blups') {
 
             analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
 
             analysis_stats_parameters = {
                 'tolparinv':analysis_stats_tolparinv_param,
+                'native_rr_summary':analysis_calculate_statistics_response.native_rr_summary,
+                'native_convergence_criterion':analysis_calculate_statistics_response.native_convergence_criterion,
+                'native_solver':analysis_calculate_statistics_response.native_solver,
+                'native_residual_initial_coefficients':analysis_calculate_statistics_response.native_residual_initial_coefficients,
+                'native_residual_initial_variance_range':analysis_calculate_statistics_response.native_residual_initial_variance_range,
                 'genotyping_protocol_id':analysis_genotyping_protocol_id,
                 'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
                 'protocol':analysis_stats_protocol
@@ -842,6 +869,7 @@ jQuery(document).ready(function() {
 
         if (analysis_calculate_statistics_select == 'lmer_germplasmname_replicate') {
             analysis_stats_protocol = 'lmer(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
             analysis_stats_parameters = {
                 'protocol':analysis_stats_protocol
             };
@@ -893,9 +921,15 @@ jQuery(document).ready(function() {
         var analysis_stats_mv_traits_string = analysis_stats_mv_traits.join();
 
         var analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
 
         var analysis_stats_parameters = {
             'tolparinv':analysis_stats_tolparinv_param,
+                'native_rr_summary':analysis_calculate_statistics_response.native_rr_summary,
+                'native_convergence_criterion':analysis_calculate_statistics_response.native_convergence_criterion,
+                'native_solver':analysis_calculate_statistics_response.native_solver,
+                'native_residual_initial_coefficients':analysis_calculate_statistics_response.native_residual_initial_coefficients,
+                'native_residual_initial_variance_range':analysis_calculate_statistics_response.native_residual_initial_variance_range,
             'genotyping_protocol_id':analysis_genotyping_protocol_id,
             'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
             'protocol':analysis_stats_protocol
@@ -944,12 +978,18 @@ jQuery(document).ready(function() {
         var analysis_compute_genotypes_from_parents = jQuery('#analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select').val();
 
         var analysis_stats_protocol = '';
+        analysis_stats_protocol = analysis_calculate_statistics_response.executed_protocol || analysis_stats_protocol;
         var analysis_statistical_ontology_term;
         var analysis_stats_auxiliary_files;
         var analysis_stats_training_data_file;
 
         var analysis_stats_parameters = {
             'tolparinv':analysis_stats_tolparinv_param,
+                'native_rr_summary':analysis_calculate_statistics_response.native_rr_summary,
+                'native_convergence_criterion':analysis_calculate_statistics_response.native_convergence_criterion,
+                'native_solver':analysis_calculate_statistics_response.native_solver,
+                'native_residual_initial_coefficients':analysis_calculate_statistics_response.native_residual_initial_coefficients,
+                'native_residual_initial_variance_range':analysis_calculate_statistics_response.native_residual_initial_variance_range,
             'genotyping_protocol_id':analysis_genotyping_protocol_id,
             'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
             'legendre_polynomial_order':analysis_legendre_order,

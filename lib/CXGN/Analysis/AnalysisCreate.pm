@@ -378,6 +378,12 @@ sub store {
     my $user_name = $self->user_name();
     my $user_role = $self->user_role();
 
+    # Predictable expired/missing inputs fail before model/analysis creation.
+    # Late archive I/O failures below retain the already stored record IDs.
+    for my $file (grep { defined($_) && length($_) } ($analysis_model_file, $analysis_model_training_data_file)) {
+        return { error => 'A supporting input file is missing or unreadable. Prepare and run the analysis again before saving.' }
+            unless -f $file && -r $file;
+    }
     # print Dumper $analysis_model_type;
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
@@ -632,21 +638,31 @@ sub store {
         nd_protocol_id=>$analysis_model_protocol_id
     });
 
-if ($analysis_model_file) {
-    $analysis_model->store_analysis_model_files({
-        project_id => $saved_analysis_id,
-        archived_model_file_type=>$analysis_model_file_type,
-        model_file=>$analysis_model_file,
-        archived_training_data_file_type=>$analysis_model_training_data_file_type,
-        archived_training_data_file=>$analysis_model_training_data_file,
-        archived_auxiliary_files=>$analysis_model_auxiliary_files,
-        archive_path=>$archive_path,
-        user_id=>$user_id,
-        user_role=>$user_role
-    });
-}
+    my $result = { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
+    if ($analysis_model_file || $analysis_model_training_data_file) {
+        my ($archive_result, $archive_exception);
+        eval {
+            $archive_result = $analysis_model->store_analysis_model_files({
+                project_id=>$saved_analysis_id,
+                archived_model_file_type=>$analysis_model_file_type,
+                model_file=>$analysis_model_file,
+                archived_training_data_file_type=>$analysis_model_training_data_file_type,
+                archived_training_data_file=>$analysis_model_training_data_file,
+                archived_auxiliary_files=>$analysis_model_auxiliary_files,
+                archive_path=>$archive_path,
+                user_id=>$user_id,
+                user_role=>$user_role
+            });
+            1;
+        } or $archive_exception = $@;
+        if ($archive_exception || (ref($archive_result) eq 'HASH' && $archive_result->{error})) {
+            warn "Supporting-file archive incomplete for model $analysis_model_protocol_id.\n";
+            $result->{archive_pending} = 1;
+            $result->{warnings} = ['Analysis/model saved, but supporting files could not be archived. Do not repeat the save; ask a curator to retry the file attachment.'];
+        }
+    }
+    return $result;
 
-    return { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
 }
 
 sub store_analysis_result_stock_names {

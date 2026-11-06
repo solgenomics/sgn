@@ -23,6 +23,7 @@ bje24
 use strict;
 use warnings;
 use Moose;
+use CXGN::Phenotypes::RejectedUnits;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
@@ -44,6 +45,10 @@ has 'data_level' => (
     default => 'plot',
 );
 
+# Exact measurements in layout/Field Book files follow the analytical rejection
+# policy. Explicit raw reads can opt out; design treatments remain available.
+has 'exclude_rejected' => (isa => 'Bool', is => 'ro', default => 1);
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -52,6 +57,9 @@ sub search {
 
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $data_level, 'stock_type')->cvterm_id();
 
+    my $rejected_where = $self->exclude_rejected
+        ? " AND (right(db.name, 10) = '_TREATMENT' OR ".CXGN::Phenotypes::RejectedUnits->not_rejected_sql($schema, 'stock.stock_id').")"
+        : '';
     my $h = $schema->storage->dbh->prepare("SELECT stock.name, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, phenotype.value
         FROM project
         JOIN nd_experiment_project USING(project_id)
@@ -62,7 +70,7 @@ sub search {
         JOIN phenotype USING(phenotype_id)
         JOIN cvterm ON(phenotype.cvalue_id = cvterm.cvterm_id)
         JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
-        WHERE project_id = ? AND stock.type_id = ?
+        WHERE project_id = ? AND stock.type_id = ? $rejected_where
         GROUP BY 1,2,3;");
 
     $h->execute($trial_id, $stock_type_id);

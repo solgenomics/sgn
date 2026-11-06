@@ -1,3 +1,19 @@
+# Load the explicit analytical recorded-design-tag contract.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "design_replication.R"), local = TRUE)
+
 ## File was edited in ESS mode in emacs and some indents changed. sorry.
 ##First read in the arguments listed at the command line
 args=commandArgs(TRUE)
@@ -32,16 +48,26 @@ library(effects)
 library(stringr)
 library(dplyr)
 
-pd = read.csv(datafile, sep="\t")
+pd <- with_design_replication(read_analysis_phenotypes(datafile, check.names = TRUE))
 
 source(paramfile)  # should give us dependent_variable and the model
 
 trait = dependent_variables
 pd$studyYear = as.factor(pd$studyYear)
+pd$designReplicate <- factor(pd$designReplicate)
+if ("blockNumber" %in% names(pd)) pd$blockNumber <- factor(pd$blockNumber)
 print(paste("MODEL :", model))
 print(paste("FIXED FACTORS: ", fixed_factors));
 print(paste("RANDOM FACTORS: ", random_factors));
 print(head(pd))
+
+model_output_error <- function(message) {
+    writeLines(message, paste0(datafile, ".model_error"))
+    stop(message)
+}
+
+tryCatch(assert_genotype_name_identity(pd),
+         error = function(e) model_output_error(conditionMessage(e)))
 
 BLUE = as.data.frame(unique(pd$germplasmName))
 colnames(BLUE) = "germplasmName"
@@ -72,71 +98,52 @@ for(i in 1:length(trait)){
     #pdout = model
     #print(pdout)
     
-    genotypeEffectType = as.vector(str_match(model_string, '1\\|germplasmName'))
-    genotypeEffectType = ifelse(is.na(genotypeEffectType), 'fixed', 'random')
-    print(paste('modeling genotypes as: ', genotypeEffectType))
-    
-    if (genotypeEffectType=="random") {
-        
-        mixmodel = lmer(as.formula(model_string), data=pd)
-
-        print("---------")
-        print(mixmodel)
-        print("---------")
-        
-        res <- (ranef(mixmodel)$germplasmName)
-        
-        blup <- res%>%mutate("germplasmName" = rownames(res))
-        names(blup)[1] = trait[i]
-        blup <- blup[,c("germplasmName",trait[i])]
-        
-        blup <- as.data.frame(blup)
-        
-        BLUP <- merge(x = BLUP, y = blup, by ="germplasmName", all=TRUE)
-        
-        adj = coef(mixmodel)$germplasmName
-
-        print(paste("adj", adj));
-
-        adj = adj[1]  # keep only one column
-        adj_means = adj%>%mutate("germplasmName" = rownames(adj))
-        names(adj_means)[1] = trait[i]
-        adj_means = as.data.frame(adj_means)
-
-        adjusted_means =  merge(x = adjusted_means, y = adj_means, by ="germplasmName", all=TRUE)
-
+    model_formula <- canonical_design_formula(as.formula(model_string), pd)
+    tryCatch(validate_design_group_terms(model_formula, pd),
+             error = function(e) model_output_error(conditionMessage(e)))
+    genotype_bars <- Filter(function(term) identical(as.character(term[[3]]), "germplasmName"), lme4::findbars(model_formula))
+    fixed_genotype <- "germplasmName" %in% all.vars(lme4::nobars(model_formula))
+    if (length(genotype_bars)) {
+        if (fixed_genotype || length(genotype_bars) != 1L || !identical(as.character(genotype_bars[[1]][[2]]), "1")) {
+            model_output_error("Genotype output supports either fixed germplasmName effects or one random genotype intercept; genotype random slopes and simultaneous fixed/random genotype terms are not supported.")
+        }
+        genotypeEffectType <- "random"
+    } else if (fixed_genotype) {
+        genotypeEffectType <- "fixed"
     } else {
-
-        mixmodel = lmer(as.formula(model_string), data=pd)
-
-        # compute adjusted blues
-        #
-        adj <- summary(lsmeans(mixmodel, "germplasmName"))
-        blue <- adj[c("germplasmName", "lsmean")]
-        colnames(blue)[2] = trait[i]
-        blueadj = as.data.frame(blue)
-        adjustedBLUE =  merge(x = adjustedBLUE, y = blueadj, by ="germplasmName", all=TRUE)
-
-        #Computing fixed effects
-        #feff <- (fixef(mixmodel)$germplasmName)
-        feff<-data.frame(coef(summary(mixmodel))[ , "Estimate"])
-        rownames(feff) <- blue$germplasmName
-        colnames(feff) <- trait[i]
-
-        fixedeff <- feff%>%mutate("germplasmName" = rownames(feff))
-        fixedeff<- fixedeff[,c("germplasmName", trait[i])]
-        fixedeff<-as.data.frame(fixedeff)
-
-        #file with fixed effect
-        print(fixedeff) 
-        
-        #file with blues
-        print(blue)
-
-        BLUE = merge(x = BLUE, y = fixedeff, by="germplasmName", all=TRUE)
-
-        
+        model_output_error("Select germplasmName as a fixed factor or a random intercept to obtain genotype means.")
     }
+
+    mixmodel <- if (length(lme4::findbars(model_formula))) lmer(model_formula, data = pd) else lm(model_formula, data = pd)
+    if (genotypeEffectType == "random") {
+        # BLUPs remain genotype random-intercept deviations. Adjusted means add
+        # the standard marginal fixed mean, not a reference-level intercept.
+        res <- ranef(mixmodel)$germplasmName
+        blup <- data.frame(germplasmName = rownames(res), estimate = res[["(Intercept)"]])
+        names(blup)[2] <- trait[i]
+        marginal <- as.data.frame(emmeans::emmeans(mixmodel, ~ 1))
+        mean_column <- intersect(c("emmean", "lsmean"), names(marginal))
+        if (length(mean_column) != 1L || nrow(marginal) != 1L || !is.finite(marginal[[mean_column]][1])) {
+            model_output_error("The selected model does not provide an estimable marginal fixed mean for genotype output.")
+        }
+        adjusted <- blup
+        adjusted[[trait[i]]] <- adjusted[[trait[i]]] + marginal[[mean_column]][1]
+        BLUP <- merge(BLUP, blup, by = "germplasmName", all = TRUE)
+        adjusted_means <- merge(adjusted_means, adjusted, by = "germplasmName", all = TRUE)
+    } else {
+        # Fixed genotype BLUEs use the same standard marginal-means calculation
+        # as the existing adjusted-BLUE interface, with stable genotype identity.
+        marginal <- as.data.frame(emmeans::emmeans(mixmodel, ~ germplasmName))
+        mean_column <- intersect(c("emmean", "lsmean"), names(marginal))
+        if (length(mean_column) != 1L || any(!is.finite(marginal[[mean_column]]))) {
+            model_output_error("The selected model does not provide estimable fixed genotype means.")
+        }
+        blue <- marginal[, c("germplasmName", mean_column), drop = FALSE]
+        names(blue)[2] <- trait[i]
+        BLUE <- merge(BLUE, blue, by = "germplasmName", all = TRUE)
+        adjustedBLUE <- merge(adjustedBLUE, blue, by = "germplasmName", all = TRUE)
+    }
+
 }
 
 # save result files

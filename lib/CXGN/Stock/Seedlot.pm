@@ -281,6 +281,7 @@ has 'transactions' =>     (
     is => 'rw',
     lazy     => 1,
     builder  => '_build_transactions',
+    clearer  => 'clear_transactions',
 );
 
 =head2 Accessor breeding_program
@@ -1569,19 +1570,79 @@ sub current_count {
     return $count;
 }
 
-# It is convenient and also much faster to retrieve a single value for the current_count, rather than calculating it from the transactions.
+=head2 Function lock_for_recount($schema, \@seedlot_ids)
+
+Lock the shared seedlot stock rows in canonical order before changing any of
+these lots' transactions. The caller must already own a SQL transaction so
+these locks remain held through its relationship writes and cache recount.
+FOR NO KEY UPDATE permits unrelated foreign-key key-share locks.
+
+=cut
+
+sub lock_for_recount {
+    my ($schema, $seedlot_ids) = @_;
+    die "Seedlot recount requires an array of seedlot IDs.\n"
+        if ref($seedlot_ids) ne 'ARRAY';
+    my %seen;
+    for my $id (@$seedlot_ids) {
+        die "Seedlot recount requires positive integer seedlot IDs.\n"
+            if !defined($id) || ref($id) || $id !~ /^[1-9]\d*$/;
+        $seen{$id} = 1;
+    }
+    my @ids = sort { $a <=> $b } keys %seen;
+    return \@ids if !@ids;
+    my $dbh = $schema->storage->dbh;
+    die "Seedlot recount locks require an active SQL transaction.\n"
+        if $dbh->{AutoCommit};
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id;
+    my $locked = $dbh->selectcol_arrayref(q{
+        SELECT stock_id FROM stock WHERE stock_id=ANY(?) AND type_id=?
+        ORDER BY stock_id FOR NO KEY UPDATE
+    }, undef, \@ids, $type_id);
+    die "A seedlot selected for recount no longer exists or is not a seedlot.\n"
+        if @$locked != @ids;
+    return $locked;
+}
+
+=head2 Method recalculate_current_properties()
+
+Refresh the transaction list and store count and weight together while holding
+the same seedlot lock used by trial corrections. Existing unknown-value and
+factor rules are implemented by current_count() and current_weight().
+Returns { count => $count, weight_gram => $weight }.
+
+=cut
+
+sub recalculate_current_properties {
+    my $self = shift;
+    my $totals;
+    $self->schema->txn_do(sub {
+        lock_for_recount($self->schema, [$self->seedlot_id]);
+        # Objects can outlive transaction edits. Never recount their lazy,
+        # previously loaded transaction array after acquiring the shared lock.
+        $self->clear_transactions;
+        my $count = $self->current_count;
+        my $weight = $self->current_weight;
+        my $stock = $self->stock;
+        for my $property (['current_count', $count], ['current_weight_gram', $weight]) {
+            my ($name, $value) = @$property;
+            my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $name, 'stock_property')->cvterm_id;
+            my $recorded = $stock->find_related('stockprops', {'me.type_id' => $type_id});
+            if ($recorded) {
+                $recorded->update({value => $value});
+            } else {
+                $stock->create_stockprops({$name => $value});
+            }
+        }
+        $totals = {count => $count, weight_gram => $weight};
+    });
+    return $totals;
+}
+
+# Preserve the public scalar return contract while refreshing the paired cache.
 sub set_current_count_property {
     my $self = shift;
-    my $current_count = $self->current_count();
-    my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_count', 'stock_property');
-    my $stock = $self->stock();
-    my $recorded_current_count = $stock->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
-    if($recorded_current_count){
-        $recorded_current_count->update({'value'=>$current_count});
-    } else {
-        $stock->create_stockprops({$current_count_cvterm->name() => $current_count});
-    }
-    return $current_count;
+    return $self->recalculate_current_properties->{count};
 }
 
 # It is convenient and also much faster to retrieve a single value for the current_count, rather than calculating it from the transactions.
@@ -1656,19 +1717,10 @@ sub current_weight {
     return $weight;
 }
 
-# It is convenient and also much faster to retrieve a single value for the current_weight, rather than calculating it from the transactions.
+# Preserve the public scalar return contract while refreshing the paired cache.
 sub set_current_weight_property {
     my $self = shift;
-    my $current_weight = $self->current_weight();
-    my $current_weight_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
-    my $stock = $self->stock();
-    my $recorded_current_weight = $stock->find_related('stockprops', {'me.type_id'=>$current_weight_cvterm->cvterm_id});
-    if ($recorded_current_weight){
-        $recorded_current_weight->update({'value'=>$current_weight});
-    } else {
-        $stock->create_stockprops({$current_weight_cvterm->name() => $current_weight});
-    }
-    return $current_weight;
+    return $self->recalculate_current_properties->{weight_gram};
 }
 
 # It is convenient and also much faster to retrieve a single value for the current_weight, rather than calculating it from the transactions.

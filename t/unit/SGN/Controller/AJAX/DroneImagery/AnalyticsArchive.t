@@ -1,0 +1,26 @@
+use strict;
+use warnings;
+use Test::More;
+use File::Temp qw(tempdir);
+use File::Slurp qw(read_file);
+use Digest::MD5 qw(md5_hex);
+use SGN::Controller::AJAX::DroneImagery::DroneImageryAnalytics;
+{package AnalyticsArchiveContext;sub config{$_[0]{config}}sub stash{$_[0]{stash}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
+my$directory=tempdir(CLEANUP=>1);
+my$file="$directory/private-summary.json";
+my$bytes='{"version":2,"source":"private fixture","zero":0}';
+open(my$out,'>',$file)or die$!;print $out $bytes;close($out);
+my$good=bless({config=>{archive_path=>"$directory/archive"},stash=>{}},'AnalyticsArchiveContext');
+my$result=SGN::Controller::AJAX::DroneImagery::DroneImageryAnalytics::_archive_analytics_result($good,$file,'native_rr_variance_summary_v2','2031-01-01_10:00:00',41,'curator',321);
+ok($result && -f$result->{filename},'actual uploader creates a readable private archive file');
+is($result->{md5}->hexdigest,md5_hex($bytes),'actual archive hash matches original bytes');
+is(read_file($file),$bytes,'successful archive preserves the original source JSON');
+ok(!exists($good->stash->{rest}),'successful helper does not emit a failure response');
+my$bad=bless({config=>{archive_path=>'/proc/sgn_analytics_archive_failure_'.$$},stash=>{}},'AnalyticsArchiveContext');
+my$failed=eval{SGN::Controller::AJAX::DroneImagery::DroneImageryAnalytics::_archive_analytics_result($bad,$file,'native_rr_variance_summary_v2','2031-01-01_10:00:00',41,'curator',321)};
+is($@,'','real unwritable archive destination produces a controlled response rather than dying in get_md5');
+ok(!defined($failed),'failed copy does not return a successful file result');
+is_deeply([@{$bad->stash->{rest}}{qw(analytics_protocol_id summary_saved archive_failed)}],[321,1,1],'REST failure identifies the retained saved calculation without claiming a download');
+like($bad->stash->{rest}{error},qr/Could not archive result file.*summary remains saved/,'failure message names the outcome');
+is(read_file($file),$bytes,'failed archive retains the exact source JSON for recovery');
+done_testing;

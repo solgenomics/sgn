@@ -25,6 +25,8 @@ use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
 use File::Spec;
+use File::Temp ();
+use Encode ();
 use Digest::MD5;
 use JSON -support_by_pp;
 use Spreadsheet::WriteExcel;
@@ -197,21 +199,35 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     my $include_notes = $c->req->param('include_notes');
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_name = $c->user()->get_object()->get_username();
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory_name = "tablet_trait_files";
-    my $archived_file_name = File::Spec->catfile($user_id, $subdirectory_name,$timestamp."_".$trait_file_name.".trt");
     my $archive_path = $c->config->{archive_path};
-    my $file_destination =  File::Spec->catfile($archive_path, $archived_file_name);
     my $dbh = $c->dbc->dbh();
     my @trait_ids;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
-    if ($c->req->param('selected_listed')) {
-	@trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
-	@trait_ids = @{_parse_list_from_json($c->req->param('trait_ids'))};
-    } else {
-	@trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
-	@trait_ids = $c->req->param('trait_ids');
+    my $parsed = eval {
+        @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
+        if ($c->req->param('selected_listed')) {
+            @trait_ids = @{_parse_list_from_json($c->req->param('trait_ids'))};
+        } else {
+            @trait_ids = $c->req->param('trait_ids');
+            @trait_ids = $c->req->param('trait_ids[]') if !@trait_ids;
+            @trait_ids = @{$trait_ids[0]} if @trait_ids == 1 && ref($trait_ids[0]) eq 'ARRAY';
+        }
+        1;
+    };
+    if (!$parsed || !@trait_list || @trait_list != @trait_ids || grep { !defined($_) || ref($_) || $_ !~ /^\d+$/ } @trait_ids) {
+        $c->stash->{rest} = {error => 'Select a valid trait list or select traits directly, then try again.'};
+        return;
+    }
+    if (!defined($trait_file_name) || $trait_file_name !~ /\S/) {
+        $c->stash->{rest} = {error => 'A trait file name is required.'};
+        return;
+    }
+    my $validation = CXGN::List::Validate->new()->validate($chado_schema, 'traits', \@trait_list);
+    if (@{$validation->{missing} || []} || grep { !$chado_schema->resultset('Cv::Cvterm')->find({cvterm_id => $_}) } @trait_ids) {
+        $c->stash->{rest} = {error => 'Some selected traits are not valid observation variables.'};
+        return;
     }
 
     if (!-d $archive_path) {
@@ -226,10 +242,13 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 	mkdir (File::Spec->catfile($archive_path, $user_id, $subdirectory_name));
     }
     
-    print STDERR Dumper($file_destination);
-    
-    open(my $FILE, "> :encoding(UTF-8)", $file_destination) or die $!;
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    $trait_file_name =~ s{[/\\\x00-\x1f]}{_}g;
+    my ($FILE, $file_destination) = File::Temp::tempfile(
+        $trait_file_name.'_XXXXXX',
+        DIR => File::Spec->catfile($archive_path, $user_id, $subdirectory_name),
+        SUFFIX => '.trt', UNLINK => 0,
+    );
+    binmode($FILE, ':encoding(UTF-8)');
     print $FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
 
     my $order = 0;
@@ -274,7 +293,9 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 	#print line with trait info
 	#print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
 	#print STDERR " Adding line \"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\" to trait file\n";
-	print $FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
+	my $label = "$name\t\t\t|$db_name:$accession";
+	$label =~ s/"/""/g;
+	print $FILE "\"$label\",$trait_info_string,\"TRUE\",\"$order\"\n";
     }
 
     if ($include_notes eq 'true') {
@@ -319,14 +340,12 @@ sub _parse_list_from_json {
     
     return unless $list_json;
     
-    my $decoded_list;
-    eval {
-	$decoded_list = decode_json($list_json);
-    };
-    if ($@) {
-	die "Invalid JSON: $@";
-    }
-    my @array_of_list_items = @{$decoded_list};
+    # Catalyst form parameters can already be decoded Perl characters; other
+    # callers supply UTF-8 bytes. decode_json alone rejects wide characters.
+    my $decoded_list = JSON->new->utf8(!Encode::is_utf8($list_json))->decode($list_json);
+    die "JSON array required" if ref($decoded_list) ne 'ARRAY';
+    die "JSON list entries must be scalar values" if grep { !defined($_) || ref($_) } @$decoded_list;
+    my @array_of_list_items = @$decoded_list;
     return \@array_of_list_items;
 }
 

@@ -437,6 +437,7 @@ sub store_analysis_spreadsheet_POST {
                         plot_name => $plot_name,
                         plot_number => $plot_number_unique,
                         rep_number => $plot_obj->{rep_number},
+                design_rep_number => $plot_obj->{design_rep_number},
                         is_a_control => $plot_obj->{is_a_control}
                     };
                 }

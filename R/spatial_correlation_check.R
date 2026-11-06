@@ -1,3 +1,19 @@
+# Load the explicit analytical recorded-design-tag contract.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "design_replication.R"), local = TRUE)
+
 ################################################################################
 # Checking for spatial correlation in the phenotypic data
 ################################################################################
@@ -66,7 +82,7 @@ replicate <- "replicate"
 # 3. Process the phenotypic data
 ###################################################################
 # read in the phenotypic data
-userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE, check.names = FALSE)
+userPheno <- read_analysis_phenotypes(phenotypeFile)
 # and the traits
 userResponse <- unlist(strsplit(traits, split = ",", fixed = T))
 userResponse <- userResponse[!userResponse == "notes"] # x[ !x == 'A'] # remove notes from userResponse
@@ -129,8 +145,17 @@ check_quality <- function(data, phenotype, replicate) {
     ###################################################################
     # Check for replicated data
     ###################################################################
-    unique_reps <- unique(data$replicate, na.rm = TRUE)
-    replicate_count <- length(unique_reps)
+    # Replication QC counts observed measurements, not arbitrary design tags
+    # or accession occurrence numbers (which may include unmeasured positions).
+    # This plot/trait QC output does not use genotype labels. Count known IDs
+    # directly when complete, preserving this workflow for duplicate names.
+    genotype_groups <- data$germplasmName
+    if ("germplasmDbId" %in% names(data)) {
+        ids <- as.character(data$germplasmDbId)
+        if (all(!is.na(ids) & !ids %in% c("", "0", "NA", "--", "-", ".", ".."))) genotype_groups <- ids
+    }
+    observed_counts <- tapply(!is.na(trait_vals), genotype_groups, sum)
+    replicate_count <- if (length(observed_counts)) max(observed_counts) else 0
     ###################################################################
     # Create a table to summarize the results
     ###################################################################

@@ -31,7 +31,7 @@ our $FACTOR_COUNT = 38; # number of columns in the file before traits columns st
 
 sub BUILD {
     my $self = shift;
-    my @lines = slurp($self->file());
+    my @lines = slurp($self->file(), binmode => ":encoding(UTF-8)");
     
     my $header = $lines[0];
     chomp($header);

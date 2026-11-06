@@ -455,7 +455,9 @@ for my $extension ("xlsx", "xls", "csv") {
 		my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 		my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 		print STDERR "Projectprop: " . $post1_project_prop_diff . "\n";
-		ok($post1_project_prop_diff == 4, "check projectprop table after upload excel trial");
+		# The occurrence marker and generated layout cache accompany the four
+        # original trial properties. Check their contents below as well.
+        is($post1_project_prop_diff, 6, "check projectprop table after upload excel trial");
 
 		my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 		my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -465,7 +467,8 @@ for my $extension ("xlsx", "xls", "csv") {
 		my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 		my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 		print STDERR "Stockprop: " . $post1_stock_prop_diff . "\n";
-		ok($post1_stock_prop_diff == 35, "check stockprop table after upload excel trial");
+		# Each plot retains its seven properties plus the recorded design tag.
+        is($post1_stock_prop_diff, 40, "check stockprop table after upload excel trial");
 
 		my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 		my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -481,6 +484,64 @@ for my $extension ("xlsx", "xls", "csv") {
 		my $post1_project_relationship_diff = $post_project_relationship_count - $pre_project_relationship_count;
 		print STDERR "ProjectRelationship: " . $post1_project_relationship_diff . "\n";
 		ok($post1_project_relationship_diff == 1, "check projectrelationship table after upload excel trial");
+
+        my $trial_id = $save->{trial_id};
+        my $dbh = $c->dbh();
+        my $versions = $dbh->selectcol_arrayref(q{
+            SELECT p.value FROM projectprop p JOIN cvterm t ON t.cvterm_id=p.type_id
+            JOIN cv ON cv.cv_id=t.cv_id
+            WHERE p.project_id=? AND t.name='accession_occurrence_version'
+                AND cv.name='project_property' ORDER BY p.rank
+        }, undef, $trial_id);
+        is_deeply($versions, ['1'], 'The imported field has one occurrence version');
+
+        my @plots = sort {$a->{plot_name} cmp $b->{plot_name}}
+            values %{$trial_data->{design_details}};
+        my @expected_properties;
+        for my $plot (@plots) {
+            # These inputs contain one occurrence of each accession. Its field
+            # counter is 1; its recorded design replication stays as uploaded.
+            my %properties = (
+                replicate => '1', design_replicate => $plot->{rep_number},
+                block => $plot->{block_number}, 'plot number' => $plot->{plot_number},
+                'is a control' => $plot->{is_a_control}, range => $plot->{range_number},
+                row_number => $plot->{row_number}, col_number => $plot->{col_number},
+            );
+            push @expected_properties, map {
+                [$plot->{plot_name}, $_, $properties{$_}, 0]
+            } sort keys %properties;
+        }
+        my $stored_properties = $dbh->selectall_arrayref(q{
+            SELECT s.uniquename,t.name,p.value,p.rank
+            FROM stock s JOIN stockprop p USING(stock_id)
+            JOIN cvterm t ON t.cvterm_id=p.type_id
+            JOIN nd_experiment_stock nes USING(stock_id)
+            JOIN nd_experiment_project nep USING(nd_experiment_id)
+            WHERE nep.project_id=? ORDER BY s.uniquename,t.name,p.rank
+        }, undef, $trial_id);
+        is_deeply($stored_properties, \@expected_properties,
+            'Stored plots preserve input metadata and separate design tags from occurrences');
+
+        my $caches = $dbh->selectcol_arrayref(q{
+            SELECT p.value FROM projectprop p JOIN cvterm t ON t.cvterm_id=p.type_id
+            JOIN cv ON cv.cv_id=t.cv_id
+            WHERE p.project_id=? AND t.name='trial_layout_json'
+                AND cv.name='project_property' ORDER BY p.rank
+        }, undef, $trial_id);
+        is(scalar @$caches, 1, 'The imported trial has one layout cache');
+        my $layout = @$caches == 1 ? decode_json($caches->[0]) : {};
+        my @cached_fields = qw(plot_name plot_number accession_name rep_number
+            design_rep_number block_number range_number row_number col_number
+            is_a_control design_replicate_recorded accession_occurrence_ready);
+        my @cached_plots = map {[@{$_}{@cached_fields}]}
+            sort {$a->{plot_name} cmp $b->{plot_name}} values %$layout;
+        my @expected_plots = map {
+            [@{$_}{qw(plot_name plot_number stock_name)}, '1',
+                @{$_}{qw(rep_number block_number range_number row_number col_number
+                    is_a_control)}, 1, 1]
+        } @plots;
+        is_deeply(\@cached_plots, \@expected_plots,
+            'The cache preserves each accession and input design with normalized occurrences');
 
     	$f->clean_up_db();
 	}

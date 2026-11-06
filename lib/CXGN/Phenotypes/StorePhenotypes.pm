@@ -74,6 +74,7 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
+use POSIX qw(isfinite);
 use JSON;
 use SGN::Image;
 use CXGN::ZipFile;
@@ -82,6 +83,9 @@ use CXGN::List::Transform;
 use CXGN::Stock;
 use CXGN::Tools::Run;
 use CXGN::Phenotype;
+use CXGN::TimeUtils;
+
+has 'error_code' => (is=>'rw',isa=>'Maybe[Int]');
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -407,7 +411,7 @@ sub create_hash_lookups {
            errors should be breaking, warnings not.
    Desc:   uses the data provided to the object, so the corresponding parameters have to be set.
            This includes the values_hash, metadata_hash, triat_list, and stock_list.
-           The function will check if all the provided identifiers are in teh database use list
+           The function will check if all the provided identifiers are in the database use list
            validators. Then each measurement is submitted to the check_measurement function, which
            checks additional properties (see description there).
 
@@ -475,6 +479,18 @@ sub verify {
         }
 
         return ($warning_message, $error_message);
+    }
+
+    # nothing grew on plots that were not planted (see CXGN::Trial::AccessionChange): their values are
+    # left out by store(), the others are stored (a Field Book, a harvest file list every plot)
+    my $not_planted = $self->not_planted_units();
+    if (@$not_planted) {
+        $warning_message .= "These plots were not planted (or these plants and samples are of plots that were not planted), so their values are not stored: <br/>".join(", <br/>", map { "'$_'" } @$not_planted)."<br/>";
+    }
+    # the values of a rejected plot are stored, but the phenotype searches leave them out
+    my $rejected = $self->rejected_units();
+    if (@$rejected) {
+        $warning_message .= "These plots are rejected (or these plants and samples are of rejected plots): their values are stored, but left out of downloads and analyses while the plots are rejected: ".join(", ", map { "'$_'" } @$rejected)."<br>";
     }
 
     $self->create_hash_lookups();
@@ -642,17 +658,10 @@ sub check_measurement {
         # print STDERR "the trait cvterm id of this trait is: " . $trait_cvterm_id . "\n";
         my $stock_id = $self->bcs_schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
-        # check timestamp format
-        if ($timestamp) { #timestamp_included) {
-            if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
-                if ($timestamp) {
-                    if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                        $error_message .= "<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
-                    }
-                    # remove timezone from timestamp since it is not stored in the database
-                    $timestamp =~ s/[\-\+][0-9]{4}$//;
-                }
-            }
+        if (defined($timestamp) && $timestamp ne '') {
+            my $normalized = eval { CXGN::TimeUtils::normalize_db_timestamp($timestamp) };
+            if ($@) { $error_message .= "Invalid timestamp for $plot_name: $@"; }
+            else { $timestamp = $normalized; $value_array->[1] = $normalized if ref($value_array) eq 'ARRAY'; }
         }
 
         #check that trait value is valid for trait name (but only if we have a trait_value)
@@ -662,6 +671,10 @@ sub check_measurement {
                 my $trait_format_checked = looks_like_number($trait_value);
                 if (!$trait_format_checked && $trait_value ne '') {
                     $error_message .= "<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                }
+
+                if ($trait_format_checked && !isfinite(0 + $trait_value)) {
+                    $error_message .= "<small>This trait value must be finite: Plot Name: $plot_name; Trait Name: $trait_name; Value: $trait_value</small><hr>";
                 }
 
                 my $trait_min = defined $self->check_trait_min_value->{$trait_cvterm_id} ? $self->check_trait_min_value->{$trait_cvterm_id} : undef;
@@ -839,12 +852,101 @@ sub check_measurement {
     return ($warning_message, $error_message);
 }
 
+# The units in values_hash with a value (other than notes and treatments) that
+# were not planted: plots with the stock property not_planted, and the plants,
+# subplots and tissue samples of such plots. Nothing grew there, so they cannot
+# have phenotypes (see CXGN::Trial::AccessionChange).
+sub not_planted_units { return $_[0]->_units_of_marked_plots('not_planted'); }
+
+# The same for rejected plots (stock property rejected): their values are stored
+# but left out of the phenotype searches (see CXGN::Phenotypes::RejectedUnits).
+sub rejected_units { return $_[0]->_units_of_marked_plots('rejected'); }
+
+sub _units_of_marked_plots {
+    my $self = shift;
+    my $property = shift;
+    my $schema = $self->bcs_schema;
+    my $property_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $property, 'stock_property');
+    return [] if !$property_cvterm;
+    my $values = $self->values_hash() || {};
+    my @units = grep { _has_values($values->{$_}) } keys %$values;
+    return [] if !@units;
+    my %relationship = map { my $row = SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_relationship'); ($_ => $row ? $row->cvterm_id() : 0) } qw(plant_of subplot_of tissue_sample_of);
+    my @unit_types = map { my $row = SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_type'); $row ? $row->cvterm_id() : () } qw(plot plant subplot tissue_sample);
+    # each unit and the units above it: the plot (subject) of a plant or subplot, the plot, plant or
+    # subplot (object) of a tissue sample; never an accession, which links to plants of every trial
+    my $h = $schema->storage->dbh()->prepare("WITH RECURSIVE up(unit_id, stock_id) AS (
+            SELECT stock_id, stock_id FROM stock WHERE uniquename = ANY(?) AND type_id = ANY(?)
+            UNION
+            SELECT up.unit_id, parent.stock_id
+            FROM up JOIN stock_relationship r ON (r.type_id IN (?, ?) AND r.object_id = up.stock_id) OR (r.type_id = ? AND r.subject_id = up.stock_id)
+            JOIN stock parent ON parent.stock_id = CASE WHEN r.type_id = ? THEN r.object_id ELSE r.subject_id END AND parent.type_id = ANY(?)
+        )
+        SELECT DISTINCT unit.uniquename FROM up
+        JOIN stock unit ON unit.stock_id = up.unit_id
+        JOIN stockprop p ON p.stock_id = up.stock_id AND p.type_id = ? AND p.value = '1'
+        ORDER BY unit.uniquename");
+    # an accession with the name of a unit is not a unit
+    $h->execute(\@units, \@unit_types, $relationship{plant_of}, $relationship{subplot_of}, $relationship{tissue_sample_of}, $relationship{tissue_sample_of}, \@unit_types, $property_cvterm->cvterm_id());
+    my @marked;
+    while (my ($name) = $h->fetchrow_array()) { push @marked, $name; }
+    return \@marked;
+}
+
+# whether the values of a unit in values_hash have a value that would be stored
+# (CXGN::Phenotype skips empty values, '.' and NA), other than notes and treatments
+sub _has_values {
+    my $traits = shift;
+    return 0 if ref($traits) ne 'HASH';
+    foreach my $trait (keys %$traits) {
+        next if $trait eq 'notes' || $trait =~ /_TREATMENT:/;
+        my $measurements = $traits->{$trait};
+        return 1 if $trait =~ /^(nirs|transcriptomics|metabolomics)$/ && defined($measurements);
+        next if ref($measurements) ne 'ARRAY';
+        foreach my $m (ref($measurements->[0]) eq 'ARRAY' ? @$measurements : ($measurements)) {
+            next if ref($m) ne 'ARRAY';
+            return 1 if defined($m->[4]) && $m->[4] ne '';
+            return 1 if defined($m->[0]) && (ref($m->[0]) || $m->[0] !~ /^\s*(NA|\.)?\s*$/);
+        }
+    }
+    return 0;
+}
+
+# Serialize with accession/status changes, including a sample's source trial.
+# NO KEY UPDATE permits ordinary FK checks while holding the same project
+# rows used by AccessionChange and the observation-unit writer.
+sub _lock_observation_projects {
+    my ($self)=@_;
+    my $schema=$self->bcs_schema;
+    my $dbh=$schema->storage->dbh;
+    my $cvterm=sub {my $r=SGN::Model::Cvterm->get_cvterm_row($schema,@_);return $r ? $r->cvterm_id : 0};
+    my($plant_of,$subplot_of,$sample_of)=map {$cvterm->($_,'stock_relationship')} qw(plant_of subplot_of tissue_sample_of);
+    my $parents=join(',',map {$cvterm->($_,'stock_type')} qw(plot plant subplot tissue_sample));
+    my $projects=$dbh->selectcol_arrayref(qq{
+        WITH RECURSIVE units(stock_id) AS (
+            SELECT stock_id FROM stock WHERE stock_id=ANY(?)
+          UNION
+            SELECT parent.stock_id FROM units u
+            JOIN stock_relationship r ON
+                (r.object_id=u.stock_id AND r.type_id IN ($plant_of,$subplot_of)) OR
+                (r.subject_id=u.stock_id AND r.type_id=$sample_of)
+            JOIN stock parent ON parent.stock_id=CASE WHEN r.type_id=$sample_of THEN r.object_id ELSE r.subject_id END
+                AND parent.type_id IN ($parents)
+        )
+        SELECT DISTINCT nep.project_id FROM units u
+        JOIN nd_experiment_stock nes ON nes.stock_id=u.stock_id
+        JOIN nd_experiment_project nep USING(nd_experiment_id)
+    },undef,$self->stock_id_list);
+    $dbh->selectcol_arrayref('SELECT project_id FROM project WHERE project_id=ANY(?) ORDER BY project_id FOR NO KEY UPDATE',undef,$projects) if @$projects;
+}
+
 sub store {
     my $self = shift;
     # print STDERR "CXGN::Phenotypes::StorePhenotypes store\n";
 
     $self->create_hash_lookups();
-    my %linked_data = %{$self->get_linked_data()};
+    my %linked_data;
+    $self->error_code(undef);
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes so they can be handled separately
@@ -866,7 +968,8 @@ sub store {
     my $user_id = $self->user_id;
     my $archived_file = $self->metadata_hash->{'archived_file'};
     my $archived_file_type = $self->metadata_hash->{'archived_file_type'};
-    my $operator = $self->metadata_hash->{'operator'};
+    my $upload_operator = $self->metadata_hash->{'operator'};
+    my $operator = $upload_operator;
     my $upload_date = $self->metadata_hash->{'date'};
     my $success_message;
 
@@ -901,8 +1004,29 @@ sub store {
     }
 
     # print STDERR "DATA: ".Dumper(\%data);
-    ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
+
+    my(%not_planted,%rejected);
+    ## Use one transaction for values, statuses and archive registration.
     my $coderef = sub {
+        $self->_lock_observation_projects;
+        # Another writer can have committed while this object was being
+        # verified. Rebuild all value lookups and status snapshots under lock.
+        for my $lookup (qw(unique_value_trait_stock unique_trait_stock unique_trait_stock_phenotype_id unique_value_trait_stock_timestamp unique_trait_stock_timestamp unique_trait_stock_timestamp_phenotype_id check_file_stock_trait_duplicates)) {
+            $self->$lookup({});
+        }
+        $rs->reset;
+        %data=();
+        while (my $row=$rs->next) {
+            $data{$row->get_column('uniquename')}=[$row->get_column('stock_id'),$row->get_column('nd_geolocation_id'),$row->get_column('project_id')];
+        }
+        if (grep {!exists($data{$_})} keys %{$self->values_hash}) {
+            $self->error_code(409);
+            die "Observation unit names or layouts changed during the upload; reload the current units.\n";
+        }
+        $self->create_hash_lookups;
+        %linked_data=%{$self->get_linked_data()};
+        %not_planted=map {$_=>1} @{$self->not_planted_units};
+        %rejected=map {$_=>1} @{$self->rejected_units};
         my %trait_and_stock_to_overwrite;
         my @overwritten_values;
         my $new_count = 0;
@@ -910,13 +1034,22 @@ sub store {
 	my $previously_stored_skip_count = 0;
         my $overwrite_count = 0;
         my $remove_count = 0;
+        my %not_stored;   # units that were not planted, whose values are left out
 
         # print STDERR "(store) values hash ".Dumper($self->values_hash());
         # foreach my $plot_name (@plot_list) {
         foreach my $plot_name (keys %{$self->values_hash()}) {
+            $operator=$upload_operator;
             my $stock_id = $data{$plot_name}[0];
             my $location_id = $data{$plot_name}[1];
             my $project_id = $data{$plot_name}[2];
+            # of a unit that was not planted, only notes and treatments are stored
+            my $not_planted = $not_planted{$plot_name};
+            if ($not_planted) {
+                my @values = keys %{ $self->values_hash()->{$plot_name} };
+                $not_stored{$plot_name} = 1 if grep { $_ ne 'notes' && !/_TREATMENT:/ } @values;
+                next if !grep { $_ eq 'notes' || /_TREATMENT:/ } @values;
+            }
 
             # create plot-wide nd_experiment entry
 
@@ -939,21 +1072,21 @@ sub store {
 
             # Check if there is nirs data for this plot
             my $nirs_hashref = $self->values_hash->{$plot_name}->{'nirs'};
-            if (defined $nirs_hashref) {
+            if (defined $nirs_hashref && !$not_planted) {
                 $self->store_high_dimensional_data($nirs_hashref, $experiment->nd_experiment_id(), 'nirs_spectra');
                 $new_count++;
             }
 
             # Check if there is transcriptomics data for this plot
             my $transcriptomics_hashref = $self->values_hash->{$plot_name}->{'transcriptomics'};
-            if (defined $transcriptomics_hashref) {
+            if (defined $transcriptomics_hashref && !$not_planted) {
                 $self->store_high_dimensional_data($transcriptomics_hashref, $experiment->nd_experiment_id(), 'transcriptomics');
                 $new_count++;
             }
 
             # Check if there is metabolomics data for this plot
             my $metabolomics_hashref = $self->values_hash->{$plot_name}->{'metabolomics'};
-            if (defined $metabolomics_hashref) {
+            if (defined $metabolomics_hashref && !$not_planted) {
                 $self->store_high_dimensional_data($metabolomics_hashref, $experiment->nd_experiment_id(), 'metabolomics');
                 $new_count++;
             }
@@ -968,6 +1101,7 @@ sub store {
                     print STDERR "skipping notes trait (already stored as stockprop)...\n";
                     next;
                 }
+                next if $not_planted && $trait_name !~ /_TREATMENT:/;
                 my $trait_cvterm = $self->trait_objs->{$trait_name};
 
                 if (!$trait_cvterm) {
@@ -1002,13 +1136,10 @@ sub store {
 
                         $phenotype_object->value($trait_value);
                         my $timestamp = $value_array->[1];
-                        # remove timezone from timestamp since it is not stored in the database
-                        $timestamp =~ s/[\-\+][0-9]{4}$//;
-
-                        if ($timestamp eq "") { $timestamp = undef; }
+                        $timestamp = CXGN::TimeUtils::normalize_db_timestamp($timestamp);
                         $phenotype_object->collect_date($timestamp);
 
-                        $operator = $value_array->[2] ? $value_array->[2] : $operator;
+                        $operator = defined($value_array->[2]) && $value_array->[2] ne '' ? $value_array->[2] : $upload_operator;
                         $phenotype_object->operator($operator);
 
                         my $observation = $value_array->[3];
@@ -1083,6 +1214,32 @@ sub store {
                             $old_phenotype_id = $self->unique_trait_stock_timestamp_phenotype_id->{$trait_cvterm_id, $stock_id, $timestamp};
                         }
 
+                        if (defined($observation) && $observation ne '') {
+                            my $rows = $schema->storage->dbh->selectall_arrayref('SELECT DISTINCT p.cvalue_id, p.value, p.collect_date, p.operator, nes.stock_id FROM phenotype p JOIN nd_experiment_phenotype nep USING(phenotype_id) JOIN nd_experiment_stock nes USING(nd_experiment_id) WHERE p.phenotype_id = ?', {Slice => {}}, $observation);
+                            die "Observation $observation does not match the requested observation unit and trait.\n"
+                                if @$rows != 1 || $rows->[0]->{stock_id} != $stock_id || $rows->[0]->{cvalue_id} != $trait_cvterm_id;
+                            my $previous_time=CXGN::TimeUtils::normalize_db_timestamp($rows->[0]->{collect_date});
+                            my $provided_time=$value_array->[7];
+                            my $requested_time=ref($provided_time) eq 'HASH' && !$provided_time->{timestamp} ? $previous_time : $timestamp;
+                            if (($requested_time // '') ne ($previous_time // '')) {
+                                my ($collision)=$schema->storage->dbh->selectrow_array(
+                                    'SELECT p.phenotype_id FROM phenotype p JOIN nd_experiment_phenotype nep USING(phenotype_id) JOIN nd_experiment_stock nes USING(nd_experiment_id) WHERE nes.stock_id=? AND p.cvalue_id=? AND p.collect_date IS NOT DISTINCT FROM ?::timestamp AND p.phenotype_id<>? LIMIT 1',
+                                    undef,$stock_id,$trait_cvterm_id,$requested_time,$observation);
+                                if ($collision) {
+                                    $self->error_code(409);
+                                    die "Another observation already uses the requested unit, variable and timestamp.\n";
+                                }
+                            }
+                            $old_phenotype_id = $observation;
+                            $old_value = $rows->[0]->{value};
+                            my $provided = $value_array->[7];
+                            if (ref($provided) eq 'HASH') {
+                                $timestamp = CXGN::TimeUtils::normalize_db_timestamp($rows->[0]->{collect_date}) if !$provided->{timestamp};
+                                $operator = $rows->[0]->{operator} if !$provided->{collector};
+                                $phenotype_object->collect_date($timestamp);
+                                $phenotype_object->operator($operator);
+                            }
+                        }
                         $phenotype_object->old_value($old_value);
                         $phenotype_object->phenotype_id($old_phenotype_id);
                         if ($self->overwrite_values()) {
@@ -1134,6 +1291,12 @@ sub store {
                         print STDERR "STORING THE VALUE $trait_value FOR TRAIT $trait_cvterm_id\n";
 
                         my $result = $phenotype_object->store();
+                        # An ID update keeps the original experiment. Archive the
+                        # accepted input against that actual measurement graph too.
+                        my $actual_experiments = $schema->storage->dbh->selectcol_arrayref(
+                            'SELECT DISTINCT nd_experiment_id FROM nd_experiment_phenotype WHERE phenotype_id=?',
+                            undef, $phenotype_object->phenotype_id);
+                        $experiment_ids{$_}=1 for @$actual_experiments;
 
                         print STDERR "RESULT FROM STORE: ".Dumper($result)."\n";
 
@@ -1174,7 +1337,7 @@ sub store {
 
                         #     elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
 
-                        #         print STDERR "TYPE IS MULTIPE OR TIME SERIES...\n";
+                        #         print STDERR "TYPE IS MULTIPLE OR TIME SERIES...\n";
                         #         # otherwise, we deal with a time series and we add a new value
                         #         # if there is no other exact same value with exactly the same timestamp
                         #         #
@@ -1199,7 +1362,7 @@ sub store {
                         #         elsif ($self->remove_values()) {
 
                         #             print STDERR "REMOVE VALUES IS SET...\n";
-                        #             # if observations are emtpy, with this option,
+                        #             # if observations are empty, with this option,
                         #             # remove the measurement from the database
                         #             #
                         #             $phenotype_object->phenotype_id($phenotype_id);
@@ -1235,10 +1398,15 @@ sub store {
                         my $external_references_stored;
                         if ($external_references) {
                             $external_references_stored = $phenotype_object->store_external_references($external_references);
+                            die "The observation references could not be stored.\n" if ref($external_references_stored) eq 'HASH' && $external_references_stored->{error};
                         }
 
                         my $observationVariableDbId = $trait_cvterm->cvterm_id;
                         my $observation_id = $phenotype_object->phenotype_id;
+                        my $stored=defined($observation_id) ? $schema->resultset('Phenotype::Phenotype')->find($observation_id) : undef;
+                        my $stored_value=$stored ? $stored->value : $trait_value;
+                        my $stored_time=$stored ? $stored->get_column('collect_date') : $timestamp;
+                        my $stored_operator=$stored ? $stored->operator : $operator;
                         my %details = (
                             "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
                             "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
@@ -1249,14 +1417,14 @@ sub store {
                             "observationVariableDbId"=> qq|$observationVariableDbId|,
                             "observationVariableName"=> $trait_cvterm->name,
                             "studyDbId"=> qq|$project_id|,
-                            "uploadedBy"=> $operator ? $operator : "",
+                            "uploadedBy"=> defined($upload_operator) ? $upload_operator : "",
                             "additionalInfo" => $additional_info_stored,
                             "externalReferences" => $external_references_stored,
-                            "value" => $trait_value
+                            "value" => $stored_value
                             );
 
-                        if ($timestamp) { $details{'observationTimeStamp'} = $timestamp }
-                        if ($operator) { $details{'collector'} = $operator }
+                        $details{observationTimeStamp}=CXGN::TimeUtils::db_time_to_iso($stored_time) if defined($stored_time) && $stored_time ne '';
+                        $details{collector}=$stored_operator if defined($stored_operator);
 
                         push @stored_details, \%details;
 
@@ -1278,6 +1446,12 @@ sub store {
         $success_message .= "$overwrite_count previously stored values overwritten<br>";
 
         $success_message .= "$remove_count previously stored values removed<br><br>";
+        if (%not_stored) {
+            $success_message .= scalar(keys %not_stored)." unit(s) were not planted, so their values were not stored: ".join(", ", sort keys %not_stored)."<br><br>";
+        }
+        if (%rejected) {
+            $success_message .= scalar(keys %rejected)." unit(s) belong to rejected plots; their values were stored and are left out of downloads and analyses: ".join(", ", sort keys %rejected)."<br><br>";
+        }
         my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
         my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);
         if (scalar(@$obsoleted_files) > 0){
@@ -1286,6 +1460,10 @@ sub store {
                 $success_message .= " ".$_->[1];
             }
         }
+        # Metadata uses the same database transaction as the measurements.
+        # A failed archive registration must not leave a committed value behind.
+        $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids) if $archived_file;
+        $self->save_archived_images_metadata(\%nd_experiment_md_images) if keys %nd_experiment_md_images;
     };
 
     try {
@@ -1298,14 +1476,6 @@ sub store {
         $error_message = $transaction_error;
         # print STDERR "Transaction error storing phenotypes: $transaction_error\n";
         return ($error_message, $success_message);
-    }
-
-    if ($archived_file) {
-        $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
-    }
-
-    if (scalar(keys %nd_experiment_md_images) > 0) {
-        $self->save_archived_images_metadata(\%nd_experiment_md_images);
     }
 
     return ($error_message, $success_message, \@stored_details);
@@ -1493,27 +1663,16 @@ sub save_archived_file_metadata {
         $md5checksum = $md5->hexdigest();
     }
 
-    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
-    $md_row->insert();
-    my $file_row = $self->metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_file),
-            dirname => dirname($archived_file),
-            filetype => $archived_file_type,
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-    $file_row->insert();
-
-    foreach my $nd_experiment_id (keys %$experiment_ids) {
-        ## Link the file to the experiment
-        my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")
-            ->create({
-                nd_experiment_id => $nd_experiment_id,
-                file_id => $file_row->file_id(),
-            });
-        $experiment_files->insert();
-        #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+    my $dbh=$self->bcs_schema->storage->dbh;
+    my ($metadata_id)=$dbh->selectrow_array(
+        'INSERT INTO metadata.md_metadata (create_person_id) VALUES (?) RETURNING metadata_id',
+        undef, $self->user_id);
+    my ($file_id)=$dbh->selectrow_array(
+        'INSERT INTO metadata.md_files (basename, dirname, filetype, md5checksum, metadata_id) VALUES (?, ?, ?, ?, ?) RETURNING file_id',
+        undef, basename($archived_file), dirname($archived_file), $archived_file_type, $md5checksum, $metadata_id);
+    for my $experiment_id (keys %$experiment_ids) {
+        $dbh->do('INSERT INTO phenome.nd_experiment_md_files (nd_experiment_id, file_id) VALUES (?, ?)',
+            undef, $experiment_id, $file_id);
     }
 }
 

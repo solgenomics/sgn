@@ -1,3 +1,19 @@
+# Load the explicit analytical recorded-design-tag contract.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "design_replication.R"), local = TRUE)
+
 # ################################################################################
 # # Modeling Spatial Variation
 # ################################################################################
@@ -43,10 +59,11 @@ spatialHeaders <- args[6]
 # ################################################################################
 # # read in the phenotypic data
 
-userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE, check.names = FALSE)
+userPheno <- read_analysis_phenotypes(phenotypeFile)
 spatialPheno <- read.delim(spatialFile, header = TRUE, sep = "\t", fill = TRUE)
 colnames(spatialPheno) <- c("Trait", "Data.Quality", "Moran.P.Value", "Correction.Needed")
 traits <- spatialPheno$Trait[spatialPheno$Correction.Needed == "YES"]
+if (length(traits)) assert_genotype_name_identity(userPheno)
 # The user should be able to select their response variables from a drop-down menu
 #    of the column names of the userPheno object. Then, those strings should be passed
 #    to this vector, 'userResponse'.
@@ -64,7 +81,7 @@ output <- data.frame(
     germplasmName = userPheno$germplasmName,
     rowNumber = userPheno$rowNumber,
     colNumber = userPheno$colNumber,
-    replicate = userPheno$replicate,
+    replicate = ifelse(is.na(recorded_design_replicates(userPheno)), "", recorded_design_replicates(userPheno)),
     blockNumber = userPheno$blockNumber,
     plotNumber = userPheno$plotNumber
 )
@@ -128,6 +145,15 @@ for (trait in userResponse) {
     userPheno$residuals <- residuals[["residuals(spatial_model)"]]
 
     plot_adjusted_vals <- merge(userPheno, acc_blues, by = 'germplasmName', sort = FALSE, all.x = TRUE)
+    if (anyNA(userPheno$observationUnitName) || anyDuplicated(userPheno$observationUnitName) ||
+        anyDuplicated(plot_adjusted_vals$observationUnitName)) {
+        stop("Spatial correction requires unique, nonmissing observationUnitName values.")
+    }
+    plot_order <- match(userPheno$observationUnitName, plot_adjusted_vals$observationUnitName)
+    if (anyNA(plot_order)) {
+        stop("Spatial correction could not match every corrected value to its observation unit.")
+    }
+    plot_adjusted_vals <- plot_adjusted_vals[plot_order, , drop = FALSE]
     rownames(plot_adjusted_vals) <- plot_adjusted_vals$observationUnitName
 
     coordinates <- userPheno[, c("rowNumber", "colNumber"), drop = FALSE]

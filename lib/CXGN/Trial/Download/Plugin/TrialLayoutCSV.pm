@@ -62,7 +62,7 @@ sub download {
         push @trial_ids, (@{$self->trial_list});
     }
 
-    open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
+    open(my $F, ">:encoding(UTF-8)", $self->filename()) || die "Can't open file ".$self->filename();
 
     my $it = 0;
     foreach my $trial_id (@trial_ids) {
@@ -89,9 +89,8 @@ sub download {
         }
         no warnings 'uninitialized';
         foreach my $l (@output_array){
-            print $F '"';
-            print $F join '","', @$l;
-            print $F '"';
+            # every value in quotes, quotes in a value doubled (names and a reject_reason are free text)
+            print $F join(',', map { my $v = $_ // ''; $v =~ s/"/""/g; "\"$v\"" } @$l);
             print $F "\n";
         }
         $it++;

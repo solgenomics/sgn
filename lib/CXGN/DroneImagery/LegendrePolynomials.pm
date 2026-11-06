@@ -14,8 +14,9 @@ The random regression models in the drone imagery analytics fit one coefficient 
 Legendre polynomial order. This module evaluates a fitted set of those coefficients at
 a given (scaled) time point, returning the summed value.
 
-Orders P0 through P6 are supported. Coefficients beyond P6 are skipped with a message
-on STDERR.
+The raw-polynomial utility supports P0 through P6. Drone model readback uses
+normalized_legendre_polynomial_sum(), matching the supplied R leg() basis and
+retaining the signs of all fitted coefficients.
 
 =head1 AUTHORS
 
@@ -23,6 +24,8 @@ on STDERR.
 
 use strict;
 use warnings;
+use Scalar::Util qw(looks_like_number);
+use POSIX qw(isfinite);
 
 # The Legendre polynomials P0..P6, in order, each scaled by its random regression
 # coefficient. Every entry takes ($b, $time) and returns that term's contribution.
@@ -54,7 +57,6 @@ sub legendre_polynomial_sum {
     my $value = 0;
     my $coeff_counter = 0;
     foreach my $b (@$coeffs) {
-        next if $b < 0;
         my $legendre_term = $legendre_coeff_subs[$coeff_counter];
         if (!$legendre_term) {
             print STDERR "No Legendre polynomial defined for coefficient number $coeff_counter. Skipping it.\n";
@@ -65,6 +67,38 @@ sub legendre_polynomial_sum {
         $coeff_counter++;
     }
     return $value;
+}
+
+=head2 normalized_legendre_polynomial_sum($coefficients, $scaled_time, $intercept_one)
+
+Evaluate the normalized Legendre basis used by enhancer::leg() and the Drone
+Sommer/F90 builders. Time is scaled from the fitted range to [0,1], then mapped
+to [-1,1]. Order n has normalization sqrt((2*n+1)/2). Optional intercept_one
+multiplies the entire basis by sqrt(2), exactly as R leg(intercept1=TRUE).
+Signed coefficients remain at their original polynomial orders.
+
+=cut
+
+sub normalized_legendre_polynomial_sum {
+    my ($coefficients, $scaled_time, $intercept_one) = @_;
+    die "Legendre coefficients must be an array.\n" unless ref($coefficients) eq 'ARRAY';
+    die "Legendre time must be finite and numeric.\n" unless defined($scaled_time) && looks_like_number($scaled_time) && isfinite($scaled_time);
+    my $x = 2*$scaled_time - 1;
+    my ($previous, $current) = (1, $x);
+    my $value = 0;
+    for my $order (0..$#$coefficients) {
+        my $coefficient = $coefficients->[$order];
+        die "Legendre coefficients must be finite and numeric.\n" unless defined($coefficient) && looks_like_number($coefficient) && isfinite($coefficient);
+        my $polynomial;
+        if ($order == 0) { $polynomial = 1; }
+        elsif ($order == 1) { $polynomial = $x; }
+        else {
+            $polynomial = ((2*$order-1)*$x*$current - ($order-1)*$previous)/$order;
+            ($previous, $current) = ($current, $polynomial);
+        }
+        $value += $coefficient * sqrt((2*$order+1)/2) * $polynomial;
+    }
+    return $intercept_one ? $value*sqrt(2) : $value;
 }
 
 1;

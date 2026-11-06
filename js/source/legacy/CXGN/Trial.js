@@ -710,15 +710,6 @@ jQuery(document).ready(function ($) {
       open_replace_trial_accession_dialog();
     });
 
-    function open_subtitute_plot_accession_dialog() {
-      jQuery('#substitute_plot_stocks_dialog').modal('show');
-    }
-
-    $('#substitute_stock_submit').click(function () {
-      jQuery('#edit_field_map_dialog').modal('hide');
-      open_subtitute_plot_accession_dialog();
-    });
-
     jQuery('#barcode_design_option_link').click(function () {
         $('#barcode_design_option_dialog').modal("show");
     });

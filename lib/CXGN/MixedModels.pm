@@ -130,8 +130,26 @@ generates the model string, in lme4 format, from the current parameters
 
 =cut
 
+# Historical analytical files call this slot replicate; it has always meant
+# the recorded design tag, not the operational accession occurrence counter.
+sub _design_factor_name {
+    my ($name) = @_;
+    return defined($name) && $name eq 'replicate' ? 'designReplicate' : $name;
+}
+
+sub _canonical_design_factors {
+    my ($self) = @_;
+    for my $attribute (qw(fixed_factors random_factors)) {
+        $self->$attribute([map {_design_factor_name($_)} @{$self->$attribute()}]);
+    }
+    for my $attribute (qw(fixed_factors_interaction variable_slope_intersects random_factors_interaction)) {
+        $self->$attribute([map {ref($_) eq 'ARRAY' ? [map {_design_factor_name($_)} @$_] : $_} @{$self->$attribute()}]);
+    }
+}
+
 sub generate_model {
     my $self = shift;
+    $self->_canonical_design_factors();
 
     my $tempfile = $self->tempfile();
     my $dependent_variables = $self->dependent_variables();
@@ -176,8 +194,7 @@ sub generate_model {
 	if (exists($variable_slope_groups->[0]) && exists($variable_slope_groups->[1])) {
 	    my $term = " (1+$variable_slope_groups->[0] \| $variable_slope_groups->[1]) ";
 	    print STDERR "TERM: $term\n";
-	    $formatted_variable_slope_intersects .= $term;
-	    push @addends, $formatted_variable_slope_intersects;
+	    push @addends, $term;
 	}
     }
 
@@ -190,9 +207,7 @@ sub generate_model {
  #   else {
     foreach my $rf (@$random_factors) {
 	if ($rf) {
-	    $formatted_random_factors .= "(1|$rf)" ;
-	    print STDERR " formatted random factor now $formatted_random_factors\n";
-	    push @addends, $formatted_random_factors;
+	    push @addends, "(1|$rf)";
 	}
     }
     
@@ -204,6 +219,7 @@ sub generate_model {
 
 sub generate_model_sommer {
     my $self = shift;
+    $self->_canonical_design_factors();
 
     my $tempfile = $self->tempfile();
     my @dependent_variables_cleaned = map { make_R_variable_name($_) } @{$self->dependent_variables()};
@@ -307,7 +323,7 @@ sub generate_model_sommer {
 	    $formula .=" ~ " .$mmer_random_factors ;
 	}
 	if ($mmer_fixed_factors_interaction) {
-	    $formula.=" ".$mmer_fixed_factors_interaction;
+	    $mmer_fixed_factors .= " " . $mmer_fixed_factors_interaction;
 	}
 	if ($mmer_variable_slope_intersects) {
 	    $formula.=" ".$mmer_variable_slope_intersects;
@@ -333,6 +349,7 @@ sub generate_model_sommer {
 
 sub generate_model_spl2D {
     my $self = shift;
+    $self->_canonical_design_factors();
 
     my $tempfile = $self->tempfile();
     my @dependent_variables_cleaned = map { make_R_variable_name($_) } @{$self->dependent_variables()};
@@ -412,7 +429,7 @@ sub generate_model_spl2D {
 	    $formula .= $mmer_random_factors ;
 	}
 	if ($mmer_fixed_factors_interaction) {
-	    $formula.=" ".$mmer_fixed_factors_interaction;
+	    $mmer_fixed_factors .= " " . $mmer_fixed_factors_interaction;
 	}
 	if ($mmer_variable_slope_intersects) {
 	    $formula.=" ".$mmer_variable_slope_intersects;
@@ -443,7 +460,7 @@ traits.
 The files from the dataset will contain trait names that are incompatible with R. These names are converted using the clean_file subroutine. The conversion takes place and is saved in a file with a .clean extension. Then, the .clean file is moved to the previous file name, such that there is not difference in file naming.
 
 
-The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The inital result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete. 
+The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The initial result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete.
   
 
 
@@ -451,6 +468,7 @@ The result files will initially contain these R-based names as well. The convers
 
 sub run_model {
     my $self = shift;
+    $self->_canonical_design_factors();
     my $backend = shift;
     my $cluster_host = shift;
     my $cluster_shared_tempdir = shift;
@@ -497,7 +515,7 @@ sub run_model {
 	# generate params_file
 	#
 	my $param_file = $self->tempfile().".params";
-	open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
+	open(my $F, ">:encoding(UTF-8)", $param_file) || die "Can't open $param_file for writing.";
 	print $F "dependent_variables <- c($dependent_variables_R)\n";
 	print $F "random_factors <- c($random_factors)\n";
 	print $F "fixed_factors <- c($fixed_factors)\n";
@@ -519,6 +537,12 @@ sub run_model {
 	
 	# run r script to create model
 	#
+        # A prepared phenotype file can be analysed repeatedly with different
+        # models. No previous result type may survive a new submission.
+        for my $suffix (qw(.model_error .adjustedBLUPs .BLUPs .BLUEs .adjustedBLUEs .anova .varcomp)) {
+            my $previous = $self->tempfile() . $suffix;
+            unlink($previous) or die "Cannot clear previous model result $previous" if -e $previous;
+        }
 	my $cmd = "R CMD BATCH  '--args datafile=\"".$clean_tempfile."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
 	# print STDERR "running R command $cmd...\n";
 	
@@ -555,12 +579,20 @@ sub run_model {
 	}
 
 	my $finished = $job->retrieve_finish_timestamp();
-	if (!$finished) {
+	if (!$finished || -e $self->tempfile().".model_error") {
 		$job->update_status("failed");
 	} else {
 		$job->update_status("finished");
 	}
 	
+        if (-e $self->tempfile().".model_error") {
+            open(my $model_error, '<:encoding(UTF-8)', $self->tempfile().".model_error") or die "Cannot read model error.";
+            local $/;
+            my $message = <$model_error>;
+            close($model_error);
+            die $message;
+        }
+
 	# replace the R-compatible traits with original trait names
 	#
 	print STDERR "Converting files back to non-R headers...\n";
@@ -619,10 +651,14 @@ sub clean_file {
     my $self = shift;
     my $file = shift;
 
-    open(my $PF, "<", $file) || die "Can't open pheno file ".$file."_phenotype.txt";
-    open(my $CLEAN, ">", $file.".clean") || die "Can't open ".$file.".clean for writing";
+    open(my $PF, "<:encoding(UTF-8)", $file) || die "Can't open pheno file ".$file."_phenotype.txt";
+    open(my $CLEAN, ">:encoding(UTF-8)", $file.".clean") || die "Can't open ".$file.".clean for writing";
 
-    open(my $TRAITS, ">", $file.".traits") || die "Can't open ".$file.".traits for writing";
+    # On a second run the current header is already cleaned. Retain its
+    # original ontology names rather than replacing the conversion map with
+    # identity mappings.
+    my $previous_traits = -e $file.".traits" ? $self->read_conversion_matrix($file.".traits") : {};
+    open(my $TRAITS, ">:encoding(UTF-8)", $file.".traits") || die "Can't open ".$file.".traits for writing";
 
     
     my $header = <$PF>;
@@ -632,12 +668,14 @@ sub clean_file {
 
     my @file_traits = @fields[ 39 .. @fields-1 ];
     my @other_headers = @fields[ 0 .. 38 ];
+    @other_headers = map {$_ eq 'replicate' ? 'designReplicate' : $_} @other_headers;
 
     print STDERR "FIELDS: ".Dumper(\@file_traits);
 
     foreach my $t (@file_traits) {
-	my $R_t = make_R_variable_name($t);
-	print $TRAITS "$R_t\t$t\n";
+        my $original = $previous_traits->{$t} // $t;
+	my $R_t = make_R_variable_name($original);
+	print $TRAITS "$R_t\t$original\n";
 	$t = $R_t;
     }
 
@@ -651,11 +689,12 @@ sub clean_file {
     }
 
     close($PF);
-    print STDERR "moving $file to $file.before_clean...\n";
-    move($file, $file.".before_clean");
-
-    print STDERR "moving $file.clean to $file...\n";
-    move($file.".clean", $file);
+    close($CLEAN);
+    close($TRAITS);
+    if (!-e $file.".before_clean") {
+        move($file, $file.".before_clean") or die "Cannot preserve the original phenotype input.";
+    }
+    move($file.".clean", $file) or die "Cannot replace the cleaned phenotype input.";
 
     return $file;
 }
@@ -666,10 +705,10 @@ sub convert_file_headers_back_to_breedbase_traits {
     my $file = shift;
     my $conversion_matrix = shift;
 
-    open(my $F, "<", $file) ||  die "Can't open $file\n";
+    open(my $F, "<:encoding(UTF-8)", $file) ||  die "Can't open $file\n";
 
     print STDERR "Opening ".$self->tempfile().".original_traits for writing...\n";
-    open(my $G, ">", $file.".original_traits") || die "Can't open $file.original_traits";
+    open(my $G, ">:encoding(UTF-8)", $file.".original_traits") || die "Can't open $file.original_traits";
     
     my $header = <$F>;
     chomp($header);
@@ -711,7 +750,7 @@ sub read_conversion_matrix {
 
     my $conversion_file = $file;
     
-    open(my $F, "<", $conversion_file) || die "Can't open file $conversion_file";
+    open(my $F, "<:encoding(UTF-8)", $conversion_file) || die "Can't open file $conversion_file";
 
     my %conversion_matrix;
     

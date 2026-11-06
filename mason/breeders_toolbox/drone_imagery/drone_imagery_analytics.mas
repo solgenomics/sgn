@@ -36,7 +36,7 @@
 
                     <div class="well well-sm">
                         <select class="form-control" id="drone_imagery_analytics_select_input">
-                            <!--option value="">Sommer Multi/Uni Spatial 2Dspl, REMLf90 RR Identiy/Env, ASREML Uni Spatial AR1xAR1</option-->
+                            <!--option value="">Sommer Multi/Uni Spatial 2Dspl, REMLf90 RR Identity/Env, ASREML Uni Spatial AR1xAR1</option-->
                             <!--option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option-->
 
                             <!--option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option-->
@@ -118,7 +118,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Number Interations: </label>
+                                    <label class="col-sm-3 control-label">Number Iterations: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="drone_imagery_analytics_number_iterations">
                                             <option value="10">10</option>
@@ -285,7 +285,7 @@
                             <hr>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Inversion Tolerance: </label>
+                                    <label class="col-sm-3 control-label">Sommer Inversion Tolerance: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="drone_image_analytics_tolparinv_select">
                                             <option value="0.000001">0.000001</option>
@@ -299,6 +299,7 @@
                                             <option value="0.2">0.2</option>
                                             <option value="0.5">0.5</option>
                                         </select>
+                                        <p class="help-block">This setting applies to Sommer matrix inversion. BLUPF90 and AIREMLF90 use their separate standard iteration convergence criterion, recorded with the execution parameters.</p>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -802,6 +803,9 @@ jQuery(document).ready(function() {
                     manage_drone_imagery_analytics_protocol_id = response.analytics_protocol_id;
 
                     var html = '<h4>Summary :</h4><ul>';
+                    if (response.native_variance_summary_version === 2) {
+                        html = '<p><a href="/analytics_protocols/'+response.analytics_protocol_id+'">View saved date variance summary and archived per-plot data</a></p>'+html;
+                    }
                     if (response.sum_square_residual_original) {
                         html = html + '<li>Sum square residual original: '+response.sum_square_residual_original+'</li>';
                     }

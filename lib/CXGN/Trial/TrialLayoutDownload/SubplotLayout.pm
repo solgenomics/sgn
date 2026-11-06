@@ -36,6 +36,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock;
 use CXGN::Stock::Accession;
 use JSON;
+use CXGN::Trial::DesignReplication;
 
 extends 'CXGN::Trial::TrialLayoutDownload';
 
@@ -53,7 +54,10 @@ sub retrieve {
     my $trial_stock_type = $self->trial_stock_type();
     my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json','variety');
+    my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','accession_occurrence','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json','variety','not_planted','rejected','reject_reason');
+
+    $selected_cols{not_planted} = 1 if grep { $_->{not_planted} } values %design;
+    $selected_cols{rejected} = $selected_cols{reject_reason} = 1 if grep { $_->{rejected} } values %design;
 
     $selected_cols{plot_order} = 1 if $include_plot_order;
 
@@ -90,7 +94,8 @@ sub retrieve {
         my $results = CXGN::Trial->get_sorted_plots($schema, [$self->trial_id], $self->plot_order, $self->plot_start);
         if ( $results->{plots} ) {
             foreach (@{$results->{plots}}) {
-                $design{$_->{plot_number}}->{plot_order} = $_->{order};
+                # plots left out of %design (not planted) are not added back
+                $design{$_->{plot_number}}->{plot_order} = $_->{order} if $design{$_->{plot_number}};
             }
         }
     }
@@ -132,6 +137,18 @@ sub retrieve {
     my $sort_key = $include_plot_order ? 'plot_order' : 'plot_number';
     @subplot_design = sort { $a->{$sort_key} <=> $b->{$sort_key} || $a->{subplot_number} <=> $b->{subplot_number} } @subplot_design;
 
+    # Child units can be pooled or have their own recorded local metadata.
+    # Resolve their actual rows instead of copying whichever plot was visited.
+    my $replication = CXGN::Trial::DesignReplication::read($schema,
+        [map {$_->{subplot_id}} @subplot_design]);
+    for my $unit (@subplot_design) {
+        my $record = $replication->{$unit->{subplot_id}};
+        $unit->{design_rep_number} = $record->{value};
+        $unit->{block_number} = $record->{block};
+        $unit->{rep_number} = $record->{occurrence};
+        $unit->{accession_occurrence_ready} = $record->{occurrence_ready};
+    }
+
     foreach my $design_info (@subplot_design) {
         my $line;
         foreach my $c (@possible_cols){
@@ -146,6 +163,14 @@ sub retrieve {
                     push @$line, $trial_year;
                 } elsif ($c eq 'planting_date') {
                     push @$line, $trial_planting_date;
+                } elsif ($c eq 'rep_number') {
+                    push @$line, $design_info->{design_rep_number};
+                } elsif ($c eq 'accession_occurrence') {
+                    push @$line, $design_info->{accession_occurrence_ready} ? $design_info->{rep_number} : undef;
+                } elsif ($c eq 'not_planted' || $c eq 'rejected') {
+                    push @$line, $design_info->{$c} ? 1 : 0;
+                } elsif ($c eq 'reject_reason') {
+                    push @$line, $design_info->{$c} // '';
                 } elsif ($c eq 'tier'){
                     my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
                     my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
