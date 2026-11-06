@@ -200,9 +200,7 @@ sub parse {
                 #print STDERR $trait_value." : ".$timestamp."\n";
 
                 if ( defined($value) && defined($timestamp) ) {
-                    if ($value ne '.'){
-                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
-                    }
+                    $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
                 } else {
                     $parse_result{'error'} = "Value or timestamp missing.";
                     return \%parse_result;
