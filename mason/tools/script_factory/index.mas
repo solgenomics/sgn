@@ -338,7 +338,11 @@ $dataset_id => undef
         <div class="sf-card sf-run-card">
           <div class="sf-card-head">
             <h3>Run the analysis</h3>
-            <button class="btn btn-success btn-lg" id="sf_run"><span class="glyphicon glyphicon-play"></span> Run analysis</button>
+            <div class="sf-run-actions">
+              <span class="sf-run-note" id="sf_run_note"></span>
+              <button class="btn btn-link btn-sm" id="sf_run_again" style="display:none"><span class="glyphicon glyphicon-repeat"></span> Run again</button>
+              <button class="btn btn-success btn-lg" id="sf_run"><span class="glyphicon glyphicon-play"></span> Run analysis</button>
+            </div>
           </div>
           <div id="sf_run_review"></div>
           <div id="sf_run_status" style="display:none">
@@ -572,6 +576,11 @@ jQuery(document).ready(function() {
 .sf-heat td, .sf-heat th { font-size: 11px; padding: 3px 5px !important; text-align: center; }
 .sf-bar { height: 10px; background: var(--sf-accent); border-radius: 3px; display: inline-block; vertical-align: middle; }
 table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
+.sf-run-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.sf-run-note { font-size: 12.5px; color: var(--sf-muted); text-align: right; }
+.sf-run-note.changed { color: #b45309; }
+.sf-app .btn.sf-run-done, .sf-app .btn.sf-run-done[disabled] { background: var(--sf-accent-soft); border: 2px solid var(--sf-accent); color: var(--sf-accent); opacity: 1; cursor: default; font-weight: 600; box-shadow: none; }
+.sf-run-card.sf-run-is-done { border-color: var(--sf-accent); }
 .sf-quickrun { border: 2px solid var(--sf-accent); background: linear-gradient(180deg, var(--sf-accent-soft) 0%, #fff 70%); }
 .sf-quickrun-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
 .sf-quickrun-kicker { color: var(--sf-accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }

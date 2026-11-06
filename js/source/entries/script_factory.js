@@ -40,6 +40,8 @@ const state = {
     designOverrides: {},    // trial -> design
     pendingRecipe: null,    // recipe loaded before a dataset
     script: { id: null, name: null, description: '', is_public: 0, is_owner: 1 },
+    lastRun: null,          // {key, finishedAt, seconds} of the last successful run
+    runFailed: false,
     scriptLoaded: false,    // a saved or imported script was applied (enables "Run whole script")
     missingTraits: [],      // script traits not found in the loaded dataset
     job: null,
@@ -294,11 +296,19 @@ function renderQuickRun() {
     if (state.missingTraits.length) warn += 'Not in this dataset, skipped: <b>' + state.missingTraits.map(esc).join(', ') + '</b>. ';
     if (problems.length) warn += problems.map(esc).join(' ');
     $('#sf_quick_run_warning').html(warn ? alertBox(problems.length ? 'danger' : 'warning', warn) : '');
-    $('#sf_quick_run_btn').prop('disabled', problems.length > 0 || !!state.job);
+    const s = runState();
+    $('#sf_quick_run_btn')
+        .toggleClass('btn-success', s !== 'done').toggleClass('btn-primary', s === 'done')
+        .html(s === 'done' ? '<span class="glyphicon glyphicon-ok-circle"></span> Completed: view results'
+            : s === 'running' ? '<span class="glyphicon glyphicon-refresh sf-spin"></span> Running...'
+            : '<span class="glyphicon glyphicon-play"></span> Run whole script')
+        .prop('disabled', s === 'running' || (s !== 'done' && problems.length > 0));
     box.show();
 }
 
-function quickRun() {
+// force: run even if the results already match the settings (explicit "Load & run")
+function quickRun(force) {
+    if (!force && runState() === 'done') { goTo(6); return; }
     goTo(6);
     if (state.step === 6 && !validateRecipe(buildRecipe()).length && !state.job) runAnalysis();
 }
@@ -404,6 +414,8 @@ function loadDataset() {
             state.exclusions = {};
             state.madrFlags = {};
             state.results = null;
+            state.lastRun = null;
+            state.runFailed = false;
             $('#sf_results').hide();
             if (state.pendingRecipe) {
                 applyRecipeTraits(state.pendingRecipe);
@@ -819,6 +831,7 @@ function renderPipeline() {
     items.push({ t: 'Environmental zones', d: r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin G&times;E test' : 'correlation clustering') + ' by ' + r.zones.unit.replace('_', ' &times; ') + '<br/>' + r.zones.targets.map(x => x === 'index' ? 'index' : esc(shortTrait(x))).join(', ') : 'off', off: !r.zones.enabled });
 
     $('#sf_pipeline').html('<ul class="sf-flow">' + items.map(i => '<li class="' + (i.off ? 'off' : '') + '"><b>' + i.t + '</b>' + i.d + '</li>').join('') + '</ul>');
+    updateRunButton();   // any change to the pipeline may make the last results stale
 }
 
 // ---------------------------------------------------------------------------
@@ -848,7 +861,49 @@ function renderRunReview() {
         cell('Zones', r.zones.enabled ? 'on' : 'off') + '</div>';
     if (problems.length) h += alertBox('warning', problems.map(esc).join('<br/>'));
     $('#sf_run_review').html(h);
-    $('#sf_run').prop('disabled', problems.length > 0 || !!state.job);
+    updateRunButton();
+}
+
+// identifies what a run was computed from: dataset, every setting and the exclusions
+function runKey() {
+    const r = buildRecipe();
+    delete r.name;
+    return JSON.stringify([state.dataset ? state.dataset.token : null, r, Object.keys(state.exclusions).sort()]);
+}
+
+// ready | running | done (results match the current settings) | changed | failed
+function runState() {
+    if (state.job) return 'running';
+    if (state.lastRun && state.results) return state.lastRun.key === runKey() ? 'done' : 'changed';
+    if (state.runFailed) return 'failed';
+    return 'ready';
+}
+
+function updateRunButton() {
+    const s = runState();
+    const problems = validateRecipe(buildRecipe());
+    const look = {
+        ready: ['btn-success', 'play', 'Run analysis'],
+        running: ['btn-default', 'refresh sf-spin', 'Running...'],
+        done: ['sf-run-done', 'ok-circle', 'Analysis completed'],
+        changed: ['btn-warning', 'repeat', 'Re-run with changes'],
+        failed: ['btn-danger', 'repeat', 'Retry analysis']
+    }[s];
+    $('#sf_run').removeClass('btn-success btn-default btn-warning btn-danger sf-run-done').addClass(look[0])
+        .html('<span class="glyphicon glyphicon-' + look[1] + '"></span> ' + look[2])
+        .prop('disabled', s === 'running' || s === 'done' || problems.length > 0);
+    $('#sf_run_again').toggle(s === 'done');
+    $('.sf-run-card').toggleClass('sf-run-is-done', s === 'done');
+    let note = '';
+    if (s === 'done') {
+        const t = state.lastRun.finishedAt;
+        const sec = state.lastRun.seconds;
+        note = 'Finished at ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0') +
+            ' in ' + (sec >= 60 ? Math.floor(sec / 60) + ' min ' : '') + (sec % 60) + ' s';
+    } else if (s === 'changed') {
+        note = 'Settings changed since the last run: the results below are from the previous settings.';
+    }
+    $('#sf_run_note').toggleClass('changed', s === 'changed').text(note);
 }
 
 function pollJob(job, onProgress) {
@@ -869,8 +924,12 @@ function pollJob(job, onProgress) {
 
 function runAnalysis() {
     const recipe = buildRecipe();
-    if (validateRecipe(recipe).length) return;
-    $('#sf_run').prop('disabled', true);
+    if (validateRecipe(recipe).length || state.job) return;
+    const key = runKey();
+    state.job = { pending: true };
+    state.runFailed = false;
+    updateRunButton();
+    renderQuickRun();
     $('#sf_results').hide();
     $('#sf_run_status').show();
     $('#sf_run_progress_text').text('Submitting...');
@@ -889,14 +948,21 @@ function runAnalysis() {
         .then(res => {
             state.results = res;
             state.resultsRecipe = recipe;
+            state.lastRun = { key: key, finishedAt: new Date(), seconds: Math.round((Date.now() - t0) / 1000) };
             renderResults();
         })
-        .catch(e => $('#sf_run_review').append(alertBox('danger', '<b>The analysis failed.</b><pre style="white-space:pre-wrap;margin-top:6px">' + esc(e.message) + '</pre>')))
+        .catch(e => {
+            state.results = null;
+            state.lastRun = null;
+            state.runFailed = true;
+            $('#sf_run_review').append(alertBox('danger', '<b>The analysis failed.</b><pre style="white-space:pre-wrap;margin-top:6px">' + esc(e.message) + '</pre>'));
+        })
         .finally(() => {
             clearInterval(state.elapsedTimer);
             state.job = null;
             $('#sf_run_status').hide();
-            $('#sf_run').prop('disabled', false);
+            updateRunButton();
+            renderQuickRun();
         });
 }
 
@@ -1203,7 +1269,7 @@ function loadScript(id, andRun) {
             } else {
                 $('#sf_dataset_message').html('');
                 renderQuickRun();
-                if (andRun) quickRun(); else goTo(1);
+                if (andRun) quickRun(true); else goTo(1);
             }
         })
         .catch(e => alert(e.message));
@@ -1383,7 +1449,8 @@ export function init(options) {
     $('#sf_open_library').on('click', openLibrary);
     $('#sf_library_list').on('click', '.sf-lib-load', function() { loadScript($(this).data('id'), false); });
     $('#sf_library_list').on('click', '.sf-lib-run', function() { loadScript($(this).data('id'), true); });
-    $('#sf_quick_run_btn').on('click', quickRun);
+    $('#sf_quick_run_btn').on('click', () => quickRun(false));
+    $('#sf_run_again').on('click', runAnalysis);
     $('#sf_quick_review').on('click', () => goTo(2));
     $('#sf_library_list').on('click', '.sf-lib-delete', function() {
         if (!confirm('Delete the script "' + $(this).data('name') + '"?')) return;
