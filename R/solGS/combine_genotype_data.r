@@ -1,3 +1,19 @@
+# Analytical replicate is the recorded design tag, never the field counter.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "../design_replication.R"), local = TRUE)
+
 #formats and combines phenotype (of a single trait)
 #and genotype datasets of multiple
 #populations
@@ -91,35 +107,32 @@ cnt               <- 0
 for (popPhenoFile in allPhenoFiles) {
 
      cnt <- cnt + 1
- 
-     phenoData <- fread(popPhenoFile,
-                        na.strings = c("NA", " ", "--", "-", "."))
-    
-     phenoData <- data.frame(phenoData)
-    
-     phenoTrait <- getAdjMeans(phenoData,
+
+     phenoData <- read_analysis_phenotypes(popPhenoFile)
+
+     phenoTrait <- analysis_adjusted_means(phenoData,
                                traitName=traitName,
                                calcAverages=TRUE)
 
      popIdFile <- basename(popPhenoFile)
      popId     <- str_extract(popIdFile, "\\d+")
      popIds    <- c(popIds, popId)
-    
+
      newTraitName <- paste(traitName, popId, sep = "_")
      colnames(phenoTrait)[2] <- newTraitName
 
      if (cnt == 1 ) {
-         print('no need to combine, yet')       
+         print('no need to combine, yet')
          combinedPhenoPops <- phenoTrait
-         
+
      } else {
          print('combining...phenotypes')
-       
-         combinedPhenoPops <- full_join(combinedPhenoPops, phenoTrait, by='genotypes')           
-     }    
+
+         combinedPhenoPops <- full_join(combinedPhenoPops, phenoTrait, by='germplasmName')
+     }
  }
 
-combinedPhenoPops <- column_to_rownames(combinedPhenoPops, var='genotypes')
+combinedPhenoPops <- column_to_rownames(combinedPhenoPops, var='germplasmName')
 
 # #fill in missing data in combined phenotype dataset
 # #using row means
@@ -154,17 +167,17 @@ for (popGenoFile in allGenoFiles) {
     genoData <- data.frame(genoData)
     message('cnt of genotypes in dataset: ', length(rownames(genoData)))
     genoData <- genoData[!duplicated(genoData[,'V1']), ]
-    message('cnt of unique genotypes in dataset: ', length(rownames(genoData)))		
+    message('cnt of unique genotypes in dataset: ', length(rownames(genoData)))
     rownames(genoData) <- genoData[, 1]
     genoData[, 1] <- NULL
-    
-    popGenoFile <- basename(popGenoFile)     
+
+    popGenoFile <- basename(popGenoFile)
     popId       <- str_extract(popGenoFile, "\\d+")
     popIds      <- c(popIds, popId)
 
     #popMarkers <- colnames(genoData)
     #message("No of markers from population ", popId, ": ", length(popMarkers))
-    
+
    # message("sum of geno missing values: ", sum(is.na(genoData)))
    # genoData <- genoData[, colSums(is.na(genoData)) < nrow(genoData) * 0.5]
    # genoData <- data.frame(genoData)
@@ -179,25 +192,25 @@ for (popGenoFile in allGenoFiles) {
         print('no need to combine, yet')
         message('cnt of genotypes first dataset: ', length(rownames(genoData)))
         combinedGenoPops <- genoData
-        
+
     } else {
         print('combining genotype datasets...')
-        
+
         uniqGenoNames <- unique(rownames(combinedGenoPops))
-      
+
         message('cnt of genotypes in new dataset ', popId, ': ',  length(rownames(genoData)) )
-       
+
         genoData <- genoData[!(rownames(genoData) %in% uniqGenoNames),]
 
         message('cnt of unique genotypes from new dataset ', popId, ': ', length(rownames(genoData)))
 
-        if (!is.null(genoData)) {        
+        if (!is.null(genoData)) {
             combinedGenoPops <- rbind(combinedGenoPops, genoData)
         } else {
             message('dataset ', popId, ' has no unique genotypes.')
         }
-    }   
-    
+    }
+
 }
 
 combinedGenoPops <- combinedGenoPops[order(rownames(combinedGenoPops)), ]

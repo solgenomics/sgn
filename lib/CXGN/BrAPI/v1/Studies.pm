@@ -10,6 +10,7 @@ use CXGN::Trait;
 use CXGN::Stock;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::RejectedUnits;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
@@ -564,6 +565,14 @@ sub studies_layout {
 			if ($design->{$plot_number}->{plant_ids}){
 				$additional_info{plantDbIds} = $design->{$plot_number}->{plant_ids};
 			}
+			# plots that were not planted (see CXGN::Trial::AccessionChange), as in v2
+			if ($design->{$plot_number}->{not_planted}){
+				$additional_info{notPlanted} = JSON::true;
+			}
+			if ($design->{$plot_number}->{rejected}){
+				$additional_info{rejected} = JSON::true;
+				$additional_info{rejectReason} = $design->{$plot_number}->{reject_reason} if defined($design->{$plot_number}->{reject_reason}) && length($design->{$plot_number}->{reject_reason});
+			}
 			my @plot_image_ids;
 			eval {
 	            my $image_id = CXGN::Stock->new({
@@ -580,6 +589,10 @@ sub studies_layout {
             $additional_info{plotImageDbIds} = \@ids;
             $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
             $additional_info{designType} = $design_type;
+            $additional_info{designReplicate} = $design->{$plot_number}->{design_rep_number}
+                if $design->{$plot_number}->{design_replicate_recorded} || defined($design->{$plot_number}->{design_rep_number});
+            $additional_info{accessionOccurrence} = $design->{$plot_number}->{rep_number}
+                if $design->{$plot_number}->{accession_occurrence_ready};
 
             if (exists($seedlots{$plot_id})) {
             	$additional_info{seedLotDbId} = qq|$seedlots{$plot_id}[0]|;
@@ -594,10 +607,10 @@ sub studies_layout {
 				observationUnitDbId => qq|$design->{$plot_number}->{plot_id}|,
 				observationUnitName => $design->{$plot_number}->{plot_name},
 				observationLevel => $cxgn_trial_type->{data_level},
-				replicate => $design->{$plot_number}->{rep_number} ? $design->{$plot_number}->{rep_number} : '',
-				blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
-				Y => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
-				X => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
+				replicate => $design->{$plot_number}->{design_rep_number},
+				blockNumber => defined($design->{$plot_number}->{block_number}) ? $design->{$plot_number}->{block_number} : '',
+				Y => defined($design->{$plot_number}->{row_number}) ? $design->{$plot_number}->{row_number} : '',
+				X => defined($design->{$plot_number}->{col_number}) ? $design->{$plot_number}->{col_number} : '',
 				entryType => $type,
 				germplasmName => $design->{$plot_number}->{accession_name},
 				germplasmDbId => $design->{$plot_number}->{accession_id},
@@ -615,11 +628,11 @@ sub studies_layout {
     } elsif ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls') {
        # if xls or csv or tsv, create tempfile name and place to save it
 
-       my @header_row = ('studyDbId', 'observationUnitDbId', 'observationUnitName', 'observationLevel', 'replicate', 'blockNumber', 'X', 'Y', 'entryType', 'germplasmName', 'germplasmDbId');
+       my @header_row = ('studyDbId', 'observationUnitDbId', 'observationUnitName', 'observationLevel', 'replicate', 'blockNumber', 'X', 'Y', 'entryType', 'germplasmName', 'germplasmDbId', 'accession_occurrence');
        my @data_out;
        push @data_out, \@header_row;
        foreach (@$plot_data){
-           my @row = ($_->{studyDbId}, $_->{observationUnitDbId}, $_->{observationUnitName}, $_->{observationLevel}, $_->{replicate}, $_->{blockNumber}, $_->{X}, $_->{Y}, $_->{entryType}, $_->{germplasmName}, $_->{germplasmDbId});
+           my @row = ($_->{studyDbId}, $_->{observationUnitDbId}, $_->{observationUnitName}, $_->{observationLevel}, $_->{replicate}, $_->{blockNumber}, $_->{X}, $_->{Y}, $_->{entryType}, $_->{germplasmName}, $_->{germplasmDbId}, $_->{additionalInfo}{accessionOccurrence});
            push @data_out, \@row;
        }
 
@@ -658,6 +671,7 @@ sub observation_units {
             trial_list=>[$study_id],
             trait_list=>\@trait_ids_array,
             include_timestamp=>1,
+            exclude_rejected=>0,   # a listing of the units: a rejected plot stays, without its values (below)
             limit=>$limit,
             offset=>$offset,
 			# Order by plot_number, account for non-numeric plot numbers
@@ -665,13 +679,16 @@ sub observation_units {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
+    my $rejected_units = CXGN::Phenotypes::RejectedUnits->ids($self->bcs_schema, [ map { $_->{observationunit_stock_id} } @$data ]);
+    my $unit_status = CXGN::Phenotypes::RejectedUnits->status_details($self->bcs_schema, [map {$_->{observationunit_stock_id}} @$data]);
     #print STDERR Dumper $data;
 
     my @data_window;
     my $total_count = 0;
     foreach my $obs_unit (@$data){
         my @brapi_observations;
-        my $observations = $obs_unit->{observations};
+        # the values of a rejected plot are left out, as in the downloads
+        my $observations = $rejected_units->{ $obs_unit->{observationunit_stock_id} } ? [] : $obs_unit->{observations};
         foreach (@$observations){
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             push @brapi_observations, {
@@ -704,11 +721,20 @@ sub observation_units {
 			$pedigree_string = $s->get_pedigree_string('Parents');
 		}
 
-        my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
+        my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
+        my $state = $unit_status->{$obs_unit->{observationunit_stock_id}} || {};
+        my %info;
+        $info{designReplicate} = $obs_unit->{obsunit_design_rep}
+            if $obs_unit->{obsunit_design_rep_recorded} || defined($obs_unit->{obsunit_design_rep});
+        $info{accessionOccurrence} = $obs_unit->{obsunit_accession_occurrence} if $obs_unit->{obsunit_occurrence_ready};
+        $info{notPlanted} = JSON::true if $state->{not_planted};
+        $info{rejected} = JSON::true if $state->{rejected};
+        $info{rejectReason} = $state->{reject_reason} if defined($state->{reject_reason});
         push @data_window, {
-			X => $obs_unit->{obsunit_row_number},
-			Y => $obs_unit->{obsunit_col_number},
-			blockNumber => $obs_unit->{obsunit_block_number},
+            (%info ? (additionalInfo => \%info) : ()),
+			X => $obs_unit->{obsunit_col_number},
+			Y => $obs_unit->{obsunit_row_number},
+			blockNumber => $obs_unit->{obsunit_block},
 			entryNumber => '',
 			entryType => $entry_type,
 			germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
@@ -720,7 +746,7 @@ sub observation_units {
 			pedigree=>$pedigree_string,
 			plantNumber => $obs_unit->{obsunit_plant_number},
 			plotNumber => $obs_unit->{obsunit_plot_number},
-			replicate => $obs_unit->{obsunit_rep_number},
+			replicate => $obs_unit->{obsunit_rep},
             observationLevel => $obs_unit->{observationunit_type_name},
             observationLevels => $obs_unit->{observationunit_type_name},
             studyDbId => qq|$obs_unit->{trial_id}|,
@@ -839,7 +865,7 @@ sub observation_units_granular {
             trial_list=>[$study_id],
             trait_list=>\@trait_ids_array,
             include_timestamp=>1,
-            exclude_phenotype_outlier=>$exclude_phenotype_outlier
+            exclude_phenotype_outlier=>$exclude_phenotype_outlier,
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();

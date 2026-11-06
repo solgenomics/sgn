@@ -15,7 +15,7 @@ Module to format layout info for trial based on which columns user wants to see.
 'tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','tissue_sample_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json'
 
 This module can also optionally include treatments into the output.
-This module can also optionally include accession trait performace summaries into the output.
+This module can also optionally include accession trait performance summaries into the output.
 
 This module is used from CXGN::Trial::Download::Plugin::TrialLayoutExcel, CXGN::Trial::Download::Plugin::TrialLayoutCSV, CXGN::Fieldbook::DownloadFile, CXGN::Trial->get_plots, CXGN::Trial->get_plants, CXGN::Trial->get_subplots, CXGN::Trial->get_tissue_samples
 
@@ -167,6 +167,13 @@ has 'overall_performance_hash' => (
     is => 'rw',
 );
 
+# leave out the plots that were not planted (for files to collect data in)
+has 'exclude_not_planted' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0,
+);
+
 has 'include_plot_order' => (
     is => 'rw',
     isa => 'Bool',
@@ -238,8 +245,8 @@ sub get_layout_output {
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
-    print STDERR "TrialLayoutDownload retrieving deisgn ".localtime."\n";
-    my $design = $trial_layout->get_design();
+    print STDERR "TrialLayoutDownload retrieving design ".localtime."\n";
+    my $design = $self->exclude_not_planted ? $trial_layout->get_planted_design() : $trial_layout->get_design();
     if (!$design){
         push @error_messages, "Trial does not have valid field design. Please contact us.";
         $errors{'error_messages'} = \@error_messages;
@@ -255,6 +262,9 @@ sub get_layout_output {
             my $row_num = $design_info->{row_number};
             my $col_num = $design_info->{col_number};
             my $accession = $design_info->{accession_name};
+            # as on the field map: the place is empty, the accession was planned
+            $accession .= " (not planted)" if $design_info->{not_planted};
+            $accession .= " (rejected)" if $design_info->{rejected};
             $hash{$row_num}->{$col_num} = $accession;
             push @rows, $row_num;
             push @cols, $col_num;

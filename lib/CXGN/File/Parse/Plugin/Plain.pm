@@ -64,7 +64,6 @@ sub parse {
   }
   close $fh;
 
-  my $row_max = scalar(@rows);
   my $col_max = scalar(@{$rows[0]})-1;
 
   my %values_map;     # map of values by column
@@ -76,6 +75,10 @@ sub parse {
   foreach my $col ( 0 .. $col_max ) {
     my $c = $rows[0]->[$col];
     my $v = $super->clean_header($c);
+
+    # _row is parser metadata, not an uploaded column. Keep the physical row
+    # number even when a spreadsheet includes its own row-number column.
+    next if defined($v) && lc($v) eq '_row';
 
     if ( $v && $v ne '' ) {
       # check for duplicated column header
@@ -97,8 +100,7 @@ sub parse {
   }
 
   # Set data values
-  $skips_in_a_row = 0;
-  for my $r ( 1..$row_max ) {
+  for my $r ( 1..$#rows ) {
     my $row = $rows[$r];
     my %row_info = (
       _row => $r+1
@@ -107,7 +109,7 @@ sub parse {
     for my $c (@col_indices) {
       my $h = $rows[0]->[$c];
       $h = $super->clean_header($h);
-      my $v = $rows[$r]->[$c];
+      my $v = $row->[$c];
       $v = $super->clean_value($v, $h);
 
       if ( defined($v) && $v ne '' ) {
@@ -130,8 +132,6 @@ sub parse {
         $row_info{$h} = $row_info{$h} || undef;
       }
     }
-    $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
-    last if $skips_in_a_row > 5;
     push @{$rtn{data}}, \%row_info if !$skip_row;
   }
 

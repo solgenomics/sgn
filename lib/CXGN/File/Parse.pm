@@ -210,7 +210,7 @@ and the optional columns (such as planting_date, harvest_date, etc).  Any of the
 
 =head1 AUTHORS
 
-  David Waring <djw64@cornell.edu>
+  David Waring <djw64@cornell.edu> Z<# codespell:ignore waring>
 
 =cut
 
@@ -251,7 +251,7 @@ has column_aliases => (
 );
 
 # Array or Map of column arrays
-# If an array, the default demiliter will be used for each specified colum name
+# If an array, the default demiliter will be used for each specified column name
 # If a hash, they key is the column name and the value is the delimiter used to split the value
 has column_arrays => (
   isa => "ArrayRef[Str]|HashRef",
@@ -383,7 +383,7 @@ sub parse {
 
       # Check for missing required columns
       foreach my $req (@$required_columns) {
-        if ( !grep( /^$req$/, @$columns ) ) {
+        if ( !grep { $_ eq $req } @$columns ) {
           push @{$parsed->{errors}}, "Required column $req is missing";
         }
       }
@@ -393,11 +393,11 @@ sub parse {
       $parsed->{optional_columns} = [];
       $parsed->{additional_columns} = [] if $optional_columns;
       foreach my $col (@$columns) {
-        if ( grep (/^$col$/, @$required_columns) ) {
+        if ( grep { $_ eq $col } @$required_columns ) {
           push @{$parsed->{required_columns}}, $col;
         }
         elsif ( $optional_columns ) {
-          if ( grep (/^$col$/, @$optional_columns) ) {
+          if ( grep { $_ eq $col } @$optional_columns ) {
             push @{$parsed->{optional_columns}}, $col;
           }
           else {
@@ -421,7 +421,7 @@ sub parse {
           elsif ( $unique_only_columns{$c} ) {
             if ( ref($v) eq 'ARRAY' ) {
               foreach (@$v) {
-                if ( $_ ne '' && defined($_) ) {
+                if ( defined($_) && $_ ne '' ) {
                   $seen->{$c}->{$_}->{$r} = 1;
                 }
               }
@@ -435,10 +435,10 @@ sub parse {
           my $v = $d->{$c};
           my $r = $d->{_row};
 
-          if ( $v ne '' && defined($v) && $unique_only_columns{$c} ) {
+          if ( defined($v) && $v ne '' && $unique_only_columns{$c} ) {
             if ( ref($v) eq 'ARRAY' ) {
               foreach (@$v) {
-                if ( $_ ne '' && defined($_) ) {
+                if ( defined($_) && $_ ne '' ) {
                   $seen->{$c}->{$_}->{$r} = 1;
                 }
               }
@@ -538,8 +538,8 @@ sub clean_value {
     # trim whitespace
     $value =~ s/^\s+|\s+$//g;
 
-    # trim unicode no-break space
-    $value =~s/\xa0//g;
+    # Internal whitespace is part of a name or free-text value. In particular,
+    # removing an NBSP here can resolve a different existing accession.
 
     # split values
     if ( $column && $column_arrays && exists $column_arrays->{$column} ) {

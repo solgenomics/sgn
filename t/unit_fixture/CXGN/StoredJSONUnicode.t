@@ -177,7 +177,10 @@ is_deeply($observation->{additionalInfo}, $info, "GET observations/{observationD
 is_deeply($observation->{externalReferences}, $references, "GET observations/{observationDbId} returns externalReferences written as characters");
 
 my $observation_unit = brapi_result("http://localhost:3010/brapi/v2/observationunits/$plot_id");
-is_deeply($observation_unit->{additionalInfo}, $info, "GET observationunits/{observationUnitDbId} returns additionalInfo written as characters");
+# CASS_6Genotypes_103 has a legacy replicate tag of 1 in cxgn_fixture.sql.
+# Preserve all Unicode fields while checking the server-owned physical design tag.
+is_deeply($observation_unit->{additionalInfo}, { %$info, designReplicate => '1' },
+    "GET observationunits/{observationUnitDbId} returns Unicode additionalInfo and the recorded design replicate");
 is_deeply($observation_unit->{observationUnitPosition}->{geoCoordinates}, $geo_json, "GET observationunits/{observationUnitDbId} returns geoCoordinates written as characters");
 my ($unit_observation) = grep { $_->{observationDbId} eq $phenotype_id } @{$observation_unit->{observations} || []};
 is_deeply($unit_observation->{additionalInfo}, $info, "GET observationunits/{observationUnitDbId} returns observation additionalInfo written as characters");

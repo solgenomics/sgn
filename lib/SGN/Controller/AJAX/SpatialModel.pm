@@ -25,6 +25,7 @@ use Cwd qw(cwd);
 use namespace::autoclean;
 use Storable qw(retrieve);
 use Storable qw(store);
+use Encode qw(decode FB_CROAK);
 use POSIX qw(strftime);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -118,8 +119,8 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema,  file_name => $temppath, quotes=>0);
     $ds -> trials([$trial_id]);
     $ds -> retrieve_phenotypes($pheno_filepath);
-    open(my $PF, "<", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
-    open(my $CLEAN, ">", $pheno_filepath.".clean") || die "Can't open pheno_filepath clean for writing";
+    open(my $PF, "<:encoding(UTF-8)", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
+    open(my $CLEAN, ">:encoding(UTF-8)", $pheno_filepath.".clean") || die "Can't open pheno_filepath clean for writing";
 
     my $header = <$PF>;
     chomp($header);
@@ -333,11 +334,11 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
    #getting the spatial correlation results
     my @result;
 
-    open(my $F, "<", "$phenotype_file.spatially_corrected") || die "Can't open result file $phenotype_file.spatially_corrected";
+    open(my $F, "<:encoding(UTF-8)", "$phenotype_file.spatially_corrected") || die "Can't open result file $phenotype_file.spatially_corrected";
 
-    open(my $moranF, "<", "$phenotype_file.moran") || die "Can't get new moran p values file!";
+    open(my $moranF, "<:encoding(UTF-8)", "$phenotype_file.moran") || die "Can't get new moran p values file!";
 
-    open(my $modelF, "<", "$phenotype_file.model_string") || die "Can't get model call file!";
+    open(my $modelF, "<:encoding(UTF-8)", "$phenotype_file.model_string") || die "Can't get model call file!";
 
     my @moran_p_values;
     while (<$moranF>) {
@@ -358,10 +359,18 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my $header = <$F>;
     # header will have plot, accession, row, column, replicate, blockNumber, plotNumber [...traits...]
-    my (undef, undef, undef, undef, undef, undef, undef, @trait_columns) = split(/\s+/, $header);
+    chomp($header);
+    my (undef, undef, undef, undef, undef, undef, undef, @trait_columns) = split(/\t/, $header, -1);
 
     my $trait_hash_file = $pheno_filepath.".clean.trait_hash";
     my $trait_hashref = retrieve $trait_hash_file;
+    my %decoded_traits;
+    while (my ($key, $value) = each %$trait_hashref) {
+        $key = decode('UTF-8', $key, FB_CROAK) unless utf8::is_utf8($key);
+        $value = decode('UTF-8', $value, FB_CROAK) if defined($value) && !utf8::is_utf8($value);
+        $decoded_traits{$key} = $value;
+    }
+    $trait_hashref = \%decoded_traits;
 
     @trait_columns = map {$trait_hashref->{$_}} @trait_columns; #need to fix trait names!
 
@@ -384,7 +393,11 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my $datarow_num = 1;
     while (<$F>) {
         chomp;
-        my ($plot, $accession, $row, $column, $replicate, $block_number, $plot_number, @trait_values) = split(/\s+/, $_);
+        my ($plot, $accession, $row, $column, $replicate, $block_number, $plot_number, @trait_values) = split(/\t/, $_, -1);
+        if (@trait_values != 3 * @traits) {
+            $c->stash->{rest} = { error => "Spatial correction output has an inconsistent tab-delimited trait row." };
+            return;
+        }
 
         for (my $i = 0; $i < @trait_values; $i += 3) {
             my $original = $trait_values[$i];
@@ -416,6 +429,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
             'plot_number' => $plot_number,
             'block_number' => $block_number,
             'rep_number' => $replicate,
+            'design_rep_number' => length($replicate) ? $replicate : undef,
             'row_number' => $row,
             'col_number' => $column
         };

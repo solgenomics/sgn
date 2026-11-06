@@ -6,6 +6,15 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trait;
 use CXGN::Trial::TrialLayoutSearch;
+use CXGN::Trial::FieldMap;
+use CXGN::Trial::AccessionChange;
+use CXGN::Trial::DesignReplication;
+use CXGN::Phenotypes::RejectedUnits;
+use CXGN::BreederSearch;
+use CXGN::BreedersToolbox::Projects;
+use CXGN::People::Person;
+use CXGN::BrAPI::DataAuthorization;
+use CXGN::JSONUtils qw(decode_stored_json);
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::BrAPI::v2::ExternalReferences;
@@ -149,6 +158,17 @@ sub _search {
         })->search()
         : {};
 
+    my $unit_status = CXGN::Phenotypes::RejectedUnits->status_details($self->bcs_schema, \@page_stock_ids);
+    my %not_planted = map {$_ => 1} grep {$unit_status->{$_}{not_planted}} keys %$unit_status;
+    my %rejected = map {$_ => 1} grep {$unit_status->{$_}{rejected}} keys %$unit_status;
+    my %reject_reason = map {$_ => $unit_status->{$_}{reject_reason}} grep {defined($unit_status->{$_}{reject_reason})} keys %$unit_status;
+    my %index_numbers;
+    if (@page_stock_ids) {
+        my $h = $self->bcs_schema->storage->dbh->prepare("SELECT stock_id, cvterm.name, value FROM stockprop JOIN cvterm ON cvterm_id = type_id WHERE stock_id = ANY(?) AND cvterm.name IN ('plant_index_number','subplot_index_number','tissue_sample_index_number','range')");
+        $h->execute(\@page_stock_ids);
+        while (my ($id, $name, $value) = $h->fetchrow_array) {$index_numbers{$id}{$name} = $value;}
+    }
+
     foreach my $obs_unit (@$data){
 
         ## Formatting observations
@@ -191,6 +211,38 @@ sub _search {
 
         my $family_name;
         my $additional_info = $obs_unit->{additional_info};
+        if (!defined($additional_info) || ref($additional_info) eq 'HASH') {
+            $additional_info = {%{$additional_info || {}}};
+            delete @{$additional_info}{qw(designReplicate accessionOccurrence)};
+            $additional_info->{designReplicate} = $replicate
+                if $obs_unit->{design_replicate_recorded} || defined($replicate);
+            $additional_info->{accessionOccurrence} = $obs_unit->{accession_occurrence}
+                if $obs_unit->{accession_occurrence_ready};
+        }
+        # notPlanted comes from the stock property, never from a stored additionalInfo
+        if ($not_planted{ $obs_unit->{obsunit_stock_id} } || (ref($additional_info) eq 'HASH' && exists($additional_info->{notPlanted}))) {
+            $additional_info = { %{ $additional_info || {} } };
+            delete $additional_info->{notPlanted};
+            $additional_info->{notPlanted} = JSON::true if $not_planted{ $obs_unit->{obsunit_stock_id} };
+        }
+        # rejected and rejectReason come from the stock properties too
+        if ($rejected{ $obs_unit->{obsunit_stock_id} } || (ref($additional_info) eq 'HASH' && (exists($additional_info->{rejected}) || exists($additional_info->{rejectReason})))) {
+            $additional_info = { %{ $additional_info || {} } };
+            delete @{$additional_info}{qw(rejected rejectReason)};
+            if ($rejected{ $obs_unit->{obsunit_stock_id} }) {
+                $additional_info->{rejected} = JSON::true;
+                my $reason = $reject_reason{ $obs_unit->{obsunit_stock_id} };
+                $additional_info->{rejectReason} = $reason if defined($reason) && length($reason);
+            }
+        }
+
+        # range, like plot statuses, is backed by its actual stock property.
+        my $range = $index_numbers{$obs_unit->{obsunit_stock_id}}{range};
+        if (defined($range) || (ref($additional_info) eq 'HASH' && exists($additional_info->{range}))) {
+            $additional_info = {%{$additional_info || {}}};
+            delete $additional_info->{range};
+            $additional_info->{range} = $range if defined($range);
+        }
 
         ## Following code lines add observationUnitParent to additionalInfo, useful for BI
         if ($obs_unit->{obsunit_type_name} eq 'plant') {
@@ -216,6 +268,11 @@ sub _search {
 
 	    # print STDERR "LEVEL NAME: ".Dumper(\%numbers);
 
+        my %index_field = (plant => 'plant_index_number', subplot => 'subplot_index_number', tissue_sample => 'tissue_sample_index_number');
+        if ($index_field{$level_name}) {
+            $numbers{$level_name} = $index_numbers{$obs_unit->{obsunit_stock_id}}{$index_field{$level_name}} // $numbers{$level_name};
+            $numbers{$level_name} = $obs_unit->{plot_number} if $level_name eq 'tissue_sample' && !defined($numbers{$level_name}) && ($obs_unit->{plot_number} // '') =~ /^[A-Za-z]\d+$/;
+        }
         my $level_order = _order($level_name) + 0;
 
         my $level_code = $numbers{$level_name}; ###### eval "\$$level_name" || "";
@@ -224,35 +281,35 @@ sub _search {
         if ( $level_code_arrayref &&  ! grep { $_ eq $level_code } @{$level_code_arrayref}  ) { next; }
 
         my @observationLevelRelationships;
-        if ($replicate) {
+        if (defined($replicate)) {
             push @observationLevelRelationships, {
                 levelCode => $replicate,
                 levelName => "rep",
                 levelOrder => _order("rep"),
             };
         }
-        if ($block) {
+        if (defined($block) && $block ne '') {
             push @observationLevelRelationships, {
                 levelCode => $block,
                 levelName => "block",
                 levelOrder => _order("block"),
             }
         }
-        if ($plot) {
+        if (defined($plot) && $plot ne '') {
             push @observationLevelRelationships, {
                 levelCode => qq|$plot|,
                 levelName => "plot",
                 levelOrder => _order("plot"),
             }
         }
-        if ($plant) {
+        if (defined($plant) && $plant ne '') {
             push @observationLevelRelationships, {
                 levelCode => $plant,
                 levelName => "plant",
                 levelOrder => _order("plant"),
             }
         }
-        if ($tissue_sample) {
+        if (defined($tissue_sample) && $tissue_sample ne '') {
             push @observationLevelRelationships, {
                 levelCode => $tissue_sample,
                 levelName => "tissue_sample",
@@ -263,9 +320,9 @@ sub _search {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $obs_unit->{plot_geo_json},
-            positionCoordinateX => $obs_unit->{col_number} ? $obs_unit->{col_number} + 0 : undef,
+            positionCoordinateX => defined($obs_unit->{col_number}) ? $obs_unit->{col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
-            positionCoordinateY => $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
+            positionCoordinateY => defined($obs_unit->{row_number}) ? $obs_unit->{row_number} + 0 : undef,
             positionCoordinateYType => 'GRID_ROW',
             observationLevel =>  {
                 levelName => $level_name,
@@ -360,259 +417,698 @@ sub detail {
 
     my @data_files;
     my ($data,$total_count, $page_size,$page,$status) = _search($self, $search_params,  $c);
+    return CXGN::BrAPI::JSONResponse->return_error($self->status, 'ObservationUnitDbId not found', 404) if !$data || !@$data;
     my $results = $data->[0];
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success($results, $pagination, \@data_files, $status, 'Observation Units search result constructed');
 }
 
-sub observationunits_update {
-    my $self = shift;
-    my $data = shift;
-    my $c = shift;
+sub _unit_fail { die { error => $_[0], code => $_[1] || 400 }; }
 
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my $status = $self->status;
+sub _unit_scalar {
+    my ($value, $field) = @_;
+    if (ref($value) eq 'ARRAY') {
+        _unit_fail("$field must contain one value.") if @$value != 1;
+        $value = $value->[0];
+    }
+    _unit_fail("$field must be a scalar value.") if ref($value);
+    return $value;
+}
 
-    my $dbh = $self->bcs_schema()->storage()->dbh();
-    my $schema = $self->bcs_schema;
-    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
-    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
-    my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property');
-    my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property');
-    my $plant_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant number', 'stock_property');
-    my $block_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property');
-    my $is_a_control_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property');
-    my $rep_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property');
-    my $range_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'range', 'stock_property');
-    my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property');
-    my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property');
-    my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_additional_info', 'stock_property');
+sub _unit_same_group {
+    my ($a, $b) = @_;
+    return !defined($a) && !defined($b) if !defined($a) || !defined($b);
+    return "$a" eq "$b";
+}
 
-    foreach my $params (@$data) {
-        my $observation_unit_db_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
-        my $data_level = $params->{observationUnitLevelName}->[0] || 'all';
-        my $years_arrayref = $params->{seasonDbId} ? $params->{seasonDbId} : undef;
-        my $location_ids_arrayref = $params->{locationDbId} ? $params->{locationDbId} : undef;
-        my $study_ids_arrayref = $params->{studyDbId} ? $params->{studyDbId} : undef;
-        my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
-        my $accession_name = $params->{germplasmName} ? $params->{germplasmName}: undef;
-        my $trait_list_arrayref = $params->{observationVariableDbId} ? $params->{observationVariableDbId} : undef;
-        my $program_ids_arrayref = $params->{programDbId} ? $params->{programDbId} : undef;
-        my $folder_ids_arrayref = $params->{trialDbId} ? $params->{trialDbId} : undef;
-        my $observationUnit_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
-        my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
-        my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
-        my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
-        #my $treatments = $params->{treatments} || ""; #not implemented yet
-
-        my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
-        my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
-        my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
-        my $level_relations = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
-        my $level_name = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
-        my $level_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
-        my $raw_additional_info = $params->{additionalInfo} || undef;
-        my $is_a_control = $raw_additional_info->{control} ? $raw_additional_info->{control} : undef;
-
-        my $entry_type = $params->{observationUnitPosition}->{entryType} ? $params->{observationUnitPosition}->{entryType} : undef;
-        my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
-
-        # BrAPI entryType overrides additionalinfo.control
-        if ($entry_type) {
-            $is_a_control = uc($entry_type) eq 'CHECK' ? 1 : 0;
-        }
-
-        my $range_number = $raw_additional_info->{range} ? $raw_additional_info->{range} : undef;
-        my %specific_keys = map { $_ => 1 } ("observationUnitParent","control","range");
-        my %additional_info;
-        my $block_number;
-        my $rep_number;
-
-        foreach (@$level_relations){
-            if($_->{levelName} eq 'block'){
-                $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
-            }
-            if($_->{levelName} eq 'rep'){
-                $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
-                $_->{levelName} = 'rep';
-            }
-        }
-        if (defined $raw_additional_info) {
-            foreach my $key (keys %$raw_additional_info) {
-                if (!exists($specific_keys{$key})) {
-                    $additional_info{$key} = $raw_additional_info->{$key};
-                }
-            }
-        }
-
-        #Check if observation_unit_db_id is plot or plant and not other stock type
-        my $stock = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$observation_unit_db_id});
-        my $stock_type = $stock->type_id;
-
-        if (( $stock_type ne $plot_cvterm_id && $stock_type ne $plant_cvterm_id ) || ($level_name ne 'plant' && $level_name ne 'plot' && $level_name ne 'tissue_sample')){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Only 'plot', 'plant' or 'tissue_sample' allowed for observation level and observationUnitDbId."), 400);
-        }
-
-        #Update: accession
-        # if (! defined $accession_id && ! defined $accession_name) {
-        #     return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
-        # }
-        # my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_name);
-        # if ($germplasm_search_result->{error}) {
-        #     return $germplasm_search_result->{error};
-        # } else {
-        #     $accession_name = $germplasm_search_result->{name};
-        # }
-
-
-        if(defined $accession_id){
-            # Speed can be improved here by adding a simple query
-            my $layout_accession_search = CXGN::Trial::TrialLayoutSearch->new(
-            {
-                bcs_schema=>$schema,
-                data_level=>'all',
-                observation_unit_id_list=>[$observation_unit_db_id],
-                # experiment_type=>'field_layout',
-                include_observations=>1,
-            });
-
-            my ($data_accession,$data_accession_observations) = $layout_accession_search->search();
-            my $old_accession;
-            my $old_accession_id;
-
-            foreach my $obs_unit (@$data_accession){
-                $old_accession = $obs_unit->{germplasm_uniquename};
-                $old_accession_id = $obs_unit->{germplasm_stock_id};
-            }
-
-            if($accession_id ne $old_accession_id){
-                if (! defined $accession_id && ! defined $accession_name) {
-                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
-                }
-                my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_name);
-                if ($germplasm_search_result->{error}) {
-                    return $germplasm_search_result->{error};
-                } else {
-                    $accession_name = $germplasm_search_result->{name};
-                }
-
-                #update accession
-                my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-                if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
-                    my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-                        bcs_schema => $schema,
-                        trial_id => $study_ids_arrayref,
-                        # new_accession => $accession_name,
-                        # old_accession => $old_accession,
-                        # old_plot_id => $observation_unit_db_id,
-                        # old_plot_name => $observationUnit_name,
-                        experiment_type => 'field_layout'
-                    });
-
-                    my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-                    if ($return_error) {
-                        print STDERR Dumper $return_error;
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
-                    }
-
-                    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($observation_unit_db_id, $old_accession_id, $plot_of_type_id);
-                    if ($replace_return_error) {
-                        print STDERR Dumper $replace_return_error;
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
-                    }
-                }
-            }
-        }
-
-        #Update: geo coordinates
-        my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || undef;
-        if($geo_coordinates) {
-
-            my $geno_json_string = encode_json $geo_coordinates;
-
-            #sub upload coordinates
-            my $upload_plot_gps_txn = sub {
-
-                my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>$observation_unit_db_id}});
-
-                while (my $plot=$plots_rs->next){
-                    my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
-                    $previous_plot_gps_rs->delete_all();
-                    $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
-                }
-            };
-
-            eval {
-                $schema->txn_do($upload_plot_gps_txn);
-            };
-            if ($@) {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
-            }
-        }
-
-        #update stockprops
-        if ($level_number){
-            if ($level_name eq 'plot'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plot_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); }
-            if ($level_name eq 'plant'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plant_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); }
-        }
-        if ($block_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$block_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$block_number },{ key=>'stockprop_c1' }); }
-        if ($is_a_control){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$is_a_control_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$is_a_control },{ key=>'stockprop_c1' }); }
-        if ($rep_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$rep_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$rep_number },{ key=>'stockprop_c1' }); }
-        if ($range_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$range_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$range_number },{ key=>'stockprop_c1' }); }
-        if ($row_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$row_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$row_number },{ key=>'stockprop_c1' }); }
-        if ($col_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$col_number },{ key=>'stockprop_c1' }); }
-        if (%additional_info){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$additional_info_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>encode_json \%additional_info },{ key=>'stockprop_c1' }); }
-
-        #store/update external references
-        if ($observationUnit_x_ref){
-            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-                bcs_schema => $self->bcs_schema,
-                table_name => 'stock',
-                table_id_key => 'stock_id',
-                external_references => $observationUnit_x_ref,
-                id => $observation_unit_db_id
-            });
-            my $reference_result = $references->store();
+sub _unit_design_group_request {
+    my ($pos, $info) = @_;
+    my @values;
+    _unit_fail('designReplicate must be a scalar or null.') if exists($info->{designReplicate}) && ref($info->{designReplicate});
+    push @values, _unit_scalar($info->{designReplicate}, 'designReplicate') if exists($info->{designReplicate});
+    if (exists($pos->{observationLevelRelationships})) {
+        _unit_fail('observationLevelRelationships must be an array.') if ref($pos->{observationLevelRelationships}) ne 'ARRAY';
+        for my $relation (@{$pos->{observationLevelRelationships}}) {
+            _unit_fail('Each level relationship must be an object.') if ref($relation) ne 'HASH';
+            next if ($relation->{levelName} // '') ne 'rep' || !exists($relation->{levelCode});
+            push @values, _unit_scalar($relation->{levelCode}, 'rep levelCode');
         }
     }
+    _unit_fail('rep and designReplicate specify conflicting design groups.')
+        if @values > 1 && grep {!_unit_same_group($_, $values[0])} @values[1..$#values];
+    return {present => @values ? 1 : 0, value => $values[0]};
+}
 
-    my @observation_unit_db_ids;
-    foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
+sub _unit_block_request {
+    my ($pos) = @_;
+    my @values;
+    if (exists($pos->{observationLevelRelationships})) {
+        _unit_fail('observationLevelRelationships must be an array.') if ref($pos->{observationLevelRelationships}) ne 'ARRAY';
+        for my $relation (@{$pos->{observationLevelRelationships}}) {
+            _unit_fail('Each level relationship must be an object.') if ref($relation) ne 'HASH';
+            next if ($relation->{levelName} // '') ne 'block' || !exists($relation->{levelCode});
+            push @values, _unit_scalar($relation->{levelCode}, 'block levelCode');
+        }
+    }
+    _unit_fail('The request specifies conflicting block groups.')
+        if @values > 1 && grep {!_unit_same_group($_, $values[0])} @values[1..$#values];
+    return {present=>@values ? 1:0, value=>$values[0]};
+}
 
-    my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
-    return $self->search($search_params, $c);
+sub _unit_blocks {
+    my ($self, $ids) = @_;
+    return {} if !@$ids;
+    my $type=SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'block', 'stock_property')->cvterm_id;
+    my $rows=$self->bcs_schema->storage->dbh->selectall_arrayref(
+        'SELECT stock_id,value FROM stockprop WHERE stock_id=ANY(?) AND type_id=? ORDER BY stock_id,rank',undef,$ids,$type);
+    my %values=map {$_=>undef} @$ids;
+    my %seen;
+    for my $row (@$rows) {
+        _unit_fail('An observation unit has multiple block values; correct its layout metadata first.') if $seen{$row->[0]}++;
+        $values{$row->[0]}=$row->[1];
+    }
+    return \%values;
+}
+
+sub _unit_inherited_metadata_updates {
+    my ($self, $updates, $trials, $property) = @_;
+    my $schema=$self->bcs_schema;
+    my %inherited;
+    for my $trial (keys %$trials) {
+        my $service=CXGN::Trial::AccessionChange->new({schema=>$schema,trial_id=>$trial});
+        my $children=$service->_children($trials->{$trial});
+        for my $root (keys %$children) {
+            $inherited{$_->{stock_id}}{$trial}=1 for @{$children->{$root}{in_trial} || []};
+        }
+    }
+    return $updates if !%inherited;
+    # Keep every structural plot ancestor, including plots outside this field.
+    # Equal text tags in different field contexts do not identify one group.
+    my $roots=$schema->storage->dbh->selectall_arrayref(q{
+        WITH RECURSIVE ancestry(unit_id,stock_id) AS (
+            SELECT id,id FROM unnest(?::integer[]) id
+          UNION
+            SELECT a.unit_id,parent.stock_id FROM ancestry a
+            JOIN stock child ON child.stock_id=a.stock_id
+            JOIN cvterm ct ON ct.cvterm_id=child.type_id
+            JOIN stock_relationship r ON
+                (ct.name IN ('plant','subplot') AND r.object_id=a.stock_id)
+                OR (ct.name='tissue_sample' AND r.subject_id=a.stock_id)
+            JOIN cvterm rt ON rt.cvterm_id=r.type_id
+            JOIN stock parent ON parent.stock_id=CASE WHEN ct.name='tissue_sample' THEN r.object_id ELSE r.subject_id END
+            JOIN cvterm pt ON pt.cvterm_id=parent.type_id
+            WHERE ((ct.name='plant' AND rt.name='plant_of') OR
+                   (ct.name='subplot' AND rt.name='subplot_of') OR
+                   (ct.name='tissue_sample' AND rt.name='tissue_sample_of'))
+                AND pt.name IN ('plot','plant','subplot','tissue_sample')
+        ) SELECT DISTINCT a.unit_id,a.stock_id FROM ancestry a
+          JOIN stock s ON s.stock_id=a.stock_id
+          JOIN cvterm st ON st.cvterm_id=s.type_id AND st.name='plot'
+    },undef,[keys %inherited]);
+    my (%parents,%ids);
+    for my $row (@$roots) {$parents{$row->[0]}{$row->[1]}=1;$ids{$row->[1]}=1}
+    my $contexts=CXGN::Trial::DesignReplication::read($schema,[keys(%ids),keys(%inherited)]);
+    my $field=$property eq 'block' ? 'block' : 'value';
+    my $values={map {$_=>$contexts->{$_}{$field}} keys %ids};
+    for my $id (keys %inherited) {
+        my @fields=@{$contexts->{$id}{field_projects} || []};
+        my @expected=keys %{$inherited{$id}};
+        my $same_field=@fields==1 && @expected==1 && $fields[0]==$expected[0] && $parents{$id};
+        my (%known,$unknown);
+        for my $parent (keys %{$parents{$id} || {}}) {
+            my @parent_fields=@{$contexts->{$parent}{field_projects} || []};
+            $same_field=0 if @parent_fields!=1 || !@fields || $parent_fields[0]!=$fields[0];
+            my $value=exists($updates->{$parent}) ? $updates->{$parent} : $values->{$parent};
+            defined($value) ? $known{$value}++ : $unknown++;
+        }
+        # Divergent or partially unknown grouping is valid pooled metadata.
+        # It is represented as unknown, not an arbitrary parent or a refusal.
+        $updates->{$id}=$same_field && !$unknown && keys(%known)==1 ? (keys %known)[0] : undef;
+    }
+    return $updates;
+}
+
+sub _unit_design_group_updates {
+    my ($self, $prepared) = @_;
+    my (%updates,%trials);
+    for my $unit (@$prepared) {
+        next if !$unit->{group_change};
+        $updates{$unit->{id}}=$unit->{design_group};
+        next if $unit->{type} ne 'plot';
+        my $trial=CXGN::Trial::AccessionChange->field_trial_of_plot($self->bcs_schema,$unit->{id});
+        push @{$trials{$trial}},$unit->{id} if $trial;
+    }
+    return $self->_unit_inherited_metadata_updates(\%updates,\%trials,'design_replicate');
+}
+
+sub _unit_block_updates {
+    my ($self,$prepared) = @_;
+    my @ids=map {$_->{id}} @$prepared;
+    my $contexts=CXGN::Trial::DesignReplication::read($self->bcs_schema,\@ids);
+    my $current={map {$_=>$contexts->{$_}{block}} @ids};
+    my (%updates,%trials);
+    for my $unit (@$prepared) {
+        my $request=_unit_block_request($unit->{pos});
+        next if !$request->{present} || _unit_same_group($request->{value},$current->{$unit->{id}});
+        _unit_fail('The block group is inherited from the parent plot; edit the parent plot.')
+            if $unit->{type} ne 'plot' && @{$contexts->{$unit->{id}}{field_projects} || []};
+        $updates{$unit->{id}}=$request->{value};
+        next if $unit->{type} ne 'plot';
+        my $trial=CXGN::Trial::AccessionChange->field_trial_of_plot($self->bcs_schema,$unit->{id});
+        push @{$trials{$trial}},$unit->{id} if $trial;
+    }
+    return $self->_unit_inherited_metadata_updates(\%updates,\%trials,'block');
+}
+
+sub _unit_creation_block {
+    my ($self,$unit,$parent) = @_;
+    my $request=_unit_block_request($unit->{observationUnitPosition} || {});
+    my $block=CXGN::Trial::DesignReplication::read($self->bcs_schema,[$parent])->{$parent}{block};
+    _unit_fail('The block group is inherited from the parent plot; use its current block.')
+        if $request->{present} && !_unit_same_group($request->{value},$block);
+    $unit->{_creation_block}=$block;
+    return $block;
+}
+
+sub _unit_set_created_child_block {
+    my ($self,$id,$unit) = @_;
+    _unit_fail('The parent block was not validated before child creation.') if !exists($unit->{_creation_block});
+    $self->_unit_prop($id,'block',$unit->{_creation_block});
+}
+
+sub _unit_set_design_groups {
+    my ($self,$updates,$state) = @_;
+    my @ids=sort {$a<=>$b} keys %$updates;
+    return if !@ids;
+    my $current=CXGN::Trial::DesignReplication::read($self->bcs_schema,\@ids);
+    for my $stock_id (@ids) {
+        my $value=$updates->{$stock_id};
+        next if $current->{$stock_id}{recorded} && _unit_same_group($current->{$stock_id}{value},$value);
+        CXGN::Trial::DesignReplication::set($self->bcs_schema,$stock_id,$value);
+        $self->{_unit_writes}++;
+    }
+    $state->{projects}{$_}=1 for @{$self->_unit_projects(\@ids)};
+}
+
+sub _unit_set_blocks {
+    my ($self,$updates,$state) = @_;
+    my @ids=sort {$a<=>$b} keys %$updates;
+    return if !@ids;
+    my $current=$self->_unit_blocks(\@ids);
+    for my $id (@ids) {
+        next if _unit_same_group($updates->{$id},$current->{$id});
+        $self->_unit_prop($id,'block',$updates->{$id});
+    }
+    $state->{projects}{$_}=1 for @{$self->_unit_projects(\@ids)};
+}
+
+sub _unit_boolean {
+    my ($value, $field) = @_;
+    return undef if !defined($value) || (!ref($value) && $value =~ /^\s*$/); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
+    if (ref($value)) {
+        return $value ? 1 : 0 if ref($value) =~ /^(?:JSON::(?:XS|PP)::Boolean|Types::Serialiser::Boolean)$/;
+        _unit_fail("$field must be true or false.");
+    }
+    return 1 if $value =~ /^\s*(?:1|true|yes|t|y)\s*$/i;
+    return 0 if $value =~ /^\s*(?:0|false|no|f|n)\s*$/i;
+    _unit_fail("$field must be true or false.");
+}
+
+sub _unit_reason {
+    my ($value) = @_;
+    return undef if !defined($value); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
+    _unit_fail('rejectReason must be text.') if ref($value);
+    $value =~ s/[\r\n\t]+/ /g; $value =~ s/^\s+|\s+$//g;
+    _unit_fail('rejectReason is longer than 500 characters.') if length($value) > 500;
+    return length($value) ? $value : undef;
+}
+
+sub _unit_prop {
+    my ($self, $stock_id, $name, @value) = @_;
+    my $schema = $self->bcs_schema;
+    my $type = SGN::Model::Cvterm->get_cvterm_row($schema, $name, 'stock_property');
+    _unit_fail("The database does not know stock property $name.") if !$type;
+    my $rs = $schema->resultset('Stock::Stockprop')->search({stock_id => $stock_id, type_id => $type->cvterm_id});
+    my @old = $rs->all;
+    _unit_fail("Observation unit $stock_id has multiple $name values; correct its layout metadata first.") if @old > 1;
+    if (@value) {
+        return undef if !@old && !defined($value[0]); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
+        return $old[0]->value if @old && (
+            (!defined($value[0]) && !defined($old[0]->value))
+            || (defined($value[0]) && defined($old[0]->value) && $old[0]->value eq $value[0]));
+        if (defined($value[0])) {
+            if (@old) { $old[0]->update({value => $value[0]}); }
+            else { $schema->resultset('Stock::Stockprop')->create({stock_id => $stock_id, type_id => $type->cvterm_id, value => $value[0], rank => 0}); }
+        } else {
+            $old[0]->delete if @old;
+        }
+        $self->{_unit_writes}++;
+    }
+    my $row = $rs->first;
+    return $row ? $row->value : undef;
+}
+
+sub _unit_projects {
+    my ($self, $ids) = @_;
+    return [] unless @$ids;
+    return $self->bcs_schema->storage->dbh->selectcol_arrayref('SELECT DISTINCT project_id FROM nd_experiment_stock JOIN nd_experiment_project USING(nd_experiment_id) WHERE stock_id = ANY(?) ORDER BY project_id', undef, $ids);
+}
+
+sub _unit_error_response {
+    my ($self, $error) = @_;
+    my $message = ref($error) eq 'HASH' ? ($error->{error} || 'The request could not be applied.') : "$error";
+    my $code = ref($error) eq 'HASH' ? ($error->{code} || $error->{errorCode} || 400) : 400;
+    $message =~ s/\s+at \/\S+ line \d+\.?//g; $message =~ s/\s+$//;
+    $message =~ s/^Nothing was changed:\s*//;
+    return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Nothing was changed: '.$message, $code);
+}
+
+sub _unit_validate_references {
+    my ($refs) = @_;
+    my $error = CXGN::BrAPI::v2::ExternalReferences::validate_payload($refs);
+    _unit_fail($error->{error}, $error->{code}) if $error;
+}
+
+sub _unit_resolve_germplasm {
+    my ($self, $id, $name) = @_;
+    my $schema = $self->bcs_schema;
+    $id = _unit_scalar($id, 'germplasmDbId'); $name = _unit_scalar($name, 'germplasmName');
+    my $rs;
+    if (defined($id) && length($id)) {
+        _unit_fail('germplasmDbId must be a positive integer.') unless $id =~ /^[1-9]\d*$/;
+        $rs = $schema->resultset('Stock::Stock')->search({stock_id => $id});
+    } elsif (defined($name) && length($name)) {
+        my @types = map {SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_type')->cvterm_id} qw(accession cross family_name);
+        $rs = $schema->resultset('Stock::Stock')->search({uniquename => $name, type_id => {-in => \@types}, is_obsolete => 0});
+    } else { _unit_fail('Either germplasmDbId or germplasmName is required.'); }
+    _unit_fail('Germplasm does not exist.', 404) if !$rs->count;
+    _unit_fail('The germplasm name is ambiguous; supply germplasmDbId.', 409) if $rs->count != 1;
+    my $stock = $rs->first;
+    _unit_fail('germplasmDbId and germplasmName identify different stocks.') if defined($name) && length($name) && $name ne $stock->uniquename;
+    return {id => $stock->stock_id, name => $stock->uniquename};
+}
+
+sub _unit_old_germplasm {
+    my ($self, $id) = @_;
+    my $rows = $self->bcs_schema->storage->dbh->selectall_arrayref(q{
+        SELECT DISTINCT g.stock_id FROM stock_relationship r
+        JOIN cvterm rt ON rt.cvterm_id = r.type_id
+        JOIN stock g ON g.stock_id = r.object_id JOIN cvterm gt ON gt.cvterm_id = g.type_id
+        WHERE r.subject_id = ? AND rt.name IN ('plot_of','plant_of','subplot_of','tissue_sample_of')
+          AND gt.name IN ('accession','cross','family_name')
+    }, undef, $id);
+    _unit_fail('The observation unit is not linked to exactly one germplasm stock.') if @$rows != 1;
+    return $rows->[0][0];
+}
+
+sub _unit_batch_germplasms {
+    my ($groups)=@_;
+    my %final;
+    for my $group (values %$groups) {
+        for my $change (@{$group->{changes}}) {
+            $final{$change->{plot_id}}=$change->{new_stock_id} if defined($change->{new_stock_id});
+        }
+    }
+    return \%final;
+}
+
+sub _unit_apply_service_groups {
+    my ($self, $groups, $user_id, $state, $locked_projects, $locked_lots) = @_;
+    my $schema = $self->bcs_schema;
+    my %roles = map {$_ => 1} CXGN::People::Person->new($schema->storage->dbh, $user_id)->get_roles;
+    for my $trial_id (sort {$a <=> $b} keys %$groups) {
+        my $g = $groups->{$trial_id};
+        my $svc = CXGN::Trial::AccessionChange->new({schema => $schema, trial_id => $trial_id, _final_stock_by_plot=>_unit_batch_germplasms($groups), _locked_projects=>$locked_projects, _locked_seedlots=>$locked_lots});
+        my $options = {rename_plots => 'none', curator => $roles{curator} ? 1 : 0};
+        my $plan = $svc->plan($g->{changes}, $options);
+        _unit_fail(join(' ', @{$plan->{errors}})) if @{$plan->{errors}};
+        next if !@{$plan->{changes}} && !@{$plan->{planting}} && !@{$plan->{rejections}};
+        my $precheck = CXGN::Trial::FieldMap->new({bcs_schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout'})->update_fieldmap_precheck;
+        _unit_fail($precheck, 403) if $precheck && !$roles{curator};
+        push @{$state->{warnings}},'Curator correction: '.$precheck if $precheck;
+        $plan = $svc->apply($g->{changes}, $options);
+        push @{$state->{warnings}},@{$plan->{warnings} || []};
+        $state->{changed} = 1;
+        $state->{projects}{$_} = 1 for $trial_id, @{$plan->{affected_project_ids} || []};
+        $state->{fullview} = 1 if @{$plan->{external_samples} || []};
+    }
+}
+
+sub _unit_apply_updates {
+    my ($self, $data, $user_id, $state, $locked_projects, $locked_lots) = @_;
+    my $schema = $self->bcs_schema;
+    _unit_fail('The request must contain observation-unit objects.') if ref($data) ne 'ARRAY' || !@$data;
+    my (@ids, %seen);
+    for my $p (@$data) {
+        _unit_fail('Each observation unit must be an object.') if ref($p) ne 'HASH';
+        my $id = _unit_scalar($p->{observationUnitDbId}, 'observationUnitDbId');
+        _unit_fail('observationUnitDbId must be a positive integer.') if !defined($id) || $id !~ /^[1-9]\d*$/;
+        _unit_fail('The same observation unit appears more than once in the request.') if $seen{$id}++;
+        push @ids, $id;
+    }
+    my $auth = CXGN::BrAPI::DataAuthorization::observation_units_error($schema, $user_id, \@ids);
+    die $auth if $auth;
+    my $projects = $self->_unit_projects(\@ids);
+    # Prepare without writes, compute the complete source/descendant closure,
+    # then lock it canonically and prepare again from the protected state.
+    $state->{projects}{$_} = 1 for @$projects;
+    my $status = CXGN::Phenotypes::RejectedUnits->status_details($schema, \@ids);
+    my $replication = CXGN::Trial::DesignReplication::read($schema, \@ids);
+    my (%groups, @prepared);
+    for my $p (@$data) {
+        my $id = _unit_scalar($p->{observationUnitDbId}, 'observationUnitDbId');
+        my $stock = $schema->resultset('Stock::Stock')->find({stock_id => $id});
+        my $type = $stock->type->name;
+        _unit_fail('Only plot, plant, subplot and tissue_sample units can be updated.') if $type !~ /^(?:plot|plant|subplot|tissue_sample)$/;
+        my $pos = $p->{observationUnitPosition} // {};
+        my $info = $p->{additionalInfo} // {};
+        _unit_fail('observationUnitPosition and additionalInfo must be objects.') if ref($pos) ne 'HASH' || ref($info) ne 'HASH';
+        _unit_fail('observationLevel must be an object.') if exists($pos->{observationLevel}) && ref($pos->{observationLevel}) ne 'HASH';
+        my $level = $pos->{observationLevel} || {};
+        my $replication_state = $replication->{$id} || {};
+        my $design_group = _unit_design_group_request($pos, $info);
+        if (exists($info->{accessionOccurrence})) {
+            _unit_fail('accessionOccurrence must be a scalar or null.') if ref($info->{accessionOccurrence});
+            my $echo = _unit_scalar($info->{accessionOccurrence}, 'accessionOccurrence');
+            _unit_fail('accessionOccurrence is assigned by the field layout and cannot be changed.')
+                if $replication_state->{occurrence_ready}
+                    ? !_unit_same_group($echo, $replication_state->{occurrence}) : defined($echo);
+        }
+        # A flat v1 GET contains replicate:null even for an unrecorded legacy
+        # group. Its unchanged PUT must not create a metadata write.
+        my $group_change = $design_group->{present} &&
+            !_unit_same_group($design_group->{value}, $replication_state->{value});
+        _unit_fail('The design group is inherited from the parent plot; edit the parent plot.')
+            if $group_change && $type ne 'plot' && @{$replication_state->{field_projects} || []};
+        _unit_fail('The observation level does not match the stored unit type.') if defined($level->{levelName}) && $level->{levelName} ne $type;
+        _unit_fail('Observation-unit renaming is not supported by this update.') if defined($p->{observationUnitName}) && $p->{observationUnitName} ne $stock->uniquename;
+        my $old_control = _unit_boolean($self->_unit_prop($id, 'is a control'), 'stored control') || 0;
+        my $control = exists($info->{control}) ? _unit_boolean($info->{control}, 'control') : undef;
+        if (defined($pos->{entryType}) && length($pos->{entryType})) {
+            _unit_fail('entryType must be CHECK or TEST.') if ref($pos->{entryType}) || $pos->{entryType} !~ /^(?:CHECK|TEST)$/i;
+            $control = uc($pos->{entryType}) eq 'CHECK' ? 1 : 0;
+        }
+        my %change = (plot_id => $id);
+        my $identity = 0;
+        if (defined($p->{germplasmDbId}) || defined($p->{germplasmName})) {
+            my $target = $self->_unit_resolve_germplasm($p->{germplasmDbId}, $p->{germplasmName});
+            if ($target->{id} != $self->_unit_old_germplasm($id)) {
+                _unit_fail('Germplasm can only be changed for plots.') if $type ne 'plot';
+                $change{new_stock_id} = $target->{id}; $identity = 1;
+            }
+        }
+        for my $pair ([notPlanted => 'not_planted'], [rejected => 'rejected']) {
+            next unless exists($info->{$pair->[0]});
+            my $value = _unit_boolean($info->{$pair->[0]}, $pair->[0]);
+            next unless defined($value);
+            if ($type ne 'plot') {
+                _unit_fail('Inherited plot status cannot be changed on a child unit.') if $value != ($status->{$id}{$pair->[1]} || 0);
+            } else { $change{$pair->[1]} = $value; }
+        }
+        if (exists($info->{rejectReason})) {
+            if ($type ne 'plot' && defined($info->{rejectReason}) && !ref($info->{rejectReason}) && $info->{rejectReason} eq ($status->{$id}{reject_reason} // '')) {
+                # A pooled sample can expose several inherited reasons. An
+                # unchanged readback is not a new 500-character plot reason.
+            } else {
+                my $reason = _unit_reason($info->{rejectReason});
+                if ($type ne 'plot') {
+                    _unit_fail('Inherited rejection reason cannot be changed on a child unit.') if defined($reason);
+                } elsif (defined($reason)) { $change{reject_reason} = $reason; }
+            }
+        }
+        if (keys(%change) > 1) {
+            my $trial = CXGN::Trial::AccessionChange->field_trial_of_plot($schema, $id);
+            _unit_fail('The plot is not part of a field trial.') if !$trial;
+            push @{$groups{$trial}{changes}}, \%change;
+            $groups{$trial}{identity_change} ||= $identity;
+        }
+        _unit_validate_references($p->{externalReferences}) if exists($p->{externalReferences});
+        my %old = (replicate=>$replication_state->{value}, block=>$replication_state->{block});
+        push @prepared, {params => $p, id => $id, type => $type, pos => $pos, info => $info, control => $control, old_control => $old_control, old => \%old, identity => $identity, group_change=>$group_change, design_group=>$design_group->{value}};
+    }
+    my $design_updates = $self->_unit_design_group_updates(\@prepared);
+    my $block_updates = $self->_unit_block_updates(\@prepared);
+    my %inherited_ids=map {$_=>1} keys %$design_updates,keys %$block_updates;
+    if (%inherited_ids) {
+        my $inherited_auth=CXGN::BrAPI::DataAuthorization::observation_units_error($schema,$user_id,[keys %inherited_ids]);
+        die $inherited_auth if $inherited_auth;
+    }
+    my %required=map {$_=>1} @$projects;
+    $required{$_}=1 for @{$self->_unit_projects([keys %$design_updates,keys %$block_updates])};
+    my %roles=map {$_=>1} CXGN::People::Person->new($schema->storage->dbh,$user_id)->get_roles;
+    my $final_stock=_unit_batch_germplasms(\%groups);
+    my %required_lots;
+    for my $trial_id (sort {$a<=>$b} keys %groups) {
+        my $service=CXGN::Trial::AccessionChange->new({schema=>$schema,trial_id=>$trial_id,_final_stock_by_plot=>$final_stock});
+        my $plan=$service->plan($groups{$trial_id}{changes},{rename_plots=>'none',curator=>$roles{curator} ? 1:0});
+        _unit_fail(join(' ',@{$plan->{errors}})) if @{$plan->{errors}};
+        $required{$_}=1 for @{$plan->{affected_project_ids} || []};
+        $required_lots{$_}=1 for @{$service->seedlot_ids_for_plan($plan)};
+    }
+    if (!defined($locked_projects)) {
+        my @closure=sort {$a<=>$b} keys %required;
+        $schema->storage->dbh->selectcol_arrayref('SELECT project_id FROM project WHERE project_id=ANY(?) ORDER BY project_id FOR UPDATE',undef,\@closure);
+        # Global write order: projects, packet lots, observation units, then
+        # relationship rows. The shared transaction writer takes the same order.
+        CXGN::Stock::Seedlot::lock_for_recount($schema,[keys %required_lots]);
+        $schema->storage->dbh->selectcol_arrayref('SELECT stock_id FROM stock WHERE stock_id=ANY(?) ORDER BY stock_id FOR UPDATE',undef,\@ids);
+        return $self->_unit_apply_updates($data,$user_id,$state,\%required,\%required_lots);
+    }
+    _unit_fail('Layout membership changed while locking this batch; retry the request.',409)
+        if grep {!$locked_projects->{$_}} keys %required;
+    _unit_fail('Packet lots changed while locking this batch; retry the request.',409)
+        if grep {!$locked_lots->{$_}} keys %required_lots;
+    $self->_unit_apply_service_groups(\%groups, $user_id, $state, $locked_projects, $locked_lots);
+    $self->_unit_set_design_groups($design_updates, $state);
+    $self->_unit_set_blocks($block_updates, $state);
+    for my $u (@prepared) {
+        my ($p, $id, $pos, $info) = @{$u}{qw(params id pos info)};
+        my $control = $u->{control};
+        if ($u->{identity} && defined($control)) {
+            # A complete GET object carries the old check marker. It must not
+            # undo the service's check/accession inference after a correction.
+            $control = undef if $control == $u->{old_control};
+            _unit_fail('Control conflicts with the corrected germplasm.') if defined($control) && $control != (_unit_boolean($self->_unit_prop($id,'is a control'),'stored control') || 0);
+        }
+        my $current_control = _unit_boolean($self->_unit_prop($id, 'is a control'), 'stored control') || 0;
+        $self->_unit_prop($id, 'is a control', "$control") if defined($control) && $control != $current_control;
+        for my $pair ([positionCoordinateY => 'row_number'], [positionCoordinateX => 'col_number']) {
+            next unless exists($pos->{$pair->[0]});
+            $self->_unit_prop($id, $pair->[1], _unit_scalar($pos->{$pair->[0]}, $pair->[0]));
+        }
+        if (exists($pos->{geoCoordinates})) {
+            _unit_fail('geoCoordinates must be an object or null.') if defined($pos->{geoCoordinates}) && ref($pos->{geoCoordinates}) ne 'HASH';
+            $self->_unit_prop($id, 'plot_geo_json', defined($pos->{geoCoordinates}) ? encode_json($pos->{geoCoordinates}) : undef);
+        }
+        my $level = $pos->{observationLevel} || {};
+        if (defined($level->{levelCode}) && length($level->{levelCode})) {
+            my $number = _unit_scalar($level->{levelCode}, 'levelCode');
+            my %field = (plot => 'plot number', plant => 'plant_index_number', subplot => 'subplot_index_number', tissue_sample => 'tissue_sample_index_number');
+            $number = $1 if $u->{type} eq 'plant' && $number =~ /^plant_(\d+)$/;
+            if ($u->{type} eq 'tissue_sample' && $number =~ /^[A-Za-z]\d+$/) {
+                $self->_unit_prop($id, 'plot number', $number); # genotyping well code
+            } else {
+                # BrAPI plot codes are literal labels; child indexes remain numeric.
+                _unit_fail('The stored unit numbering requires a positive integer.')
+                    if $u->{type} ne 'plot' && $number !~ /^[1-9]\d*$/;
+                $self->_unit_prop($id, $field{$u->{type}}, $number);
+            }
+        }
+        # Replication/block relationships were validated together and applied
+        # once above, including inherited children and deliberate NULL clears.
+        $self->_unit_prop($id, 'range', _unit_scalar($info->{range}, 'range')) if exists($info->{range});
+        my %reserved = map {$_ => 1} qw(observationUnitParent control range notPlanted rejected rejectReason familyDbId familyName intercropGermplasm designReplicate accessionOccurrence);
+        my %extra = map {$_ => $info->{$_}} grep {!$reserved{$_}} keys %$info;
+        if (%extra) {
+            my $old = $self->_unit_prop($id, 'stock_additional_info');
+            my $decoded = defined($old) ? decode_stored_json($old) : {};
+            _unit_fail('Stored additionalInfo is not an object.') if ref($decoded) ne 'HASH';
+            $self->_unit_prop($id, 'stock_additional_info', encode_json({%$decoded, %extra}));
+        }
+        if (exists($p->{externalReferences}) && defined($p->{externalReferences})) {
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({bcs_schema=>$schema,table_name=>'stock',table_id_key=>'stock_id',id=>"$id",external_references=>$p->{externalReferences}});
+            my $existing = $references->search->{$id} || [];
+            my $json = JSON->new->canonical;
+            if ($json->encode($existing) ne $json->encode($p->{externalReferences})) {
+                my $result = $references->store;
+                _unit_fail($result->{error}, $result->{code} || 400) if $result->{error};
+                $self->{_unit_writes}++;
+            }
+        }
+    }
+    $state->{changed} ||= $self->{_unit_writes};
+    $state->{ids} = \@ids;
+}
+
+sub _unit_regenerate_layouts {
+    my ($self, $state) = @_;
+    return if !$state->{changed};
+    for my $id (sort {$a <=> $b} keys %{$state->{projects}}) {
+        my $schema = $self->bcs_schema;
+        my $design = $schema->resultset('Project::Projectprop')->find({project_id=>$id,type_id=>SGN::Model::Cvterm->get_cvterm_row($schema,'design','project_property')->cvterm_id});
+        next unless $design;
+        my $kind = CXGN::Trial->new({bcs_schema=>$schema,trial_id=>$id})->get_cxgn_project_type->{experiment_type};
+        CXGN::Trial::TrialLayout->new({schema=>$schema,trial_id=>$id,experiment_type=>$kind})->generate_and_cache_layout;
+    }
+}
+
+sub _unit_finish_request {
+    my ($self, $c, $state) = @_;
+    $self->page(0);
+    $self->page_size(scalar @{$state->{ids}}) if @{$state->{ids}} > $self->page_size;
+    return $self->search({observationUnitDbIds=>$state->{ids}},$c) if !$state->{changed};
+    my $refresh = CXGN::BreederSearch->new({dbh=>$c->dbc->dbh,dbname=>$c->config->{dbname}})->refresh_matviews_after_change($c->config->{dbhost},$c->config->{dbname},$c->config->{dbuser},$c->config->{dbpass},$state->{fullview} ? 'fullview' : 'phenotypes','concurrent',$c->config->{basepath});
+    # Also clear on refresh failure: no old completed result is advertised as
+    # current. This response reads live unit metadata and never recaches an
+    # analytical result while its refresh is pending.
+    my $cleared = eval {$c->controller('solGS::clearCache')->clear_cached_analyses_result($c,{trials=>[sort {$a <=> $b} keys %{$state->{projects}}]})};
+    my $response = $self->search({observationUnitDbIds=>$state->{ids}},$c);
+    my %warning_seen;
+    for my $message (@{$state->{warnings} || []}) {
+        next if $warning_seen{$message}++;
+        push @{$response->{status}},{messageType=>'WARNING',message=>$message};
+    }
+    if ($refresh->{refresh_pending} || $refresh->{error} || !$cleared) {
+        push @{$response->{status}}, {messageType=>'WARNING',message=>'Changes saved; analytical refresh needs retry before using analytical results.'};
+        $response->{http_code} = 200;
+        $response->{refresh_pending} = 1;
+        $response->{result}{changesSaved} = JSON::true;
+        $response->{result}{refreshPending} = JSON::true;
+    }
+    return $response;
+}
+
+sub observationunits_update {
+    my ($self, $data, $c, $user_id) = @_;
+    my $state = {projects=>{},ids=>[]};
+    $self->{_unit_writes} = 0;
+    my $ok = eval {
+        $self->bcs_schema->txn_do(sub {
+            $self->_unit_apply_updates($data,$user_id,$state);
+            $self->_unit_regenerate_layouts($state);
+        });
+        1;
+    };
+    return $self->_unit_error_response($@) if !$ok;
+    return $self->_unit_finish_request($c,$state);
 }
 
 sub _get_existing_germplasm {
-    my $self = shift;
-    my $schema = shift;
-    my $accession_id = shift;
-    my $accession_name = shift;
-
-    if (!looks_like_number($accession_id)) {
-        return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Verify Germplasm Id.'), 404)};
-    }
-
-    # Get the germplasm name from germplasmDbId. Check if a germplasm name passed exists
-    my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$accession_id});
-    if ($rs->count() eq 0 && ! defined $accession_name){
-        return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm with that id does not exist.'), 404)};
-    } elsif ($rs->count() > 0) {
-        my $stock = $rs->first;
-        $accession_name = $stock->uniquename();
-    } else {
-        # Check that a germplasm exists with that name
-        my $rs = $schema->resultset("Stock::Stock")->search({uniquename=>$accession_name});
-        if ($rs->count() eq 0) {
-            return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm with that name does not exist.'), 404)};
-        }
-    }
-
-    return {name => $accession_name};
+    my ($self,$schema,$id,$name)=@_;
+    my $resolved=eval {$self->_unit_resolve_germplasm($id,$name)};
+    return $resolved if $resolved;
+    return {error=>$self->_unit_error_response($@)};
 }
 
 sub observationunits_store {
+    my ($self,$data,$c,$user_id)=@_;
+    my $state={projects=>{},ids=>[],fullview=>1,changed=>1};
+    $self->{_unit_writes} = 0;
+    my $ok=eval {
+        $self->bcs_schema->txn_do(sub {
+            _unit_fail('The request must contain observation-unit objects.') if ref($data) ne 'ARRAY' || !@$data;
+            my @study_ids;
+            my @parents;
+            my @copy;
+            for my $p (@$data) {
+                _unit_fail('Each observation unit must be an object.') if ref($p) ne 'HASH';
+                my $unit=decode_json(encode_json($p));
+                my $info=$unit->{additionalInfo} // {};
+                my $pos=$unit->{observationUnitPosition} // {};
+                _unit_fail('additionalInfo and observationUnitPosition must be objects.') if ref($info) ne 'HASH' || ref($pos) ne 'HASH';
+                _unit_fail('observationLevel must be an object.') if ref($pos->{observationLevel}) ne 'HASH';
+                my $level=$pos->{observationLevel}{levelName} // '';
+                _unit_fail('Only plot, plant or tissue_sample units can be created.') if $level !~ /^(?:plot|plant|tissue_sample)$/;
+                my $study=_unit_scalar($unit->{studyDbId},'studyDbId');push @study_ids,$study;
+                $unit->{studyDbId}=$study;
+                $unit->{additionalInfo}=$info;
+                $unit->{observationUnitPosition}=$pos;
+                $pos->{observationLevelRelationships} //= [];
+                _unit_fail('observationLevelRelationships must be an array.') if ref($pos->{observationLevelRelationships}) ne 'ARRAY';
+                my $design_group = _unit_design_group_request($pos, $info);
+                _unit_fail('accessionOccurrence is assigned by the field layout; omit it when creating a unit.')
+                    if exists($info->{accessionOccurrence}) && defined($info->{accessionOccurrence});
+                $unit->{_creation_design_replicate} = $design_group->{value};
+                delete $unit->{_creation_occurrence};
+                delete $unit->{_creation_block};
+                my $target=$self->_unit_resolve_germplasm($unit->{germplasmDbId},$unit->{germplasmName});
+                $unit->{germplasmDbId}=''.$target->{id};$unit->{germplasmName}=$target->{name};
+                _unit_fail('observationUnitName is required.') if !defined($unit->{observationUnitName}) || ref($unit->{observationUnitName}) || !length($unit->{observationUnitName});
+                _unit_validate_references($unit->{externalReferences}) if exists($unit->{externalReferences});
+                _unit_boolean($info->{control},'control') if exists($info->{control});
+                if (defined($pos->{entryType}) && $pos->{entryType} !~ /^(?:CHECK|TEST)$/i) {_unit_fail('entryType must be CHECK or TEST.')}
+                for my $flag(qw(notPlanted rejected)){_unit_boolean($info->{$flag},$flag) if exists($info->{$flag})}
+                _unit_reason($info->{rejectReason}) if exists($info->{rejectReason});
+                if ($level ne 'plot') {
+                    _unit_fail('Plot statuses must be set on the parent plot.') if grep {defined($info->{$_}) && "$info->{$_}" ne ''} qw(notPlanted rejected rejectReason);
+                    my $parent=_unit_scalar($info->{observationUnitParent},'observationUnitParent');
+                    _unit_fail('A parent plot is required for a child unit.') if !defined($parent) || $parent !~ /^[1-9]\d*$/;
+                    push @parents,$parent;
+                    my $stock=$self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$parent});
+                    _unit_fail('Parent plot does not exist.',404) if !$stock;
+                    my $parent_type = $stock->type->name;
+                    _unit_fail('This creation endpoint requires a plot parent, or a plant parent for a tissue sample.')
+                        if $parent_type ne 'plot' && !($level eq 'tissue_sample' && $parent_type eq 'plant');
+                    _unit_fail('The new child germplasm must match its parent plot.') if $target->{id} != $self->_unit_old_germplasm($parent);
+                    my $parent_trial=CXGN::Trial::AccessionChange->field_trial_of_plot($self->bcs_schema,$parent);
+                    _unit_fail('This child-creation endpoint requires its parent plot in the same field study.') if !$parent_trial || !defined($study) || $parent_trial ne $study;
+                    my $parent_replication = CXGN::Trial::DesignReplication::read($self->bcs_schema, [$parent])->{$parent};
+                    _unit_fail('The design group is inherited from the parent plot.')
+                        if $design_group->{present} && !_unit_same_group($design_group->{value}, $parent_replication->{value});
+                    $unit->{_creation_design_replicate} = $parent_replication->{value};
+                    $unit->{_creation_occurrence} = $parent_replication->{occurrence};
+                    $self->_unit_creation_block($unit,$parent);
+                }
+                push @copy,$unit;
+            }
+            my $auth=CXGN::BrAPI::DataAuthorization::projects_error($self->bcs_schema,$user_id,\@study_ids);die $auth if $auth;
+            if(@parents){
+                $auth=CXGN::BrAPI::DataAuthorization::observation_units_error($self->bcs_schema,$user_id,\@parents);die $auth if $auth;
+            }
+            my %locks=map {$_=>1} (@study_ids,@{$self->_unit_projects(\@parents)});
+            $self->bcs_schema->storage->dbh->selectcol_arrayref('SELECT project_id FROM project WHERE project_id = ANY(?) ORDER BY project_id FOR UPDATE',undef,[keys %locks]);
+            if(@parents){
+                $self->bcs_schema->storage->dbh->selectcol_arrayref('SELECT stock_id FROM stock WHERE stock_id = ANY(?) ORDER BY stock_id FOR UPDATE',undef,\@parents);
+                my $not_planted=CXGN::Phenotypes::RejectedUnits->marked_ids($self->bcs_schema,\@parents,'not_planted');
+                _unit_fail('New plants or samples cannot be added to a plot that was not planted.') if keys %$not_planted;
+                my $parent_replication = CXGN::Trial::DesignReplication::read($self->bcs_schema, \@parents);
+                for my $unit (@copy) {
+                    next if $unit->{observationUnitPosition}{observationLevel}{levelName} eq 'plot';
+                    my $parent = $unit->{additionalInfo}{observationUnitParent};
+                    _unit_fail('The parent plot germplasm changed while the request was checked; retry with its current germplasm.',409)
+                        if $unit->{germplasmDbId} != $self->_unit_old_germplasm($parent);
+                    my $declared = _unit_design_group_request($unit->{observationUnitPosition}, $unit->{additionalInfo});
+                    _unit_fail('The design group is inherited from the parent plot; retry with its current group.',409)
+                        if $declared->{present} && !_unit_same_group($declared->{value}, $parent_replication->{$parent}{value});
+                    $unit->{_creation_design_replicate} = $parent_replication->{$parent}{value};
+                    $unit->{_creation_occurrence} = $parent_replication->{$parent}{occurrence};
+                    $self->_unit_creation_block($unit,$parent);
+                }
+            }
+            $self->page(0);
+            my $created=$self->_store_units_legacy(\@copy,$c,$user_id);
+            if(!$created || !defined($created->{result})) {
+                my @errors=grep {($_->{messageType}//'') eq 'ERROR'} @{$created->{status}||[]};
+                _unit_fail(@errors ? $errors[-1]{message} : 'Could not create observation units.',$created->{http_code}||400);
+            }
+            for my $p (@copy) {
+                my $type=SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,$p->{observationUnitPosition}{observationLevel}{levelName},'stock_type')->cvterm_id;
+                my $rs=$self->bcs_schema->resultset('Stock::Stock')->search({uniquename=>$p->{observationUnitName},type_id=>$type});
+                _unit_fail('Created unit identity could not be resolved uniquely.') if $rs->count != 1;
+                $p->{observationUnitDbId}=''.$rs->first->stock_id;
+                $self->_unit_set_created_child_block($rs->first->stock_id,$p)
+                    if $p->{observationUnitPosition}{observationLevel}{levelName} ne 'plot';
+            }
+            $self->_unit_apply_updates(\@copy,$user_id,$state);
+            $self->_unit_regenerate_layouts($state);
+        });
+        1;
+    };
+    return $self->_unit_error_response($@) if !$ok;
+    return $self->_unit_finish_request($c,$state);
+}
+
+sub _store_units_legacy {
     my $self = shift;
     my $data = shift;
     my $c = shift;
@@ -627,29 +1123,29 @@ sub observationunits_store {
     my %seen_plot_numbers;
     foreach my $params (@{$data}) {
         my $study_id = $params->{studyDbId} || undef;
-        my $plot_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
-        my $plot_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
-        my $plot_parent_id = $params->{additionalInfo}->{observationUnitParent} ? $params->{additionalInfo}->{observationUnitParent} : undef;
-        my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
-        my $accession_name = $params->{germplasmName} ? $params->{germplasmName} : undef;
-        my $entry_type = $params->{observationUnitPosition}->{entryType} ? $params->{observationUnitPosition}->{entryType} : undef;
-        my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
+        my $plot_name = defined($params->{observationUnitName}) ? $params->{observationUnitName} : undef;
+        my $plot_number = defined($params->{observationUnitPosition}->{observationLevel}->{levelCode}) ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
+        my $plot_parent_id = defined($params->{additionalInfo}->{observationUnitParent}) ? $params->{additionalInfo}->{observationUnitParent} : undef;
+        my $accession_id = defined($params->{germplasmDbId}) ? $params->{germplasmDbId} : undef;
+        my $accession_name = defined($params->{germplasmName}) ? $params->{germplasmName} : undef;
+        my $entry_type = defined($params->{observationUnitPosition}->{entryType}) ? $params->{observationUnitPosition}->{entryType} : undef;
+        my $is_a_control = defined($params->{additionalInfo}->{control}) ? $params->{additionalInfo}->{control} : undef;
 
         # BrAPI entryType overrides additionalinfo.control
         if ($entry_type) {
             $is_a_control = uc($entry_type) eq 'CHECK' ? 1 : 0;
         }
 
-        my $range_number = $params->{additionalInfo}->{range}  ? $params->{additionalInfo}->{range}  : undef;
-        my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
-        my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
-        my $seedlot_id = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;
+        my $range_number = $params->{additionalInfo}->{range};
+        my $row_number = defined($params->{observationUnitPosition}->{positionCoordinateY}) ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
+        my $col_number = defined($params->{observationUnitPosition}->{positionCoordinateX}) ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
+        my $seedlot_id = defined($params->{seedLotDbId}) ? $params->{seedLotDbId} : undef;
         my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
         my $levels = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
         my $ou_level = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
         my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $raw_additional_info = $params->{additionalInfo} || undef;
-        my %specific_keys = map { $_ => 1 } ("observationUnitParent","control");
+        my %specific_keys = map { $_ => 1 } ("observationUnitParent","control","notPlanted","rejected","rejectReason","designReplicate","accessionOccurrence");
         my %additional_info;
         if (defined $raw_additional_info) {
             foreach my $key (keys %$raw_additional_info) {
@@ -660,6 +1156,7 @@ sub observationunits_store {
         }
         my $block_number;
         my $rep_number;
+        my $design_rep_number = $params->{_creation_design_replicate};
 
         # Required fields check
         if (! defined $accession_id && ! defined $accession_name) {
@@ -685,13 +1182,13 @@ sub observationunits_store {
 
         foreach (@$levels){
             if($_->{levelName} eq 'block'){
-                $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
-            }
-            if($_->{levelName} eq 'rep'){
-                $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
-                $_->{levelName} = 'rep';
+                $block_number = defined($_->{levelCode}) ? $_->{levelCode} : undef;
             }
         }
+        $block_number=$params->{_creation_block} if exists($params->{_creation_block});
+        # The public rep relationship is the declared design group. Counters
+        # are assigned by native storage; a child starts from its parent's value.
+        $rep_number = $params->{_creation_occurrence};
 
         # The trial designer expects a list of plant names, this object is a plant, so add to single item list
         my $plot_hash;
@@ -710,6 +1207,7 @@ sub observationunits_store {
 
             $plot_hash = {
                 plot_name       => $plot_parent_name,
+                _existing_parent_stock_id => $plot_parent_id,
                 plant_names     => [ $plot_name ],
                 # accession_name => $accession_name,
                 stock_name      => $accession_name,
@@ -717,6 +1215,7 @@ sub observationunits_store {
                 block_number    => $block_number,
                 is_a_control    => $is_a_control,
                 rep_number      => $rep_number,
+                design_rep_number => $design_rep_number,
                 range_number    => $range_number,
                 row_number      => $row_number,
                 col_number      => $col_number,
@@ -738,12 +1237,14 @@ sub observationunits_store {
 
             $plot_hash = {
                 plot_name       =>  $plot_parent_name,
+                _existing_parent_stock_id => $plot_parent_id,
                 tissue_sample_names => [ $plot_name ],                
                 stock_name => $accession_name,
                 plot_number => $plot_number,
                 block_number    => $block_number,
                 is_a_control    => $is_a_control,
                 rep_number      => $rep_number,
+                design_rep_number => $design_rep_number,
                 range_number    => $range_number,
                 row_number      => $row_number,
                 col_number      => $col_number,
@@ -759,6 +1260,7 @@ sub observationunits_store {
                 block_number => $block_number,
                 is_a_control => $is_a_control,
                 rep_number => $rep_number,
+                design_rep_number => $design_rep_number,
                 range_number => $range_number,
                 row_number => $row_number,
                 col_number => $col_number,
@@ -833,50 +1335,21 @@ sub observationunits_store {
                 if ($error) {
                     die {error => sprintf('ERROR store: ' . $error), errorCode => 500};
                 }
-                # Refresh the trial layout property
-                my %param = ( schema => $schema, trial_id => $study_id );
-                if ($design_type eq 'genotyping_plate'){
-                    $param{experiment_type} = 'genotyping_layout';
-                } else {
-                    $param{experiment_type} = 'field_layout';
-                }
-                my $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
-                my $design = $trial_layout->generate_and_cache_layout();
-
-                foreach my $plot_num (keys %{$design}) {
-                    my $observationUnit_x_ref = $study->{$plot_num}->{external_refs};
-                    if ($observationUnit_x_ref){
-                        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-                            bcs_schema => $self->bcs_schema,
-                            table_name => 'stock',
-                            table_id_key => 'stock_id',
-                            external_references => $observationUnit_x_ref,
-                            id => $design->{$plot_num}->{plot_id}
-                        });
-                        my $reference_result = $references->store();
-                    }
-                }
+                # Exact requested IDs are resolved by the owning wrapper. It
+                # applies external references and rebuilds the final layout
+                # after all metadata writes; child indexes are not plot keys.
             }
         }
     };
 
-    my $error_resp;
-    try {
-        $schema->txn_do($coderef);
-    }
-    catch {
-        print "Error: :". Dumper($_);
-        # print Dumper("Error: $_\n");
-        $error_resp = CXGN::BrAPI::JSONResponse->return_error($self->status, $_->{error}, $_->{errorCode} || 500);
-    };
-    if ($error_resp) { return $error_resp; }
+    # The owning transaction formats native hash and string errors consistently.
+    $schema->txn_do($coderef);
 
-    # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution
-    my @observationUnitNames;
-    foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; }
-    my $search_params = {observationUnitNames => \@observationUnitNames};
+    # The transactional wrapper resolves the requested identities and performs
+    # the final read after applying all metadata. An intermediate search would
+    # add a duplicate response status before that authoritative read.
     $self->page_size(scalar @{$data});
-    return $self->search($search_params, $c);
+    return {result => {}};
 }
 
 sub _order {

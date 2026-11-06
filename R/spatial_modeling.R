@@ -1,3 +1,18 @@
+# Analytical replicate contains the recorded tag, never a field occurrence.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "design_replication.R"))
 ################################################################################
 # Modeling Spatial Variation
 ################################################################################
@@ -32,14 +47,21 @@ traits <- args[2]
 ################################################################################
 # read in the phenotypic data
 
-userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE)
+userPheno <- with_design_replication(read_analysis_phenotypes(phenotypeFile))
+assert_genotype_name_identity(userPheno)
 
 # The user should be able to select their response variables from a drop-down menu
 #    of the column names of the userPheno object. Then, those strings should be passed
 #    to this vector, 'userResponse'.
 userResponse <- unlist(strsplit(traits, split = ",", fixed = T))
 userResponse <- userResponse[!userResponse == "notes"] # x[ !x == 'A'] # remove notes from userResponse
-replicate <- "replicate"
+if (!"studyDesign" %in% names(userPheno)) stop("Declare studyDesign before fitting spatial design effects.")
+design <- unique(tolower(trimws(userPheno$studyDesign)))
+if(length(design) != 1L || anyNA(design)) stop("Fit one declared studyDesign at a time.")
+userPheno$designReplicate <- factor(userPheno$designReplicate)
+userPheno$blockNumber <- factor(userPheno$blockNumber)
+replicate <- if(grepl("^crd$|completely randomi[sz]ed",design)) "1" else if(grepl("rcbd|randomi[sz]ed complete block|augmented",design)) "blockNumber" else if(grepl("alpha|lattice|incomplete",design)) "designReplicate/blockNumber" else stop("Unsupported declared spatial studyDesign.")
+validate_design_group_terms(stats::as.formula(paste("~",replicate)),userPheno)
 userID <- "germplasmName"
 row <- "rowNumber"
 col <- "colNumber"
@@ -59,7 +81,7 @@ output <- data.frame()
 fitted_output <- data.frame()
 
 # Loop through the response variables running the model with and without spatial variation
-for (i in 2:length(userResponse)) {
+for (i in seq_along(userResponse)) {
   write(paste("userResponse:", userResponse[i]), stderr())
   # we want response variables with nas < 90% and more than one unique value
   nas <- colMeans(is.na(userPheno[userResponse[i]])) * 100
@@ -88,7 +110,7 @@ for (i in 2:length(userResponse)) {
     ## Fit the model with spatial variation ##
 
     # create a formula for the fixed effects
-    fixedArg <- paste(userResponse[i], " ~ ", "1 +", userID, sep = "")
+    fixedArg <- modArg
     write(paste("fixedArg:", fixedArg), stderr())
     # create a formula for the random effects
     randArg <- paste("~vsr(R)+vsr(C)+ spl2Da(", col, ",", row, ")", sep = "")

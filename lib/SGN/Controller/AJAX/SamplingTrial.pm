@@ -231,6 +231,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
             stock_name => $val->{source_stock_uniquename},
             plot_number => $val->{sample_number},
             rep_number => $val->{replicate},
+            design_rep_number => exists($val->{designReplicate}) ? $val->{designReplicate} : $val->{replicate},
             tissue_type => $val->{tissue_type},
             block_number => 1,
             ncbi_taxonomy_id => $val->{ncbi_taxonomy_id},

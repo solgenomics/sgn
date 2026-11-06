@@ -35,6 +35,7 @@ use CXGN::Stock;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialLayoutDownload;
 use SGN::Model::Cvterm;
+use CXGN::Trial::DesignReplication;
 use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
@@ -3291,6 +3292,7 @@ sub create_plant_entities {
     my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
         'Native', {
         bcs_schema => $chado_schema,
+        exclude_rejected => 0,   # the treatments of a rejected plot are copied to its new units too
         trait_list => [map {$_->{trait_id}} @{$treatments}],
         trial_list => [$self->get_trial_id()],
         data_level => 'plot'
@@ -3303,7 +3305,7 @@ sub create_plant_entities {
 
     my $create_plant_entities_txn = sub {
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
-        my $design = $layout->get_design();
+        my $design = $layout->get_planted_design(); # none for plots that were not planted
 
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
         my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
@@ -3510,6 +3512,7 @@ sub save_plant_entries {
     my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
         'Native', {
         bcs_schema => $chado_schema,
+        exclude_rejected => 0,   # the treatments of a rejected plot are copied to its new units too
         trait_list => [map {$_->{trait_id}} @{$treatments}],
         trial_list => [$self->get_trial_id()],
         data_level => 'plot'
@@ -3567,9 +3570,16 @@ sub save_plant_entries {
 
         my %design_by_plot_name = map { $design->{$_}->{plot_name} => $design->{$_} } keys %$design;
 
+        # nothing grew in a plot that was not planted (see CXGN::Trial::AccessionChange): no plants in it
+        my %not_planted_plot = map { $_->{plot_id} => 1 } grep { ref($_) eq 'HASH' && $_->{not_planted} } values %$design;
+
         while( my ($key, $val) = each %$parsed_data){
             my $plot_stock_id = $key;
             my $plot_name = $val->{plot_name};
+            if ($not_planted_plot{$plot_stock_id}) {
+                print STDERR " ... no plants for plot $plot_name: it was not planted\n";
+                next;
+            }
             print STDERR " ... creating plants for plot $plot_name...\n";
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { stock_id=>$plot_stock_id });
 
@@ -3730,6 +3740,7 @@ sub create_plant_subplot_entities {
     my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
         'Native', {
         bcs_schema => $chado_schema,
+        exclude_rejected => 0,   # the treatments of a rejected plot are copied to its new units too
         trait_list => [map {$_->{trait_id}} @{$treatments}],
         trial_list => [$self->get_trial_id()],
         data_level => 'subplot'
@@ -3742,7 +3753,7 @@ sub create_plant_subplot_entities {
 
     my $create_plant_entities_txn = sub {
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
-        my $design = $layout->get_design();
+        my $design = $layout->get_planted_design(); # none for plots that were not planted
 
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
         my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
@@ -3979,6 +3990,7 @@ sub save_plant_subplot_entries {
     my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
         'Native', {
         bcs_schema => $chado_schema,
+        exclude_rejected => 0,   # the treatments of a rejected plot are copied to its new units too
         trait_list => [map {$_->{trait_id}} @{$treatments}],
         trial_list => [$self->get_trial_id()],
         data_level => 'subplot'
@@ -4077,6 +4089,11 @@ sub save_plant_subplot_entries {
             my $parent_plot = $plot_row->stock_id();
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
+            # nothing grew in a plot that was not planted (see CXGN::Trial::AccessionChange): no plants in it
+            if (grep { ref($_) eq 'HASH' && $_->{not_planted} && $_->{plot_id} == $parent_plot } values %$design) {
+                print STDERR " ... no plants for subplot $subplot_name: its plot was not planted\n";
+                next;
+            }
 
             my $existing_count = 0;
             if ($add_additional_plants) {
@@ -4256,6 +4273,9 @@ sub _save_plant_entry {
         });
     }
 
+    my $parent_design_rep=CXGN::Trial::DesignReplication::read($chado_schema,[$parent_plot])->{$parent_plot}{value};
+    CXGN::Trial::DesignReplication::capture($chado_schema,[$plant->stock_id],{$plant->stock_id=>$parent_design_rep});
+
     #the plant has a relationship to the plot
     my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
         subject_id => $parent_plot,
@@ -4363,6 +4383,7 @@ sub create_tissue_samples {
     my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
         'Native', {
         bcs_schema => $chado_schema,
+        exclude_rejected => 0,   # the treatments of a rejected plot are copied to its new units too
         trait_list => [map {$_->{trait_id}} @{$treatments}],
         trial_list => [$self->get_trial_id()],
         data_level => 'plant'
@@ -4375,7 +4396,7 @@ sub create_tissue_samples {
 
     my $create_tissue_sample_entries_txn = sub {
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
-        my $design = $layout->get_design();
+        my $design = $layout->get_planted_design(); # none for plots that were not planted
 
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
         my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
@@ -4487,6 +4508,16 @@ sub create_tissue_samples {
                         stock_relationship_objects => \@tissue_objects,
                         nd_experiment_stocks => \@tissue_nd_experiment_stocks,
                     });
+
+                    my $group=CXGN::Trial::DesignReplication::read($chado_schema,[$parent_plot_id])->{$parent_plot_id}{value};
+                    CXGN::Trial::DesignReplication::capture($chado_schema,[$tissue->stock_id],{$tissue->stock_id=>$group});
+                    # Store the available physical block for new single-parent
+                    # field tissues; readers also resolve legacy missing rows.
+                    $tissue->create_related('stockprops',{type_id=>$block_cvterm,value=>$design->{$plot}{block_number},rank=>0});
+                    my $parent_occurrence=$design->{$plot}{rep_number};
+                    if (defined($parent_occurrence)) {
+                        $tissue->create_related('stockprops',{type_id=>$replicate_cvterm,value=>$parent_occurrence,rank=>0});
+                    }
 
                     if ($tissue_sample_owner) {
                         my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$tissue->stock_id()});
@@ -4669,6 +4700,7 @@ sub create_subplot_entities {
     my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
         'Native', {
         bcs_schema => $chado_schema,
+        exclude_rejected => 0,   # the treatments of a rejected plot are copied to its new units too
         trait_list => [map {$_->{trait_id}} @{$treatments}],
         trial_list => [$self->get_trial_id()],
         data_level => 'plot'
@@ -4681,7 +4713,7 @@ sub create_subplot_entities {
 
     my $create_subplot_entities_txn = sub {
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
-        my $design = $layout->get_design();
+        my $design = $layout->get_planted_design(); # none for plots that were not planted
 
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
         my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
@@ -4847,6 +4879,7 @@ sub save_subplot_entries {
     my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
         'Native', {
         bcs_schema => $chado_schema,
+        exclude_rejected => 0,   # the treatments of a rejected plot are copied to its new units too
         trait_list => [map {$_->{trait_id}} @{$treatments}],
         trial_list => [$self->get_trial_id()],
         data_level => 'plot'
@@ -4899,6 +4932,11 @@ sub save_subplot_entries {
         while( my ($key, $val) = each %$parsed_data){
             my $plot_stock_id = $key;
             my $plot_name = $val->{plot_name};
+            # nothing grew in a plot that was not planted (see CXGN::Trial::AccessionChange): no subplots in it
+            if ($design_by_plot_name{$plot_name} && $design_by_plot_name{$plot_name}->{not_planted}) {
+                print STDERR " ... no subplots for plot $plot_name: it was not planted\n";
+                next;
+            }
             print STDERR " ... creating subplots for plot $plot_name...\n";
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { stock_id=>$plot_stock_id });
 
@@ -5049,6 +5087,9 @@ sub _save_subplot_entry {
             value => $prop->value(),
         });
     }
+
+    my $parent_design_rep=CXGN::Trial::DesignReplication::read($chado_schema,[$parent_plot])->{$parent_plot}{value};
+    CXGN::Trial::DesignReplication::capture($chado_schema,[$subplot->stock_id],{$subplot->stock_id=>$parent_design_rep});
 
     #the subplot has a relationship to the plot
     my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({

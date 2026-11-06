@@ -307,7 +307,7 @@ sub get_sorted_plots {
             selected_columns => {
                 "location_name"=>1,"trial_name"=>1,"plot_name"=>1,"plot_id"=>1,"plot_number"=>1,
                 "row_number"=>1,"col_number"=>1,"accession_name"=>1,"seedlot_name"=>1,
-                "rep_number"=>1,"block_number"=>1,"is_a_control"=>1,"accession_id"=>1
+                "rep_number"=>1,"accession_occurrence"=>1,"block_number"=>1,"is_a_control"=>1,"accession_id"=>1
             },
         });
         my $output = $trial_layout_download->get_layout_output()->{output};
@@ -322,6 +322,9 @@ sub get_sorted_plots {
             if (scalar @keys > 0) {
                 my %detail_hash;
                 @detail_hash{@keys} = @{$outer_array[$i]};
+                # Layout export replication is the recorded design tag; retain
+                # its explicit alias beside accession_occurrence in ordered files.
+                $detail_hash{design_rep_number}=$detail_hash{rep_number};
                 my $row = $detail_hash{'row_number'};
                 my $col = $detail_hash{'col_number'};
                 my $key = "$row|$col";

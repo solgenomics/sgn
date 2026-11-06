@@ -18,6 +18,8 @@ Naama Menda <nm249@cornell.edu>
 package SGN::Controller::AJAX::Stock;
 
 use Moose;
+use CXGN::Phenotypes::Summary;
+use CXGN::Phenotypes::RejectedUnits;
 
 use List::MoreUtils qw /any /;
 use Data::Dumper;
@@ -63,6 +65,74 @@ Stores a new stockprop in the database
 
 =cut
 
+=head2 _write_field_layout_property
+
+Keep the native property form on the same validated transaction as BrAPI for
+field blocks, recorded replication tags and plot eligibility. Operational occurrences are derived
+and remain read-only. A group clear retains explicit missing metadata; all
+inherited units, permissions, layout caches and analytical refresh are handled by
+the owning unit workflow.
+
+=cut
+
+sub _write_field_layout_property {
+    my ($self,$c,$schema,$stock_id,$property,$value,$clear)=@_;
+    return 0 if !defined($property) || $property !~ /^(?:block|design_replicate|replicate|not_planted|rejected|reject_reason|is a control)$/;
+    my ($field)=$schema->storage->dbh->selectrow_array(q{
+        SELECT EXISTS(SELECT 1 FROM nd_experiment_stock nes
+          JOIN nd_experiment ne USING(nd_experiment_id)
+          JOIN cvterm t ON t.cvterm_id=ne.type_id JOIN cv ON cv.cv_id=t.cv_id
+          WHERE nes.stock_id=? AND cv.name='experiment_type' AND t.name='field_layout')
+    },undef,$stock_id);
+    if (!$field) {
+        if ($property =~ /^(?:not_planted|rejected|reject_reason)$/) {
+            $c->stash->{rest}={error=>'Plot status belongs to its field plot. Use the plot status workflow.'};
+            return 1;
+        }
+        return 0;
+    }
+    if ($property eq 'replicate') {
+        $c->stash->{rest}={error=>'Accession occurrence numbers are assigned by the field layout. Use Change Accessions to correct the recorded planting.'};
+        return 1;
+    }
+    if (!$clear && (!defined($value) || (!ref($value) && $value !~ /\S/))) {
+        $c->stash->{rest}={error=>'Provide a plot metadata value.'};
+        return 1;
+    }
+    if ($clear && $property eq 'reject_reason') {
+        $c->stash->{rest}={error=>'Correct rejection metadata through the plot status workflow.'};
+        return 1;
+    }
+    if (defined($value) && ref($value)) {
+        $c->stash->{rest}={error=>'A design metadata value must be one scalar or empty.'};
+        return 1;
+    }
+    require CXGN::BrAPI::v2::ObservationUnits;
+    my $api=CXGN::BrAPI::v2::ObservationUnits->new({
+        bcs_schema=>$schema,metadata_schema=>$c->dbic_schema('CXGN::Metadata::Schema'),
+        phenome_schema=>$c->dbic_schema('CXGN::Phenome::Schema'),people_schema=>$c->dbic_schema('CXGN::People::Schema'),
+        context=>$c,page=>0,page_size=>1,status=>[],
+    });
+    my $unit={observationUnitDbId=>"$stock_id"};
+    if ($property eq 'block') {
+        $unit->{observationUnitPosition}={observationLevelRelationships=>[{levelName=>'block',levelCode=>$value}]};
+    } else {
+        my %key=(design_replicate=>'designReplicate',not_planted=>'notPlanted',rejected=>'rejected',reject_reason=>'rejectReason','is a control'=>'control');
+        $value=0 if $clear && $property =~ /^(?:not_planted|rejected|is a control)$/;
+        $unit->{additionalInfo}={$key{$property}=>$value};
+    }
+    my $response=$api->observationunits_update([$unit],$c,$c->user->get_object->get_sp_person_id);
+    my @errors=map {$_->{message}} grep {($_->{messageType} // '') eq 'ERROR'} @{$response->{status} || []};
+    if (@errors || ($response->{http_code} || 200)>=400) {
+        $c->stash->{rest}={error=>@errors ? join(' ',@errors):'Field design metadata could not be updated.'};
+    } else {
+        my $message=defined($value) ? 'Plot metadata updated.':'Plot metadata cleared.';
+        $message.=' Analytical refresh is pending.' if $response->{refresh_pending};
+        $c->stash->{rest}={message=>$message,($response->{refresh_pending} ? (refresh_pending=>1):())};
+    }
+    return 1;
+}
+
 sub add_stockprop : Path('/stock/prop/add') : ActionClass('REST') { }
 
 sub add_stockprop_POST {
@@ -77,9 +147,20 @@ sub add_stockprop_POST {
     if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
         my $req = $c->req;
         my $stock_id = $c->req->param('stock_id');
+        if (!defined($stock_id) || ref($stock_id) || $stock_id !~ /^[1-9]\d*$/) {
+            $c->stash->{rest}={error=>'stock_id must be a positive integer.'};
+            return;
+        }
         my $prop  = $c->req->param('prop');
-        $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
         my $prop_type = $c->req->param('prop_type');
+        return if $self->_write_field_layout_property($c,$schema,$stock_id,$prop_type,$prop);
+        $prop =~ s/^\s+|\s+$//g if defined($prop); # generic stock-property convention
+        my ($field_occurrence)=$schema->storage->dbh->selectrow_array(q{SELECT EXISTS(SELECT 1 FROM nd_experiment_stock nes JOIN nd_experiment ne USING(nd_experiment_id) JOIN cvterm t ON t.cvterm_id=ne.type_id JOIN cv ON cv.cv_id=t.cv_id WHERE nes.stock_id=? AND cv.name='experiment_type' AND t.name='field_layout')},undef,$stock_id);
+        if (defined($prop_type) && ($prop_type eq 'design_replicate' || ($prop_type eq 'replicate' && $field_occurrence))) {
+            $c->stash->{rest}={error=>'Edit recorded replication through the field layout/BrAPI metadata workflow; accession occurrences are derived by layout correction.'};
+            return;
+        }
+
 
 	    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
@@ -204,7 +285,11 @@ sub delete_stockprop_GET {
     my $self = shift;
     my $c = shift;
     my $stockprop_id = $c->req->param("stockprop_id");
-    if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    if (!defined($stockprop_id) || ref($stockprop_id) || $stockprop_id !~ /^[1-9]\d*$/) {
+        $c->stash->{rest}={error=>'stockprop_id must be a positive integer.'};
+        return;
+    }
+    if (!$c->user || ! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
 	$c->stash->{rest} = { error => 'Log in required for deletion of stock properties.' };
 	return;
     }
@@ -213,6 +298,12 @@ sub delete_stockprop_GET {
     if (! $spr) {
 	$c->stash->{rest} = { error => 'The specified prop does not exist' };
 	return;
+    }
+    return if $self->_write_field_layout_property($c,$schema,$spr->stock_id,$spr->type->name,undef,1);
+    my ($field_occurrence)=$schema->storage->dbh->selectrow_array(q{SELECT EXISTS(SELECT 1 FROM nd_experiment_stock nes JOIN nd_experiment ne USING(nd_experiment_id) JOIN cvterm t ON t.cvterm_id=ne.type_id JOIN cv ON cv.cv_id=t.cv_id WHERE nes.stock_id=? AND cv.name='experiment_type' AND t.name='field_layout')},undef,$spr->stock_id);
+    if ($spr->type->name eq 'design_replicate' || ($spr->type->name eq 'replicate' && $field_occurrence)) {
+        $c->stash->{rest}={error=>'Replication metadata cannot be removed through generic property deletion. Clear the design tag through the field layout/BrAPI workflow to retain an explicit missing snapshot.'};
+        return;
     }
     eval {
 	$spr->delete();
@@ -1826,7 +1917,11 @@ sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/trait
     my $self = shift;
     my $c = shift;
 
-    my @trait_list = $c->stash->{stock}->get_trait_list();
+    # The legacy Chado wrapper has unfiltered raw averages. Use the shared
+    # analytical model while retaining the legacy route's real stock identity.
+    my $legacy_stock = $c->stash->{stock};
+    my $analytics = CXGN::Stock->new({schema => $legacy_stock->get_schema, stock_id => $legacy_stock->get_stock_id});
+    my @trait_list = $analytics->get_trait_list({include_count => 1});
 
     my @formatted_list;
     foreach my $t (@trait_list) {
@@ -1844,15 +1939,18 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
     my $trial_id = shift;
     my $stock_type = $c->stash->{stock}->get_type()->name();
 
+    my $related_not_rejected = CXGN::Phenotypes::RejectedUnits->not_rejected_sql($c->dbic_schema('Bio::Chado::Schema'), 'stock_relationship.subject_id');
+    my $direct_not_rejected = CXGN::Phenotypes::RejectedUnits->not_rejected_sql($c->dbic_schema('Bio::Chado::Schema'), 'stock.stock_id');
+    my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
     my $q;
     if ($stock_type eq 'accession' || $stock_type eq 'family_name' || $stock_type eq 'cross'){
-        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? AND phenotype.value ~ ? AND $related_not_rejected GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
     } else {
-        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? AND phenotype.value ~ ? AND $direct_not_rejected GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
     }
 
     my $h = $c->dbc->dbh->prepare($q);
-    $h->execute($trial_id, $c->stash->{stock}->get_stock_id());
+    $h->execute($trial_id, $c->stash->{stock}->get_stock_id(), $numeric_regex);
 
     my @phenotypes;
     while (my ($stock_id, $stock_name, $cvterm_id, $cvterm_name, $avg, $stddev, $count) = $h->fetchrow_array()) {

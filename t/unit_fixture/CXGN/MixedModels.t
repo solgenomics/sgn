@@ -1,5 +1,6 @@
 
 use strict;
+use File::Path qw(make_path);
 use Test::More qw | no_plan |;
 use File::Slurp;
 use File::Temp qw | tempfile |;
@@ -16,6 +17,7 @@ my $f = SGN::Test::Fixture->new();
 my $dir = Cwd::cwd();
 
 # create tempfile 
+make_path('static/documents/tempfiles') unless -d 'static/documents/tempfiles';
 my ($fh, $tempfile) = tempfile( "mixedmodelsXXXXXX", DIR => $dir."/static/documents/tempfiles/", UNLINK => 0 );
 
 my $job_config = {
@@ -78,7 +80,7 @@ foreach my $engine ("lme4", "sommer") {
     print STDERR "MODEL STRING: $model_string ERROR: $error\n";
 
     if ($engine eq "lme4") { 
-	is($model_string, "replicate + (1|germplasmName)", "model string test for BLUPs");
+	is($model_string, "designReplicate + (1|germplasmName)", "model string test for BLUPs");
     }
     else {
 	print STDERR "MODEL STRING: $model_string\n";
@@ -133,7 +135,7 @@ my ($model_string, $error) = $mm->generate_model();
 
 print STDERR "MODEL STRING = $model_string\n";
 
-is($model_string, "germplasmName + (1|replicate)", "model string test for BLUEs");
+is($model_string, "germplasmName + (1|designReplicate)", "model string test for BLUEs");
 
 $mm->run_model($f->config->{backend}, $f->config->{cluster_host}, dirname($pheno_tempfile), $job_config);
 

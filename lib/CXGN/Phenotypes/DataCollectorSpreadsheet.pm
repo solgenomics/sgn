@@ -90,9 +90,9 @@ sub create {
 	$ws->write($n+6, 0, $ordered_plots[$n]);
 	$ws->write($n+6, 1, $design_info{accession_name});
 	$ws->write($n+6, 2, $design_info{plot_number});
-	$ws->write($n+6, 3, $design_info{block_number});
+	$ws->write_string($n+6, 3, $design_info{block_number} // '');
 	$ws->write($n+6, 4, $design_info{is_a_control});
-	$ws->write($n+6, 5, $design_info{rep_number});
+	$ws->write_string($n+6, 5, $design_info{design_rep_number} // '');
     }
 
     # write traits and format trait columns

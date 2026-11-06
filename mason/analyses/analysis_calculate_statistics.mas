@@ -168,7 +168,7 @@
                                     <label class="col-sm-3 control-label">Fixed Effects: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_div">
-                                            <option value="replicate">Replicate</option>
+                                            <option value="replicate">Recorded design effects (CRD: none; RCBD: block; Alpha/Lattice: replicate + nested block)</option>
                                             <option value="fixed_effect_trait">Select a continuous trait (e.g. soil elevation curvature)</option>
                                         </select>
                                     </div>

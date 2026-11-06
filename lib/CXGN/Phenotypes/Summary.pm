@@ -6,7 +6,7 @@ CXGN::Phenotypes::Summary - an object to handle searching an accession's phenoty
 
 =head1 SYNOPSIS
 
-returns summary statistics by accession. returns the performace of an accession across all recorded observations for a trait (whether plot, plant, or subplot).
+returns summary statistics by accession. returns the performance of an accession across all recorded observations for a trait (whether plot, plant, or subplot).
 you can provide an arrayref of trial_ids, accession_ids, or trait_ids to filter down the search results.
 
 my $summary_obj = CXGN::Phenotypes::Summary->new({
@@ -20,7 +20,7 @@ my $summary_info = $summary_obj->search();
 $summary_info is an arrayref of arrayref where each entry is:
 [trait_name, trait_id, num_phenotypes_count, phenotypes_average, phenotypes_max, phenotypes_min, phenotypes_stddev, accession_name, accession_id]
 
-trial_list, accession_list, and trait_list are optional, so you can do something like this to get the performace of a single accession for all traits:
+trial_list, accession_list, and trait_list are optional, so you can do something like this to get the performance of a single accession for all traits:
 
 my $summary_obj = CXGN::Phenotypes::Summary->new({
     bcs_schema => $schema,
@@ -37,6 +37,7 @@ nm529
 use strict;
 use warnings;
 use Moose;
+use CXGN::Phenotypes::RejectedUnits;   # rejected plots are left out of the trait performance
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
@@ -61,6 +62,14 @@ has 'accession_list' => (
     is => 'rw',
 );
 
+# Match PostgreSQL's ordinary finite numeric syntax without guessing a decimal
+# locale. Restrict surrounding whitespace to the ASCII characters accepted by
+# the numeric input routine; categorical comma text must never reach ::real.
+sub numeric_value_regex {
+    my $space = " \t\r\n\f".chr(11);
+    return '^['.$space.']*[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?['.$space.']*$';
+}
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -74,7 +83,7 @@ sub search {
     my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
 
-    my @rel_types = ($plot_of_type_id, $plant_of_type_id, $subplot_type_id);
+    my @rel_types = ($plot_of_type_id, $plant_of_type_id, $subplot_of_type_id);
     my @stock_types = ($plot_type_id, $plant_type_id, $subplot_type_id);
 
     my $rel_type_sql = join ("," , @rel_types);
@@ -132,10 +141,11 @@ sub search {
             $additional_trial_where
             $additional_accession_where
             $additional_trait_where
+            AND plot.stock_id NOT IN (SELECT stock_id FROM ".CXGN::Phenotypes::RejectedUnits->sql($schema)." rejected_units)
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename
         ORDER BY cvterm.name ASC;");
 
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = numeric_value_regex();
     $h->execute($numeric_regex, $accession_type_id);
 
     my @phenotype_data;

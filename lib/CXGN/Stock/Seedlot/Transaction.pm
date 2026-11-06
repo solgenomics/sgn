@@ -5,6 +5,7 @@ use Moose;
 use JSON::Any;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 has 'schema' => ( isa => 'Bio::Chado::Schema',
 		  is => 'rw',
@@ -65,9 +66,9 @@ sub BUILD {
 
         $self->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
         $self->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
-        my $data = JSON::Any->decode($row->value());
+        my $data = decode_stored_json($row->value());
         $self->amount($data->{amount});
-        if ($data->{weight_gram}){
+        if (defined($data->{weight_gram})){
             $self->weight_gram($data->{weight_gram});
         } else {
             $self->weight_gram('NA');
@@ -119,7 +120,7 @@ sub get_transactions_by_seedlot_id {
         $t_obj->transaction_id($row->stock_relationship_id);
         $t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
         $t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
-        my $data = JSON::Any->decode($row->value());
+        my $data = decode_stored_json($row->value());
         if (defined($data->{weight_gram})){
             $t_obj->weight_gram($data->{weight_gram});
         } else {
@@ -210,7 +211,7 @@ sub get_transactions {
         #$t_obj->transaction_id($row->stock_relationship_id);
         #$t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
         #$t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
-        #my $data = JSON::Any->decode($row->value());
+        #my $data = decode_stored_json($row->value());
         #if (defined($data->{weight_gram})){
         #    $t_obj->weight_gram($data->{weight_gram});
         #} else {
@@ -231,85 +232,150 @@ sub get_transactions {
     return \@transactions, $total_count;
 }
 
-sub store {
-    my $self = shift;
-    my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
-    my $amount = defined($self->amount()) && length($self->amount()) ? $self->amount() : 'NA';
-    my $weight = defined($self->weight_gram()) && length($self->weight_gram()) ? $self->weight_gram() : 'NA';
-    my $value = {
-        amount => $amount,
-        weight_gram => $weight,
-        timestamp => $self->timestamp(),
-        operator => $self->operator(),
-        description => $self->description(),
-    };
+# Mutations use the same stock-row semaphore as shared seedlot recounts.
+# Direct layout projects precede old/current/requested lot and relationship
+# locks, including when
+# this method is nested inside a creator/upload transaction.
+sub _mutation_scope {
+    my ($self,$endpoints)=@_;
+    return {projects=>[],lots=>[]} if !@$endpoints;
+    my $schema=$self->schema;
+    my $lot_type=SGN::Model::Cvterm->get_cvterm_row($schema,'seedlot','stock_type')->cvterm_id;
+    my $lots=$schema->storage->dbh->selectcol_arrayref(
+        'SELECT stock_id FROM stock WHERE stock_id=ANY(?) AND type_id=? ORDER BY stock_id',undef,$endpoints,$lot_type);
+    # Only direct physical-layout membership on this same BCS handle applies.
+    # Phenotyping/analysis associations and standalone lot transfers do not
+    # acquire unrelated project locks.
+    my $projects=$schema->storage->dbh->selectcol_arrayref(q{
+        SELECT DISTINCT nep.project_id FROM nd_experiment_stock nes
+        JOIN stock unit ON unit.stock_id=nes.stock_id
+        JOIN cvterm st ON st.cvterm_id=unit.type_id
+        JOIN cv scv ON scv.cv_id=st.cv_id AND scv.name='stock_type'
+        JOIN nd_experiment ne USING(nd_experiment_id)
+        JOIN cvterm et ON et.cvterm_id=ne.type_id
+        JOIN cv ecv ON ecv.cv_id=et.cv_id AND ecv.name='experiment_type'
+        JOIN nd_experiment_project nep USING(nd_experiment_id)
+        WHERE nes.stock_id=ANY(?)
+          AND st.name IN ('plot','plant','subplot','tissue_sample')
+          AND et.name IN ('field_layout','genotyping_layout','sampling_layout')
+        ORDER BY nep.project_id
+    },undef,$endpoints);
+    return {projects=>$projects,lots=>$lots};
+}
 
-    #In the special case where the transaction is between the same seedlot
-    if($self->from_stock()->[0] == $self->to_stock()->[0]){
-        $value->{factor} = $self->factor();
-    }
-    #print STDERR Dumper $value;
-    my $json_value = JSON::Any->encode($value);
+# Batch creators/uploaders must lock their complete union before entering a
+# mutation loop. Read the same direct-layout scope used by individual writes;
+# this method does not acquire locks or change any transaction value.
+sub mutation_scope {
+    my ($self,$endpoint_ids)=@_;
+    return $self->_mutation_scope($endpoint_ids);
+}
 
-    if (!$self->has_transaction_id()) {
-        my $row_rs = $self->schema()->resultset("Stock::StockRelationship")
-            ->search({
-                object_id => $self->from_stock()->[0],
-                subject_id => $self->to_stock()->[0],
-                type_id => $transaction_type_id,
-            }, {order_by => { -desc => 'rank'} });
-
-        my $new_rank = 0;
-        if ($row_rs->first) {
-            $new_rank = $row_rs->first->rank()+1;
+sub _with_mutation_locks {
+    my ($self, $extra_endpoints, $operation) = @_;
+    my $schema=$self->schema;
+    my $result;
+    $schema->txn_do(sub {
+        my $before;
+        if ($self->has_transaction_id) {
+            $before=$schema->resultset('Stock::StockRelationship')->find($self->transaction_id);
+            die "The seed transaction no longer exists; reload it before editing.\n" if !$before;
         }
-        #print STDERR Dumper $new_rank;
+        my @endpoints=(
+            ($self->from_stock ? $self->from_stock->[0] : ()),
+            ($self->to_stock ? $self->to_stock->[0] : ()),
+            ($before ? ($before->object_id,$before->subject_id) : ()),
+            @$extra_endpoints,
+        );
+        my %seen;
+        @endpoints=grep {defined($_) && !$seen{$_}++} @endpoints;
+        my $scope=$self->_mutation_scope(\@endpoints);
+        $schema->storage->dbh->selectcol_arrayref(
+            'SELECT project_id FROM project WHERE project_id=ANY(?) ORDER BY project_id FOR UPDATE',undef,$scope->{projects})
+            if @{$scope->{projects}};
+        require CXGN::Stock::Seedlot;
+        CXGN::Stock::Seedlot::lock_for_recount($schema,$scope->{lots});
+        my $current_scope=$self->_mutation_scope(\@endpoints);
+        die "The seed transaction layout or lot membership changed while locking; reload it before editing.\n"
+            if join(',',@{$scope->{projects}}) ne join(',',@{$current_scope->{projects}}) ||
+               join(',',@{$scope->{lots}}) ne join(',',@{$current_scope->{lots}});
+        my $row;
+        if ($before) {
+            my $locked=$schema->storage->dbh->selectrow_hashref(
+                'SELECT object_id,subject_id,type_id FROM stock_relationship WHERE stock_relationship_id=? FOR UPDATE',undef,$self->transaction_id);
+            die "The seed transaction changed or was removed; reload it before editing.\n"
+                if !$locked || $locked->{object_id}!=$before->object_id || $locked->{subject_id}!=$before->subject_id || $locked->{type_id}!=$before->type_id;
+            my $type=SGN::Model::Cvterm->get_cvterm_row($schema,'seed transaction','stock_relationship')->cvterm_id;
+            die "The selected relationship is not a seed transaction.\n" if $locked->{type_id}!=$type;
+            die "The seed transaction endpoints changed; reload it before editing.\n"
+                if ($self->from_stock && $self->from_stock->[0]!=$locked->{object_id}) ||
+                   ($self->to_stock && $self->to_stock->[0]!=$locked->{subject_id});
+            # Read JSON after locks. A constructor-time copy can be stale and
+            # must not overwrite a later correction's packet provenance.
+            $row=$schema->resultset('Stock::StockRelationship')->find($self->transaction_id);
+        }
+        $result=$operation->($row);
+    });
+    return $result;
+}
 
-        my $row = $self->schema()->resultset("Stock::StockRelationship")
-            ->create({
-                object_id => $self->from_stock()->[0],
-                subject_id => $self->to_stock()->[0],
-                type_id => $transaction_type_id,
-                rank => $new_rank,
-                value => $json_value,
-            });
-        return $row->stock_relationship_id();
-    }
+sub store {
+    my $self=shift;
+    return $self->_with_mutation_locks([],sub {
+        my $existing=shift;
+        my $value=$existing ? decode_stored_json($existing->value) : {};
+        die "The seed transaction value must be a JSON object.\n" if ref($value) ne 'HASH';
+        $value={%$value};
+        $value->{amount}=defined($self->amount) && length($self->amount) ? $self->amount : 'NA';
+        $value->{weight_gram}=defined($self->weight_gram) && length($self->weight_gram) ? $self->weight_gram : 'NA';
+        $value->{timestamp}=$self->timestamp;
+        $value->{operator}=$self->operator;
+        $value->{description}=$self->description;
+        $value->{factor}=$self->factor if $self->from_stock->[0]==$self->to_stock->[0];
+        my $json=JSON::Any->encode($value);
+        if ($existing) {
+            $existing->update({value=>$json});
+            return $existing->stock_relationship_id;
+        }
+        my $type=SGN::Model::Cvterm->get_cvterm_row($self->schema,'seed transaction','stock_relationship')->cvterm_id;
+        my $previous=$self->schema->resultset('Stock::StockRelationship')->search({object_id=>$self->from_stock->[0],subject_id=>$self->to_stock->[0],type_id=>$type},{order_by=>{-desc=>'rank'}})->first;
+        my $row=$self->schema->resultset('Stock::StockRelationship')->create({object_id=>$self->from_stock->[0],subject_id=>$self->to_stock->[0],type_id=>$type,rank=>$previous ? $previous->rank+1 : 0,value=>$json});
+        return $row->stock_relationship_id;
+    });
+}
 
-    else {
-        my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
-        $row->update({
-            value => $json_value
-        });
-        return $row->stock_relationship_id();
-    }
+sub _update_endpoint {
+    my ($self,$column,$new_id)=@_;
+    return $self->_with_mutation_locks([$new_id],sub {
+        my $row=shift;
+        die "An existing seed transaction is required.\n" if !$row;
+        $row->update({$column=>$new_id});
+        my $stock=$self->schema->resultset('Stock::Stock')->find($new_id);
+        my $value=[$stock->stock_id,$stock->uniquename,$stock->type_id];
+        $column eq 'subject_id' ? $self->to_stock($value) : $self->from_stock($value);
+        return $row->stock_relationship_id;
+    });
 }
 
 sub update_transaction_subject_id {
-    my $self = shift;
-    my $new_subject_id = shift;
-    my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
-    $row->update({
-        subject_id => $new_subject_id
-    });
-    return $row->stock_relationship_id();
+    my ($self,$new_id)=@_;
+    return $self->_update_endpoint('subject_id',$new_id);
 }
 
 sub update_transaction_object_id {
-    my $self = shift;
-    my $new_object_id = shift;
-    my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
-    $row->update({
-        object_id => $new_object_id
-    });
-    return $row->stock_relationship_id();
+    my ($self,$new_id)=@_;
+    return $self->_update_endpoint('object_id',$new_id);
 }
 
 sub delete_transaction {
-    my $self = shift;
-    my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
-    $row->delete();
-    return $row->stock_relationship_id();
+    my $self=shift;
+    return $self->_with_mutation_locks([],sub {
+        my $row=shift;
+        die "An existing seed transaction is required.\n" if !$row;
+        my $id=$row->stock_relationship_id;
+        $row->delete;
+        return $id;
+    });
 }
 
 1;

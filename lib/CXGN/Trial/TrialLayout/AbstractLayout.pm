@@ -14,6 +14,7 @@ use CXGN::Location::LocationLookup;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
 use CXGN::JSONUtils qw(decode_stored_json);
+use CXGN::Trial::DesignReplication;
 
 
 has 'schema' => (
@@ -183,7 +184,7 @@ sub _lookup_trial_id {
 
     $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
     # moved to subclass  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
-    $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
+    $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("design_rep_number") || []);
     $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
     $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
     $self->_set_accession_names($self->_get_unique_accession_names_from_trial() || []);
@@ -321,7 +322,7 @@ sub _get_plot_info_fields_from_trial {
     my %unique_field_values;
     foreach my $key (sort { $a cmp $b} keys %design) {
 	my %design_info = %{$design{$key}};
-	if (exists($design_info{$field_name})) {
+	if (exists($design_info{$field_name}) && defined($design_info{$field_name}) && $design_info{$field_name} ne '') {
 	    if (! exists($unique_field_values{$design_info{$field_name}})) {
 		#print STDERR "pushing $design_info{$field_name}...\n";
 		push(@field_values, $design_info{$field_name});
@@ -356,6 +357,11 @@ sub _get_design_from_trial {
     }
     # print STDERR "\n_get_design_from_trial design: ".Dumper($design)."\n";
     if (keys(%$design)) {
+        # Existing layout JSON predates the split between an accession's
+        # occurrence number and the recorded design group. Rebuild it once.
+        if (grep { ref($_) eq 'HASH' && (!exists($_->{design_rep_number}) || !exists($_->{accession_occurrence_ready})) } values %$design) {
+            return $self->generate_and_cache_layout();
+        }
         # print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
 	    # print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
 
@@ -379,6 +385,21 @@ sub _get_design_from_trial {
 	    # print STDERR "_get_design_from_trial Generated DESIGN (and cached) : ".Dumper($design);
 	return $design;
     }
+}
+
+=head2 get_planted_design()
+
+The design without the plots that were not planted (stock property
+not_planted, see CXGN::Trial::AccessionChange). For files to collect data
+in, where those plots have nothing to measure.
+
+=cut
+
+sub get_planted_design {
+    my $self = shift;
+    my $design = $self->get_design();
+    return $design if ref($design) ne 'HASH';
+    return { map { $_ => $design->{$_} } grep { !(ref($design->{$_}) eq 'HASH' && $design->{$_}->{not_planted}) } keys %$design };
 }
 
 sub generate_and_cache_layout {
@@ -418,6 +439,8 @@ sub generate_and_cache_layout {
     # }
 
     @plots = @{$plots_ref};
+    $self->{_design_replication} = CXGN::Trial::DesignReplication::read(
+        $schema, [map { $_->stock_id } @plots]);
 
     my %design;
 
@@ -474,6 +497,7 @@ sub retrieve_plot_info {
     # }
     my $plot_name = $plot->uniquename;
     my $plot_id = $plot->stock_id;
+    my $design_replication = $self->{_design_replication}{$plot_id} || {};
     my $plot_properties = $plot->search_related('stockprops');
     my %stockprop_hash;
     while (my $r = $plot_properties->next){
@@ -487,6 +511,14 @@ sub retrieve_plot_info {
     my $row_number_prop = $stockprop_hash{$self->cvterm_id('row_number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('row_number')}} : undef;
     my $col_number_prop = $stockprop_hash{$self->cvterm_id('col_number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('col_number')}} : undef;
     my $is_blank_prop = $stockprop_hash{$self->cvterm_id('is_blank')} ? join ',', @{$stockprop_hash{$self->cvterm_id('is_blank')}} : undef;
+    # not_planted is added by a database patch, so it may not exist yet
+    my $not_planted_type_id = $self->get_cvterm_hash->{'not_planted'};
+    my $not_planted_prop = ($not_planted_type_id && $stockprop_hash{$not_planted_type_id}) ? join ',', @{$stockprop_hash{$not_planted_type_id}} : undef;
+    # rejected and reject_reason as well (CXGN::Trial::AccessionChange)
+    my $rejected_type_id = $self->get_cvterm_hash->{'rejected'};
+    my $rejected_prop = ($rejected_type_id && $stockprop_hash{$rejected_type_id}) ? join ',', @{$stockprop_hash{$rejected_type_id}} : undef;
+    my $reject_reason_type_id = $self->get_cvterm_hash->{'reject_reason'};
+    my $reject_reason_prop = ($reject_reason_type_id && $stockprop_hash{$reject_reason_type_id}) ? join ',', @{$stockprop_hash{$reject_reason_type_id}} : undef;
     my $well_concentration_prop = $stockprop_hash{$self->cvterm_id('concentration')} ? join ',', @{$stockprop_hash{$self->cvterm_id('concentration')}} : undef;
     my $well_volume_prop = $stockprop_hash{$self->cvterm_id('volume')} ? join ',', @{$stockprop_hash{$self->cvterm_id('volume')}} : undef;
     my $well_dna_person_prop = $stockprop_hash{$self->cvterm_id('dna_person')} ? join ',', @{$stockprop_hash{$self->cvterm_id('dna_person')}} : undef;
@@ -580,13 +612,13 @@ sub retrieve_plot_info {
 	die "no plot number stockprop found for plot $plot_name";
     }
 
-    if ($block_number_prop) {
+    if (defined($block_number_prop) && $block_number_prop ne '') {
 	$design_info{"block_number"}=$block_number_prop;
     }
-    if ($row_number_prop) {
+    if (defined($row_number_prop) && $row_number_prop ne '') {
 	$design_info{"row_number"}=$row_number_prop;
     }
-    if ($col_number_prop) {
+    if (defined($col_number_prop) && $col_number_prop ne '') {
 	$design_info{"col_number"}=$col_number_prop;
     }
     if ($self->get_experiment_type eq 'genotyping_layout'){
@@ -623,15 +655,25 @@ sub retrieve_plot_info {
     if ($well_facility_identifier_prop){
 	$design_info{"facility_identifier"} = $well_facility_identifier_prop;
     }
-    if ($replicate_number_prop) {
+    if (defined($replicate_number_prop) && $replicate_number_prop ne '') {
 	$design_info{"rep_number"}=$replicate_number_prop;
     }
-    if ($range_number_prop) {
+    $design_info{design_rep_number} = $design_replication->{value};
+    $design_info{design_replicate_recorded} = $design_replication->{recorded} ? 1 : 0;
+    $design_info{accession_occurrence_ready} = $design_replication->{occurrence_ready} ? 1 : 0;
+    if (defined($range_number_prop) && $range_number_prop ne '') {
 	$design_info{"range_number"}=$range_number_prop;
     }
 	if ($plot_geo_json_prop) {
 	    $design_info{"plot_geo_json"} = decode_stored_json($plot_geo_json_prop);
 	}
+    if ($not_planted_prop) {
+        $design_info{"not_planted"} = $not_planted_prop;
+    }
+    if ($rejected_prop) {
+        $design_info{"rejected"} = $rejected_prop;
+        $design_info{"reject_reason"} = $reject_reason_prop if defined($reject_reason_prop) && length($reject_reason_prop);
+    }
     if ($is_a_control_prop) {
 	    $design_info{"is_a_control"}=$is_a_control_prop;
 	    $unique_controls{$accession_name}=$accession_id;
@@ -697,7 +739,7 @@ sub retrieve_plot_info {
     }
 
     if ($seedlot_transaction->first()){
-	my $val = $json->decode($seedlot_transaction->first()->value());
+	my $val = decode_stored_json($seedlot_transaction->first()->value());
 	my $seedlot = $seedlot_transaction->search_related('object');
 	if ($self->get_verify_layout){
 	    my $seedlot_accession_check = $seedlot->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$self->cvterm_id('collection_of')})->search_related('subject', {'subject.stock_id'=>$accession_id, 'subject.type_id'=>$self->cvterm_id('accession')});
@@ -880,6 +922,12 @@ sub _retrieve_plots_info_bulk {
 	ncbi_taxonomy_id => 'ncbi_taxonomy_id', facility_identifier => 'facility_identifier', plot_geo_json => 'plot_geo_json',
     );
     my %prop_type_id = map { $_ => $self->cvterm_id($prop_terms{$_}) } keys %prop_terms;
+    # Status vocabulary may not have been migrated on an existing installation.
+    # Match the scalar reader without making the optional terms prerequisites.
+    for my $name (qw(not_planted rejected reject_reason)) {
+        my $type_id = $self->get_cvterm_hash->{$name};
+        $prop_type_id{$name} = $type_id if defined($type_id);
+    }
 
     my $plot_props = $stockprops_of->(\@plot_ids);
     my $accessions = $related->('subject', \@plot_ids, $self->get_relationship_type_ids(), $self->get_source_primary_stock_type_ids(), 'id');
@@ -911,6 +959,7 @@ sub _retrieve_plots_info_bulk {
 	my $plot_name = $plot->uniquename;
 	my $plot_id = $plot->stock_id;
 	my $plot_key = $plot->stock_id;  # copy for hash lookups, so $plot_id keeps its type in the JSON
+	my $design_replication = $self->{_design_replication}{$plot_key} || {};
 	my %design_info;
 
 	my $props = $plot_props->{$plot_key} || {};
@@ -938,21 +987,35 @@ sub _retrieve_plots_info_bulk {
 	$design_info{"plot_name"} = $plot_name;
 	$design_info{"plot_id"} = $plot_id;
 
-	if ($prop{plot_number}) {
+	if (defined($prop{plot_number}) && $prop{plot_number} ne '') {
 	    $design_info{"plot_number"} = $prop{plot_number};
 	}
 	else {
 	    die "no plot number stockprop found for plot $plot_name";
 	}
 	foreach my $key (qw(block_number row_number col_number)) {
-	    $design_info{$key} = $prop{$key} if $prop{$key};
+	    $design_info{$key} = $prop{$key} if defined($prop{$key}) && $prop{$key} ne '';
 	}
 	if ($self->get_experiment_type eq 'genotyping_layout') {
 	    $design_info{"is_blank"} = $prop{is_blank} ? 1 : 0;
 	}
-	foreach my $key (qw(concentration volume dna_person extraction tissue_type acquisition_date notes ncbi_taxonomy_id facility_identifier rep_number range_number)) {
+	foreach my $key (qw(concentration volume dna_person extraction tissue_type acquisition_date notes ncbi_taxonomy_id facility_identifier)) {
 	    $design_info{$key} = $prop{$key} if $prop{$key};
 	}
+        for my $key (qw(rep_number range_number)) {
+            $design_info{$key} = $prop{$key} if defined($prop{$key}) && $prop{$key} ne '';
+        }
+        $design_info{design_rep_number} = $design_replication->{value};
+        $design_info{design_replicate_recorded} = $design_replication->{recorded} ? 1 : 0;
+        $design_info{accession_occurrence_ready} = $design_replication->{occurrence_ready} ? 1 : 0;
+        if ($prop{not_planted}) {
+            $design_info{not_planted} = $prop{not_planted};
+        }
+        if ($prop{rejected}) {
+            $design_info{rejected} = $prop{rejected};
+            $design_info{reject_reason} = $prop{reject_reason}
+                if defined($prop{reject_reason}) && length($prop{reject_reason});
+        }
 	if ($prop{plot_geo_json}) {
 	    $design_info{"plot_geo_json"} = decode_stored_json($prop{plot_geo_json});
 	}
@@ -974,7 +1037,7 @@ sub _retrieve_plots_info_bulk {
 	}
 
 	if (@plot_seedlots) {
-	    my $val = $json->decode($plot_seedlots[0]->{value});
+	    my $val = decode_stored_json($plot_seedlots[0]->{value});
 	    $design_info{"seedlot_name"} = $plot_seedlots[0]->{uniquename};
 	    $design_info{"seedlot_stock_id"} = $plot_seedlots[0]->{stock_id};
 	    $design_info{"num_seed_per_plot"} = $val->{amount};
