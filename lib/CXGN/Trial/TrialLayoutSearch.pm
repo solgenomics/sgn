@@ -40,6 +40,8 @@ CXGN::Trial::TrialLayoutSearch - Module to get layout information about one or m
 # use strict;
 # use warnings;
 use Moose;
+use CXGN::DB::ReadSnapshot;
+use CXGN::Trial::DesignReplication;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
@@ -349,6 +351,17 @@ sub search {
         };
     }
 
+    my $replication = CXGN::Trial::DesignReplication::read(
+        $schema, [map { $_->{obsunit_stock_id} } @result]);
+    for my $unit (@result) {
+        my $record = $replication->{$unit->{obsunit_stock_id}} || {};
+        $unit->{rep} = $record->{value};
+        $unit->{block} = $record->{block};
+        $unit->{design_replicate_recorded} = $record->{recorded} ? 1 : 0;
+        $unit->{accession_occurrence} = $record->{occurrence_ready} ? $record->{occurrence} : undef;
+        $unit->{accession_occurrence_ready} = $record->{occurrence_ready} ? 1 : 0;
+    }
+
     # Fetch treatments per stock from the phenotype table.
     # Grouped by (stock_id, treatment_id_str, value) to produce one entry per unique application.
     my %treatments_by_stock;
@@ -457,5 +470,13 @@ sub _sql_from_arrayref {
     my $sql = join ("," , @$arrayref);
     return $sql;
 }
+
+# Identity and later live enrichment belong to the same read snapshot. The
+# shared helper leaves a surrounding caller-owned transaction unchanged.
+around 'search' => sub {
+    my ($next,$self,@args)=@_;
+    return CXGN::DB::ReadSnapshot::run($self->bcs_schema, sub {$next->($self,@args)});
+};
+
 
 1;

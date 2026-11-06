@@ -1,3 +1,19 @@
+# Analytical replicate is the recorded design tag, never the field counter.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "../design_replication.R"), local = TRUE)
+
 #SNOPSIS
 #calculates genomic estimated breeding values (GEBVs) using rrBLUP,
 #GBLUP method
@@ -318,10 +334,7 @@ if (length(formatted_pheno_file) != 0 &&
 
     }
 
-    pheno_data <- data.frame(fread(pheno_file,
-                                   sep = "\t",
-                                   na.strings = c("NA", "", "--", "-", "."),
-                                   header = TRUE))
+    pheno_data <- read_analysis_phenotypes(pheno_file)
 }
 
 pheno_trait_data <- c()
@@ -358,7 +371,7 @@ if (dataset_info == "combined_populations") {
     } else if (length(grep("list", pheno_file)) != 0) {
         pheno_trait_data <- phenoAnalysis::averageTrait(pheno_data, trait_abbr)
     } else {
-        pheno_adjusted_means_result <- phenoAnalysis::getAdjMeans(
+        pheno_adjusted_means_result <- analysis_adjusted_means(
             pheno_data,
             traitName = trait_abbr,
             calcAverages = TRUE,

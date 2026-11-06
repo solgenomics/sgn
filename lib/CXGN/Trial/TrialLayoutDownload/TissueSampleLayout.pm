@@ -36,6 +36,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock;
 use CXGN::Stock::Accession;
 use JSON;
+use CXGN::Trial::DesignReplication;
 
 extends 'CXGN::Trial::TrialLayoutDownload';
 
@@ -53,7 +54,8 @@ sub retrieve {
     my $trial_stock_type = $self->trial_stock_type();
     my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','tissue_sample_number','pedigree','location_name','trial_name','year', 'planting_date','synonyms','tier','plot_geo_json','variety');
+    my @possible_cols = ('tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','range_number','rep_number','accession_occurrence','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','tissue_sample_number','pedigree','location_name','trial_name','year', 'planting_date','synonyms','tier','plot_geo_json','variety');
+
 
     $selected_cols{plot_order} = 1 if $include_plot_order;
 
@@ -176,6 +178,18 @@ sub retrieve {
 
     print STDERR "TrialLayoutDownload::TissueSample turning tissue design into output ".localtime()."\n";
 
+    # Child units can be pooled or have their own recorded local metadata.
+    # Resolve their actual rows instead of copying whichever plot was visited.
+    my $replication = CXGN::Trial::DesignReplication::read($schema,
+        [map {$_->{tissue_sample_id}} @tissue_sample_design]);
+    for my $unit (@tissue_sample_design) {
+        my $record = $replication->{$unit->{tissue_sample_id}};
+        $unit->{design_rep_number} = $record->{value};
+        $unit->{block_number} = $record->{block};
+        $unit->{rep_number} = $record->{occurrence};
+        $unit->{accession_occurrence_ready} = $record->{occurrence_ready};
+    }
+
     foreach my $design_info (@tissue_sample_design) {
         my $line;
         foreach my $c (@possible_cols){
@@ -190,6 +204,10 @@ sub retrieve {
                     push @$line, $trial_year;
                 } elsif ($c eq 'planting_date') {
                     push @$line, $trial_planting_date;
+                } elsif ($c eq 'rep_number') {
+                    push @$line, $design_info->{design_rep_number};
+                } elsif ($c eq 'accession_occurrence') {
+                    push @$line, $design_info->{accession_occurrence_ready} ? $design_info->{rep_number} : undef;
                 } elsif ($c eq 'tier'){
                     my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
                     my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';

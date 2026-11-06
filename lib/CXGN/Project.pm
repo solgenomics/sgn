@@ -35,6 +35,7 @@ use CXGN::Stock;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialLayoutDownload;
 use SGN::Model::Cvterm;
+use CXGN::Trial::DesignReplication;
 use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
@@ -4256,6 +4257,9 @@ sub _save_plant_entry {
         });
     }
 
+    my $parent_design_rep=CXGN::Trial::DesignReplication::read($chado_schema,[$parent_plot])->{$parent_plot}{value};
+    CXGN::Trial::DesignReplication::capture($chado_schema,[$plant->stock_id],{$plant->stock_id=>$parent_design_rep});
+
     #the plant has a relationship to the plot
     my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
         subject_id => $parent_plot,
@@ -4487,6 +4491,16 @@ sub create_tissue_samples {
                         stock_relationship_objects => \@tissue_objects,
                         nd_experiment_stocks => \@tissue_nd_experiment_stocks,
                     });
+
+                    my $group=CXGN::Trial::DesignReplication::read($chado_schema,[$parent_plot_id])->{$parent_plot_id}{value};
+                    CXGN::Trial::DesignReplication::capture($chado_schema,[$tissue->stock_id],{$tissue->stock_id=>$group});
+                    # Store the available physical block for new single-parent
+                    # field tissues; readers also resolve legacy missing rows.
+                    $tissue->create_related('stockprops',{type_id=>$block_cvterm,value=>$design->{$plot}{block_number},rank=>0});
+                    my $parent_occurrence=$design->{$plot}{rep_number};
+                    if (defined($parent_occurrence)) {
+                        $tissue->create_related('stockprops',{type_id=>$replicate_cvterm,value=>$parent_occurrence,rank=>0});
+                    }
 
                     if ($tissue_sample_owner) {
                         my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$tissue->stock_id()});
@@ -5049,6 +5063,9 @@ sub _save_subplot_entry {
             value => $prop->value(),
         });
     }
+
+    my $parent_design_rep=CXGN::Trial::DesignReplication::read($chado_schema,[$parent_plot])->{$parent_plot}{value};
+    CXGN::Trial::DesignReplication::capture($chado_schema,[$subplot->stock_id],{$subplot->stock_id=>$parent_design_rep});
 
     #the subplot has a relationship to the plot
     my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({

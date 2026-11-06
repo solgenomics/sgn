@@ -37,6 +37,7 @@ use R::YapRI::Data::Matrix;
 use CXGN::Tag;
 use CXGN::DroneImagery::ImageTypes;
 use CXGN::DroneImagery::LegendrePolynomials;
+use CXGN::DroneImagery::DesignFactors;
 use Time::Piece;
 use POSIX;
 use Math::Round;
@@ -238,6 +239,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         return;
     }
 
+    my $recorded_study_design = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$field_trial_id_list->[0]})->get_design_type();
+    my $design_fixed_terms;
+    if ($statistics_select =~ /^(?:lmer_|sommer_|blupf90_|airemlf90_)/) {
+        eval { $design_fixed_terms = CXGN::DroneImagery::DesignFactors::fixed_terms($recorded_study_design); };
+        if ($@) { $c->stash->{rest} = {error=>"$@"}; return; }
+    }
+
+    my $drone_sommer_compat_file = "".$c->path_to('R/drone_sommer_compat.R');
+
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $compute_relationship_matrix_from_htp_phenotypes = $c->req->param('relationship_matrix_type') || 'genotypes';
     my $compute_relationship_matrix_from_htp_phenotypes_type = $c->req->param('htp_pheno_rel_matrix_type');
@@ -346,6 +356,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 plot_name => $plot_obj->{plot_name},
                 plot_number => $plot_number_unique,
                 rep_number => $plot_obj->{rep_number},
+                design_rep_number => $plot_obj->{design_rep_number},
                 is_a_control => $plot_obj->{is_a_control}
             };
         }
@@ -414,6 +425,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             );
             my ($data, $unique_traits) = $phenotypes_search->search();
+            eval { CXGN::DroneImagery::DesignFactors::validate_genotype_names($data); };
+            if ($@) { $c->stash->{rest} = {error=>"$@"}; return; }
+            eval { CXGN::DroneImagery::DesignFactors::validate_rows($recorded_study_design,$data); };
+            if ($@) { $c->stash->{rest} = {error=>"$@"}; return; }
             @sorted_trait_names = sort keys %$unique_traits;
             @sorted_trait_names_original = sort keys %$unique_traits;
 
@@ -426,8 +441,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                my $block_number = $obs_unit->{obsunit_block} || '';
+                my $replicate_number = defined($obs_unit->{obsunit_rep}) ? $obs_unit->{obsunit_rep} : '';
+                my $block_number = defined($obs_unit->{obsunit_block}) ? $obs_unit->{obsunit_block} : '';
                 my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                 my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                 my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -539,11 +554,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             my $header_string = join ',', @phenotype_header;
 
-            open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
-                print $F $header_string."\n";
+            open(my $F, ">:encoding(UTF-8)", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+                my $design_csv = Text::CSV->new({binary=>1,eol=>"\n"});
+                $design_csv->print($F,\@phenotype_header) or die $design_csv->error_diag;
                 foreach (@data_matrix) {
-                    my $line = join ',', @$_;
-                    print $F "$line\n";
+                    $design_csv->print($F,$_) or die $design_csv->error_diag;
                 }
             close($F);
         }
@@ -561,6 +576,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             );
             my ($data, $unique_traits) = $phenotypes_search->search();
+            eval { CXGN::DroneImagery::DesignFactors::validate_genotype_names($data); };
+            if ($@) { $c->stash->{rest} = {error=>"$@"}; return; }
+            eval { CXGN::DroneImagery::DesignFactors::validate_rows($recorded_study_design,$data); };
+            if ($@) { $c->stash->{rest} = {error=>"$@"}; return; }
             @sorted_trait_names = sort keys %$unique_traits;
 
             if (scalar(@$data) == 0) {
@@ -575,8 +594,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                my $block_number = $obs_unit->{obsunit_block} || '';
+                my $replicate_number = defined($obs_unit->{obsunit_rep}) ? $obs_unit->{obsunit_rep} : '';
+                my $block_number = defined($obs_unit->{obsunit_block}) ? $obs_unit->{obsunit_block} : '';
                 my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                 my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                 my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -730,11 +749,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             push @phenotype_header, @sorted_trait_names;
             my $header_string = join ',', @phenotype_header;
 
-            open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
-                print $F $header_string."\n";
+            open(my $F, ">:encoding(UTF-8)", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+                my $design_csv = Text::CSV->new({binary=>1,eol=>"\n"});
+                $design_csv->print($F,\@phenotype_header) or die $design_csv->error_diag;
                 foreach (@data_matrix) {
-                    my $line = join ',', @$_;
-                    print $F "$line\n";
+                    $design_csv->print($F,$_) or die $design_csv->error_diag;
                 }
             close($F);
         }
@@ -754,6 +773,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             );
             my ($data, $unique_traits) = $phenotypes_search->search();
+            eval { CXGN::DroneImagery::DesignFactors::validate_genotype_names($data); };
+            if ($@) { $c->stash->{rest} = {error=>"$@"}; return; }
+            eval { CXGN::DroneImagery::DesignFactors::validate_rows($recorded_study_design,$data); };
+            if ($@) { $c->stash->{rest} = {error=>"$@"}; return; }
             @sorted_trait_names = sort keys %$unique_traits;
 
             if (scalar(@$trait_id_list) < 2) {
@@ -774,8 +797,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                my $block_number = $obs_unit->{obsunit_block} || '';
+                my $replicate_number = defined($obs_unit->{obsunit_rep}) ? $obs_unit->{obsunit_rep} : '';
+                my $block_number = defined($obs_unit->{obsunit_block}) ? $obs_unit->{obsunit_block} : '';
                 my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                 my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                 my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -932,25 +955,30 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($fh);
 
-            open(my $F_prep, ">", $stats_prep_tempfile) || die "Can't open file ".$stats_prep_tempfile;
+            open(my $F_prep, ">:encoding(UTF-8)", $stats_prep_tempfile) || die "Can't open file ".$stats_prep_tempfile;
                 print $F_prep "accession_id,accession_id_factor,plot_id,plot_id_factor,replicate,time,replicate_time,ind_replicate\n";
                 foreach (@$data) {
                     my $obsunit_stock_id = $_->{observationunit_stock_id};
                     my $replicate = $_->{obsunit_rep};
+                    my $group = CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$replicate,$_->{obsunit_block});
                     my $germplasm_stock_id = $_->{germplasm_stock_id};
+                    my $prep_csv = Text::CSV->new({binary=>1,eol=>"\n"});
                     foreach my $t (@sorted_trait_names) {
-                        print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate\n";
+                        # A CRD has only the time fixed effect. A physical plot
+                        # is the permanent individual, independent of its tag.
+                        my $group_time = JSON->new->utf8(0)->encode([defined($group)?$group:(),"$t"]);
+                        $prep_csv->print($F_prep,[$germplasm_stock_id,'',$obsunit_stock_id,'',$replicate,$t,$group_time,$obsunit_stock_id]) or die $prep_csv->error_diag;
                     }
                 }
             close($F_prep);
 
             my $cmd_factor = 'R -e "library(data.table);
-            mat <- fread(\''.$stats_prep_tempfile.'\', header=TRUE, sep=\',\');
+            mat <- read.csv(\''.$stats_prep_tempfile.'\', header=TRUE, colClasses=\'character\', na.strings=NULL, check.names=FALSE, fileEncoding=\'UTF-8\');
             mat\$replicate_time <- as.numeric(as.factor(mat\$replicate_time));
             mat\$ind_replicate <- as.numeric(as.factor(mat\$ind_replicate));
             mat\$accession_id_factor <- as.numeric(as.factor(mat\$accession_id));
             mat\$plot_id_factor <- as.numeric(as.factor(mat\$plot_id));
-            write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+            write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', fileEncoding=\'UTF-8\', sep=\'\t\');"';
             print STDERR Dumper $cmd_factor;
             my $status_factor = system("$cmd_factor > /dev/null");
 
@@ -959,22 +987,17 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my %plot_ind_rep_factor_map;
             my %seen_rep_times;
             my %seen_ind_reps;
-            $csv = Text::CSV->new({ sep_char => "\t" });
-            open(my $fh_factor, '<', $stats_prep_factor_tempfile)
+            $csv = Text::CSV->new({ sep_char => "\t", binary => 1 });
+            open(my $fh_factor, '<:encoding(UTF-8)', $stats_prep_factor_tempfile)
                 or die "Could not open file '$stats_prep_factor_tempfile' $!";
 
                 print STDERR "Opened $stats_prep_factor_tempfile\n";
-                $header = <$fh_factor>;
-                if ($csv->parse($header)) {
-                    @header_cols = $csv->fields();
-                }
+                my $factor_header = $csv->getline($fh_factor);
+                @header_cols = @$factor_header if $factor_header;
 
                 my $line_factor_count = 0;
-                while (my $row = <$fh_factor>) {
-                    my @columns;
-                    if ($csv->parse($row)) {
-                        @columns = $csv->fields();
-                    }
+                while (my $row = $csv->getline($fh_factor)) {
+                    my @columns = @$row;
                     my $accession_id = $columns[0];
                     my $accession_id_factor = $columns[1];
                     my $plot_id = $columns[2];
@@ -1011,6 +1034,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             @rep_time_factors = sort keys %seen_rep_times;
             @ind_rep_factors = sort keys %seen_ind_reps;
 
+            my $f90_group_codes = CXGN::DroneImagery::DesignFactors::category_codes([map {
+                CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$_->{obsunit_rep},$_->{obsunit_block})
+            } @$data]);
             my @data_matrix_phenotypes;
             my %stock_row_col;
             my @stocks_ordered;
@@ -1039,7 +1065,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my @row = (
                         $accession_id_factor_map{$germplasm_stock_id},
                         $obsunit_stock_id,
-                        $replicate_number,
+                        # F90 consumes a whitespace numeric matrix. Its unused
+                        # legacy group column must also be categorical numeric;
+                        # the literal recorded tag remains in the prep CSV.
+                        CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate_number,$_->{obsunit_block},$f90_group_codes),
                         $t,
                         $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate_number}->{$t},
                         #$plot_ind_rep_factor_map{$obsunit_stock_id}->{$germplasm_stock_id}->{$replicate_number},
@@ -2129,9 +2158,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_lmer_germplasmname_replicate_phenotype_file";
 
             foreach my $t (@sorted_trait_names) {
-                my $cmd = 'R -e "library(lme4); library(data.table);
-                mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
-                mix <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|id), data = mat, na.action = na.omit );
+                my $cmd = 'R -e "library(lme4); source(\''.$drone_sommer_compat_file.'\'); library(data.table);
+                mat <- drone_read_model_csv(\''.$stats_tempfile.'\');
+            mat\$replicate <- factor(mat\$replicate); mat\$block <- factor(mat\$block);
+            for (trait_col in setdiff(names(mat),c(\'replicate\',\'block\',\'id\',\'plot_id\',\'rowNumber\',\'colNumber\',\'rowNumberFactor\',\'colNumberFactor\'))) mat[[trait_col]] <- as.numeric(mat[[trait_col]]);
+                mix <- lmer('.$trait_name_encoder{$t}.' ~ '.$design_fixed_terms.' + (1|id), data = mat, na.action = na.omit );
                 #mix.summary <- summary(mix);
                 #ve <- mix.summary\$varcor\$id[1,1]/(mix.summary\$varcor\$id[1,1] + (mix.summary\$sigma)^2);
                 write.table(ranef(mix)\$id, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
@@ -2175,12 +2206,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $number_traits = scalar(@encoded_traits);
             my $cbind_string = $number_traits > 1 ? "cbind($encoded_trait_string)" : $encoded_trait_string;
 
-            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
-            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            my $cmd = 'R -e "library(sommer); source(\''.$drone_sommer_compat_file.'\'); library(data.table); library(reshape2);
+            mat <- drone_read_model_csv(\''.$stats_tempfile.'\');
+            mat\$replicate <- factor(mat\$replicate); mat\$block <- factor(mat\$block);
+            for (trait_col in setdiff(names(mat),c(\'replicate\',\'block\',\'id\',\'plot_id\',\'rowNumber\',\'colNumber\',\'rowNumberFactor\',\'colNumberFactor\'))) mat[[trait_col]] <- as.numeric(mat[[trait_col]]);
             geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
             geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
             geno_mat[is.na(geno_mat)] <- 0;
-            mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$cbind_string.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             "';
             print STDERR Dumper $cmd;
@@ -2232,8 +2265,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $number_traits = scalar(@encoded_traits);
             my $cbind_string = $number_traits > 1 ? "cbind($encoded_trait_string)" : $encoded_trait_string;
 
-            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
-            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            my $cmd = 'R -e "library(sommer); source(\''.$drone_sommer_compat_file.'\'); library(data.table); library(reshape2);
+            mat <- drone_read_model_csv(\''.$stats_tempfile.'\');
+            mat\$replicate <- factor(mat\$replicate); mat\$block <- factor(mat\$block);
+            for (trait_col in setdiff(names(mat),c(\'replicate\',\'block\',\'id\',\'plot_id\',\'rowNumber\',\'colNumber\',\'rowNumberFactor\',\'colNumberFactor\'))) mat[[trait_col]] <- as.numeric(mat[[trait_col]]);
             geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
             geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
             geno_mat[is.na(geno_mat)] <- 0;
@@ -2241,7 +2276,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$cbind_string.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -2252,7 +2287,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $trait_index = 1;
             foreach my $enc_trait_name (@encoded_traits) {
                 $cmd .= '
-            blups'.$trait_index.' <- mix\$U\$\`u:rowNumber\`\$'.$enc_trait_name.';
+            blups'.$trait_index.' <- drone_spline_coefficients(mix,\''.$enc_trait_name.'\',X);
             spatial_blup_results\$'.$enc_trait_name.' <- data.matrix(X) %*% data.matrix(blups'.$trait_index.');
                 ';
                 $trait_index++;
@@ -2406,23 +2441,25 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
             }
 
-            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
-            mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\', check.names = FALSE);
+            my $cmd = 'R -e "library(sommer); source(\''.$drone_sommer_compat_file.'\'); library(data.table); library(reshape2); library(orthopolynom);
+            mat <- drone_read_model_csv(\''.$stats_tempfile.'\');
+            mat\$replicate <- factor(mat\$replicate); mat\$block <- factor(mat\$block);
+            for (trait_col in setdiff(names(mat),c(\'replicate\',\'block\',\'id\',\'plot_id\',\'rowNumber\',\'colNumber\',\'rowNumberFactor\',\'colNumberFactor\'))) mat[[trait_col]] <- as.numeric(mat[[trait_col]]);
             geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
             geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
             geno_mat[is.na(geno_mat)] <- 0;
             mat_long <- melt(mat, id.vars=c(\'replicate\', \'block\', \'id\', \'plot_id\', \'rowNumber\', \'colNumber\', \'rowNumberFactor\', \'colNumberFactor\'), variable.name=\'time\', value.name=\'value\');
             mat_long\$time <- as.numeric(as.character(mat_long\$time));
-            mat_long <- mat_long[order(time),];
+            mat_long <- mat_long[order(mat_long\$time),];
             mat\$rowNumber <- as.numeric(mat\$rowNumber);
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
             mix <- mmer(
-                value~1 + replicate,
+                value~'.$design_fixed_terms.',
                 random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), plot_id),
                 rcov=~vs(units),
-                data=mat_long, tolparinv='.$tolparinv.'
+                data=mat_long, tolParInv='.$tolparinv.'
             );
             write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -2644,23 +2681,25 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_leg_random_regression_GDD_genetic_blups_phenotype_file";
             }
 
-            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
-            mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\', check.names = FALSE);
+            my $cmd = 'R -e "library(sommer); source(\''.$drone_sommer_compat_file.'\'); library(data.table); library(reshape2); library(orthopolynom);
+            mat <- drone_read_model_csv(\''.$stats_tempfile.'\');
+            mat\$replicate <- factor(mat\$replicate); mat\$block <- factor(mat\$block);
+            for (trait_col in setdiff(names(mat),c(\'replicate\',\'block\',\'id\',\'plot_id\',\'rowNumber\',\'colNumber\',\'rowNumberFactor\',\'colNumberFactor\'))) mat[[trait_col]] <- as.numeric(mat[[trait_col]]);
             geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
             geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
             geno_mat[is.na(geno_mat)] <- 0;
             mat_long <- melt(mat, id.vars=c(\'replicate\', \'block\', \'id\', \'plot_id\', \'rowNumber\', \'colNumber\', \'rowNumberFactor\', \'colNumberFactor\'), variable.name=\'time\', value.name=\'value\');
             mat_long\$time <- as.numeric(as.character(mat_long\$time));
-            mat_long <- mat_long[order(time),];
+            mat_long <- mat_long[order(mat_long\$time),];
             mat\$rowNumber <- as.numeric(mat\$rowNumber);
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
             mix <- mmer(
-                value~1 + replicate,
+                value~'.$design_fixed_terms.',
                 random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id),
                 rcov=~vs(units),
-                data=mat_long, tolparinv='.$tolparinv.'
+                data=mat_long, tolParInv='.$tolparinv.'
             );
             write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -2817,14 +2856,22 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $pheno_var_pos = $legendre_order_number+1;
             my $cmd_r = 'R -e "
                 pheno <- read.csv(\''.$stats_prep2_tempfile.'\', header=FALSE, sep=\',\');
-                v <- var(pheno);
-                v <- v[1:'.$pheno_var_pos.', 1:'.$pheno_var_pos.'];
+                start_data <- pheno[,seq_len('.$pheno_var_pos.'),drop=FALSE];
+                start_data <- start_data[complete.cases(start_data),,drop=FALSE];
+                if(nrow(start_data) <= '.$pheno_var_pos.')stop(\'Insufficient complete observations for native covariance initialization.\');
+                v <- var(start_data);
+                if(any(!is.finite(v)) || any(diag(v)<=0) || inherits(try(chol(v),silent=TRUE),\'try-error\'))stop(\'Native initial covariance must be finite and positive definite.\');
                 #v <- matrix(rep(0.1, '.$pheno_var_pos.'*'.$pheno_var_pos.'), nrow = '.$pheno_var_pos.');
                 #diag(v) <- rep(1, '.$pheno_var_pos.');
                 write.table(v, file=\''.$stats_out_param_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
             "';
             print STDERR Dumper $cmd_r;
             my $status_r = system("$cmd_r > /dev/null");
+            if ($status_r) {
+                $c->stash->{rest}={error=>'Native RR covariance initialization requires enough complete paired coefficient-column observations and a finite positive definite covariance.'};
+                return;
+            }
+
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -3254,6 +3301,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
         );
         my ($data, $unique_traits) = $phenotypes_search->search();
+        eval { CXGN::DroneImagery::DesignFactors::validate_genotype_names($data); };
+        if ($@) { $c->stash->{rest} = {error=>"$@"}; return; }
         my @sorted_trait_names = sort keys %$unique_traits;
 
         if (scalar(@$data) == 0) {
@@ -3286,27 +3335,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my @sorted_gdd_time_points = sort {$a <=> $b} keys %seen_gdd_times;
 
         my %data_matrix;
-        my %germplasm_pheno_hash;
-        foreach (@$data) {
-            my $germplasm_name = $_->{germplasm_uniquename};
-            my $obsunit_name = $_->{observationunit_uniquename};
-            $germplasm_pheno_hash{$germplasm_name}->{obsunit_rep} = $_->{obsunit_rep};
-            $germplasm_pheno_hash{$germplasm_name}->{obsunit_block} = $_->{obsunit_block};
-            $germplasm_pheno_hash{$germplasm_name}->{germplasm_encoded} = $germplasm_name_encoder{$germplasm_name};
+        foreach my $observation_unit (@$data) {
+            my $germplasm_name = $observation_unit->{germplasm_uniquename};
+            my $obsunit_name = $observation_unit->{observationunit_uniquename};
+            my @row = ($observation_unit->{obsunit_rep},$observation_unit->{obsunit_block},$germplasm_name_encoder{$germplasm_name});
             foreach my $t (@sorted_gdd_time_points) {
-                if (defined($phenotype_data{$obsunit_name}->{$t})) {
-                    $germplasm_pheno_hash{$germplasm_name}->{$t} = $phenotype_data{$obsunit_name}->{$t} + 0;
-                } else {
-                    print STDERR "Using NA for ".$obsunit_name." : $t : $germplasm_name :  \n";
-                }
+                push @row, defined($phenotype_data{$obsunit_name}->{$t}) ? $phenotype_data{$obsunit_name}->{$t}+0 : 'NA';
             }
-        }
-        foreach my $g (keys %seen_germplasm_names) {
-            my @row = ($germplasm_pheno_hash{$g}->{obsunit_rep}, $germplasm_pheno_hash{$g}->{obsunit_block}, $germplasm_pheno_hash{$g}->{germplasm_encoded});
-            foreach my $t (@sorted_gdd_time_points) {
-                push @row, $germplasm_pheno_hash{$g}->{$t};
-            }
-            push @{$data_matrix{$g}}, @row;
+            push @{$data_matrix{$germplasm_name}},@row;
         }
 
         my @phenotype_header = ("replicate", "block", "germplasmName");
@@ -5377,8 +5413,8 @@ sub _perform_plot_polygon_assign {
         my ($previous_result, $previous_total_count) = $previous_images_search->search();
 
         if (scalar(@$previous_result) == scalar(@found_stock_ids)) {
-            print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occured. Skipping \n";
-            return {warning => "Plot polygon assignment already occured for $assign_plot_polygons_type on project $drone_run_band_project_id."};
+            print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occurred. Skipping \n";
+            return {warning => "Plot polygon assignment already occurred for $assign_plot_polygons_type on project $drone_run_band_project_id."};
         }
     }
 
@@ -11705,8 +11741,14 @@ sub _perform_keras_cnn_predict {
         WHERE stock.type_id=$plot_cvterm_id AND stock.stock_id IN ($stock_ids_sql) $accession_ids_sql";
     my $stock_metadata_h = $schema->storage->dbh()->prepare($stock_metadata_q);
     $stock_metadata_h->execute();
+    my $recorded_design_metadata = CXGN::Trial::DesignReplication::read($schema,\@seen_plots);
     my %stock_info;
     while (my ($stock_id, $stock_uniquename, $germplasm_uniquename, $germplasm_stock_id, $plot_number, $rep, $block, $col, $row) = $stock_metadata_h->fetchrow_array()) {
+        $rep = $recorded_design_metadata->{$stock_id}->{value};
+        $block = $recorded_design_metadata->{$stock_id}->{block};
+        if (exists($stock_info{$stock_id}) && $stock_info{$stock_id}->{germplasm_stock_id} ne $germplasm_stock_id) {
+            die "Plot $stock_id has multiple germplasm assignments; CNN scalar model input requires one recorded germplasm per plot.\n";
+        }
         $stock_info{$stock_id} = {
             uniquename => $stock_uniquename,
             germplasm_uniquename => $germplasm_uniquename,
@@ -12075,6 +12117,18 @@ sub _perform_keras_cnn_predict {
     my @result_agg;
     my @data_matrix;
     my $data_matrix_rows = 0;
+    my @cnn_designs = $model_prediction_type eq 'cnn_prediction_mixed_model'
+        ? map {CXGN::Trial->new({bcs_schema=>$schema,trial_id=>$_})->get_design_type()} @field_trial_ids
+        : ();
+    my $cnn_design = CXGN::DroneImagery::DesignFactors::cnn_design($model_prediction_type,\@cnn_designs);
+    my %cnn_group_keys;
+    my $cnn_group_codes = {};
+    my $cnn_group_term = '1';
+    if (defined($cnn_design)) {
+        %cnn_group_keys = map {$_ => CXGN::DroneImagery::DesignFactors::group_key($cnn_design,$stock_info{$_}->{replicate},$stock_info{$_}->{block_number},join(',',@{$recorded_design_metadata->{$_}->{field_projects}}))} keys %stock_info;
+        $cnn_group_codes = CXGN::DroneImagery::DesignFactors::category_codes([values %cnn_group_keys]);
+        $cnn_group_term = CXGN::DroneImagery::DesignFactors::kind($cnn_design) eq 'CRD' ? '1' : 'replicate';
+    }
     my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'growing_degree_days', 'previous_value', 'prediction');
     my @simple_data_matrix;
 
@@ -12170,7 +12224,7 @@ sub _perform_keras_cnn_predict {
         $seen_stock_names{$stock_uniquename}++;
 
         if ($previous_value){
-            push @data_matrix, ($sorted_stock_id, $stock_info{$sorted_stock_id}->{germplasm_stock_id}, $stock_info{$sorted_stock_id}->{replicate}, $stock_info{$sorted_stock_id}->{block_number}, $stock_info{$sorted_stock_id}->{row_number}, $stock_info{$sorted_stock_id}->{col_number}, $stock_info{$sorted_stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
+            push @data_matrix, ($sorted_stock_id, $stock_info{$sorted_stock_id}->{germplasm_stock_id}, (defined($cnn_group_keys{$sorted_stock_id}) ? $cnn_group_codes->{$cnn_group_keys{$sorted_stock_id}} : 0), $stock_info{$sorted_stock_id}->{block_number}, $stock_info{$sorted_stock_id}->{row_number}, $stock_info{$sorted_stock_id}->{col_number}, $stock_info{$sorted_stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
             push @simple_data_matrix, ($previous_value, $prediction);
             $data_matrix_rows++;
         }
@@ -12282,12 +12336,14 @@ sub _perform_keras_cnn_predict {
         $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
         $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
         $r_block->add_command('dataframe.matrix1$prediction <- as.numeric(dataframe.matrix1$prediction)');
-        $r_block->add_command('mixed.lmer <- lmer(previous_value ~ prediction + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
+        $r_block->add_command('dataframe.matrix1$replicate <- factor(dataframe.matrix1$replicate)');
+        $r_block->add_command('mixed.lmer <- lmer(previous_value ~ prediction + '.$cnn_group_term.' + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
         # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 2)');
         $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
 
-        $r_block->add_command('mixed.lmer <- lmer(prediction ~ replicate + (1|germplasm_stock_id), data = dataframe.matrix1 )');
+        $r_block->add_command('dataframe.matrix1$replicate <- factor(dataframe.matrix1$replicate)');
+        $r_block->add_command('mixed.lmer <- lmer(prediction ~ '.$cnn_group_term.' + (1|germplasm_stock_id), data = dataframe.matrix1 )');
         # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix[1,2] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
         $r_block->run_block();
@@ -12495,8 +12551,14 @@ sub _perform_autoencoder_keras_cnn_vi {
         WHERE stock.type_id=$plot_cvterm_id AND stock.stock_id IN ($stock_ids_sql) ";
     my $stock_metadata_h = $schema->storage->dbh()->prepare($stock_metadata_q);
     $stock_metadata_h->execute();
+    my $recorded_design_metadata = CXGN::Trial::DesignReplication::read($schema,\@seen_plots);
     my %stock_info;
     while (my ($stock_id, $stock_uniquename, $germplasm_uniquename, $germplasm_stock_id, $plot_number, $rep, $block, $col, $row) = $stock_metadata_h->fetchrow_array()) {
+        $rep = $recorded_design_metadata->{$stock_id}->{value};
+        $block = $recorded_design_metadata->{$stock_id}->{block};
+        if (exists($stock_info{$stock_id}) && $stock_info{$stock_id}->{germplasm_stock_id} ne $germplasm_stock_id) {
+            die "Plot $stock_id has multiple germplasm assignments; CNN scalar model input requires one recorded germplasm per plot.\n";
+        }
         $stock_info{$stock_id} = {
             stock_uniquename => $stock_uniquename,
             germplasm_uniquename => $germplasm_uniquename,

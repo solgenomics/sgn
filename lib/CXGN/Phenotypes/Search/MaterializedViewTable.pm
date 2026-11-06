@@ -43,9 +43,11 @@ my @data = $phenotypes_search->search();
 use strict;
 use warnings;
 use Moose;
+use CXGN::DB::ReadSnapshot;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Trial::DesignReplication;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
@@ -175,6 +177,120 @@ has 'order_by' => (
 );
 
 
+
+# Read fixed layout vocabulary once per search, not once per observation.
+sub _layout_terms {
+    my ($schema) = @_;
+    my @names = ('plot','plant','subplot','tissue_sample','accession','cross','family_name',
+        'plot_of','plant_of','subplot_of','tissue_sample_of','block','plot number',
+        'row_number','col_number','plant_index_number','is a control');
+    my $rows = $schema->storage->dbh->selectall_arrayref(q{
+        SELECT cv.name,t.name,t.cvterm_id FROM cvterm t JOIN cv USING(cv_id)
+        WHERE cv.name IN ('stock_type','stock_relationship','stock_property')
+          AND t.name=ANY(?) AND t.is_obsolete=0
+    }, undef, \@names);
+    my %terms;
+    for my $row (@$rows) {
+        my $key="$row->[0]/$row->[1]";
+        die "Ambiguous layout vocabulary $key; correct its metadata before reading analytical data.\n"
+            if exists($terms{$key}) && $terms{$key} != $row->[2];
+        $terms{$key}=$row->[2];
+    }
+    return \%terms;
+}
+
+# Validate the complete requested scope, including rows beyond the output page.
+# Accession/name scope uses cached OR live matches: a newly corrected identity
+# must cause an explicit refresh error rather than disappearing in an old filter.
+sub _assert_cached_layout_identity {
+    my ($schema,$from,$where,$omitted,$accessions,$unit_names,$terms) = @_;
+    my @scope = grep {!$omitted->{$_}} @$where;
+    push @scope, "materialized_phenotype_jsonb_table.observationunit_type_name IN ('plot','plant','subplot','tissue_sample')";
+    my @edges;
+    for my $kind (qw(plot plant subplot tissue_sample)) {
+        my $type=$terms->{"stock_type/$kind"} || 0;
+        my $relationship=$terms->{"stock_relationship/${kind}_of"} || 0;
+        push @edges,"(u.type_id=$type AND r.type_id=$relationship)";
+    }
+    my $primary=join(',',map {$terms->{"stock_type/$_"} || 0} qw(accession cross family_name));
+    my @matching;my @bind;
+    if ($accessions && @$accessions) {
+        push @matching,'(cached_germplasm_id=ANY(?::integer[]) OR live_germplasm_ids && ?::integer[])';
+        push @bind,$accessions,$accessions;
+    }
+    if ($unit_names && @$unit_names) {
+        my $names=[map {lc($_)} @$unit_names];
+        push @matching,'(lower(cached_unit_name)=ANY(?::text[]) OR lower(live_unit_name)=ANY(?::text[]))';
+        push @bind,$names,$names;
+    }
+    my $matching=@matching ? join(' AND ',@matching).' AND ' : '';
+    my $sql=q{
+        WITH requested_cache AS (
+            SELECT DISTINCT materialized_phenotype_jsonb_table.observationunit_stock_id AS unit_id,
+                materialized_phenotype_jsonb_table.observationunit_uniquename AS cached_unit_name,
+                materialized_phenotype_jsonb_table.observationunit_type_name AS cached_unit_type,
+                materialized_phenotype_jsonb_table.germplasm_stock_id AS cached_germplasm_id,
+                materialized_phenotype_jsonb_table.germplasm_uniquename AS cached_germplasm_name
+    }.$from.' WHERE '.join(' AND ',@scope).q{
+        ), live_identity AS (
+            SELECT c.*,u.stock_id AS live_unit_id,u.uniquename AS live_unit_name,ut.name AS live_unit_type,
+                count(g.stock_id) AS identity_count,min(g.stock_id) AS live_germplasm_id,
+                min(g.uniquename) AS live_germplasm_name,
+                array_agg(g.stock_id) FILTER (WHERE g.stock_id IS NOT NULL) AS live_germplasm_ids
+            FROM requested_cache c
+            LEFT JOIN stock u ON u.stock_id=c.unit_id
+            LEFT JOIN cvterm ut ON ut.cvterm_id=u.type_id
+            LEFT JOIN stock_relationship r ON r.subject_id=u.stock_id AND (}.join(' OR ',@edges).q{)
+            LEFT JOIN stock g ON g.stock_id=r.object_id AND g.type_id IN (}.$primary.q{)
+            GROUP BY c.unit_id,c.cached_unit_name,c.cached_unit_type,c.cached_germplasm_id,
+                c.cached_germplasm_name,u.stock_id,u.uniquename,ut.name
+        ) SELECT * FROM live_identity WHERE }.$matching.q{(
+            live_unit_id IS NULL OR live_unit_type IS DISTINCT FROM cached_unit_type OR identity_count<>1
+            OR cached_unit_name IS DISTINCT FROM live_unit_name
+            OR cached_germplasm_id IS DISTINCT FROM live_germplasm_id
+            OR cached_germplasm_name IS DISTINCT FROM live_germplasm_name
+        ) ORDER BY unit_id LIMIT 1
+    };
+    my $row=$schema->storage->dbh->selectrow_hashref($sql,undef,@bind);
+    return if !$row;
+    if (defined($row->{live_unit_id}) && $row->{live_unit_type} eq $row->{cached_unit_type} && $row->{identity_count} != 1) {
+        die "Observation unit $row->{unit_id} has missing or ambiguous live germplasm identity; correct its layout before refreshing analytical data.\n";
+    }
+    die "Analytical phenotype cache is stale for observation unit $row->{unit_id}; refresh analytical data before using this result.\n";
+}
+
+# The materialized view stores these stockprop values as text (db/00203).
+# Keep exact zero, leading zeros and NULL; row/column use only rank zero.
+sub _project_live_layout_fields {
+    my ($schema,$result,$terms) = @_;
+    return if !@$result;
+    my %columns=('block'=>'obsunit_block','plot number'=>'obsunit_plot_number',
+        'row_number'=>'obsunit_row_number','col_number'=>'obsunit_col_number',
+        'plant_index_number'=>'obsunit_plant_number','is a control'=>'obsunit_is_a_control');
+    my %by_type=map {defined($terms->{"stock_property/$_"}) ? ($terms->{"stock_property/$_"}=>$_) : ()} keys %columns;
+    my %ids=map {$_->{observationunit_stock_id}=>1} @$result;
+    my %values=map {$_=>{map {$_=>undef} values %columns}} keys %ids;
+    my $rows=$schema->storage->dbh->selectall_arrayref(
+        'SELECT stock_id,type_id,value,rank FROM stockprop WHERE stock_id=ANY(?) AND type_id=ANY(?) ORDER BY stock_id,type_id,rank',
+        undef,[keys %ids],[keys %by_type]);
+    my %seen;
+    for my $row (@$rows) {
+        my ($id,$type,$value,$rank)=@$row;my $name=$by_type{$type};
+        next if ($name eq 'row_number' || $name eq 'col_number') && $rank != 0;
+        my $key=$columns{$name};
+        if ($seen{$id}{$key}++ &&
+            (defined($values{$id}{$key}) != defined($value) ||
+             (defined($value) && $values{$id}{$key} ne $value))) {
+            die "Observation unit $id has ambiguous live layout property $name; correct its metadata before using analytical data.\n";
+        }
+        $values{$id}{$key}=$value;
+    }
+    for my $row (@$result) {
+        my $live=$values{$row->{observationunit_stock_id}};
+        $row->{$_}=$live->{$_} for values %columns;
+    }
+}
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -189,17 +305,22 @@ sub search {
     my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
     
     my $phenotypeprop_sql = '';
+    my $observations_column = 'materialized_phenotype_jsonb_table.observations';
     if ($self->exclude_phenotype_outlier) {
-        $phenotypeprop_sql = " LEFT JOIN (
-            SELECT DISTINCT nes.stock_id
-            FROM nd_experiment_stock nes
-            JOIN nd_experiment_phenotype nep ON nes.nd_experiment_id = nep.nd_experiment_id
-            JOIN phenotypeprop pp ON pp.phenotype_id = nep.phenotype_id
-            WHERE pp.type_id = $phenotype_outlier_type_id
-        ) outlier_stocks ON outlier_stocks.stock_id = materialized_phenotype_jsonb_table.observationunit_stock_id"
-    };
+        $phenotypeprop_sql = " LEFT JOIN LATERAL (
+            SELECT COALESCE(jsonb_agg(o.value), '[]'::jsonb) AS observations
+            FROM jsonb_array_elements(materialized_phenotype_jsonb_table.observations) o
+            WHERE NOT EXISTS (
+                SELECT 1 FROM phenotypeprop pp
+                WHERE pp.phenotype_id = (o.value->>'phenotype_id')::integer
+                  AND pp.type_id = $phenotype_outlier_type_id
+            )
+        ) phenotype_qc ON true ";
+        $observations_column = 'phenotype_qc.observations';
+    }
 
-    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count, intercrop_germplasm FROM materialized_phenotype_jsonb_table
+    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, $observations_column, count(observationunit_stock_id) OVER() AS full_count, intercrop_germplasm";
+    my $from_clause = " FROM materialized_phenotype_jsonb_table
                          LEFT JOIN (
                             select stock.stock_id, array_agg(db.name)::text[] as xref_sources, array_agg(dbxref.accession)::text[] as xref_ids
                             from stock
@@ -214,6 +335,7 @@ sub search {
     
 
     my @where_clause;
+    my %identity_omitted;
 
     if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
         my $plot_and_plant_and_subplot_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
@@ -260,7 +382,9 @@ sub search {
         my $arrayref = $self->accession_list;
         my $sql = join ("','" , @$arrayref);
         my $accession_sql = "'" . $sql . "'";
-        push @where_clause, "germplasm_stock_id in ($accession_sql)";
+        my $predicate="germplasm_stock_id in ($accession_sql)";
+        push @where_clause,$predicate;
+        $identity_omitted{$predicate}=1;
     }
     if ($self->location_list && scalar(@{$self->location_list})>0) {
         my $arrayref = $self->location_list;
@@ -285,7 +409,9 @@ sub search {
         my $dbh = $schema->storage->dbh();
         for my $name (@{$self->observation_unit_names_list}) {push @arrayref, $dbh->quote(lc $name);}
         my $sql = join ("," , @arrayref);
-        push @where_clause, "LOWER(observationunit_uniquename) in ($sql)";
+        my $predicate="LOWER(observationunit_uniquename) in ($sql)";
+        push @where_clause,$predicate;
+        $identity_omitted{$predicate}=1;
     }
 
     my @or_clause;
@@ -298,7 +424,7 @@ sub search {
         foreach (@{$self->trait_list}){
             if ($_){
                 #print STDERR "Working on trait $_\n";
-                push @trait_ids_or, "observations @> '[{\"trait_id\" : $_}]'";
+                push @trait_ids_or, "$observations_column @> '[{\"trait_id\" : $_}]'";
                 $trait_list_check{$_}++;
                 $filter_trait_ids = 1;
             }
@@ -313,7 +439,7 @@ sub search {
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
             if ($_){
-                push @trait_names_or, "observations @> '[{\"trait_name\" : \"$_\"}]'";
+                push @trait_names_or, "$observations_column @> '[{\"trait_name\" : \"$_\"}]'";
                 $filter_trait_names = 1;
             }
         }
@@ -327,7 +453,7 @@ sub search {
     if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
         foreach (@{$self->observation_id_list}) {
             if ($_){
-                push @observation_ids_or, "observations @> '[{\"phenotype_id\" : $_}]'";
+                push @observation_ids_or, "$observations_column @> '[{\"phenotype_id\" : $_}]'";
                 $filter_observation_ids = 1;
             }
         }
@@ -347,9 +473,8 @@ sub search {
     #
 
     if ($self->exclude_phenotype_outlier) {
-        push @where_clause, " outlier_stocks.stock_id IS NULL"
+        push @where_clause, "jsonb_array_length($observations_column) > 0"
     };
-
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
     my $or_clause = '';
@@ -369,7 +494,13 @@ sub search {
     
 
 
-    my  $q = $select_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
+    my $layout_terms=_layout_terms($schema);
+    my $assert_identity=sub {
+        _assert_cached_layout_identity($schema,$from_clause,\@where_clause,\%identity_omitted,
+            $self->accession_list,$self->observation_unit_names_list,$layout_terms);
+    };
+    $assert_identity->();
+    my $q = $select_clause . $from_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
 
     # print STDERR "QUERY: $q\n\n";
 
@@ -492,7 +623,7 @@ sub search {
 		$o->{timestamp} = $timestamp_value;
 		
 	    }
-	    if (!$o->{operator}){
+	    if (!defined($o->{operator}) || $o->{operator} eq '') {
 		if ($phenotype_uniquename){
 		    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
 		    if ($p2){
@@ -571,6 +702,29 @@ sub search {
     }
     #print STDERR Dumper \@result;
 
+    _project_live_layout_fields($schema,\@result,$layout_terms);
+    # The historical analytical replica slot remains the recorded physical
+    # design group. Resolve live rows after cached layout/materialized data so
+    # a stale occurrence value cannot masquerade as a design group.
+    if (@result) {
+        my %unit_ids = map { $_->{observationunit_stock_id} => 1 } @result;
+        my $replication = CXGN::Trial::DesignReplication::read($schema, [keys %unit_ids]);
+        for my $row (@result) {
+            my $info = $replication->{$row->{observationunit_stock_id}};
+            $row->{obsunit_rep} = $info->{value};
+            $row->{obsunit_design_rep} = $info->{value};
+            $row->{obsunit_accession_occurrence} = $info->{occurrence_ready} ? $info->{occurrence} : undef;
+            $row->{obsunit_occurrence_ready} = $info->{occurrence_ready} ? 1 : 0;
+            $row->{obsunit_design_rep_recorded} = $info->{recorded} ? 1 : 0;
+            $row->{obsunit_block} = $info->{block};
+            $row->{obsunit_block_raw} = $info->{block_raw};
+            $row->{obsunit_block_recorded} = $info->{block_recorded} ? 1 : 0;
+        }
+    }
+
+    # Recheck after live projections too: a correction committed during this
+    # read must not combine the former cached identity with a new counter.
+    $assert_identity->();
     print STDERR "Search End:".localtime."\n";
     return (\@result, \%unique_traits, \%trait_synonyms);
 }
@@ -580,6 +734,14 @@ sub _sql_from_arrayref {
     my $sql = join ("," , @$arrayref);
     return $sql;
 }
+
+
+# Identity and later live enrichment belong to the same read snapshot. The
+# shared helper leaves a surrounding caller-owned transaction unchanged.
+around 'search' => sub {
+    my ($next,$self,@args)=@_;
+    return CXGN::DB::ReadSnapshot::run($self->bcs_schema, sub {$next->($self,@args)});
+};
 
 
 1;

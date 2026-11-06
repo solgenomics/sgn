@@ -27,6 +27,7 @@ sub BUILD {
         'plot_name',
         'block_number',
    	    'rep_number',
+        'design_rep_number',
         'row_number',
         'col_number',
         'plot_number',

@@ -2,6 +2,8 @@ package CXGN::BrAPI::v1::Observations;
 
 use Moose;
 use Data::Dumper;
+use CXGN::BrAPI::DataAuthorization;
+use CXGN::BrAPI::v2::Observations;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Search;
 use CXGN::Stock;
@@ -23,6 +25,7 @@ sub observations_store {
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
     my $observations = $params->{observations};
+    return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Observations must be supplied as an array.', 400) if ref($observations) ne 'ARRAY';
     my $version = $params->{version};
     my $user_id = $params->{user_id};
     my $username = $params->{username};
@@ -66,7 +69,7 @@ sub observations_store {
     }
 
 
-    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $user_id, undef, undef);
+    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $username, undef, undef);
     my %parsed_data;
     my @units;
     my @variables;
@@ -83,6 +86,10 @@ sub observations_store {
         %parsed_data = %{$parsed_request->{'data'}};
         #print STDERR "Parsed data is: ".Dumper(%parsed_data)."\n";
     }
+
+    my @authorization_unit_ids = map { $_->{observationUnitDbId} } @$observations;
+    my $authorization = CXGN::BrAPI::DataAuthorization::observation_units_error($schema, $user_id, \@authorization_unit_ids);
+    return CXGN::BrAPI::JSONResponse->return_error($status, $authorization->{error}, $authorization->{code}) if $authorization;
 
     ## Archive in file
     my $archived_request = CXGN::BrAPI::FileRequest->new({
@@ -115,6 +122,7 @@ sub observations_store {
     $phenotype_metadata{'archived_file'} = $file;
     $phenotype_metadata{'archived_file_type'} = 'brapi observations';
     $phenotype_metadata{'date'} = $timestamp;
+    $phenotype_metadata{'operator'} = $username;
 
     ## Store observations and return details for response
     my $store_observations = CXGN::Phenotypes::StorePhenotypes->new(
@@ -132,51 +140,68 @@ sub observations_store {
         trait_list=>\@variables,
         values_hash=>\%parsed_data,
         has_timestamps=>1,
+        overwrite_values => $params->{overwrite} ? 1 : 0,
         metadata_hash=>\%phenotype_metadata,
         #image_zipfile_path=>$image_zip,
         composable_validation_check_name=>$params->{composable_validation_check_name},
         allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
 
+    my (undef, $verified_error) = $store_observations->verify();
+    if ($verified_error) {
+        $verified_error =~ s/<[^>]*>/ /g;
+        $verified_error =~ s/\s+/ /g;
+        return CXGN::BrAPI::JSONResponse->return_error($status, "Your request did not pass the checks. $verified_error", 400);
+    }
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
 
     if ($stored_observation_error) {
         print STDERR "Error: $stored_observation_error\n";
-        return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'The observations could not be stored; no values were changed.', $store_observations->error_code || 500);
     }
     if ($stored_observation_success) {
         print STDERR "Success: $stored_observation_success\n";
         $result{observations} = $stored_observation_details;
     }
 
-    ## Will need to initiate refresh matviews in controller instead
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+    CXGN::BrAPI::v2::Observations::refresh_after_store($schema,$c,\@authorization_unit_ids,$status,\%result);
 
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $stored_observation_success);
 
 }
 
-# sub observations_search {
-#     my $self = shift;
-#     my $search_params = shift;
-#
-#     my $page_size = $self->page_size;
-#     my $page = $self->page;
-#     my $status = $self->status;
-#
-#     my @collectors = $search_params->{collectors} ? @{$search_params->{collectors}} : ();
-#     my @observation_db_ids = $search_params->{observationDbIds} ? @{$search_params->{observationDbIds}} : ();
-#     my @observation_unit_db_ids = $search_params->{observationUnitDbIds} ? @{$search_params->{observationUnitDbIds}} : ();
-#     my @observation_variable_db_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
-#
-#     #implement observation search here using stock search
-#
-#     my @data;
-#     my %result = (data => \@data);
-#     my @data_files;
-#     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-#     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
-# }
+# Advertised v1 reads use the same stored observation identity and QC policy.
+# The v1 season field is a year, while v2 represents it as a season object.
+sub _read_model {
+    my ($self) = @_;
+    return CXGN::BrAPI::v2::Observations->new({
+        bcs_schema=>$self->bcs_schema, metadata_schema=>$self->metadata_schema,
+        phenome_schema=>$self->phenome_schema, people_schema=>$self->people_schema,
+        context=>undef, page=>$self->page, page_size=>$self->page_size, status=>$self->status,
+    });
+}
+
+sub _v1_observation {
+    my ($row) = @_;
+    my %copy = %$row;
+    $copy{season}=$copy{season}{year} if ref($copy{season}) eq 'HASH';
+    return \%copy;
+}
+
+sub search {
+    my ($self,$params)=@_;
+    my $response=$self->_read_model->search($params);
+    if (ref($response->{result}{data}) eq 'ARRAY') {
+        $response->{result}{data}=[map {_v1_observation($_)} @{$response->{result}{data}}];
+    }
+    return $response;
+}
+
+sub detail {
+    my ($self,$params)=@_;
+    my $response=$self->_read_model->detail({%$params});
+    $response->{result}=_v1_observation($response->{result}) if ref($response->{result}) eq 'HASH';
+    return $response;
+}
 
 1;

@@ -9,6 +9,14 @@ sub return_error {
     my $status = shift;
     my $message = shift;
     my $http_code = shift;
+    if (!defined($http_code)) {
+        foreach my $entry (@$status) {
+            my @codes = (keys %$entry, $entry->{messageType} // '');
+            ($http_code) = grep { /^[45]\d\d$/ } @codes;
+            last if defined($http_code);
+        }
+        $http_code = 400 if !defined($http_code);
+    }
     push @$status, { 'ERROR' => $message };
     my $formatted_status = _convert_status_obj($status);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);

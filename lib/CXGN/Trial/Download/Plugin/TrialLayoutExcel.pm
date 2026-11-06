@@ -128,16 +128,25 @@ sub download {
             my $cols = $hash{$row};
             foreach my $col (keys %$cols){
                 my $accession = $hash{$row}->{$col};
-                $ws->write($row, $col, $accession);
+                $ws->write_string($row, $col, $accession // '');
             }
         }
     } else {
         my @output_array = @{$output->{output}};
+        # Names and free-text reasons must survive an unchanged download/upload.
+        my %text_column = map { $_ => 1 } grep {
+            my $header = $output_array[0][$_] // '';
+            $header =~ /_name$/ || $header eq 'rep_number' || $header eq 'design_rep_number' || $header eq 'block_number';
+        } 0 .. $#{ $output_array[0] || [] };
         my $row_num = 0;
         foreach my $l (@output_array){
             my $col_num = 0;
             foreach my $c (@$l){
-                $ws->write($row_num, $col_num, $c);
+                if (defined($c) && ($row_num == 0 || $text_column{$col_num} || $c =~ /^=/)) {
+                    $ws->write_string($row_num, $col_num, $c);
+                } else {
+                    $ws->write($row_num, $col_num, $c);
+                }
                 $col_num++;
             }
             $row_num++;

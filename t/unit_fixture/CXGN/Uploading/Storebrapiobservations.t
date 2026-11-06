@@ -16,11 +16,12 @@ my $schema = $f->bcs_schema;
 
 my $mech = Test::WWW::Mechanize->new(timeout=>30000);
 my $response;
+my $upload_user = 'janedoe';
 
 my $plot_id1 = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial210'})->stock_id;
 my $plot_id2 = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial214'})->stock_id;
 
-$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> $upload_user, "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
@@ -118,6 +119,12 @@ print STDERR Dumper $response;
 
 #Remove observationdbid from result because it is variable
 foreach (@{$response->{result}->{observations}}){
+    # The authenticated uploader and the field collector are distinct actors.
+    my $stored = $schema->resultset('Phenotype::Phenotype')->find($_->{observationDbId});
+    ok($stored, 'the returned observation ID resolves to a stored measurement');
+    is($stored->operator, 'collector1', 'the raw measurement retains its field collector');
+    is($stored->get_column('collect_date'), '2015-06-16 00:53:26',
+        'the raw measurement retains its original collection time');
     delete $_->{observationDbId};
 }
 
@@ -136,7 +143,7 @@ is_deeply($response, {
                                               'observationTimeStamp' => '2015-06-16T00:53:26Z',
                                               'germplasmName' => 'test_accession3',
                                               'observationUnitName' => 'test_trial210',
-                                              'uploadedBy' => 'collector1',
+                                              'uploadedBy' => $upload_user,
                                               'collector' => 'collector1',
                                               'germplasmDbId' => 38842,
                                               'observationUnitDbId' => 38866,
@@ -153,7 +160,7 @@ is_deeply($response, {
                                               'observationTimeStamp' => '2015-06-16T00:53:26Z',
                                               'germplasmName' => 'test_accession4',
                                               'observationUnitName' => 'test_trial214',
-                                              'uploadedBy' => 'collector1',
+                                              'uploadedBy' => $upload_user,
                                               'collector' => 'collector1',
                                               'germplasmDbId' => 38843,
                                               'observationUnitDbId' => 38870,

@@ -61,6 +61,10 @@ sub parse {
     my $v = $c ? $c->value() : undef;
     $v = $super->clean_header($v);
 
+    # A user column must not replace the physical row number used for
+    # duplicate validation and for deciding which trial a row belongs to.
+    next if defined($v) && lc($v) eq '_row';
+
     if ( $v && $v ne '' ) {
       # check for duplicated column header
       if ( exists $seen_column_headers{$v} && !exists $column_arrays->{$v} ) {
@@ -81,7 +85,6 @@ sub parse {
   }
 
   # Parse each row
-  $skips_in_a_row = 0;
   for my $row ( 1 .. $row_max ) {
     my %row_info = (
       _row => $row+1
@@ -114,8 +117,6 @@ sub parse {
         $row_info{$hv} = $row_info{$hv} || undef;
       }
     }
-    $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
-    last if $skips_in_a_row > 5;
     push @{$rtn{data}}, \%row_info if !$skip_row;
   }
 

@@ -53,7 +53,7 @@ sub retrieve {
     my $trial_stock_type = $self->trial_stock_type();
     my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','variety','tier','plot_geo_json',);
+    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','accession_occurrence','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','variety','tier','plot_geo_json',);
 
     $selected_cols{plot_order} = 1 if $include_plot_order;
 
@@ -122,6 +122,10 @@ sub retrieve {
                     push @$line, $trial_year;
                 } elsif ($_ eq 'planting_date') {
                     push @$line, $trial_planting_date;
+                } elsif ($_ eq 'rep_number') {
+                    push @$line, $design_info->{design_rep_number};
+                } elsif ($_ eq 'accession_occurrence') {
+                    push @$line, $design_info->{accession_occurrence_ready} ? $design_info->{rep_number} : undef;
                 } elsif ($_ eq 'tier'){
                     my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
                     my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';

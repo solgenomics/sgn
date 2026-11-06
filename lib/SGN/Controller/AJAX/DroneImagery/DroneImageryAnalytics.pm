@@ -59,6 +59,9 @@ use Scalar::Util qw(looks_like_number);
 use SGN::Controller::AJAX::DroneImagery::DroneImagery;
 use Storable qw(dclone);
 use Statistics::Descriptive;
+use CXGN::DroneImagery::DesignFactors;
+use CXGN::Trial;
+use File::Spec;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -94,6 +97,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         return;
     }
 
+    my $recorded_study_design=CXGN::Trial->new({bcs_schema=>$schema,trial_id=>$field_trial_id_list->[0]})->get_design_type;
+    my $design_fixed_terms;
+    my $drone_sommer_compat_file="".$c->path_to('R/drone_sommer_compat.R');
+    my $f90_group_codes;
     my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_imagery_analytics_env_simulation_protocol', 'protocol_type')->cvterm_id();
     my $protocolprop_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analytics_protocol_properties', 'protocol_property')->cvterm_id();
     my $protocolprop_result_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analytics_protocol_result_summary', 'protocol_property')->cvterm_id();
@@ -147,6 +154,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             simulated_environment_real_data_trait_id => $c->req->param('simulated_environment_real_data_trait_id'),
             sim_env_change_over_time_correlation => $c->req->param('sim_env_change_over_time_correlation') || '0.9',
             fixed_effect_type => $c->req->param('fixed_effect_type'),
+            replicate_column_definition => (($c->req->param('fixed_effect_type') // 'replicate') eq 'fixed_effect_trait' ? 'Sommer/ASReml replicate is the selected numeric trait bin; temporal fixed groups use selected bin and time. Field occurrence is not fitted.' : 'Recorded physical design tag; temporal numeric categories are internal. Field occurrence is not fitted.'),
+            study_design => $recorded_study_design,
             fixed_effect_trait_id => $c->req->param('fixed_effect_trait_id'),
             fixed_effect_quantiles => $c->req->param('fixed_effect_quantiles'),
             env_iterations => $env_iterations,
@@ -206,6 +215,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $simulated_environment_real_data_trait_id = $protocol_properties->{simulated_environment_real_data_trait_id};
     my $correlation_between_times = $protocol_properties->{sim_env_change_over_time_correlation} || 0.9;
     my $fixed_effect_type = $protocol_properties->{fixed_effect_type} || 'replicate';
+    my $replicate_is_quantitative=$fixed_effect_type eq 'fixed_effect_trait' ? 'TRUE':'FALSE';
+    eval {$design_fixed_terms=$fixed_effect_type eq 'fixed_effect_trait' ? 'replicate' : CXGN::DroneImagery::DesignFactors::fixed_terms($recorded_study_design)};
+    if ($@) {$c->stash->{rest}={error=>"$@"};return;}
+
     my $fixed_effect_trait_id = $protocol_properties->{fixed_effect_trait_id};
     my $fixed_effect_quantiles = $protocol_properties->{fixed_effect_quantiles};
     my $env_iterations = $protocol_properties->{env_iterations};
@@ -247,6 +260,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     plot_name => $plot_obj->{plot_name},
                     plot_number => $plot_number_unique,
                     rep_number => $plot_obj->{rep_number},
+                design_rep_number => $plot_obj->{design_rep_number},
                     is_a_control => $plot_obj->{is_a_control}
                 };
             }
@@ -400,7 +414,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 mat <- fread(\''.$stats_tempfile_fixed_effect_binning.'\', header=TRUE, sep=\'\t\');
                 mat <- mat %>% mutate(value_binned = cut(value_continuous, breaks = unique(quantile(value_continuous,probs=seq.int(0,1, by=1/'.$fixed_effect_quantiles.'))), include.lowest=TRUE));
                 mat\$value_binned <- as.numeric(as.factor(mat\$value_binned));
-                write.table(mat, file=\''.$stats_tempfile_fixed_effect_binned.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+                write.table(mat, file=\''.$stats_tempfile_fixed_effect_binned.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                 my $status_factor = system($cmd_factor);
 
                 open(my $fh_factor, '<', $stats_tempfile_fixed_effect_binned) or die "Could not open file '$stats_tempfile_fixed_effect_binned' $!";
@@ -410,11 +424,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my @header_cols = $csv->fields();
                     }
 
-                    while (my $row = <$fh_factor>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
+                    while (my $record = $csv->getline($fh_factor)) {
+                            my @columns = @$record;
                         my $plot_id = $columns[0];
                         my $value = $columns[1];
                         my $value_binned = $columns[2];
@@ -626,7 +637,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -876,7 +887,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -1193,7 +1204,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             colnames(cor_mat) <- mat_agg[,1];
                             range01 <- function(x){(x-min(x))/(max(x)-min(x))};
                             cor_mat <- range01(cor_mat);
-                            write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -1221,7 +1232,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             rel <- (1/ncol(blues_vals)) * (blues_vals %*% t(blues_vals));
                             rownames(rel) <- blues[,2];
                             colnames(rel) <- blues[,2];
-                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -1334,6 +1345,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         }
                     );
                     my ($data, $unique_traits) = $phenotypes_search->search();
+                    eval {CXGN::DroneImagery::DesignFactors::validate_genotype_names($data);};
+                    if ($@) {$c->stash->{rest}={error=>"$@"};return;}
                     @sorted_trait_names = sort keys %$unique_traits;
 
                     if (scalar(@$trait_id_list) < 2) {
@@ -1352,8 +1365,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     foreach my $obs_unit (@$data){
                         my $germplasm_name = $obs_unit->{germplasm_uniquename};
                         my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                        my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                        my $block_number = $obs_unit->{obsunit_block} || '';
+                        my $replicate_number = $obs_unit->{obsunit_rep} // '';
+                        my $block_number = $obs_unit->{obsunit_block} // '';
                         my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                         my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                         my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -1504,8 +1517,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $sorted_trait_names_scaled_string = join ',', @sorted_trait_names_scaled;
 
                     my $cmd = 'R -e "library(sommer); library(orthopolynom);
-                    polynomials <- leg(c('.$sorted_trait_names_scaled_string.'), n='.$legendre_order_number.', intercept=TRUE);
-                    write.table(polynomials, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+                    polynomials <- leg(c('.$sorted_trait_names_scaled_string.'), n='.$legendre_order_number.', intercept=TRUE, intercept1=FALSE);
+                    write.table(polynomials, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                     my $status = system($cmd);
 
                     open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -1536,13 +1549,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
                             my $fixed_effect_trait_value = defined($fixed_effect_trait_data->{$obsunit_stock_id}) ? $fixed_effect_trait_data->{$obsunit_stock_id} : 0;
                             foreach my $t (@sorted_trait_names) {
-                                print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate,$fixed_effect_trait_value\n";
+                                my $group=$fixed_effect_type eq 'fixed_effect_trait' ? undef : CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$replicate,$stock_name_row_col{$p}{block});
+                                my $group_time=JSON->new->utf8(0)->encode([defined($group)?$group:(),"$t"]);
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_prep,[$germplasm_stock_id,'',$obsunit_stock_id,'',$replicate,$t,$group_time,$obsunit_stock_id,$fixed_effect_trait_value]);
                             }
                         }
                     close($F_prep);
 
                     my $cmd_factor = 'R -e "library(data.table); library(dplyr);
-                    mat <- fread(\''.$stats_prep_tempfile.'\', header=TRUE, sep=\',\');
+                    mat <- read.csv(\''.$stats_prep_tempfile.'\', header=TRUE, colClasses=\'character\', na.strings=NULL, check.names=FALSE);
                     mat\$replicate_time <- as.numeric(as.factor(mat\$replicate_time));
                     mat\$ind_replicate <- as.numeric(as.factor(mat\$ind_replicate));
                     mat\$accession_id_factor <- as.numeric(as.factor(mat\$accession_id));
@@ -1551,10 +1566,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     if ($fixed_effect_type eq 'fixed_effect_trait') {
                         $cmd_factor .= 'mat\$replicate_time <- as.numeric(as.factor(paste(mat\$fixed_effect_trait_binned, mat\$time, sep=\'_\')));';
                     }
-                    $cmd_factor .= 'write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+                    $cmd_factor .= 'write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                     my $status_factor = system($cmd_factor);
 
-                    open(my $fh_factor, '<', $stats_prep_factor_tempfile) or die "Could not open file '$stats_prep_factor_tempfile' $!";
+                    $csv=Text::CSV->new({binary=>1,sep_char=>"\t"});
+                    open(my $fh_factor, '<:encoding(UTF-8)', $stats_prep_factor_tempfile) or die "Could not open file '$stats_prep_factor_tempfile' $!";
                         print STDERR "Opened $stats_prep_factor_tempfile\n";
                         $header = <$fh_factor>;
                         if ($csv->parse($header)) {
@@ -1562,11 +1578,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         }
 
                         my $line_factor_count = 0;
-                        while (my $row = <$fh_factor>) {
-                            my @columns;
-                            if ($csv->parse($row)) {
-                                @columns = $csv->fields();
-                            }
+                        while (my $record = $csv->getline($fh_factor)) {
+                            my @columns = @$record;
                             my $accession_id = $columns[0];
                             my $accession_id_factor = $columns[1];
                             my $plot_id = $columns[2];
@@ -1590,6 +1603,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     close($fh_factor);
                     @rep_time_factors = sort keys %seen_rep_times;
                     @ind_rep_factors = sort keys %seen_ind_reps;
+                    $f90_group_codes=$fixed_effect_type eq 'fixed_effect_trait' ? {} : CXGN::DroneImagery::DesignFactors::category_codes([map {
+                        CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$stock_name_row_col{$_}{rep},$stock_name_row_col{$_}{block})
+                    } @unique_plot_names]);
 
                     foreach my $p (@unique_plot_names) {
                         my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -1606,7 +1622,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             my @row = (
                                 $accession_id_factor_map{$germplasm_stock_id},
                                 $obsunit_stock_id,
-                                $replicate,
+                                ($fixed_effect_type eq 'fixed_effect_trait' ? 0 : CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate,$block,$f90_group_codes)),
                                 $t,
                                 $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate}->{$t},
                                 $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
@@ -1670,8 +1686,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                     open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
                         foreach (@data_matrix_phenotypes_original) {
-                            my $line = join ',', @$_;
-                            print $F2 "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F2,$_);
                         }
                     close($F2);
 
@@ -1811,7 +1826,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         colnames(cor_mat) <- mat_agg\$plot_id;
                         range01 <- function(x){(x-min(x))/(max(x)-min(x))};
                         cor_mat <- range01(cor_mat);
-                        write.table(cor_mat, file=\''.$stats_out_pe_pheno_rel_tempfile2.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                        write.table(cor_mat, file=\''.$stats_out_pe_pheno_rel_tempfile2.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                         # print STDERR Dumper $pe_rel_cmd;
                         my $status_pe_rel = system($pe_rel_cmd);
 
@@ -1888,8 +1903,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $obs_unit (@$data_permanent_environment_structure){
                             my $germplasm_name = $obs_unit->{germplasm_uniquename};
                             my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                            my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                            my $block_number = $obs_unit->{obsunit_block} || '';
+                            my $replicate_number = $obs_unit->{obsunit_rep} // '';
+                            my $block_number = $obs_unit->{obsunit_block} // '';
                             my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                             my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                             my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -1959,8 +1974,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         open($F, ">", $stats_out_pe_pheno_rel_tempfile3) || die "Can't open file ".$stats_out_pe_pheno_rel_tempfile3;
                             print $F $header_string_pe."\n";
                             foreach (@data_matrix_pe) {
-                                my $line = join ',', @$_;
-                                print $F "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
                             }
                         close($F);
 
@@ -1970,7 +1984,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $cbind_string_pe = $number_traits_pe > 1 ? "cbind($encoded_trait_string_pe)" : $encoded_trait_string_pe;
 
                         my $statistics_cmd_pe = 'R -e "library(sommer); library(data.table); library(reshape2);
-                        mat <- data.frame(fread(\''.$stats_out_pe_pheno_rel_tempfile3.'\', header=TRUE, sep=\',\'));
+                        source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_out_pe_pheno_rel_tempfile3.'\', quantitative_replicate='.$replicate_is_quantitative.');
                         geno_mat_3col <- data.frame(fread(\''.$stats_out_pe_pheno_rel_2dspline_grm_tempfile.'\', header=FALSE, sep=\'\t\'));
                         geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
                         geno_mat[is.na(geno_mat)] <- 0;
@@ -1978,7 +1993,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         mat\$colNumber <- as.numeric(mat\$colNumber);
                         mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
                         mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-                        mix <- mmer('.$cbind_string_pe.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits_pe.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits_pe.')), rcov=~vs(units, Gtc=unsm('.$number_traits_pe.')), data=mat, tolparinv='.$tolparinv.');
+                        mix <- mmer('.$cbind_string_pe.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits_pe.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits_pe.')), rcov=~vs(units, Gtc=unsm('.$number_traits_pe.')), data=mat, tolParInv='.$tolparinv.');
                         if (!is.null(mix\$U)) {
                         #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
                         X <- with(mat, spl2D(rowNumber, colNumber));
@@ -1987,7 +2002,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $trait_index = 1;
                         foreach my $enc_trait_name (@encoded_traits_pe) {
                             $statistics_cmd_pe .= '
-                        blups'.$trait_index.' <- mix\$U\$\`u:rowNumber\`\$'.$enc_trait_name.';
+                        blups'.$trait_index.' <- drone_spline_coefficients(mix, \''.$enc_trait_name.'\', X);
                         spatial_blup_results\$'.$enc_trait_name.' <- data.matrix(X) %*% data.matrix(blups'.$trait_index.');
                             ';
                             $trait_index++;
@@ -1997,8 +2012,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         colnames(cor_mat) <- spatial_blup_results\$plot_id;
                         range01 <- function(x){(x-min(x))/(max(x)-min(x))};
                         cor_mat <- range01(cor_mat);
-                        write.table(spatial_blup_results, file=\''.$stats_out_pe_pheno_rel_tempfile5.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                        write.table(cor_mat, file=\''.$stats_out_pe_pheno_rel_tempfile4.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+                        write.table(spatial_blup_results, file=\''.$stats_out_pe_pheno_rel_tempfile5.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                        write.table(cor_mat, file=\''.$stats_out_pe_pheno_rel_tempfile4.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
                         }
                         "';
                         # print STDERR Dumper $statistics_cmd;
@@ -2198,8 +2213,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $effect_sim6_1 = $result_blup_pe_data_delta_altered_env_6_1->{$p}->{$t}->[0];
                                 push @row, ($sim_env6, $pheno_sim6_1, $effect_sim6_1);
                             }
-                            my $line = join ',', @row;
-                            print $F_fullplot "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_fullplot,\@row);
                         }
                     close($F_fullplot);
 
@@ -2230,8 +2244,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_original{$p}->{$t};
                                 my @row = ("pheno_orig_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @original_pheno_vals, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2252,8 +2265,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_altered_hash_1->{$p}->{$t};
                                 my @row = ("pheno_postm1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @altered_pheno_vals, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2273,8 +2285,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_pe_data_delta_original_1->{$p}->{$t}->[0];
                                 my @row = ("eff_origm1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @original_effect_vals, $val;
                             }
                         }
@@ -2295,8 +2306,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_pe_data_delta_altered_1->{$p}->{$t}->[0];
                                 my @row = ("eff_postm1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @altered_effect_vals, $val;
                             }
                         }
@@ -2315,8 +2325,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names) {
                                 my @row = ("sim_env1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_1_1->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2329,8 +2338,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $phenotype_data_altered_env_hash_1_1->{$p}->{$t};
                                 my @row = ("simm1_pheno1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno1_vals, $val;
                             }
                         }
@@ -2349,8 +2357,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_pe_data_delta_altered_env_1_1->{$p}->{$t}->[0];
                                 my @row = ("effm1_sim1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect1_vals, $val;
                             }
                         }
@@ -2369,8 +2376,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names) {
                                 my @row = ("sim_env2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_2_1->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2383,8 +2389,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $phenotype_data_altered_env_hash_2_1->{$p}->{$t};
                                 my @row = ("simm1_pheno2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno2_vals, $val;
                             }
                         }
@@ -2403,8 +2408,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_pe_data_delta_altered_env_2_1->{$p}->{$t}->[0];
                                 my @row = ("effm1_sim2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect2_vals, $val;
                             }
                         }
@@ -2419,8 +2423,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names) {
                                 my @row = ("sim_env3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_3_1->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2433,8 +2436,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $phenotype_data_altered_env_hash_3_1->{$p}->{$t};
                                 my @row = ("simm1_pheno3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno3_vals, $val;
                             }
                         }
@@ -2453,8 +2455,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_pe_data_delta_altered_env_3_1->{$p}->{$t}->[0];
                                 my @row = ("effm1_sim3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect3_vals, $val;
                             }
                         }
@@ -2473,8 +2474,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names) {
                                 my @row = ("sim_env4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_4_1->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2487,8 +2487,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $phenotype_data_altered_env_hash_4_1->{$p}->{$t};
                                 my @row = ("simm1_pheno4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno4_vals, $val;
                             }
                         }
@@ -2507,8 +2506,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_pe_data_delta_altered_env_4_1->{$p}->{$t}->[0];
                                 my @row = ("effm1_sim4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect4_vals, $val;
                             }
                         }
@@ -2527,8 +2525,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names) {
                                 my @row = ("sim_env5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_5_1->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2541,8 +2538,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $phenotype_data_altered_env_hash_5_1->{$p}->{$t};
                                 my @row = ("simm1_pheno5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno5_vals, $val;
                             }
                         }
@@ -2561,8 +2557,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_pe_data_delta_altered_env_5_1->{$p}->{$t}->[0];
                                 my @row = ("effm1_sim5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect5_vals, $val;
                             }
                         }
@@ -2581,8 +2576,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names) {
                                 my @row = ("sim_env6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_6_1->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2595,8 +2589,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $phenotype_data_altered_env_hash_6_1->{$p}->{$t};
                                 my @row = ("simm1_pheno6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno6_vals, $val;
                             }
                         }
@@ -2615,8 +2608,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_pe_data_delta_altered_env_6_1->{$p}->{$t}->[0];
                                 my @row = ("effm1_sim6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect6_vals, $val;
                             }
                         }
@@ -2725,7 +2717,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_1, nrow=1), device=\'png\', width=20, height=20, units=\'in\');
-                    write.table(data.frame(airemlf90_grm_random_regression_dap_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_1)), airemlf90_grm_random_regression_dap_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_1)), airemlf90_grm_random_regression_dap_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_1)), airemlf90_grm_random_regression_dap_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_1)), airemlf90_grm_random_regression_dap_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_1)), airemlf90_grm_random_regression_dap_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_1)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(airemlf90_grm_random_regression_dap_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_1)), airemlf90_grm_random_regression_dap_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_1)), airemlf90_grm_random_regression_dap_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_1)), airemlf90_grm_random_regression_dap_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_1)), airemlf90_grm_random_regression_dap_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_1)), airemlf90_grm_random_regression_dap_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_1)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -2953,8 +2945,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $result_blup_data_original_1->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_1->{$t}, $val);
                                 push @original_blup_vals, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -2971,8 +2962,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_data_altered_1->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_1->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @altered_blups_vals, $val;
                             }
                         }
@@ -2990,8 +2980,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_data_altered_env_1_1->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_1->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim1_blup_vals, $val;
                             }
                         }
@@ -3009,8 +2998,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_data_altered_env_2_1->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_1->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim2_blup_vals, $val;
                             }
                         }
@@ -3028,8 +3016,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_data_altered_env_3_1->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_1->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim3_blup_vals, $val;
                             }
                         }
@@ -3047,8 +3034,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_data_altered_env_4_1->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_1->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim4_blup_vals, $val;
                             }
                         }
@@ -3066,8 +3052,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_data_altered_env_5_1->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_1->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim5_blup_vals, $val;
                             }
                         }
@@ -3085,8 +3070,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names) {
                                 my $val = $result_blup_data_altered_env_6_1->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_1->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim6_blup_vals, $val;
                             }
                         }
@@ -3418,6 +3402,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         }
                     );
                     my ($data_2, $unique_traits_2) = $phenotypes_search_2->search();
+                    eval {CXGN::DroneImagery::DesignFactors::validate_genotype_names($data_2);};
+                    if ($@) {$c->stash->{rest}={error=>"$@"};return;}
                     @sorted_trait_names_2 = sort keys %$unique_traits_2;
 
                     if (scalar(@$data_2) == 0) {
@@ -3428,8 +3414,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     foreach my $obs_unit (@$data_2){
                         my $germplasm_name = $obs_unit->{germplasm_uniquename};
                         my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                        my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                        my $block_number = $obs_unit->{obsunit_block} || '';
+                        my $replicate_number = $obs_unit->{obsunit_rep} // '';
+                        my $block_number = $obs_unit->{obsunit_block} // '';
                         my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                         my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                         my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -3572,8 +3558,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open($F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
                         print $F $header_string_2."\n";
                         foreach (@data_matrix_original_2) {
-                            my $line = join ',', @$_;
-                            print $F "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
                         }
                     close($F);
 
@@ -3779,7 +3764,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -4009,7 +3994,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -4291,7 +4276,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             colnames(cor_mat) <- mat_agg[,1];
                             range01 <- function(x){(x-min(x))/(max(x)-min(x))};
                             cor_mat <- range01(cor_mat);
-                            write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -4319,7 +4304,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             rel <- (1/ncol(blues_vals)) * (blues_vals %*% t(blues_vals));
                             rownames(rel) <- blues[,2];
                             colnames(rel) <- blues[,2];
-                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -4508,8 +4493,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $effect_sim6_2 = $result_blup_spatial_data_altered_env_6_2->{$p}->{$t_conv}->[0];
                                 push @row, ($sim_env6, $pheno_sim6_2, $effect_sim6_2);
                             }
-                            my $line = join ',', @row;
-                            print $F_fullplot "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_fullplot,\@row);
                         }
                     close($F_fullplot);
 
@@ -4540,8 +4524,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_original_2{$p}->{$t};
                                 my @row = ("pheno_orig_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @original_pheno_vals, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -4562,8 +4545,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_altered_hash_2->{$p}->{$t};
                                 my @row = ("pheno_postm2_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @altered_pheno_vals_2, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -4583,8 +4565,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_original_2->{$p}->{$t}->[0];
                                 my @row = ("eff_origm2_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @original_effect_vals_2, $val;
                             }
                         }
@@ -4605,8 +4586,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_2->{$p}->{$t}->[0];
                                 my @row = ("eff_postm2_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @altered_effect_vals_2, $val;
                             }
                         }
@@ -4625,8 +4605,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env1_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_1_2->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -4639,8 +4618,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_1_2->{$p}->{$t};
                                 my @row = ("simm2_pheno1_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno1_vals_2, $val;
                             }
                         }
@@ -4659,8 +4637,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_1_2->{$p}->{$t}->[0];
                                 my @row = ("effm2_sim1_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect1_vals_2, $val;
                             }
                         }
@@ -4679,8 +4656,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env2_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_2_2->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -4693,8 +4669,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_2_2->{$p}->{$t};
                                 my @row = ("simm2_pheno2_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno2_vals_2, $val;
                             }
                         }
@@ -4713,8 +4688,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_2_2->{$p}->{$t}->[0];
                                 my @row = ("effm2_sim2_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect2_vals_2, $val;
                             }
                         }
@@ -4733,8 +4707,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env3_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_3_2->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -4747,8 +4720,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_3_2->{$p}->{$t};
                                 my @row = ("simm2_pheno3_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno3_vals_2, $val;
                             }
                         }
@@ -4767,8 +4739,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_3_2->{$p}->{$t}->[0];
                                 my @row = ("effm2_sim3_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect3_vals_2, $val;
                             }
                         }
@@ -4787,8 +4758,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env4_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_4_2->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -4801,8 +4771,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_4_2->{$p}->{$t};
                                 my @row = ("simm2_pheno4_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno4_vals_2, $val;
                             }
                         }
@@ -4821,8 +4790,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_4_2->{$p}->{$t}->[0];
                                 my @row = ("effm2_sim4_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect4_vals_2, $val;
                             }
                         }
@@ -4841,8 +4809,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env5_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_5_2->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -4855,8 +4822,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_5_2->{$p}->{$t};
                                 my @row = ("simm2_pheno5_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno5_vals_2, $val;
                             }
                         }
@@ -4875,8 +4841,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_5_2->{$p}->{$t}->[0];
                                 my @row = ("effm2_sim5_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect5_vals_2, $val;
                             }
                         }
@@ -4895,8 +4860,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env6_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_6_2->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -4909,8 +4873,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_6_2->{$p}->{$t};
                                 my @row = ("simm2_pheno6_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno6_vals_2, $val;
                             }
                         }
@@ -4929,8 +4892,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_6_2->{$p}->{$t}->[0];
                                 my @row = ("effm2_sim6_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect6_vals_2, $val;
                             }
                         }
@@ -5038,7 +5000,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_2, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2)), env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_2)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2)), env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_2)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -5265,8 +5227,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $result_blup_data_original_2->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
                                 push @original_blup_vals_2, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -5283,8 +5244,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_2->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @altered_blups_vals_2, $val;
                             }
                         }
@@ -5302,8 +5262,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_1_2->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim1_blup_vals_2, $val;
                             }
                         }
@@ -5321,8 +5280,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_2_2->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim2_blup_vals_2, $val;
                             }
                         }
@@ -5340,8 +5298,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_3_2->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim3_blup_vals_2, $val;
                             }
                         }
@@ -5359,8 +5316,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_4_2->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim4_blup_vals_2, $val;
                             }
                         }
@@ -5378,8 +5334,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_5_2->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim5_blup_vals_2, $val;
                             }
                         }
@@ -5397,8 +5352,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_6_2->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim6_blup_vals_2, $val;
                             }
                         }
@@ -5693,6 +5647,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         }
                     );
                     my ($data_2, $unique_traits_2) = $phenotypes_search_2->search();
+                    eval {CXGN::DroneImagery::DesignFactors::validate_genotype_names($data_2);};
+                    if ($@) {$c->stash->{rest}={error=>"$@"};return;}
                     @sorted_trait_names_2 = sort keys %$unique_traits_2;
 
                     if (scalar(@$data_2) == 0) {
@@ -5703,8 +5659,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     foreach my $obs_unit (@$data_2){
                         my $germplasm_name = $obs_unit->{germplasm_uniquename};
                         my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                        my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                        my $block_number = $obs_unit->{obsunit_block} || '';
+                        my $replicate_number = $obs_unit->{obsunit_rep} // '';
+                        my $block_number = $obs_unit->{obsunit_block} // '';
                         my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                         my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                         my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -5847,8 +5803,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open($F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
                         print $F $header_string_2."\n";
                         foreach (@data_matrix_original_2) {
-                            my $line = join ',', @$_;
-                            print $F "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
                         }
                     close($F);
 
@@ -6054,7 +6009,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -6284,7 +6239,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -6566,7 +6521,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             colnames(cor_mat) <- mat_agg[,1];
                             range01 <- function(x){(x-min(x))/(max(x)-min(x))};
                             cor_mat <- range01(cor_mat);
-                            write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -6594,7 +6549,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             rel <- (1/ncol(blues_vals)) * (blues_vals %*% t(blues_vals));
                             rownames(rel) <- blues[,2];
                             colnames(rel) <- blues[,2];
-                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -6784,8 +6739,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $effect_sim6_3 = $result_blup_spatial_data_altered_env_6_3->{$p}->{$t_conv}->[0];
                                 push @row, ($sim_env6, $pheno_sim6_3, $effect_sim6_3);
                             }
-                            my $line = join ',', @row;
-                            print $F_fullplot "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_fullplot,\@row);
                         }
                     close($F_fullplot);
 
@@ -6816,8 +6770,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_original_2{$p}->{$t};
                                 my @row = ("pheno_orig_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @original_pheno_vals, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -6838,8 +6791,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_altered_hash_3->{$p}->{$t};
                                 my @row = ("pheno_postm3_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @altered_pheno_vals_3, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -6859,8 +6811,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_original_3->{$p}->{$t}->[0];
                                 my @row = ("eff_origm3_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @original_effect_vals_3, $val;
                             }
                         }
@@ -6881,8 +6832,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_3->{$p}->{$t}->[0];
                                 my @row = ("eff_postm3_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @altered_effect_vals_3, $val;
                             }
                         }
@@ -6901,8 +6851,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env1_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_1_3->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -6915,8 +6864,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_1_3->{$p}->{$t};
                                 my @row = ("simm3_pheno1_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno1_vals_3, $val;
                             }
                         }
@@ -6935,8 +6883,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_1_3->{$p}->{$t}->[0];
                                 my @row = ("effm3_sim1_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect1_vals_3, $val;
                             }
                         }
@@ -6955,8 +6902,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env2_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_2_3->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -6969,8 +6915,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_2_3->{$p}->{$t};
                                 my @row = ("simm3_pheno2_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno2_vals_3, $val;
                             }
                         }
@@ -6989,8 +6934,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_2_3->{$p}->{$t}->[0];
                                 my @row = ("effm3_sim2_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect2_vals_3, $val;
                             }
                         }
@@ -7009,8 +6953,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env3_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_3_3->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -7023,8 +6966,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_3_3->{$p}->{$t};
                                 my @row = ("simm3_pheno3_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno3_vals_3, $val;
                             }
                         }
@@ -7043,8 +6985,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_3_3->{$p}->{$t}->[0];
                                 my @row = ("effm3_sim3_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect3_vals_3, $val;
                             }
                         }
@@ -7063,8 +7004,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env4_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_4_3->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -7077,8 +7017,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_4_3->{$p}->{$t};
                                 my @row = ("simm3_pheno4_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno4_vals_3, $val;
                             }
                         }
@@ -7097,8 +7036,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_4_3->{$p}->{$t}->[0];
                                 my @row = ("effm3_sim4_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect4_vals_3, $val;
                             }
                         }
@@ -7117,8 +7055,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env5_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_5_3->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -7131,8 +7068,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_5_3->{$p}->{$t};
                                 my @row = ("simm3_pheno5_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno5_vals_3, $val;
                             }
                         }
@@ -7151,8 +7087,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_5_3->{$p}->{$t}->[0];
                                 my @row = ("effm3_sim5_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect5_vals_3, $val;
                             }
                         }
@@ -7171,8 +7106,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my @row = ("sim_env6_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_6_3->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -7185,8 +7119,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $phenotype_data_altered_env_hash_6_3->{$p}->{$t};
                                 my @row = ("simm3_pheno6_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno6_vals_3, $val;
                             }
                         }
@@ -7205,8 +7138,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_spatial_data_altered_env_6_3->{$p}->{$t}->[0];
                                 my @row = ("effm3_sim6_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect6_vals_3, $val;
                             }
                         }
@@ -7315,7 +7247,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_3, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3)), env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_3)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3)), env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_3)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -7542,8 +7474,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $result_blup_data_original_3->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_2{$t}, $val);
                                 push @original_blup_vals_3, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -7560,8 +7491,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_3->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_2{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @altered_blups_vals_3, $val;
                             }
                         }
@@ -7579,8 +7509,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_1_3->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_2{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim1_blup_vals_3, $val;
                             }
                         }
@@ -7598,8 +7527,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_2_3->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_2{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim2_blup_vals_3, $val;
                             }
                         }
@@ -7617,8 +7545,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_3_3->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_2{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim3_blup_vals_3, $val;
                             }
                         }
@@ -7636,8 +7563,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_4_3->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_2{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim4_blup_vals_3, $val;
                             }
                         }
@@ -7655,8 +7581,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_5_3->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_2{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim5_blup_vals_3, $val;
                             }
                         }
@@ -7674,8 +7599,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_2) {
                                 my $val = $result_blup_data_altered_env_6_3->{$p}->{$t}->[0];
                                 my @row = ($p, $trait_to_time_map_2{$t}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim6_blup_vals_3, $val;
                             }
                         }
@@ -7981,6 +7905,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         }
                     );
                     my ($data_5, $unique_traits_5) = $phenotypes_search_5->search();
+                    eval {CXGN::DroneImagery::DesignFactors::validate_genotype_names($data_5);};
+                    if ($@) {$c->stash->{rest}={error=>"$@"};return;}
                     @sorted_trait_names_5 = sort keys %$unique_traits_5;
 
                     if (scalar(@$data_5) == 0) {
@@ -7994,8 +7920,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     foreach my $obs_unit (@$data_5){
                         my $germplasm_name = $obs_unit->{germplasm_uniquename};
                         my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                        my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                        my $block_number = $obs_unit->{obsunit_block} || '';
+                        my $replicate_number = $obs_unit->{obsunit_rep} // '';
+                        my $block_number = $obs_unit->{obsunit_block} // '';
                         my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                         my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                         my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -8117,30 +8043,30 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
                             my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
                             foreach my $t (@sorted_trait_names_5) {
-                                print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate\n";
+                                my $group=$fixed_effect_type eq 'fixed_effect_trait' ? undef : CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$replicate,$stock_name_row_col{$p}{block});
+                                my $group_time=JSON->new->utf8(0)->encode([defined($group)?$group:(),"$t"]);
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_prep,[$germplasm_stock_id,'',$obsunit_stock_id,'',$replicate,$t,$group_time,$obsunit_stock_id]);
                             }
                         }
                     close($F_prep);
 
                     my $cmd_factor = 'R -e "library(data.table);
-                    mat <- fread(\''.$stats_prep_tempfile.'\', header=TRUE, sep=\',\');
+                    mat <- read.csv(\''.$stats_prep_tempfile.'\', header=TRUE, colClasses=\'character\', na.strings=NULL, check.names=FALSE);
                     mat\$replicate_time <- as.numeric(as.factor(mat\$replicate_time));
                     mat\$ind_replicate <- as.numeric(as.factor(mat\$ind_replicate));
                     mat\$accession_id_factor <- as.numeric(as.factor(mat\$accession_id));
                     mat\$plot_id_factor <- as.numeric(as.factor(mat\$plot_id));
-                    write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+                    write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                     my $status_factor = system($cmd_factor);
 
-                    open(my $fh_factor, '<', $stats_prep_factor_tempfile) or die "Could not open file '$stats_prep_factor_tempfile' $!";
+                    $csv=Text::CSV->new({binary=>1,sep_char=>"\t"});
+                    open(my $fh_factor, '<:encoding(UTF-8)', $stats_prep_factor_tempfile) or die "Could not open file '$stats_prep_factor_tempfile' $!";
                         print STDERR "Opened $stats_prep_factor_tempfile\n";
                         my $header_d = <$fh_factor>;
 
                         my $line_factor_count = 0;
-                        while (my $row = <$fh_factor>) {
-                            my @columns;
-                            if ($csv->parse($row)) {
-                                @columns = $csv->fields();
-                            }
+                        while (my $record = $csv->getline($fh_factor)) {
+                            my @columns = @$record;
                             my $accession_id = $columns[0];
                             my $accession_id_factor = $columns[1];
                             my $plot_id = $columns[2];
@@ -8164,6 +8090,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     close($fh_factor);
                     @rep_time_factors = sort keys %seen_rep_times;
                     @ind_rep_factors = sort keys %seen_ind_reps;
+                    $f90_group_codes=$fixed_effect_type eq 'fixed_effect_trait' ? {} : CXGN::DroneImagery::DesignFactors::category_codes([map {
+                        CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$stock_name_row_col{$_}{rep},$stock_name_row_col{$_}{block})
+                    } @unique_plot_names]);
 
                     foreach my $p (@unique_plot_names) {
                         my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
@@ -8182,6 +8111,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             $germplasm_stock_id,
                             $obsunit_stock_id,
                             $replicate,
+                $block,
                             $row_number,
                             $col_number,
                             $accession_id_factor_map{$germplasm_stock_id},
@@ -8201,7 +8131,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         push @data_matrix_original_5, \@row;
                     }
 
-                    @phenotype_header_5 = ("id", "plot_id", "replicate", "rowNumber", "colNumber", "id_factor", "plot_id_factor");
+                    @phenotype_header_5 = ("id", "plot_id", "replicate", "block", "rowNumber", "colNumber", "id_factor", "plot_id_factor");
                     foreach (@sorted_trait_names_5) {
                         push @phenotype_header_5, "t$_";
                     }
@@ -8210,8 +8140,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open($F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
                         print $F $header_string_5."\n";
                         foreach (@data_matrix_original_5) {
-                            my $line = join ',', @$_;
-                            print $F "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
                         }
                     close($F);
                 };
@@ -8420,7 +8349,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -8655,7 +8584,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -8944,7 +8873,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 $htp_cmd .= 'cor_mat <- solve(cor_mat);
                                 ';
                             }
-                            $htp_cmd .= 'write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            $htp_cmd .= 'write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -8977,7 +8906,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
                             $htp_cmd .= 'rownames(rel) <- blues[,2];
                             colnames(rel) <- blues[,2];
-                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -9163,8 +9092,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $effect_sim6_5 = $result_blup_spatial_data_altered_env_6_5->{$p}->{$t}->[0];
                                 push @row, ($sim_env6, $pheno_sim6_5, $effect_sim6_5);
                             }
-                            my $line = join ',', @row;
-                            print $F_fullplot "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_fullplot,\@row);
                         }
                     close($F_fullplot);
 
@@ -9195,8 +9123,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_original_5{$p}->{$t};
                                 my @row = ("pheno_orig_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @original_pheno_vals, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9217,8 +9144,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_altered_hash_5->{$p}->{$t};
                                 my @row = ("pheno_postm5_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @altered_pheno_vals_5, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9238,8 +9164,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_spatial_data_original_5->{$p}->{$t}->[0];
                                 my @row = ("eff_origm5_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @original_effect_vals_5, $val;
                             }
                         }
@@ -9260,8 +9185,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_spatial_data_altered_5->{$p}->{$t}->[0];
                                 my @row = ("eff_postm5_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @altered_effect_vals_5, $val;
                             }
                         }
@@ -9280,8 +9204,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my @row = ("sim_env1_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_1_5->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9294,8 +9217,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $phenotype_data_altered_env_hash_1_5->{$p}->{$t};
                                 my @row = ("simm5_pheno1_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno1_vals_5, $val;
                             }
                         }
@@ -9314,8 +9236,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_spatial_data_altered_env_1_5->{$p}->{$t}->[0];
                                 my @row = ("effm5_sim1_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect1_vals_5, $val;
                             }
                         }
@@ -9334,8 +9255,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my @row = ("sim_env2_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_2_5->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9348,8 +9268,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $phenotype_data_altered_env_hash_2_5->{$p}->{$t};
                                 my @row = ("simm5_pheno2_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno2_vals_5, $val;
                             }
                         }
@@ -9368,8 +9287,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_spatial_data_altered_env_2_5->{$p}->{$t}->[0];
                                 my @row = ("effm5_sim2_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect2_vals_5, $val;
                             }
                         }
@@ -9388,8 +9306,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my @row = ("sim_env3_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_3_5->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9402,8 +9319,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $phenotype_data_altered_env_hash_3_5->{$p}->{$t};
                                 my @row = ("simm5_pheno3_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno3_vals_5, $val;
                             }
                         }
@@ -9422,8 +9338,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_spatial_data_altered_env_3_5->{$p}->{$t}->[0];
                                 my @row = ("effm5_sim3_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect3_vals_5, $val;
                             }
                         }
@@ -9442,8 +9357,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my @row = ("sim_env4_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_4_5->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9456,8 +9370,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $phenotype_data_altered_env_hash_4_5->{$p}->{$t};
                                 my @row = ("simm5_pheno4_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno4_vals_5, $val;
                             }
                         }
@@ -9476,8 +9389,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_spatial_data_altered_env_4_5->{$p}->{$t}->[0];
                                 my @row = ("effm5_sim4_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect4_vals_5, $val;
                             }
                         }
@@ -9496,8 +9408,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my @row = ("sim_env5_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_5_5->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9510,8 +9421,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $phenotype_data_altered_env_hash_5_5->{$p}->{$t};
                                 my @row = ("simm5_pheno5_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno5_vals_5, $val;
                             }
                         }
@@ -9530,8 +9440,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_spatial_data_altered_env_5_5->{$p}->{$t}->[0];
                                 my @row = ("effm5_sim5_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect5_vals_5, $val;
                             }
                         }
@@ -9550,8 +9459,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my @row = ("sim_env6_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_6_5->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9564,8 +9472,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $phenotype_data_altered_env_hash_6_5->{$p}->{$t};
                                 my @row = ("simm5_pheno6_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno6_vals_5, $val;
                             }
                         }
@@ -9584,8 +9491,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_spatial_data_altered_env_6_5->{$p}->{$t}->[0];
                                 my @row = ("effm5_sim6_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect6_vals_5, $val;
                             }
                         }
@@ -9694,7 +9600,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_5).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_5, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_5)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_5)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_5)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_5)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_5)), asreml_grm_univariate_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_5)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_5)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_5)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_5)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_5)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_5)), asreml_grm_univariate_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_5)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -9921,8 +9827,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $result_blup_data_original_5->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
                                 push @original_blup_vals_5, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -9939,8 +9844,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_data_altered_5->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @altered_blups_vals_5, $val;
                             }
                         }
@@ -9958,8 +9862,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_data_altered_env_1_5->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim1_blup_vals_5, $val;
                             }
                         }
@@ -9977,8 +9880,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_data_altered_env_2_5->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim2_blup_vals_5, $val;
                             }
                         }
@@ -9996,8 +9898,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_data_altered_env_3_5->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim3_blup_vals_5, $val;
                             }
                         }
@@ -10015,8 +9916,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_data_altered_env_4_5->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim4_blup_vals_5, $val;
                             }
                         }
@@ -10034,8 +9934,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_data_altered_env_5_5->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim5_blup_vals_5, $val;
                             }
                         }
@@ -10053,8 +9952,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_5) {
                                 my $val = $result_blup_data_altered_env_6_5->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim6_blup_vals_5, $val;
                             }
                         }
@@ -10357,6 +10255,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         }
                     );
                     my ($data_6, $unique_traits_6) = $phenotypes_search_6->search();
+                    eval {CXGN::DroneImagery::DesignFactors::validate_genotype_names($data_6);};
+                    if ($@) {$c->stash->{rest}={error=>"$@"};return;}
                     @sorted_trait_names_6 = sort keys %$unique_traits_6;
 
                     if (scalar(@$data_6) == 0) {
@@ -10370,8 +10270,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     foreach my $obs_unit (@$data_6){
                         my $germplasm_name = $obs_unit->{germplasm_uniquename};
                         my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                        my $replicate_number = $obs_unit->{obsunit_rep} || '';
-                        my $block_number = $obs_unit->{obsunit_block} || '';
+                        my $replicate_number = $obs_unit->{obsunit_rep} // '';
+                        my $block_number = $obs_unit->{obsunit_block} // '';
                         my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
                         my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
                         my $row_number = $obs_unit->{obsunit_row_number} || '';
@@ -10493,30 +10393,30 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
                             my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
                             foreach my $t (@sorted_trait_names_6) {
-                                print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate\n";
+                                my $group=$fixed_effect_type eq 'fixed_effect_trait' ? undef : CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$replicate,$stock_name_row_col{$p}{block});
+                                my $group_time=JSON->new->utf8(0)->encode([defined($group)?$group:(),"$t"]);
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_prep,[$germplasm_stock_id,'',$obsunit_stock_id,'',$replicate,$t,$group_time,$obsunit_stock_id]);
                             }
                         }
                     close($F_prep);
 
                     my $cmd_factor = 'R -e "library(data.table);
-                    mat <- fread(\''.$stats_prep_tempfile.'\', header=TRUE, sep=\',\');
+                    mat <- read.csv(\''.$stats_prep_tempfile.'\', header=TRUE, colClasses=\'character\', na.strings=NULL, check.names=FALSE);
                     mat\$replicate_time <- as.numeric(as.factor(mat\$replicate_time));
                     mat\$ind_replicate <- as.numeric(as.factor(mat\$ind_replicate));
                     mat\$accession_id_factor <- as.numeric(as.factor(mat\$accession_id));
                     mat\$plot_id_factor <- as.numeric(as.factor(mat\$plot_id));
-                    write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+                    write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                     my $status_factor = system($cmd_factor);
 
-                    open(my $fh_factor, '<', $stats_prep_factor_tempfile) or die "Could not open file '$stats_prep_factor_tempfile' $!";
+                    $csv=Text::CSV->new({binary=>1,sep_char=>"\t"});
+                    open(my $fh_factor, '<:encoding(UTF-8)', $stats_prep_factor_tempfile) or die "Could not open file '$stats_prep_factor_tempfile' $!";
                         print STDERR "Opened $stats_prep_factor_tempfile\n";
                         my $header_d = <$fh_factor>;
 
                         my $line_factor_count = 0;
-                        while (my $row = <$fh_factor>) {
-                            my @columns;
-                            if ($csv->parse($row)) {
-                                @columns = $csv->fields();
-                            }
+                        while (my $record = $csv->getline($fh_factor)) {
+                            my @columns = @$record;
                             my $accession_id = $columns[0];
                             my $accession_id_factor = $columns[1];
                             my $plot_id = $columns[2];
@@ -10540,6 +10440,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     close($fh_factor);
                     @rep_time_factors = sort keys %seen_rep_times;
                     @ind_rep_factors = sort keys %seen_ind_reps;
+                    $f90_group_codes=$fixed_effect_type eq 'fixed_effect_trait' ? {} : CXGN::DroneImagery::DesignFactors::category_codes([map {
+                        CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$stock_name_row_col{$_}{rep},$stock_name_row_col{$_}{block})
+                    } @unique_plot_names]);
 
                     foreach my $p (@unique_plot_names) {
                         my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
@@ -10558,6 +10461,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             $germplasm_stock_id,
                             $obsunit_stock_id,
                             $replicate,
+                $block,
                             $row_number,
                             $col_number,
                             $accession_id_factor_map{$germplasm_stock_id},
@@ -10577,7 +10481,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         push @data_matrix_original_6, \@row;
                     }
 
-                    @phenotype_header_6 = ("id", "plot_id", "replicate", "rowNumber", "colNumber", "id_factor", "plot_id_factor");
+                    @phenotype_header_6 = ("id", "plot_id", "replicate", "block", "rowNumber", "colNumber", "id_factor", "plot_id_factor");
                     foreach (@sorted_trait_names_6) {
                         push @phenotype_header_6, "t$_";
                     }
@@ -10586,8 +10490,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open($F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
                         print $F $header_string_6."\n";
                         foreach (@data_matrix_original_6) {
-                            my $line = join ',', @$_;
-                            print $F "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
                         }
                     close($F);
                 };
@@ -10796,7 +10699,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -11031,7 +10934,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                             A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
                             A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                            write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR $cmd."\n";
                             my $status = system($cmd);
 
@@ -11320,7 +11223,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 $htp_cmd .= 'cor_mat <- solve(cor_mat);
                                 ';
                             }
-                            $htp_cmd .= 'write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            $htp_cmd .= 'write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -11353,7 +11256,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
                             $htp_cmd .= 'rownames(rel) <- blues[,2];
                             colnames(rel) <- blues[,2];
-                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                            write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
                             print STDERR Dumper $htp_cmd;
                             my $status = system($htp_cmd);
                         }
@@ -11541,8 +11444,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $effect_sim6_6 = $result_blup_spatial_data_altered_env_6_6->{$p}->{$t}->[0];
                                 push @row, ($sim_env6, $pheno_sim6_6, $effect_sim6_6);
                             }
-                            my $line = join ',', @row;
-                            print $F_fullplot "$line\n";
+                            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_fullplot,\@row);
                         }
                     close($F_fullplot);
 
@@ -11573,8 +11475,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_original_6{$p}->{$t};
                                 my @row = ("pheno_orig_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @original_pheno_vals, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -11595,8 +11496,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $phenotype_data_altered_hash_6->{$p}->{$t};
                                 my @row = ("pheno_postm6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
                                 push @altered_pheno_vals_6, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -11616,8 +11516,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_spatial_data_original_6->{$p}->{$t}->[0];
                                 my @row = ("eff_origm6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @original_effect_vals_6, $val;
                             }
                         }
@@ -11638,8 +11537,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_spatial_data_altered_6->{$p}->{$t}->[0];
                                 my @row = ("eff_postm6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @altered_effect_vals_6, $val;
                             }
                         }
@@ -11658,8 +11556,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my @row = ("sim_env1_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_1_6->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -11672,8 +11569,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $phenotype_data_altered_env_hash_1_6->{$p}->{$t};
                                 my @row = ("simm6_pheno1_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno1_vals_6, $val;
                             }
                         }
@@ -11692,8 +11588,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_spatial_data_altered_env_1_6->{$p}->{$t}->[0];
                                 my @row = ("effm6_sim1_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect1_vals_6, $val;
                             }
                         }
@@ -11712,8 +11607,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my @row = ("sim_env2_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_2_6->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -11726,8 +11620,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $phenotype_data_altered_env_hash_2_6->{$p}->{$t};
                                 my @row = ("simm6_pheno2_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno2_vals_6, $val;
                             }
                         }
@@ -11746,8 +11639,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_spatial_data_altered_env_2_6->{$p}->{$t}->[0];
                                 my @row = ("effm6_sim2_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect2_vals_6, $val;
                             }
                         }
@@ -11766,8 +11658,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my @row = ("sim_env3_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_3_6->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -11780,8 +11671,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $phenotype_data_altered_env_hash_3_6->{$p}->{$t};
                                 my @row = ("simm6_pheno3_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno3_vals_6, $val;
                             }
                         }
@@ -11800,8 +11690,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_spatial_data_altered_env_3_6->{$p}->{$t}->[0];
                                 my @row = ("effm6_sim3_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect3_vals_6, $val;
                             }
                         }
@@ -11820,8 +11709,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my @row = ("sim_env4_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_4_6->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -11834,8 +11722,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $phenotype_data_altered_env_hash_4_6->{$p}->{$t};
                                 my @row = ("simm6_pheno4_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno4_vals_6, $val;
                             }
                         }
@@ -11854,8 +11741,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_spatial_data_altered_env_4_6->{$p}->{$t}->[0];
                                 my @row = ("effm6_sim4_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect4_vals_6, $val;
                             }
                         }
@@ -11874,8 +11760,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my @row = ("sim_env5_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_5_6->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -11888,8 +11773,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $phenotype_data_altered_env_hash_5_6->{$p}->{$t};
                                 my @row = ("simm6_pheno5_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno5_vals_6, $val;
                             }
                         }
@@ -11908,8 +11792,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_spatial_data_altered_env_5_6->{$p}->{$t}->[0];
                                 my @row = ("effm6_sim5_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect5_vals_6, $val;
                             }
                         }
@@ -11928,8 +11811,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         foreach my $p (@unique_plot_names) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my @row = ("sim_env6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_hash_6_6->{$p}->{$t});
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -11942,8 +11824,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $phenotype_data_altered_env_hash_6_6->{$p}->{$t};
                                 my @row = ("simm6_pheno6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim_pheno6_vals_6, $val;
                             }
                         }
@@ -11962,8 +11843,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_spatial_data_altered_env_6_6->{$p}->{$t}->[0];
                                 my @row = ("effm6_sim6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
-                                my $line = join ',', @row;
-                                print $F_eff "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_eff,\@row);
                                 push @sim_effect6_vals_6, $val;
                             }
                         }
@@ -12072,7 +11952,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_6).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_6, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_6)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_6)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_6)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_6)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_6)), asreml_grm_univariate_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_6)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_6)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_6)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_6)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_6)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_6)), asreml_grm_univariate_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_6)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -12299,8 +12179,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $val = $result_blup_data_original_6->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
                                 push @original_blup_vals_6, $val;
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                             }
                         }
                     close($F_pheno);
@@ -12317,8 +12196,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_data_altered_6->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @altered_blups_vals_6, $val;
                             }
                         }
@@ -12336,8 +12214,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_data_altered_env_1_6->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim1_blup_vals_6, $val;
                             }
                         }
@@ -12355,8 +12232,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_data_altered_env_2_6->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim2_blup_vals_6, $val;
                             }
                         }
@@ -12374,8 +12250,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_data_altered_env_3_6->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim3_blup_vals_6, $val;
                             }
                         }
@@ -12393,8 +12268,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_data_altered_env_4_6->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim4_blup_vals_6, $val;
                             }
                         }
@@ -12412,8 +12286,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_data_altered_env_5_6->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim5_blup_vals_6, $val;
                             }
                         }
@@ -12431,8 +12304,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             foreach my $t (@sorted_trait_names_6) {
                                 my $val = $result_blup_data_altered_env_6_6->{$p}->{$t}->[0];
                                 my @row = ($p, $t, $val);
-                                my $line = join ',', @row;
-                                print $F_pheno "$line\n";
+                                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F_pheno,\@row);
                                 push @sim6_blup_vals_6, $val;
                             }
                         }
@@ -12838,7 +12710,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             }
         }
     }
-    #AIREMLF90 RR
     else {
         foreach (@$env_varcomps) {
             my $type = $_->{statistics_select};
@@ -12909,11 +12780,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
         %avg_varcomps = %avg_varcomps_save;
     }
-    # print STDERR Dumper \%avg_varcomps;
 
     my %avg_cross_validation;
     my @avg_cross_validation_display;
-    foreach (@$env_varcomps) {
+    foreach (@{($statistics_select =~ /^(?:blupf90|airemlf90)_/ && !$perform_cv) ? []:$env_varcomps}) {
         my $type = $_->{statistics_select};
         foreach my $t (@varcomp_keys) {
             my $cv1 = $_->{$t}->{cv_1};

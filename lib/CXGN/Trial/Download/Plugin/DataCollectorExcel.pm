@@ -350,9 +350,9 @@ sub download {
             $ws->write($n+1, 0, $design_info{plot_name});
             $ws->write($n+1, 1, $design_info{accession_name});
             $ws->write($n+1, 2, $design_info{plot_number});
-            $ws->write($n+1, 3, $design_info{block_number});
+            $ws->write_string($n+1, 3, $design_info{block_number} // '');
             $ws->write($n+1, 4, $design_info{is_a_control});
-            $ws->write($n+1, 5, $design_info{rep_number});
+            $ws->write_string($n+1, 5, $design_info{design_rep_number} // '');
         }
     } elsif ($self->data_level eq 'plants') {
         $num_col_before_traits = 7;
@@ -379,9 +379,9 @@ sub download {
                 $ws->write($line, 1, $design_info{plot_name});
                 $ws->write($line, 2, $design_info{accession_name});
                 $ws->write($line, 3, $design_info{plot_number});
-                $ws->write($line, 4, $design_info{block_number});
+                $ws->write_string($line, 4, $design_info{block_number} // '');
                 $ws->write($line, 5, $design_info{is_a_control});
-                $ws->write($line, 6, $design_info{rep_number});
+                $ws->write_string($line, 6, $design_info{design_rep_number} // '');
                 $line++;
             }
         }

@@ -14,7 +14,7 @@ has 'bcs_schema' => (
 
 has 'external_references' => (
     is => 'ro',
-    isa => 'ArrayRef[HashRef[Str]]',
+    isa => 'ArrayRef[HashRef]',
 );
 
 has 'id' => (
@@ -37,6 +37,28 @@ has 'table_id_key' => (
 
 
 
+# Shared input contract for unit and phenotype writers. Optional scalar/null
+# fields and the legacy referenceID spelling are accepted without mutation.
+# Callers may validate before constructing the storage object or archiving data.
+sub validate_payload {
+    my ($refs) = @_;
+    return undef if !defined($refs); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
+    return {code=>400,error=>'externalReferences must be an array of objects.'} if ref($refs) ne 'ARRAY';
+    for my $ref (@$refs) {
+        return {code=>400,error=>'Each external reference must be an object.'} if ref($ref) ne 'HASH';
+        for my $value (values %$ref) {
+            return {code=>400,error=>'External reference fields must be scalar values.'} if ref($value);
+        }
+        my $source=$ref->{referenceSource};
+        my $id=defined($ref->{referenceId}) && length($ref->{referenceId}) ? $ref->{referenceId} : $ref->{referenceID};
+        return {code=>400,error=>'Each external reference needs nonempty referenceSource and referenceId values.'}
+            if !defined($source) || !length($source) || !defined($id) || !length($id);
+        return {code=>400,error=>'referenceId and legacy referenceID identify different references.'}
+            if defined($ref->{referenceId}) && length($ref->{referenceId}) && defined($ref->{referenceID}) && length($ref->{referenceID}) && $ref->{referenceId} ne $ref->{referenceID};
+    }
+    return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
+}
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -49,40 +71,34 @@ sub search {
                 join dbxref as ref on (ref.dbxref_id=o_dbxref.dbxref_id)
                 join db using (db_id)";
 
-    # $ids may be a string or an Array Reference.  This code must handle both cases.
-    if ($ids) {
-        if ( ref($ids) eq "ARRAY" ) {
-            if (scalar(@$ids) > 0){
-                my $list_ids = join(",", @$ids);
-                $query = $query . " where s.$table_id in ($list_ids)";
-            }
-        }
-        else{ # $ids must be a Str (assumed to be a single ID)
-            my $list_ids = $ids;
-            $query = $query . " where s.$table_id in ($list_ids)";
+    my @bind;
+    if (defined($ids)) {
+        if (ref($ids) eq 'ARRAY') {
+            return {} if !@$ids;
+            $query .= " WHERE s.$table_id IN (".join(',', ('?') x @$ids).")";
+            @bind = @$ids;
+        } else {
+            $query .= " WHERE s.$table_id = ?";
+            @bind = ($ids);
         }
     }
-
-    # the dbxref table's id column has no schema prefix (sgn_people.list -> list_dbxref_id)
     (my $table_base = $table) =~ s/^.*\.//;
-    $query .=  " order by o_dbxref.${table_base}_dbxref_id";  ### ORDER THE OUTPUT SO IT IS REPRODUCIBLE FOR THE TEST.
-
-    print STDERR "QUERY = $query\n";
-    my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
-    $sth->execute();
+    $query .= " ORDER BY o_dbxref.${table_base}_dbxref_id";
+    my $sth = $schema->storage->dbh->prepare($query);
+    $sth->execute(@bind);
 
     my %result;
     while (my @r = $sth->fetchrow_array()) {
-        my $reference_source = $r[0] || undef;
+        my $reference_source = $r[0];
         my $url = $r[1];
         my $accession = $r[2];
         my $reference_id;
 
         if($reference_source eq 'DOI') {
-            $reference_id = ($url) ? "$url$accession" : "doi:$accession";
+            $reference_id = (defined($url) && length($url)) ? "$url$accession" : "doi:$accession";
         } else {
-            $url = ($url) ? $url : "";
-            $reference_id = ($accession) ? "$url$accession" : $url;
+            $url = defined($url) ? $url : "";
+            $reference_id = (defined($accession) && length($accession)) ? "$url$accession" : $url;
         }
 
         push @{$result{$r[3]}}, {
@@ -97,93 +113,39 @@ sub search {
 
 sub store {
     my $self = shift;
-    my $schema = $self->bcs_schema();
-    my $table = sprintf "%s_dbxref", $self->table_name();
-    my $table_id = $self->table_id_key();
-    my $id = $self->id();
-    my $external_references = $self->external_references();
-    # Clear old external references
-    $self->_remove_external_references();
-
-    foreach (@$external_references){
-
-        my $ref_name = $_->{'referenceSource'};
-
-        # 'referenceID' was deprecated in v2.1 of the brapi spec. Now 'referenceId'
-        # should be used.  Both are now in use.
-        my $ref_id = $_->{'referenceId'};
-        if( ! $ref_id ){
-            $ref_id = $_->{'referenceID'};
-        }
-
-        #DOI
-        if($ref_name eq "DOI"){
-            my $create_db = $schema->resultset("General::Db")->find_or_create(
-            {
-            name       => 'DOI',
-            urlprefix =>  'http://',
-            url        => 'doi.org',
-            } );
-            
-            $ref_id =~ s/http:\/\/doi\.org//;
-            $ref_id =~ s/https:\/\/doi\.org//;
-            $ref_id =~ s/doi://;
-            $ref_id =~ s/DOI://;
-
-            my $create_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
-                db_id => $create_db->db_id(),
-                accession => $ref_id
-            });
-
-            # Switch to model way to do it once project_dbxref is added to chado schema
-            my $dbh = $self->bcs_schema->storage()->dbh();
-            my $sql = "INSERT INTO $table (dbxref_id, $table_id) VALUES ( ?, ? ) ON CONFLICT DO NOTHING";
-            my $sth = $dbh->prepare( $sql );
-            $sth->execute($create_dbxref->dbxref_id(), $id);
-
-            #my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
-            #    $table_id => $id,
-            #    dbxref_id => $create_dbxref->dbxref_id()
-            #});
-
-        } else {
-            my ($url,$object_id) = _check_brapi_url($ref_id);
-
-            if($ref_name){
-
-                my $create_db = $schema->resultset("General::Db")->find_or_create({
-                    name => $ref_name,
-                    url => $url
-                });
-            
-                if($object_id){
-                  my $create_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
-                      db_id => $create_db->db_id(),
-                      accession => $object_id
-                  });
-
-                  # Switch to model way to do it once project_dbxref is added to chado schema
-                  my $dbh = $self->bcs_schema->storage()->dbh();
-                  my $sql = "INSERT INTO $table (dbxref_id, $table_id) VALUES ( ?, ? ) ON CONFLICT DO NOTHING";
-                  my $sth = $dbh->prepare( $sql );
-                  $sth->execute($create_dbxref->dbxref_id(), $id);
-
-                  #my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
-                  #    $table_id => $id,
-                  #    dbxref_id => $create_dbxref->dbxref_id()
-                  #});
-                }
+    my $schema = $self->bcs_schema;
+    my $refs = $self->external_references;
+    my $invalid = validate_payload($refs);
+    return $invalid if $invalid;
+    return {success=>'External references unchanged.'} if !defined($refs);
+    my $id=$self->id;
+    return {code=>400,error=>'A scalar target identifier is required for external references.'} if !defined($id) || ref($id) || !length($id);
+    my $table = sprintf '%s_dbxref', $self->table_name;
+    my $table_id = $self->table_id_key;
+    my $ok=eval {
+        $schema->txn_do(sub {
+            $self->_remove_external_references;
+            for my $ref (@$refs) {
+                my $name=$ref->{referenceSource};
+                my $ref_id=defined($ref->{referenceId}) && length($ref->{referenceId}) ? $ref->{referenceId} : $ref->{referenceID};
+                my ($url,$accession);
+                if ($name eq 'DOI') {
+                    $url='http://doi.org/';
+                    $ref_id =~ s{^https?://doi\.org/}{}i;
+                    $ref_id =~ s{^doi:}{}i;
+                    $accession=$ref_id;
+                } else { ($url,$accession)=_check_brapi_url($ref_id); }
+                my $db=$schema->resultset('General::Db')->find_or_create({name=>$name,url=>$url});
+                my $xref=$schema->resultset('General::Dbxref')->find_or_create({db_id=>$db->db_id,accession=>$accession});
+                $schema->storage->dbh->prepare("INSERT INTO $table (dbxref_id, $table_id) VALUES (?, ?) ON CONFLICT DO NOTHING")->execute($xref->dbxref_id,$id);
             }
-        }
-    }
-
-    if ($@) {
-        return {error => "External References transaction error trying to write to db"};
-    }
-
-    return { success => "External References added successfully" };
-
+        });
+        1;
+    };
+    return {code=>500,error=>'External references could not be saved.'} if !$ok;
+    return {success=>'External References added successfully'};
 }
+
 
 sub _remove_external_references {
     my $self = shift;
@@ -192,8 +154,8 @@ sub _remove_external_references {
     my $id = $self->id();
 
     # Clear $table_dbxref, we'll leave the dbxref because those can be shared
-    my $delete_table_dbxref_query = "delete from $table\_dbxref where $table_id = $id";
-    $self->bcs_schema->storage()->dbh()->prepare($delete_table_dbxref_query)->execute();
+    my $delete_table_dbxref_query = "delete from $table\_dbxref where $table_id = ?";
+    $self->bcs_schema->storage()->dbh()->prepare($delete_table_dbxref_query)->execute($id);
 }
 
 

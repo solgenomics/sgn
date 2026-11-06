@@ -1,3 +1,18 @@
+# Analytical replicate contains the recorded tag, never a field occurrence.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "design_replication.R"))
 
 # R CMD BATCH --no-save --no-restore '--args phenotype_file="blabla.txt" output_file="blalba.png" ' analyze_phenotype.r output.txt
 library(plyr)
@@ -22,7 +37,8 @@ write(paste("output_file: ", output_file), stderr())
 
 errorfile = paste(phenotype_file, ".err", sep="");
 
-phenodata = read.csv(phenotype_file,fill=TRUE, sep=",", header = TRUE, stringsAsFactors = T, na.strings="NA");
+phenodata <- read_analysis_phenotypes(phenotype_file,sep=",",quote='"')
+assert_genotype_name_identity(phenodata)
 
 blocks = unique(phenodata$blockNumber)
 print(paste("blocks: ", blocks));
@@ -43,7 +59,7 @@ for (i in 1:(length(studyNames))) {
  
   trialdata <- trialdata[, !(names(trialdata) %in% metadata)]
  
-  trialdata <- trialdata[, !(names(trialdata) %in% c('replicate', 'blockNumber'))]
+  trialdata <- trialdata[, !(names(trialdata) %in% c('replicate', 'designReplicate', 'design_rep_number', 'blockNumber'))]
 
   trialdata <- ddply(trialdata,
                      "germplasmName",

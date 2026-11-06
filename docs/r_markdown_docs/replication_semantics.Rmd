@@ -1,0 +1,146 @@
+# Design replication and accession occurrences
+
+An accession correction changes what occupies a field position. It does not
+move that position to another block or replication group. The following
+contracts keep those two facts separate.
+
+| Boundary | Design replication tag | Accession occurrence |
+|---|---|---|
+| Stock properties | `design_replicate` | `replicate` after field cutover |
+| Operational layout cache | `design_rep_number` | `rep_number` |
+| BrAPI standard replication level / v1 replicate | Design tag | Separate `additionalInfo.accessionOccurrence` |
+| BrAPI explicit additional information | `designReplicate` | `accessionOccurrence` only when ready |
+| Statistical matrix, existing 30/39 metadata columns | Existing `replicate` column | Not a blocking factor / not added as a trait |
+| Updated mixed-model working input | `designReplicate` alias in the same metadata slot | Physical unit IDs identify individuals |
+| Layout CSV/XLSX | Existing replication column is the design tag | Explicit `accession_occurrence` column |
+
+## Recorded metadata and migration
+
+`AddDesignReplicationStockprop` creates the new stock-property vocabulary and
+`accession_occurrence_version` project-property vocabulary. Existing recorded
+replication labels are captured before any counter is changed. This is a
+snapshot of available records, not a reconstruction of a lost original design.
+Do not infer Alpha/Lattice membership from accession counts or plot order.
+
+A `design_replicate` row with a NULL value explicitly records missing metadata.
+It differs from no snapshot row. Readers must not substitute an occurrence
+counter for that recorded NULL. Zero is a valid recorded tag and is retained.
+Same-field descendants inherit their plot's design tag; external sampling and
+plate units retain the metadata of their own layout.
+
+A whole field layout gets `accession_occurrence_version = 1` only in the same
+transaction that normalizes its counters. Until then, a stored legacy replicate
+must not be advertised as a modern occurrence counter. Public statistical
+replication still resolves to the recorded design tag, or pre-cutover legacy
+tag where no snapshot exists.
+
+## Correction and creation
+
+Before a field accession correction, preserve all design tags in the trial.
+For the proposed final accession assignment, number every accession's planned
+positions from 1 through N by numeric plot number, then stock ID. Only changed
+values are written. Normalize all trial accessions on a membership change so
+legacy group labels cannot remain mixed with occurrence counters. Same-trial
+plants, subplots and samples receive the plot's occurrence; external layouts
+keep their own local fields. A repeated correction is idempotent.
+
+Check plots and planned positions retain their places in
+this numbering. These labels are not counts of eligible measurements. Analysis
+eligibility and observation counts remain separate.
+
+A pure status change or no-op does not renumber a layout. Native full-layout
+creation uses an internal forced-normalization option after all positions are
+stored. Genotyping wells and aggregated analysis units are not field-plot
+occurrence domains.
+
+Plot-name templates use the operational occurrence label. Recorded block and
+design tags remain available separately. Preview digests cover those tags and
+snapshot state, so a concurrent design-metadata edit invalidates an old preview.
+
+## Model and API rules
+
+The standard BrAPI replication hierarchy remains a recorded position/group tag.
+An unchanged GET/PUT round trip preserves both concepts. Explicit design-tag
+edits use the normal target-project permissions, update same-field descendants
+and caches, and retain a NULL snapshot when cleared. Conflicting aliases fail;
+the derived occurrence extension cannot silently overwrite a design tag.
+
+Analytical producers resolve the design tag before filling their existing
+`replicate` metadata slot. This preserves the established 30/39-column schemas
+and trait offsets. Rich records also carry named design/counter/presence fields;
+old cached JSON is enriched from live stored metadata. Models must not extract a
+blocking effect from the operational counter.
+
+Study design determines whether a recorded tag is a factor. CRD has no blocking
+factor; RCBD uses its actual block; incomplete-block designs require the recorded
+replication/block nesting. Missing, ambiguous or unsupported scientific metadata
+must produce an explicit diagnostic, not invented groups or residual variance.
+Repeated-measure individual identity uses observation-unit IDs, not a product of
+germplasm name and a replication group.
+
+## Acceptance
+
+Verify old and new field layouts, all native/BrAPI correction entry points,
+preview/apply/retry, noncontiguous tags, zero/NULL, swaps and over-replication,
+children/external studies, concurrent edits, cache/export agreement and actual
+native Alpha/Lattice generators. Qualify actual model inputs and numeric outputs,
+including CRD dispatch and unsupported-estimator diagnostics. A green subset is
+not completion while another affected path remains unexplained or unverified.
+
+## Pooled samples and analytical cache identity
+
+A pooled sample can have several physical plot sources, so its occurrence is
+unknown even if those sources happen to have equal occurrence labels. Its
+recorded group is known only when every source belongs to the same field context
+and has the same recorded tag. Equal text across different fields is not one
+group.
+
+The current unit, BrAPI and phenotype contracts associate one unit with one
+germplasm. A correction that would give a pooled sample divergent final source
+identities is refused atomically: otherwise one measurement would appear under
+multiple germplasms and could also break the materialized view's unique-unit
+index. Review sample provenance instead of inventing an identity. A coherent
+atomic correction of all its sources is allowed, including authorized BrAPI
+batches across studies; no intermediate mixed identity is published.
+
+A stale analytical cache must not join an old germplasm identity with a live new
+occurrence. Materialized searches validate relevant live identities before
+cached accession filtering and pagination. An outdated or ambiguous identity
+requires a refresh/correction before emitting an analytical matrix or training
+file; it is never silently dropped or reassigned.
+
+Field descendants inherit their physical plot block, resolved from every source
+plot in the same field context. Unanimous exact tags are known; conflicting,
+missing or cross-field contexts remain unknown. This also retains the established
+single-parent semantics for legacy tissues without their own block property.
+Independent sampling and plate layouts keep their local block metadata. The raw
+stored property remains inspectable; no historical block is reconstructed.
+
+A field child counter is resolved through exactly one plot source. Pooled,
+orphan and cross-field units do not advertise a local legacy label as a field
+occurrence. The stored replicate remains separately inspectable and is what the
+normalization planner compares when repairing missing or stale descendant rows.
+
+`IncludeTissueSamplesInPhenotypeMatview` extends the existing derived-table
+relationship predicate to include `tissue_sample_of`; previously refreshed tissue
+observations could be absent from the supported tissue phenotype matrix. It
+retains query columns and rebuilds derived data transactionally with the original
+owner, privileges and indexes. Raw records remain unchanged. The ordinary
+Dataset::File level choices are not expanded by this correction.
+
+Curators may correct a recorded accession through BrAPI after measurements exist,
+using the same service contract as the confirmed planting-file workflow. The
+measurements and their IDs stay with the physical unit, and API status warnings
+explain the changed attribution/design and need to rerun analyses. Ordinary
+editors retain the existing measured-layout restrictions.
+
+Seedlot reassignment locks the old and new lots in canonical order before the
+planting transaction changes. Cached seed count and weight are then recalculated
+together from one fresh transaction list under the same lock; cached per-object
+transactions cannot overwrite another study's committed inventory changes.
+
+Explicit layout/Field Book `selected_columns` requests retain exactly the
+requested metadata columns. Selecting `rep_number` does not silently insert an
+extra occurrence column. Rich native defaults/UI can select both independently;
+the separate `accession_occurrence` option is visible and removable. Existing
+fixed-width custom layouts remain compatible.

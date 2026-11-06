@@ -26,9 +26,11 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'intercrop_stock_name',
         'tissue_sample_names',
         'plot_name',
+        '_existing_parent_stock_id', # Internal child-writer identity; validated by AbstractTrial.
         'plot_number',
         'block_number',
         'rep_number',
+        'design_rep_number',
         'is_a_control',
         'range_number',
         'row_number',
@@ -94,7 +96,7 @@ sub validate_design {
             }
             if ($property eq 'seedlot_name') {
                 my $stock_name = $design{$stock}->{$property};
-                if ($stock_name){
+                if (defined($stock_name) && $stock_name ne '') {
                     $seen_source_names{$stock_name}++;
                 }
             }
@@ -127,6 +129,9 @@ sub validate_design {
             if ($property eq 'plot_number') {
                 my $plot_number = $design{$stock}->{$property};
                 if ($design{$stock}->{plant_names} && scalar $design{$stock}->{plant_names} > 0) { next; }
+                # An existing-parent child index is not a new physical plot number.
+                next if defined($design{$stock}->{_existing_parent_stock_id})
+                    && $design{$stock}->{tissue_sample_names} && @{$design{$stock}->{tissue_sample_names}};
                 $seen_plot_numbers{$plot_number}++;
                 push @plot_numbers, $plot_number;
             }

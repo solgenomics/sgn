@@ -25,6 +25,8 @@ use Moose;
 use File::Slurp;
 use List::MoreUtils qw(uniq);
 use Data::Dumper;
+use CXGN::TimeUtils;
+use CXGN::BrAPI::v2::ExternalReferences;
 use SGN::Model::Cvterm;
 
 sub name {
@@ -37,6 +39,7 @@ sub check_unique_var_unit_time {
     my $trait_cvterm = shift;
     my $unit = shift;
     my $timestamp = shift;
+    my $excluded_id = shift;
     my $variable_id = $trait_cvterm->cvterm_id();
     my %check_result;
 
@@ -45,11 +48,16 @@ sub check_unique_var_unit_time {
     FROM phenotype
     JOIN nd_experiment_phenotype USING (phenotype_id)
     JOIN nd_experiment_stock USING (nd_experiment_id)
-    WHERE observable_id = ? AND stock_id = ? AND collect_date = ?
+    WHERE observable_id = ? AND stock_id = ? AND collect_date IS NOT DISTINCT FROM ?::timestamp
     ";
 
+    my @bind=($variable_id,$unit,$timestamp);
+    if (defined($excluded_id)) {
+        $q .= ' AND phenotype_id <> ?';
+        push @bind,$excluded_id;
+    }
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($variable_id, $unit, $timestamp);
+    $h->execute(@bind);
     my ($id, $value) = $h->fetchrow_array();
     if ($id) {
         #print STDERR "Found id $id and value $value\n";
@@ -128,38 +136,61 @@ sub parse {
     my @data = @{$data};
     my %data = ();
     my %seen = ();
+    my %seen_observation_ids;
     my (@observations, @unit_dbids, @variables, @values, @timestamps);
 
     foreach my $obs (@data){
 
         my $obsunit_db_id = $obs->{'observationUnitDbId'};
         my $variable_db_id = $obs->{'observationVariableDbId'};
-        my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : undef;
-        my $collector = $obs->{'collector'} ? $obs->{'collector'} : $user_name;
-        my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
+        my $timestamp = exists($obs->{'observationTimeStamp'}) ? $obs->{'observationTimeStamp'} : undef;
+        my $collector = defined($obs->{'collector'}) && $obs->{'collector'} ne '' ? $obs->{'collector'} : $user_name;
+        my $obs_db_id = defined($obs->{'observationDbId'}) ? $obs->{'observationDbId'} : '';
+        my $original_timestamp;
         my $value = $obs->{'value'};
-        my $additional_info = $obs->{'additionalInfo'} ? $obs->{'additionalInfo'} : undef;
-        my $external_references = $obs->{'externalReferences'} ? $obs->{'externalReferences'} : undef;
+        my $additional_info = $obs->{'additionalInfo'};
+        my $external_references = $obs->{'externalReferences'};
+        if (!defined($obsunit_db_id) || ref($obsunit_db_id) || $obsunit_db_id !~ /^[1-9]\d*$/ || !defined($variable_db_id) || ref($variable_db_id) || $variable_db_id !~ /^[1-9]\d*$/) {
+            return {error => 'Observation unit and variable identifiers must be positive integers.'};
+        }
+        return {error=>'Collector must be a scalar value.'} if defined($collector) && ref($collector);
+        return {error=>'additionalInfo must be an object.'} if defined($additional_info) && ref($additional_info) ne 'HASH';
+        my $provided = { timestamp => exists($obs->{observationTimeStamp}) ? 1 : 0, collector => exists($obs->{collector}) ? 1 : 0 };
+        if (defined($obs_db_id) && $obs_db_id ne '') {
+            return {error => 'Observation identifier must be a positive integer.'} if ref($obs_db_id) || $obs_db_id !~ /^[1-9]\d*$/;
+            return {error => 'An existing observation identifier appears more than once in the request.'} if $seen_observation_ids{$obs_db_id}++;
+            my $rows = $schema->storage->dbh->selectall_arrayref('SELECT DISTINCT p.cvalue_id, p.collect_date, p.operator, nes.stock_id FROM phenotype p JOIN nd_experiment_phenotype nep USING(phenotype_id) JOIN nd_experiment_stock nes USING(nd_experiment_id) WHERE p.phenotype_id = ?', {Slice => {}}, $obs_db_id);
+            return {error => "Observation $obs_db_id does not exist."} if !@$rows;
+            return {error => "Observation $obs_db_id belongs to a different observation unit or variable; its identity cannot be changed."}
+                if @$rows != 1 || $rows->[0]->{stock_id} != $obsunit_db_id || $rows->[0]->{cvalue_id} != $variable_db_id;
+            $original_timestamp=$rows->[0]->{collect_date};
+            $timestamp = $rows->[0]->{collect_date} if !$provided->{timestamp};
+            $collector = $rows->[0]->{operator} if !$provided->{collector};
+        }
+        $timestamp = eval { CXGN::TimeUtils::normalize_db_timestamp($timestamp) };
+        return {error => "Invalid observation timestamp: $@"} if $@;
+        return {error => "Observation variable $variable_db_id does not exist."} if !$schema->resultset('Cv::Cvterm')->find({cvterm_id => $variable_db_id});
         my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $variable_db_id,"extended");
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 
-        my $unique_combo = $obsunit_db_id.$variable_db_id.$timestamp;
+        my $unique_combo = join("\x1e", $obsunit_db_id, $variable_db_id, $timestamp // '');
         if ($seen{$unique_combo}) {
             $parse_result{'error'} = "Invalid request. The combination of $unique_combo appears more than once in the request";
             return \%parse_result;
         }
         $seen{$unique_combo} = 1;
 
-        if ($obs_db_id && defined $obs_db_id) {
-            push @observations, $obs_db_id;
-        } else {
-            ## If observationDbId is undefined, check that same trait, stock, and timestamp triplet doesn't already exist in the database
-            my $unique_observation = $self->check_unique_var_unit_time($schema, $trait_cvterm, $obsunit_db_id, $timestamp);
-            if (!$unique_observation || $unique_observation->{'error'}) {
-                $parse_result{'error'} = $unique_observation ? $unique_observation->{'error'} : "Error validating that observations are unique";
-                return \%parse_result;
+        # Existing duplicate keys can be corrected by their distinct IDs.
+        # A timestamp change must not introduce a new collision with another ID.
+        my $old_time=CXGN::TimeUtils::normalize_db_timestamp($original_timestamp);
+        if ($obs_db_id eq '' || ($timestamp // '') ne ($old_time // '')) {
+            my $unique_observation = $self->check_unique_var_unit_time($schema, $trait_cvterm, $obsunit_db_id, $timestamp,
+                $obs_db_id ne '' ? $obs_db_id : undef);
+            if (!$unique_observation || $unique_observation->{error}) {
+                return {error=>$unique_observation ? $unique_observation->{error} : 'Error validating that observations are unique'};
             }
         }
+        push @observations, $obs_db_id if $obs_db_id ne '';
 
         push @unit_dbids, $obsunit_db_id;
         push @variables, $trait_name;
@@ -168,8 +199,11 @@ sub parse {
         }
         push @values, $value;
 
+        my $references_error = CXGN::BrAPI::v2::ExternalReferences::validate_payload($external_references);
+        return {error => $references_error->{error}} if $references_error;
+
         # track data for store
-        push @{$data{$obsunit_db_id}->{$trait_name}}, [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info,$external_references];
+        push @{$data{$obsunit_db_id}->{$trait_name}}, [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info,$external_references,$provided];
     }
     #print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;
@@ -194,6 +228,13 @@ sub parse {
     my $t = CXGN::List::Transform->new();
     my $units_transform = $t->transform($schema, 'stock_ids_2_stocks', \@unit_dbids);
     my @unit_names = @{$units_transform->{'transform'}};
+    # The common storage contract is keyed by stock name. Refuse ambiguity
+    # before its name-to-ID guard can throw, even when this request used IDs.
+    my $ambiguous_names=$schema->storage->dbh->selectcol_arrayref(
+        'SELECT uniquename FROM stock WHERE uniquename=ANY(?) GROUP BY uniquename HAVING count(*)>1 ORDER BY uniquename',
+        undef,\@unit_names);
+    return {error=>'Observation unit names are ambiguous; correct the duplicate names before storing measurements: '.join(', ',@$ambiguous_names)} if @$ambiguous_names;
+
 
     my $validated_units = $validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@unit_names);
     my @units_missing = @{$validated_units->{'missing'}};
@@ -224,13 +265,6 @@ sub parse {
         return \%parse_result;
     }
 
-    foreach my $timestamp (@timestamps) {
-        if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-            $parse_result{'error'} = "Timestamp $timestamp is not of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-            print STDERR "Invalid Timestamp: $timestamp\n";
-            return \%parse_result;
-        }
-    }
 
     my %formatted_data;
     while (my ($obs_db_id, $val) = each %data){

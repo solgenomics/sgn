@@ -42,6 +42,7 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Spec::Functions;
+use File::Temp ();
 use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
@@ -187,6 +188,7 @@ sub download {
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $tempfile =~ /(\.[^.]+)$/;
+    $extension = ($extension // '') eq '.xlsx' ? '.xlsx' : '.xls';
     my $wb;
 
     if ($extension eq '.xlsx') {
@@ -236,11 +238,22 @@ sub download {
     # Generate the output Excel file
     my $row_num = 0;
     my $plot_name_col = 0;
+    my %text_column = map { $_ => 1 } grep {
+        my $header = $output_array[0][$_] // '';
+        $header =~ /_name$/ || $header eq 'rep_number' || $header eq 'design_rep_number' || $header eq 'block_number';
+    } 0 .. $#{ $output_array[0] || [] };
     foreach my $l (@output_array){
         my $col_num = 0;
         foreach my $c (@$l){
             $plot_name_col = $col_num if $row_num == 0 && $c eq 'plot_name';
-            $ws->write($row_num, $col_num, $c);
+            # Labels/reasons are text, and a value beginning with '=' must not
+            # turn into a spreadsheet calculation. Real numeric data still use
+            # the ordinary writer and retain their numeric cell type.
+            if (defined($c) && ($row_num == 0 || $text_column{$col_num} || $c =~ /^=/)) {
+                $ws->write_string($row_num, $col_num, $c);
+            } else {
+                $ws->write($row_num, $col_num, $c);
+            }
             $col_num++;
         }
         if ( $include_plot_order ) {
@@ -263,15 +276,8 @@ sub download {
     my $trial_name = $selected_trial->get_name();
     $trial_name =~ s/ /\_/g;
 
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_name = $self->user_name();
     my $subdirectory_name = "tablet_field_layout";
-    #my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trial_name.($extension eq '.xlsx' ? ".xlsx" : ".xls"));
-    my $archived_file_name = catfile($user_id, $subdirectory_name, $trial_name.'_fieldbook_layout'.($extension eq '.xlsx' ? ".xlsx" : ".xls"));
-    # print STDERR "archived_file_name=$user_id|$subdirectory_name|$trial_name|\n";
     my $archive_path = $self->archive_path();
-    my $file_destination =  catfile($archive_path, $archived_file_name);
 
     if (!-d $archive_path) {
         mkdir $archive_path;
@@ -283,6 +289,23 @@ sub download {
 
     if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
         mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    }
+
+    # Reserve a separate path before publishing its file ID. A later export of
+    # another dimension must not replace this artifact or its recorded checksum.
+    $trial_name =~ s{[/\\\x00-\x1f]}{_}g;
+    my $level = $self->data_level;
+    $level =~ s/[^A-Za-z0-9_]/_/g;
+    my ($reserved, $file_destination) = File::Temp::tempfile(
+        $trial_name.'_fieldbook_'.$level.'_XXXXXX',
+        DIR => catfile($archive_path, $user_id, $subdirectory_name),
+        SUFFIX => $extension, UNLINK => 0,
+    );
+    close $reserved;
+    if (!move($tempfile, $file_destination)) {
+        my $error = "$!";
+        unlink $file_destination;
+        return {error_messages => ["Could not archive the generated Field Book file: $error"]};
     }
 
     my $metadata_schema = $self->metadata_schema();
@@ -318,9 +341,6 @@ sub download {
         file_id => $file_row->file_id(),
     });
     $experiment_files->insert();
-
-    move($tempfile,$file_destination);
-    unlink $tempfile;
 
     my $result = $file_row->file_id;
     # print STDERR "FIeldbook file generated $file_destination ".localtime()."\n";

@@ -1,3 +1,19 @@
+# Analytical replicate is the recorded design tag, never the field counter.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "../design_replication.R"), local = TRUE)
+
 #formats and combines phenotype (of a single trait)
 #and genotype datasets of multiple
 #populations
@@ -128,14 +144,9 @@ for (popPhenoFile in allPhenoFiles) {
 
      cnt <- cnt + 1
 
-    phenoData <- fread(popPhenoFile,
-                       header = TRUE,
-                       sep="\t",
-                       na.strings = c("NA", "", "--", "-", "."))
+    phenoData <- read_analysis_phenotypes(popPhenoFile)
 
-     phenoData <- data.frame(phenoData)
-
-     meansResult <- getAdjMeans(phenoData,
+     meansResult <- analysis_adjusted_means(phenoData,
                                traitName = traitAbbr,
                                calcAverages = TRUE,
                                logReturn = TRUE)

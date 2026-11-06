@@ -44,6 +44,9 @@ has 'data_level' => (
     default => 'plot',
 );
 
+# Exact measurements in layout/Field Book files follow the analytical rejection
+# policy. Explicit raw reads can opt out; design treatments remain available.
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema;
