@@ -2,13 +2,18 @@ package CXGN::BrAPI::v2::Observations;
 
 use Moose;
 use Data::Dumper;
+use CXGN::BrAPI::DataAuthorization;
+use CXGN::BreederSearch;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Search;
 use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 use CXGN::BrAPI::FileRequest;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Phenotypes::SearchFactory;
+use JSON;
 use CXGN::TimeUtils;
 use DateTime;
 use utf8;
@@ -17,9 +22,63 @@ use CXGN::JSONUtils qw(decode_stored_json);
 
 extends 'CXGN::BrAPI::v2::Common';
 
+# Validate request boundaries here; Native owns filtering and pagination.
+sub _read_params {
+    my ($params)=@_;
+    return (undef,'Observation search parameters must be an object.') if ref($params) ne 'HASH';
+    my %copy=%$params;
+    my @id_fields=qw(observationDbId observationDbIds observationVariableDbId observationVariableDbIds observationUnitDbId observationUnitDbIds studyDbId studyDbIds trialDbId trialDbIds germplasmDbId germplasmDbIds programDbId programDbIds locationDbId locationDbIds);
+    for my $key (@id_fields,qw(seasonDbId seasonDbIds observationVariableName observationVariableNames collectors observationLevel)) {
+        next unless defined($copy{$key});
+        return (undef,"$key must be a value or an array of values.") if ref($copy{$key}) && ref($copy{$key}) ne 'ARRAY';
+        my $values=ref($copy{$key}) eq 'ARRAY' ? $copy{$key} : [$copy{$key}];
+        return (undef,"$key must contain scalar values.") if grep {!defined($_) || ref($_)} @$values;
+        if (grep {$_ eq $key} @id_fields) {
+            return (undef,"$key must contain positive integer identifiers.") if grep {!/^[1-9]\d*$/} @$values;
+        }
+        return (undef,"$key must contain integer years.") if $key =~ /^seasonDbIds?$/ && grep {!/^-?\d+$/} @$values;
+        $copy{$key}=[@$values];
+    }
+    my %levels=map {$_=>1} qw(all accession plot plant subplot tissue_sample analysis_instance);
+    return (undef,'Unsupported observation level.') if grep {$_ ne '' && !$levels{$_}} @{$copy{observationLevel} || []};
+    for my $key (qw(observationTimeStampRangeStart observationTimeStampRangeEnd)) {
+        next unless defined($copy{$key});
+        my $values=ref($copy{$key}) eq 'ARRAY' ? $copy{$key} : [$copy{$key}];
+        return (undef,"$key accepts one timestamp.") if @$values>1;
+        my $ok=eval {CXGN::TimeUtils::normalize_db_timestamp($values->[0]);1};
+        return (undef,"$key must be a valid ISO8601 date or timestamp with microsecond precision or less.") if !$ok;
+        $copy{$key}=[@$values];
+    }
+    return (\%copy,undef);
+}
+
+# Called after a committed observation write by both API versions. Native reads
+# are live; materialized datasets and saved analysis caches must follow too.
+sub refresh_after_store {
+    my ($schema,$c,$unit_ids,$status,$result)=@_;
+    my $ok=eval {
+        my $projects=$schema->storage->dbh->selectcol_arrayref(
+            'SELECT DISTINCT nep.project_id FROM nd_experiment_stock nes JOIN nd_experiment_project nep USING(nd_experiment_id) WHERE nes.stock_id=ANY(?)',
+            undef,$unit_ids);
+        my $refresh=CXGN::BreederSearch->new({dbh=>$c->dbc->dbh,dbname=>$c->config->{dbname}})->refresh_matviews_after_change(
+            $c->config->{dbhost},$c->config->{dbname},$c->config->{dbuser},$c->config->{dbpass},'phenotypes','concurrent',$c->config->{basepath});
+        my $cleared=$c->controller('solGS::clearCache')->clear_cached_analyses_result($c,{trials=>$projects});
+        die "Analytical refresh pending.\n" if $refresh->{refresh_pending} || $refresh->{error} || !$cleared;
+        1;
+    };
+    if (!$ok) {
+        push @$status,{WARNING=>'Observations saved; analytical refresh needs retry before using analytical results.'};
+        $result->{changesSaved}=JSON::true;
+        $result->{refreshPending}=JSON::true;
+    }
+}
+
 sub search {
     my $self = shift;
     my $params = shift;
+    my ($checked,$error)=_read_params($params);
+    return CXGN::BrAPI::JSONResponse->return_error($self->status,$error,400) if $error;
+    $params=$checked;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -45,13 +104,16 @@ sub detail {
     my $page = $self->page;
     my $status = $self->status;
 
-    $params->{observationDbId} = [$params->{observationDbId}];
+    my $id=$params->{observationDbId};
+    return CXGN::BrAPI::JSONResponse->return_error($status,'Observation identifier must be a positive integer.',400)
+        if !defined($id) || ref($id) || $id !~ /^[1-9]\d*$/;
+    $params={%$params,observationDbId=>[$id]};
 
     my $data;
 	my $counter=0;
     ($data,$counter) = _search($self,$params);
 
-    if ($data > 0){
+    if (ref($data) eq 'ARRAY' && @$data){
 		my $result = @$data[0];
 		my @data_files;
 		my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
@@ -136,6 +198,10 @@ sub observations_store {
         %parsed_data = %{$parsed_request->{'data'}};
     }
 
+    my @authorization_unit_ids = map { $_->{observationUnitDbId} } @$observations;
+    my $authorization = CXGN::BrAPI::DataAuthorization::observation_units_error($schema, $user_id, \@authorization_unit_ids);
+    return CXGN::BrAPI::JSONResponse->return_error($status, $authorization->{error}, $authorization->{code}) if $authorization;
+
     ## Archive in file
     my $archived_request = CXGN::BrAPI::FileRequest->new({
         schema=>$schema,
@@ -198,7 +264,12 @@ sub observations_store {
     if ($verified_error) {
         print STDERR "Error: $verified_error\n";
         push @$status, {'500' => 'Internal error.'};
-        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks.", 500);
+        # the reason, without the HTML of the web page (which units, which values)
+        (my $reason = $verified_error) =~ s/<[^>]*>/ /g;
+        $reason =~ s/\s+/ /g;
+        $reason =~ s/^\s+|\s+$//g;
+        $reason = substr($reason, 0, 1000)."..." if length($reason) > 1000;
+        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks. $reason", 400);
     }
     if ($verified_warning) {
         print STDERR "\nWarning: $verified_warning\n";
@@ -208,8 +279,8 @@ sub observations_store {
 
     if ($stored_observation_error) {
         print STDERR "Error: $stored_observation_error\n";
-        push @$status, {'500' => 'Internal error.'};
-        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request could not be processed correctly.", 500);
+        push @$status, {($store_observations->error_code || 500) => 'The observations were not changed.'};
+        return CXGN::BrAPI::JSONResponse->return_error($status, "The observations could not be stored; no values were changed.", $store_observations->error_code || 500);
     }
     if ($stored_observation_success) {
         #if no error refresh matviews 
@@ -220,8 +291,9 @@ sub observations_store {
         $result{data} = $stored_observation_details;
     }
 
+    refresh_after_store($schema,$c,\@authorization_unit_ids,$status,\%result);
     my @data_files = ();
-    my $total_count = scalar @{$observations};
+    my $total_count = scalar @{$stored_observation_details || []};
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $stored_observation_success);
 
@@ -284,19 +356,22 @@ sub _search {
             offset=>$offset,
             order_by=>"plot_number",
             #include_timestamp=>1,
+            date_range_mode => 'timestamp',
             start_date => $start_date,
 	        end_date => $end_date,
             repetitive_measurements => $repetitive_measurements_type,
-	        include_dateless_items => 1
+            include_dateless_items => ($start_date || $end_date) ? 0 : 1,
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
 
+    my %collectors = map {$_=>1} @{$params->{collectors} || []};
     my @data_window;
     my $counter = 0;
 
     foreach (@$data){
         if (defined($_->{phenotype_value}) && $_->{phenotype_value} ne '') {
+            next if %collectors && !$collectors{$_->{operator} // ''};
             my $observation_id = "$_->{phenotype_id}";
             my $additional_info;
             my $external_references;
@@ -307,30 +382,7 @@ sub _search {
                 seasonDbId => $_->{year}
             );
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-            #since, the collect_date as stored as the timestamp in the database, we need to convert it to the correct format
-	        if ($obs_timestamp) {
-                my ($obs_date, $obs_time) = split / /, $obs_timestamp;
-		        my ($obs_year, $obs_month, $obs_day) = split /-/, $obs_date;
-		        my ($start_year, $start_month, $start_day);
-                if ($start_date) {
-                    ($start_year, $start_month, $start_day) = split /\-/, $start_date;
-                }
-		        my ($end_year, $end_month, $end_day);
-                if ($end_date) {
-                    ($end_year, $end_month, $end_day) = split /\-/, $end_date;
-                } 
-
-		        if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) { 
-		            my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
-		            my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
-		            my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
-
-
-		            if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
-		            if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
-		        }
-	        }
-
+            # Native owns exact normalized timestamp filtering before pagination.
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
                     additionalInfo => $_->{phenotype_additional_info} ? decode_stored_json($_->{phenotype_additional_info}) : undef,

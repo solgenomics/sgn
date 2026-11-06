@@ -23,6 +23,7 @@ Looks up a trait and builds a string to use in the fieldbook trait file.
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
+use Text::CSV;
 
 has 'chado_schema' => (
 		 is       => 'ro',
@@ -128,7 +129,7 @@ sub get_trait_info {
 	foreach my $property_name (keys %{$cvterms}) {
 		my $prop_cvterm = $cvterms->{$property_name};
 		my $prop = $cvtermprops->find({ 'type_id' => $prop_cvterm->cvterm_id() });
-		if ($prop && $prop->value()) {
+		if ($prop && defined($prop->value()) && length($prop->value())) {
 			$trait_props{$property_name} = $prop->value();
 		}
 	}
@@ -136,7 +137,7 @@ sub get_trait_info {
 	# updates for Breeding Insight
 	my $prop_cvterm = $cvterms->{'trait_format'};
 	my $prop = $cvtermprops->find({ 'type_id' => $prop_cvterm->cvterm_id() });
-	if ($prop && $prop->value()) {
+	if ($prop && defined($prop->value()) && length($prop->value())) {
 		$trait_props{'trait_format'} = _convert_brapi_datatype($prop->value());
 	}
 
@@ -144,7 +145,7 @@ sub get_trait_info {
 	if ($trait_name !~ m/([0-9])-([0-9]+)/) {
 		my $prop_cvterm = $cvterms->{'trait_categories'};
 		my $prop = $cvtermprops->find({ 'type_id' => $prop_cvterm->cvterm_id() });
-		if ($prop && $prop->value()) {
+		if ($prop && defined($prop->value()) && length($prop->value())) {
 			my $categories_str = "";
 			my $trait_details_str = "";
 
@@ -173,12 +174,10 @@ sub get_trait_info {
 
   #build trait_info_string
   #order for trait file is: format,defaultValue,minimum,maximum,details,categories
-  $trait_info_string .= '"'.$trait_props{'trait_format'}.'",';
-  $trait_info_string .= '"'.$trait_props{'trait_default_value'}.'",';
-  $trait_info_string .= '"'.$trait_props{'trait_minimum'}.'",';
-  $trait_info_string .= '"'.$trait_props{'trait_maximum'}.'",';
-  $trait_info_string .= '"'.$trait_props{'trait_details'}.'",';
-  $trait_info_string .= '"'.$trait_props{'trait_categories'}.'"';
+  my $csv = Text::CSV->new({binary => 1, always_quote => 1});
+  $csv->combine(@trait_props{qw(trait_format trait_default_value trait_minimum trait_maximum trait_details trait_categories)})
+    or die "Could not serialize Field Book trait metadata: ".$csv->error_diag;
+  $trait_info_string = $csv->string;
 
   return $trait_info_string;
 }

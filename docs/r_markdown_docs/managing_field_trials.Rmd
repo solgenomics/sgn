@@ -461,6 +461,11 @@ Select any accession that you want to replace, enter your new accession, then cl
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/image85.png')
 ```
+
+BrAPI observation corrections keep the observation ID, observation unit and variable together. An existing ID cannot be moved to another unit or variable, repeated in one request, or moved onto another observation's collection time. Omitted collector and collection time remain unchanged; a literal collector `0` remains `0`. Times with an offset are stored and returned as the same UTC instant, with at most microsecond precision. A more precise nonzero fraction is refused instead of silently merging collection times. A bounded date search excludes observations without a collection date; an unbounded search retains them.
+
+The request archive keeps each accepted input separately, including its additional information and external references. Updating an existing observation links the new input to its actual experiment and preserves the previous input history. A failed archive registration rolls back its observation changes. A saved change whose analytical refresh is still pending is returned as saved, with a warning and `refreshPending`; the analytical refresh must be completed before relying on materialized datasets or cached results.
+
 <!--
 You can switch plot accessions between any two plots by clicking on “Substitute Accession” button.
 

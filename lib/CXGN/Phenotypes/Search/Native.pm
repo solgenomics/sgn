@@ -44,6 +44,8 @@ my @data = $phenotypes_search->search();
 use strict;
 use warnings;
 use Moose;
+use CXGN::DB::ReadSnapshot;
+use CXGN::Phenotypes::Summary;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
@@ -52,6 +54,7 @@ use CXGN::Trial;
 use CXGN::Project;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
+use CXGN::TimeUtils;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -130,6 +133,14 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
+# Native trial-page filters select calendar days. BrAPI callers explicitly
+# request complete UTC instants instead; neither contract depends on input shape.
+has 'date_range_mode' => (
+    isa => 'Str',
+    is => 'ro',
+    default => 'calendar',
+);
+
 has 'include_timestamp' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -187,7 +198,16 @@ has 'experiment_type' => (
 
 sub search {
     my $self = shift;
+    # Trial prefetches must neither widen explicit caller filters nor mutate a
+    # caller-owned list reused by a later search.
+    local $self->{plot_list} = $self->plot_list ? [@{$self->plot_list}] : undef;
+    local $self->{plant_list} = $self->plant_list ? [@{$self->plant_list}] : undef;
+    local $self->{subplot_list} = $self->subplot_list ? [@{$self->subplot_list}] : undef;
+    local $self->{accession_list} = $self->accession_list ? [@{$self->accession_list}] : undef;
+    my $explicit_units = grep {ref($_) eq 'ARRAY' && @$_} ($self->plot_list, $self->plant_list, $self->subplot_list);
+    my $explicit_accessions = ref($self->accession_list) eq 'ARRAY' && @{$self->accession_list};
     my $schema = $self->bcs_schema();
+    my $dbh = $schema->storage->dbh;
     print STDERR "Search Start:".localtime."\n";
     my $rep_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
     my $block_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
@@ -232,7 +252,7 @@ sub search {
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
     my $include_timestamp = $self->include_timestamp;
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
@@ -289,10 +309,9 @@ sub search {
 
 
             #For performance reasons it is faster to include specific stock_ids in the query.
-            if ($self->data_level eq 'analysis_instance'){
-                if (!$self->plot_list){
-                    $self->plot_list(\@plots_list);
-                }
+            if ($self->data_level eq 'analysis_instance' && !$explicit_units){
+                $self->plot_list([]) if !$self->plot_list;
+                push @{$self->plot_list}, @plots_list;
             }
 
             print STDERR "\n\n fetching layout for  ".$self->data_level. " time: ".  localtime ."\n";
@@ -303,7 +322,7 @@ sub search {
                     ->get_observation_units_direct([qw(plot plant analysis_instance subplot tissue_sample)]);
                 push @$trial_observationunit_list, map { $_->[0] } @$units;
             }
-            if ($self->data_level eq 'plot'){
+            if ($self->data_level eq 'plot' && !$explicit_units){
                 if (!$self->plot_list){
                     $self->plot_list([]);
                 }
@@ -314,27 +333,19 @@ sub search {
             }
 
             if ($self->data_level eq 'accession'){
-                if (!$self->accession_list){
-                    $self->accession_list([]);
+                $self->accession_list([]) if !$self->accession_list;
+                if (!$explicit_accessions && !$explicit_units) {
+                    my $accessions = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_accessions();
+                    push @{$self->accession_list}, map { $_->{stock_id} } @$accessions;
                 }
-                my $accessions = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_accessions();
-                # print STDERR "Accessions for trial $_ : ".Dumper($accessions)."\n";
-                foreach (@$accessions){
-                    print STDERR "iterating accessions: " . Dumper( $_) . "\n";
-                    print STDERR "Pushing accession ".$_->{'stock_id'}."\n";
-                    push @{$self->accession_list}, $_->{'stock_id'};
-                }
-
-                if (!$self->plot_list){
-                    $self->plot_list([]);
-                }
-                my $plots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plots();
-                foreach (@$plots){
-                    push @{$self->plot_list}, $_->[0];
+                if (!$explicit_units) {
+                    $self->plot_list([]) if !$self->plot_list;
+                    my $plots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plots();
+                    push @{$self->plot_list}, map { $_->[0] } @$plots;
                 }
             }
 
-            if ($self->data_level eq 'plant'){
+            if ($self->data_level eq 'plant' && !$explicit_units){
                 if (!$self->plant_list){
                     $self->plant_list([]);
                 }
@@ -343,7 +354,7 @@ sub search {
                     push @{$self->plant_list}, $_->[0];
                 }
             }
-            if ($self->data_level eq 'subplot'){
+            if ($self->data_level eq 'subplot' && !$explicit_units){
                 if (!$self->subplot_list){
                     $self->subplot_list([]);
                 }
@@ -528,34 +539,13 @@ sub search {
     }
 
     # print STDERR "plot list is ".Dumper($self->plot_list)."\n";
-    if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
-        my $plot_and_plant_and_subplot_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
-        push @where_clause, "observationunit.stock_id in ($plot_and_plant_and_subplot_sql)";
-    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0)) {
-        my $plot_and_plant_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->plant_list);
-        push @where_clause, "observationunit.stock_id in ($plot_and_plant_sql)";
-    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
-        my $plot_and_subplot_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->subplot_list);
-        push @where_clause, "observationunit.stock_id in ($plot_and_subplot_sql)";
-    } elsif (($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
-        my $plant_and_subplot_sql = _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
-        push @where_clause, "observationunit.stock_id in ($plant_and_subplot_sql)";
-    } elsif ($self->plot_list && scalar(@{$self->plot_list})>0 && (!$self->accession_list || scalar(@{$self->accession_list}) == 0)) {
-        my $plot_sql = _sql_from_arrayref($self->plot_list);
-        push @where_clause, "observationunit.stock_id in ($plot_sql)";
-    } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
-        my $plant_sql = _sql_from_arrayref($self->plant_list);
-        push @where_clause, "observationunit.stock_id in ($plant_sql)";
-    } elsif ($self->subplot_list && scalar(@{$self->subplot_list})>0) {
-        my $subplot_sql = _sql_from_arrayref($self->subplot_list);
-        push @where_clause, "observationunit.stock_id in ($subplot_sql)";
-
-    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->accession_list && scalar(@{$self->accession_list})>0)) {
-        #if only accessions are given, we need to join to analysis_result and get all analysis results for those accessions
-        my $accession_sql = _sql_from_arrayref($self->accession_list);
-        my $plot_sql = _sql_from_arrayref($self->plot_list);
-        push @where_clause, "observationunit.stock_id in ($plot_sql) AND germplasm.stock_id in ($accession_sql)";
-    } elsif (($self->accession_list && scalar(@{$self->accession_list})>0) && ($self->plot_list && scalar(@{$self->plot_list})==0)) {
+    my @requested_units = map {@{$_ || []}} ($self->plot_list, $self->plant_list, $self->subplot_list);
+    if (@requested_units) {
+        my %seen;
+        my $unit_sql = _sql_from_arrayref([grep {!$seen{$_}++} @requested_units]);
+        push @where_clause, "observationunit.stock_id in ($unit_sql)";
+    }
+    if ($self->accession_list && @{$self->accession_list}) {
         my $accession_sql = _sql_from_arrayref($self->accession_list);
         push @where_clause, "germplasm.stock_id in ($accession_sql)";
     }
@@ -580,20 +570,18 @@ sub search {
     }
     if ($self->location_list && scalar(@{$self->location_list})>0) {
         my $arrayref = $self->location_list;
-        my $sql = join ("','" , @$arrayref);
-        my $location_sql = "'" . $sql . "'";
+        my $location_sql = join(',',map {$dbh->quote($_)} @$arrayref);
         push @where_clause, "location.value in ($location_sql)";
     }
     if ($self->year_list && scalar(@{$self->year_list})>0) {
         my $arrayref = $self->year_list;
-        my $sql = join ("','" , @$arrayref);
-        my $year_sql = "'" . $sql . "'";
+        my $year_sql = join(',',map {$dbh->quote($_)} @$arrayref);
         push @where_clause, "year.value in ($year_sql)";
     }
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
             if ( $_ ne '' ) {
-                push @where_clause, "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text like '%".lc($_)."%'";
+                push @where_clause, "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text like ".$dbh->quote('%'.lc($_).'%');
             }
         }
     }
@@ -604,42 +592,52 @@ sub search {
 	$datelessq = " phenotype.collect_date IS NULL OR ";
     }
 
-    my ($start_date, $end_date);
-    if ($requested_start_date =~ m/(\d{4}\-\d{2}\-\d{2})/) {
-	$start_date = $1;
+    # Stored collection times are UTC timestamps without a timezone. Native
+    # filters retain complete calendar days; BrAPI requests exact UTC instants.
+    # Both modes allow independent bounds and include a date-only end's whole day.
+    my @date_bounds;
+    my $date_range_mode = $self->date_range_mode;
+    die "date_range_mode must be calendar or timestamp.\n"
+        unless $date_range_mode eq 'calendar' || $date_range_mode eq 'timestamp';
+
+    for my $bound ([ $requested_start_date, 'start' ], [ $requested_end_date, 'end' ]) {
+        my ($value, $side) = @$bound;
+        next unless defined($value) && $value =~ /\S/;
+        my $date_only = $value =~ /^\d{4}-\d{2}-\d{2}$/;
+        if ($date_range_mode eq 'calendar') {
+            # Validate the complete supplied value before taking its calendar
+            # component. UI calendar selection must not shift with a UTC offset.
+            CXGN::TimeUtils::normalize_db_timestamp($value);
+            ($value) = $value =~ /^(\d{4}-\d{2}-\d{2})(?:[T\s]|$)/;
+            die "A calendar bound must begin with an ISO8601 date.\n" unless defined($value);
+            $date_only = 1;
+        }
+        my $normalized = CXGN::TimeUtils::normalize_db_timestamp($date_only ? $value.'T00:00:00Z' : $value);
+        my $quoted = $dbh->quote($normalized);
+        if ($side eq 'start') {
+            push @date_bounds, "phenotype.collect_date >= ${quoted}::timestamp";
+        } elsif ($date_only) {
+            push @date_bounds, "phenotype.collect_date < (${quoted}::timestamp + INTERVAL '1 day')";
+        } else {
+            push @date_bounds, "phenotype.collect_date <= ${quoted}::timestamp";
+        }
     }
-
-    if ($requested_end_date =~ m/(\d{4}\-\d{2}\-\d{2})/) {
-	$end_date = $1;
-    }
-
-    #print STDERR "the start date here: $start_date. And the end date here: $end_date\n";
-
-    if ($start_date && $end_date) {
-        # Include the entire end date, including fractional seconds before midnight.
-        push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date < ('$end_date'::date + 1) ) ) ";
-        #push @where_clause, " ( $datelessq ( phenotype.collect_date >= $start_date and phenotype.collect_date <= $end_date ) ) ";
+    if (@date_bounds) {
+        push @where_clause, "( $datelessq (".join(' AND ', @date_bounds).") )";
     }
 
     if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
         my $arrayref = $self->observation_id_list;
-        my $sql = join ("','" , @$arrayref);
-        my $phenotype_id_sql = "'" . $sql . "'";
+        my $phenotype_id_sql = join(',',map {$dbh->quote($_)} @$arrayref);
 
         push @where_clause, "phenotype.phenotype_id in ($phenotype_id_sql)";
     }
 
-    if ($self->phenotype_min_value && !$self->phenotype_max_value) {
-        push @where_clause, "phenotype.value::real >= ".$self->phenotype_min_value;
-        push @where_clause, "phenotype.value~\'$numeric_regex\'";
-    }
-    if ($self->phenotype_max_value && !$self->phenotype_min_value) {
-        push @where_clause, "phenotype.value::real <= ".$self->phenotype_max_value;
-        push @where_clause, "phenotype.value~\'$numeric_regex\'";
-    }
-    if ($self->phenotype_max_value && $self->phenotype_min_value) {
-        push @where_clause, "phenotype.value::real BETWEEN ".$self->phenotype_min_value." AND ".$self->phenotype_max_value;
-        push @where_clause, "phenotype.value~\'$numeric_regex\'";
+    my $numeric_value = "CASE WHEN phenotype.value ~ ".$dbh->quote($numeric_regex)." THEN phenotype.value::real END";
+    for my $bound ([ $self->phenotype_min_value, '>=' ], [ $self->phenotype_max_value, '<=' ]) {
+        my ($value, $operator) = @$bound;
+        next unless defined($value) && length($value);
+        push @where_clause, "$numeric_value $operator ".$dbh->quote($value)."::real";
     }
 
     if ($self->data_level ne 'all') {
@@ -700,13 +698,14 @@ sub search {
                 }
             }
         }
-        if ($phenotype_operator){
+        if (defined($phenotype_operator) && $phenotype_operator ne '') {
             $operator_value = $phenotype_operator;
         } else {
             if ($phenotype_uniquename){
                 my ($p1, $p2) = split /date: /, $phenotype_uniquename;
                 if ($p2){
-                    my ($timestamp, $operator_value) = split /  operator = /, $p2;
+                    my ($timestamp, $legacy_operator) = split /  operator = /, $p2;
+                    $operator_value = $legacy_operator;
                 }
             }
         }
@@ -814,6 +813,14 @@ sub _sql_from_arrayref {
     my $sql = join ("," , @$arrayref);
     return $sql;
 }
+
+
+# Identity and later live enrichment belong to the same read snapshot. The
+# shared helper leaves a surrounding caller-owned transaction unchanged.
+around 'search' => sub {
+    my ($next,$self,@args)=@_;
+    return CXGN::DB::ReadSnapshot::run($self->bcs_schema, sub {$next->($self,@args)});
+};
 
 
 1;

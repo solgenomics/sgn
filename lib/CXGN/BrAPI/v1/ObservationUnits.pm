@@ -1,6 +1,9 @@
 package CXGN::BrAPI::v1::ObservationUnits;
 
 use Moose;
+use JSON;
+use CXGN::TimeUtils;
+use DateTime;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
@@ -31,8 +34,25 @@ sub search {
     my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
-    my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
-    my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
+    my ($start_time, $end_time, $end_date_only);
+    my $valid_bounds = eval {
+        for my $pair ([observationTimeStampRangeStart => 'start'], [observationTimeStampRangeEnd => 'end']) {
+            my $raw = $params->{$pair->[0]};
+            if (ref($raw) eq 'ARRAY') {next if !@$raw; die "A timestamp bound must have one value." if @$raw != 1; $raw=$raw->[0];}
+            next unless defined($raw) && length($raw);
+            my $normalized = CXGN::TimeUtils::normalize_db_timestamp($raw);
+            if ($pair->[1] eq 'start') {$start_time=$normalized;}
+            else {
+                $end_time=$normalized;
+                if ($raw =~ /^(\d{4})-(\d{2})-(\d{2})$/) {
+                    $end_date_only=1;
+                    $end_time=DateTime->new(year=>$1,month=>$2,day=>$3,time_zone=>'UTC')->add(days=>1)->strftime('%Y-%m-%d %H:%M:%S');
+                }
+            }
+        }
+        1;
+    };
+    return CXGN::BrAPI::JSONResponse->return_error($status,'Invalid observation timestamp range.',400) if !$valid_bounds;
 
     # not part of brapi standard yet
     # my $phenotype_min_value = $params->{phenotype_min_value};
@@ -79,13 +99,17 @@ sub search {
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-            if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
-            if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
+            if (defined($start_time) || defined($end_time)) {
+                my $normalized=eval {CXGN::TimeUtils::normalize_db_timestamp($obs_timestamp)};
+                next if !defined($normalized) || $@;
+                next if defined($start_time) && $normalized lt $start_time;
+                next if defined($end_time) && ($end_date_only ? $normalized ge $end_time : $normalized gt $end_time);
+            }
             push @brapi_observations, {
                 observationDbId => qq|$_->{phenotype_id}|,
                 observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimeStamp => $obs_timestamp,
+                observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
                 season => $obs_unit->{year},
                 collector => $_->{operator},
                 value => qq|$_->{value}|,

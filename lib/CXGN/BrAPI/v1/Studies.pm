@@ -720,7 +720,7 @@ sub observation_units {
 			pedigree=>$pedigree_string,
 			plantNumber => $obs_unit->{obsunit_plant_number},
 			plotNumber => $obs_unit->{obsunit_plot_number},
-			replicate => $obs_unit->{obsunit_rep_number},
+			replicate => $obs_unit->{obsunit_rep},
             observationLevel => $obs_unit->{observationunit_type_name},
             observationLevels => $obs_unit->{observationunit_type_name},
             studyDbId => qq|$obs_unit->{trial_id}|,

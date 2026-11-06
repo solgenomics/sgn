@@ -330,8 +330,13 @@ sub _standard_response_construction {
 	my $result = $brapi_package_result->{result};
 	my $datafiles = $brapi_package_result->{datafiles};
 
-	# some older brapi stuff uses parameter, could refactor at some point
-	if (!$return_status) { $return_status = $brapi_package_result->{http_code} };
+    # An explicit error from the owning module must not be hidden by a
+    # caller's default 200 inferred from informational status entries.
+    if ($brapi_package_result->{http_code}) {
+        $return_status = $brapi_package_result->{http_code};
+    } elsif (!$return_status || $return_status == 200) {
+        $return_status = _get_http_status_code($status);
+    }
 
 	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
 	my %response = (metadata=>\%metadata, result=>$result);
@@ -342,7 +347,7 @@ sub _standard_response_construction {
 
 =head2 /brapi/v1/token
 
- Usage: For logging a user in and loggin a user out through the API
+ Usage: For loggingg a user in and logging a user out through the API
  Desc:
 
 For Logging In
@@ -690,7 +695,7 @@ sub season_search_retrieve : Chained('brapi') PathPart('search/seasons') Args(1)
 
 =head2 brapi/v1/studyTypes
 
- Usage: To retrieve a list of programs being worked onthe various study types
+ Usage: To retrieve a list of programs being worked on the various study types
  Desc:
  Return JSON example:
         {
@@ -2631,7 +2636,7 @@ sub studies_observations_granular_GET {
 
              "result" : {
                  "observationUnitDbId": 20,
-                 "observationUnitPUI": "http://phenome-fppn.fr/maugio/bloc/12/2345",
+                 "observationUnitPUI": "http://phenome-fppn.fr/maugio/bloc/12/2345", Z<# codespell:ignore bloc>
                  "studyId": "RIGW1",
                  "studyDbId": 25,
                  "studyLocation": "Bergheim",
@@ -2639,7 +2644,7 @@ sub studies_observations_granular_GET {
                  "studyProject": "Inovine",
                  "studySet": ["National Network", "Frost suceptibility network"],
                  "studyPlatform": "Phenome",
-                 "observationUnitLevelTypes" : [ "plant","plot", "bloc"],
+                 "observationUnitLevelTypes" : [ "plant","plot", "bloc"], Z<# codespell:ignore bloc>
                  "observationUnitLevelLabels": [ "1","26123", "1"],
                  "germplasmPUI": "http://inra.fr/vassal/41207Col0001E",
                  "germplasmDbId": 3425,
@@ -3933,6 +3938,11 @@ sub observations_PUT {
 		my $force_authenticate = $c->config->{brapi_observations_require_login};
 		my ($auth,$user_id,$user_type) = _authenticate_user($c,$force_authenticate);
 	    my $clean_inputs = $c->stash->{clean_inputs};
+    my $body_version = $c->request->captures->[0];
+    if ($body_version eq 'v2' && (ref($clean_inputs) ne 'HASH' || !keys(%$clean_inputs) || grep { $_ !~ /^[1-9]\d*$/ || ref($clean_inputs->{$_}) ne 'HASH' } keys %$clean_inputs)) {
+        return _standard_response_construction($c, CXGN::BrAPI::JSONResponse->return_error([], 'Bulk observation updates require an object keyed by existing positive identifiers.', 400));
+    }
+
 	    my %observations = %$clean_inputs;
 	    my @all_observations;
 	    foreach my $observation (keys %observations) {
@@ -3949,11 +3959,10 @@ sub observations_PUT {
 	        user_type => $user_type,
 	        overwrite => 1,
 	    },$c);
-	} elsif ($version eq 'v1'){
-		my $clean_inputs = $c->stash->{clean_inputs};
-	    my $observations = $clean_inputs->{observations};
-		save_observation_results($self, $c, $observations, 'v1');
-	}
+    } elsif ($version eq 'v1') {
+        my $clean_inputs = $c->stash->{clean_inputs};
+        return save_observation_results($self, $c, $clean_inputs->{observations}, 'v1', 1);
+    }
 
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
@@ -3968,21 +3977,7 @@ sub observations_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Observations');
-    my $brapi_package_result = $brapi_module->search({
-        observationLevel => $clean_inputs->{observationLevel},
-        seasonDbId => $clean_inputs->{seasonDbId},
-        locationDbId => $clean_inputs->{locationDbId},
-        studyDbId => $clean_inputs->{studyDbId},
-		trialDbId => $clean_inputs->{trialDbId},
-        germplasmDbId => $clean_inputs->{germplasmDbId},
-        programDbId => $clean_inputs->{programDbId},
-        observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
-        observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
-        observationUnitDbId => $clean_inputs->{observationUnitDbId},
-        observationDbId => $clean_inputs->{observationDbId},
-        observationVariableDbId => $clean_inputs->{observationVariableDbId}
-
-    });
+    my $brapi_package_result = $brapi_module->search({%$clean_inputs});
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -4055,6 +4050,8 @@ sub observations_detail_PUT {
     my @all_observations;
     $observations->{observationDbId} = $c->stash->{observation_id};
     push @all_observations, $observations;
+    my $version = $c->request->captures->[0];
+    return save_observation_results($self, $c, \@all_observations, 'v1', 1) if $version eq 'v1';
 
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
@@ -4092,11 +4089,15 @@ sub save_observation_results {
     my $c = shift;
     my $observations = shift;
     my $version = shift;
+    my $overwrite = shift || 0;
 
 	# Check that the user is a user. We don't check other permissions for now.
 	my $force_authenticate = $c->config->{brapi_observations_require_login};
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
+    if (!$user_id) {
+        return _standard_response_construction($c, CXGN::BrAPI::JSONResponse->return_error([], 'You must be logged in to store observations.', 401));
+    }
 	my $dbh = $c->dbc->dbh;
     my $p = CXGN::People::Person->new($dbh, $user_id);
     my $username = $p->get_username;
@@ -4109,6 +4110,7 @@ sub save_observation_results {
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
 	my $brapi_package_result = $brapi_module->observations_store({
         observations => $observations,
+        overwrite => $overwrite,
         user_id => $user_id,
         username => $username,
         user_type => $user_type,
@@ -4321,12 +4323,7 @@ sub observations_search_process {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
-	my $brapi_package_result = $brapi_module->search({
-        collectors => $clean_inputs->{collectors},
-        observationDbIds => $clean_inputs->{observationDbIds},
-        observationUnitDbIds => $clean_inputs->{observationUnitDbIds},
-        observationVariableDbIds => $clean_inputs->{observationVariableDbIds}
-	});
+    my $brapi_package_result = $brapi_module->search({%$clean_inputs});
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -4628,30 +4625,14 @@ sub image_search_retrieve : Chained('brapi') PathPart('search/images') Args(1) {
 }
 
 sub _get_http_status_code {
-	my $status = shift;
-	my $http_status_code = 200;
-
-	foreach(@$status) {
-
-		if ($_->{messageType} eq "403") {
-			$http_status_code = 403;
-			last;
-		}
-		elsif ($_->{messageType} eq "401") {
-			$http_status_code = 401;
-			last;
-		}
-		elsif ($_->{messageType} eq "400") {
-			$http_status_code = 400;
-			last;
-		}
-		elsif ($_->{messageType} eq "200") {
-			$http_status_code = 200;
-			last;
-		}
-	}
-
-	return $http_status_code;
+    my $status = shift || [];
+    my $code = 200;
+    foreach my $item (@$status) {
+        my $type = $item->{messageType} // '';
+        return 0 + $type if $type =~ /^[45]\d\d$/;
+        $code = 400 if uc($type) eq 'ERROR';
+    }
+    return $code;
 }
 
 =head2 brapi/v2/callsets
