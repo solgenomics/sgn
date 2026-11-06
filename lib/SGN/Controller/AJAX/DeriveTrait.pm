@@ -66,6 +66,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     my $c = shift;
     my $trial_id = $c->req->param('trial_id');
     my $selected_trait = $c->req->param('trait');
+    my $overwrite = $c->req->param('overwrite') ? 1 : 0;
     my %parse_result;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
@@ -80,6 +81,8 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     my $selected_trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $selected_trait);
     if (!$selected_trait_cvterm) {
 	print STDERR "The trait $selected_trait is not in the database.\n";
+	$c->stash->{rest} = {error => "Select a trait to compute." };
+	return;
     }
 
     my $selected_trait_cvterm_id = $selected_trait_cvterm->cvterm_id();
@@ -112,18 +115,8 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     }
 
 
-    foreach my $trait_found (@{$triat_name}) {
-	if  ($selected_trait_cvterm_id && ($trait_found->[0] eq $selected_trait_cvterm_id)) {
-	    print "Trait found = $trait_found->[1] with id $trait_found->[0]\n";
-	    $c->stash->{rest} = {error => "$trait_found->[1] has been computed and uploaded for this trial." };
-	    return;
-	}
-
-	elsif ($selected_trait_cvterm_id eq '')  {
-	    $c->stash->{rest} = {error => "Select trait to compute." };
-	    return;
-	}
-    }
+    # A trait already computed for this trial is computed again: with overwrite, the new values
+    # replace the stored ones; without it, only plots and plants that have no value yet get one.
 
     my $dbh = $c->dbc->dbh();
     my @plots;
@@ -315,7 +308,7 @@ project.project_id=? ) );");
         trait_list=>\@traits,
         values_hash=>\%data,
         has_timestamps=>1,
-        overwrite_values=>0,
+        overwrite_values=>$overwrite,
         metadata_hash=>\%phenotype_metadata,
 				composable_validation_check_name=>$c->config->{composable_validation_check_name}
     );
@@ -330,7 +323,7 @@ project.project_id=? ) );");
         return;
     }
 
-	$c->stash->{rest} = {success => 1};
+	$c->stash->{rest} = {success => 1, message => $store_success};
 }
 
 

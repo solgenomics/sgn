@@ -38,7 +38,10 @@ $trial_id
   	<div id="trait_list_dc" name="trait_list">
     		<label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please select trait to compute: <br />
   			<select id="derived_trait_select"></select>
-    		</label> 
+    		</label>
+    		<div class="checkbox">
+    			<label><input type="checkbox" id="derived_trait_overwrite" /> Overwrite values already stored for this trait in this trial</label>
+    		</div>
     			
   	</div>
 </div>
