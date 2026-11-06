@@ -190,6 +190,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#dismiss_transgenic_data_saved_dialog").click(function(){
+        jQuery('#transgenic_historical_data_file').val('');
         location.reload();
     });
 
