@@ -40,9 +40,11 @@ $run_id => ''
         <button class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-download"></span> Downloads <span class="caret"></span></button>
         <ul class="dropdown-menu dropdown-menu-right" id="sfd_downloads"></ul>
       </div>
+      <button class="btn btn-primary" id="sfd_store" style="display:none"><span class="glyphicon glyphicon-floppy-disk"></span> Store analysis</button>
       <button class="btn btn-default" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print</button>
     </div>
   </div>
+  <div id="sfd_store_result"></div>
 
   <div id="sfd_message"></div>
 
@@ -286,6 +288,8 @@ $run_id => ''
   <datalist id="sfd_accession_options"></datalist>
   <div class="sfd-tooltip" id="sfd_tooltip"></div>
 </div>
+
+<& /tools/script_factory/store_dialog.mas &>
 
 <script>
 jQuery(document).ready(function() {

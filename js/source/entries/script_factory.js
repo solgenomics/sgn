@@ -12,6 +12,8 @@
  * Author: Chris Simoes <ccs263@cornell.edu>
  */
 
+import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
+
 const VERSION = '1.2';
 const SVGNS = 'http://www.w3.org/2000/svg';
 const ZONE_COLORS = ['#2b7a4b', '#2563eb', '#d97706', '#9333ea', '#dc2626', '#0891b2', '#65a30d', '#db2777', '#4b5563', '#b45309'];
@@ -1435,10 +1437,12 @@ function runAnalysis() {
         $('#sf_run_elapsed').text('(' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + ')');
     }, 1000);
 
-    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full', dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name })
+    const notify = $('#sf_notify').is(':checked') && !!cfg.user_email;
+    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full', dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: notify ? 1 : 0 })
         .then(job => {
             state.job = job;
-            $('#sf_run_progress_text').text('Queued. The analysis runs in the background; you can follow it in your jobs list too.');
+            $('#sf_run_progress_text').text('Queued. The analysis runs in the background; you can follow it in your jobs list too.' +
+                (notify ? ' You will get an email at ' + cfg.user_email + ' when it finishes, so you can close this page.' : ''));
             return pollJob(job, p => $('#sf_run_progress_text').text(p));
         })
         .then(res => {
@@ -1487,9 +1491,10 @@ function renderResults() {
     const s = res.summary || {};
     const label = res.value_label || 'BLUP';
     $('#sf_results').show();
-    // a new run can be stored again
+    // a new run can be stored; a run stored before shows its analysis
     $('#sf_store_result').html('');
     $('#sf_save_analysis').prop('disabled', false).html('<span class="glyphicon glyphicon-save"></span> Store analysis');
+    if (res.stored && res.stored.analysis_id) showStored(res.stored.analysis_id, res.stored.name);
     $('#sf_open_dashboard').attr('href', '/tools/script_factory/results/' + encodeURIComponent(res.run_id || '')).toggle(!!res.run_id);
 
     // downloads
@@ -1679,81 +1684,23 @@ function renderZoneResults(zones) {
 // store analysis / list
 // ---------------------------------------------------------------------------
 
-// Store the analysis: one form, pre-filled from the run, posted directly to
-// /ajax/script_factory/store with the run id; the dialog closes when the analysis is saved.
-function storeDefaults() {
-    const res = state.results;
-    const recipe = state.resultsRecipe || buildRecipe();
-    const d = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    const stamp = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-    const dsName = (state.dataset && state.dataset.dataset_name) || 'dataset';
-    const engine = res.engine === 'blupf90' ? 'BLUPF90+' : 'R';
-    const genetic = { pedigree: 'pedigree (A matrix) breeding values', parents: 'mother and father effects' }[res.genetic_model] || '';
-    const h2 = arr(res.stage2).filter(x => x.h2 !== null && x.h2 !== undefined && isFinite(x.h2)).map(x => x.trait + ' ' + Number(x.h2).toFixed(2));
-    const desc = (state.script.name ? 'Script "' + state.script.name + '". ' : '') +
-        (res.strategy === 'two_stage' ? 'Two-stage' : 'Single-stage') + ' analysis of dataset "' + dsName + '" (' +
-        (res.summary || {}).n_trials + ' trials, ' + (res.summary || {}).n_accessions + ' accessions) with the Breedbase Script Factory: ' +
-        (res.value_label || 'BLUP') + 's fitted with ' + engine + (genetic ? ', ' + genetic : '') +
-        (recipe.outliers && recipe.outliers.method !== 'none' ? ', outliers removed by ' + recipe.outliers.method.toUpperCase() : '') +
-        '. Traits: ' + arr((res.summary || {}).traits).join(', ') + '.' + (h2.length ? ' Heritability: ' + h2.join(', ') + '.' : '');
-    return { name: (state.script.name || 'Script Factory') + ' - ' + dsName + ' - ' + stamp, description: desc, year: d.getFullYear() };
-}
-
+// Store the analysis: shared form (modules/script_factory_store.js)
 function openStoreAnalysis() {
     const res = state.results;
     if (!res || !res.store) { alert('There are no genotype values to store.'); return; }
-    const def = storeDefaults();
-    $('#sf_store_name').val(def.name);
-    $('#sf_store_description').val(def.description);
-    $('#sf_store_year').val(def.year);
-    $('#sf_store_message').html('');
-    $('#sf_store_submit').prop('disabled', false);
-    const nAcc = arr(res.store.accession_names).length, nTr = arr(res.store.trait_names).length;
-    $('#sf_store_summary').html('<p class="sf-muted"><span class="glyphicon glyphicon-info-sign"></span> ' + nAcc + ' accessions &times; ' + nTr + ' trait(s) of ' +
-        esc(res.value_label || 'BLUP') + 's will be stored. The script, the input phenotype file, the results and their tables' + (res.engine === 'blupf90' ? ', the BLUPF90+ files' : '') +
-        ' are archived with it and can be downloaded from the analysis page (Model Details).</p>');
-    // breeding programs: preselect the program of the dataset's trials
-    const progs = arr(state.dataset && state.dataset.programs);
-    const want = progs.length ? String(progs[0].id) : '';
-    $.ajax({ url: '/ajax/html/select/breeding_programs', data: { id: 'sf_store_program_tmp', name: 'sf_store_program_tmp' }, dataType: 'json' })
-        .done(r => {
-            const opts = $('<div>' + ((r && r.select) || '') + '</div>').find('option');
-            const sel = $('#sf_store_program').empty();
-            if (!want) sel.append('<option value="">Please select a program</option>');
-            opts.each(function() { if ($(this).val() !== '') sel.append($('<option>').val($(this).val()).text($(this).text())); });
-            if (want && sel.find('option[value="' + want + '"]').length) sel.val(want);
-        })
-        .fail(() => {
-            $('#sf_store_program').html(progs.map(p => '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>').join('') || '<option value="">No breeding program found</option>');
-        });
-    $('#sf_store_modal').modal('show');
+    const recipe = state.resultsRecipe || buildRecipe();
+    openStoreDialog({
+        runId: res.run_id,
+        res: res,
+        ctx: { scriptName: state.script.name, datasetName: state.dataset && state.dataset.dataset_name, outlierMethod: recipe.outliers && recipe.outliers.method },
+        programs: arr(state.dataset && state.dataset.programs),
+        onStored: (id, name) => showStored(id, name)
+    });
 }
 
-function submitStoreAnalysis() {
-    const res = state.results;
-    const name = $.trim($('#sf_store_name').val());
-    const description = $.trim($('#sf_store_description').val());
-    const program = $('#sf_store_program').val();
-    const year = $.trim($('#sf_store_year').val());
-    const msg = (type, h) => $('#sf_store_message').html(alertBox(type, h));
-    if (!name) return msg('warning', 'Please give the analysis a name.');
-    if (!description) return msg('warning', 'Please give a description.');
-    if (!program) return msg('warning', 'Please choose a breeding program.');
-    if (!/^\d{4}$/.test(year)) return msg('warning', 'Please give the year (e.g. ' + new Date().getFullYear() + ').');
-    if (!res.run_id) return msg('danger', 'This run cannot be stored (no run id); please run the analysis again.');
-    // the server takes the values and the files from the run itself
-    const data = { run_id: res.run_id, name: name, description: description, year: year, breeding_program_id: program, is_public: $('#sf_store_public').val() };
-    $('#sf_store_submit').prop('disabled', true).html('<span class="glyphicon glyphicon-refresh sf-spin"></span> Saving...');
-    post('/ajax/script_factory/store', data)
-        .then(r => {
-            $('#sf_store_modal').modal('hide');
-            const link = r.analysis_id ? ' <a href="/analyses/' + encodeURIComponent(r.analysis_id) + '" target="_blank">Open the analysis</a>' : '';
-            $('#sf_store_result').html(alertBox('success', '<span class="glyphicon glyphicon-ok"></span> Stored as analysis <b>' + esc(name) + '</b>.' + link));
-            $('#sf_save_analysis').prop('disabled', true).html('<span class="glyphicon glyphicon-ok"></span> Stored');
-        })
-        .catch(e => msg('danger', esc(e.message)))
-        .finally(() => $('#sf_store_submit').prop('disabled', false).html('<span class="glyphicon glyphicon-floppy-disk"></span> Save'));
+function showStored(id, name) {
+    $('#sf_store_result').html(storedNotice(id, name));
+    $('#sf_save_analysis').prop('disabled', true).html('<span class="glyphicon glyphicon-ok"></span> Stored');
 }
 
 function openSaveList() {
@@ -1976,6 +1923,12 @@ export function init(options) {
     // step 3
     $('input[name=sf_strategy], input[name=sf_stage1_model], #sf_stage2_genotype, #sf_stage2_weighting, input[name=sf_engine], #sf_gen_model, #sf_check').on('change', () => { renderDesignTable(); renderModelPreview(); });
     $('#sf_apply_suggestion').on('click', e => { e.preventDefault(); applySuggestion(); });
+    if (cfg.user_email) {
+        $('#sf_notify_to').text('at ' + cfg.user_email);
+    } else {
+        $('#sf_notify').prop({ checked: false, disabled: true });
+        $('#sf_notify_help').html('Your account has no email address. Add one to your user profile to be notified when an analysis finishes.');
+    }
     if (!cfg.blupf90_available) {
         $('#sf_engine_f90').addClass('disabled').find('input').prop('disabled', true);
         $('#sf_engine_note').html('<small class="sf-muted">BLUPF90+ is not installed on this server (ask the site administrator to install blupf90+ or set <code>blupf90_bin_dir</code>).</small>');
@@ -2043,7 +1996,6 @@ export function init(options) {
     // step 6
     $('#sf_run').on('click', runAnalysis);
     $('#sf_save_analysis').on('click', openStoreAnalysis);
-    $('#sf_store_submit').on('click', submitStoreAnalysis);
     $('#sf_save_list').on('click', openSaveList);
     $('#sf_list_submit').on('click', createList);
     $('#sf_export_r').on('click', e => { e.preventDefault(); exportR(); });

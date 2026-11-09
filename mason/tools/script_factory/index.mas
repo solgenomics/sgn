@@ -479,6 +479,10 @@ $blupf90_available => 0
             </div>
           </div>
           <div id="sf_run_review"></div>
+          <div class="sf-notify">
+            <label class="sf-check"><input type="checkbox" id="sf_notify" checked /> <span class="glyphicon glyphicon-envelope"></span> Email me <span id="sf_notify_to"></span> when the analysis finishes</label>
+            <small class="sf-muted" id="sf_notify_help">You can then close this page: the analysis keeps running on the server, and the email links to its results, where you can also store it.</small>
+          </div>
           <div id="sf_run_status" style="display:none">
             <div class="progress progress-striped active"><div class="progress-bar progress-bar-success" style="width:100%"></div></div>
             <div class="sf-run-progress"><span class="glyphicon glyphicon-cog sf-spin"></span> <span id="sf_run_progress_text">Submitting...</span> <span class="sf-muted" id="sf_run_elapsed"></span></div>
@@ -616,50 +620,10 @@ $blupf90_available => 0
   </div>
 </div>
 
-<!-- store the analysis: one pre-filled form, closes when saved -->
-<div class="modal fade" id="sf_store_modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title"><span class="glyphicon glyphicon-floppy-disk"></span> Store the analysis in Breedbase</h4>
-      </div>
-      <div class="modal-body">
-        <p class="sf-help">Everything is filled in from this run; change anything you like. The genotype values become an analysis (visible under Manage &gt; Analyses) and the script is kept as its model, so the analysis can be traced and repeated.</p>
-        <form class="form-horizontal" onsubmit="return false;">
-          <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label" for="sf_store_name">Analysis name</label>
-            <div class="col-sm-9"><input class="form-control" id="sf_store_name" type="text" /></div>
-          </div>
-          <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label" for="sf_store_description">Description</label>
-            <div class="col-sm-9"><textarea class="form-control" id="sf_store_description" rows="3"></textarea></div>
-          </div>
-          <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label" for="sf_store_program">Breeding program</label>
-            <div class="col-sm-5"><select class="form-control" id="sf_store_program"><option value="">loading...</option></select></div>
-            <label class="col-sm-1 control-label" for="sf_store_year">Year</label>
-            <div class="col-sm-3"><input class="form-control" id="sf_store_year" type="number" min="1900" max="2999" /></div>
-          </div>
-          <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label" for="sf_store_public">Script (model)</label>
-            <div class="col-sm-9"><select class="form-control" id="sf_store_public">
-              <option value="yes">Public: other users can see how the values were computed</option>
-              <option value="no">Private</option>
-            </select></div>
-          </div>
-        </form>
-        <div id="sf_store_summary"></div>
-        <div id="sf_store_message"></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="sf_store_submit"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
-      </div>
-    </div>
-  </div>
-</div>
+<& /tools/script_factory/store_dialog.mas &>
 
+% my $user_email = '';
+% if ($c->user()) { my $p = $c->user()->get_object(); $user_email = $p->get_contact_email() || $p->get_private_email() || ''; }
 % my $can_mark_database = ($c->user() && grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
 <script>
 jQuery(document).ready(function() {
@@ -668,12 +632,16 @@ jQuery(document).ready(function() {
     recipe_id: "<% $recipe_id && $recipe_id =~ /^\d+$/ ? $recipe_id : '' %>",
     dataset_id: "<% $dataset_id && $dataset_id =~ /^\d+$/ ? $dataset_id : '' %>",
     check_outliers: "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>",
-    blupf90_available: <% $blupf90_available ? 1 : 0 %>
+    blupf90_available: <% $blupf90_available ? 1 : 0 %>,
+    user_email: "<% $user_email =~ /^[^\s"<>\\]+@[^\s"<>\\]+$/ ? $user_email : '' %>"
   });
 });
 </script>
 
 <style>
+.sf-notify { margin: 10px 0 0; padding: 10px 12px; background: var(--sf-bg); border: 1px solid var(--sf-border); border-radius: 6px; }
+.sf-notify label { margin: 0 0 2px; display: block; }
+.sf-notify small { display: block; margin-left: 22px; }
 .sf-suggest-card { border-left: 4px solid var(--sf-accent); }
 .sf-suggest-list { list-style: none; padding: 0; margin: 10px 0 0; }
 .sf-suggest-list li { padding: 6px 0; border-top: 1px solid var(--sf-border); display: flex; gap: 10px; align-items: baseline; }

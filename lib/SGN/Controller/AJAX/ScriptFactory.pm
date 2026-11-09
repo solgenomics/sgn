@@ -602,6 +602,16 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
         dataset_name => scalar($c->req->param('dataset_name')) // '',
         token => $token,    # input files of the run (archived when the analysis is stored)
     );
+    # email when the run ends (address from the account, never from the request)
+    if ($mode ne 'preview' && $c->req->param('notify')) {
+        my $person = $c->user()->get_object();
+        my $email = $person->get_contact_email() || $person->get_private_email();
+        if ($email && $email =~ /^[^\s@]+@[^\s@]+$/) {
+            (my $site = $c->req->base . '') =~ s{/+$}{};
+            $meta{notify_email} = $email;
+            $meta{site_url} = $site;
+        }
+    }
 
     my $pedigree_file = "$dir/$token.pedigree.txt";
     my $f90_dir = blupf90_dir($c);
@@ -618,6 +628,11 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
             (-s $pedigree_file ? ("--pedigree=$pedigree_file") : ()),
         )
     ) . " > " . _shell_quote("$run_base.log") . " 2>&1";
+    if ($meta{notify_email}) {
+        my $basepath = $c->config->{basepath};
+        $cmd .= "; perl -I" . _shell_quote("$basepath/lib") . " " . _shell_quote("$basepath/bin/script_factory_notify.pl")
+            . " " . _shell_quote($run_base) . " >> " . _shell_quote("$run_base.log") . " 2>&1";
+    }
 
     my $job;
     try {
@@ -662,6 +677,11 @@ sub _load_results {
     my $dir = _work_dir($c);
     my $results_file = "$dir/$run_id.results.json";
     my $results = decode_json(read_file($results_file));
+    my $meta = _run_meta($c, $run_id) || {};
+    $results->{stored} = $meta->{stored} if $meta->{stored};
+    $results->{programs} = _run_programs($c, $meta);
+    $results->{dataset_name} //= $meta->{dataset_name};
+    $results->{script_name} //= $meta->{script_name};
 
     # publish downloadable files
     my $public_dir = _public_dir($c);
@@ -701,6 +721,33 @@ sub _load_results {
     return $results;
 }
 
+# breeding programs of the run's phenotype file, most plots first
+sub _run_programs {
+    my ($c, $meta) = @_;
+    my $token = $meta->{token};
+    return [] if !$token || !_valid_token($token);
+    my $file = _work_dir($c) . "/$token.phenotype.txt";
+    return [] if !-e $file;
+    my %p;
+    try {
+        my ($keys, $idx, $rows) = _read_pheno_file($file);
+        my ($ii, $ni) = ($idx->{programDbId}, $idx->{programName});
+        return if !defined $ii;
+        foreach my $r (@$rows) {
+            my $id = $r->[$ii];
+            next if !defined($id) || $id !~ /^\d+$/;
+            $p{$id} ||= { id => $id, name => defined($ni) ? $r->[$ni] : $id, n_plots => 0 };
+            $p{$id}->{n_plots}++;
+        }
+    };
+    return [ sort { $b->{n_plots} <=> $a->{n_plots} } values %p ];
+}
+
+sub _write_run_meta {
+    my ($c, $run_id, $meta) = @_;
+    write_file(_work_dir($c) . "/$run_id.meta.json", encode_json($meta));
+}
+
 # owner and context of a run, written when it is submitted
 sub _run_meta {
     my ($c, $run_id) = @_;
@@ -734,6 +781,11 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
     }
 
     my $results = _load_results($c, $run_id);
+    # the dashboard needs only the size of what would be stored
+    $results->{store_counts} = {
+        n_accessions => scalar(@{ ($results->{store} || {})->{accession_names} || [] }),
+        n_traits => scalar(@{ ($results->{store} || {})->{trait_names} || [] }),
+    };
     delete $results->{store};
 
     # coordinates of the trial locations for the maps
@@ -758,6 +810,7 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
             dataset_id => $meta->{dataset_id},
             dataset_name => $meta->{dataset_name},
             job_id => $meta->{job_id},
+            is_owner => (($meta->{sp_person_id} // -1) == $sp_person_id) ? 1 : 0,
         },
         locations => \%coords,
         results => $results,
@@ -928,6 +981,10 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         return;
     }
 
+    if ($meta->{stored} && $meta->{stored}->{analysis_id}) {
+        $c->stash->{rest} = { error => "This run is already stored as the analysis \"$meta->{stored}->{name}\".", analysis_id => $meta->{stored}->{analysis_id} };
+        return;
+    }
     my $name = $c->req->param('name') // '';
     my $description = $c->req->param('description') // '';
     my $year = $c->req->param('year') // '';
@@ -1052,6 +1109,10 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
     } catch {
         { error => "The analysis could not be stored: $_" };
     };
+    if ($saved && $saved->{success} && $saved->{analysis_id}) {
+        $meta->{stored} = { analysis_id => $saved->{analysis_id}, name => $name };
+        _write_run_meta($c, $run_id, $meta);
+    }
     $c->stash->{rest} = $saved;
 }
 

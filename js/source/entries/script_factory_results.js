@@ -15,6 +15,7 @@
  */
 
 import '../legacy/leaflet.js';
+import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const ACCENT = '#2b7a4b';
@@ -1286,6 +1287,23 @@ function renderAll() {
     safely('ranking', renderRankTable);
 }
 
+// store the analysis from the dashboard (the owner of the run only)
+function initStore() {
+    if (!META.is_owner) return;
+    const stored = (id, name) => {
+        $('#sfd_store_result').html(storedNotice(id, name));
+        $('#sfd_store').prop('disabled', true).html('<span class="glyphicon glyphicon-ok"></span> Stored');
+    };
+    $('#sfd_store').show().on('click', () => openStoreDialog({
+        runId: cfg.run_id,
+        res: R,
+        ctx: { scriptName: META.script_name || R.script_name, datasetName: META.dataset_name || R.dataset_name, outlierMethod: ((R.recipe || {}).outliers || {}).method },
+        programs: R.programs || [],
+        onStored: stored
+    }));
+    if (R.stored && R.stored.analysis_id) stored(R.stored.analysis_id, R.stored.name);
+}
+
 export function init(options) {
     $ = window.jQuery;
     cfg = options || {};
@@ -1307,6 +1325,7 @@ export function init(options) {
             $('#sfd_body').show();
             initControls();
             renderAll();
+            initStore();
         })
         .fail(x => {
             $('#sfd_title').text('Decision dashboard');
