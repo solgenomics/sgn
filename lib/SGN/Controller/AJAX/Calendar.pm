@@ -243,7 +243,17 @@ sub edit_event_POST {
     if ($params->{edit_event_url} eq '') {$params->{edit_event_url} = '#';}
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$params->{edit_event_project_select}, type_id=>$params->{edit_event_type_select}, value=>[$format_start, $format_end, $params->{edit_event_description}, $params->{edit_event_url}] })) {
+    my $event_row = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['projectprop_id', 'project_id', 'type_id', 'value']);
+    if (!$event_row) {
+        $c->stash->{rest} = {error => 1,};
+        return;
+    }
+
+    #Keep the event's current project and type when the form does not offer them.
+    my $project_id = $params->{edit_event_project_select} || $event_row->project_id;
+    my $type_id = $params->{edit_event_type_select} || $event_row->type_id;
+
+    if (my $update_rs = $event_row->update({project_id=>$project_id, type_id=>$type_id, value=>[$format_start, $format_end, $params->{edit_event_description}, $params->{edit_event_url}] })) {
 	   $c->stash->{rest} = {status => 1,};
     } else {
 	   $c->stash->{rest} = {error => 1,};
@@ -277,7 +287,7 @@ sub day_click_personal_GET {
 	}
     }
 
-    my @calendar_projectprop_names = (['project_planting_date', 'project_property'], ['project_harvest_date', 'project_property'], ['Fertilizer Event', 'calendar'], ['Meeting Event', 'calendar'], ['Planning Event', 'calendar'], ['Presentation Event', 'calendar'], ['Phenotyping Event', 'calendar'], ['Genotyping Event', 'calendar'] );
+    my @calendar_projectprop_names = (['project_planting_date', 'project_property'], ['project_harvest_date', 'project_property'], ['project_second_harvest_date', 'project_property', 'optional'], ['Fertilizer Event', 'calendar'], ['Meeting Event', 'calendar'], ['Planning Event', 'calendar'], ['Presentation Event', 'calendar'], ['Phenotyping Event', 'calendar'], ['Genotyping Event', 'calendar'] );
  
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my @projectprop_types;
@@ -285,7 +295,7 @@ sub day_click_personal_GET {
         my $term = SGN::Model::Cvterm->get_cvterm_row($schema, $_->[0], $_->[1] );
         if ($term) {
             push(@projectprop_types, {cvterm_id=>$term->cvterm_id(), cvterm_name=>$term->name() });
-        } else {
+        } elsif (!$_->[2]) {
             push(@projectprop_types, {cvterm_id=>'', cvterm_name=>'Error: Missing cvterm '.$_->[0].' : '.$_->[1].' in database.'});
         }
     }
