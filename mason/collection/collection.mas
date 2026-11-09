@@ -18,12 +18,18 @@ my $type_label = $collection_type eq 'file' ? 'File' : 'Image';
 
 <& /page/page_title.mas, title => "$type_label Collections" &>
 
+<div style="margin-bottom:15px;">
+    <button class="btn btn-primary" id="new_folder_button">
+        <span class="glyphicon glyphicon-plus"></span> New <% $type_label %> Collection
+    </button>
+</div>
+
 <&| /page/info_section.mas, title => "About $type_label Collections", collapsible => 1, collapsed => 0 &>
     <div class="well well-sm">
 % if ($collection_type eq 'image') {
-        <!-- TODO: describe image collections here -->
-% } else {
-        <!-- TODO: describe file collections here -->
+        Image collections are a way to group images in a folder-like structure. You can create collections with multiple images from the same or different trials. Collections can be created with custom names, and can be associated with breeding programs.
+% } elsif ($collection_type eq 'file') {
+        File collections are a way to group images in a folder-like structure. You can create collections with multiple files from the same or different trials. Collections can be created with custom names, and can be associated with breeding programs.
 % }
     </div>
 </&>
@@ -87,7 +93,6 @@ my $type_label = $collection_type eq 'file' ? 'File' : 'Image';
 
         <center>
         <button class="btn btn-primary" id="collection_search_submit" >Search</button>
-        <button class="btn btn-default" id="new_folder_button" >New Collection</button>
         </center>
     </div>
 </&>

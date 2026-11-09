@@ -34,7 +34,7 @@ $instance_id => 'collections_tree'
         <thead>
             <tr>
                 <th style="width:30%;">Search</th>
-                <th>Breeding Programs -- Projects -- Collections
+                <th>Breeding Programs -- Collections
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <button class="btn btn-sm btn-default" id="<% $instance %>_refresh_button">Refresh</button>
                 </th>
@@ -47,7 +47,6 @@ $instance_id => 'collections_tree'
                     <hr>
                     <h5><i>Double click a collection to view its detail page.</i></h5>
                     <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;),
-                        projects (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;),
                         collections (&nbsp;<span class="glyphicon glyphicon-folder-close text-warning"></span>&nbsp;)</i></h5>
                 </td>
                 <td>

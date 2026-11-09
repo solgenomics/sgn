@@ -100,7 +100,7 @@ $user_can_modify => 1
 </center>
 
 <hr/>
-<a href="/search/images">
+<a class="btn btn-default btn-sm" href="/search/images">
   <span class="glyphicon glyphicon-search"></span> Search all images
 </a>
 
@@ -163,8 +163,8 @@ $user_can_modify => 1
       </div>
 
       <div style="margin-top:10px;">
-        <a href="/collections/images">
-          Browse all image collections &rarr;
+        <a class="btn btn-default btn-sm" href="/collections/images">
+          <span class="glyphicon glyphicon-folder-open"></span>&nbsp; Browse all image collections
         </a>
       </div>
 
