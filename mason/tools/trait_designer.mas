@@ -11,7 +11,7 @@
 
    <div class="container-fluid">
         <ul class="nav nav-pills nav-justified" id="new_trait_term_type_tabs" style="width:70%;margin:0 auto 2em auto;">
-            <li class="active"><a data-toggle="pill" href="#new_trait_variable_term_pane">New Trait Term</a></li>
+            <li class="active"><a data-toggle="pill" href="#new_trait_variable_term_pane">New Trait Variable</a></li>
             <li><a data-toggle="pill" href="#new_trait_ontology_term_pane">New Ontology (Grouping) Term</a></li>
         </ul>
         <form class="form-horizontal" role="form" method="post" id="new_trait_design_form" name="new_trait_design_form" autocomplete="off">
@@ -96,6 +96,7 @@
                     </table>
                     <table id="new_trait_categories" style="width:30%;">
                     </table>
+                    <em id="new_trait_category_none" style="display:block;">None added</em>
                     <button id="new_trait_remove_category_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
             </div>
@@ -110,6 +111,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                         </tr>
                     </table>
                     <ul id="new_trait_parents" style="text-align:left;width:70%;padding-left:1em;list-style-type:disc;"></ul>
+                    <em id="new_trait_parent_none" style="display:block;">None added</em>
                     <button id="new_trait_remove_parent_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
             </div>
@@ -123,6 +125,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                         </tr>
                     </table>
                     <ul id="new_trait_synonyms" style="text-align:left;width:70%;padding-left:1em;list-style-type:disc;"></ul>
+                    <em id="new_trait_synonym_none" style="display:block;">None added</em>
                     <button id="new_trait_remove_synonym_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
             </div>
@@ -141,14 +144,6 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
         <td>
             <button id="download_ontology_btn" class="btn btn-primary"><span class="glyphicon glyphicon-floppy-save"></span></button>
         </td>
-        <td style="padding-left:8em;">
-            <select id="trait_cvtermpath_rebuild_select" class="form-control">
-                <option value="">Select an ontology...</option>
-            </select>
-        </td>
-        <td>
-            <button id="trait_rebuild_cvtermpath_btn" class="btn btn-primary btn-sm">Rebuild cvterm paths</button>
-        </td>
     </tr>
 </table>
 
@@ -159,14 +154,21 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
 % my $root_nodes = $db_names =~ s/,/ /gr;
 % 
 <&| /page/info_section.mas, title=>"Trait terms", collapsible=>1 &>
-    <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>0 &>
+    <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>1 &>
 </&>
 
 
 <script>
     jQuery(document).ready(function () {
 
-        jQuery('#new_trait_submit_btn').on('click', function () {
+        jQuery('#new_trait_submit_btn').on('click', function (e) {
+
+            let pending_parent_term = jQuery('#new_trait_parent_term').val().trim();
+            if (pending_parent_term && jQuery('#new_trait_parents li').length === 0) {
+                e.preventDefault();
+                alert("Did you finish entering parent terms? You entered " + pending_parent_term + ", but did not add it to the list of parents.");
+                return;
+            }
 
             jQuery('#working_modal').modal("show");
 
@@ -247,6 +249,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             if (parent_term) {
                 jQuery('<li>').text(parent_term).appendTo('#new_trait_parents');
                 jQuery('#new_trait_remove_parent_btn').show();
+                jQuery('#new_trait_parent_none').hide();
                 jQuery('#new_trait_parent_term').val('');
             }
         });
@@ -257,6 +260,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             if (synonym) {
                 jQuery('<li>').text(synonym).appendTo('#new_trait_synonyms');
                 jQuery('#new_trait_remove_synonym_btn').show();
+                jQuery('#new_trait_synonym_none').hide();
                 jQuery('#new_trait_synonym').val('');
             }
         });
@@ -266,6 +270,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             jQuery('#new_trait_synonyms li:last').remove();
             if (jQuery('#new_trait_synonyms li').length === 0) {
                 jQuery('#new_trait_remove_synonym_btn').hide();
+                jQuery('#new_trait_synonym_none').show();
             }
         });
 
@@ -274,6 +279,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             jQuery('#new_trait_parents li:last').remove();
             if (jQuery('#new_trait_parents li').length === 0) {
                 jQuery('#new_trait_remove_parent_btn').hide();
+                jQuery('#new_trait_parent_none').show();
             }
         });
 
@@ -407,6 +413,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_categories').html(table_str);
                 if (Object.keys(table_elems).length > 0) {
                     jQuery('#new_trait_remove_category_btn').css('display', '');
+                    jQuery('#new_trait_category_none').hide();
                 }
             }
             jQuery('#new_trait_add_category').val('');
@@ -421,6 +428,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             delete table_elems[max_key];
             if (Object.keys(table_elems).length == 0) {
                 jQuery('#new_trait_remove_category_btn').css('display', 'none');
+                jQuery('#new_trait_category_none').show();
             }
             table_str = json_to_html_table(table_elems);
             jQuery('#new_trait_categories').html(table_str);
@@ -499,7 +507,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 });
         });
 
-        jQuery("[title='ontology browser input form']").hide();
+        // jQuery("[title='ontology browser input form']").hide();
 
         function html_table_to_json(html_str) {
             let list = html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== '');

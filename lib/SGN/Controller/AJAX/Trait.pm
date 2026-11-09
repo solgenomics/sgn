@@ -73,7 +73,6 @@ sub create_trait :Path('/ajax/trait/create') {
         my %seen_synonyms;
         foreach my $synonym (@{$decoded_synonyms}) {
             next if !defined($synonym);
-            $synonym =~ s/[^[:ascii:]]//g;
             $synonym =~ s/\|//g;
             $synonym =~ s/^\s+|\s+$//g;
             next if !$synonym || $seen_synonyms{lc($synonym)}++;
