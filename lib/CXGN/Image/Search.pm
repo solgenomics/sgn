@@ -464,7 +464,7 @@ sub search {
             "EXISTS (SELECT 1 FROM metadata.md_collection_image AS collection_membership
                     WHERE collection_membership.image_id = image.image_id
                         AND collection_membership.collection_id IN ($placeholders))";
-        push @question_mark_values, @$collection_id_list;
+        push @where_values, @$collection_id_list;
     }
     if (!$include_obsolete_images) {
         push @where_clause, "image.obsolete = 'f'";
