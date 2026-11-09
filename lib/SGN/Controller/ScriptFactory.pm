@@ -20,6 +20,7 @@ package SGN::Controller::ScriptFactory;
 
 use Moose;
 use URI::FromHash qw | uri |;
+use SGN::Controller::AJAX::ScriptFactory;
 
 BEGIN { extends 'Catalyst::Controller' };
 
@@ -34,6 +35,7 @@ sub script_factory_index :Path('/tools/script_factory') Args(0) {
 
     $c->stash->{recipe_id} = $c->req->param('recipe_id');
     $c->stash->{dataset_id} = $c->req->param('dataset_id');
+    $c->stash->{blupf90_available} = SGN::Controller::AJAX::ScriptFactory::blupf90_dir($c) ? 1 : 0;
     $c->stash->{template} = '/tools/script_factory/index.mas';
 }
 

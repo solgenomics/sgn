@@ -37,12 +37,18 @@ suppressPackageStartupMessages({
   library(lme4)
 })
 
-SF_VERSION <- "1.1"
+SF_VERSION <- "1.2"
 
 # -----------------------------------------------------------------------------
 # Arguments
 # -----------------------------------------------------------------------------
 args <- commandArgs(trailingOnly = TRUE)
+# optional named argument: --pedigree=<file> (tab-delimited accession, mother,
+# father; header line; the format of the Breedbase pedigree download)
+pedigree_file <- NA
+named <- grepl("^--pedigree=", args)
+if (any(named)) pedigree_file <- sub("^--pedigree=", "", args[named][1])
+args <- args[!named]
 
 if (exists("RECIPE_JSON")) {
   if (length(args) < 2) {
@@ -153,6 +159,30 @@ if (length(requested) == 0) {
   }
 }
 traits <- unique(traits)
+
+# Checks: entries whose entryType is "check" (augmented designs, check plots)
+dat$check <- ifelse(tolower(dat$entry_type) %in% c("check", "control", "checks"), "check", "test")
+
+# Pedigree ----------------------------------------------------------------------
+# mother / father of every accession (factors of the model; unknown parents are
+# missing) and the full pedigree (ancestors included) for the relationship
+# matrix. Rows: accession, mother, father.
+pedigree <- NULL
+if (!is.na(pedigree_file) && file.exists(pedigree_file)) {
+  pg <- tryCatch(read.delim(pedigree_file, header = TRUE, sep = "\t", quote = "", comment.char = "",
+                            stringsAsFactors = FALSE, colClasses = "character", na.strings = c("", "NA")),
+                 error = function(e) NULL)
+  if (!is.null(pg) && ncol(pg) >= 3 && nrow(pg)) {
+    pg <- pg[, 1:3]; names(pg) <- c("accession", "mother", "father")
+    pg <- pg[!is.na(pg$accession) & pg$accession != "", ]
+    for (k in c("mother", "father")) pg[[k]][!is.na(pg[[k]]) & (pg[[k]] %in% c("", "0", "NA", "unknown") | pg[[k]] == pg$accession)] <- NA
+    pedigree <- pg[!duplicated(pg$accession), ]
+    log_step("Pedigree: ", nrow(pedigree), " individuals, ", sum(!is.na(pedigree$mother) | !is.na(pedigree$father)), " with known parent(s)")
+  }
+}
+dat$mother <- if (!is.null(pedigree)) pedigree$mother[match(dat$accession, pedigree$accession)] else NA_character_
+dat$father <- if (!is.null(pedigree)) pedigree$father[match(dat$accession, pedigree$accession)] else NA_character_
+
 for (t in traits) dat[[t]] <- suppressWarnings(as.numeric(pheno[[t]]))
 traits <- traits[vapply(traits, function(t) sum(!is.na(dat[[t]])) > 0, logical(1))]
 if (length(traits) == 0) stop("None of the selected traits has numeric data in this dataset. Available traits: ", paste(short_trait(available_traits), collapse = ", "))
@@ -363,6 +393,452 @@ fit_quietly <- function(expr) {
     message = function(m) invokeRestart("muffleMessage"))
 }
 
+# -----------------------------------------------------------------------------
+# BLUPF90 engine
+# -----------------------------------------------------------------------------
+# The mixed models can be fitted with blupf90+ (BLUPF90 family, Misztal et al.;
+# Fortran, sparse AI-REML) instead of lme4. Phenotype-only models. R only
+# writes the data and parameter files in the native BLUPF90 format and reads
+# the solutions back:
+#   - every factor is coded as consecutive integers here (no renumf90 needed),
+#     so the solutions map straight back to names;
+#   - fixed factors are 'cross' effects, numeric covariates 'cov' effects
+#     (nested in a factor for terms such as trial:rowN);
+#   - genotype BLUEs: when the other fixed effects need few columns they are
+#     coded as centred covariates instead, which makes each genotype solution
+#     an estimable BLUE (mean over the other fixed effects) with an exact
+#     standard error, the quantity accession_blues() computes for lme4 fits.
+# The program is looked up in $BLUPF90_DIR, then in the PATH. The parameter and
+# data files of every fit are kept in <output_prefix>_blupf90/ so the analysis
+# can be inspected or re-run outside Breedbase.
+
+f90_program <- function() {
+  dir <- Sys.getenv("BLUPF90_DIR")
+  if (nzchar(dir) && file.exists(file.path(dir, "blupf90+"))) return(file.path(dir, "blupf90+"))
+  p <- Sys.which("blupf90+")
+  if (nzchar(p)) unname(p) else ""
+}
+
+engine <- opt(recipe, "engine", "lme4")   # lme4 | blupf90
+if (!engine %in% c("lme4", "blupf90")) engine <- "lme4"
+if (engine == "blupf90" && !nzchar(f90_program())) {
+  add_warning("BLUPF90+ is not installed on the analysis server; the models were fitted with lme4 instead.")
+  engine <- "lme4"
+}
+use_f90 <- engine == "blupf90"
+f90_keep_dir <- paste0(output_prefix, "_blupf90")
+f90_n_fits <- 0
+F90_DENSE_MAX <- 60   # max. fixed covariate columns for exact BLUE standard errors
+
+# split the right-hand side of a lme4 formula into fixed terms and random
+# grouping terms; random terms other than (1|a), (1|a:b) or (1|a/b) are
+# returned in 'unsupported'
+split_lme4_terms <- function(rhs) {
+  rhs <- gsub("\\s+", "", rhs)
+  random <- character(); unsupported <- character()
+  for (m in regmatches(rhs, gregexpr("\\([^()]*\\|[^()]*\\)", rhs))[[1]]) {
+    inner <- substr(m, 2, nchar(m) - 1)
+    lhs <- sub("\\|.*$", "", inner); grp <- sub("^[^|]*\\|", "", inner)
+    if (lhs != "1" || grepl("[^A-Za-z0-9_.:/]", grp)) { unsupported <- c(unsupported, m); next }
+    parts <- strsplit(grp, "/", fixed = TRUE)[[1]]
+    for (k in seq_along(parts)) random <- c(random, paste(parts[1:k], collapse = ":"))
+  }
+  fixed_txt <- gsub("-", "+-", gsub("\\([^()]*\\|[^()]*\\)", "", rhs), fixed = TRUE)
+  fixed <- strsplit(fixed_txt, "+", fixed = TRUE)[[1]]
+  fixed <- fixed[nzchar(fixed) & !fixed %in% c("0", "1", "-1")]
+  if (any(grepl("^-", fixed))) unsupported <- c(unsupported, fixed[grepl("^-", fixed)])
+  fixed <- fixed[!grepl("^-", fixed)]
+  list(fixed = unique(fixed), random = unique(random), unsupported = unsupported)
+}
+
+# integer codes 1..n of the combination of factor columns (0 = missing)
+f90_codes <- function(d, vars) {
+  key <- do.call(paste, c(lapply(vars, function(v) as.character(d[[v]])), sep = "\r"))
+  na <- Reduce(`|`, lapply(vars, function(v) is.na(d[[v]])))
+  f <- factor(ifelse(na, NA, key))
+  list(code = ifelse(is.na(f), 0L, as.integer(f)), n = nlevels(f), labels = gsub("\r", ":", levels(f), fixed = TRUE))
+}
+
+# Pedigree of a set of accessions: the accessions first (codes 1..n), then all
+# their known ancestors; mother / father as codes (0 = unknown).
+ped_codes <- function(acc_levels) {
+  P <- pedigree
+  keep <- character(); todo <- acc_levels
+  while (length(todo)) {
+    keep <- union(keep, todo)
+    i <- match(todo, P$accession)
+    par <- c(P$mother[i], P$father[i])
+    todo <- setdiff(par[!is.na(par)], keep)
+  }
+  ids <- c(acc_levels, setdiff(keep, acc_levels))
+  i <- match(ids, P$accession)
+  s <- match(P$mother[i], ids); d <- match(P$father[i], ids)
+  s[is.na(s)] <- 0L; d[is.na(d)] <- 0L
+  data.frame(id = ids, code = seq_along(ids), s = s, d = d, stringsAsFactors = FALSE)
+}
+
+# Inverse of the additive relationship matrix by Henderson's rules (inbreeding
+# ignored, as BLUPF90's add_animal), lower triangle as (row, col, value)
+# triplets with the level names in attr(, "rowNames") (sommer's Gu format).
+ainv_triplets <- function(pc) {
+  n <- nrow(pc); idx <- pc$code; s <- pc$s; d <- pc$d
+  k <- (s > 0) + (d > 0); delta <- c(1, 4/3, 2)[k + 1]
+  I <- c(idx, idx, s, idx, d, s, d, s, d)
+  J <- c(idx, s, idx, d, idx, s, d, d, s)
+  V <- c(delta, -delta/2, -delta/2, -delta/2, -delta/2, delta/4, delta/4, delta/4, delta/4)
+  ok <- I > 0 & J > 0
+  A <- Matrix::sparseMatrix(I[ok], J[ok], x = V[ok], dims = c(n, n))
+  tr <- Matrix::summary(as(A, "TsparseMatrix"))
+  tr <- tr[tr$i >= tr$j & tr$x != 0, ]
+  G3 <- as.matrix(tr[, c("i", "j", "x")])
+  attr(G3, "rowNames") <- pc$id
+  G3
+}
+
+# Fit y ~ genotype + fixed_terms + random_terms with blupf90+.
+#   d                data with columns y, accession, unit and the model variables
+#   fixed_terms      fixed terms other than the genotype (formula syntax: a, a:b, a*b, a:x)
+#   random_terms     random grouping factors, e.g. "rep_eff" or "accession:trial"
+#   genotype_random  genotype as random (BLUPs) or fixed (BLUEs)
+#   w                optional weights (residual variance divided by w)
+#   fixed_mean_by    factor over which the fixed part is averaged into the
+#                    population mean of the BLUPs (as for lme4: mean over trials)
+#   label            name of the folder the BLUPF90 files are kept in
+# Returns genotype values (value, se), variance components named as lme4
+# names them, residuals and notes.
+f90_fit <- function(d, fixed_terms = character(), random_terms = character(), genotype_random = TRUE,
+                    w = NULL, fixed_mean_by = NULL, label = "model", ped = NULL) {
+  n <- nrow(d)
+  if (n < 3) stop("not enough observations")
+  acc <- factor(d$accession)
+  if (!is.null(ped) && !genotype_random) stop("a pedigree needs the genotype as random effect")
+  notes <- character()
+
+  labs <- if (length(fixed_terms)) attr(terms(as.formula(paste("~", paste(fixed_terms, collapse = " + ")))), "term.labels") else character()
+  labs <- setdiff(labs, "accession")
+  is_num <- function(v) is.numeric(d[[v]])
+
+  # dense coding (exact BLUE standard errors) when the genotype is fixed and
+  # the other fixed effects need few columns
+  X <- matrix(numeric(0), n, 0)
+  dense <- FALSE
+  if (!genotype_random && length(labs)) {
+    fml_x <- as.formula(paste("~", paste(labs, collapse = " + ")))
+    mm <- model.matrix(fml_x, data = model.frame(fml_x, d, na.action = na.pass))
+    mm <- mm[, colnames(mm) != "(Intercept)", drop = FALSE]
+    if (ncol(mm) <= F90_DENSE_MAX) {
+      dense <- TRUE
+      Xc <- sweep(mm, 2, colMeans(mm))
+      R <- mm - apply(mm, 2, function(v) ave(v, acc))     # part not explained by the genotype
+      keep <- colSums(R^2) > 1e-8 * pmax(1, colSums(mm^2))
+      idx <- if (any(keep)) { q <- qr(R[, keep, drop = FALSE], tol = 1e-7); which(keep)[sort(q$pivot[seq_len(q$rank)])] } else integer()
+      X <- Xc[, idx, drop = FALSE]
+    }
+  }
+
+  cols <- list(y = d$y)
+  if (!is.null(w)) cols$w <- w
+  eff <- character()
+  fx <- list()          # native fixed effects: how to rebuild the fixed part
+  add_col <- function(name, v) { cols[[name]] <<- v; length(cols) }
+
+  if (!genotype_random) eff <- c(eff, paste(add_col("acc", as.integer(acc)), nlevels(acc), "cross"))
+  if (dense) {
+    for (j in seq_len(ncol(X))) eff <- c(eff, paste(add_col(paste0("x", j), X[, j]), 1, "cov"))
+  } else {
+    for (lab in labs) {
+      vars <- strsplit(lab, ":", fixed = TRUE)[[1]]
+      nums <- vars[vapply(vars, is_num, logical(1))]
+      facs <- setdiff(vars, nums)
+      if (length(nums) > 1) { notes <- c(notes, paste0(lab, " (product of covariates, not supported by BLUPF90+)")); next }
+      if (length(nums) == 1) {
+        x <- d[[nums]]; x <- x - mean(x, na.rm = TRUE); x[is.na(x)] <- 0
+        if (length(facs)) {
+          cd <- f90_codes(d, facs)
+          fpos <- add_col(paste0("f_", lab), cd$code)
+          xpos <- add_col(paste0("x_", lab), x)
+          eff <- c(eff, paste(xpos, cd$n, "cov", fpos))
+          fx[[length(fx) + 1]] <- list(effect = length(eff), code = cd$code, x = x)
+        } else {
+          eff <- c(eff, paste(add_col(paste0("x_", lab), x), 1, "cov"))
+          fx[[length(fx) + 1]] <- list(effect = length(eff), code = rep(1L, n), x = x)
+        }
+      } else {
+        cd <- f90_codes(d, facs)
+        if (cd$n < 2) next
+        eff <- c(eff, paste(add_col(paste0("f_", lab), cd$code), cd$n, "cross"))
+        fx[[length(fx) + 1]] <- list(effect = length(eff), code = cd$code, x = rep(1, n), name = lab, labels = cd$labels)
+      }
+    }
+  }
+  # overall mean when nothing else absorbs it
+  if (genotype_random && !any(vapply(fx, function(f) all(f$x == 1), logical(1)))) {
+    eff <- c(eff, paste(add_col("mu", rep(1L, n)), 1, "cross"))
+    fx[[length(fx) + 1]] <- list(effect = length(eff), code = rep(1L, n), x = rep(1, n))
+  }
+
+  first_random <- length(eff) + 1
+  rcodes <- list()
+  if (genotype_random) {
+    rcodes$accession <- if (is.null(ped)) list(code = as.integer(acc), n = nlevels(acc), labels = levels(acc))
+                        else list(code = match(as.character(acc), ped$id), n = nrow(ped), labels = ped$id)
+  }
+  for (rt in random_terms) {
+    cd <- f90_codes(d, strsplit(rt, ":", fixed = TRUE)[[1]])
+    if (cd$n >= 2) rcodes[[rt]] <- cd
+  }
+  for (rt in names(rcodes)) eff <- c(eff, paste(add_col(paste0("r_", rt), rcodes[[rt]]$code), rcodes[[rt]]$n, "cross"))
+  n_random <- length(rcodes)
+  if (n_random == 0) stop("the model has no random effect")
+
+  f90_n_fits <<- f90_n_fits + 1
+  wd <- file.path(f90_keep_dir, sprintf("%03d_%s", f90_n_fits, gsub("[^A-Za-z0-9_.-]+", "_", label)))
+  dir.create(wd, recursive = TRUE, showWarnings = FALSE)
+  data_mat <- as.data.frame(cols)
+  write.table(format(data_mat, digits = 15, scientific = FALSE, trim = TRUE), file.path(wd, "data.txt"),
+              quote = FALSE, row.names = FALSE, col.names = FALSE)
+  writeLines(names(cols), file.path(wd, "data_columns.txt"))
+  v0 <- max(var(d$y), 1e-6) / (n_random + 1)
+  par <- c("# BLUPF90+ parameter file written by the Breedbase Script Factory",
+           paste0("# model: y ~ ", if (genotype_random) "(1|accession)" else "accession",
+                  if (length(labs)) paste0(" + ", paste(labs, collapse = " + ")),
+                  if (length(random_terms)) paste0(" + ", paste0("(1|", names(rcodes)[names(rcodes) != "accession"], ")", collapse = " + ")),
+                  if (dense) "   [fixed effects other than accession as centred covariates]"),
+           "# columns of data.txt: see data_columns.txt",
+           "DATAFILE", "data.txt", "NUMBER_OF_TRAITS", "1", "NUMBER_OF_EFFECTS", length(eff),
+           "OBSERVATION(S)", "1", "WEIGHT(S)", if (is.null(w)) "" else "2",
+           "EFFECTS: POSITIONS_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT[EFFECT NESTED]", eff,
+           "RANDOM_RESIDUAL VALUES", format(v0, digits = 10))
+  for (k in seq_len(n_random)) {
+    animal <- !is.null(ped) && names(rcodes)[k] == "accession"
+    par <- c(par, "RANDOM_GROUP", first_random + k - 1, "RANDOM_TYPE", if (animal) "add_animal" else "diagonal",
+             "FILE", if (animal) "pedigree.txt" else "", "(CO)VARIANCES", format(v0, digits = 10))
+  }
+  par <- c(par, "OPTION method VCE", "OPTION use_yams", "OPTION sol se", "OPTION missing -999999999", "OPTION residual",
+           "OPTION conv_crit 1e-9", "OPTION maxrounds 200")
+  writeLines(par[!grepl("^#", par)], file.path(wd, "f90.par"))
+  if (!is.null(ped)) {
+    # animal, mother, father, 3 - number of known parents (BLUPF90 add_animal)
+    write.table(data.frame(ped$code, ped$s, ped$d, 3L - (ped$s > 0) - (ped$d > 0)), file.path(wd, "pedigree.txt"),
+                quote = FALSE, row.names = FALSE, col.names = FALSE)
+  }
+  writeLines(par[grepl("^#", par)], file.path(wd, "README.txt"))
+  for (f in fx) if (!is.null(f$labels)) {
+    write.table(data.frame(code = seq_along(f$labels), level = f$labels),
+                file.path(wd, paste0("levels_", gsub(":", "_x_", f$name), ".txt")), sep = "\t", quote = FALSE, row.names = FALSE)
+  }
+  if (!genotype_random) write.table(data.frame(code = seq_len(nlevels(acc)), level = levels(acc)), file.path(wd, "levels_accession.txt"), sep = "\t", quote = FALSE, row.names = FALSE)
+  for (k in names(rcodes)) {
+    # level codes of each random effect, to read the solutions file by name
+    write.table(data.frame(code = seq_len(rcodes[[k]]$n), level = rcodes[[k]]$labels),
+                file.path(wd, paste0("levels_", gsub(":", "_x_", k), ".txt")), sep = "\t", quote = FALSE, row.names = FALSE)
+  }
+
+  # blupf90+ keeps large arrays on the stack (segfaults with the 8 MB default)
+  cmd <- paste("ulimit -s unlimited 2>/dev/null || ulimit -s $(ulimit -H -s) 2>/dev/null;",
+               "export OMP_STACKSIZE=64M; cd", shQuote(wd), "&& echo f90.par |", shQuote(f90_program()), "> blupf90.out 2>&1")
+  t0 <- proc.time()[["elapsed"]]
+  system(cmd)
+  elapsed <- proc.time()[["elapsed"]] - t0
+  out <- tryCatch(readLines(file.path(wd, "blupf90.out")), error = function(e) character())
+  sol_file <- file.path(wd, "solutions")
+  if (!file.exists(sol_file)) {
+    stop("blupf90+ failed: ", paste(utils::tail(trimws(out[nzchar(trimws(out))]), 2), collapse = " | "))
+  }
+  sol <- read.table(sol_file, skip = 1, col.names = c("trait", "effect", "level", "solution", "se"))
+  fe <- utils::tail(grep("Final Estimates", out), 1)
+  if (!length(fe)) stop("blupf90+ did not converge: ", paste(utils::tail(trimws(out), 2), collapse = " | "))
+  blk <- out[fe:length(out)]
+  vc <- c()
+  for (i in grep("variance\\(s\\) for effect", blk)) {
+    e <- as.integer(sub(".*effect\\s+([0-9]+).*", "\\1", blk[i]))
+    vc[names(rcodes)[e - first_random + 1]] <- as.numeric(trimws(blk[i + 1]))
+  }
+  vc["Residual"] <- as.numeric(trimws(blk[grep("Residual variance", blk)[1] + 1]))
+  if (any(!is.finite(vc))) stop("blupf90+ returned invalid variance components")
+  rounds <- length(grep("In round", out))
+  if (rounds >= 200) notes <- c(notes, "AI-REML stopped at 200 rounds before full convergence")
+
+  yr <- tryCatch(read.table(file.path(wd, "yhat_residual")), error = function(e) NULL)
+  resid <- if (!is.null(yr) && nrow(yr) == n) yr[[ncol(yr)]] else rep(NA_real_, n)
+  unlink(file.path(wd, c("fspak90.ord", "AI_inv.mat", "yhat_residual")))
+
+  # fixed part of every observation (estimable whatever generalized inverse
+  # blupf90+ used for redundant equations)
+  fixed_part <- rep(0, n)
+  for (f in fx) {
+    s <- sol[sol$effect == f$effect, ]
+    b <- s$solution[match(f$code, s$level)]
+    b[is.na(b)] <- 0
+    fixed_part <- fixed_part + b * f$x
+  }
+  # solutions of every random effect, by level name
+  random <- list()
+  for (k in seq_along(rcodes)) {
+    u <- sol[sol$effect == first_random + k - 1, ]
+    random[[names(rcodes)[k]]] <- data.frame(level = rcodes[[k]]$labels[u$level], solution = u$solution, se = u$se, stringsAsFactors = FALSE)
+  }
+  e1 <- sol[sol$effect == 1, ]
+  mu <- if (!is.null(fixed_mean_by)) mean(tapply(fixed_part, fixed_mean_by, mean)) else mean(fixed_part)
+  if (genotype_random) {
+    u <- random$accession
+    gv <- data.frame(accession = levels(acc), stringsAsFactors = FALSE)
+    i <- match(gv$accession, u$level)
+    gv$value <- mu + u$solution[i]; gv$se <- u$se[i]
+  } else {
+    # dense coding: the solution is the BLUE; native coding: genotype solution
+    # plus the mean fixed part (estimable for connected data), no exact SE
+    gv <- data.frame(accession = levels(acc)[e1$level], value = e1$solution + mean(fixed_part),
+                     se = if (dense || !length(fx)) e1$se else NA_real_, stringsAsFactors = FALSE)
+    if (!dense && length(fx)) notes <- c(notes, paste0("standard errors of the BLUEs are not reported: the fixed effects other than accession need more than ", F90_DENSE_MAX, " columns"))
+  }
+  log_step("  blupf90+ ", label, ": ", n, " records, ", rounds, " AI-REML rounds, ", sprintf("%.1f s", elapsed))
+  list(values = gv, vc = vc, resid = resid, notes = notes, seconds = elapsed, rounds = rounds, dir = wd,
+       random = random, mu = mu, engine = "BLUPF90+")
+}
+
+# -----------------------------------------------------------------------------
+# Genetic model and model fitting shared by stage 2 and the single stage
+# -----------------------------------------------------------------------------
+gen_cfg <- opt(recipe, "genetic", list())
+gen_model <- opt(gen_cfg, "model", "iid")      # iid | parents | pedigree
+check_opt <- opt(gen_cfg, "check", "auto")     # auto | fixed | none
+if (!gen_model %in% c("iid", "parents", "pedigree")) gen_model <- "iid"
+if (gen_model != "iid") {
+  n_known <- if (is.null(pedigree)) 0 else sum(unique(dat$accession) %in% pedigree$accession[!is.na(pedigree$mother) | !is.na(pedigree$father)])
+  if (n_known == 0) {
+    add_warning("No accession of this dataset has known parents, so the ", if (gen_model == "pedigree") "pedigree (A matrix)" else "mother / father", " model could not be used; accessions were treated as unrelated.")
+    gen_model <- "iid"
+  } else log_step("Genetic model: ", gen_model, " (", n_known, " accessions with known parents)")
+}
+acc_is_check <- tapply(dat$check == "check", dat$accession, any)
+
+# Pedigree model with the R engine: sommer::mmes with the A inverse.
+sommer_fit <- function(d, fixed_terms, random_terms, w = NULL, fixed_mean_by = NULL) {
+  if (!suppressPackageStartupMessages(suppressWarnings(require("sommer", quietly = TRUE, character.only = TRUE))))
+    stop("the R package sommer is needed for pedigree models with the R engine")
+  pc <- ped_codes(levels(factor(d$accession)))
+  G3 <- ainv_triplets(pc)
+  d$accession <- factor(as.character(d$accession))
+  rnames <- character()
+  for (rt in setdiff(random_terms, "accession")) {
+    vars <- strsplit(rt, ":", fixed = TRUE)[[1]]
+    nm <- paste0("re", length(rnames) + 1)
+    key <- do.call(paste, c(lapply(vars, function(v) as.character(d[[v]])), sep = ":"))
+    key[Reduce(`|`, lapply(vars, function(v) is.na(d[[v]])))] <- "(unknown)"
+    d[[nm]] <- factor(key)
+    rnames[rt] <- nm
+  }
+  fixed_fml <- as.formula(paste("y ~", if (length(fixed_terms)) paste(fixed_terms, collapse = " + ") else "1"))
+  rand_fml <- as.formula(paste("~", paste(c("vsm(ism(accession), Gu = G3)", sprintf("vsm(ism(%s))", rnames)), collapse = " + ")))
+  ctrl <- sommer::mmes_control(output = list(inverse = 1L), diagnostics = list(verbose = FALSE))
+  fit <- if (is.null(w)) sommer::mmes(fixed_fml, random = rand_fml, rcov = ~ units, data = d, control = ctrl)
+         else sommer::mmes(fixed_fml, random = rand_fml, rcov = ~ units, data = d, W = Matrix::Diagonal(x = w), control = ctrl)
+  th <- as.numeric(unlist(fit$theta))
+  vc <- setNames(th, c("accession", names(rnames), "Residual"))
+  random <- list()
+  keys <- c("accession", names(rnames))
+  fitted_random <- rep(0, nrow(d))
+  for (k in seq_along(fit$uList)) {
+    u <- fit$uList[[k]]; pev <- fit$uPevList[[k]]
+    df <- data.frame(level = rownames(u), solution = as.numeric(u[, 1]),
+                     se = if (length(pev) == nrow(u)) sqrt(pmax(0, as.numeric(pev))) else NA_real_, stringsAsFactors = FALSE)
+    random[[keys[k]]] <- df
+    col <- if (keys[k] == "accession") "accession" else rnames[keys[k]]
+    v <- df$solution[match(as.character(d[[col]]), df$level)]; v[is.na(v)] <- 0
+    fitted_random <- fitted_random + v
+  }
+  X <- model.matrix(fixed_fml, d)
+  colnames(X)[colnames(X) == "(Intercept)"] <- "Intercept"
+  b <- fit$b[, 1]; names(b) <- rownames(fit$b)
+  fixed_part <- as.vector(X[, intersect(colnames(X), names(b)), drop = FALSE] %*% b[intersect(colnames(X), names(b))])
+  mu <- if (!is.null(fixed_mean_by)) mean(tapply(fixed_part, fixed_mean_by, mean)) else mean(fixed_part)
+  gv <- data.frame(accession = levels(d$accession), stringsAsFactors = FALSE)
+  i <- match(gv$accession, random$accession$level)
+  gv$value <- mu + random$accession$solution[i]; gv$se <- random$accession$se[i]
+  list(values = gv, vc = vc, resid = d$y - fixed_part - fitted_random, notes = character(), random = random, mu = mu, engine = "sommer")
+}
+
+# Fit 'y ~ ...' (lme4 syntax) with the engine of the recipe and the genetic
+# model. Returns genotype values, variance components (lme4 names),
+# residuals, the solutions of every random effect, ancestors' breeding values
+# (pedigree model) and notes.
+fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model") {
+  rhs <- sub("^\\s*y\\s*~", "", fml_txt)
+  sp <- split_lme4_terms(rhs)
+  has_random <- grepl("\\|", rhs)
+  ped_on <- genotype_random && gen_model == "pedigree" && "accession" %in% sp$random
+  notes <- character()
+  fit <- NULL
+  if (use_f90 && has_random) {
+    if (length(sp$unsupported)) {
+      notes <- c(notes, paste0("BLUPF90+ cannot fit ", paste(sp$unsupported, collapse = ", "), "; R was used"))
+    } else {
+      fit <- tryCatch(f90_fit(d, setdiff(sp$fixed, "accession"), setdiff(sp$random, "accession"), genotype_random,
+                              w = w, fixed_mean_by = d$trial, label = label, ped = if (ped_on) ped_codes(levels(factor(d$accession)))),
+                      error = function(e) { notes <<- c(notes, paste0("BLUPF90+ failed (", conditionMessage(e), "); R was used")); NULL })
+    }
+  }
+  if (is.null(fit) && ped_on) {
+    if (length(sp$unsupported)) stop("the pedigree model does not support ", paste(sp$unsupported, collapse = ", "))
+    fit <- tryCatch(sommer_fit(d, setdiff(sp$fixed, "accession"), sp$random, w = w, fixed_mean_by = d$trial),
+                    error = function(e) { notes <<- c(notes, paste0("pedigree model failed (", conditionMessage(e), "); accessions were treated as unrelated")); NULL })
+  }
+  if (is.null(fit)) {
+    # lme4 / lm; unknown parents become one '(unknown)' level
+    for (v in intersect(c("mother", "father"), all.vars(as.formula(fml_txt)))) d[[v]] <- ifelse(is.na(d[[v]]), "(unknown)", d[[v]])
+    fml <- as.formula(fml_txt)
+    d$.w <- if (is.null(w)) rep(1, nrow(d)) else w
+    m <- if (has_random) fit_quietly(lmer(fml, data = d, weights = .w, REML = TRUE)) else fit_quietly(lm(fml, data = d, weights = .w))
+    if (inherits(m, "error")) stop(conditionMessage(m))
+    vc <- if (inherits(m, "merMod")) var_comp(m) else c(Residual = summary(m)$sigma^2)
+    random <- list()
+    if (inherits(m, "merMod")) {
+      re <- ranef(m, condVar = TRUE)
+      for (k in names(re)) {
+        pv <- attr(re[[k]], "postVar")
+        random[[k]] <- data.frame(level = rownames(re[[k]]), solution = re[[k]][, 1],
+                                  se = if (!is.null(pv)) sqrt(pv[1, 1, ]) else NA_real_, stringsAsFactors = FALSE)
+      }
+    }
+    if (genotype_random) {
+      fp <- predict(m, re.form = NA)
+      mu <- mean(tapply(fp, d$trial, mean))
+      u <- random$accession
+      gv <- data.frame(accession = u$level, value = mu + u$solution, se = u$se, stringsAsFactors = FALSE)
+    } else {
+      gv <- accession_blues(m, d)
+      mu <- NA_real_
+    }
+    fit <- list(values = gv, vc = vc, resid = as.numeric(residuals(m)), notes = character(), random = random, mu = mu, engine = "R")
+  }
+  fit$notes <- c(notes, fit$notes)
+  fit$ancestors <- NULL
+  if (genotype_random) {
+    gv <- fit$values
+    # mother / father (GCA-like) effects are part of the genetic value
+    if (!is.null(fit$random$mother) || !is.null(fit$random$father)) {
+      for (k in intersect(c("mother", "father"), names(fit$random))) {
+        p <- dat[[k]][match(gv$accession, dat$accession)]
+        r <- fit$random[[k]]
+        i <- match(p, r$level)
+        g <- r$solution[i]; g[is.na(g)] <- 0
+        e <- r$se[i]; e[is.na(e)] <- 0
+        gv$value <- gv$value + g
+        gv$se <- sqrt(gv$se^2 + e^2)
+      }
+    }
+    fit$values <- gv
+    # breeding values of ancestors without phenotypes (pedigree model)
+    if (ped_on && !is.null(fit$random$accession)) {
+      a <- fit$random$accession
+      a <- a[!a$level %in% gv$accession, ]
+      if (nrow(a)) fit$ancestors <- data.frame(accession = a$level, value = fit$mu + a$solution, se = a$se, stringsAsFactors = FALSE)
+    }
+  }
+  fit
+}
+
 # random terms for a design inside one trial
 design_terms <- function(design, d) {
   has_rep <- n_levels(d$rep_eff) > 1
@@ -409,7 +885,7 @@ add_model_factors <- function(d) {
 # Variables a custom formula may use. Only these names, the numbers 0 and 1,
 # the operators + - * / : | and parentheses are accepted: no function call can
 # reach R through the formula.
-FORMULA_VARS <- c("accession", "trial", "location", "year", "rep", "block", "row", "col", "rowN", "colN")
+FORMULA_VARS <- c("accession", "trial", "location", "year", "rep", "block", "row", "col", "rowN", "colN", "mother", "father", "check")
 
 parse_custom_formula <- function(txt, cov_vars) {
   txt <- gsub("[\r\n\t]+", " ", as.character(txt))
@@ -525,6 +1001,29 @@ fit_stage1 <- function(d, info, trait) {
   }
 
   terms <- design_terms(design, d)
+
+  # BLUPF90+: same model, genotype fixed (BLUEs, residual variance) and random
+  # (genotypic variance, heritability). Designs without random terms are plain
+  # least squares and stay in R.
+  if (use_f90 && length(terms)) {
+    rterms <- sub("^\\(1\\|(.*)\\)$", "\\1", terms)
+    lab <- paste0("stage1_", info$trial, "_", short_trait(trait))
+    fF <- tryCatch(f90_fit(d, character(), rterms, FALSE, label = paste0(lab, "_blue")), error = function(e) e)
+    if (!inherits(fF, "error")) {
+      res$model <- paste0("BLUPF90+: ", model_text(design, terms, FALSE))
+      res$var_e <- unname(fF$vc["Residual"])
+      fR <- tryCatch(f90_fit(d, character(), rterms, TRUE, label = paste0(lab, "_blup")), error = function(e) e)
+      if (!inherits(fR, "error")) {
+        res$var_g <- unname(fR$vc["accession"])
+        r_bar <- 1 / mean(1 / as.numeric(table(d$accession)))
+        res$h2 <- unname(res$var_g / (res$var_g + fR$vc["Residual"] / r_bar))
+      }
+      res$cv <- 100 * sqrt(res$var_e) / abs(res$mean)
+      return(list(summary = res, means = fF$values, resid = data.frame(unit = d$unit, resid = fF$resid)))
+    }
+    add_warning("BLUPF90+ could not fit ", info$trial, " / ", short_trait(trait), " (", conditionMessage(fF), "); lme4 was used for this trial.")
+  }
+
   fml_fixed <- as.formula(model_text(design, terms, FALSE))
   fit <- if (length(terms)) fit_quietly(lmer(fml_fixed, data = d, REML = TRUE)) else fit_quietly(lm(y ~ accession, data = d))
   if (inherits(fit, "error")) {
@@ -569,6 +1068,7 @@ stage1_summary <- list()
 stage1_means <- list()
 stage2_summary <- list()
 genotype_values <- list()
+ancestor_values <- list()
 
 # Stage-1 style per-trial means are always computed: they are needed for the
 # two-stage approach, for environmental zoning and for the results dashboard
@@ -611,7 +1111,8 @@ if (strategy == "two_stage") {
     res <- list(trait = short_trait(t), n_trials = n_tr, n_accessions = n_levels(m$accession),
                 mean = mean(m$value), var_g = NA_real_, var_ge = NA_real_, h2 = NA_real_,
                 model = "", message = "OK")
-    if (n_tr == 1) {
+    check_on <- genotype_random && check_opt != "none" && (check_opt == "fixed" || n_levels(acc_is_check[as.character(m$accession)]) > 1)
+    if (n_tr == 1 && gen_model == "iid" && !check_on) {
       gv <- data.frame(accession = m$accession, value = m$value, se = m$se)
       res$model <- "Single trial: stage 1 means"
       s1 <- stage1_summary[stage1_summary$trait == short_trait(t), ]
@@ -620,27 +1121,31 @@ if (strategy == "two_stage") {
       m$accession <- factor(m$accession); m$trial <- factor(m$trial)
       w <- if (weighting == "inverse_se2" && all(is.finite(m$se)) && all(m$se > 0)) 1 / m$se^2 else rep(1, nrow(m))
       m$w <- w / mean(w)
+      m$y <- m$value
+      m$check <- ifelse(acc_is_check[as.character(m$accession)], "check", "test")
+      m$mother <- dat$mother[match(m$accession, dat$accession)]
+      m$father <- dat$father[match(m$accession, dat$accession)]
+      terms <- c(if (genotype_random) "(1|accession)" else "accession", if (n_tr > 1) "trial", if (check_on) "check",
+                 if (genotype_random && gen_model == "parents") c("(1|mother)", "(1|father)"))
+      fml_txt <- paste("y ~", paste(terms, collapse = " + "))
+      f2 <- tryCatch(fit_model(m, fml_txt, genotype_random, w = m$w, label = paste0("stage2_", short_trait(t))), error = function(e) e)
+      if (inherits(f2, "error")) { res$message <- conditionMessage(f2); add_warning("Stage 2, ", short_trait(t), ": the model could not be fitted (", conditionMessage(f2), ")."); stage2_summary[[length(stage2_summary) + 1]] <- as.data.frame(res); next }
+      if (length(f2$notes)) add_warning("Stage 2, ", short_trait(t), ": ", paste(f2$notes, collapse = "; "), ".")
+      gv <- f2$values
+      vc <- f2$vc
+      g_names <- intersect(c("accession", "mother", "father"), names(vc))
       if (genotype_random) {
-        fit <- fit_quietly(lmer(value ~ trial + (1|accession), data = m, weights = w, REML = TRUE))
-        if (inherits(fit, "error")) { res$message <- conditionMessage(fit); stage2_summary[[length(stage2_summary) + 1]] <- as.data.frame(res); next }
-        vc <- var_comp(fit)
-        re <- ranef(fit, condVar = TRUE)$accession
-        pv <- attr(re, "postVar")
-        mu <- mean(fixef(fit)[1] + c(0, fixef(fit)[-1]))
-        gv <- data.frame(accession = rownames(re), value = mu + re[, 1],
-                         se = if (!is.null(pv)) sqrt(pv[1, 1, ]) * 1 else NA_real_)
-        res$var_g <- unname(vc["accession"]); res$var_ge <- unname(vc["Residual"])
-        variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = c("accession", "accession:trial + error"), variance = c(res$var_g, res$var_ge), stringsAsFactors = FALSE)
+        res$var_g <- unname(sum(vc[g_names]))
+        res$var_ge <- unname(vc["Residual"])
         e_bar <- 1 / mean(1 / as.numeric(table(m$accession)))
         res$h2 <- unname(res$var_g / (res$var_g + res$var_ge / e_bar))
-        res$model <- paste0("lmer(BLUE ~ trial + (1|accession)", if (weighting == "inverse_se2") ", weights = 1/SE^2" else "", ")")
-      } else {
-        fit <- fit_quietly(lm(value ~ accession + trial, data = m, weights = w))
-        if (inherits(fit, "error")) { res$message <- conditionMessage(fit); stage2_summary[[length(stage2_summary) + 1]] <- as.data.frame(res); next }
-        gv <- accession_blues(fit, m)
-        res$var_ge <- summary(fit)$sigma^2
-        res$model <- paste0("lm(BLUE ~ accession + trial", if (weighting == "inverse_se2") ", weights = 1/SE^2" else "", ")")
-      }
+      } else res$var_ge <- unname(vc["Residual"])
+      comp <- names(vc); comp[comp == "Residual"] <- "accession:trial + error"
+      variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = comp, variance = unname(vc), stringsAsFactors = FALSE)
+      res$model <- paste0(c(BLUPF90 = "BLUPF90+: ", sommer = "sommer: ", R = "")[[sub("\\+$", "", f2$engine)]],
+                          sub("^y ~", "BLUE ~", fml_txt), if (gen_model == "pedigree" && genotype_random) ", accession ~ N(0, A s2a)",
+                          if (weighting == "inverse_se2") ", weights = 1/SE^2" else "")
+      if (!is.null(f2$ancestors)) { f2$ancestors$trait <- t; ancestor_values[[length(ancestor_values) + 1]] <- f2$ancestors }
     }
     gv$trait <- t
     genotype_values[[length(genotype_values) + 1]] <- gv
@@ -688,7 +1193,13 @@ if (strategy == "two_stage") {
     if (ss_mode == "custom") {
       if (cov_name(t) %in% custom$vars) { add_warning(short_trait(t), " is a covariate of the custom formula; it cannot be analysed with its own value as covariate and was skipped."); next }
       fml_txt <- custom$text
-      used_vars <- unique(c(used_vars, custom$vars))
+      one <- Filter(function(v) v %in% c("trial", "location", "year", "check", "rep", "block") && n_levels(d[[v]]) < 2, custom$vars)
+      if (length(one)) {
+        add_warning(short_trait(t), ": the custom formula uses ", paste0("'", one, "'", collapse = ", "), " but ", if (length(one) > 1) "these variables have" else "it has",
+                    " a single level in the data", if ("check" %in% one) " (no entry is marked as check)" else "", "; remove ", if (length(one) > 1) "them" else "it", " from the formula.")
+        next
+      }
+      used_vars <- unique(c(used_vars, setdiff(custom$vars, c("mother", "father"))))   # unknown parents are allowed
     } else {
       designs <- vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$design, character(1))
       all_rc <- all(vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$has_rowcol, logical(1)))
@@ -727,9 +1238,21 @@ if (strategy == "two_stage") {
         ok <-sum(!is.na(d[[cv]])) > 0.5 * nrow(d) && n_levels(d[[cv]]) > 1
         add_term(cv, ok, paste0("covariate ", sub("^cov_", "", cv), " (missing or constant)"), cv)
       }
+      # checks vs test entries (separates the check mean from the population
+      # the BLUPs shrink to); only with the genotype random
+      if (genotype_random && check_opt != "none") {
+        has_both <- n_levels(d$check) > 1
+        if (check_opt == "fixed" || has_both) add_term("check", has_both, "check vs test entries (no checks in the data)", "check")
+      }
+      # mother / father (GCA-like) effects
+      if (gen_model == "parents") {
+        if (genotype_random) { terms <- c(terms, "(1|mother)", "(1|father)") }
+        else dropped <- c(dropped, "mother / father effects (need the genotype as random effect)")
+      }
       g_term <- if (genotype_random) "(1|accession)" else "accession"
       fml_txt <- paste("y ~", paste(c(g_term, terms), collapse = " + "))
     }
+    if (gen_model == "pedigree" && !genotype_random) dropped <- c(dropped, "pedigree relationship (needs the genotype as random effect)")
 
     # keep only the plots that have every variable of the model
     cc <- complete.cases(d[, intersect(used_vars, names(d)), drop = FALSE])
@@ -741,19 +1264,23 @@ if (strategy == "two_stage") {
     res <- list(trait = short_trait(t), n_trials = n_tr, n_accessions = n_levels(d$accession), mean = mean(d$y),
                 var_g = NA_real_, var_ge = NA_real_, var_e = NA_real_, h2 = NA_real_, model = "",
                 dropped_terms = paste(dropped, collapse = "; "), message = "OK")
-    fml <- as.formula(fml_txt)
-    has_random <- grepl("\\|", fml_txt)
-    fit <- if (has_random) fit_quietly(lmer(fml, data = d, REML = TRUE)) else fit_quietly(lm(fml, data = d))
-    if (inherits(fit, "error")) {
-      res$message <- conditionMessage(fit)
+    r_bar <- 1 / mean(1 / as.numeric(table(d$accession)))
+    f1 <- tryCatch(fit_model(d, fml_txt, genotype_random, label = paste0("single_", short_trait(t))), error = function(e) e)
+    if (inherits(f1, "error")) {
+      res$message <- conditionMessage(f1)
+      add_warning(short_trait(t), ": the model could not be fitted (", conditionMessage(f1), ").")
       stage2_summary[[length(stage2_summary) + 1]] <- as.data.frame(res, stringsAsFactors = FALSE)
       next
     }
-    res$model <- paste(deparse(fml, width.cutoff = 500), collapse = "")
-    r_bar <- 1 / mean(1 / as.numeric(table(d$accession)))
-    res$var_e <- if (inherits(fit, "merMod")) sigma(fit)^2 else summary(fit)$sigma^2
+    if (length(f1$notes)) add_warning(short_trait(t), ": ", paste(f1$notes, collapse = "; "), ".")
+    vc <- f1$vc
+    res$model <- paste0(c(BLUPF90 = "BLUPF90+: ", sommer = "sommer: ", R = "")[[sub("\\+$", "", f1$engine)]], fml_txt,
+                        if (gen_model == "pedigree" && genotype_random) ", accession ~ N(0, A s2a)")
+    res$var_e <- unname(vc["Residual"])
+    gv <- f1$values
+    rs <- f1$resid
+    if (!is.null(f1$ancestors)) { f1$ancestors$trait <- t; ancestor_values[[length(ancestor_values) + 1]] <- f1$ancestors }
 
-    vc <- if (inherits(fit, "merMod")) var_comp(fit) else c(Residual = res$var_e)
     for (k in names(vc)) variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = k, variance = unname(vc[k]), stringsAsFactors = FALSE)
     # genotype x environment components, each divided by the (harmonic) mean
     # number of levels of its environment factor per accession
@@ -768,20 +1295,10 @@ if (strategy == "two_stage") {
         gxe_part <- gxe_part + vc[k] / n_k
       }
     }
-
     if (genotype_random) {
-      re <- ranef(fit, condVar = TRUE)$accession
-      pv <- attr(re, "postVar")
-      # population mean: fixed part of the model averaged within and then over trials
-      fp <- predict(fit, re.form = NA)
-      mu <- mean(tapply(fp, d$trial, mean))
-      gv <- data.frame(accession = rownames(re), value = mu + re[, 1], se = if (!is.null(pv)) sqrt(pv[1, 1, ]) else NA_real_)
-      res$var_g <- unname(vc["accession"])
+      res$var_g <- unname(sum(vc[intersect(c("accession", "mother", "father"), names(vc))]))
       res$h2 <- unname(res$var_g / (res$var_g + gxe_part + res$var_e / r_bar))
-    } else {
-      gv <- accession_blues(fit, d)
     }
-    rs <- residuals(fit)
     add_residuals(d$unit, t, rs)
     gv$trait <- t
     genotype_values[[length(genotype_values) + 1]] <- gv
@@ -1032,6 +1549,14 @@ if (!is.null(s1_out)) s1_out$trait <- short_trait(s1_out$trait)
 gv_out <- genotype_values
 gv_out$trait_full <- gv_out$trait
 gv_out$trait <- short_trait(gv_out$trait)
+# parents of each accession, when the pedigree is known
+if (!is.null(pedigree)) {
+  wide_out$mother <- pedigree$mother[match(wide_out$accession, pedigree$accession)]
+  wide_out$father <- pedigree$father[match(wide_out$accession, pedigree$accession)]
+}
+# breeding values of ancestors without phenotypes (pedigree model)
+anc_out <- if (length(ancestor_values)) do.call(rbind, ancestor_values) else NULL
+if (!is.null(anc_out)) anc_out$trait <- short_trait(anc_out$trait)
 
 # CSV files for download
 write_csv <- function(x, suffix) {
@@ -1044,9 +1569,21 @@ files <- list(
   genotype_values = write_csv(wide_out, "genotype_values"),
   stage1_means = write_csv(s1_out, "stage1_means"),
   outliers = write_csv(outliers, "outliers"),
+  ancestors = write_csv(anc_out, "ancestor_breeding_values"),
   index = if (!is.null(index_result)) write_csv({ x <- index_result$table; names(x) <- short_trait(names(x)); x }, "selection_index") else NULL,
   zones = if (length(zone_results)) write_csv(do.call(rbind, lapply(zone_results, function(z) cbind(target = z$target, z$membership))), "zones") else NULL
 )
+# BLUPF90+ parameter and data files of every model, to inspect or re-run them
+if (use_f90 && dir.exists(f90_keep_dir)) {
+  tgz <- paste0(output_prefix, "_blupf90.tar.gz")
+  ok <- tryCatch({
+    old_wd <- setwd(dirname(f90_keep_dir)); on.exit(setwd(old_wd), add = TRUE)
+    utils::tar(basename(tgz), files = basename(f90_keep_dir), compression = "gzip", tar = "internal")
+    setwd(old_wd)
+    TRUE
+  }, error = function(e) { add_warning("The BLUPF90+ files could not be packed: ", conditionMessage(e)); FALSE })
+  if (ok) { files$blupf90 <- basename(tgz); unlink(f90_keep_dir, recursive = TRUE) }
+}
 
 if (!is.null(index_result)) names(index_result$table) <- short_trait(names(index_result$table))
 
@@ -1073,8 +1610,10 @@ trial_table <- do.call(rbind, lapply(trial_info, function(x) data.frame(
 result <- list(
   version = SF_VERSION,
   strategy = strategy,
+  engine = engine,
+  genetic_model = gen_model,
   genotype_effect = if (genotype_random) "random" else "fixed",
-  value_label = if (genotype_random) "BLUP" else "BLUE",
+  value_label = if (!genotype_random) "BLUE" else if (gen_model == "pedigree") "EBV" else "BLUP",
   summary = list(n_plots = nrow(dat), n_accessions = n_levels(dat$accession), n_trials = length(trials),
                  n_environments = n_levels(dat$env), traits = short_trait(traits), traits_full = traits,
                  environment_unit = env_unit),
@@ -1085,6 +1624,7 @@ result <- list(
   stage2 = stage2_summary,
   genotype_values = wide_out,
   genotype_values_long = gv_out,
+  ancestor_values = anc_out,
   stage1_means = s1_out,
   variance_components = variance_components,
   plots = plots_out,

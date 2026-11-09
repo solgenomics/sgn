@@ -15,6 +15,7 @@ Chris Simoes <ccs263@cornell.edu>
 <%args>
 $recipe_id => undef
 $dataset_id => undef
+$blupf90_available => 0
 </%args>
 
 <& /util/import_javascript.mas, classes => ['jquery', 'jquery.dataTables', 'CXGN.Login', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['script_factory'] &>
@@ -197,6 +198,15 @@ $dataset_id => undef
 
       <!-- ===================== step 3 ===================== -->
       <section class="sf-step" data-step="3" style="display:none">
+        <div class="sf-card sf-suggest-card" id="sf_suggest_card">
+          <div class="sf-card-head">
+            <h3><span class="glyphicon glyphicon-flash"></span> Breedbase suggestion</h3>
+            <button class="btn btn-success btn-sm" id="sf_apply_suggestion"><span class="glyphicon glyphicon-ok"></span> Apply suggestion</button>
+          </div>
+          <p class="sf-help">Based on the design stored in Breedbase for each trial, its field layout (replicates, blocks, rows and columns), the checks and the pedigree of the accessions. It is only a suggestion: every choice below can be changed.</p>
+          <div id="sf_suggest"><span class="sf-muted">Load a dataset to get a suggestion.</span></div>
+        </div>
+
         <div class="sf-card">
           <h3>Analysis strategy</h3>
           <div class="sf-options sf-options-2">
@@ -207,6 +217,19 @@ $dataset_id => undef
               <span class="sf-option-title">Single stage</span>
               <span class="sf-option-text">One mixed model on all plots. Choose each term (environment, design effects nested in trials, field trend, G&times;E, covariates) or write your own lme4 formula.</span></label>
           </div>
+        </div>
+
+        <div class="sf-card" id="sf_engine_card">
+          <h3>Model engine</h3>
+          <div class="sf-options sf-options-2">
+            <label class="sf-option sf-option-sm"><input type="radio" name="sf_engine" value="lme4" checked />
+              <span class="sf-option-title">R <small>(lme4, SpATS, sommer)</small></span>
+              <span class="sf-option-text">Mixed models fitted in R. Fast on small and medium datasets; required for custom formulas with random slopes.</span></label>
+            <label class="sf-option sf-option-sm" id="sf_engine_f90"><input type="radio" name="sf_engine" value="blupf90" />
+              <span class="sf-option-title">BLUPF90+</span>
+              <span class="sf-option-text">The same mixed models solved by BLUPF90+ (Fortran, sparse AI-REML; Misztal et al.). Much faster on large multi-environment datasets and pedigrees. Its parameter and data files can be downloaded with the results. SpATS spatial models stay in R.</span></label>
+          </div>
+          <div id="sf_engine_note"></div>
         </div>
 
         <div class="sf-card" id="sf_stage1_card">
@@ -324,6 +347,31 @@ $dataset_id => undef
             <div id="sf_single_covariates" class="sf-cov-list"></div>
             <small class="sf-muted">Fixed linear effect of another trait measured on the same plots (e.g. stand count). In a written formula a selected covariate is available by the name shown in brackets. A trait is never used as a covariate of itself.</small>
           </div>
+        </div>
+
+        <div class="sf-card" id="sf_genetic_card">
+          <h3>Genetic model and entries</h3>
+          <div class="row">
+            <div class="col-sm-6">
+              <label class="sf-label">Relationship among accessions</label>
+              <select class="form-control" id="sf_gen_model">
+                <option value="iid">Unrelated accessions (identity)</option>
+                <option value="parents">Mother and father effects (GCA-like) + accession</option>
+                <option value="pedigree">Pedigree relationship (A matrix) &rarr; breeding values</option>
+              </select>
+              <div id="sf_pedigree_info" class="sf-help"></div>
+            </div>
+            <div class="col-sm-6">
+              <label class="sf-label">Checks vs test entries <code>check</code></label>
+              <select class="form-control" id="sf_check">
+                <option value="auto">Automatic (when the data have checks)</option>
+                <option value="fixed">Fixed effect</option>
+                <option value="none">Not in the model</option>
+              </select>
+              <div id="sf_check_info" class="sf-help"></div>
+            </div>
+          </div>
+          <small class="sf-muted">Used by stage 2 and by the single-stage model, with the genotype as random effect. Mother / father: random effects of the parents recorded in Breedbase; the genetic value of an accession is the sum of its parents' and its own effect. Pedigree: the accession effect follows the additive relationship of all known ancestors (BLUPF90+ <code>add_animal</code> or sommer), giving breeding values (EBVs) for the accessions and for their ancestors. Checks: a fixed check / test effect, so test entries are not shrunk toward the mean of the checks.</small>
         </div>
 
         <div class="sf-card sf-formula-card">
@@ -575,12 +623,22 @@ jQuery(document).ready(function() {
     can_mark_database: <% $can_mark_database %>,
     recipe_id: "<% $recipe_id && $recipe_id =~ /^\d+$/ ? $recipe_id : '' %>",
     dataset_id: "<% $dataset_id && $dataset_id =~ /^\d+$/ ? $dataset_id : '' %>",
-    check_outliers: "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>"
+    check_outliers: "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>",
+    blupf90_available: <% $blupf90_available ? 1 : 0 %>
   });
 });
 </script>
 
 <style>
+.sf-suggest-card { border-left: 4px solid var(--sf-accent); }
+.sf-suggest-list { list-style: none; padding: 0; margin: 10px 0 0; }
+.sf-suggest-list li { padding: 6px 0; border-top: 1px solid var(--sf-border); display: flex; gap: 10px; align-items: baseline; }
+.sf-suggest-list li b { min-width: 150px; }
+.sf-suggest-list li .why { color: var(--sf-muted); font-size: 12px; flex: 1; }
+.sf-suggest-list .st-ok { color: var(--sf-accent); white-space: nowrap; }
+.sf-suggest-list .st-diff { color: #b45309; white-space: nowrap; }
+.sf-suggested { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 8px; font-size: 10px; font-weight: 600; background: var(--sf-accent-soft); color: var(--sf-accent); text-transform: uppercase; letter-spacing: .03em; vertical-align: middle; }
+.sf-option.disabled { opacity: .55; cursor: not-allowed; }
 .sf-app { --sf-accent: #2b7a4b; --sf-accent-soft: #e8f4ec; --sf-border: #dfe3e8; --sf-muted: #6b7280; --sf-bg: #f7f9fa; margin-bottom: 40px; }
 .sf-app h3 { font-size: 18px; margin: 0 0 6px 0; font-weight: 600; }
 .sf-app h4 { font-size: 15px; font-weight: 600; margin-top: 16px; }

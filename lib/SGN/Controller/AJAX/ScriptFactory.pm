@@ -134,6 +134,68 @@ sub _short_trait {
     return $t;
 }
 
+# Directory holding blupf90+: the 'blupf90_bin_dir' configuration key, else
+# the PATH. Returns undef when BLUPF90+ is not installed.
+sub blupf90_dir {
+    my $c = shift;
+    my $conf = $c->config->{blupf90_bin_dir};
+    return $conf if $conf && -x "$conf/blupf90+";
+    foreach my $d (File::Spec->path()) {
+        return $d if -x "$d/blupf90+";
+    }
+    return undef;
+}
+
+# Pedigree of the accessions with all their known ancestors (female_parent /
+# male_parent stock relationships, followed recursively). Writes a
+# tab-delimited file (Accession, Female_Parent, Male_Parent; the format of the
+# Breedbase pedigree download) and returns summary counts.
+sub _write_pedigree {
+    my ($schema, $accessions, $file) = @_;
+    my $female = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship');
+    my $male = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
+    return { n_with_parents => 0 } if !$female || !$male || !@$accessions;
+    my ($f_id, $m_id) = ($female->cvterm_id(), $male->cvterm_id());
+    my $dbh = $schema->storage->dbh();
+    my $sth = $dbh->prepare(
+        "WITH RECURSIVE ped(stock_id) AS (
+             SELECT stock_id FROM stock WHERE uniquename = ANY(?)
+           UNION
+             SELECT sr.subject_id FROM ped JOIN stock_relationship sr ON sr.object_id = ped.stock_id AND sr.type_id IN (?, ?)
+         )
+         SELECT s.uniquename,
+                (SELECT m.uniquename FROM stock_relationship r JOIN stock m ON m.stock_id = r.subject_id
+                  WHERE r.object_id = s.stock_id AND r.type_id = ? ORDER BY r.stock_relationship_id LIMIT 1),
+                (SELECT f.uniquename FROM stock_relationship r JOIN stock f ON f.stock_id = r.subject_id
+                  WHERE r.object_id = s.stock_id AND r.type_id = ? ORDER BY r.stock_relationship_id LIMIT 1)
+           FROM ped JOIN stock s ON s.stock_id = ped.stock_id");
+    $sth->execute($accessions, $f_id, $m_id, $f_id, $m_id);
+    my %in_data = map { $_ => 1 } @$accessions;
+    my (%mothers, %fathers);
+    my ($n_parents, $n_both, $n_ancestors) = (0, 0, 0);
+    open(my $F, '>', $file) or die "Cannot write the pedigree file\n";
+    print $F "Accession\tFemale_Parent\tMale_Parent\n";
+    while (my ($acc, $mother, $father) = $sth->fetchrow_array()) {
+        print $F join("\t", $acc, $mother // '', $father // '') . "\n";
+        if ($in_data{$acc}) {
+            $n_parents++ if $mother || $father;
+            $n_both++ if $mother && $father;
+            $mothers{$mother} = 1 if $mother;
+            $fathers{$father} = 1 if $father;
+        } else {
+            $n_ancestors++;
+        }
+    }
+    close($F);
+    return {
+        n_with_parents => $n_parents,
+        n_with_both => $n_both,
+        n_mothers => scalar(keys %mothers),
+        n_fathers => scalar(keys %fathers),
+        n_ancestors => $n_ancestors,
+    };
+}
+
 sub _is_number {
     my $v = shift;
     return defined($v) && $v =~ /^\s*-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?\s*$/ ? 1 : 0;
@@ -229,6 +291,7 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         $t->{n_plots}++;
         my $acc = $col->($r, 'germplasmName');
         $t->{acc}->{$acc}++ if defined $acc;
+        $t->{n_checks}++ if lc($col->($r, 'entryType') // '') =~ /^(check|checks|control)$/;
         $accessions{$acc} = 1 if defined $acc;
         foreach my $f (['rep', 'replicate'], ['block', 'blockNumber'], ['row', 'rowNumber'], ['col', 'colNumber']) {
             my $v = $col->($r, $f->[1]);
@@ -258,8 +321,12 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
             n_cols => scalar(keys %{$t->{col}}),
             has_rowcol => $has_rowcol,
             replicated => $replicated ? 1 : 0,
+            n_check_plots => $t->{n_checks} // 0,
         };
     }
+
+    my $pedigree = try { _write_pedigree($schema, [ sort keys %accessions ], "$tempfile.pedigree.txt") }
+                   catch { { n_with_parents => 0, error => "$_" } };
 
     my %locations = map { ($_->{location} // '') => 1 } @trials;
     my %years = map { ($_->{year} // '') => 1 } @trials;
@@ -277,6 +344,7 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         n_accessions => scalar(keys %accessions),
         n_locations => scalar(keys %locations),
         n_years => scalar(keys %years),
+        pedigree => $pedigree,
     };
 }
 
@@ -525,7 +593,10 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
         dataset_name => scalar($c->req->param('dataset_name')) // '',
     );
 
+    my $pedigree_file = "$dir/$token.pedigree.txt";
+    my $f90_dir = blupf90_dir($c);
     my $cmd = join(" ",
+        ($f90_dir ? ("BLUPF90_DIR=" . _shell_quote($f90_dir)) : ()),
         "Rscript",
         map { _shell_quote($_) } (
             $c->config->{basepath} . "/$PIPELINE",
@@ -534,6 +605,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
             "$run_base.results.json",
             "$run_base.exclusions.json",
             $run_base,
+            (-s $pedigree_file ? ("--pedigree=$pedigree_file") : ()),
         )
     ) . " > " . _shell_quote("$run_base.log") . " 2>&1";
 
@@ -588,7 +660,7 @@ sub _load_results {
         my $f = $results->{files}->{$k};
         next if !$f || ref($f);
         $f = basename($f);
-        next if $f !~ /^sf_run_[A-Za-z0-9_]+\.csv$/;
+        next if $f !~ /^sf_run_[A-Za-z0-9_]+(\.csv|_blupf90\.tar\.gz)$/;
         copy("$dir/$f", "$public_dir/$f");
         $files{$k} = "/documents/tempfiles/$TMP_SUBDIR/$f";
     }
@@ -785,9 +857,16 @@ sub export_r : Path('/ajax/script_factory/export_r') Args(0) {
 #   1. In Breedbase, download the phenotypes of a dataset or of your trials
 #      (tab-delimited "plot" level file, the same file the Script Factory uses).
 #   2. Run:  Rscript $file_name.R <phenotype_file.txt> <results.json>
+#      For the mother/father or pedigree (A matrix) models, also download the
+#      pedigree of the accessions (Accession, Female_Parent, Male_Parent) and add
+#      --pedigree=<pedigree_file.txt>
 #   3. The results (JSON) and CSV tables are written next to <results.json>.
 #
-# Required R packages: jsonlite, lme4 (and SpATS for spatial models).
+# Required R packages: jsonlite, lme4 (SpATS for spatial models, sommer and
+# Matrix for pedigree models with the R engine).
+# With "engine": "blupf90" the mixed models are fitted by BLUPF90+ (blupf90+ in
+# the PATH, or in the folder given by the BLUPF90_DIR environment variable);
+# its parameter and data files are kept in <results>_blupf90.tar.gz.
 # You can edit the recipe below to change the analysis.
 # =============================================================================
 
