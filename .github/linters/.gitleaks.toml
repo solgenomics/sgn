@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "BrAPI germplasm test contains random IDs that look like keys"
+paths = ['''t/unit_mech/AJAX/_BrAPIv2_germplasm\.t''']

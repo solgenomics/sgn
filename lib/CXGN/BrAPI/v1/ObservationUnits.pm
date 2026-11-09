@@ -43,7 +43,7 @@ sub search {
     my $lt = CXGN::List::Transform->new();
     my $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
 
-    my $limit = $page_size*($page+1)-1;
+    my $limit = $page_size;
     my $offset = $page_size*$page;
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(

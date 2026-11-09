@@ -129,19 +129,24 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
         }
     }
 
-    # Format the unique project names for the SQL query
+    # No rows for this trait (or no trait given): nothing to check against validated trials
+    if (!%unique_names) {
+        $c->stash->{rest} = { data => [], trait => $trait };
+        return;
+    }
 
     $trait =~ s/\|.*//;
     my $trait_like = $trait . '%';
 
-    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
+    my @project_names = keys %unique_names;
+    my $placeholders = join(", ", ("?") x @project_names);
 
     my $trait_sql = qq{
         select project."name" from projectprop
         join project on project.project_id = projectprop.project_id
         where projectprop.type_id = (select cvterm_id from cvterm where cvterm."name" = 'validated_phenotype')
-        and project.name in ($project_names)
-        and projectprop.value like '$trait_like'
+        and project.name in ($placeholders)
+        and projectprop.value like ?
         group by project."name";
     };
 
@@ -149,7 +154,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     eval {
         # Prepare and execute the query
         my $sth_trait = $dbh->prepare($trait_sql);
-        $sth_trait->execute();
+        $sth_trait->execute(@project_names, $trait_like);
 
         # Collect project names from the query result
         while (my ($project_name) = $sth_trait->fetchrow_array) {

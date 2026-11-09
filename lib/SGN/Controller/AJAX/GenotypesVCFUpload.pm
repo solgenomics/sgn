@@ -31,7 +31,9 @@ use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::GenotypingProject;
 use File::Basename qw | basename dirname|;
+use IO::Compress::Gzip qw(gzip $GzipError);
 use JSON;
+use Encode qw(decode FB_CROAK);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -83,6 +85,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->stash->{rest} = { error => 'Must have correct permissions to upload VCF genotypes! Please contact us.' };
         $c->detach();
     }
+    my $is_curator = $user_role eq 'curator' ? 1 : 0;
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
@@ -104,6 +107,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $assay_type = $c->req->param('assay_type_select');
     my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
     my $add_new_markers = $c->req->param('upload_genotype_add_new_markers');
+    my $update_existing_markers = $c->req->param('upload_genotype_update_markers');
     my $add_accessions;
     if ($add_new_accessions){
         $add_accessions = 1;
@@ -112,6 +116,10 @@ sub upload_genotype_verify_POST : Args(0) {
     my $add_markers;
     if ($add_new_markers) {
         $add_markers = 1;
+    }
+    my $update_markers;
+    if ($update_existing_markers && $is_curator) {
+        $update_markers = 1;
     }
     my $include_igd_numbers;
     if ($contains_igd){
@@ -195,6 +203,11 @@ sub upload_genotype_verify_POST : Args(0) {
     if ($upload_vcf) {
         $upload_original_name = $upload_vcf->filename();
         $upload_tempfile = $upload_vcf->tempname;
+        my $utf8_error = _check_utf8_file($upload_tempfile);
+        if ($utf8_error) {
+            $c->stash->{rest} = { error => "The uploaded file $upload_original_name $utf8_error" };
+            $c->detach();
+        }
         $subdirectory = "genotype_vcf_upload";
         $parser_plugin = 'VCF';
 
@@ -204,6 +217,7 @@ sub upload_genotype_verify_POST : Args(0) {
             #version that gets archived (and used for loading) below. It is archived using
             #the same archive_filename/timestamp as the transposed file, so that it can be
             #found later by swapping the genotype_vcf_upload directory for genotype_vcf_archive.
+            #The archived original is gzipped, so it is stored as <basename>.gz.
             my $original_uploader = CXGN::UploadFile->new({
                 tempfile => $upload_tempfile,
                 subdirectory => "genotype_vcf_archive",
@@ -218,6 +232,12 @@ sub upload_genotype_verify_POST : Args(0) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
                 $c->detach();
             }
+            if (!gzip($archived_original_vcf => "$archived_original_vcf.gz")) {
+                print STDERR "Could not gzip $archived_original_vcf: $GzipError\n";
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
+            }
+            unlink $archived_original_vcf;
 
             my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
             my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
@@ -262,6 +282,11 @@ sub upload_genotype_verify_POST : Args(0) {
     if ($upload_transposed_vcf) {
         $upload_original_name = $upload_transposed_vcf->filename();
         $upload_tempfile = $upload_transposed_vcf->tempname;
+        my $utf8_error = _check_utf8_file($upload_tempfile);
+        if ($utf8_error) {
+            $c->stash->{rest} = { error => "The uploaded file $upload_original_name $utf8_error" };
+            $c->detach();
+        }
         $subdirectory = "genotype_transposed_vcf_upload";
         $parser_plugin = 'transposedVCF';
     }
@@ -565,14 +590,17 @@ sub upload_genotype_verify_POST : Args(0) {
             }
 
             my @all_warnings;
+            my @warning_groups;
+            my @mismatched_markers;
+            my @protocol_match_errors;
             my $previous_genotypes_exist;
             if (scalar(@{$verified_errors->{warning_messages}}) > 0){
                 push @all_warnings, @{$verified_errors->{warning_messages}};
+                push @warning_groups, { title => 'Accessions with genotypes already stored for this protocol', count => scalar(@{$verified_errors->{warning_messages}}), messages => $verified_errors->{warning_messages} };
                 $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
             }
 
             if ($protocol_id) {
-                my @protocol_match_errors;
                 my $new_marker_data = $protocol->{markers};
                 my $stored_protocol = CXGN::Genotype::Protocol->new({
                     bcs_schema => $schema,
@@ -585,14 +613,31 @@ sub upload_genotype_verify_POST : Args(0) {
 		my $total_marker_count = 0;
                 my @mismatch_marker_names;
 		my @mismatch_markers;
+		my @markers_to_update;
+		my @marker_permission_errors;
                 while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
                     while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
 			$total_marker_count++;
                         if (exists($compare_marker_names{$marker_name})) {
+                            my @field_diffs;
+                            my $chrom_changed = 0;
                             for my $key (qw(chrom pos name ref alt)) {
                                 my $value = $new_marker_details->{$key};
                                 if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                                    push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                                    push @field_diffs, "Marker $marker_name was matched to the stored protocol by name, but its $key differs: your file has \"$value\", the stored protocol has \"".$stored_markers->{$marker_name}->{$key}."\"";
+                                    $chrom_changed = 1 if $key eq 'chrom';
+                                }
+                            }
+                            if (scalar(@field_diffs)) {
+                                if (!$is_curator) {
+                                    push @marker_permission_errors, @field_diffs;
+                                } else {
+                                    push @mismatched_markers, $marker_name;
+                                    if ($update_markers && !$chrom_changed) {
+                                        push @markers_to_update, [$chrom, $marker_name];
+                                    } else {
+                                        push @protocol_match_errors, @field_diffs;
+                                    }
                                 }
                             }
                         } else {
@@ -600,6 +645,11 @@ sub upload_genotype_verify_POST : Args(0) {
 			    push @mismatch_markers, [$chrom, $marker_name];
                         }
                     }
+                }
+
+                if (scalar(@marker_permission_errors)) {
+                    $c->stash->{rest} = { error => "The following markers in your file differ from the previously stored protocol. Only a curator can modify existing protocol markers; please contact a curator.<br>".join("<br>", @marker_permission_errors) };
+                    $c->detach();
                 }
 
                 if (scalar(@mismatch_marker_names)) {
@@ -621,12 +671,26 @@ sub upload_genotype_verify_POST : Args(0) {
                     }
                 }
 
+                if (scalar(@markers_to_update)) {
+                    print STDERR "Updating mismatched markers\n";
+                    $store_genotypes->store_updated_markers_in_protocolprop(\@markers_to_update);
+                }
+
                 push @all_warnings, @protocol_match_errors;
+                if (scalar(@protocol_match_errors)) {
+                    push @warning_groups, { title => 'Markers matched to the previously stored protocol by name, but differing in chrom, pos, ref, or alt', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
+                }
 	    }
+
+            if (scalar(@protocol_match_errors) > 0 && !$update_markers) {
+                my $warning_string = join("<br>", @all_warnings);
+                $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
+                $c->detach();
+            }
 
             if (scalar(@all_warnings) > 0 && !$accept_warnings) {
                 my $warning_string = join("<br>", @all_warnings);
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+                $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
                 $c->detach();
             }
 
@@ -699,14 +763,17 @@ sub upload_genotype_verify_POST : Args(0) {
         }
 
         my @all_warnings;
+        my @warning_groups;
+        my @mismatched_markers;
+        my @protocol_match_errors;
         my $previous_genotypes_exist;
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
             push @all_warnings, @{$verified_errors->{warning_messages}};
+            push @warning_groups, { title => 'Accessions with genotypes already stored for this protocol', count => scalar(@{$verified_errors->{warning_messages}}), messages => $verified_errors->{warning_messages} };
             $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
         }
 
         if ($protocol_id) {
-            my @protocol_match_errors;
             my $new_marker_data = $protocol_info->{markers};
             my $stored_protocol = CXGN::Genotype::Protocol->new({
                 bcs_schema => $schema,
@@ -718,14 +785,31 @@ sub upload_genotype_verify_POST : Args(0) {
 	    my $total_marker_count = 0;
             my @mismatch_marker_names;
             my @mismatch_markers;
+            my @markers_to_update;
+            my @marker_permission_errors;
             while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
                 while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
                     $total_marker_count++;
                     if (exists($compare_marker_names{$marker_name})) {
+                        my @field_diffs;
+                        my $chrom_changed = 0;
                         for my $key (qw(chrom pos name ref alt)) {
                             my $value = $new_marker_details->{$key};
                             if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                                push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                                push @field_diffs, "Marker $marker_name was matched to the stored protocol by name, but its $key differs: your file has \"$value\", the stored protocol has \"".$stored_markers->{$marker_name}->{$key}."\"";
+                                $chrom_changed = 1 if $key eq 'chrom';
+                            }
+                        }
+                        if (scalar(@field_diffs)) {
+                            if (!$is_curator) {
+                                push @marker_permission_errors, @field_diffs;
+                            } else {
+                                push @mismatched_markers, $marker_name;
+                                if ($update_markers && !$chrom_changed) {
+                                    push @markers_to_update, [$chrom, $marker_name];
+                                } else {
+                                    push @protocol_match_errors, @field_diffs;
+                                }
                             }
                         }
                     } else {
@@ -734,6 +818,11 @@ sub upload_genotype_verify_POST : Args(0) {
                     }
                 }
 	    }
+
+            if (scalar(@marker_permission_errors)) {
+                $c->stash->{rest} = { error => "The following markers in your file differ from the previously stored protocol. Only a curator can modify existing protocol markers; please contact a curator.<br>".join("<br>", @marker_permission_errors) };
+                $c->detach();
+            }
 
             if (scalar(@mismatch_marker_names)){
 		if ($add_markers) {
@@ -755,12 +844,26 @@ sub upload_genotype_verify_POST : Args(0) {
                 }
             }
 
+            if (scalar(@markers_to_update)) {
+                print STDERR "Updating mismatched markers\n";
+                $store_genotypes->store_updated_markers_in_protocolprop(\@markers_to_update);
+            }
+
             push @all_warnings, @protocol_match_errors;
+            if (scalar(@protocol_match_errors)) {
+                push @warning_groups, { title => 'Markers matched to the previously stored protocol by name, but differing in chrom, pos, ref, or alt', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
+            }
 	}
+
+        if (scalar(@protocol_match_errors) > 0 && !$update_markers) {
+            my $warning_string = join("<br>", @all_warnings);
+            $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
+            $c->detach();
+        }
 
         if (scalar(@all_warnings) > 0 && !$accept_warnings) {
             my $warning_string = join("<br>", @all_warnings);
-            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+            $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
             $c->detach();
         }
 
@@ -857,6 +960,21 @@ sub upload_genotype_verify_POST : Args(0) {
     $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
 
     $c->stash->{rest} = $return;
+}
+
+#Returns an error message if the file contains bytes that are not valid UTF-8, otherwise undef.
+sub _check_utf8_file {
+    my $filename = shift;
+    open(my $F, "<:raw", $filename) || die "Can't open file $filename\n";
+    while (my $line = <$F>) {
+        if (!eval { decode('UTF-8', $line, FB_CROAK); 1 }) {
+            my $line_number = $.;
+            close($F);
+            return "is not valid UTF-8 (line $line_number). Please save it with UTF-8 encoding and upload again.";
+        }
+    }
+    close($F);
+    return;
 }
 
 1;

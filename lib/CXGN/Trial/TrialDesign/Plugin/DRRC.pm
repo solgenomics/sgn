@@ -14,7 +14,7 @@ sub create_design {
   my $rbase = R::YapRI::Base->new();
   my $stock_list;
   my @stock_list;
-  my $control_list;
+  my $control_list = '';
   my $number_of_blocks;
   my $stock_data_matrix;
   my $control_data_matrix;
@@ -62,7 +62,7 @@ sub create_design {
     die "Number of cols not specified\n";
   }
 
-  my $rowNumber = scalar(@stock_list) / ($colNumber/$repNumber);
+  $rowNumber = scalar(@stock_list) / ($colNumber/$repNumber);
 
   ## It checks if number of stocks is divisible by number of columns and rows.
   if (scalar(@stock_list) % $colNumber == 0) {
@@ -88,7 +88,7 @@ sub create_design {
   my $tempfile = $self->get_tempfile();
 
   my $param_file = $tempfile.".params";
-  open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
+  open(my $F, ">", $param_file) or die "Can't open $param_file for writing: $!";
   print $F "treatments <- c($stock_list)\n";
   print $F "controls <- c($control_list)\n";
   print $F "nRep <- ".$repNumber."\n";
@@ -122,10 +122,9 @@ sub create_design {
 
 
   my $design_file = $tempfile.".design";
-  open my $design, $design_file or die "Could not open $design_file: $!";
-
-  my $design_file = $tempfile.".design";
-  open my $design, $design_file or die "Could not open $design_file: $!";
+  unless (-e $design_file) {
+    die "R did not produce a design file ($design_file). Check the R log at $tempfile.out\n";
+  }
 
 if (-e $design_file) {
     my @lines = read_file($design_file);

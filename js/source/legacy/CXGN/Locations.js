@@ -14,6 +14,36 @@ jQuery('#add_location_link').click( function() {
 });
 
 
+// Location fields are user-entered text: escape them before building HTML strings
+function location_html_escape(value) {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// user-entered text is escaped for display; sorting, searching and exports use the raw value
+function render_text(data, type, full, meta) {
+    return type === 'display' ? location_html_escape(data) : data;
+}
+
+// Locations without latitude/longitude have coordinates [null, null], which Leaflet would place at 0,0
+function has_coordinates(feature) {
+    var coordinates = feature.geometry ? feature.geometry.coordinates : undefined;
+    if (!coordinates || coordinates.length < 2) {
+        return false;
+    }
+    return [coordinates[0], coordinates[1]].every(function(value) {
+        return value !== null && value !== '' && isFinite(value);
+    });
+}
+
+
 function updateLocations(callback) {
     jQuery.ajax({
         url: '/ajax/location/all',
@@ -55,22 +85,23 @@ function createLocationsTable() {
         rowId: 'properties.Id',
         "columns": [
             { "data": "properties.Id" },
-            { "data": "properties.Name" },
-            { "data": "properties.Abbreviation" },
+            { "data": "properties.Name", "render": render_text },
+            { "data": "properties.Abbreviation", "render": render_text },
             { "data": "properties.Code",
                 "render":function(data, type, full, meta){
-                    return full.properties.Code + ' ' + full.properties.Country;
+                    return render_text(full.properties.Code + ' ' + full.properties.Country, type);
                 }
             },
-            { "data": "properties.Program" },
-            { "data": "properties.Type" },
+            { "data": "properties.Program", "render": render_text },
+            { "data": "properties.Type", "render": render_text },
             { "data": "properties.Latitude" },
             { "data": "properties.Longitude" },
             { "data": "properties.Altitude" },
             { "data": "properties.Trials" },
             { "data": "properties.NOAAStationID",
                 "render":function(data, type, full, meta) {
-                    return full.properties.NOAAStationID ? "<a href='https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/" + full.properties.NOAAStationID + "/detail' target=_blank>"+ full.properties.NOAAStationID + "</a>" : "";
+                    var station_id = location_html_escape(full.properties.NOAAStationID);
+                    return station_id ? "<a href='https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/" + station_id + "/detail' target=_blank>"+ station_id + "</a>" : "";
                 }
             },
             {
@@ -112,7 +143,12 @@ function createLocationsTable() {
             {
                 extend: 'print',
                 exportOptions: {
-                    columns: ':visible'
+                    columns: ':visible',
+                    // The escaped display value already contains entities (e.g. &lt;img&gt;).
+                    // DataTables Buttons' print export runs decodeEntities on the display value
+                    // before print-min.js writes it into the print window with innerHTML, which
+                    // would turn it back into live markup. Keep it as literal text.
+                    decodeEntities: false
                 },
                 message: export_message
             }
@@ -124,7 +160,7 @@ function createLocationsTable() {
             for (var i = 0; i < name_data.length; i++) { //extract names from data object
                 names.push(name_data[i]+'\n');
             }
-            $('#location_names').html(names);
+            $('#location_names').text(names.join(''));
             addToListMenu('locations_to_list_menu', 'location_names', {
                 listType: 'locations'
             });
@@ -181,6 +217,7 @@ function initialize_map(id = "location_map") {
         };
 
         var location_layer = L.geoJSON(locationJSON, {
+            filter: has_coordinates,
             pointToLayer: function (feature, latlng) {
             return L.marker(latlng, style(feature));
         },
@@ -215,7 +252,7 @@ function initialize_map(id = "location_map") {
         mymap.addControl(new locateUser({ position: 'topleft' }));
 
         // Set Map Bounds if provided, otherwise fit the map to the world
-        if ( Object.entries(location_layer.getBounds()).length !== 0 ) {
+        if ( location_layer.getBounds().isValid() ) {
             mymap.fitBounds(location_layer.getBounds());
         }
         else {
@@ -241,16 +278,7 @@ function initialize_map(id = "location_map") {
 
         var searchControl = L.esri.Geocoding.geosearch({
             providers: [
-                arcgisOnline,
-                L.esri.Geocoding.featureLayerProvider({
-                    url: 'https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0/',
-                    searchFields: ['Name', 'Organization'],
-                    label: 'GIS Day Events',
-                    bufferRadius: 5000,
-                    formatSuggestion: function(feature){
-                        return feature.properties.Name + ' - ' + feature.properties.Organization;
-                    }
-                })
+                arcgisOnline
             ],
             position: 'topright',
             expanded: true
@@ -267,7 +295,7 @@ function initialize_map(id = "location_map") {
                 layerControl.removeLayer(location_layer);
                 location_layer = L.geoJson(locationJSON, {
                     filter: function(feature, layer) {
-                        return ids[feature.properties.Id];
+                        return ids[feature.properties.Id] && has_coordinates(feature);
                     },
                     pointToLayer: function (feature, latlng) {
                     return L.marker(latlng, style(feature));
@@ -277,7 +305,12 @@ function initialize_map(id = "location_map") {
 
                 layerControl.addOverlay(location_layer, "Locations");
                 location_layer.addTo(mymap);
-                mymap.fitBounds(location_layer.getBounds());
+                if ( location_layer.getBounds().isValid() ) {
+                    mymap.fitBounds(location_layer.getBounds());
+                }
+                else {
+                    mymap.fitWorld();
+                }
             });
         }
 
@@ -287,7 +320,7 @@ function initialize_map(id = "location_map") {
 function style(feature) {
     //console.log("Type of marker "+feature.properties.Name+" is "+feature.properties.Type);
 
-    var label = feature.properties.Abbreviation || feature.properties.Id;
+    var label = location_html_escape(feature.properties.Abbreviation || feature.properties.Id);
 
     var townMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
@@ -385,9 +418,11 @@ function style(feature) {
 function onEachFeature(feature, layer) {
     // var keys = ["Id","Name","Abbreviation","Country","Program","Type","Latitude","Longitude","Altitude","Trials"];
     var keys = ["Abbreviation","Program","Type","Trials"];
-    var popupContent = '<table class="table table-sm"><caption style="text-align: center;"><font id="'+feature.properties.Id+'_name" size="3" color="black">'+feature.properties.Name+'</font></caption><tbody>';
+    var popupContent = '<table class="table table-sm"><caption style="text-align: center;"><font id="'+feature.properties.Id+'_name" size="3" color="black">'+location_html_escape(feature.properties.Name)+'</font></caption><tbody>';
     for (var i = 0; i < keys.length; i++) {
-        popupContent += '<tr><th>'+keys[i]+'</th><td>'+feature.properties[keys[i]]+'</td></tr>';
+        // Trials is a link built by the server, the other fields are user-entered text
+        var value = keys[i] === 'Trials' ? feature.properties[keys[i]] : location_html_escape(feature.properties[keys[i]]);
+        popupContent += '<tr><th>'+keys[i]+'</th><td>'+value+'</td></tr>';
     }
     var options = '[<a href="javascript:;" onclick="edit_location('+feature.properties.Id+')">Edit</a>]&nbsp[<a href="javascript:;" onclick="delete_location('+feature.properties.Id+')">Delete</a>]';
     popupContent += '<tr><th>Options</th><td>'+options+'</td></tr></tbody></table>';
@@ -400,7 +435,7 @@ function onEachFeature(feature, layer) {
 function add_from_map(coordinate_string) {
     //console.log("coordinate_string is"+coordinate_string);
     var latlng = coordinate_string.split(',');
-    latitude = latlng[0], longitude = latlng[1];
+    var latitude = latlng[0], longitude = latlng[1];
     var coordinates = [parseFloat(latitude),parseFloat(longitude)];
 
 
@@ -431,6 +466,7 @@ function add_from_map(coordinate_string) {
         // $('#location_altitude').val(elevation);
         $('#location_country').val('');
         $('#location_altitude').val('');
+        $('#location_noaa_station_id').val('');
         $('#location_latitude').val(coordinates[0]);
         $('#location_longitude').val(coordinates[1]);
         $('#store_location_dialog').modal("show");

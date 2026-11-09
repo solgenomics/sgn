@@ -784,9 +784,12 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
 #    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
 #    my $search_weight = $c->req->param('seedlot_weight') ? $c->req->param('seedlot_weight') : '';
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $exclude_discarded = $c->req->param('exclude_discarded') ? $c->req->param('exclude_discarded') : '';
     my $exclude_self = $c->req->param('exclude_self') ? $c->req->param('exclude_self') : '';
+    my $include_contents = $c->req->param('include_contents') ? $c->req->param('include_contents') : '';
+
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id),
         $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
@@ -844,6 +847,20 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     }
 
     @stocks = sort { $a->[1] cmp $b->[1] } @stocks;
+
+    if ($include_contents) {
+        my @contents;
+        if (scalar @$accessions > 0) {
+            @contents = @$accessions;
+        } elsif (scalar @$crosses > 0) {
+            @contents = @$crosses;
+        }
+
+        foreach my $content (@contents) {
+            my $content_stock_id = $schema->resultset("Stock::Stock")->find( { uniquename => $content })->stock_id();
+            push @stocks, [$content_stock_id, $content];
+        }
+    }
 
     if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
 

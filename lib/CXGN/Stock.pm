@@ -622,7 +622,7 @@ sub store {
     my $stock = $self->stock;
     my $schema = $self->schema();
 
-    #no stock id . Check first if the name  exists in te database
+    #no stock id . Check first if the name  exists in the database
     my $exists;
     if ($self->check_name_exists){
         $exists= $self->exists_in_database();
@@ -659,7 +659,7 @@ sub store {
         }
     }
 
-    # ###Check first if the name  exists in te database
+    # ###Check first if the name  exists in the database
     # $exists = 0;
     # if ($self->check_name_exists){
     # 	print STDERR "Checking stock uniquename \n";
@@ -1411,7 +1411,7 @@ sub get_ancestor_hash {
   push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
 
   my $stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
-  #print STDERR "Stock ".$stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
+  #print STDERR "Stock ".$stock->uniquename()." descendants are: ".Dumper($direct_descendant_ids)."\n";
   my %pedigree;
   $pedigree{'id'} = $stock_id;
   $pedigree{'name'} = $stock->uniquename();
@@ -1489,7 +1489,7 @@ sub get_descendant_hash {
 =head2 get_pedigree_rows()
 
  Usage:
- Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
+ Desc:          get an array of pedigree rows from an array of stock ids, containing female parent, male parent, and cross type if defined
  Ret:
  Args: $accession_ids, $format (either 'parents_only' or 'full'), $include (either 'ancestors' or 'ancestors_descendants')
  Side Effects:
@@ -2329,7 +2329,7 @@ sub get_child_stocks {
 
 =head2 get_child_stocks_flat_list
 
-Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are ommitted.
+Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are omitted.
 Listref elements are hashrefs with structure {stock_id, name, type}. Self is dropped in the list,
 unlike in get_child_stocks where it remains at the top of the hierarchy.
 
@@ -2600,7 +2600,7 @@ sub merge {
 	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $row->object_id(), type_id => $row->type_id() });
 
 	if ($this_subject_rel_rs->count() > 0) { # this stock does not have the relationship
-	    print STDERR "Target object ".$row->uniquename()." already has this relationship of type ".$row->type_id()."(".$this_subject_rel_rs->count()." counts)\n";
+	    print STDERR "Target object ".$row->subject_id()." already has this relationship of type ".$row->type_id()."(".$this_subject_rel_rs->count()." counts)\n";
 	}
 	else {
 	    # get the max rank
@@ -2625,8 +2625,7 @@ sub merge {
 	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });
 
 	if ($this_object_rel_rs->count() > 0) {
-	    print STDERR "Target object ".$row->uniquename()." already has this relationship of ".$row->type_id()." with ".$this_object_rel_rs->count()." counts\n";;
-	    
+	    print STDERR "Target object ".$row->object_id()." already has this relationship of ".$row->type_id()." with ".$this_object_rel_rs->count()." counts\n";
 	}
 	else {
 	    my $rank_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id(), type_id => $row->type_id() });
