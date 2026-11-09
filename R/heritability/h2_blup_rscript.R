@@ -66,7 +66,7 @@ szyr <- length(unique(pheno$studyYear))
 
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
-an.error.occured <- FALSE
+an.error.occurred <- FALSE
 
 H2 = c()
 her = c()
@@ -167,7 +167,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
   }
 
 }, error = function(e) {
-  an.error.occured <<- TRUE
+  an.error.occurred <<- TRUE
   errorMessages <<- c(errorMessages, as.character(e))
 })
 
@@ -190,14 +190,14 @@ tryCatch({
   write.csv(Heritability, file = h2CsvFile)
 
 }, error = function(e) {
-  an.error.occured <<- TRUE
+  an.error.occurred <<- TRUE
   errorMessages <<- c(errorMessages, as.character(e))
 })
 
 errorMessages <- c(errorMessages, as.character(message1))
 errorMessages <- c(errorMessages, as.character(message2))
 
-cat("Was there an error? ", an.error.occured,"\n")
+cat("Was there an error? ", an.error.occurred,"\n")
 if ( length(errorMessages) > 0 ) {
   print(sprintf("Writing Error Messages to file: %s", errorFile))
   print(errorMessages)

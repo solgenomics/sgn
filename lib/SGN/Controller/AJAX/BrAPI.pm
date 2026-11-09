@@ -342,7 +342,7 @@ sub _standard_response_construction {
 
 =head2 /brapi/v1/token
 
- Usage: For logging a user in and loggin a user out through the API
+ Usage: For logging a user in and logging a user out through the API
  Desc:
 
 For Logging In
@@ -690,7 +690,7 @@ sub season_search_retrieve : Chained('brapi') PathPart('search/seasons') Args(1)
 
 =head2 brapi/v1/studyTypes
 
- Usage: To retrieve a list of programs being worked onthe various study types
+ Usage: To retrieve a list of programs being worked on the various study types
  Desc:
  Return JSON example:
         {
@@ -2631,7 +2631,7 @@ sub studies_observations_granular_GET {
 
              "result" : {
                  "observationUnitDbId": 20,
-                 "observationUnitPUI": "http://phenome-fppn.fr/maugio/bloc/12/2345",
+                 "observationUnitPUI": "http://phenome-fppn.fr/maugio/block/12/2345",
                  "studyId": "RIGW1",
                  "studyDbId": 25,
                  "studyLocation": "Bergheim",
@@ -2639,7 +2639,7 @@ sub studies_observations_granular_GET {
                  "studyProject": "Inovine",
                  "studySet": ["National Network", "Frost suceptibility network"],
                  "studyPlatform": "Phenome",
-                 "observationUnitLevelTypes" : [ "plant","plot", "bloc"],
+                 "observationUnitLevelTypes" : [ "plant","plot", "block"],
                  "observationUnitLevelLabels": [ "1","26123", "1"],
                  "germplasmPUI": "http://inra.fr/vassal/41207Col0001E",
                  "germplasmDbId": 3425,

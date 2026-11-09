@@ -1,7 +1,7 @@
  #SNOPSIS
 
  #runs phenotypic heritability analysis.
- #Heritability coeffiecients are stored in tabular and json formats 
+ #Heritability coefficients are stored in tabular and json formats 
 
  #AUTHOR
  # Christiano Simoes (ccs263@cornell.edu)
@@ -161,7 +161,7 @@ traits <- Heritability$trait
 
 heritabilityList <- list(
                      "traits" = toJSON(traits),
-                     "coeffiecients" =heritability2json(Heritability)
+                     "coefficients" =heritability2json(Heritability)
                    )
 
 heritabilityJson <- paste("{",paste("\"", names(heritabilityList), "\":", heritabilityList, collapse=","), "}")
