@@ -43,6 +43,7 @@ use Try::Tiny;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Job;
+use CXGN::Analysis::AnalysisCreate;
 use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -277,6 +278,7 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
 
     my %trials;
     my %accessions;
+    my %programs;
     my $col = sub { my ($r, $name) = @_; my $i = $idx->{$name}; return defined($i) ? $r->[$i] : undef; };
     foreach my $r (@plot_rows) {
         my $trial = $col->($r, 'studyName') // 'unknown';
@@ -292,6 +294,11 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         my $acc = $col->($r, 'germplasmName');
         $t->{acc}->{$acc}++ if defined $acc;
         $t->{n_checks}++ if lc($col->($r, 'entryType') // '') =~ /^(check|checks|control)$/;
+        my $prog_id = $col->($r, 'programDbId');
+        if (defined($prog_id) && $prog_id =~ /^\d+$/) {
+            $programs{$prog_id} ||= { id => $prog_id, name => $col->($r, 'programName'), n_plots => 0 };
+            $programs{$prog_id}->{n_plots}++;
+        }
         $accessions{$acc} = 1 if defined $acc;
         foreach my $f (['rep', 'replicate'], ['block', 'blockNumber'], ['row', 'rowNumber'], ['col', 'colNumber']) {
             my $v = $col->($r, $f->[1]);
@@ -345,6 +352,8 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         n_locations => scalar(keys %locations),
         n_years => scalar(keys %years),
         pedigree => $pedigree,
+        # breeding programs of the trials, most plots first (default program of a stored analysis)
+        programs => [ sort { $b->{n_plots} <=> $a->{n_plots} } values %programs ],
     };
 }
 
@@ -591,6 +600,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
         script_name => $recipe->{name} // '',
         dataset_id => (defined($dataset_id) && $dataset_id =~ /^\d+$/) ? $dataset_id : undef,
         dataset_name => scalar($c->req->param('dataset_name')) // '',
+        token => $token,    # input files of the run (archived when the analysis is stored)
     );
 
     my $pedigree_file = "$dir/$token.pedigree.txt";
@@ -838,6 +848,15 @@ sub export_r : Path('/ajax/script_factory/export_r') Args(0) {
     my $recipe;
     try { $recipe = decode_json($recipe_json); } catch { $c->stash->{rest} = { error => 'Invalid script definition.' }; };
     return if $c->stash->{rest};
+    my ($file_name, $script) = _standalone_script($c, $recipe, $name);
+    $c->stash->{rest} = { filename => $file_name, script => $script };
+}
+
+# Standalone R script: the pipeline with the recipe embedded. Returns the file
+# name and the script.
+sub _standalone_script {
+    my ($c, $recipe, $name) = @_;
+    $recipe = { %$recipe };
     delete $recipe->{stop_after};
 
     my $pretty = JSON->new->canonical(1)->pretty(1)->encode($recipe);
@@ -874,7 +893,166 @@ RECIPE_JSON <- r"---($pretty)---"
 
 HEADER
 
-    $c->stash->{rest} = { filename => "$file_name.R", script => $script . $pipeline };
+    return ("$file_name.R", $script . $pipeline);
+}
+
+# ---------------------------------------------------------------------------
+# store a run as a Breedbase analysis
+# ---------------------------------------------------------------------------
+
+# Stores the genotype values of a run as an analysis, with the run's script as
+# its model. Everything comes from the run's own files (the browser only sends
+# the run id and the descriptive fields), and the files of the run are
+# archived with the model: the standalone R script (model file), the input
+# phenotype file (training data), the results and every result table, the
+# BLUPF90+ files and the pedigree.
+sub store : Path('/ajax/script_factory/store') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+
+    my $run_id = $c->req->param('run_id') // '';
+    if (!_valid_token($run_id) || $run_id !~ /^sf_run_/) {
+        $c->stash->{rest} = { error => 'Invalid analysis run.' };
+        return;
+    }
+    my $dir = _work_dir($c);
+    my $meta = _run_meta($c, $run_id);
+    if (!$meta || !-e "$dir/$run_id.results.json") {
+        $c->stash->{rest} = { error => 'The results of this run are no longer available; please run the analysis again.' };
+        return;
+    }
+    my ($schema, $people_schema, $sp_person_id) = _schemas($c);
+    if (($meta->{sp_person_id} // -1) != $sp_person_id) {
+        $c->stash->{rest} = { error => 'Only the person who ran this analysis can store it.' };
+        return;
+    }
+
+    my $name = $c->req->param('name') // '';
+    my $description = $c->req->param('description') // '';
+    my $year = $c->req->param('year') // '';
+    my $program_id = $c->req->param('breeding_program_id') // '';
+    my $is_public = ($c->req->param('is_public') // 'yes') eq 'no' ? 'no' : 'yes';
+    s/^\s+|\s+$//g for ($name, $description);
+    return $c->stash->{rest} = { error => 'Please give the analysis a name.' } if $name eq '';
+    return $c->stash->{rest} = { error => 'Please give a description.' } if $description eq '';
+    return $c->stash->{rest} = { error => 'Please give the year.' } if $year !~ /^\d{4}$/;
+    return $c->stash->{rest} = { error => 'Please choose a breeding program.' } if $program_id !~ /^\d+$/;
+    if ($schema->resultset("Project::Project")->find({ name => $name })) {
+        $c->stash->{rest} = { error => "An analysis with the name \"$name\" already exists. Please choose another name." };
+        return;
+    }
+
+    my $results = _load_results($c, $run_id);
+    if (!$results->{store} || !@{ $results->{store}->{accession_names} || [] }) {
+        $c->stash->{rest} = { error => 'This run has no genotype values to store.' };
+        return;
+    }
+    my $recipe = try { decode_json(read_file("$dir/$run_id.recipe.json")) } catch { {} };
+    delete $recipe->{stop_after};
+    my $f90 = ($results->{engine} // '') eq 'blupf90';
+    my $random = ($results->{genotype_effect} // 'random') eq 'random';
+    my %h2 = map { $_->{trait} => $_->{h2} } @{ $results->{stage2} || [] };
+    my $protocol = 'Script Factory ' . (($results->{strategy} // '') eq 'two_stage' ? 'two-stage' : 'single-stage') . ' analysis: '
+        . join('; ', map { ($_->{trait} // '') . ': ' . ($_->{model} // '') } @{ $results->{stage2} || [] });
+    my $summary = {
+        method => 'Breedbase Script Factory',
+        strategy => $results->{strategy},
+        engine => $f90 ? 'BLUPF90+' : 'R',
+        genetic_model => $results->{genetic_model} // 'iid',
+        genotype_effect => $results->{genotype_effect},
+        outlier_method => ($recipe->{outliers} || {})->{method} // 'none',
+        values_removed => scalar(@{ $results->{outliers} || [] }),
+        heritability => \%h2,
+    };
+
+    # files of the run, with readable names in the archive
+    my $label = $name;
+    $label =~ s/[^A-Za-z0-9_\-]+/_/g;
+    $label = substr($label, 0, 80);
+    my $files_dir = "$dir/$run_id.store";
+    mkdir $files_dir if !-d $files_dir;
+    my $place = sub {
+        my ($src, $file_name) = @_;
+        return undef if !$src || !-s $src;
+        my $dest = "$files_dir/$file_name";
+        copy($src, $dest) or return undef;
+        return $dest;
+    };
+    my (undef, $script) = _standalone_script($c, { %$recipe, name => $name }, $name);
+    write_file("$files_dir/${label}_script.R", $script);
+    my $model_file = "$files_dir/${label}_script.R";
+    my $token = $meta->{token} && _valid_token($meta->{token}) ? $meta->{token} : '';
+    my $training_file = $place->($token ? "$dir/$token.phenotype.txt" : undef, "${label}_input_phenotypes.txt")
+        // $place->("$dir/$run_id.results.json", "${label}_results.json");
+    my @aux;
+    push @aux, { auxiliary_model_file => $_->[0], auxiliary_model_file_archive_type => $_->[1] } for grep { $_->[0] } (
+        [ $place->("$dir/$run_id.results.json", "${label}_results.json"), 'script_factory_results' ],
+        (map { [ $place->("$dir/${run_id}_$_->[0].csv", "${label}_$_->[0].csv"), "script_factory_$_->[0]" ] }
+            (['genotype_values'], ['stage1_means'], ['outliers'], ['selection_index'], ['zones'], ['ancestor_breeding_values'])),
+        [ $place->("$dir/${run_id}_blupf90.tar.gz", "${label}_blupf90_files.tar.gz"), 'script_factory_blupf90_files' ],
+        [ ($token && ($results->{genetic_model} // 'iid') ne 'iid') ? $place->("$dir/$token.pedigree.txt", "${label}_pedigree.txt") : undef, 'script_factory_pedigree' ],
+    );
+
+    my $user = $c->user()->get_object();
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+    $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath} . "/" . $c->tempfile(TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my $saved = try {
+        CXGN::Analysis::AnalysisCreate->new({
+            bcs_schema => $schema,
+            people_schema => $people_schema,
+            metadata_schema => $metadata_schema,
+            phenome_schema => $phenome_schema,
+            archive_path => $c->config->{archive_path},
+            tempfile_for_deleting_nd_experiment_ids => $temp_file_nd_experiment_id,
+            base_path => $c->config->{basepath},
+            dbhost => $c->config->{dbhost},
+            dbname => $c->config->{dbname},
+            dbuser => $c->config->{dbuser},
+            dbpass => $c->config->{dbpass},
+            analysis_to_save_boolean => 'yes',
+            analysis_name => $name,
+            analysis_description => $description,
+            analysis_year => $year,
+            analysis_breeding_program_id => $program_id,
+            analysis_protocol => $protocol,
+            analysis_dataset_id => $meta->{dataset_id},
+            analysis_accession_names => $results->{store}->{accession_names},
+            analysis_result_stock_names => [],
+            analysis_trait_names => $results->{store}->{trait_names},
+            analysis_statistical_ontology_term => $random
+                ? 'Adjusted means from BLUPs using LMER R|SGNSTAT:0000034'
+                : 'Adjusted means from BLUEs using LMER R|SGNSTAT:0000036',
+            analysis_result_values => $results->{store}->{result_values},
+            analysis_result_values_type => 'analysis_result_values_match_accession_names',
+            analysis_result_summary => $summary,
+            analysis_model_name => $name,
+            analysis_model_description => $description,
+            analysis_model_is_public => $is_public,
+            analysis_model_language => $f90 ? 'BLUPF90+' : 'R',
+            analysis_model_type => 'mixed_model_lmer',     # protocol_type cvterm (db/00131)
+            analysis_model_properties => $recipe,
+            analysis_model_application_name => 'Breedbase Script Factory',
+            analysis_model_application_version => $results->{version} // '',
+            analysis_model_file => $model_file,
+            analysis_model_file_type => 'script_factory_script',
+            analysis_model_training_data_file => $training_file,
+            analysis_model_training_data_file_type => 'script_factory_input_phenotype_file',
+            analysis_model_auxiliary_files => \@aux,
+            allowed_composed_cvs => [ split ',', ($c->config->{composable_cvs} // '') ],
+            composable_cvterm_delimiter => $c->config->{composable_cvterm_delimiter},
+            composable_cvterm_format => $c->config->{composable_cvterm_format},
+            user_id => $sp_person_id,
+            user_name => $user->get_username(),
+            user_role => $c->user()->get_object()->get_user_type(),
+        })->store();
+    } catch {
+        { error => "The analysis could not be stored: $_" };
+    };
+    $c->stash->{rest} = $saved;
 }
 
 # ---------------------------------------------------------------------------
