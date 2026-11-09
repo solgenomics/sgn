@@ -107,11 +107,11 @@ sub create_trait :Path('/ajax/trait/create') {
     if (!$definition) {
         $error .= "You must supply a definition.\n";
     }
-    if (defined($definition) && $definition !~ m/([^\s]+\s+){6,}/) {
+    if (defined($definition) && length($definition) < 18) {
         $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the trait and allows it to be differentiated from other traits.\n";
     }
-    if (!$format || $format !~ m/numeric|categorical|date|percent|counter|boolean|text|ontology/i) {
-        $error .= "Treatment format must be numeric, categorical, date, percent, counter, boolean, text, or ontology.\n";
+    if (!$format || $format !~ m/numeric|categorical|date|percent|counter|boolean|text|image|ontology/i) {
+        $error .= "Treatment format must be numeric, categorical, date, percent, counter, boolean, text, image, or ontology.\n";
     }
     if (defined($categories) && defined($default_value) && $default_value ne "" && $categories !~ m/\Q$default_value\E/) {
         $error .= "The default value of the trait is not in the categories list.\n";
@@ -164,7 +164,7 @@ sub create_trait :Path('/ajax/trait/create') {
             if ($repeat_type) {
                 $new_trait->repeat_type($repeat_type);
             }
-        } elsif ($format eq "ontology" || $format eq "date" || $format eq "text") {
+        } elsif ($format eq "ontology" || $format eq "date" || $format eq "text" || $format eq "image") {
             $new_trait = CXGN::Trait->new({
                 bcs_schema => $schema,
                 name => $name,

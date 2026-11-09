@@ -91,7 +91,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     if (!$definition) {
         $error .= "You must supply a definition.\n";
     }
-    if (defined($definition) && $definition !~ m/([^\s]+\s+){6,}/) {
+    if (defined($definition) && length($definition) < 18) {
         $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the treatment and allows it to be differentiated from other treatments.\n";
     }
     if (!$format || $format !~ m/numeric|categorical|date|percent|counter|boolean|text|ontology/i) {

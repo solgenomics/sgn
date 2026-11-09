@@ -50,6 +50,7 @@
                                 <option value="date">Date</option>
                                 <option value="text">Text</option>
                                 <option value="counter">Counter</option>
+                                <option value="image">Photo</option>
                             </select>
                         </div>
                     </div>
@@ -380,6 +381,15 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_maximum_value_container').hide();
                 jQuery('#new_trait_add_categories_container').hide();
                 jQuery('#new_trait_default_value_container').show();
+                jQuery('#new_trait_repeat_select_container').show();
+                jQuery('#new_trait_default_value').val('');
+                jQuery('#new_trait_min_value').val('');
+                jQuery('#new_trait_max_value').val('');
+            } else if (trait_type.toLowerCase() === 'image') {
+                jQuery('#new_trait_minimum_value_container').hide();
+                jQuery('#new_trait_maximum_value_container').hide();
+                jQuery('#new_trait_add_categories_container').hide();
+                jQuery('#new_trait_default_value_container').hide();
                 jQuery('#new_trait_repeat_select_container').show();
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('');
