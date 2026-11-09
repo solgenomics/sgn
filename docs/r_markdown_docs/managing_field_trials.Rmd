@@ -461,6 +461,31 @@ Select any accession that you want to replace, enter your new accession, then cl
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/image85.png')
 ```
+
+Before anything is changed, a summary shows how many plots get the new accession, which plots are renamed and any notes; nothing is changed until you confirm it.
+
+The plot names are kept unless "Update plot names" is checked: then a plot whose name contains the old accession name as a whole part gets the new name there (for example, TRIAL-rep1-OLD_3 becomes TRIAL-rep1-NEW_3), or, if the trial was created with a plot name template, the changed plots get their template names. Plants and tissue samples are renamed with their plot. Leave it unchecked when labels with the plot names are already printed.
+
+Changing the accession does not move the plot: plot numbers, blocks, rows and columns stay the same. The replicate counts the plots of each accession, so the replicates of the accessions involved are numbered again by plot number. The heritability models, and the model without spatial terms in the spatial correction, use the block number as the block effect (one level per block).
+
+A change that breaks the design is allowed, but the summary shown before you confirm says so: an accession that would be in two plots of a block (RCBD, Alpha, lattice), an accession that would have more or fewer plots than the others had, an accession that would have no plot left.
+
+Check plots follow the check accessions: a plot that gets a check accession of the trial becomes a check plot, and one that gets a test accession becomes a test plot. Phenotypes stay with their plots, so after a correction they count for the accession that really grew there; run the analyses of the trial again. Once a trial has phenotypes, only curators can change its accessions, after a warning, with “Change Accessions” or the plot form; “Replace Accession” is not available then.
+
+#### Correcting the trial to what was planted
+
+The surest way to make the trial match the field is a file of what was planted, because the ways a planting can go wrong are many:
+
+1. Download the trial: “Download the current layout” in the “Change Accessions” window (on the “Experimental Design” section) gives plot_name, accession_name, plot number, block, replicate, row, column and seedlot, by plot number. “Download Plot Order” (Planting Order) in Field Layout Tools, for a trial with row and column numbers, gives the plots in the order of the planting, with the border rows, which makes shifts easy to correct. Upload the file as .xlsx or as CSV with commas; a CSV that Excel saved with semicolons is not read.
+2. Write what was planted: change accession_name where another accession grows. In a file in planting order, a shift is a cut and paste of accession_name one row down, to where the shift ended. Border rows, and rows of other trials in the same field, are ignored, so it does not matter if you write the packet that went into a border there.
+3. Upload it with “Change Accessions”. Before anything is changed, a summary shows which plots get another accession, how the seed transactions move, and any notes; nothing is changed until you confirm it, and then exactly that is changed: if the trial was changed in the meantime, for example by someone else, you are asked to check again. Plots that already match the file are left as they are: uploading the same file again changes nothing while the plot names are kept (plots that were renamed are not found by their old names), and a later correction starts from a new download.
+
+“Keep the plot names” is checked: keep it while labels with the plot names are in the field or data was collected with them. Unchecked, plot names that contain the old accession name, or that follow the plot name template of the trial, are updated, and you print new labels for those plots.
+
+If the plots were planted from seedlots, the seed transactions follow the packets: a plot that got the packet planned for another plot takes over its seed transaction, so the seedlot of each plot holds its accession (for a family name, one of its crosses). A packet that is in no plot any more, for example one planted into a border, stays taken from its seedlot, so the inventory does not change; if the seed of a place left empty went back into its seedlot, add it there on the seedlot page. An optional seedlot_name column names the seedlot a plot was planted from where it is another one, for example another seedlot of the same accession; a plot that has no seed transaction yet gets one with “Upload Seedlots Planted In Trial”. Seedlots harvested from corrected plots are named in the summary, to be corrected. Once seedlots are saved for the trial, only a curator can change it (as with the field map), after a warning: the summary shows the curator what moves.
+
+The file stays with the trial in “Uploaded Additional Files”, as a record of the correction. After it, download new Field Book files and phenotyping spreadsheets. Correct the trial as often as needed, for example once after planting and again when a skipped place is found later, each time from a new download: a file describes the whole trial, so an old one would undo the corrections made after it was downloaded (the summary lists every change, so that this does not go unseen).
+
 <!--
 You can switch plot accessions between any two plots by clicking on “Substitute Accession” button.
 

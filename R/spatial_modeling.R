@@ -39,11 +39,15 @@ userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE)
 #    to this vector, 'userResponse'.
 userResponse <- unlist(strsplit(traits, split = ",", fixed = T))
 userResponse <- userResponse[!userResponse == "notes"] # x[ !x == 'A'] # remove notes from userResponse
-replicate <- "replicate"
+# the block effect of the model without spatial terms is the block number, one level per block;
+# the replicate counts the plots of an accession
+block <- "blockNumber"
 userID <- "germplasmName"
 row <- "rowNumber"
 col <- "colNumber"
 userPheno$R <- as.factor(userPheno$rowNumber)
+userPheno$blockNumber <- as.factor(userPheno$blockNumber)
+hasBlocks <- nlevels(userPheno$blockNumber) > 1
 userPheno$C <- as.factor(userPheno$colNumber)
 
 ################################################################################
@@ -74,7 +78,7 @@ for (i in 2:length(userResponse)) {
     write(paste("userResponsedata:", userPheno[userResponse[i]]), stderr())
 
     ## Fit the model without spatial variation ##
-    modArg <- paste(userResponse[i], " ~ ", userID, " + ", replicate, sep = "")
+    modArg <- paste(userResponse[i], " ~ ", userID, if (hasBlocks) paste(" + ", block) else "", sep = "")
     write(paste("modArg:", modArg), stderr())
     mod <- mmer(
       as.formula(modArg),

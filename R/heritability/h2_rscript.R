@@ -117,7 +117,12 @@ for (i in rangeTraits) {
   
   print(paste0('outcome ', outcome))
   
-  model <- lmer(get(outcome)~ (1|germplasmName) + replicate,
+  # the block effect is the block number, one level per block; the replicate counts the plots of an accession
+  # (a single block stays a constant, which lmer drops from the fixed effects)
+  if (length(unique(phenoData$blockNumber)) > 1) {
+    phenoData$blockNumber <- as.factor(phenoData$blockNumber)
+  }
+  model <- lmer(get(outcome)~ (1|germplasmName) + blockNumber,
                 na.action = na.exclude,
                 data=phenoData)
   

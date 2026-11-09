@@ -9,7 +9,7 @@ $trial_stock_type => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
-<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
+<& /util/import_javascript.mas, entries => ['fieldmap', 'trial_accession_change'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
 <style id='heatmap_stylesheet'>
     #trait_heatmap {display: inline; }
@@ -674,36 +674,6 @@ $trial_stock_type => undef
     </div>
 </div>
 
-<div class="modal fade" id="hm_replace_accession_curator_warning_message" name="hm_replace_accession_curator_warning_message" tabindex="-1" role="dialog" aria-labelledby="td_curator_warning">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="tDDialog"><b>Warning!</b></h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-
-                    <big>
-                        <span>&#9888;</span>
-                        <p3>
-                            One or more traits have been assayed for this trial; <br>
-                            It is not recommended to change accessions at this point. Are you sure?
-                        </p3>
-                    </big>
-
-
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="fm_override_accession_warning" type="button" class="btn btn-primary">Yes</button>
-                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">No</button>
-
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal  fade" id="delete_filler_plots_confirm_message" name="delete_filler_dialog_confirm_message" tabindex="-1" role="dialog" aria-labelledby="DeleteFillerPlotsDialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
@@ -1266,17 +1236,13 @@ jQuery(document).ready( function() {
         source: '/ajax/stock/accession_autocomplete',
     });
 
-    jQuery("#hm_replace_plot_accession_form").submit( function() {
+    jQuery("#hm_replace_plot_accession_form").submit( function(event) {
       event.preventDefault();
-      hm_replace_plotAccession_fieldMap('check');
+      hm_replace_plotAccession_fieldMap();
     });
 
     jQuery('#hm_replace_plot_accession_submit').click( function() {
-      hm_replace_plotAccession_fieldMap('check');
-    });
-
-    jQuery('#fm_override_accession_warning').click( function() {
-      hm_replace_plotAccession_fieldMap('override');
+      hm_replace_plotAccession_fieldMap();
     });
 
     function refresh_cache() {
@@ -1346,46 +1312,19 @@ jQuery(document).ready( function() {
             },
         });
     }
-    function hm_replace_plotAccession_fieldMap(override) {
+    // a preview first: the plan and its warnings (for example when the change breaks the design),
+    // and the curator warning when the trial has phenotypes; nothing changes until confirmed
+    async function hm_replace_plotAccession_fieldMap() {
       jQuery('#hm_replace_plot_accessions_dialog').modal("hide");
-      jQuery('#working_modal').modal("show");
-
-      var new_accession = jQuery('#hm_accession').val();
-      var new_plot_name = jQuery('#hm_new_plot_name').val();
-      var old_accession = jQuery('#hm_plot_accession').text();
-      var old_plot_id = jQuery('#hm_plot_id').html();
-      var old_plot_name = jQuery('#hm_plot_name').html();
-
-      new jQuery.ajax({
-        type: 'POST',
-        url: '/ajax/breeders/trial/<% $trial_id %>/replace_plot_accessions',
-        dataType: "json",
-        data: {
-                'new_accession': new_accession,
-                'new_plot_name': new_plot_name,
-                'old_accession': old_accession,
-                'old_plot_id': old_plot_id,
-                'old_plot_name': old_plot_name,
-                'override': override,
-        },
-
-        success: function (response) {
-          jQuery('#working_modal').modal("hide");
-          if (response.warning) {
-            jQuery('#working_modal').modal("hide");
-            jQuery('#hm_replace_accession_curator_warning_message').modal("show");
-          } else if (response.error) {
-            alert("Error Replacing Plot Accession: "+response.error);
-          }
-          else {
-            jQuery('#hm_replace_accession_curator_warning_message').modal("hide");
-            jQuery('#hm_replace_accessions_dialog_message').modal("show");
-          }
-        },
-        error: function () {
-          jQuery('#working_modal').modal("hide");
-          alert('A server error occurred replacing plot accession - see console.');
-        }
+      var summary = await window.jsMod['trial_accession_change'].changeWithPreview('/ajax/breeders/trial/<% $trial_id %>/replace_plot_accessions', {
+          'new_accession': jQuery('#hm_accession').val(),
+          'new_plot_name': jQuery('#hm_new_plot_name').val(),
+          'old_plot_id': jQuery('#hm_plot_id').html(),
+      }, { action: "Error Replacing Plot Accession", title: "Edit Plot Info" });
+      if (summary) {
+          jQuery('#hm_replace_accessions_dialog_message').modal("show");
+      }
+    }
       });
     }
 

@@ -6,6 +6,11 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trait;
 use CXGN::Trial::TrialLayoutSearch;
+use CXGN::Trial::FieldMap;
+use CXGN::Trial::AccessionChange;
+use CXGN::BreederSearch;
+use CXGN::BreedersToolbox::Projects;
+use CXGN::People::Person;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::BrAPI::v2::ExternalReferences;
@@ -369,6 +374,7 @@ sub observationunits_update {
     my $self = shift;
     my $data = shift;
     my $c = shift;
+    my $user_id = shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -498,29 +504,13 @@ sub observationunits_update {
                 }
 
                 #update accession
-                my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
                 if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
-                    my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-                        bcs_schema => $schema,
-                        trial_id => $study_ids_arrayref,
-                        # new_accession => $accession_name,
-                        # old_accession => $old_accession,
-                        # old_plot_id => $observation_unit_db_id,
-                        # old_plot_name => $observationUnit_name,
-                        experiment_type => 'field_layout'
-                    });
-
-                    my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-                    if ($return_error) {
-                        print STDERR Dumper $return_error;
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+                    if ($stock_type ne $plot_cvterm_id) {
+                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('The germplasm can only be changed for plots.'), 400);
                     }
-
-                    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($observation_unit_db_id, $old_accession_id, $plot_of_type_id);
-                    if ($replace_return_error) {
-                        print STDERR Dumper $replace_return_error;
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
-                    }
+                    # a trial with phenotypes or seedlots keeps its germplasm here, also for a curator
+                    my $error_response = $self->_change_plot($c, $user_id, { plot_id => $observation_unit_db_id, new_stock_id => $accession_id }, 1);
+                    return $error_response if $error_response;
                 }
             }
         }
@@ -582,6 +572,75 @@ sub observationunits_update {
 
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
     return $self->search($search_params, $c);
+}
+
+# Changes one plot through CXGN::Trial::AccessionChange, with the rules of the
+# trial page: a curator, or a submitter of the trial's breeding program; plots
+# with phenotypes or with samples in other trials only by a curator. Once the
+# trial has phenotypes or seedlots only a curator may, and nobody when
+# $refuse_after_data is set. Returns an error response, or undef when the change
+# was made or there was nothing to change.
+sub _change_plot {
+    my $self = shift;
+    my $c = shift;
+    my $user_id = shift;
+    my $change = shift;
+    my $refuse_after_data = shift;
+    my $schema = $self->bcs_schema;
+
+    my $trial_id = CXGN::Trial::AccessionChange->field_trial_of_plot($schema, $change->{plot_id});
+    if (!$trial_id) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, 'The plot is not part of a field trial.', 400);
+    }
+    my %roles = $user_id ? (map { $_ => 1 } CXGN::People::Person->new($schema->storage->dbh(), $user_id)->get_roles()) : ();
+    my $accession_change = CXGN::Trial::AccessionChange->new({ schema => $schema, trial_id => $trial_id });
+    my $options = { rename_plots => 'none', curator => $roles{curator} ? 1 : 0 };
+    my $plan = $accession_change->plan([ $change ], $options);
+    if (@{$plan->{errors}}) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, join(' ', @{$plan->{errors}}), 400);
+    }
+    if (!@{$plan->{changes}}) {
+        return;
+    }
+
+    if (!$user_id) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, 'You must be logged in to change a plot.', 401);
+    }
+    if (!$roles{curator}) {
+        my $programs = CXGN::BreedersToolbox::Projects->new({ schema => $schema })->get_breeding_programs_by_trial($trial_id);
+        my $program_name = $programs->[0] ? $programs->[0]->[1] : undef;
+        if (!$roles{submitter} || !defined($program_name) || !$roles{$program_name}) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, "You need to be either a curator, or a submitter associated with breeding program ".($program_name // '')." to change this trial.", 403);
+        }
+    }
+    my $precheck_error = CXGN::Trial::FieldMap->new({ bcs_schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' })->update_fieldmap_precheck();
+    if ($precheck_error && ($refuse_after_data || !$roles{curator})) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, $precheck_error, 403);
+    }
+
+    my $error;
+    try {
+        $plan = $accession_change->apply([ $change ], $options);
+    } catch {
+        $error = $_;
+    };
+    if ($error) {
+        print STDERR "Changing plot $change->{plot_id} failed: $error\n";
+        $error =~ s/\s+at \/\S+ line \d+\.?//g;
+        $error =~ s/\s+$//;
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, "Nothing was changed: $error", 400);
+    }
+
+    # as on the trial page: the views and the analyses cached by solGS used the old state of the plot
+    my $bs = CXGN::BreederSearch->new({ dbh => $c->dbc->dbh(), dbname => $c->config->{dbname} });
+    my $matviews = @{ $plan->{external_samples} || [] } ? 'fullview' : 'phenotypes';
+    $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews, 'concurrent', $c->config->{basepath});
+    try {
+        $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, { trials => [ $trial_id ] });
+    } catch {
+        print STDERR "Could not clear the cached analyses of trial $trial_id: $_\n";
+    };
+    return;
 }
 
 sub _get_existing_germplasm {
