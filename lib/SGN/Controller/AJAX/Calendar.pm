@@ -209,7 +209,7 @@ sub drag_or_resize_event_POST {
 
 =head2 /ajax/calendar/edit_event
 
- Usage: When an event is editted using the edit_event_form
+ Usage: When an event is edited using the edit_event_form
  Desc:
  Return JSON example:
  Args: edit_event_start, edit_event_end, edit_event_description, edit_event_url, edit_event_projectprop_id, edit_event_project_select, edit_event_type_select
@@ -261,7 +261,7 @@ sub edit_event_POST {
 }
 
 
-#When a day is clicked or when an event is being editted, this function is called to populate the add_event project name and property type dropdowns.
+#When a day is clicked or when an event is being edited, this function is called to populate the add_event project name and property type dropdowns.
 sub day_click_personal : Path('/ajax/calendar/dayclick/personal') : ActionClass('REST') { }
 sub day_click_personal_GET { 
     my $self = shift;

@@ -95,9 +95,19 @@ sub _limit_days_display {
 $dap = _days_since($planting_date);
 $dah = _days_since($harvest_date);
 
-# Show harvest dates as YYYY-MM-DD; keep the stored value if it cannot be parsed.
-my $harvest_date_display = _normalize_to_ymd($harvest_date) || $harvest_date;
-my $second_harvest_date_display = _normalize_to_ymd($second_harvest_date) || $second_harvest_date;
+# Show harvest dates as YYYY-MonthName-DD so the month cannot be mistaken for the day.
+# Calendar links use YYYY-MM-DD, which browsers parse reliably.
+# If a stored date cannot be parsed, it is shown and linked as stored.
+sub _month_name_date {
+    my ($ymd) = @_;
+    my @month_names = qw(January February March April May June July August September October November December);
+    return undef unless $ymd && $ymd =~ /^(\d{4})-(\d{2})-(\d{2})$/ && $2 >= 1 && $2 <= 12;
+    return "$1-$month_names[$2 - 1]-$3";
+}
+my $harvest_date_ymd = _normalize_to_ymd($harvest_date) || $harvest_date;
+my $harvest_date_display = _month_name_date($harvest_date_ymd) || $harvest_date;
+my $second_harvest_date_ymd = _normalize_to_ymd($second_harvest_date) || $second_harvest_date;
+my $second_harvest_date_display = _month_name_date($second_harvest_date_ymd) || $second_harvest_date;
 my $display_dap_dah = eval { $c->get_conf('display_dap_dah') } ? 1 : 0;
 my $dap_display = $display_dap_dah ? _limit_days_display($dap, _positive_integer_conf('limit_dap')) : undef;
 my $dah_display = $display_dap_dah ? _limit_days_display($dah, _positive_integer_conf('limit_dah')) : undef;
@@ -243,7 +253,7 @@ if ($plot_name_template) {
                 <td>
                     <div id="harvest_date">
 % if ($harvest_date) {
-<a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date_display |u %>" ><% $harvest_date_display |h %></a>
+<a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date_ymd |u %>" ><% $harvest_date_display |h %></a>
 % if (defined $dah_display) {
 &nbsp;<span> | DAH: <% $dah_display %> </span>
 % }
@@ -370,7 +380,7 @@ if ($plot_name_template) {
                 <td>
                     <div id="second_harvest_date">
 % if ($second_harvest_date) {
-                        <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $second_harvest_date_display |u %>"><% $second_harvest_date_display |h %></a>
+                        <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $second_harvest_date_ymd |u %>"><% $second_harvest_date_display |h %></a>
 % } else {
                         <span class="text-default">[No Second Harvest Date]</span>
 % }

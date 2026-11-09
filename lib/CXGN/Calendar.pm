@@ -3,7 +3,7 @@
 
 CXGN::Calendar - helper class for calendar
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $calendar_funcs = CXGN::Calendar->new( {  } );
  $calendar_funcs->check_value_format("2012/01/01 00:00:00");
@@ -204,7 +204,7 @@ sub get_calendar_events_personal {
 		}
 	}
 
-	@search_project_ids = map{$_='me.project_id='.$_; $_} @search_project_ids;
+	@search_project_ids = map { 'me.project_id='.$_ } @search_project_ids;
 	my $search_projects = join(" OR ", @search_project_ids);
 	my $search_rs = $schema->resultset('Project::Project')->search(
 		undef,
