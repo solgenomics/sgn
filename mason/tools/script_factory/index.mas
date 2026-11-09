@@ -162,8 +162,32 @@ $dataset_id => undef
           <p class="sf-help">Each box shows one trial. <span class="sf-dot sf-dot-flag"></span> flagged by the rule, <span class="sf-dot sf-dot-excl"></span> excluded by you. Click a point to exclude it or bring it back.</p>
           <div id="sf_explorer_plot" class="sf-plot"></div>
           <div id="sf_explorer_summary"></div>
-          <h4>Individually excluded observations <span class="badge" id="sf_exclusion_count">0</span></h4>
-          <div id="sf_exclusion_table"></div>
+        </div>
+
+        <div class="sf-card">
+          <div class="sf-card-head">
+            <h3>All outliers <span class="badge" id="sf_outlier_count">0</span></h3>
+            <select class="form-control input-sm" id="sf_outlier_filter" style="width:auto"></select>
+          </div>
+          <p class="sf-help" id="sf_outlier_breakdown"></p>
+          <div class="sf-outlier-toolbar">
+            <span class="sf-muted" id="sf_outlier_selected">0 selected</span>
+            <button class="btn btn-default btn-sm sf-mark" data-action="dataset" id="sf_mark_dataset"><span class="glyphicon glyphicon-flag"></span> Mark as dataset outliers</button>
+            <button class="btn btn-default btn-sm sf-mark" data-action="database" id="sf_mark_database"><span class="glyphicon glyphicon-hdd"></span> Mark as database outliers</button>
+            <div class="btn-group">
+              <button class="btn btn-link btn-sm dropdown-toggle" data-toggle="dropdown" id="sf_unmark_menu">Remove marks <span class="caret"></span></button>
+              <ul class="dropdown-menu dropdown-menu-right">
+                <li><a href="#" class="sf-mark" data-action="unmark_dataset">Remove dataset outlier mark from selected</a></li>
+                <li><a href="#" class="sf-mark" data-action="unmark_database">Remove database outlier mark from selected</a></li>
+              </ul>
+            </div>
+          </div>
+          <div id="sf_outlier_message"></div>
+          <div class="sf-outlier-table" id="sf_outlier_table"></div>
+          <p class="sf-help" style="margin-top:8px">
+            <span class="label sf-badge-ds">dataset</span> only the marked values are hidden, whenever this dataset is used with <i>exclude outliers</i> (dataset owner only).
+            <span class="label sf-badge-db">database</span> hidden for everyone, in every tool that excludes outliers; Breedbase then leaves out the <b>whole plot</b>, all traits (curators and breeders only).
+          </p>
         </div>
         <div class="sf-nav">
           <button class="btn btn-default sf-next" data-goto="1"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
@@ -480,9 +504,11 @@ $dataset_id => undef
   </div>
 </div>
 
+% my $can_mark_database = ($c->user() && grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
 <script>
 jQuery(document).ready(function() {
   window.jsMod['script_factory'].init({
+    can_mark_database: <% $can_mark_database %>,
     recipe_id: "<% $recipe_id && $recipe_id =~ /^\d+$/ ? $recipe_id : '' %>",
     dataset_id: "<% $dataset_id && $dataset_id =~ /^\d+$/ ? $dataset_id : '' %>",
     check_outliers: "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>"
@@ -576,6 +602,17 @@ jQuery(document).ready(function() {
 .sf-heat td, .sf-heat th { font-size: 11px; padding: 3px 5px !important; text-align: center; }
 .sf-bar { height: 10px; background: var(--sf-accent); border-radius: 3px; display: inline-block; vertical-align: middle; }
 table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
+.sf-outlier-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--sf-bg); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.sf-outlier-toolbar #sf_outlier_selected { margin-right: auto; font-size: 13px; }
+.sf-outlier-table { max-height: 420px; overflow-y: auto; border: 1px solid var(--sf-border); border-radius: 8px; }
+.sf-outlier-table table { margin: 0; }
+.sf-outlier-table thead th { position: sticky; top: 0; background: #fff; z-index: 1; box-shadow: 0 1px 0 var(--sf-border); }
+.sf-outlier-table tr.sel td { background: var(--sf-accent-soft); }
+.sf-src { display: inline-block; border-radius: 10px; padding: 0 8px; font-size: 11px; margin-right: 3px; }
+.sf-src-rule { background: #ffe4e6; color: #be123c; }
+.sf-src-ind { background: #e5e7eb; color: #111; }
+.sf-badge-ds { background: #2563eb; }
+.sf-badge-db { background: #7c3aed; }
 .sf-run-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .sf-run-note { font-size: 12.5px; color: var(--sf-muted); text-align: right; }
 .sf-run-note.changed { color: #b45309; }

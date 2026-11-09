@@ -35,6 +35,10 @@ const state = {
     plotDataKey: '',
     exclusions: {},         // "unit|trait" -> {unit, trait, trial, accession, value}
     madrFlags: {},          // "unit|trait" -> true (from a preview run)
+    outlierRows: [],        // current full outlier list (rule + individual)
+    outlierSel: {},         // "unit|trait" -> true, selected in the list
+    outlierStatus: {},      // "unit|trait" -> {dataset, database} as stored in Breedbase
+    outlierChecking: {},    // status requests in flight
     indexCfg: {},           // full trait -> {weight, direction}
     zoneTargets: { index: true },
     designOverrides: {},    // trial -> design
@@ -413,6 +417,9 @@ function loadDataset() {
             state.plotDataKey = '';
             state.exclusions = {};
             state.madrFlags = {};
+            state.madrPreviewDone = false;
+            state.outlierSel = {};
+            state.outlierStatus = {};
             state.results = null;
             state.lastRun = null;
             state.runFailed = false;
@@ -650,6 +657,7 @@ function drawExplorer() {
         : ' &middot; BH-MADR needs a model fit: click <i>Flag with BH-MADR</i> to preview the flagged points (it is applied anyway when you run the analysis).';
     msg += ', <b>' + nExcl + '</b> excluded by you.';
     $('#sf_explorer_summary').html('<p class="sf-help">' + msg + '</p>');
+    renderExclusions();   // the full outlier list follows the rule and the exclusions
 }
 
 function toggleExclusion(r, trait) {
@@ -657,25 +665,148 @@ function toggleExclusion(r, trait) {
     if (state.exclusions[key]) delete state.exclusions[key];
     else state.exclusions[key] = { unit: r[0], trait: trait, trial: r[1], accession: r[2], value: r[state.plotData.columns.indexOf(trait)] };
     drawExplorer();
-    renderExclusions();
     renderPipeline();
 }
 
-function renderExclusions() {
-    const keys = Object.keys(state.exclusions);
-    $('#sf_exclusion_count').text(keys.length);
-    if (!keys.length) {
-        $('#sf_exclusion_table').html('<p class="sf-muted">None. Click points in the plot to exclude them.</p>');
-        return;
-    }
-    let h = '<table class="table table-condensed"><thead><tr><th>Plot</th><th>Trial</th><th>Accession</th><th>Trait</th><th>Value</th><th></th></tr></thead><tbody>';
-    keys.forEach(k => {
-        const e = state.exclusions[k];
-        h += '<tr><td>' + esc(e.unit) + '</td><td>' + esc(e.trial) + '</td><td>' + esc(e.accession) + '</td><td>' + esc(shortTrait(e.trait)) + '</td><td>' + fmt(e.value) + '</td>' +
-            '<td><button class="btn btn-link btn-xs sf-restore" data-key="' + esc(k) + '">restore</button></td></tr>';
+// every outlier of every selected trait: flagged by the rule and/or excluded individually
+function collectOutliers() {
+    const pd = state.plotData;
+    if (!pd) return [];
+    const method = radio('sf_outlier_method');
+    const ruleLabel = method === 'iqr' ? 'IQR rule' : method === 'madr' ? 'BH-MADR' : '';
+    const out = [];
+    state.traits.forEach(trait => {
+        const ti = pd.columns.indexOf(trait);
+        if (ti < 0) return;
+        const flags = ruleFlags(trait);
+        pd.rows.forEach(r => {
+            if (r[ti] === null || r[ti] === undefined) return;
+            const key = r[0] + '|' + trait;
+            const rule = !!flags[r[0]];
+            const ind = !!state.exclusions[key];
+            if (rule || ind) out.push({ key: key, unit: r[0], trial: r[1], accession: r[2], trait: trait, value: r[ti], rule: rule, ind: ind, ruleLabel: ruleLabel });
+        });
     });
-    h += '</tbody></table><button class="btn btn-default btn-xs" id="sf_restore_all">Restore all</button>';
-    $('#sf_exclusion_table').html(h);
+    return out;
+}
+
+function statusBadges(key) {
+    const s = state.outlierStatus[key];
+    if (!s) return '<span class="sf-muted">&hellip;</span>';
+    return (s.dataset ? '<span class="label sf-badge-ds">dataset</span> ' : '') + (s.database ? '<span class="label sf-badge-db">database</span>' : '') +
+        (!s.dataset && !s.database ? '<span class="sf-muted">&ndash;</span>' : '');
+}
+
+function renderExclusions() {
+    $('#sf_exclusion_count').text(Object.keys(state.exclusions).length);
+    const all = collectOutliers();
+    state.outlierRows = all;
+
+    // trait filter
+    const filter = $('#sf_outlier_filter');
+    const cur = filter.val() || '';
+    const counts = {};
+    all.forEach(o => { counts[o.trait] = (counts[o.trait] || 0) + 1; });
+    filter.html('<option value="">All traits (' + all.length + ')</option>' + state.traits.map(t => '<option value="' + esc(t) + '">' + esc(shortTrait(t)) + ' (' + (counts[t] || 0) + ')</option>').join(''));
+    filter.val(state.traits.indexOf(cur) >= 0 ? cur : '');
+    const rows = all.filter(o => !filter.val() || o.trait === filter.val());
+
+    const nRule = all.filter(o => o.rule).length, nInd = all.filter(o => o.ind).length;
+    $('#sf_outlier_count').text(all.length);
+    const method = radio('sf_outlier_method');
+    let bd = '<b>' + nRule + '</b> flagged by ' + (method === 'iqr' ? 'the IQR rule' : method === 'madr' ? 'BH-MADR' : 'no rule') +
+        ' &middot; <b><span id="sf_exclusion_count">' + nInd + '</span></b> excluded by you';
+    if (method === 'madr' && !state.madrPreviewDone) bd += ' &middot; <i>click "Flag with BH-MADR" above to list the BH-MADR outliers</i>';
+    if (state.dataset && state.dataset.dataset_n_outliers) bd += ' &middot; this dataset already has <b>' + state.dataset.dataset_n_outliers + '</b> dataset outlier(s)';
+    $('#sf_outlier_breakdown').html(bd);
+
+    // drop selections that are no longer listed
+    const listed = {};
+    all.forEach(o => { listed[o.key] = true; });
+    Object.keys(state.outlierSel).forEach(k => { if (!listed[k]) delete state.outlierSel[k]; });
+
+    if (!rows.length) {
+        $('#sf_outlier_table').html('<p class="sf-muted" style="padding:10px">No outliers' + (all.length ? ' for this trait' : '') + '. Choose a rule above or click points in the plot to exclude them.</p>');
+    } else {
+        const allSel = rows.every(o => state.outlierSel[o.key]);
+        let h = '<table class="table table-condensed table-hover"><thead><tr><th style="width:28px"><input type="checkbox" id="sf_outlier_all"' + (allSel ? ' checked' : '') + ' title="Select all listed" /></th>' +
+            '<th>Plot</th><th>Trial</th><th>Accession</th><th>Trait</th><th>Value</th><th>Flagged by</th><th>Marked in Breedbase</th><th></th></tr></thead><tbody>';
+        rows.forEach(o => {
+            const sel = !!state.outlierSel[o.key];
+            h += '<tr class="' + (sel ? 'sel' : '') + '"><td><input type="checkbox" class="sf-outlier-cb" data-key="' + esc(o.key) + '"' + (sel ? ' checked' : '') + ' /></td>' +
+                '<td>' + esc(o.unit) + '</td><td>' + esc(o.trial) + '</td><td>' + esc(o.accession) + '</td><td>' + esc(shortTrait(o.trait)) + '</td><td>' + fmt(o.value) + '</td>' +
+                '<td>' + (o.rule ? '<span class="sf-src sf-src-rule">' + esc(o.ruleLabel) + '</span>' : '') + (o.ind ? '<span class="sf-src sf-src-ind">you</span>' : '') + '</td>' +
+                '<td class="sf-outlier-status" data-key="' + esc(o.key) + '">' + statusBadges(o.key) + '</td>' +
+                '<td>' + (o.ind ? '<button class="btn btn-link btn-xs sf-restore" data-key="' + esc(o.key) + '">restore</button>' : '') + '</td></tr>';
+        });
+        h += '</tbody></table>';
+        $('#sf_outlier_table').html(h);
+    }
+    updateOutlierToolbar();
+    checkOutlierStatus(all);
+}
+
+function selectedOutliers() {
+    return (state.outlierRows || []).filter(o => state.outlierSel[o.key]);
+}
+
+function updateOutlierToolbar() {
+    const n = selectedOutliers().length;
+    const owner = !!(state.dataset && state.dataset.dataset_is_owner);
+    const canDb = String(cfg.can_mark_database) === '1';
+    $('#sf_outlier_selected').text(n + ' selected');
+    $('#sf_mark_dataset').prop('disabled', !n || !owner)
+        .attr('title', owner ? 'Add the selected values to this dataset\'s outliers' : 'Only the owner of the dataset can change its outliers');
+    $('#sf_mark_database').prop('disabled', !n || !canDb)
+        .attr('title', canDb ? 'Flag the selected values as outliers in the database, for all users' : 'Only curators and breeders can mark database outliers');
+    $('#sf_unmark_menu').prop('disabled', !n || (!owner && !canDb));
+}
+
+// ask the server which listed outliers are already dataset / database outliers
+function checkOutlierStatus(rows) {
+    if (!state.dataset) return;
+    const todo = rows.filter(o => !state.outlierStatus[o.key] && !state.outlierChecking[o.key]);
+    if (!todo.length) return;
+    todo.forEach(o => { state.outlierChecking[o.key] = true; });
+    post('/ajax/script_factory/outliers/mark', { dataset_id: state.dataset.dataset_id, action: 'check', items: JSON.stringify(todo.map(o => ({ unit: o.unit, trait: o.trait }))) })
+        .then(r => applyOutlierStatus(todo.map(o => o.key), r))
+        .catch(() => {})
+        .finally(() => todo.forEach(o => { delete state.outlierChecking[o.key]; }));
+}
+
+function applyOutlierStatus(keys, r) {
+    keys.forEach(k => { state.outlierStatus[k] = (r.status || {})[k] || { dataset: 0, database: 0, missing: 1 }; });
+    if (r.dataset_n_outliers !== undefined && state.dataset) state.dataset.dataset_n_outliers = r.dataset_n_outliers;
+    $('.sf-outlier-status').each(function() { $(this).html(statusBadges($(this).data('key'))); });
+}
+
+const MARK_TEXT = {
+    dataset: ['marked as dataset outliers', 'dataset'],
+    database: ['marked as database outliers', 'database'],
+    unmark_dataset: ['removed from the dataset outliers', 'dataset'],
+    unmark_database: ['removed from the database outliers', 'database']
+};
+
+// items: [{key, unit, trait}]; msgBox: where to report
+function markOutliers(items, action, msgBox) {
+    if (!items.length || !state.dataset) return Promise.resolve();
+    if (action === 'database' && !confirm('Mark ' + items.length + ' value(s) as outliers in the database?\n\nThey will be excluded for ALL users, in every dataset, analysis and tool that excludes outliers.\n\nNote: when a dataset excludes database outliers, Breedbase leaves out the WHOLE plot (all its traits), not only the marked value. To drop only the value, use dataset outliers instead.\n\nA curator or breeder can remove the mark later.')) return Promise.resolve();
+    if (action === 'unmark_database' && !confirm('Remove the database outlier mark from ' + items.length + ' value(s)? They will be used again by all tools.')) return Promise.resolve();
+    $(msgBox).html('<p class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Saving...</p>');
+    return post('/ajax/script_factory/outliers/mark', { dataset_id: state.dataset.dataset_id, action: action, items: JSON.stringify(items.map(o => ({ unit: o.unit, trait: o.trait }))) })
+        .then(r => {
+            const keys = items.map(o => o.key || (o.unit + '|' + o.trait));
+            applyOutlierStatus(keys, r);
+            const t = MARK_TEXT[action];
+            let m = '<span class="glyphicon glyphicon-ok"></span> <b>' + r.changed + '</b> value(s) ' + t[0] + '.';
+            if (items.length - r.not_found > r.changed) m += ' ' + (items.length - r.not_found - r.changed) + ' already were.';
+            if (r.not_found) m += ' ' + r.not_found + ' could not be matched to a stored phenotype.';
+            if (t[1] === 'dataset') m += ' The dataset now has <b>' + r.dataset_n_outliers + '</b> outlier(s).';
+            $(msgBox).html(alertBox(r.not_found ? 'warning' : 'success', m));
+            if (state.plotData) renderExclusions();
+            renderPipeline();
+        })
+        .catch(e => $(msgBox).html(alertBox('danger', esc(e.message))));
 }
 
 function exclusionsPayload() {
@@ -1009,9 +1140,16 @@ function renderResults() {
     $('#sf_tab_overview').html(ov);
 
     // outliers
+    const nRemoved = arr(res.outliers).length;
+    const canDs = !!(state.dataset && state.dataset.dataset_is_owner);
+    const canDb = String(cfg.can_mark_database) === '1';
+    const markBar = nRemoved ? '<div class="sf-outlier-toolbar" style="margin-top:12px"><span style="margin-right:auto">Mark all <b>' + nRemoved + '</b> removed value(s) in Breedbase:</span>' +
+        '<button class="btn btn-default btn-sm sf-mark-removed" data-action="dataset"' + (canDs ? '' : ' disabled title="Only the owner of the dataset can change its outliers"') + '><span class="glyphicon glyphicon-flag"></span> As dataset outliers</button>' +
+        '<button class="btn btn-default btn-sm sf-mark-removed" data-action="database"' + (canDb ? '' : ' disabled title="Only curators and breeders can mark database outliers"') + '><span class="glyphicon glyphicon-hdd"></span> As database outliers</button></div>' +
+        '<div id="sf_removed_message"></div>' : '';
     $('#sf_tab_outliers').html('<h4>Summary</h4>' + simpleTable(res.outlier_summary, [
         { k: 'trait', l: 'Trait' }, { k: 'n_observations', l: 'Observations', f: v => v }, { k: 'n_removed', l: 'Removed', f: v => v }, { k: 'pct_removed', l: '% removed', f: v => fmt(v, 2) + '%' }
-    ]) + '<h4>Removed values</h4>' + simpleTable(res.outliers, [
+    ]) + markBar + '<h4>Removed values</h4>' + simpleTable(res.outliers, [
         { k: 'unit', l: 'Plot' }, { k: 'trial', l: 'Trial' }, { k: 'accession', l: 'Accession' }, { k: 'trait', l: 'Trait' }, { k: 'value', l: 'Value' }, { k: 'reason', l: 'Reason' }
     ], { id: 'sf_dt_outliers', empty: 'No values were removed.' }));
     dataTable('#sf_dt_outliers');
@@ -1392,13 +1530,37 @@ export function init(options) {
     $('#sf_explorer_trait').on('change', drawExplorer);
     $('#sf_preview_madr').on('click', previewMadr);
     $('#sf_madr_alpha').on('change', () => { state.madrFlags = {}; state.madrPreviewDone = false; if (state.plotData) drawExplorer(); });
-    $('#sf_exclusion_table').on('click', '.sf-restore', function() {
+    $('#sf_outlier_table').on('click', '.sf-restore', function() {
         delete state.exclusions[$(this).data('key')];
-        renderExclusions(); drawExplorer(); renderPipeline();
+        drawExplorer(); renderPipeline();
     });
-    $('#sf_exclusion_table').on('click', '#sf_restore_all', () => {
-        state.exclusions = {};
-        renderExclusions(); drawExplorer(); renderPipeline();
+    $('#sf_outlier_filter').on('change', renderExclusions);
+    $('#sf_outlier_table').on('change', '.sf-outlier-cb', function() {
+        const k = $(this).data('key');
+        if ($(this).is(':checked')) state.outlierSel[k] = true; else delete state.outlierSel[k];
+        $(this).closest('tr').toggleClass('sel', $(this).is(':checked'));
+        updateOutlierToolbar();
+    });
+    $('#sf_outlier_table').on('change', '#sf_outlier_all', function() {
+        const on = $(this).is(':checked');
+        $('#sf_outlier_table .sf-outlier-cb').each(function() {
+            const k = $(this).data('key');
+            if (on) state.outlierSel[k] = true; else delete state.outlierSel[k];
+            $(this).prop('checked', on).closest('tr').toggleClass('sel', on);
+        });
+        updateOutlierToolbar();
+    });
+    $(document).on('click', '.sf-outlier-toolbar .sf-mark', function(e) {
+        e.preventDefault();
+        if ($(this).prop('disabled')) return;
+        markOutliers(selectedOutliers(), $(this).data('action'), '#sf_outlier_message');
+    });
+    // results tab: mark everything the run removed
+    $('#sf_tab_outliers').on('click', '.sf-mark-removed', function() {
+        const full = {};
+        arr((state.results.summary || {}).traits_full).forEach(t => { full[shortTrait(t)] = t; });
+        const items = arr(state.results.outliers).filter(o => full[o.trait]).map(o => ({ key: o.unit + '|' + full[o.trait], unit: o.unit, trait: full[o.trait] }));
+        markOutliers(items, $(this).data('action'), '#sf_removed_message');
     });
 
     // step 3

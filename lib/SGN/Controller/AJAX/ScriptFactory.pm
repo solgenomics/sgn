@@ -9,6 +9,7 @@ Endpoints used by /tools/script_factory:
 
   /ajax/script_factory/prepare        write the dataset phenotype file, describe traits and trials
   /ajax/script_factory/plot_data      plot level values of selected traits (outlier explorer)
+  /ajax/script_factory/outliers/mark  check / mark / unmark outliers as dataset or database outliers
   /ajax/script_factory/run            submit the R pipeline as a background job
   /ajax/script_factory/status         poll a submitted job, return the results when done
   /ajax/script_factory/export_r       standalone R script with the recipe embedded
@@ -40,6 +41,7 @@ use Try::Tiny;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Job;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -264,6 +266,8 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         token => $token,
         dataset_id => $dataset_id,
         dataset_name => $ds->name(),
+        dataset_is_owner => (($ds->sp_person_id() // -1) == _user_id($c)) ? 1 : 0,
+        dataset_n_outliers => scalar(@{ $ds->outliers() || [] }),
         phenotype_file => $pheno_file,    # archived as training data when the analysis is stored
         traits => \@traits,
         trials => \@trials,
@@ -312,6 +316,149 @@ sub plot_data : Path('/ajax/script_factory/plot_data') Args(0) {
         columns => [ qw | unit trial accession rep block row col |, @traits ],
         traits => \@traits,
         rows => \@out,
+    };
+}
+
+# ---------------------------------------------------------------------------
+# marking outliers in Breedbase
+#
+#   dataset outliers:  phenotype ids in the dataset's "outliers" list (as the
+#                      dataset scatterplot tool stores them); used when a
+#                      dataset is read with exclude_dataset_outliers.
+#   database outliers: phenotypeprop of type phenotype_outlier (as the
+#                      phenotype quality control tool stores them); used by
+#                      every search with exclude_phenotype_outlier.
+# ---------------------------------------------------------------------------
+
+sub _can_mark_database {
+    my $c = shift;
+    return (grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
+}
+
+# items: [{unit, trait}] -> { "unit|trait" => [phenotype_id, ...] } plus database flags
+sub _resolve_phenotypes {
+    my ($schema, $dataset_trials, $items) = @_;
+    my $dbh = $schema->storage->dbh();
+    my $outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+    my (%trait_id, %units);
+    foreach my $it (@$items) {
+        next if !$it->{unit} || !$it->{trait};
+        $units{$it->{unit}} = 1;
+        if (!exists $trait_id{$it->{trait}}) {
+            my $row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $it->{trait});
+            $trait_id{$it->{trait}} = $row ? $row->cvterm_id() : undef;
+        }
+    }
+    my %trait_name_of = map { $trait_id{$_} => $_ } grep { defined $trait_id{$_} } keys %trait_id;
+    return ({}, {}, $outlier_type_id) if !%units || !%trait_name_of;
+
+    # only phenotypes of plots that belong to the dataset's trials
+    my $sth = $dbh->prepare(
+        "SELECT stock.uniquename, phenotype.cvalue_id, phenotype.phenotype_id, (pp.phenotype_id IS NOT NULL)
+           FROM stock
+           JOIN nd_experiment_stock nes ON nes.stock_id = stock.stock_id AND nes.type_id = ?
+           JOIN nd_experiment_project nepr ON nepr.nd_experiment_id = nes.nd_experiment_id
+           JOIN nd_experiment_phenotype nep ON nep.nd_experiment_id = nes.nd_experiment_id
+           JOIN phenotype ON phenotype.phenotype_id = nep.phenotype_id
+           LEFT JOIN (SELECT DISTINCT phenotype_id FROM phenotypeprop WHERE type_id = ?) pp ON pp.phenotype_id = phenotype.phenotype_id
+          WHERE stock.uniquename = ANY(?) AND phenotype.cvalue_id = ANY(?) AND nepr.project_id = ANY(?)");
+    $sth->execute($experiment_type_id, $outlier_type_id, [ keys %units ], [ keys %trait_name_of ], $dataset_trials);
+
+    my %wanted = map { ($_->{unit} . '|' . $_->{trait}) => 1 } @$items;
+    my (%ids, %in_db);
+    while (my ($unit, $cvterm_id, $phenotype_id, $is_outlier) = $sth->fetchrow_array()) {
+        my $key = $unit . '|' . $trait_name_of{$cvterm_id};
+        next if !$wanted{$key};
+        push @{$ids{$key}}, $phenotype_id;
+        $in_db{$phenotype_id} = 1 if $is_outlier;
+    }
+    return (\%ids, \%in_db, $outlier_type_id);
+}
+
+sub mark_outliers : Path('/ajax/script_factory/outliers/mark') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+
+    my $dataset_id = $c->req->param('dataset_id');
+    my $action = $c->req->param('action') || 'check';    # check | dataset | database | unmark_dataset | unmark_database
+    my $items = try { decode_json($c->req->param('items') || '[]') } catch { undef };
+    if (!$dataset_id || $dataset_id !~ /^\d+$/ || ref($items) ne 'ARRAY' || $action !~ /^(check|dataset|database|unmark_dataset|unmark_database)$/) {
+        $c->stash->{rest} = { error => 'Invalid request.' };
+        return;
+    }
+
+    my ($schema, $people_schema, $sp_person_id) = _schemas($c);
+    my $ds;
+    try {
+        $ds = CXGN::Dataset->new({ schema => $schema, people_schema => $people_schema, sp_dataset_id => $dataset_id });
+    } catch {
+        $c->stash->{rest} = { error => 'Dataset not found.' };
+    };
+    return if $c->stash->{rest};
+    my $is_owner = (($ds->sp_person_id() // -1) == $sp_person_id) ? 1 : 0;
+    my $can_db = _can_mark_database($c);
+
+    if ($action =~ /dataset$/ && !$is_owner) {
+        $c->stash->{rest} = { error => 'Only the owner of the dataset can change its outliers. You can copy the dataset to your own account and mark them there.' };
+        return;
+    }
+    if ($action =~ /database$/ && !$can_db) {
+        $c->stash->{rest} = { error => 'Only curators and breeders can mark outliers in the database.' };
+        return;
+    }
+
+    my $trials = [ map { ref($_) ? $_->[0] : $_ } @{ $ds->retrieve_trials() || [] } ];
+    my ($ids, $in_db, $outlier_type_id) = _resolve_phenotypes($schema, $trials, $items);
+    my @phenotype_ids = map { @$_ } values %$ids;
+    my %ds_outliers = map { $_ => 1 } grep { defined } @{ $ds->outliers() || [] };
+    my $dbh = $schema->storage->dbh();
+    my $changed = 0;
+
+    if ($action eq 'dataset' || $action eq 'unmark_dataset') {
+        foreach my $id (@phenotype_ids) {
+            if ($action eq 'dataset') { $changed++ if !$ds_outliers{$id}; $ds_outliers{$id} = 1; }
+            else { $changed++ if delete $ds_outliers{$id}; }
+        }
+        if ($changed) {
+            # phenotype ids as strings, the format the dataset tools store
+            $ds->outliers([ map { "$_" } sort { $a <=> $b } map { $_ + 0 } keys %ds_outliers ]);
+            $ds->store();
+        }
+    }
+    elsif ($action eq 'database' && @phenotype_ids) {
+        $changed = $dbh->do(
+            "INSERT INTO phenotypeprop (phenotype_id, type_id, value)
+             SELECT p.phenotype_id, ?, p.value FROM phenotype p
+              WHERE p.phenotype_id = ANY(?)
+                AND NOT EXISTS (SELECT 1 FROM phenotypeprop pp WHERE pp.phenotype_id = p.phenotype_id AND pp.type_id = ?)",
+            undef, $outlier_type_id, \@phenotype_ids, $outlier_type_id) + 0;
+        $in_db->{$_} = 1 for @phenotype_ids;
+    }
+    elsif ($action eq 'unmark_database' && @phenotype_ids) {
+        $changed = $dbh->do("DELETE FROM phenotypeprop WHERE type_id = ? AND phenotype_id = ANY(?)", undef, $outlier_type_id, \@phenotype_ids) + 0;
+        delete $in_db->{$_} for @phenotype_ids;
+    }
+
+    my %status;
+    foreach my $key (keys %$ids) {
+        my @p = @{$ids->{$key}};
+        $status{$key} = {
+            dataset => (grep { $ds_outliers{$_} } @p) ? 1 : 0,
+            database => (grep { $in_db->{$_} } @p) ? 1 : 0,
+        };
+    }
+    print STDERR "Script Factory: $action on dataset $dataset_id by person $sp_person_id, $changed phenotype(s) changed\n" if $action ne 'check';
+
+    $c->stash->{rest} = {
+        status => \%status,
+        changed => $changed,
+        not_found => scalar(grep { !$ids->{$_->{unit} . '|' . $_->{trait}} } @$items),
+        dataset_n_outliers => scalar(keys %ds_outliers),
+        is_owner => $is_owner,
+        can_mark_database => $can_db,
     };
 }
 
