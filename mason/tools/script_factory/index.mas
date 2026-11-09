@@ -205,7 +205,7 @@ $dataset_id => undef
               <span class="sf-option-text"><b>Stage 1:</b> each trial is analysed on its own (SpATS spatial model or a model specific to its design), giving adjusted means and standard errors.<br/><b>Stage 2:</b> the means are combined across trials with a weighted mixed model.</span></label>
             <label class="sf-option"><input type="radio" name="sf_strategy" value="single_stage" />
               <span class="sf-option-title">Single stage</span>
-              <span class="sf-option-text">One mixed model on all plots, with design effects nested in trials and the genotype &times; trial interaction.</span></label>
+              <span class="sf-option-text">One mixed model on all plots. Choose each term (environment, design effects nested in trials, field trend, G&times;E, covariates) or write your own lme4 formula.</span></label>
           </div>
         </div>
 
@@ -247,19 +247,82 @@ $dataset_id => undef
         </div>
 
         <div class="sf-card" id="sf_single_card" style="display:none">
-          <h3>Single-stage model</h3>
-          <div class="row">
-            <div class="col-sm-6">
-              <label class="sf-label">Genotype effect</label>
-              <select class="form-control" id="sf_single_genotype">
-                <option value="random">Random &rarr; BLUPs (recommended for selection)</option>
-                <option value="fixed">Fixed &rarr; BLUEs</option>
-              </select>
+          <div class="sf-card-head">
+            <h3>Single-stage model</h3>
+            <div class="btn-group btn-group-sm sf-mode-toggle">
+              <label class="btn btn-default active"><input type="radio" name="sf_single_mode" value="builder" checked /> <span class="glyphicon glyphicon-th-list"></span> Build term by term</label>
+              <label class="btn btn-default"><input type="radio" name="sf_single_mode" value="custom" /> <span class="glyphicon glyphicon-pencil"></span> Write the formula</label>
             </div>
-            <div class="col-sm-6">
-              <label class="sf-label">&nbsp;</label>
-              <label class="sf-check"><input type="checkbox" id="sf_single_gxe" checked /> Include genotype &times; trial interaction</label>
+          </div>
+
+          <div id="sf_single_builder">
+            <p class="sf-help">Choose every effect of the model. <b>Automatic</b> follows the design of the trials; any other choice is applied as you set it. Terms the data cannot support (for example a row effect when no trial has row numbers) are left out and reported in the results.</p>
+            <table class="table sf-terms">
+              <tbody>
+                <tr><th>Genotype <code>accession</code></th>
+                  <td><select class="form-control input-sm sf-single-opt" id="sf_single_genotype">
+                    <option value="random">Random &rarr; BLUPs (recommended for selection)</option>
+                    <option value="fixed">Fixed &rarr; BLUEs (e.g. for GWAS or genomic prediction)</option>
+                  </select></td><td class="sf-term-hint" data-hint="genotype"></td></tr>
+                <tr><th>Environment <code>trial</code></th>
+                  <td><select class="form-control input-sm sf-single-opt" id="sf_single_env">
+                    <option value="fixed">Fixed</option>
+                    <option value="random">Random</option>
+                    <option value="none">Not in the model</option>
+                  </select></td><td class="sf-term-hint" data-hint="env"></td></tr>
+                <tr><th>Replicate within trial <code>trial:rep</code></th>
+                  <td><select class="form-control input-sm sf-single-opt" id="sf_single_rep">
+                    <option value="auto">Automatic</option>
+                    <option value="random">Random</option>
+                    <option value="fixed">Fixed</option>
+                    <option value="none">Not in the model</option>
+                  </select></td><td class="sf-term-hint" data-hint="rep"></td></tr>
+                <tr><th>Block within replicate <code>trial:rep:block</code></th>
+                  <td><select class="form-control input-sm sf-single-opt" id="sf_single_block">
+                    <option value="auto">Automatic</option>
+                    <option value="random">Random</option>
+                    <option value="fixed">Fixed</option>
+                    <option value="none">Not in the model</option>
+                  </select></td><td class="sf-term-hint" data-hint="block"></td></tr>
+                <tr><th>Row and column within trial <code>trial:row</code>, <code>trial:col</code></th>
+                  <td><select class="form-control input-sm sf-single-opt" id="sf_single_rowcol">
+                    <option value="auto">Automatic</option>
+                    <option value="random">Random</option>
+                    <option value="none">Not in the model</option>
+                  </select></td><td class="sf-term-hint" data-hint="rowcol"></td></tr>
+                <tr><th>Field trend</th>
+                  <td><select class="form-control input-sm sf-single-opt" id="sf_single_trend">
+                    <option value="none">None</option>
+                    <option value="linear">Linear row and column trend within each trial</option>
+                  </select></td><td class="sf-term-hint" data-hint="trend"></td></tr>
+                <tr><th>Genotype &times; environment</th>
+                  <td>
+                    <label class="sf-check sf-check-inline"><input type="checkbox" class="sf-single-gxe" value="trial" checked /> &times; trial</label>
+                    <label class="sf-check sf-check-inline"><input type="checkbox" class="sf-single-gxe" value="location" /> &times; location</label>
+                    <label class="sf-check sf-check-inline"><input type="checkbox" class="sf-single-gxe" value="year" /> &times; year</label>
+                  </td><td class="sf-term-hint" data-hint="gxe"></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="sf_single_custom" style="display:none">
+            <p class="sf-help">Write the right-hand side of an <a href="https://cran.r-project.org/package=lme4" target="_blank">lme4</a> formula. Use <code>(1|term)</code> for random effects and <code>a:b</code> for nesting / interactions. The response is the trait; the genotype must appear once, as <code>accession</code> (fixed, BLUEs) or <code>(1|accession)</code> (random, BLUPs).</p>
+            <div class="input-group">
+              <span class="input-group-addon"><code>y ~</code></span>
+              <textarea class="form-control sf-mono" id="sf_single_formula" rows="2" spellcheck="false" placeholder="(1|accession) + trial + (1|trial:rep) + (1|accession:trial)"></textarea>
             </div>
+            <div class="sf-formula-tools">
+              <button class="btn btn-default btn-xs" id="sf_single_from_builder"><span class="glyphicon glyphicon-import"></span> Start from the builder</button>
+              <span class="sf-muted">Insert:</span>
+              <span id="sf_single_vars"></span>
+            </div>
+            <div id="sf_single_formula_check"></div>
+          </div>
+
+          <div class="sf-cov-block">
+            <label class="sf-label">Covariates</label>
+            <div id="sf_single_covariates" class="sf-cov-list"></div>
+            <small class="sf-muted">Fixed linear effect of another trait measured on the same plots (e.g. stand count). In a written formula a selected covariate is available by the name shown in brackets. A trait is never used as a covariate of itself.</small>
           </div>
         </div>
 
@@ -379,6 +442,7 @@ $dataset_id => undef
           <div class="sf-card sf-actions-card">
             <h3>Results</h3>
             <div class="sf-actions">
+              <a class="btn btn-success" id="sf_open_dashboard" href="#" target="_blank"><span class="glyphicon glyphicon-dashboard"></span> Open decision dashboard</a>
               <button class="btn btn-primary" id="sf_save_analysis"><span class="glyphicon glyphicon-save"></span> Store analysis</button>
               <button class="btn btn-default" id="sf_save_list" disabled><span class="glyphicon glyphicon-list"></span> Save selected accessions as list</button>
               <div class="btn-group">
@@ -627,4 +691,21 @@ table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-quickrun-steps span.off { color: var(--sf-muted); text-decoration: line-through; }
 .sf-quickrun-steps b { color: var(--sf-accent); margin-right: 4px; }
 @media (max-width: 991px) { .sf-summary { position: static; margin-top: 16px; } .sf-step-label { display: none; } }
+
+.sf-terms th { width: 30%; font-weight: 600; vertical-align: middle !important; }
+.sf-terms th code { font-size: 11px; font-weight: normal; display: inline-block; margin-top: 2px; }
+.sf-terms td { vertical-align: middle !important; }
+.sf-terms select { max-width: 360px; }
+.sf-term-hint { font-size: 12px; color: #6b7280; width: 32%; }
+.sf-term-hint .warn { color: #b45309; }
+.sf-check-inline { display: inline-block; margin-right: 14px; }
+.sf-cov-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.sf-cov-list label { margin: 0; padding: 3px 10px; border: 1px solid #d1d5db; border-radius: 14px; font-weight: normal; cursor: pointer; font-size: 12px; }
+.sf-cov-list label.on { background: #e8f3ec; border-color: #2b7a4b; color: #1f5c38; }
+.sf-cov-list label.dis { opacity: .45; cursor: not-allowed; }
+.sf-cov-list input { display: none; }
+.sf-mono { font-family: Menlo, Consolas, monospace; font-size: 13px; }
+.sf-formula-tools { margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sf-formula-tools .sf-var { cursor: pointer; }
+.sf-mode-toggle .btn input { display: none; }
 </style>

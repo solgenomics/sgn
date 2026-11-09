@@ -13,7 +13,10 @@
 #        a) two stages: stage 1 per trial (SpATS spatial model or a model
 #           specific to the trial design) followed by a weighted stage 2
 #           across trials, or
-#        b) a single stage model fitted on all plots at once.
+#        b) a single stage model fitted on all plots at once, built term by
+#           term (environment, replicate, block, row/column, field trend,
+#           G x trial / location / year, covariates) or given as a custom
+#           lme4 formula.
 #   4. Selection index (weighted Z-score or Mulamba & Mock rank sum) with
 #      selection differentials and expected genetic gains.
 #   5. Environmental zoning (Lin 1982 GxE F-test grouping or genetic
@@ -34,7 +37,7 @@ suppressPackageStartupMessages({
   library(lme4)
 })
 
-SF_VERSION <- "1.0"
+SF_VERSION <- "1.1"
 
 # -----------------------------------------------------------------------------
 # Arguments
@@ -383,6 +386,65 @@ model_text <- function(design, terms, genotype_random) {
   paste("y ~", paste(c(g, terms), collapse = " + "))
 }
 
+
+# -----------------------------------------------------------------------------
+# Helpers for the single-stage model, residuals and variance components
+# -----------------------------------------------------------------------------
+cov_name <- function(full) paste0("cov_", gsub("[^A-Za-z0-9]+", "_", short_trait(full)))
+
+# factors used by the single-stage models (builder and custom formula)
+add_model_factors <- function(d) {
+  d$rowN <- d$row; d$colN <- d$col
+  d$accession <- factor(d$accession); d$trial <- factor(d$trial)
+  d$location <- factor(d$location); d$year <- factor(d$year)
+  d$rep <- factor(d$rep_eff); d$block <- factor(d$block)
+  d$tr_rep <- factor(paste(d$trial, d$rep_eff))
+  d$tr_block <- factor(paste(d$trial, d$rep_eff, d$block))
+  d$tr_row <- factor(ifelse(is.na(d$rowN), NA, paste(d$trial, d$rowN)))
+  d$tr_col <- factor(ifelse(is.na(d$colN), NA, paste(d$trial, d$colN)))
+  d$row <- factor(d$rowN); d$col <- factor(d$colN)
+  d
+}
+
+# Variables a custom formula may use. Only these names, the numbers 0 and 1,
+# the operators + - * / : | and parentheses are accepted: no function call can
+# reach R through the formula.
+FORMULA_VARS <- c("accession", "trial", "location", "year", "rep", "block", "row", "col", "rowN", "colN")
+
+parse_custom_formula <- function(txt, cov_vars) {
+  txt <- gsub("[\r\n\t]+", " ", as.character(txt))
+  txt <- sub("^\\s*y\\s*~", "", txt)
+  if (!nzchar(trimws(txt))) stop("The custom model formula is empty.")
+  allowed <- c(FORMULA_VARS, cov_vars)
+  toks <- regmatches(txt, gregexpr("[A-Za-z_][A-Za-z0-9_.]*|[0-9]+(\\.[0-9]+)?|\\s+|.", txt))[[1]]
+  for (i in seq_along(toks)) {
+    tk <- toks[i]
+    if (grepl("^\\s+$", tk) || tk %in% c("+", "-", "*", "/", ":", "|", "(", ")")) next
+    if (grepl("^[0-9]", tk)) { if (tk %in% c("0", "1")) next; stop("Custom formula: only the numbers 0 and 1 are allowed (found '", tk, "').") }
+    if (grepl("^[A-Za-z_]", tk)) {
+      nxt <- toks[-(1:i)]; nxt <- nxt[!grepl("^\\s+$", nxt)]
+      if (length(nxt) && nxt[1] == "(") stop("Custom formula: functions are not allowed ('", tk, "(').")
+      if (!(tk %in% allowed)) stop("Custom formula: unknown variable '", tk, "'. Allowed: ", paste(allowed, collapse = ", "), ".")
+      next
+    }
+    stop("Custom formula: character '", tk, "' is not allowed.")
+  }
+  rhs <- trimws(txt)
+  random_g <- grepl("\\(\\s*1\\s*\\|\\s*accession\\s*\\)", rhs)
+  fixed_part <- gsub("\\([^()]*\\|[^()]*\\)", "", rhs)
+  fixed_g <- any(trimws(strsplit(fixed_part, "+", fixed = TRUE)[[1]]) == "accession")
+  if (random_g == fixed_g) stop("Custom formula: include the genotype exactly once, either as a fixed effect 'accession' or as a random effect '(1|accession)'.")
+  vars <- intersect(unique(toks), allowed)
+  list(text = paste("y ~", rhs), genotype_random = random_g, vars = vars)
+}
+
+residual_rows <- list()
+add_residuals <- function(units, trait, r) {
+  if (length(r) != length(units)) return(invisible())
+  residual_rows[[length(residual_rows) + 1]] <<- data.frame(unit = as.character(units), trait = trait, resid = as.numeric(r), stringsAsFactors = FALSE)
+}
+variance_components <- list()
+
 # -----------------------------------------------------------------------------
 # Stage 1 - one trial, one trait
 # -----------------------------------------------------------------------------
@@ -443,7 +505,7 @@ fit_stage1 <- function(d, info, trait) {
         res$var_g <- tryCatch(unname(fR$var.comp["accession"]), error = function(e) NA_real_)
       }
       res$cv <- 100 * sqrt(res$var_e) / abs(res$mean)
-      return(list(summary = res, means = means))
+      return(list(summary = res, means = means, resid = data.frame(unit = d$unit, resid = as.numeric(fF$residuals))))
     }
     add_warning("SpATS could not be fitted for ", info$trial, " / ", short_trait(trait), " (", conditionMessage(fF), " This usually means the field layout confounds the spatial trend with genotypes); the ", info$design_label, " design model was used instead.")
   } else if (use_spats) {
@@ -491,7 +553,7 @@ fit_stage1 <- function(d, info, trait) {
     res$h2 <- unname(res$h2)
   }
   res$cv <- 100 * sqrt(res$var_e) / abs(res$mean)
-  list(summary = res, means = means)
+  list(summary = res, means = means, resid = data.frame(unit = d$unit, resid = as.numeric(residuals(fit))))
 }
 
 # -----------------------------------------------------------------------------
@@ -509,8 +571,10 @@ stage2_summary <- list()
 genotype_values <- list()
 
 # Stage-1 style per-trial means are always computed: they are needed for the
-# two-stage approach and for environmental zoning.
-run_stage1 <- strategy == "two_stage" || isTRUE(opt(zones_cfg, "enabled", FALSE))
+# two-stage approach, for environmental zoning and for the results dashboard
+# (performance of each accession in each environment). For a single-stage
+# analysis they are plain cell means.
+run_stage1 <- TRUE
 if (run_stage1) {
   for (t in traits) {
     for (tr in trials) {
@@ -525,6 +589,7 @@ if (run_stage1) {
         list(summary = NULL, means = data.frame(accession = m$accession, value = m$y, se = NA_real_))
       }
       if (!is.null(r$summary)) stage1_summary[[length(stage1_summary) + 1]] <- as.data.frame(r$summary, stringsAsFactors = FALSE)
+      if (!is.null(r$resid)) add_residuals(r$resid$unit, t, r$resid$resid)
       if (!is.null(r$means) && nrow(r$means)) {
         r$means$trial <- tr
         r$means$env <- dat$env[dat$trial == tr][1]
@@ -565,6 +630,7 @@ if (strategy == "two_stage") {
         gv <- data.frame(accession = rownames(re), value = mu + re[, 1],
                          se = if (!is.null(pv)) sqrt(pv[1, 1, ]) * 1 else NA_real_)
         res$var_g <- unname(vc["accession"]); res$var_ge <- unname(vc["Residual"])
+        variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = c("accession", "accession:trial + error"), variance = c(res$var_g, res$var_ge), stringsAsFactors = FALSE)
         e_bar <- 1 / mean(1 / as.numeric(table(m$accession)))
         res$h2 <- unname(res$var_g / (res$var_g + res$var_ge / e_bar))
         res$model <- paste0("lmer(BLUE ~ trial + (1|accession)", if (weighting == "inverse_se2") ", weights = 1/SE^2" else "", ")")
@@ -582,32 +648,101 @@ if (strategy == "two_stage") {
   }
 } else {
   # Single stage -----------------------------------------------------------------
-  include_gxe <- !identical(opt(ss_cfg, "include_gxe", TRUE), FALSE)
+  # The model is either assembled from the terms chosen in the interface
+  # ("builder") or given as a custom lme4 formula ("custom"). Every term the
+  # data cannot support is dropped and reported, never silently.
+  ss_mode <- opt(ss_cfg, "mode", "builder")
+  ss_env <- opt(ss_cfg, "env", "fixed")            # fixed | random | none
+  ss_rep <- opt(ss_cfg, "rep", "auto")             # auto | fixed | random | none
+  ss_block <- opt(ss_cfg, "block", "auto")         # auto | fixed | random | none
+  ss_rowcol <- opt(ss_cfg, "rowcol", "auto")       # auto | random | none
+  ss_trend <- opt(ss_cfg, "trend", "none")         # none | linear
+  ss_gxe <- unlist(opt(ss_cfg, "gxe", if (identical(opt(ss_cfg, "include_gxe", TRUE), FALSE)) list() else list("trial")))
+  ss_cov <- unlist(opt(ss_cfg, "covariates", list()))
+
+  # covariates: any numeric column of the phenotype file (usually another trait)
+  cov_vars <- character()
+  for (cv in ss_cov) {
+    full <- if (cv %in% names(pheno)) cv else available_traits[short_trait(available_traits) == short_trait(cv)][1]
+    if (is.na(full) || is.null(full)) { add_warning("Covariate '", short_trait(cv), "' is not in this dataset and was skipped."); next }
+    vn <- cov_name(full)
+    dat[[vn]] <- suppressWarnings(as.numeric(pheno[[full]]))
+    cov_vars <- c(cov_vars, vn)
+  }
+
+  if (ss_mode == "custom") {
+    custom <- parse_custom_formula(opt(ss_cfg, "formula", ""), cov_vars)
+    genotype_random <- custom$genotype_random
+  }
+
   for (t in traits) {
     d <- dat[!is.na(dat[[t]]), ]
     d$y <- d[[t]]
     if (nrow(d) < 3) next
     log_step("Single stage: ", short_trait(t))
+    d <- add_model_factors(d)
     n_tr <- n_levels(d$trial)
-    d$accession <- factor(d$accession); d$trial <- factor(d$trial)
-    d$tr_rep <- factor(paste(d$trial, d$rep_eff))
-    d$tr_block <- factor(paste(d$trial, d$rep_eff, d$block))
-    d$tr_row <- factor(paste(d$trial, d$row)); d$tr_col <- factor(paste(d$trial, d$col))
-    designs <- vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$design, character(1))
-    terms <- character()
-    if (n_tr > 1) terms <- c(terms, "trial")
-    if (n_levels(d$tr_rep) > n_tr) terms <- c(terms, "(1|tr_rep)")
-    if (any(designs %in% c("alpha_lattice", "augmented")) && n_levels(d$tr_block) > n_levels(d$tr_rep)) terms <- c(terms, "(1|tr_block)")
-    if (any(designs == "row_column") || (s1_model != "design" && all(vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$has_rowcol, logical(1))))) {
-      if (n_levels(d$tr_row) > n_tr) terms <- c(terms, "(1|tr_row)")
-      if (n_levels(d$tr_col) > n_tr) terms <- c(terms, "(1|tr_col)")
+    dropped <- character()
+    used_vars <- c("y", "accession")
+
+    if (ss_mode == "custom") {
+      if (cov_name(t) %in% custom$vars) { add_warning(short_trait(t), " is a covariate of the custom formula; it cannot be analysed with its own value as covariate and was skipped."); next }
+      fml_txt <- custom$text
+      used_vars <- unique(c(used_vars, custom$vars))
+    } else {
+      designs <- vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$design, character(1))
+      all_rc <- all(vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$has_rowcol, logical(1)))
+      terms <- character()
+      add_term <- function(term, ok, label, vars) {
+        if (ok) { terms <<- c(terms, term); used_vars <<- unique(c(used_vars, vars)) }
+        else dropped <<- c(dropped, label)
+      }
+      # environment (trial) main effect
+      if (ss_env != "none") add_term(if (ss_env == "random") "(1|trial)" else "trial", n_tr > 1, "trial (only one trial)", "trial")
+      # replicates within trials
+      rep_on <- if (ss_rep == "auto") n_levels(d$tr_rep) > n_tr else ss_rep != "none"
+      if (rep_on) add_term(if (ss_rep == "fixed") "tr_rep" else "(1|tr_rep)", n_levels(d$tr_rep) > n_tr, "replicate within trial (one replicate per trial)", "tr_rep")
+      # incomplete blocks within replicates
+      block_on <- if (ss_block == "auto") any(designs %in% c("alpha_lattice", "augmented")) && n_levels(d$tr_block) > n_levels(d$tr_rep) else ss_block != "none"
+      if (block_on) add_term(if (ss_block == "fixed") "tr_block" else "(1|tr_block)", n_levels(d$tr_block) > n_levels(d$tr_rep), "block within replicate (blocks equal replicates)", "tr_block")
+      # rows and columns within trials
+      rc_on <- if (ss_rowcol == "auto") any(designs == "row_column") || all_rc else ss_rowcol != "none"
+      if (rc_on) {
+        add_term("(1|tr_row)", n_levels(d$tr_row) > n_tr && sum(!is.na(d$row)) > 0, "row within trial (no row numbers)", "tr_row")
+        add_term("(1|tr_col)", n_levels(d$tr_col) > n_tr && sum(!is.na(d$col)) > 0, "column within trial (no column numbers)", "tr_col")
+      }
+      # linear field trend within trials
+      if (ss_trend == "linear") {
+        rc_ok <- sum(!is.na(d$rowN) & !is.na(d$colN)) >= 0.9 * nrow(d) && n_levels(d$rowN) > 1
+        add_term(if (n_tr > 1) "trial:rowN + trial:colN" else "rowN + colN", rc_ok, "linear row/column trend (row and column numbers missing)", c("trial", "rowN", "colN"))
+      }
+      # genotype x environment interactions
+      for (gx in ss_gxe) {
+        n_lv <- n_levels(d[[gx]])
+        add_term(paste0("(1|accession:", gx, ")"), n_lv > 1, paste0("accession x ", gx, " (only one ", gx, ")"), gx)
+      }
+      # covariates
+      for (cv in cov_vars) {
+        if (cv == cov_name(t)) next   # a trait is never its own covariate
+        ok <-sum(!is.na(d[[cv]])) > 0.5 * nrow(d) && n_levels(d[[cv]]) > 1
+        add_term(cv, ok, paste0("covariate ", sub("^cov_", "", cv), " (missing or constant)"), cv)
+      }
+      g_term <- if (genotype_random) "(1|accession)" else "accession"
+      fml_txt <- paste("y ~", paste(c(g_term, terms), collapse = " + "))
     }
-    if (include_gxe && n_tr > 1) terms <- c(terms, "(1|accession:trial)")
+
+    # keep only the plots that have every variable of the model
+    cc <- complete.cases(d[, intersect(used_vars, names(d)), drop = FALSE])
+    if (sum(!cc) > 0) add_warning(short_trait(t), ": ", sum(!cc), " plot(s) without values for all model terms were left out of the single-stage model.")
+    d <- droplevels(d[cc, ])
+    n_tr <- n_levels(d$trial)
+    if (length(dropped)) add_warning(short_trait(t), ": term(s) not supported by the data were left out of the model: ", paste(dropped, collapse = "; "), ".")
+
     res <- list(trait = short_trait(t), n_trials = n_tr, n_accessions = n_levels(d$accession), mean = mean(d$y),
-                var_g = NA_real_, var_ge = NA_real_, var_e = NA_real_, h2 = NA_real_, model = "", message = "OK")
-    g_term <- if (genotype_random) "(1|accession)" else "accession"
-    fml <- as.formula(paste("y ~", paste(c(g_term, terms), collapse = " + ")))
-    has_random <- genotype_random || any(grepl("\\|", terms))
+                var_g = NA_real_, var_ge = NA_real_, var_e = NA_real_, h2 = NA_real_, model = "",
+                dropped_terms = paste(dropped, collapse = "; "), message = "OK")
+    fml <- as.formula(fml_txt)
+    has_random <- grepl("\\|", fml_txt)
     fit <- if (has_random) fit_quietly(lmer(fml, data = d, REML = TRUE)) else fit_quietly(lm(fml, data = d))
     if (inherits(fit, "error")) {
       res$message <- conditionMessage(fit)
@@ -616,23 +751,38 @@ if (strategy == "two_stage") {
     }
     res$model <- paste(deparse(fml, width.cutoff = 500), collapse = "")
     r_bar <- 1 / mean(1 / as.numeric(table(d$accession)))
-    e_bar <- if (n_tr > 1) 1 / mean(1 / as.numeric(table(unique(d[, c("accession", "trial")])$accession))) else 1
+    res$var_e <- if (inherits(fit, "merMod")) sigma(fit)^2 else summary(fit)$sigma^2
+
+    vc <- if (inherits(fit, "merMod")) var_comp(fit) else c(Residual = res$var_e)
+    for (k in names(vc)) variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = k, variance = unname(vc[k]), stringsAsFactors = FALSE)
+    # genotype x environment components, each divided by the (harmonic) mean
+    # number of levels of its environment factor per accession
+    gxe_names <- names(vc)[grepl("(^|:)accession(:|$)", names(vc)) & names(vc) != "accession"]
+    gxe_part <- 0
+    if (length(gxe_names)) {
+      res$var_ge <- sum(vc[gxe_names])
+      for (k in gxe_names) {
+        other <- setdiff(strsplit(k, ":", fixed = TRUE)[[1]], "accession")
+        other <- other[other %in% names(d)]
+        n_k <- if (length(other)) { u <- unique(data.frame(a = d$accession, e = do.call(paste, d[, other, drop = FALSE]))); 1 / mean(1 / as.numeric(table(u$a))) } else 1
+        gxe_part <- gxe_part + vc[k] / n_k
+      }
+    }
+
     if (genotype_random) {
-      vc <- var_comp(fit)
       re <- ranef(fit, condVar = TRUE)$accession
       pv <- attr(re, "postVar")
-      fe <- fixef(fit)
-      mu <- mean(fe[1] + c(0, fe[grepl("^trial", names(fe))]))
+      # population mean: fixed part of the model averaged within and then over trials
+      fp <- predict(fit, re.form = NA)
+      mu <- mean(tapply(fp, d$trial, mean))
       gv <- data.frame(accession = rownames(re), value = mu + re[, 1], se = if (!is.null(pv)) sqrt(pv[1, 1, ]) else NA_real_)
       res$var_g <- unname(vc["accession"])
-      res$var_ge <- if ("accession:trial" %in% names(vc)) unname(vc["accession:trial"]) else NA_real_
-      res$var_e <- unname(vc["Residual"])
-      res$h2 <- unname(res$var_g / (res$var_g + ifelse(is.na(res$var_ge), 0, res$var_ge) / e_bar + res$var_e / r_bar))
+      res$h2 <- unname(res$var_g / (res$var_g + gxe_part + res$var_e / r_bar))
     } else {
       gv <- accession_blues(fit, d)
-      res$var_e <- if (inherits(fit, "merMod")) sigma(fit)^2 else summary(fit)$sigma^2
-      if (inherits(fit, "merMod")) { vc <- var_comp(fit); if ("accession:trial" %in% names(vc)) res$var_ge <- unname(vc["accession:trial"]) }
     }
+    rs <- residuals(fit)
+    add_residuals(d$unit, t, rs)
     gv$trait <- t
     genotype_values[[length(genotype_values) + 1]] <- gv
     stage2_summary[[length(stage2_summary) + 1]] <- as.data.frame(res, stringsAsFactors = FALSE)
@@ -900,6 +1050,22 @@ files <- list(
 
 if (!is.null(index_result)) names(index_result$table) <- short_trait(names(index_result$table))
 
+# plot level data for the field maps of the results dashboard: values after
+# outlier removal and model residuals for every trait
+plots_out <- data.frame(unit = dat$unit, trial = dat$trial, location = dat$location, year = dat$year,
+                        accession = dat$accession, rep = dat$rep_eff, block = dat$block,
+                        row = dat$row, col = dat$col, stringsAsFactors = FALSE)
+resid_all <- if (length(residual_rows)) do.call(rbind, residual_rows) else NULL
+for (t in traits) {
+  st <- short_trait(t)
+  plots_out[[st]] <- dat[[t]]
+  if (!is.null(resid_all)) {
+    rr <- resid_all[resid_all$trait == t, ]
+    if (nrow(rr)) plots_out[[paste0("resid:", st)]] <- rr$resid[match(plots_out$unit, rr$unit)]
+  }
+}
+variance_components <- if (length(variance_components)) do.call(rbind, variance_components) else NULL
+
 trial_table <- do.call(rbind, lapply(trial_info, function(x) data.frame(
   trial = x$trial, location = x$location, year = x$year, design = x$design_label,
   spatial_layout = x$has_rowcol, n_plots = x$n_plots, n_accessions = x$n_accessions, stringsAsFactors = FALSE)))
@@ -919,6 +1085,10 @@ result <- list(
   stage2 = stage2_summary,
   genotype_values = wide_out,
   genotype_values_long = gv_out,
+  stage1_means = s1_out,
+  variance_components = variance_components,
+  plots = plots_out,
+  recipe = recipe,
   index = index_result,
   zones = zone_results,
   files = files,

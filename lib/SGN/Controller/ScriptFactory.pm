@@ -37,4 +37,20 @@ sub script_factory_index :Path('/tools/script_factory') Args(0) {
     $c->stash->{template} = '/tools/script_factory/index.mas';
 }
 
+# decision dashboard of one analysis run; the data come from
+# /ajax/script_factory/results, which checks the owner of the run
+sub script_factory_results :Path('/tools/script_factory/results') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $run_id = shift;
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->detach();
+    }
+
+    $c->stash->{run_id} = ($run_id // '') =~ /^sf_run_[A-Za-z0-9_]+$/ ? $run_id : '';
+    $c->stash->{template} = '/tools/script_factory/results.mas';
+}
+
 1;

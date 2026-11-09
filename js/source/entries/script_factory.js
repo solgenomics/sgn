@@ -42,6 +42,7 @@ const state = {
     indexCfg: {},           // full trait -> {weight, direction}
     zoneTargets: { index: true },
     designOverrides: {},    // trial -> design
+    singleCov: {},          // full trait -> true, covariates of the single-stage model
     pendingRecipe: null,    // recipe loaded before a dataset
     script: { id: null, name: null, description: '', is_public: 0, is_owner: 1 },
     lastRun: null,          // {key, finishedAt, seconds} of the last successful run
@@ -185,7 +186,7 @@ function buildRecipe() {
         strategy: radio('sf_strategy'),
         stage1: { model: radio('sf_stage1_model'), design_overrides: overrides },
         stage2: { genotype: $('#sf_stage2_genotype').val(), weighting: $('#sf_stage2_weighting').val() },
-        single: { genotype: $('#sf_single_genotype').val(), include_gxe: $('#sf_single_gxe').is(':checked') },
+        single: singleRecipe(),
         index: index,
         zones: {
             enabled: $('#sf_zones_enabled').is(':checked'),
@@ -224,9 +225,7 @@ function applyRecipe(r) {
     const s2 = r.stage2 || {};
     if (s2.genotype) $('#sf_stage2_genotype').val(s2.genotype);
     if (s2.weighting) $('#sf_stage2_weighting').val(s2.weighting);
-    const ss = r.single || {};
-    if (ss.genotype) $('#sf_single_genotype').val(ss.genotype);
-    $('#sf_single_gxe').prop('checked', ss.include_gxe !== false);
+    applySingle(r.single || {});
 
     const ix = r.index || {};
     $('#sf_index_enabled').prop('checked', !!ix.enabled);
@@ -361,6 +360,10 @@ function refreshToggles() {
     const two = radio('sf_strategy') === 'two_stage';
     $('#sf_stage1_card, #sf_stage2_card').toggle(two);
     $('#sf_single_card').toggle(!two);
+    const custom = radio('sf_single_mode') === 'custom';
+    $('#sf_single_builder').toggle(!custom);
+    $('#sf_single_custom').toggle(custom);
+    $('input[name=sf_single_mode]').each(function() { $(this).closest('label').toggleClass('active', $(this).is(':checked')); });
 
     $('#sf_index_body').toggleClass('sf-disabled', !$('#sf_index_enabled').is(':checked'));
     $('#sf_zones_body').toggleClass('sf-disabled', !$('#sf_zones_enabled').is(':checked'));
@@ -477,6 +480,11 @@ function renderDatasetOverview() {
     h += '</tbody></table>';
     $('#sf_trials_table').html(h);
     renderTraits();
+    // covariates of a script loaded before the dataset: match them by name
+    const cov = {};
+    Object.keys(state.singleCov).forEach(t => { const m = matchTrait(t); if (m) cov[m] = true; });
+    state.singleCov = cov;
+    renderSingleCovariates();
     $('#sf_dataset_overview').show();
 }
 
@@ -882,14 +890,166 @@ function renderModelPreview() {
             '\n\n# Stage 2 (across trials)\n  BLUE_ij ~ trial_j + ' + (random ? '(1|accession_i)' : 'accession_i') + ' + e_ij' + (w ? ',  weights = 1 / SE_ij^2' : '') +
             '\n  -> ' + (random ? 'BLUPs (genotype random)' : 'BLUEs (genotype fixed)');
     } else {
-        const random = $('#sf_single_genotype').val() === 'random';
-        const gxe = $('#sf_single_gxe').is(':checked');
-        const anyRC = state.dataset && state.dataset.trials.some(t => t.has_rowcol);
-        txt = 'y ~ ' + (random ? '(1|accession)' : 'accession') + ' + trial + (1|trial:rep) + (1|trial:rep:block)' +
-            (anyRC ? ' + (1|trial:row) + (1|trial:col)' : '') + (gxe ? ' + (1|accession:trial)' : '') +
-            '\n  -> ' + (random ? 'BLUPs' : 'BLUEs') + '\n# terms that do not apply to the data are dropped automatically';
+        renderSingleHints();
+        if (radio('sf_single_mode') === 'custom') {
+            const chk = checkFormula($('#sf_single_formula').val());
+            txt = chk.ok ? 'y ~ ' + chk.rhs + '\n  -> ' + (chk.random ? 'BLUPs (genotype random)' : 'BLUEs (genotype fixed)') : '# ' + chk.msg;
+        } else {
+            const b = singleBuilderFormula();
+            txt = 'y ~ ' + b.terms.join(' + ') + '\n  -> ' + (b.random ? 'BLUPs (genotype random)' : 'BLUEs (genotype fixed)');
+            if (b.dropped.length) txt += '\n# left out, not supported by this dataset: ' + b.dropped.join('; ');
+            if (!state.dataset) txt += '\n# load a dataset to see which terms apply';
+        }
     }
     $('#sf_model_preview').html('<div class="sf-formula">' + esc(txt) + '</div>');
+}
+
+// single-stage model ---------------------------------------------------------
+
+// variables a written formula may use (kept in sync with FORMULA_VARS in the R pipeline)
+const FORMULA_VARS = {
+    accession: 'genotype', trial: 'trial (environment)', location: 'location', year: 'year',
+    rep: 'replicate (nest it: trial:rep)', block: 'block (nest it: trial:rep:block)',
+    row: 'row as factor (trial:row)', col: 'column as factor (trial:col)', rowN: 'row number (numeric trend)', colN: 'column number (numeric trend)'
+};
+
+function covName(t) { return 'cov_' + shortTrait(t).replace(/[^A-Za-z0-9]+/g, '_'); }
+
+function singleRecipe() {
+    const gxe = [];
+    $('.sf-single-gxe:checked').each(function() { gxe.push($(this).val()); });
+    return {
+        mode: radio('sf_single_mode') || 'builder',
+        genotype: $('#sf_single_genotype').val(),
+        env: $('#sf_single_env').val(),
+        rep: $('#sf_single_rep').val(),
+        block: $('#sf_single_block').val(),
+        rowcol: $('#sf_single_rowcol').val(),
+        trend: $('#sf_single_trend').val(),
+        gxe: gxe,
+        include_gxe: gxe.indexOf('trial') >= 0,     // read by scripts made before version 1.1
+        covariates: Object.keys(state.singleCov),
+        formula: $.trim($('#sf_single_formula').val() || '')
+    };
+}
+
+function applySingle(ss) {
+    setRadio('sf_single_mode', ss.mode || 'builder');
+    $('#sf_single_genotype').val(ss.genotype || 'random');
+    $('#sf_single_env').val(ss.env || 'fixed');
+    $('#sf_single_rep').val(ss.rep || 'auto');
+    $('#sf_single_block').val(ss.block || 'auto');
+    $('#sf_single_rowcol').val(ss.rowcol || 'auto');
+    $('#sf_single_trend').val(ss.trend || 'none');
+    const gxe = ss.gxe ? arr(ss.gxe) : (ss.include_gxe === false ? [] : ['trial']);
+    $('.sf-single-gxe').each(function() { $(this).prop('checked', gxe.indexOf($(this).val()) >= 0); });
+    $('#sf_single_formula').val(ss.formula || '');
+    state.singleCov = {};
+    arr(ss.covariates).forEach(t => { const m = matchTrait(t) || t; state.singleCov[m] = true; });
+    renderSingleCovariates();
+}
+
+// what the dataset offers for each term of the single-stage builder
+function singleData() {
+    const ds = state.dataset;
+    if (!ds) return null;
+    const tr = ds.trials;
+    const designs = tr.map(t => state.designOverrides[t.trial] && state.designOverrides[t.trial] !== 'auto' ? state.designOverrides[t.trial] : detectDesign(t));
+    const uniq = k => { const o = {}; tr.forEach(t => { o[t[k] || ''] = 1; }); return Object.keys(o).length; };
+    return {
+        n_trials: tr.length,
+        rep_trials: tr.filter(t => t.n_reps > 1).length,
+        block_trials: tr.filter(t => t.n_blocks > 1 && t.n_blocks > t.n_reps).length,
+        rc_trials: tr.filter(t => t.has_rowcol).length,
+        incomplete: designs.some(d => d === 'alpha_lattice' || d === 'augmented'),
+        rowcol_design: designs.some(d => d === 'row_column'),
+        n_locations: uniq('location'),
+        n_years: uniq('year')
+    };
+}
+
+// formula of the builder, written with the variables of the custom formula;
+// "automatic" choices are resolved the same way as in the R pipeline
+function singleBuilderFormula() {
+    const r = singleRecipe();
+    const D = singleData();
+    const terms = [r.genotype === 'fixed' ? 'accession' : '(1|accession)'];
+    const dropped = [];
+    const add = (term, ok, why) => { if (ok) terms.push(term); else dropped.push(why); };
+    const known = !!D;
+    if (r.env !== 'none') add(r.env === 'random' ? '(1|trial)' : 'trial', !known || D.n_trials > 1, 'trial (one trial)');
+    const repOn = r.rep === 'auto' ? (!known || D.rep_trials > 0) : r.rep !== 'none';
+    if (repOn) add(r.rep === 'fixed' ? 'trial:rep' : '(1|trial:rep)', !known || D.rep_trials > 0, 'replicate (one per trial)');
+    const blockOn = r.block === 'auto' ? (known ? D.incomplete && D.block_trials > 0 : true) : r.block !== 'none';
+    if (blockOn) add(r.block === 'fixed' ? 'trial:rep:block' : '(1|trial:rep:block)', !known || D.block_trials > 0, 'block (blocks equal replicates)');
+    const rcOn = r.rowcol === 'auto' ? (known ? D.rowcol_design || (D.rc_trials === D.n_trials && D.n_trials > 0) : false) : r.rowcol !== 'none';
+    if (rcOn) { add('(1|trial:row)', !known || D.rc_trials > 0, 'row/column (no row and column numbers)'); if (!known || D.rc_trials > 0) terms.push('(1|trial:col)'); }
+    if (r.trend === 'linear') add(!known || D.n_trials > 1 ? 'trial:rowN + trial:colN' : 'rowN + colN', !known || D.rc_trials > 0, 'linear trend (no row and column numbers)');
+    r.gxe.forEach(g => {
+        const n = !known ? 2 : g === 'trial' ? D.n_trials : g === 'location' ? D.n_locations : D.n_years;
+        add('(1|accession:' + g + ')', n > 1, 'accession x ' + g + ' (one ' + g + ')');
+    });
+    r.covariates.forEach(t => terms.push(covName(t)));
+    return { terms: terms, dropped: dropped, random: r.genotype !== 'fixed' };
+}
+
+// same checks as parse_custom_formula() in the R pipeline
+function checkFormula(txt) {
+    let rhs = String(txt || '').replace(/[\r\n\t]+/g, ' ').replace(/^\s*y\s*~/, '').trim();
+    if (!rhs) return { ok: false, msg: 'write the formula of the model' };
+    const allowed = Object.keys(FORMULA_VARS).concat(Object.keys(state.singleCov).map(covName));
+    const toks = rhs.match(/[A-Za-z_][A-Za-z0-9_.]*|[0-9]+(\.[0-9]+)?|\s+|./g) || [];
+    let depth = 0;
+    for (let i = 0; i < toks.length; i++) {
+        const tk = toks[i];
+        if (/^\s+$/.test(tk)) continue;
+        if ('+-*/:|'.indexOf(tk) >= 0) continue;
+        if (tk === '(') { depth++; continue; }
+        if (tk === ')') { if (--depth < 0) return { ok: false, msg: 'unbalanced parentheses' }; continue; }
+        if (/^[0-9]/.test(tk)) { if (tk === '0' || tk === '1') continue; return { ok: false, msg: 'only the numbers 0 and 1 are allowed (found "' + tk + '")' }; }
+        if (/^[A-Za-z_]/.test(tk)) {
+            const next = toks.slice(i + 1).filter(x => !/^\s+$/.test(x))[0];
+            if (next === '(') return { ok: false, msg: 'functions are not allowed ("' + tk + '(")' };
+            if (allowed.indexOf(tk) < 0) return { ok: false, msg: 'unknown variable "' + tk + '"' + (/^cov_/.test(tk) ? ' (select the covariate below first)' : '') };
+            continue;
+        }
+        return { ok: false, msg: 'character "' + tk + '" is not allowed' };
+    }
+    if (depth !== 0) return { ok: false, msg: 'unbalanced parentheses' };
+    const random = /\(\s*1\s*\|\s*accession\s*\)/.test(rhs);
+    const fixedPart = rhs.replace(/\([^()]*\|[^()]*\)/g, '');
+    const fixed = fixedPart.split('+').map(x => x.trim()).indexOf('accession') >= 0;
+    if (random === fixed) return { ok: false, msg: 'include the genotype exactly once: "accession" (fixed) or "(1|accession)" (random)' };
+    return { ok: true, rhs: rhs.replace(/\s+/g, ' '), random: random };
+}
+
+function renderSingleHints() {
+    const D = singleData();
+    const hint = (k, h) => $('.sf-term-hint[data-hint=' + k + ']').html(h);
+    $('#sf_single_vars').html(Object.keys(FORMULA_VARS).concat(Object.keys(state.singleCov).map(covName)).map(v =>
+        '<span class="label label-default sf-var" data-v="' + esc(v) + '" title="' + esc(FORMULA_VARS[v] || 'covariate') + '">' + esc(v) + '</span>').join(' '));
+    const chk = checkFormula($('#sf_single_formula').val());
+    $('#sf_single_formula_check').html($.trim($('#sf_single_formula').val()) ?
+        (chk.ok ? '<small style="color:#2b7a4b"><span class="glyphicon glyphicon-ok"></span> Valid formula: genotype ' + (chk.random ? 'random (BLUPs)' : 'fixed (BLUEs)') + '</small>' :
+            '<small style="color:#dc2626"><span class="glyphicon glyphicon-exclamation-sign"></span> ' + esc(chk.msg) + '</small>') : '');
+    if (!D) { $('.sf-term-hint').html('<span class="sf-muted">load a dataset</span>'); return; }
+    const of = (n, tot, what) => '<span' + (n ? '' : ' class="warn"') + '>' + n + ' of ' + tot + ' trial(s) ' + what + '</span>';
+    hint('genotype', '');
+    hint('env', D.n_trials > 1 ? D.n_trials + ' trials' : '<span class="warn">one trial: no environment effect</span>');
+    hint('rep', of(D.rep_trials, D.n_trials, 'with more than one replicate'));
+    hint('block', of(D.block_trials, D.n_trials, 'with blocks inside replicates') + (D.incomplete ? '' : '<br/>automatic: only for alpha-lattice / augmented'));
+    hint('rowcol', of(D.rc_trials, D.n_trials, 'with row and column numbers'));
+    hint('trend', of(D.rc_trials, D.n_trials, 'with row and column numbers'));
+    hint('gxe', D.n_trials + ' trial(s), ' + D.n_locations + ' location(s), ' + D.n_years + ' year(s)');
+}
+
+function renderSingleCovariates() {
+    if (!state.dataset) { $('#sf_single_covariates').html('<span class="sf-muted">load a dataset</span>'); return; }
+    $('#sf_single_covariates').html(state.dataset.traits.map(t => {
+        const on = !!state.singleCov[t.name];
+        return '<label class="' + (on ? 'on' : '') + '" title="' + esc(t.name) + '"><input type="checkbox" value="' + esc(t.name) + '"' + (on ? ' checked' : '') + ' />' +
+            (on ? '<span class="glyphicon glyphicon-ok"></span> ' : '') + esc(t.short) + (on ? ' <code>' + esc(covName(t.name)) + '</code>' : '') + '</label>';
+    }).join(''));
 }
 
 // ---------------------------------------------------------------------------
@@ -955,7 +1115,16 @@ function renderPipeline() {
         items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] });
         items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? 'BLUPs' : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') });
     } else {
-        items.push({ t: 'Single stage', d: (r.single.genotype === 'random' ? 'BLUPs' : 'BLUEs') + (r.single.include_gxe ? ' with G&times;E' : '') });
+        let d;
+        if (r.single.mode === 'custom') {
+            const chk = checkFormula(r.single.formula);
+            d = 'custom formula' + (chk.ok ? ', ' + (chk.random ? 'BLUPs' : 'BLUEs') : ' (invalid)');
+        } else {
+            d = (r.single.genotype === 'random' ? 'BLUPs' : 'BLUEs') + ', trial ' + (r.single.env === 'none' ? 'not modelled' : r.single.env) +
+                (r.single.gxe.length ? '<br/>G&times;' + r.single.gxe.join(', G&times;') : '<br/>no G&times;E') +
+                (r.single.trend === 'linear' ? ', linear trend' : '') + (r.single.covariates.length ? ', ' + r.single.covariates.length + ' covariate(s)' : '');
+        }
+        items.push({ t: 'Single stage', d: d });
     }
     const nIdx = Object.keys(r.index.traits).length;
     items.push({ t: 'Selection index', d: r.index.enabled ? (r.index.method === 'rank_sum' ? 'rank sum' : 'weighted Z-score') + ', ' + nIdx + ' trait(s), top ' + r.index.selection_pct + '%' : 'off', off: !r.index.enabled });
@@ -973,6 +1142,10 @@ function validateRecipe(r) {
     const problems = [];
     if (!r.traits.length) problems.push('Select at least one trait (step 1).');
     if (r.index.enabled && !Object.keys(r.index.traits).length) problems.push('The selection index is on but no trait has a non-zero weight (step 4).');
+    if (r.strategy === 'single_stage' && r.single.mode === 'custom') {
+        const chk = checkFormula(r.single.formula);
+        if (!chk.ok) problems.push('Single-stage formula: ' + chk.msg + ' (step 3).');
+    }
     if (r.zones.enabled && !r.zones.targets.length) problems.push('Choose what to group environments on (step 5).');
     if (r.zones.enabled && r.zones.targets.indexOf('index') >= 0 && !r.index.enabled) problems.push('Zoning on the index requires the selection index (step 4).');
     if (r.zones.enabled && state.dataset && state.dataset.trials.length < 2) problems.push('Environmental zoning needs at least two trials.');
@@ -987,7 +1160,7 @@ function renderRunReview() {
         cell('Dataset', state.dataset ? esc(state.dataset.dataset_name) : '&ndash;') +
         cell('Traits', r.traits.map(t => esc(shortTrait(t))).join(', ')) +
         cell('Outliers', r.outliers.method === 'none' ? 'none' : r.outliers.method.toUpperCase()) +
-        cell('Model', r.strategy === 'two_stage' ? 'Two stages' : 'Single stage') +
+        cell('Model', r.strategy === 'two_stage' ? 'Two stages' : 'Single stage' + (r.single.mode === 'custom' ? ' (custom formula)' : '')) +
         cell('Index', r.index.enabled ? 'on' : 'off') +
         cell('Zones', r.zones.enabled ? 'on' : 'off') + '</div>';
     if (problems.length) h += alertBox('warning', problems.map(esc).join('<br/>'));
@@ -1070,7 +1243,7 @@ function runAnalysis() {
         $('#sf_run_elapsed').text('(' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + ')');
     }, 1000);
 
-    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full' })
+    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full', dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name })
         .then(job => {
             state.job = job;
             $('#sf_run_progress_text').text('Queued. The analysis runs in the background; you can follow it in your jobs list too.');
@@ -1078,6 +1251,7 @@ function runAnalysis() {
         })
         .then(res => {
             state.results = res;
+            state.results.run_id = state.job.run_id;
             state.resultsRecipe = recipe;
             state.lastRun = { key: key, finishedAt: new Date(), seconds: Math.round((Date.now() - t0) / 1000) };
             renderResults();
@@ -1121,6 +1295,7 @@ function renderResults() {
     const s = res.summary || {};
     const label = res.value_label || 'BLUP';
     $('#sf_results').show();
+    $('#sf_open_dashboard').attr('href', '/tools/script_factory/results/' + encodeURIComponent(res.run_id || '')).toggle(!!res.run_id);
 
     // downloads
     const dl = { genotype_values: 'Genotype values (' + label + 's)', stage1_means: 'Stage 1 means per trial', outliers: 'Removed outliers', index: 'Selection index ranking', zones: 'Environmental zones' };
@@ -1168,7 +1343,7 @@ function renderResults() {
     $('#sf_tab_model').html(simpleTable(res.stage2, [
         { k: 'trait', l: 'Trait' }, { k: 'model', l: 'Model', f: v => '<code style="font-size:11px">' + esc(v) + '</code>' },
         { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' }, { k: 'var_ge', l: '&sigma;&sup2;<sub>GE</sub>' }, { k: 'var_e', l: '&sigma;&sup2;<sub>e</sub>' },
-        { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status' }
+        { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status', f: (v, r) => esc(v) + (r.dropped_terms ? '<br/><small class="sf-muted" title="Terms the data could not support">left out: ' + esc(r.dropped_terms) + '</small>' : '') }
     ]) + '<p class="sf-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
 
     // genotype values
@@ -1479,7 +1654,7 @@ function newScript() {
     state.designOverrides = {};
     state.indexCfg = {};
     state.zoneTargets = { index: true };
-    applyRecipe({ strategy: 'two_stage', outliers: { method: 'none', group_by: 'trial', k: 1.5, alpha: 0.05 }, stage1: { model: 'auto' }, stage2: { genotype: 'random', weighting: 'inverse_se2' }, single: { genotype: 'random', include_gxe: true }, index: { enabled: false, method: 'zscore', selection_pct: 10 }, zones: { enabled: false, unit: 'trial', method: 'correlation', threshold: 0.5, alpha: 0.05, top_n: 10, targets: ['index'] } });
+    applyRecipe({ strategy: 'two_stage', outliers: { method: 'none', group_by: 'trial', k: 1.5, alpha: 0.05 }, stage1: { model: 'auto' }, stage2: { genotype: 'random', weighting: 'inverse_se2' }, single: { mode: 'builder', genotype: 'random', env: 'fixed', rep: 'auto', block: 'auto', rowcol: 'auto', trend: 'none', gxe: ['trial'], covariates: [], formula: '' }, index: { enabled: false, method: 'zscore', selection_pct: 10 }, zones: { enabled: false, unit: 'trial', method: 'correlation', threshold: 0.5, alpha: 0.05, top_n: 10, targets: ['index'] } });
     if (state.dataset) { state.traits = state.dataset.traits.map(t => t.name); renderTraits(); }
     renderExclusions();
     setScriptName();
@@ -1564,7 +1739,34 @@ export function init(options) {
     });
 
     // step 3
-    $('input[name=sf_strategy], input[name=sf_stage1_model], #sf_stage2_genotype, #sf_stage2_weighting, #sf_single_genotype, #sf_single_gxe').on('change', () => { renderDesignTable(); renderModelPreview(); });
+    $('input[name=sf_strategy], input[name=sf_stage1_model], #sf_stage2_genotype, #sf_stage2_weighting').on('change', () => { renderDesignTable(); renderModelPreview(); });
+    $('#sf_single_card').on('change', '.sf-single-opt, .sf-single-gxe, input[name=sf_single_mode]', renderModelPreview);
+    $('#sf_single_card').on('click', '.sf-mode-toggle label', function(e) {
+        // plain handling of the two-button toggle (keeps radio, label and preview in sync)
+        e.preventDefault();
+        setRadio('sf_single_mode', $(this).find('input').val());
+        if (radio('sf_single_mode') === 'custom' && !$.trim($('#sf_single_formula').val())) $('#sf_single_formula').val(singleBuilderFormula().terms.join(' + '));
+        $('input[name=sf_single_mode]').trigger('change');
+    });
+    $('#sf_single_formula').on('input', () => { renderModelPreview(); renderPipeline(); });
+    $('#sf_single_from_builder').on('click', e => {
+        e.preventDefault();
+        $('#sf_single_formula').val(singleBuilderFormula().terms.join(' + ')).trigger('input');
+    });
+    $('#sf_single_vars').on('click', '.sf-var', function() {
+        const ta = $('#sf_single_formula')[0];
+        const v = String($(this).data('v'));
+        const a = ta.selectionStart || ta.value.length, b = ta.selectionEnd || ta.value.length;
+        ta.value = ta.value.slice(0, a) + v + ta.value.slice(b);
+        ta.focus(); ta.selectionStart = ta.selectionEnd = a + v.length;
+        $(ta).trigger('input');
+    });
+    $('#sf_single_covariates').on('change', 'input', function() {
+        const t = $(this).val();
+        if ($(this).is(':checked')) state.singleCov[t] = true; else delete state.singleCov[t];
+        renderSingleCovariates();
+        renderModelPreview();
+    });
     $('#sf_design_table').on('change', '.sf-design-override', function() {
         state.designOverrides[$(this).data('trial')] = $(this).val();
         renderDesignTable(); renderModelPreview();

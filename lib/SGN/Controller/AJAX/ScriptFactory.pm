@@ -12,6 +12,8 @@ Endpoints used by /tools/script_factory:
   /ajax/script_factory/outliers/mark  check / mark / unmark outliers as dataset or database outliers
   /ajax/script_factory/run            submit the R pipeline as a background job
   /ajax/script_factory/status         poll a submitted job, return the results when done
+  /ajax/script_factory/results        full results of a finished run for the results dashboard
+                                      (/tools/script_factory/results/<run_id>), with location coordinates
   /ajax/script_factory/export_r       standalone R script with the recipe embedded
   /ajax/script_factory/recipes        list saved scripts (own and public)
   /ajax/script_factory/recipe/get     retrieve one saved script
@@ -496,6 +498,14 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     }
     $recipe->{stop_after} = 'outliers' if $mode eq 'preview';
 
+    # the R pipeline validates custom formulas token by token; refuse anything
+    # outside the formula alphabet before it gets there
+    my $single = ref($recipe->{single}) eq 'HASH' ? $recipe->{single} : {};
+    if (($single->{mode} // '') eq 'custom' && ($single->{formula} // '') !~ /^[A-Za-z0-9_.\s+\-*\/:|()~]*$/) {
+        $c->stash->{rest} = { error => 'The custom model formula contains characters that are not allowed. Use variable names, + - * / : | ( ) 0 and 1 only.' };
+        return;
+    }
+
     my $dir = _work_dir($c);
     my ($fh, $run_base) = tempfile("sf_run_XXXXXXXX", DIR => $dir);
     close($fh);
@@ -505,6 +515,15 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     write_file("$run_base.exclusions.json", encode_json($exclusions || []));
 
     my ($schema, $people_schema, $sp_person_id) = _schemas($c);
+    my $dataset_id = $c->req->param('dataset_id');
+    my %meta = (
+        sp_person_id => $sp_person_id,
+        mode => $mode,
+        created => DateTime->now()->iso8601(),
+        script_name => $recipe->{name} // '',
+        dataset_id => (defined($dataset_id) && $dataset_id =~ /^\d+$/) ? $dataset_id : undef,
+        dataset_name => scalar($c->req->param('dataset_name')) // '',
+    );
 
     my $cmd = join(" ",
         "Rscript",
@@ -532,7 +551,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
             name => ($mode eq 'preview' ? 'Script Factory outlier preview' : 'Script Factory analysis') . ($recipe->{name} ? ": $recipe->{name}" : ''),
             job_type => 'script_factory_analysis',
             cmd => $cmd,
-            results_page => '/tools/script_factory',
+            results_page => ($mode eq 'preview' ? '/tools/script_factory' : "/tools/script_factory/results/$run_id"),
             cxgn_tools_run_config => {
                 backend => $c->config->{backend},
                 submit_host => $c->config->{cluster_host},
@@ -548,7 +567,119 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     };
     return if $c->stash->{rest};
 
+    $meta{job_id} = $job->sp_job_id();
+    write_file("$run_base.meta.json", encode_json(\%meta));
+
     $c->stash->{rest} = { job_id => $job->sp_job_id(), run_id => $run_id };
+}
+
+# Read the results of a run, publish its csv files and prepare the genotype
+# values in the format expected by /ajax/analysis/store/json.
+sub _load_results {
+    my ($c, $run_id) = @_;
+    my $dir = _work_dir($c);
+    my $results_file = "$dir/$run_id.results.json";
+    my $results = decode_json(read_file($results_file));
+
+    # publish downloadable files
+    my $public_dir = _public_dir($c);
+    my %files;
+    foreach my $k (keys %{$results->{files} || {}}) {
+        my $f = $results->{files}->{$k};
+        next if !$f || ref($f);
+        $f = basename($f);
+        next if $f !~ /^sf_run_[A-Za-z0-9_]+\.csv$/;
+        copy("$dir/$f", "$public_dir/$f");
+        $files{$k} = "/documents/tempfiles/$TMP_SUBDIR/$f";
+    }
+    $results->{files} = \%files;
+
+    # values ready for /ajax/analysis/store/json
+    if ($results->{genotype_values_long}) {
+        my $now = DateTime->now();
+        my $timestamp = $now->ymd() . "T" . $now->hms();
+        my $operator = $c->user()->get_object()->get_first_name() . " " . $c->user()->get_object()->get_last_name();
+        my %values;
+        my %acc;
+        my %traits;
+        foreach my $r (@{$results->{genotype_values_long}}) {
+            next if !defined($r->{value});
+            $values{$r->{accession}}->{$r->{trait_full}} = [ $r->{value}, $timestamp, $operator, "", "" ];
+            $acc{$r->{accession}} = 1;
+            $traits{$r->{trait_full}} = 1;
+        }
+        $results->{store} = {
+            result_values => \%values,
+            accession_names => [ sort keys %acc ],
+            trait_names => [ sort keys %traits ],
+        };
+        delete $results->{genotype_values_long};
+    }
+
+    return $results;
+}
+
+# owner and context of a run, written when it is submitted
+sub _run_meta {
+    my ($c, $run_id) = @_;
+    my $file = _work_dir($c) . "/$run_id.meta.json";
+    return undef if !-e $file;
+    return try { decode_json(read_file($file)) } catch { undef };
+}
+
+sub results : Path('/ajax/script_factory/results') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+
+    my $run_id = $c->req->param('run_id');
+    if (!_valid_token($run_id) || $run_id !~ /^sf_run_/) {
+        $c->stash->{rest} = { error => 'Invalid analysis run.' };
+        return;
+    }
+    my $meta = _run_meta($c, $run_id);
+    my $dir = _work_dir($c);
+    if (!$meta || !-e "$dir/$run_id.results.json") {
+        $c->stash->{rest} = { error => (-e "$dir/$run_id.recipe.json" && !-e "$dir/$run_id.results.json" && $meta
+            ? 'This analysis has no results yet: it is still running or it failed. Check it on the Script Factory page.'
+            : 'The results of this analysis are no longer available (temporary files are cleaned regularly). Run the script again, or store the analysis to keep its results.') };
+        return;
+    }
+    my $sp_person_id = _user_id($c);
+    if (($meta->{sp_person_id} // -1) != $sp_person_id && !$c->user()->check_roles('curator')) {
+        $c->stash->{rest} = { error => 'This analysis belongs to another user.' };
+        return;
+    }
+
+    my $results = _load_results($c, $run_id);
+    delete $results->{store};
+
+    # coordinates of the trial locations for the maps
+    my %names = map { ($_->{location} // '') => 1 } @{ $results->{trials} || [] };
+    delete $names{''};
+    my %coords;
+    if (%names) {
+        my ($schema) = _schemas($c);
+        my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search({ description => { -in => [ keys %names ] } });
+        while (my $loc = $rs->next()) {
+            my ($lat, $lon) = ($loc->latitude(), $loc->longitude());
+            next if !defined($lat) || !defined($lon) || ($lat == 0 && $lon == 0);
+            $coords{$loc->description()} = { latitude => $lat + 0, longitude => $lon + 0, altitude => $loc->altitude(), location_id => $loc->nd_geolocation_id() };
+        }
+    }
+
+    $c->stash->{rest} = {
+        run_id => $run_id,
+        meta => {
+            created => $meta->{created},
+            script_name => $meta->{script_name},
+            dataset_id => $meta->{dataset_id},
+            dataset_name => $meta->{dataset_name},
+            job_id => $meta->{job_id},
+        },
+        locations => \%coords,
+        results => $results,
+    };
 }
 
 sub status : Path('/ajax/script_factory/status') Args(0) {
@@ -613,42 +744,10 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
         return;
     }
 
-    my $results = decode_json(read_file($results_file));
-
-    # publish downloadable files
-    my $public_dir = _public_dir($c);
-    my %files;
-    foreach my $k (keys %{$results->{files} || {}}) {
-        my $f = $results->{files}->{$k};
-        next if !$f || ref($f);
-        $f = basename($f);
-        next if $f !~ /^sf_run_[A-Za-z0-9_]+\.csv$/;
-        copy("$dir/$f", "$public_dir/$f");
-        $files{$k} = "/documents/tempfiles/$TMP_SUBDIR/$f";
-    }
-    $results->{files} = \%files;
-
-    # values ready for /ajax/analysis/store/json
-    if ($results->{genotype_values_long}) {
-        my $now = DateTime->now();
-        my $timestamp = $now->ymd() . "T" . $now->hms();
-        my $operator = $c->user()->get_object()->get_first_name() . " " . $c->user()->get_object()->get_last_name();
-        my %values;
-        my %acc;
-        my %traits;
-        foreach my $r (@{$results->{genotype_values_long}}) {
-            next if !defined($r->{value});
-            $values{$r->{accession}}->{$r->{trait_full}} = [ $r->{value}, $timestamp, $operator, "", "" ];
-            $acc{$r->{accession}} = 1;
-            $traits{$r->{trait_full}} = 1;
-        }
-        $results->{store} = {
-            result_values => \%values,
-            accession_names => [ sort keys %acc ],
-            trait_names => [ sort keys %traits ],
-        };
-        delete $results->{genotype_values_long};
-    }
+    my $results = _load_results($c, $run_id);
+    # the plot level data and the per environment means are only used by the
+    # results dashboard; keep the polling response small
+    delete $results->{$_} for qw(plots stage1_means recipe);
 
     $c->stash->{rest} = { status => 'finished', results => $results };
 }

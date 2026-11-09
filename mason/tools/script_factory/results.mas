@@ -1,0 +1,370 @@
+<%doc>
+
+=head1 NAME
+
+/tools/script_factory/results.mas - Script Factory decision dashboard of one analysis run
+
+=head1 DESCRIPTION
+
+All the results of a Script Factory run on one page: maps of the trial
+locations and of the field layouts, trait distributions and correlations,
+interactive selection with a shortlist, genotype x environment stability,
+environmental zones, outliers and model details. Data come from
+/ajax/script_factory/results.
+
+=head1 AUTHOR
+
+Chris Simoes <ccs263@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$run_id => ''
+</%args>
+
+<& /util/import_css.mas, paths => ['leaflet.css'] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'jquery.dataTables', 'CXGN.Login', 'CXGN.List'], entries => ['script_factory_results'] &>
+
+<div id="sfd" class="sfd">
+
+  <div class="sfd-hero">
+    <div>
+      <div class="sfd-kicker"><a href="/tools/script_factory"><span class="glyphicon glyphicon-wrench"></span> Script Factory</a> &rsaquo; Decision dashboard</div>
+      <h2 id="sfd_title">Loading analysis&hellip;</h2>
+      <div id="sfd_subtitle" class="sfd-subtitle"></div>
+    </div>
+    <div class="sfd-hero-actions">
+      <div class="btn-group">
+        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-download"></span> Downloads <span class="caret"></span></button>
+        <ul class="dropdown-menu dropdown-menu-right" id="sfd_downloads"></ul>
+      </div>
+      <button class="btn btn-default" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print</button>
+    </div>
+  </div>
+
+  <div id="sfd_message"></div>
+
+  <div id="sfd_body" style="display:none">
+
+    <!-- sticky navigation and global controls -->
+    <div class="sfd-bar" id="sfd_bar">
+      <ul class="sfd-nav" id="sfd_nav">
+        <li><a href="#sfd_overview">Overview</a></li>
+        <li><a href="#sfd_map_section">Map</a></li>
+        <li><a href="#sfd_field_section">Field</a></li>
+        <li><a href="#sfd_traits_section">Traits</a></li>
+        <li><a href="#sfd_selection_section">Selection</a></li>
+        <li><a href="#sfd_gxe_section">Stability</a></li>
+        <li class="sfd-zones-only"><a href="#sfd_zones_section">Zones</a></li>
+        <li><a href="#sfd_outliers_section">Outliers</a></li>
+        <li><a href="#sfd_model_section">Model</a></li>
+      </ul>
+      <div class="sfd-bar-controls">
+        <label for="sfd_trait">Focus trait</label>
+        <select class="form-control input-sm" id="sfd_trait"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-9 sfd-main">
+
+        <!-- overview -->
+        <section class="sfd-section" id="sfd_overview">
+          <div class="sfd-stats" id="sfd_stats"></div>
+          <div id="sfd_warnings"></div>
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>Traits at a glance</h3><span class="sfd-help">Is each trait reliable enough to select on?</span></div>
+            <div id="sfd_trait_summary"></div>
+          </div>
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>Variance components</h3><span class="sfd-help">Share of the variance due to genotypes, G&times;E, design and residual error</span></div>
+            <div id="sfd_varcomp" class="sfd-plot"></div>
+          </div>
+        </section>
+
+        <!-- map -->
+        <section class="sfd-section" id="sfd_map_section">
+          <div class="sfd-card">
+            <div class="sfd-card-head">
+              <h3><span class="glyphicon glyphicon-map-marker"></span> Trial locations</h3>
+              <div class="sfd-controls">
+                <label>Colour by</label>
+                <select class="form-control input-sm" id="sfd_map_color">
+                  <option value="mean">Mean of the focus trait</option>
+                  <option value="h2">Trial heritability (focus trait)</option>
+                  <option value="zone">Environmental zone</option>
+                  <option value="accession">Performance of an accession</option>
+                </select>
+                <select class="form-control input-sm" id="sfd_map_zone_target" style="display:none"></select>
+                <input class="form-control input-sm" id="sfd_map_accession" list="sfd_accession_options" placeholder="Accession name" style="display:none;width:180px" />
+              </div>
+            </div>
+            <div class="sfd-map-wrap">
+              <div id="sfd_map"></div>
+              <div id="sfd_map_legend" class="sfd-legend"></div>
+            </div>
+            <div id="sfd_map_note" class="sfd-help"></div>
+            <div id="sfd_location_table"></div>
+          </div>
+        </section>
+
+        <!-- field -->
+        <section class="sfd-section" id="sfd_field_section">
+          <div class="sfd-card">
+            <div class="sfd-card-head">
+              <h3><span class="glyphicon glyphicon-th"></span> Field layout</h3>
+              <div class="sfd-controls">
+                <select class="form-control input-sm" id="sfd_field_trial"></select>
+                <select class="form-control input-sm" id="sfd_field_layer">
+                  <option value="value">Trait value (after quality control)</option>
+                  <option value="resid">Model residual</option>
+                  <option value="rep">Replicate / block</option>
+                  <option value="shortlist">Shortlisted accessions</option>
+                </select>
+              </div>
+            </div>
+            <p class="sfd-help">Each cell is a plot at its row and column. Spatial patterns in the residuals point to field trends the model did not capture. <b>&times;</b> marks values removed as outliers; outlined plots hold shortlisted accessions. Click a plot to add its accession to the shortlist.</p>
+            <div id="sfd_field" class="sfd-plot sfd-scroll"></div>
+          </div>
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>Trial quality</h3><span class="sfd-help">Heritability and coefficient of variation of the focus trait in each trial</span></div>
+            <div id="sfd_trial_quality" class="sfd-plot"></div>
+          </div>
+        </section>
+
+        <!-- traits -->
+        <section class="sfd-section" id="sfd_traits_section">
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>Distribution of genotype values</h3><span class="sfd-help" id="sfd_dist_help"></span></div>
+            <div id="sfd_distributions" class="sfd-small-multiples"></div>
+          </div>
+          <div class="row">
+            <div class="col-lg-5">
+              <div class="sfd-card">
+                <div class="sfd-card-head"><h3>Trait correlations</h3></div>
+                <p class="sfd-help">Pearson correlation between the genotype values. Click a cell to plot the pair.</p>
+                <div id="sfd_correlations" class="sfd-scroll"></div>
+              </div>
+            </div>
+            <div class="col-lg-7">
+              <div class="sfd-card">
+                <div class="sfd-card-head">
+                  <h3>Trait vs trait</h3>
+                  <div class="sfd-controls">
+                    <select class="form-control input-sm" id="sfd_scatter_x"></select>
+                    <span>vs</span>
+                    <select class="form-control input-sm" id="sfd_scatter_y"></select>
+                  </div>
+                </div>
+                <div id="sfd_scatter" class="sfd-plot"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- selection -->
+        <section class="sfd-section" id="sfd_selection_section">
+          <div class="sfd-card">
+            <div class="sfd-card-head">
+              <h3><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Selection</h3>
+              <div class="sfd-controls">
+                <label>Rank by</label>
+                <select class="form-control input-sm" id="sfd_rank_by"></select>
+                <div class="btn-group btn-group-sm" id="sfd_rank_dir">
+                  <button class="btn btn-default active" data-dir="increase" title="Higher values are better"><span class="glyphicon glyphicon-arrow-up"></span></button>
+                  <button class="btn btn-default" data-dir="decrease" title="Lower values are better"><span class="glyphicon glyphicon-arrow-down"></span></button>
+                </div>
+              </div>
+            </div>
+            <div class="sfd-slider">
+              <label for="sfd_sel_pct">Select the top <b id="sfd_sel_pct_label">10</b>% &rarr; <b id="sfd_sel_n">0</b> accession(s)</label>
+              <input type="range" id="sfd_sel_pct" min="1" max="50" step="1" value="10" />
+            </div>
+            <h4>Expected response to selection</h4>
+            <div id="sfd_gains"></div>
+            <div class="row">
+              <div class="col-lg-6">
+                <h4>Top accessions</h4>
+                <div id="sfd_rank_chart" class="sfd-plot"></div>
+              </div>
+              <div class="col-lg-6">
+                <h4>Ranking</h4>
+                <div id="sfd_rank_table"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- G x E / stability -->
+        <section class="sfd-section" id="sfd_gxe_section">
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>Performance and stability</h3><span class="sfd-help">Finlay &amp; Wilkinson (1963) regression on the environment index, focus trait</span></div>
+            <div id="sfd_stability_note" class="sfd-help"></div>
+            <div class="row">
+              <div class="col-lg-7"><div id="sfd_stability" class="sfd-plot"></div></div>
+              <div class="col-lg-5">
+                <div class="sfd-quadrants" id="sfd_quadrants"></div>
+              </div>
+            </div>
+          </div>
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>Reaction norms</h3><span class="sfd-help">Shortlisted accessions across environments ordered from poorest to best</span></div>
+            <div id="sfd_reaction" class="sfd-plot"></div>
+          </div>
+          <div class="sfd-card">
+            <div class="sfd-card-head">
+              <h3>Accession &times; environment</h3>
+              <div class="sfd-controls">
+                <select class="form-control input-sm" id="sfd_gxe_rows">
+                  <option value="top">Top 30 accessions</option>
+                  <option value="shortlist">Shortlist</option>
+                  <option value="all">All accessions</option>
+                </select>
+                <select class="form-control input-sm" id="sfd_gxe_scale">
+                  <option value="dev">Deviation from the environment mean</option>
+                  <option value="value">Value</option>
+                </select>
+              </div>
+            </div>
+            <div id="sfd_gxe_heat" class="sfd-scroll"></div>
+          </div>
+        </section>
+
+        <!-- zones -->
+        <section class="sfd-section sfd-zones-only" id="sfd_zones_section">
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3><span class="glyphicon glyphicon-globe"></span> Environmental zones</h3>
+              <div class="sfd-controls"><select class="form-control input-sm" id="sfd_zone_target"></select></div></div>
+            <div id="sfd_zones"></div>
+          </div>
+        </section>
+
+        <!-- outliers -->
+        <section class="sfd-section" id="sfd_outliers_section">
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>Quality control</h3><span class="sfd-help">Values removed before modelling</span></div>
+            <div id="sfd_outlier_chart" class="sfd-plot"></div>
+            <div id="sfd_outlier_table"></div>
+          </div>
+        </section>
+
+        <!-- model -->
+        <section class="sfd-section" id="sfd_model_section">
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>Model details</h3></div>
+            <div id="sfd_model"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- shortlist -->
+      <div class="col-md-3">
+        <div class="sfd-shortlist" id="sfd_shortlist_panel">
+          <div class="sfd-card-head"><h4><span class="glyphicon glyphicon-star"></span> Shortlist <span class="badge" id="sfd_short_n">0</span></h4></div>
+          <p class="sfd-help">Your candidates. They start as the selected accessions; click any accession in a chart or table to add or remove it. Kept in this browser.</p>
+          <div class="sfd-short-add">
+            <input class="form-control input-sm" id="sfd_short_input" list="sfd_accession_options" placeholder="Add an accession&hellip;" />
+          </div>
+          <ul id="sfd_short_list" class="sfd-short-list"></ul>
+          <div class="sfd-short-actions">
+            <button class="btn btn-primary btn-sm" id="sfd_short_save"><span class="glyphicon glyphicon-list"></span> Save as list</button>
+            <button class="btn btn-default btn-sm" id="sfd_short_csv"><span class="glyphicon glyphicon-download-alt"></span> CSV</button>
+            <div class="btn-group">
+              <button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">More <span class="caret"></span></button>
+              <ul class="dropdown-menu dropdown-menu-right">
+                <li><a href="#" id="sfd_short_reset">Reset to the selected accessions</a></li>
+                <li><a href="#" id="sfd_short_clear">Clear the shortlist</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <datalist id="sfd_accession_options"></datalist>
+  <div class="sfd-tooltip" id="sfd_tooltip"></div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+  window.jsMod['script_factory_results'].init({ run_id: '<% $run_id |h %>' });
+});
+</script>
+
+<style>
+.sfd { --a: #2b7a4b; --a-soft: #e8f4ec; --b: #dfe3e8; --m: #6b7280; --bg: #f7f9fa; margin-bottom: 40px; }
+.sfd h3 { font-size: 17px; margin: 0; font-weight: 600; }
+.sfd h4 { font-size: 14px; font-weight: 600; margin: 14px 0 8px; }
+.sfd-help { color: var(--m); font-size: 12.5px; }
+.sfd-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 14px; padding: 18px 22px; margin: 10px 0 14px; border-radius: 10px; background: linear-gradient(120deg, #1f5f3a 0%, #2b7a4b 55%, #4c9a6a 100%); color: #fff; }
+.sfd-hero h2 { margin: 2px 0 4px; font-weight: 600; color: #fff; font-size: 24px; }
+.sfd-kicker a, .sfd-kicker { color: #d7eadf; font-size: 13px; }
+.sfd-subtitle { opacity: .92; font-size: 13px; }
+.sfd-subtitle .chip { display: inline-block; background: rgba(255,255,255,.16); border-radius: 12px; padding: 1px 9px; margin: 3px 4px 0 0; }
+.sfd-hero-actions { display: flex; gap: 8px; }
+.sfd-bar { position: sticky; top: 50px; z-index: 50; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; background: rgba(255,255,255,.96); border: 1px solid var(--b); border-radius: 10px; padding: 6px 10px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.04); }
+.sfd-nav { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px; }
+.sfd-nav a { display: block; padding: 5px 10px; border-radius: 6px; color: #374151; font-size: 13px; }
+.sfd-nav a:hover, .sfd-nav a.on { background: var(--a-soft); color: var(--a); text-decoration: none; }
+.sfd-bar-controls, .sfd-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sfd-bar-controls label, .sfd-controls label { margin: 0; font-weight: 600; font-size: 12.5px; color: #374151; }
+.sfd-bar-controls select { min-width: 200px; }
+.sfd-section { scroll-margin-top: 110px; }
+.sfd-card { background: #fff; border: 1px solid var(--b); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.sfd-card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sfd-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.sfd-stat { background: #fff; border: 1px solid var(--b); border-radius: 10px; padding: 10px 14px; }
+.sfd-stat .v { font-size: 22px; font-weight: 600; color: #111827; line-height: 1.2; }
+.sfd-stat .l { font-size: 12px; color: var(--m); }
+.sfd-plot { width: 100%; overflow-x: auto; }
+.sfd-plot svg, .sfd-scroll svg { display: block; max-width: 100%; height: auto; }
+.sfd-scroll { overflow: auto; max-height: 640px; }
+.sfd-map-wrap { position: relative; }
+#sfd_map { height: 420px; border-radius: 8px; border: 1px solid var(--b); z-index: 1; }
+.sfd-legend { position: absolute; right: 10px; bottom: 22px; z-index: 500; background: rgba(255,255,255,.95); border: 1px solid var(--b); border-radius: 8px; padding: 6px 10px; font-size: 12px; max-width: 240px; }
+.sfd-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.sfd-legend .bar { height: 10px; border-radius: 4px; margin: 4px 0 2px; width: 180px; }
+.sfd-small-multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.sfd-small-multiples > div { border: 1px solid var(--b); border-radius: 8px; padding: 8px; }
+.sfd-small-multiples h5 { margin: 0 0 4px; font-weight: 600; font-size: 13px; }
+.sfd-slider { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--bg); border-radius: 8px; padding: 8px 12px; }
+.sfd-slider label { margin: 0; font-weight: normal; }
+.sfd-slider input { flex: 1; min-width: 160px; }
+.sfd-quadrants { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sfd-quadrants > div { border: 1px solid var(--b); border-radius: 8px; padding: 8px 10px; font-size: 12px; }
+.sfd-quadrants b { display: block; font-size: 12.5px; margin-bottom: 4px; }
+.sfd-quadrants ol { padding-left: 18px; margin: 0; }
+.sfd-shortlist { position: sticky; top: 112px; background: #fff; border: 1px solid var(--b); border-radius: 10px; padding: 12px 14px; max-height: calc(100vh - 130px); display: flex; flex-direction: column; }
+.sfd-shortlist h4 { margin: 0; }
+.sfd-short-list { list-style: none; padding: 0; margin: 8px 0; overflow-y: auto; flex: 1; min-height: 60px; }
+.sfd-short-list li { display: flex; justify-content: space-between; align-items: center; padding: 3px 6px; border-radius: 6px; font-size: 12.5px; }
+.sfd-short-list li:hover { background: var(--bg); }
+.sfd-short-list .x { color: var(--m); cursor: pointer; border: 0; background: none; padding: 0 4px; }
+.sfd-short-list .x:hover { color: #dc2626; }
+.sfd-short-list .rk { color: var(--m); font-size: 11px; margin-right: 4px; }
+.sfd-short-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.sfd-short-add { margin-top: 4px; }
+.sfd-tooltip { position: fixed; z-index: 2000; pointer-events: none; background: #111827; color: #fff; padding: 6px 9px; border-radius: 6px; font-size: 12px; line-height: 1.4; display: none; max-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+.sfd-acc { cursor: pointer; border-bottom: 1px dotted #9ca3af; }
+.sfd-acc.on { color: var(--a); font-weight: 600; }
+.sfd table.dataTable { font-size: 12.5px; }
+.sfd-heat { border-collapse: collapse; font-size: 11px; }
+.sfd-heat td, .sfd-heat th { border: 1px solid #fff; padding: 3px 5px; text-align: center; white-space: nowrap; }
+.sfd-heat th { background: #f3f4f6; font-weight: 600; }
+.sfd-heat th.r { text-align: left; }
+.sfd-zone-chip { display: inline-block; padding: 1px 9px; border-radius: 10px; color: #fff; font-size: 12px; }
+.sfd-h2 { display: inline-block; min-width: 44px; padding: 1px 6px; border-radius: 10px; color: #fff; text-align: center; font-size: 12px; }
+.sfd-verdict { font-size: 12px; }
+.sfd code { font-size: 11px; white-space: normal; }
+.leaflet-popup-content { font-size: 12.5px; }
+.leaflet-popup-content table td { padding: 1px 6px 1px 0; }
+@media (max-width: 991px) { .sfd-shortlist { position: static; max-height: none; margin-top: 14px; } .sfd-bar { position: static; } }
+@media print {
+  .sfd-bar, .sfd-hero-actions, .sfd-shortlist .sfd-short-actions, .sfd-short-add, .navbar, footer { display: none !important; }
+  .sfd-card { break-inside: avoid; box-shadow: none; }
+  .sfd-hero { background: none; color: #111; border: 1px solid #ccc; }
+  .sfd-hero h2, .sfd-kicker, .sfd-kicker a { color: #111; }
+}
+</style>
