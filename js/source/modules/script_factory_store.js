@@ -65,7 +65,9 @@ export function openStoreDialog(opts) {
     const nTr = st.trait_names ? arr(st.trait_names).length : (cnt.n_traits || 0);
     $('#sf_store_summary').html('<p class="text-muted"><span class="glyphicon glyphicon-info-sign"></span> ' + nAcc + ' accessions &times; ' + nTr + ' trait(s) of ' +
         esc(res.value_label || 'BLUP') + 's will be stored. The script, the input phenotype file, the results and their tables' + (res.engine === 'blupf90' ? ', the BLUPF90+ files' : '') +
-        ' are archived with it and can be downloaded from the analysis page (Model Details).</p>');
+        ' are archived with it and can be downloaded from the analysis page (Model Details).</p>' +
+        savedAsTable(res.saved_as));
+    const blocked = arr(res.saved_as).some(r => r.error);
 
     // breeding programs: preselect the program of the dataset's trials
     const progs = arr(opts.programs);
@@ -82,8 +84,26 @@ export function openStoreDialog(opts) {
             $('#sf_store_program').html(progs.map(p => '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>').join('') || '<option value="">No breeding program found</option>');
         });
 
-    $('#sf_store_submit').off('click.sfstore').on('click.sfstore', () => submit(opts));
+    $('#sf_store_submit').off('click.sfstore').on('click.sfstore', () => submit(opts)).prop('disabled', blocked);
     $('#sf_store_modal').modal('show');
+}
+
+// Stored values are not measurements of the trait: each trait is stored as a
+// post-composed trait (trait + statistical term), chosen by the server.
+//   rows: [{trait, statistical_term_name, saved_as, is_new, error}]
+export function savedAsTable(rows) {
+    rows = arr(rows);
+    if (!rows.length) return '';
+    const short = t => String(t || '').replace(/\|[^|]+$/, '');
+    const body = rows.map(r => '<tr><td>' + esc(short(r.trait)) + '</td><td>' +
+        (r.error
+            ? '<span class="text-danger"><span class="glyphicon glyphicon-warning-sign"></span> ' + esc(r.error) + '</span>'
+            : r.not_stored
+            ? '<span class="text-muted">Not stored: ' + esc(r.not_stored) + '</span>'
+            : '<b>' + esc(short(r.saved_as)) + '</b>' + (r.is_new ? ' <span class="label label-info">new trait</span>' : '')) +
+        '</td></tr>').join('');
+    return '<p style="margin-bottom:4px"><b>Values will be saved as</b> <span class="text-muted">(the trait combined with how its values were computed, so the measured trait is not changed)</span></p>' +
+        '<table class="table table-condensed table-bordered" style="font-size:12px"><thead><tr><th>Trait</th><th>Saved as</th></tr></thead><tbody>' + body + '</tbody></table>';
 }
 
 function submit(opts) {

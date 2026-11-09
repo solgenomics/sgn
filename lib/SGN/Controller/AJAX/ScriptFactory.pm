@@ -43,6 +43,7 @@ use Try::Tiny;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Job;
+use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
 use SGN::Model::Cvterm;
 
@@ -144,7 +145,7 @@ sub blupf90_dir {
     foreach my $d (File::Spec->path()) {
         return $d if -x "$d/blupf90+";
     }
-    return undef;
+    return;
 }
 
 # Pedigree of the accessions with all their known ancestors (female_parent /
@@ -710,15 +711,113 @@ sub _load_results {
             $acc{$r->{accession}} = 1;
             $traits{$r->{trait_full}} = 1;
         }
+        my $terms = _statistical_terms($results);
+        my @not_stored = sort grep { defined($terms->{$_}) && $terms->{$_} eq '' } keys %traits;
+        foreach my $trait (@not_stored) {
+            delete $traits{$trait};
+            delete $terms->{$trait};
+            delete $_->{$trait} for values %values;
+        }
+        delete $values{$_} for grep { !%{ $values{$_} } } keys %values;
+        %acc = map { $_ => 1 } keys %values;
         $results->{store} = {
             result_values => \%values,
             accession_names => [ sort keys %acc ],
             trait_names => [ sort keys %traits ],
+            statistical_terms => $terms,
         };
         delete $results->{genotype_values_long};
+        $results->{saved_as} = [
+            @{ _saved_as($c, $results->{store}) },
+            map { { trait => $_, not_stored => 'Raw values of an unreplicated trial: no model was fitted, and the values are already in the database.' } } @not_stored
+        ];
     }
 
     return $results;
+}
+
+# Statistical ontology (SGNSTAT) terms of the stored values. Stored values are
+# not measurements of the trait, so each trait is post-composed with the term
+# that describes how its values were computed. The term is chosen per trait
+# from what the model really did (an engine or pedigree fallback changes it).
+my %STAT_TERMS = (
+    'R|blup'               => 'Adjusted means from BLUPs using LMER R|SGNSTAT:0000034',
+    'R|blue'               => 'Adjusted means from BLUEs using LMER R|SGNSTAT:0000036',
+    # runs made before sommer was removed from the pipeline (SF_VERSION <= 1.2)
+    'sommer|blup'          => 'Adjusted means from BLUPs using Sommer R|SGNSTAT:0000039',
+    'sommer|pedigree'      => 'Adjusted means from BLUPs using Sommer R|SGNSTAT:0000039',
+    'BLUPF90+|blup'        => 'Adjusted means from BLUPs using BLUPF90+|SGNSTAT:0000055',
+    'BLUPF90+|blue'        => 'Adjusted means from BLUEs using BLUPF90+|SGNSTAT:0000056',
+    'BLUPF90+|pedigree'    => 'Adjusted means from pedigree-based BLUPs using BLUPF90+|SGNSTAT:0000057',
+    'SpATS|blue'           => 'Adjusted Means from Spatial Correction using SpATS R|SGNSTAT:0000054',
+);
+
+# trait (full name) => SGNSTAT term
+sub _statistical_terms {
+    my ($results) = @_;
+    my $as_list = sub { my $x = shift; return !defined($x) ? [] : ref($x) eq 'ARRAY' ? $x : [ $x ] };
+    my $summary = $results->{summary} || {};
+    my @short = @{ $as_list->($summary->{traits}) };
+    my @full = @{ $as_list->($summary->{traits_full}) };
+    my %full_of = map { $short[$_] => $full[$_] } grep { defined $full[$_] } 0 .. $#short;
+    my %row_of = map { (($full_of{$_->{trait} // ''} // $_->{trait} // '') => $_) } @{ $as_list->($results->{stage2}) };
+    my %stage1_models;
+    push @{ $stage1_models{ $full_of{$_->{trait} // ''} // $_->{trait} // '' } }, $_->{model} // '' for @{ $as_list->($results->{stage1}) };
+
+    my $random = ($results->{genotype_effect} // 'random') eq 'random';
+    my $run_engine = ($results->{engine} // '') eq 'blupf90' ? 'BLUPF90+' : 'R';
+    my %terms;
+    foreach my $r (@{ $as_list->($results->{genotype_values_long}) }) {
+        my $trait = $r->{trait_full} // next;
+        next if $terms{$trait};
+        my $row = $row_of{$trait} || {};
+        my $model = $row->{model} // '';
+        # a trait from a single trial keeps its stage 1 means: BLUEs from SpATS
+        # or from the design model, or raw values when the trial is unreplicated
+        # (these are already in the database and are not stored again: '')
+        if ($model =~ /^Single trial: stage 1 means/) {
+            my @m = @{ $stage1_models{$trait} || [] };
+            my $all = sub { my $re = shift; return @m && !grep { $_ !~ $re } @m };
+            $terms{$trait} = $all->(qr/^Unreplicated/) ? ''
+                : $all->(qr/^SpATS/) ? $STAT_TERMS{'SpATS|blue'}
+                : $all->(qr/^BLUPF90\+: /) ? $STAT_TERMS{'BLUPF90+|blue'}
+                : $STAT_TERMS{'R|blue'};
+            next;
+        }
+        # engine and pedigree use recorded by the pipeline (SF_VERSION >= 1.3); older runs: from the model text
+        my $engine = $row->{engine_used} // ($model =~ /^BLUPF90\+: / ? 'BLUPF90+' : $model =~ /^sommer: / ? 'sommer' : $model ne '' ? 'R' : $run_engine);
+        my $pedigree = defined($row->{pedigree_used}) ? $row->{pedigree_used} : ($model =~ /A s2a/ && $engine ne 'R');
+        my $kind = !$random ? 'blue' : ($pedigree && $pedigree ne 'false') ? 'pedigree' : 'blup';
+        $terms{$trait} = $STAT_TERMS{"$engine|$kind"} // $STAT_TERMS{"R|$kind"} // $STAT_TERMS{'R|blup'};
+    }
+    return \%terms;
+}
+
+# What each trait will be stored as: the existing post-composed trait, or the
+# name of the one that will be created when the analysis is stored.
+sub _saved_as {
+    my ($c, $store) = @_;
+    my ($schema) = _schemas($c);
+    my $delimiter = $c->config->{composable_cvterm_delimiter} || '|';
+    my @rows;
+    foreach my $trait (@{ $store->{trait_names} || [] }) {
+        my $term = $store->{statistical_terms}->{$trait} // '';
+        my $trait_row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait);
+        my $stat_row = $term ? SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $term) : undef;
+        my ($stat_name) = $term =~ /^(.*)\|[^|]+$/;
+        my $row = { trait => $trait, statistical_term => $term, statistical_term_name => $stat_name // $term };
+        if (!$trait_row || !$stat_row) {
+            $row->{error} = !$trait_row ? 'The trait is not in the database.' : 'The statistical term is not in the database (run the db patch AddScriptFactoryStatisticsTerms).';
+        } else {
+            my $existing = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [ $trait_row->cvterm_id(), $stat_row->cvterm_id() ]);
+            $row->{saved_as} = $existing
+                ? SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $existing, 'extended')
+                : $trait_row->name() . $delimiter . $stat_row->name();
+            $row->{is_new} = $existing ? 0 : 1;
+        }
+        push @rows, $row;
+    }
+    return \@rows;
 }
 
 # breeding programs of the run's phenotype file, most plots first
@@ -752,7 +851,7 @@ sub _write_run_meta {
 sub _run_meta {
     my ($c, $run_id) = @_;
     my $file = _work_dir($c) . "/$run_id.meta.json";
-    return undef if !-e $file;
+    return if !-e $file;
     return try { decode_json(read_file($file)) } catch { undef };
 }
 
@@ -775,7 +874,9 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
         return;
     }
     my $sp_person_id = _user_id($c);
-    if (($meta->{sp_person_id} // -1) != $sp_person_id && !$c->user()->check_roles('curator')) {
+    # stored analyses with a public model can be followed by everyone
+    my $public = $meta->{stored} && $meta->{stored}->{is_public};
+    if (($meta->{sp_person_id} // -1) != $sp_person_id && !$public && !$c->user()->check_roles('curator')) {
         $c->stash->{rest} = { error => 'This analysis belongs to another user.' };
         return;
     }
@@ -934,8 +1035,8 @@ sub _standalone_script {
 #      --pedigree=<pedigree_file.txt>
 #   3. The results (JSON) and CSV tables are written next to <results.json>.
 #
-# Required R packages: jsonlite, lme4 (SpATS for spatial models, sommer and
-# Matrix for pedigree models with the R engine).
+# Required R packages: jsonlite, lme4 (SpATS for spatial models). Pedigree
+# (A matrix) models are fitted with BLUPF90+.
 # With "engine": "blupf90" the mixed models are fitted by BLUPF90+ (blupf90+ in
 # the PATH, or in the folder given by the BLUPF90_DIR environment variable);
 # its parameter and data files are kept in <results>_blupf90.tar.gz.
@@ -1007,8 +1108,21 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
     }
     my $recipe = try { decode_json(read_file("$dir/$run_id.recipe.json")) } catch { {} };
     delete $recipe->{stop_after};
+
+    # every trait is stored post-composed with its statistical term, never under the trait itself
+    my $terms = $results->{store}->{statistical_terms} || {};
+    if (my @problems = grep { $_->{error} } @{ $results->{saved_as} || [] }) {
+        $c->stash->{rest} = { error => join(' ', map { "$_->{trait}: $_->{error}" } @problems) };
+        return;
+    }
+    my %term_count;
+    $term_count{$_}++ for values %$terms;
+    my ($default_term) = sort { $term_count{$b} <=> $term_count{$a} || $a cmp $b } keys %term_count;
+    if (!$default_term || grep { !$terms->{$_} } @{ $results->{store}->{trait_names} || [] }) {
+        $c->stash->{rest} = { error => 'Could not determine the statistical term of the stored values.' };
+        return;
+    }
     my $f90 = ($results->{engine} // '') eq 'blupf90';
-    my $random = ($results->{genotype_effect} // 'random') eq 'random';
     my %h2 = map { $_->{trait} => $_->{h2} } @{ $results->{stage2} || [] };
     my $protocol = 'Script Factory ' . (($results->{strategy} // '') eq 'two_stage' ? 'two-stage' : 'single-stage') . ' analysis: '
         . join('; ', map { ($_->{trait} // '') . ': ' . ($_->{model} // '') } @{ $results->{stage2} || [] });
@@ -1021,6 +1135,8 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         outlier_method => ($recipe->{outliers} || {})->{method} // 'none',
         values_removed => scalar(@{ $results->{outliers} || [] }),
         heritability => \%h2,
+        statistical_terms => $terms,
+        run_id => $run_id,
     };
 
     # files of the run, with readable names in the archive
@@ -1031,9 +1147,11 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
     mkdir $files_dir if !-d $files_dir;
     my $place = sub {
         my ($src, $file_name) = @_;
-        return undef if !$src || !-s $src;
-        my $dest = "$files_dir/$file_name";
-        copy($src, $dest) or return undef;
+        # always one value: the result is used inside lists
+        my $dest;
+        if ($src && -s $src && copy($src, "$files_dir/$file_name")) {
+            $dest = "$files_dir/$file_name";
+        }
         return $dest;
     };
     my (undef, $script) = _standalone_script($c, { %$recipe, name => $name }, $name);
@@ -1080,9 +1198,8 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
             analysis_accession_names => $results->{store}->{accession_names},
             analysis_result_stock_names => [],
             analysis_trait_names => $results->{store}->{trait_names},
-            analysis_statistical_ontology_term => $random
-                ? 'Adjusted means from BLUPs using LMER R|SGNSTAT:0000034'
-                : 'Adjusted means from BLUEs using LMER R|SGNSTAT:0000036',
+            analysis_statistical_ontology_term => $default_term,
+            analysis_statistical_ontology_term_by_trait => $terms,
             analysis_result_values => $results->{store}->{result_values},
             analysis_result_values_type => 'analysis_result_values_match_accession_names',
             analysis_result_summary => $summary,
@@ -1114,6 +1231,172 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         _write_run_meta($c, $run_id, $meta);
     }
     $c->stash->{rest} = $saved;
+}
+
+# ---------------------------------------------------------------------------
+# stored analyses: follow the pipeline of an analysis in the Script Factory
+# ---------------------------------------------------------------------------
+
+# model properties that describe the stored model rather than the recipe
+my @MODEL_INFO_KEYS = qw(application_name application_version model_is_public model_language protocol script_factory_version name dataset_id);
+
+# A Script Factory analysis the user may follow: its recipe, dataset, owner and
+# archived files. Returns { error => ... } when it cannot be followed.
+sub _stored_analysis {
+    my ($c, $analysis_id) = @_;
+    return { error => 'Invalid analysis.' } if ($analysis_id // '') !~ /^\d+$/;
+    my ($schema, $people_schema, $sp_person_id) = _schemas($c);
+    my $analysis = try {
+        CXGN::Analysis->new({
+            bcs_schema => $schema,
+            people_schema => $people_schema,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id),
+            phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id),
+            trial_id => $analysis_id,
+        });
+    } catch { undef };
+    return { error => 'This analysis does not exist.' } if !$analysis;
+    my $model = (try { $analysis->saved_model() } catch { undef }) || {};
+    my $props = $model->{model_properties} || {};
+    return { error => 'This analysis was not made with the Script Factory.' } if ($props->{application_name} // '') ne 'Breedbase Script Factory';
+
+    my ($owner_id) = $schema->storage->dbh->selectrow_array(
+        'SELECT sp_person_id FROM phenome.project_owner WHERE project_id = ? ORDER BY project_owner_id LIMIT 1', undef, $analysis_id);
+    my $is_owner = defined($owner_id) && $owner_id == $sp_person_id ? 1 : 0;
+    my $is_public = ($props->{model_is_public} // 'yes') eq 'no' ? 0 : 1;
+    if (!$is_owner && !$is_public && !$c->user()->check_roles('curator')) {
+        return { error => 'The pipeline of this analysis is private.' };
+    }
+    my %recipe = %$props;
+    delete @recipe{@MODEL_INFO_KEYS};
+    my $summary = (try { $analysis->metadata()->result_summary() } catch { undef }) || {};
+    return {
+        analysis_id => $analysis_id,
+        name => $analysis->name(),
+        description => $analysis->description(),
+        owner_id => $owner_id,
+        is_owner => $is_owner,
+        is_public => $is_public,
+        recipe => \%recipe,
+        dataset_id => (try { $analysis->metadata()->dataset_id() } catch { undef }) // $props->{dataset_id},
+        files => $model->{model_files} || {},
+        run_id => $summary->{run_id},
+    };
+}
+
+# The run of a stored analysis, ready for the results dashboard. Temporary run
+# files are cleaned regularly; when they are gone the run is restored from the
+# copies archived with the analysis. Returns the run id or undef.
+sub _restore_analysis_run {
+    my ($c, $info) = @_;
+    my $dir = _work_dir($c);
+    my $archived = $info->{files}->{script_factory_results};
+    $archived = undef if !$archived || !-s $archived;
+
+    # the run id: kept in the result summary (newer analyses), else from the
+    # names of the run's files, else from the runs still on disk
+    my $run_id = $info->{run_id};
+    if (!$run_id && $archived) {
+        my $res = try { decode_json(read_file($archived)) } catch { {} };
+        foreach my $f (values %{ $res->{files} || {} }) {
+            next if !$f || ref($f);
+            if (basename($f) =~ /^(sf_run_[A-Za-z0-9]+)_/) { $run_id = $1; last; }
+        }
+    }
+    if (!$run_id) {
+        foreach my $file (glob("$dir/sf_run_*.meta.json")) {
+            my $m = (try { decode_json(read_file($file)) } catch { undef }) or next;
+            next if !$m->{stored} || ($m->{stored}->{analysis_id} // '') ne $info->{analysis_id};
+            ($run_id = basename($file)) =~ s/\.meta\.json$//;
+            last;
+        }
+    }
+    return if !$run_id || !_valid_token($run_id) || $run_id !~ /^sf_run_/;
+
+    if (!-e "$dir/$run_id.results.json") {
+        return if !$archived;
+        copy($archived, "$dir/$run_id.results.json") or return;
+        my %tables = map { ("script_factory_$_" => "${run_id}_$_.csv") } qw(genotype_values stage1_means outliers selection_index zones ancestor_breeding_values);
+        $tables{script_factory_blupf90_files} = "${run_id}_blupf90.tar.gz";
+        while (my ($type, $name) = each %tables) {
+            my $src = $info->{files}->{$type};
+            copy($src, "$dir/$name") if $src && -s $src && !-e "$dir/$name";
+        }
+    }
+    my $meta = _run_meta($c, $run_id) || { created => '', dataset_name => '' };
+    $meta->{sp_person_id} //= $info->{owner_id};
+    $meta->{dataset_id} //= $info->{dataset_id};
+    $meta->{stored} ||= { analysis_id => $info->{analysis_id}, name => $info->{name} };
+    $meta->{stored}->{is_public} = $info->{is_public};
+    _write_run_meta($c, $run_id, $meta);
+    return $run_id;
+}
+
+# Results dashboard of a stored analysis (used by /tools/script_factory/analysis/<id>)
+sub analysis_run_id {
+    my ($c, $analysis_id) = @_;
+    my $info = _stored_analysis($c, $analysis_id);
+    return { error => $info->{error} } if $info->{error};
+    my $run_id = _restore_analysis_run($c, $info);
+    return { run_id => $run_id } if $run_id;
+    return { error => 'The results dashboard of this analysis is not available: it was stored before the Script Factory archived its results. '
+        . 'You can still <a href="/tools/script_factory?analysis_id=' . $info->{analysis_id} . '">open its pipeline</a> and run it again, '
+        . 'or see the stored values on the <a href="/analyses/' . $info->{analysis_id} . '">analysis page</a>.' };
+}
+
+# Recipe and dataset of a stored analysis or of a run, to open the pipeline in
+# the Script Factory.
+sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+
+    my $analysis_id = $c->req->param('analysis_id');
+    my $run_id = $c->req->param('run_id');
+    if (defined($analysis_id) && $analysis_id ne '') {
+        my $info = _stored_analysis($c, $analysis_id);
+        if ($info->{error}) {
+            $c->stash->{rest} = { error => $info->{error} };
+            return;
+        }
+        $c->stash->{rest} = {
+            source => 'analysis',
+            analysis_id => $info->{analysis_id},
+            name => $info->{name},
+            description => $info->{description},
+            recipe => $info->{recipe},
+            dataset_id => $info->{dataset_id},
+            is_owner => $info->{is_owner},
+            results_url => '/tools/script_factory/analysis/' . $info->{analysis_id},
+        };
+        return;
+    }
+    if (!_valid_token($run_id) || $run_id !~ /^sf_run_/) {
+        $c->stash->{rest} = { error => 'Invalid analysis run.' };
+        return;
+    }
+    my $meta = _run_meta($c, $run_id);
+    my $dir = _work_dir($c);
+    if (!$meta || !-e "$dir/$run_id.recipe.json") {
+        $c->stash->{rest} = { error => 'This run is no longer available (temporary files are cleaned regularly). Stored analyses can always be opened from Manage > Analyses.' };
+        return;
+    }
+    if (($meta->{sp_person_id} // -1) != _user_id($c) && !$c->user()->check_roles('curator')) {
+        $c->stash->{rest} = { error => 'This analysis belongs to another user.' };
+        return;
+    }
+    my $recipe = try { decode_json(read_file("$dir/$run_id.recipe.json")) } catch { {} };
+    delete $recipe->{stop_after};
+    $c->stash->{rest} = {
+        source => 'run',
+        run_id => $run_id,
+        name => $meta->{script_name} || '',
+        recipe => $recipe,
+        dataset_id => $meta->{dataset_id},
+        is_owner => 1,
+        analysis_id => $meta->{stored} ? $meta->{stored}->{analysis_id} : undef,
+        results_url => "/tools/script_factory/results/$run_id",
+    };
 }
 
 # ---------------------------------------------------------------------------

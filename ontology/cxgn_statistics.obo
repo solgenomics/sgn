@@ -272,7 +272,7 @@ relationship: variable_of SGNSTAT:0000043
 [Term]
 id: SGNSTAT:0000052
 name: Principal component 9 (PC9) scores
-definition: values for the nineth principal component derived from a linear combination of variables with quantitative values
+definition: values for the ninth principal component derived from a linear combination of variables with quantitative values
 relationship: variable_of SGNSTAT:0000043
 
 [Term]
@@ -285,4 +285,21 @@ relationship: variable_of SGNSTAT:0000043
 id: SGNSTAT:0000054
 name: Adjusted Means from Spatial Correction using SpATS R
 definition: Values of a trait measurement that have been adjusted due to spatial correction 
+is_a: SGNSTAT:0000000
+[Term]
+id: SGNSTAT:0000055
+name: Adjusted means from BLUPs using BLUPF90+
+definition: Genotype values computed as the overall mean plus the genotype BLUPs of a linear mixed model fitted with BLUPF90+
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000056
+name: Adjusted means from BLUEs using BLUPF90+
+definition: Genotype values computed as the BLUEs of the genotypes, fitted as a fixed effect in a linear mixed model with BLUPF90+
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000057
+name: Adjusted means from pedigree-based BLUPs using BLUPF90+
+definition: Genotype values computed as the overall mean plus the genotype BLUPs of a linear mixed model with a pedigree relationship matrix, fitted with BLUPF90+
 is_a: SGNSTAT:0000000

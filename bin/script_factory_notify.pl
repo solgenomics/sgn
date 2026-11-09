@@ -39,12 +39,15 @@ my $dataset = $meta->{dataset_name} || 'the selected dataset';
 my $results = -s "$run_base.results.json" ? eval { decode_json(read_file("$run_base.results.json")) } : undef;
 my ($subject, $body);
 
+# R writes a single value as a scalar: always work on lists
+my $as_list = sub { my $x = shift; return !defined($x) ? [] : ref($x) eq 'ARRAY' ? $x : [ $x ] };
+
 if ($results && $results->{genotype_values}) {
     my $s = $results->{summary} || {};
-    my @h2 = map { sprintf("%s %s", $_->{trait}, defined($_->{h2}) ? sprintf("%.2f", $_->{h2}) : 'n/a') } @{ $results->{stage2} || [] };
+    my @h2 = map { sprintf("%s %s", $_->{trait}, defined($_->{h2}) ? sprintf("%.2f", $_->{h2}) : 'n/a') } @{ $as_list->($results->{stage2}) };
     my $engine = ($results->{engine} // '') eq 'blupf90' ? 'BLUPF90+' : 'R';
     my $genetic = { pedigree => ', pedigree (A matrix)', parents => ', mother + father effects' }->{ $results->{genetic_model} // '' } // '';
-    my $n_warn = scalar(@{ $results->{warnings} || [] });
+    my $n_warn = scalar(@{ $as_list->($results->{warnings}) });
     $subject = "Breedbase Script Factory: $name finished";
     $body = join("\n",
         "$name on dataset \"$dataset\" has finished.",

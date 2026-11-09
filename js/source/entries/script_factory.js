@@ -726,6 +726,7 @@ function renderExclusions() {
     filter.html('<option value="">All traits (' + all.length + ')</option>' + state.traits.map(t => '<option value="' + esc(t) + '">' + esc(shortTrait(t)) + ' (' + (counts[t] || 0) + ')</option>').join(''));
     filter.val(state.traits.indexOf(cur) >= 0 ? cur : '');
     const rows = all.filter(o => !filter.val() || o.trait === filter.val());
+    state.outlierVisible = rows;
 
     const nRule = all.filter(o => o.rule).length, nInd = all.filter(o => o.ind).length;
     $('#sf_outlier_count').text(all.length);
@@ -766,16 +767,31 @@ function selectedOutliers() {
     return (state.outlierRows || []).filter(o => state.outlierSel[o.key]);
 }
 
+// the values the mark buttons act on: the ticked rows, or every listed
+// outlier (current trait filter) when none is ticked
+function outlierTargets() {
+    const sel = selectedOutliers();
+    return sel.length ? sel : (state.outlierVisible || []);
+}
+
 function updateOutlierToolbar() {
-    const n = selectedOutliers().length;
+    const nSel = selectedOutliers().length;
+    const n = outlierTargets().length;
+    const what = nSel ? nSel + ' selected' : (n === 1 ? 'the listed outlier' : 'all ' + n);
     const owner = !!(state.dataset && state.dataset.dataset_is_owner);
     const canDb = String(cfg.can_mark_database) === '1';
-    $('#sf_outlier_selected').text(n + ' selected');
+    $('#sf_outlier_selected').text(nSel ? nSel + ' selected' : (n ? 'None ticked: the buttons apply to all ' + n + ' listed' : ''));
     $('#sf_mark_dataset').prop('disabled', !n || !owner)
-        .attr('title', owner ? 'Add the selected values to this dataset\'s outliers' : 'Only the owner of the dataset can change its outliers');
+        .html('<span class="glyphicon glyphicon-flag"></span> Mark ' + (n ? what + ' ' : '') + 'as dataset outliers')
+        .attr('title', owner ? 'Add these values to this dataset\'s outliers' : 'Only the owner of the dataset can change its outliers');
     $('#sf_mark_database').prop('disabled', !n || !canDb)
-        .attr('title', canDb ? 'Flag the selected values as outliers in the database, for all users' : 'Only curators and breeders can mark database outliers');
+        .html('<span class="glyphicon glyphicon-hdd"></span> Mark ' + (n ? what + ' ' : '') + 'as database outliers')
+        .attr('title', canDb ? 'Flag these values as outliers in the database, for all users' : 'Only curators and breeders can mark database outliers');
     $('#sf_unmark_menu').prop('disabled', !n || (!owner && !canDb));
+    const why = [];
+    if (n && !owner) why.push('dataset outliers can only be marked by the owner of the dataset');
+    if (n && !canDb) why.push('database outliers can only be marked by curators and breeders');
+    $('#sf_outlier_permissions').html(why.length ? '<span class="glyphicon glyphicon-lock"></span> ' + esc(why.join('; ')) + '.' : '');
 }
 
 // ask the server which listed outliers are already dataset / database outliers
@@ -911,7 +927,7 @@ function renderModelPreview() {
     }
     const g = geneticRecipe();
     if (g.model === 'pedigree') txt += '\n# accession ~ N(0, A s2a): A = additive relationship from the pedigree (accessions and ancestors)';
-    txt += '\n# engine: ' + (radio('sf_engine') === 'blupf90' ? 'BLUPF90+ (blupf90+, AI-REML)' + (two ? '; SpATS stage 1 models stay in R' : '') : 'R (lme4' + (two ? ' / SpATS' : '') + (g.model === 'pedigree' ? ' / sommer' : '') + ')');
+    txt += '\n# engine: ' + (radio('sf_engine') === 'blupf90' ? 'BLUPF90+ (blupf90+, AI-REML)' + (two ? '; SpATS stage 1 models stay in R' : '') : 'R (lme4' + (two ? ' / SpATS' : '') + ')' + (g.model === 'pedigree' ? '; pedigree models: BLUPF90+' : ''));
     $('#sf_model_preview').html('<div class="sf-formula">' + esc(txt) + '</div>');
     renderGeneticInfo();
     renderSuggestion();
@@ -948,6 +964,9 @@ function renderGeneticInfo() {
         '<span class="warn">No parents are recorded in Breedbase for these accessions</span>; the mother / father and pedigree models would fall back to unrelated accessions.';
     const random = radio('sf_strategy') === 'two_stage' ? $('#sf_stage2_genotype').val() === 'random' : $('#sf_single_genotype').val() !== 'fixed';
     if (g.model !== 'iid' && !random) h += '<br/><span class="warn">These models need the genotype as random effect.</span>';
+    if (g.model === 'pedigree') h += '<br/>' + (cfg.blupf90_available
+        ? 'The pedigree model is fitted with BLUPF90+, whichever engine is chosen.'
+        : '<span class="warn">The pedigree model needs BLUPF90+, which is not installed on this server; the accessions would be treated as unrelated.</span>');
     $('#sf_pedigree_info').html(h);
     const D = singleData();
     $('#sf_check_info').html(D.n_check_plots ? D.n_check_plots + ' plot(s) of entries marked as check.' : '<span class="sf-muted">No entry is marked as check in this dataset.</span>');
@@ -1750,6 +1769,25 @@ function openLibrary() {
         .catch(e => $('#sf_library_list').html(alertBox('warning', esc(e.message))));
 }
 
+// Show the pipeline of a stored analysis or of a run: its recipe is applied to
+// every step and its dataset is loaded (see init).
+function openPipeline(p) {
+    state.script = { id: null, name: p.name ? 'Pipeline of ' + p.name : 'Pipeline of a previous run', description: p.description || '', is_public: 0, is_owner: 1 };
+    state.scriptLoaded = true;
+    applyRecipe(p.recipe);
+    setScriptName();
+    const links = [
+        p.results_url ? '<a href="' + esc(p.results_url) + '"><span class="glyphicon glyphicon-stats"></span> Results dashboard</a>' : '',
+        p.analysis_id ? '<a href="/analyses/' + encodeURIComponent(p.analysis_id) + '"><span class="glyphicon glyphicon-list-alt"></span> Stored analysis</a>' : ''
+    ].filter(Boolean).join(' &nbsp;&middot;&nbsp; ');
+    $('#sf_pipeline_banner').html(alertBox('info', '<span class="glyphicon glyphicon-random"></span> This is the pipeline of ' +
+        (p.source === 'analysis' ? 'the stored analysis <b>' + esc(p.name) + '</b>' : 'a previous run') +
+        ': every step below shows the settings that were used. Load the dataset to see each step, change anything and run again; save it as a script to reuse it.' +
+        (links ? '<br/>' + links : '')));
+    goTo(1);
+    return p;
+}
+
 function loadScript(id, andRun) {
     return post('/ajax/script_factory/recipe/get', { recipe_id: id })
         .then(r => {
@@ -1829,6 +1867,7 @@ function newScript() {
     state.script = { id: null, name: null, description: '', is_public: 0, is_owner: 1 };
     state.scriptLoaded = false;
     state.missingTraits = [];
+    $('#sf_pipeline_banner').html('');
     $('#sf_recipe_trait_warning').html('');
     renderQuickRun();
     state.exclusions = {};
@@ -1854,14 +1893,26 @@ export function init(options) {
 
     if (String(cfg.check_outliers) !== '1') $('#sf_dataset_outliers').closest('label').hide();
 
+    // pipeline of a stored analysis or of a run (Manage > Analyses, job list, dashboard)
+    const pipelineP = (cfg.analysis_id || cfg.run_id)
+        ? post('/ajax/script_factory/pipeline', cfg.analysis_id ? { analysis_id: cfg.analysis_id } : { run_id: cfg.run_id })
+            .then(openPipeline)
+            .catch(e => { $('#sf_dataset_message').html(alertBox('danger', esc(e.message))); return null; })
+        : Promise.resolve(null);
+
     get_select_box('datasets', 'sf_dataset_select', {
         checkbox_name: 'sf_dataset_checkbox',
-        after_load: () => {
-            if (cfg.dataset_id) {
-                $('input[name=sf_dataset_checkbox][value=' + cfg.dataset_id + ']').prop('checked', true);
-                loadDataset();
+        after_load: () => pipelineP.then(p => {
+            const id = (p && p.dataset_id) || cfg.dataset_id;
+            if (!id) return;
+            const box = $('input[name=sf_dataset_checkbox][value=' + id + ']');
+            if (!box.length) {
+                if (p) $('#sf_dataset_message').append(alertBox('warning', 'The dataset of this analysis is not in your list of datasets (it may be private or deleted). Choose a dataset to run the pipeline on.'));
+                return;
             }
-        }
+            box.prop('checked', true);
+            loadDataset();
+        })
     });
 
     // navigation
@@ -1910,7 +1961,7 @@ export function init(options) {
     $(document).on('click', '.sf-outlier-toolbar .sf-mark', function(e) {
         e.preventDefault();
         if ($(this).prop('disabled')) return;
-        markOutliers(selectedOutliers(), $(this).data('action'), '#sf_outlier_message');
+        markOutliers(outlierTargets(), $(this).data('action'), '#sf_outlier_message');
     });
     // results tab: mark everything the run removed
     $('#sf_tab_outliers').on('click', '.sf-mark-removed', function() {

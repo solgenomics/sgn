@@ -1287,12 +1287,22 @@ function renderAll() {
     safely('ranking', renderRankTable);
 }
 
+// open the steps of this analysis in the Script Factory: the stored analysis
+// when there is one (it outlives the temporary run files), else the run
+function initPipelineLink() {
+    const stored = R.stored && R.stored.analysis_id;
+    if (!stored && !META.is_owner) return;
+    $('#sfd_pipeline').attr('href', '/tools/script_factory?' + (stored ? 'analysis_id=' + encodeURIComponent(R.stored.analysis_id) : 'run_id=' + encodeURIComponent(cfg.run_id))).show();
+}
+
 // store the analysis from the dashboard (the owner of the run only)
 function initStore() {
     if (!META.is_owner) return;
     const stored = (id, name) => {
         $('#sfd_store_result').html(storedNotice(id, name));
         $('#sfd_store').prop('disabled', true).html('<span class="glyphicon glyphicon-ok"></span> Stored');
+        R.stored = { analysis_id: id, name: name };
+        initPipelineLink();
     };
     $('#sfd_store').show().on('click', () => openStoreDialog({
         runId: cfg.run_id,
@@ -1326,6 +1336,7 @@ export function init(options) {
             initControls();
             renderAll();
             initStore();
+            initPipelineLink();
         })
         .fail(x => {
             $('#sfd_title').text('Decision dashboard');

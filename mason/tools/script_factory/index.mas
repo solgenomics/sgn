@@ -15,6 +15,8 @@ Chris Simoes <ccs263@cornell.edu>
 <%args>
 $recipe_id => undef
 $dataset_id => undef
+$analysis_id => undef
+$run_id => undef
 $blupf90_available => 0
 </%args>
 
@@ -41,6 +43,9 @@ $blupf90_available => 0
       </div>
     </div>
   </div>
+
+  <!-- pipeline of a stored analysis or of a run, when opened from one -->
+  <div id="sf_pipeline_banner"></div>
 
   <!-- ===================== stepper ===================== -->
   <ol class="sf-stepper" id="sf_stepper">
@@ -177,11 +182,12 @@ $blupf90_available => 0
             <div class="btn-group">
               <button class="btn btn-link btn-sm dropdown-toggle" data-toggle="dropdown" id="sf_unmark_menu">Remove marks <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right">
-                <li><a href="#" class="sf-mark" data-action="unmark_dataset">Remove dataset outlier mark from selected</a></li>
-                <li><a href="#" class="sf-mark" data-action="unmark_database">Remove database outlier mark from selected</a></li>
+                <li><a href="#" class="sf-mark" data-action="unmark_dataset">Remove the dataset outlier mark</a></li>
+                <li><a href="#" class="sf-mark" data-action="unmark_database">Remove the database outlier mark</a></li>
               </ul>
             </div>
           </div>
+          <p class="sf-muted" id="sf_outlier_permissions" style="margin:4px 0 0"></p>
           <div id="sf_outlier_message"></div>
           <div class="sf-outlier-table" id="sf_outlier_table"></div>
           <p class="sf-help" style="margin-top:8px">
@@ -222,7 +228,7 @@ $blupf90_available => 0
           <h3>Model engine</h3>
           <div class="sf-options sf-options-2">
             <label class="sf-option sf-option-sm"><input type="radio" name="sf_engine" value="lme4" checked />
-              <span class="sf-option-title">R <small>(lme4, SpATS, sommer)</small></span>
+              <span class="sf-option-title">R <small>(lme4, SpATS)</small></span>
               <span class="sf-option-text">Mixed models fitted in R. Fast on small and medium datasets; required for custom formulas with random slopes.</span></label>
             <label class="sf-option sf-option-sm" id="sf_engine_f90"><input type="radio" name="sf_engine" value="blupf90" />
               <span class="sf-option-title">BLUPF90+</span>
@@ -370,7 +376,7 @@ $blupf90_available => 0
               <div id="sf_check_info" class="sf-help"></div>
             </div>
           </div>
-          <small class="sf-muted">Used by stage 2 and by the single-stage model, with the genotype as random effect. Mother / father: random effects of the parents recorded in Breedbase; the genetic value of an accession is the sum of its parents' and its own effect. Pedigree: the accession effect follows the additive relationship of all known ancestors (BLUPF90+ <code>add_animal</code> or sommer), giving breeding values (EBVs) for the accessions and for their ancestors. Checks: a fixed check / test effect, so test entries are not shrunk toward the mean of the checks.</small>
+          <small class="sf-muted">Used by stage 2 and by the single-stage model, with the genotype as random effect. Mother / father: random effects of the parents recorded in Breedbase; the genetic value of an accession is the sum of its parents' and its own effect. Pedigree: the accession effect follows the additive relationship of all known ancestors (fitted with BLUPF90+ <code>add_animal</code>, whichever engine is chosen), giving breeding values (EBVs) for the accessions and for their ancestors. Checks: a fixed check / test effect, so test entries are not shrunk toward the mean of the checks.</small>
         </div>
 
         <div class="sf-card sf-formula-card">
@@ -631,6 +637,8 @@ jQuery(document).ready(function() {
     can_mark_database: <% $can_mark_database %>,
     recipe_id: "<% $recipe_id && $recipe_id =~ /^\d+$/ ? $recipe_id : '' %>",
     dataset_id: "<% $dataset_id && $dataset_id =~ /^\d+$/ ? $dataset_id : '' %>",
+    analysis_id: "<% $analysis_id && $analysis_id =~ /^\d+$/ ? $analysis_id : '' %>",
+    run_id: "<% $run_id && $run_id =~ /^sf_run_[A-Za-z0-9_]+$/ ? $run_id : '' %>",
     check_outliers: "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>",
     blupf90_available: <% $blupf90_available ? 1 : 0 %>,
     user_email: "<% $user_email =~ /^[^\s"<>\\]+@[^\s"<>\\]+$/ ? $user_email : '' %>"

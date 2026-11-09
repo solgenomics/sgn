@@ -40,6 +40,7 @@ $run_id => ''
         <button class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-download"></span> Downloads <span class="caret"></span></button>
         <ul class="dropdown-menu dropdown-menu-right" id="sfd_downloads"></ul>
       </div>
+      <a class="btn btn-default" id="sfd_pipeline" style="display:none" title="Open every step of this analysis in the Script Factory"><span class="glyphicon glyphicon-random"></span> Open pipeline</a>
       <button class="btn btn-primary" id="sfd_store" style="display:none"><span class="glyphicon glyphicon-floppy-disk"></span> Store analysis</button>
       <button class="btn btn-default" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print</button>
     </div>
