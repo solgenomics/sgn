@@ -462,6 +462,9 @@ is_deeply($response, {'result' => {'data' => [ { 'commonCropName' => 'Cassava', 
 
 
 ####### Traits
+# The trait total depends on cvterms left behind by tests that ran earlier,
+# so read it from the database with the same joins CXGN::BrAPI::v2::Traits uses.
+my ($trait_total) = $f->dbh->selectrow_array("SELECT count(DISTINCT cvterm.cvterm_id) FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) JOIN cvterm_relationship AS rel ON (rel.subject_id=cvterm.cvterm_id) JOIN cvterm AS reltype ON (rel.type_id=reltype.cvterm_id)");
 $mech->get_ok('http://localhost:3010/brapi/v2/traits?pageSize=1&page=1');
 $response = decode_json $mech->content;
 #print STDERR "\n\n" . Dumper$response;
@@ -485,8 +488,8 @@ is_deeply($response,  {
     'pagination' => {
       'pageSize' => 1,
       'currentPage' => 1,
-      'totalPages' => 7140,
-      'totalCount' => 7140
+      'totalPages' => $trait_total,
+      'totalCount' => $trait_total
     }
   },
   'result' => {
