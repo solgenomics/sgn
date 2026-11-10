@@ -119,15 +119,18 @@ $clear->solgs_cache_clear($context);
 is(scalar read_file($dataset_file), 'unsupported shared-input sentinel',
     'ANOVA clearing does not expand raw-input deletion to dataset identifiers');
 
+# The ANOVA clear is limited to the ANOVA directories. Phenotype input and
+# trait maps in the solGS cache are shared with other tools and are retained.
 $request_args = {analysis_types => 'anova', trials => "$trial_id"};
 $clear->solgs_cache_clear($context);
 is($context->stash->{rest}{success}, 1, 'the existing manual ANOVA clear action succeeds');
-ok(!-s $raw_file, 'manual ANOVA clear invalidates its shared raw phenotype input');
-for my $method (sort keys %trait_inputs) {
-    ok(!-s $trait_inputs{$method}, "manual ANOVA clear invalidates dependent $method");
-}
 ok(!-e $anova_output, 'requested ANOVA output is removed');
 ok(!-e $anova_temp, 'requested ANOVA temporary input is removed');
+is(scalar read_file($raw_file), $old_content, 'ANOVA clear retains the shared solGS phenotype input');
+for my $method (sort keys %trait_inputs) {
+    is(scalar read_file($trait_inputs{$method}), "stale per-trial $method",
+        "ANOVA clear retains the shared solGS $method");
+}
 is(scalar read_file($model), 'unrelated shared-cache model', 'the same trial solGS model is retained');
 is(scalar read_file($other_raw_file), $other_content, 'another trial raw input is retained');
 is(scalar read_file($other_anova_output), 'other trial ANOVA result', 'another trial ANOVA output is retained');
@@ -135,19 +138,10 @@ is(scalar read_file($metadata), 'shared phenotype metadata', 'shared phenotype m
 is(scalar read_file($other_acronyms), 'other trial trait acronym mapping',
     'another trial trait acronym mapping is retained');
 
-# phenotype_file_name() can recreate an empty cache file while obtaining its
-# path. File existence alone must not prevent the following data query.
-my $empty_input = $anova->trial_phenotype_file($context, $trial_id);
-ok(!-s $empty_input, 'getting the raw path after clearing does not restore stale observations');
-my $regenerated = $anova->create_anova_phenodata_file($context);
-is($queries, 1, 'the next ANOVA request queries phenotype input again');
-is(scalar read_file($regenerated), $new_content, 'regeneration replaces the old observations');
-is($anova->trial_phenotype_file($context), $regenerated, 'the actual ANOVA accessor uses the regenerated input');
-is(scalar read_file($model), 'unrelated shared-cache model', 'regeneration leaves the solGS model intact');
-is(scalar read_file($other_raw_file), $other_content, 'regeneration leaves the other trial untouched');
+$anova->create_anova_phenodata_file($context);
+is($queries, 0, 'the next ANOVA request reuses the retained solGS phenotype input');
 
-# Existing all-analysis callers can select solgs before anova. Removing the
-# ANOVA input must not recreate the solgs cache after its requested deletion.
+# Clearing solgs together with anova removes both caches.
 my $selected_solgs_cache = $files->solgs_cache_dir($context, $trial_id);
 my $selected_anova_cache = $anova->anova_trial_cache_dir($context, $trial_id);
 write_file($anova->trial_phenotype_file($context, $trial_id), $old_content);

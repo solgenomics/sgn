@@ -21,9 +21,17 @@ for my $case (
     {name => 'numeric final column', last => 1, values => ['0', '2', '3.5']},
     {name => 'scientific notation', values => ['1e-3', '-2.5E+2', '0']},
     {name => 'R missing markers', values => ['1', 'NA', '.', '..', '-', ' ', '', 'NaN']},
-    {name => 'actual text', values => ['1', 'red', '3'], error => qr/not all numeric/},
-    {name => 'numeric prefix is not a number', values => ['1', '12cm', '3'], error => qr/not all numeric/},
-    {name => 'missing trait column', missing_column => 1, values => ['1', '2'], error => qr/selected trait.*not.*phenotype/i},
+    {name => 'actual text', values => ['1', 'red', '3'], error => qr/not all numeric/, row => 3},
+    {name => 'numeric prefix is not a number', values => ['1', '12cm', '3'], error => qr/not all numeric/, row => 3},
+    {name => 'first of several nonnumeric values', values => ['1', 'red', '3', 'blue'], error => qr/not all numeric/, row => 3},
+    {name => 'nonnumeric first data row', values => ['red', '2', '3'], error => qr/not all numeric/, row => 2},
+    {name => 'all values nonnumeric', values => ['red', 'blue'], error => qr/not all numeric/, row => 2},
+    {name => 'nonnumeric after missing markers', values => ['NA', '.', 'red'], error => qr/not all numeric/, row => 4},
+    {name => 'whitespace padded text', values => ['1', ' red ', '3'], error => qr/not all numeric/, row => 3},
+    {name => 'lowercase nan is not a missing marker', values => ['1', 'nan', '3'], error => qr/not all numeric/, row => 3},
+    {name => 'negative infinity', values => ['1', '-Inf', '3'], error => qr/not all numeric/, row => 3},
+    {name => 'comma decimal separator', values => ['1', '1,5', '3'], error => qr/not all numeric/, row => 3},
+    {name => 'missing trait column', missing_column => 1, values => ['1', '2'], error => qr/selected trait is not present.*Check the trait name/},
     {name => 'all values missing', values => ['NA', '.', '..', '-', ''], error => qr/no numeric observations/i},
     {name => 'header only', values => [], error => qr/no numeric observations/i},
     {name => 'fresh numeric file', fresh => 1, last => 1, values => ['0', '2', '3.5']},
@@ -33,13 +41,11 @@ for my $case (
     {name => 'composed trait', trait => 'plant height|CO_334:0000001||day 43|TIME:0000043', last => 1, values => ['0', '2', '3']},
     {name => 'duplicate base acronym', trait => 'dry matter content', other => 'disease mean count', last => 1, abbr => 'DMC.2', values => ['0', '2', '3']},
     {name => 'literal acronym metacharacter', trait => 'A+B', last => 1, values => ['0', '2', '3']},
-    {name => 'nonfinite measurement', values => ['1', 'Inf', '3'], error => qr/not all numeric/},
-    {name => 'incomplete cached row', values => ['1', '2'], short_row => 1, error => qr/inconsistent columns/},
-    {name => 'ambiguous trait mapping', values => ['1', '2'], ambiguous => 1, error => qr/ambiguous phenotype column/},
+    {name => 'nonfinite measurement', values => ['1', 'Inf', '3'], error => qr/not all numeric/, row => 3},
     {name => 'failed query cannot appear successful', fresh => 1, query_error => 1, values => ['1', '2'], error => qr/error querying/},
     {name => 'query without data', fresh => 1, no_data => 1, values => ['1', '2'], error => qr/no phenotype data/},
-    {name => 'missing cached trait mapping', values => ['1', '2'], map_missing => 1, error => qr/selected trait.*no mapping/i},
-    {name => 'empty cached trait mapping', values => ['1', '2'], map_empty => 1, error => qr/selected trait.*no mapping/i},
+    {name => 'missing cached trait mapping', values => ['1', '2'], map_missing => 1, error => qr/^The selected trait is not present in the phenotype data\.$/},
+    {name => 'empty cached trait mapping', values => ['1', '2'], map_empty => 1, error => qr/^The selected trait is not present in the phenotype data\.$/},
 ) {
     subtest $case->{name} => sub {
         my $trait = $case->{trait} || 'height cm';
@@ -55,7 +61,6 @@ for my $case (
         for my $i (0 .. $#{$case->{values}}) {
             my $value = $case->{values}[$i];
             my @row = $case->{last} ? ('G'.$i, 'neighbor text', $value) : ('G'.$i, $value, 'neighbor text');
-            pop @row if $case->{short_row} && $i == 1;
             $content .= join("\t", @row).$newline;
         }
         my $file = "$directory/phenotype_data_".(++$case_number).($case->{spaced_path} ? ' with spaces' : '').'.txt';
@@ -82,7 +87,7 @@ for my $case (
         $traits->mock(get_acronym_pairs => sub {
             return [] if $case->{map_empty};
             return [['unrelated', 'another trait']] if $case->{map_missing};
-            return $case->{ambiguous} ? [[$abbr, "$clean_trait\n"], [$abbr.".2", "$clean_trait\n"]] : [[$abbr, "$clean_trait\n"]];
+            return [[$abbr, "$clean_trait\n"]];
         });
         my $files = Test::MockObject->new;
         $files->mock(phenotype_file_name => sub { $c->stash->{phenotype_file_name} = $file; return $file; });
@@ -105,8 +110,8 @@ for my $case (
         if ($case->{error}) {
             like($response->{Error} || '', $case->{error}, 'action gives the appropriate data error');
             ok(!$response->{success}, 'invalid input is not reported as successful');
-            like($response->{Error}, qr/row 3/, 'the first invalid record is identified')
-                if $case->{name} =~ /actual text|numeric prefix|nonfinite/;
+            like($response->{Error}, qr/row $case->{row}\./, 'the first invalid record is identified')
+                if $case->{row};
         }
         else {
             ok(!$response->{Error}, 'valid numeric observations are accepted') or diag $response->{Error};

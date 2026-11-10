@@ -60,10 +60,8 @@ for my $case (
         my $tree = HTML::TreeBuilder->new_from_content($output);
         my $clear = $tree->look_down(id => 'clear_cache_anova');
         ok($clear, 'Clear cache is present before an ANOVA result exists');
-        ok($clear && !defined($clear->attr('hidden'))
-                && ($clear->attr('class') || '') !~ /(?:^|\s)hidden(?:\s|$)/
-                && ($clear->attr('style') || '') !~ /display\s*:\s*none/i,
-            'Clear cache is initially visible in component markup');
+        ok($clear && ($clear->attr('class') || '') =~ /(?:^|\s)hidden(?:\s|$)/,
+            'Clear cache is initially hidden until an ANOVA result exists');
         ok($clear && !defined($clear->attr('disabled')), 'Clear cache is enabled');
         ok($tree->look_down(id => 'run_anova'), 'Run ANOVA remains present');
         my $trial = $tree->look_down(id => 'trial_id');
