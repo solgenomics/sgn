@@ -143,17 +143,18 @@ $anova->anova_phenotype_data($context);
 is($queries, 1, 'a second request uses cached data until explicitly cleared');
 $controllers{'solGS::clearCache'}->solgs_cache_clear($context);
 is($context->stash->{rest}{success}, 1, 'the actual manual ANOVA reset succeeds');
+# The ANOVA clear removes only ANOVA output. Raw input and trait maps are
+# shared with other solGS tools and are refreshed when trial data is deleted.
 for my $method (qw(traits_list_file traits_acronym_file all_traits_file)) {
-    ok(!-s $context->stash->{$method}, "$method is invalidated with the raw input");
+    ok(-s $context->stash->{$method}, "$method is retained by the ANOVA clear");
 }
 $context->stash->{rest} = {};
 $anova->anova_phenotype_data($context);
-is($context->stash->{rest}{success}, 'Success.', 'regenerated trait mapping and input pass preflight');
-is($queries, 2, 'manual reset triggers a second actual model query');
+is($context->stash->{rest}{success}, 'Success.', 'retained trait mapping and input pass preflight');
+is($queries, 1, 'the ANOVA clear reuses the retained phenotype input');
 $mapping = decode_json($context->stash->{rest}{traits_abbrs});
 ($headers, $cells) = cached_column($mapping->{trait_abbr});
-ok(scalar(grep(defined($_) && $_ eq '7.25', @$cells)), 'regenerated input contains the corrected synthetic value');
-ok(!grep(defined($_) && $_ eq '2.5', @$cells), 'regenerated input drops the old cached value');
+ok(scalar(grep(defined($_) && $_ eq '2.5', @$cells)), 'retained input keeps the cached value');
 is_deeply($f->dbh->selectall_arrayref($snapshot_sql, undef, $trait_id, $previous_max), $original,
     'original fixture observations for this trait are unchanged');
 is($reference_accession->discard_changes->is_obsolete, $original_obsolete,
