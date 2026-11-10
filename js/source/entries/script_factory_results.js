@@ -16,6 +16,7 @@
 
 import '../legacy/leaflet.js';
 import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
+import { analysisLogHtml, analysisLogSummaryHtml } from '../modules/script_factory_log.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const ACCENT = '#2b7a4b';
@@ -411,7 +412,9 @@ function renderOverview() {
         stat('<span id="sfd_stat_sel">' + rankRows().filter(r => r.selected).length + '</span>', 'Selected accessions'));
 
     const w = arr(R.warnings);
-    $('#sfd_warnings').html(w.length ? '<div class="alert alert-warning"><a data-toggle="collapse" href="#sfd_warn_list"><b>' + w.length + ' note(s) from the analysis</b> <span class="caret"></span></a><ul id="sfd_warn_list" class="collapse" style="margin:6px 0 0">' + w.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>' : '');
+    // only notes that need attention are shown here; all notes are in the "Analysis log" section
+    $('#sfd_warnings').html(analysisLogSummaryHtml(w));
+    $('#sfd_log').html(analysisLogHtml(w, 'sfd'));
 
     const outBy = {};
     arr(R.outlier_summary).forEach(r => { outBy[r.trait] = r; });
@@ -1433,6 +1436,8 @@ function initControls() {
     $('#sfd_short_csv').on('click', shortlistCSV);
     $('#sfd_short_reset').on('click', e => { e.preventDefault(); S.shortlist = defaultShortlist(); saveShort(); renderShortDependent(); });
     $('#sfd_short_clear').on('click', e => { e.preventDefault(); if (confirm('Remove every accession from the shortlist?')) { S.shortlist = []; saveShort(); renderShortDependent(); } });
+
+    $('#sfd_warnings').on('click', '.sf-open-log', e => { e.preventDefault(); document.getElementById('sfd_log_section').scrollIntoView({ behavior: 'smooth' }); });
 
     // navigation highlight
     const secs = $('.sfd-section');

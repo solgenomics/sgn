@@ -532,6 +532,7 @@ $blupf90_available => 0
             <li><a data-toggle="tab" href="#sf_tab_values">Genotype values</a></li>
             <li id="sf_tab_index_li"><a data-toggle="tab" href="#sf_tab_index">Selection index</a></li>
             <li id="sf_tab_zones_li"><a data-toggle="tab" href="#sf_tab_zones">Zones</a></li>
+            <li id="sf_tab_log_li"><a data-toggle="tab" href="#sf_tab_log">Analysis log <span class="badge" id="sf_log_n"></span></a></li>
           </ul>
           <div class="tab-content sf-tab-content">
             <div class="tab-pane active" id="sf_tab_overview"></div>
@@ -541,6 +542,7 @@ $blupf90_available => 0
             <div class="tab-pane" id="sf_tab_values"></div>
             <div class="tab-pane" id="sf_tab_index"></div>
             <div class="tab-pane" id="sf_tab_zones"></div>
+            <div class="tab-pane" id="sf_tab_log"></div>
           </div>
         </div>
 

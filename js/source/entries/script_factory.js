@@ -13,6 +13,7 @@
  */
 
 import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
+import { analysisLogHtml, analysisLogSummaryHtml } from '../modules/script_factory_log.js';
 
 const VERSION = '1.5';
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -1717,7 +1718,10 @@ function renderResults() {
     const dl = { genotype_values: 'Genotype values (' + label + 's)', stage1_means: 'Stage 1 means per trial', outliers: 'Removed outliers', index: 'Selection index ranking', zones: 'Environmental zones',
         ancestors: 'Breeding values of ancestors', blupf90: 'BLUPF90+ parameter and data files' };
     $('#sf_downloads').html(Object.keys(res.files || {}).map(k => '<li><a href="' + esc(res.files[k]) + '" download>' + esc(dl[k] || k) + (/\.tar\.gz$/.test(res.files[k]) ? ' (.tar.gz)' : ' (.csv)') + '</a></li>').join('') || '<li class="disabled"><a>No files</a></li>');
-    $('#sf_warnings').html(arr(res.warnings).length ? alertBox('warning', '<b>' + arr(res.warnings).length + ' note(s):</b><ul style="margin:4px 0 0">' + arr(res.warnings).map(w => '<li>' + esc(w) + '</li>').join('') + '</ul>') : '');
+    // notes of the run: only what needs attention is shown here, the rest goes to the "Analysis log" tab
+    $('#sf_warnings').html(analysisLogSummaryHtml(res.warnings));
+    $('#sf_tab_log').html(analysisLogHtml(res.warnings, 'sf'));
+    $('#sf_log_n').text(arr(res.warnings).length || '');
     $('#sf_save_list').prop('disabled', !res.index);
 
     // overview
@@ -2172,6 +2176,7 @@ export function init(options) {
         markOutliers(outlierTargets(), $(this).data('action'), '#sf_outlier_message');
     });
     // results tab: mark everything the run removed
+    $('#sf_warnings').on('click', '.sf-open-log', function(e) { e.preventDefault(); $('#sf_result_tabs a[href="#sf_tab_log"]').tab('show'); });
     $('#sf_tab_outliers').on('click', '.sf-mark-removed', function() {
         const full = {};
         arr((state.results.summary || {}).traits_full).forEach(t => { full[shortTrait(t)] = t; });
