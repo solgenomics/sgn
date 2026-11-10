@@ -209,19 +209,20 @@ sub acronymize_traits {
 
     no warnings 'uninitialized';
 
-    foreach my $trait_name (@$traits)
-    {
-	$cnt++;
+    foreach my $trait_name (@$traits) {
+        $cnt++;
 
         my $abbr = $self->abbreviate_term($trait_name);
 
-	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};
+        # Suffix repeated acronyms in order: DMC, DMC.2, DMC.3, ...
+        my $base = $abbr;
+        my $suffix = 1;
+        $abbr = $base . '.' . ++$suffix while $abbr && $acronym_table->{$abbr};
 
         $acronymized_traits .= $abbr;
-	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
+        $acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
 
         $acronym_table->{$abbr} = $trait_name if $abbr;
-	my $tr_h = $acronym_table->{$abbr};
     }
 
     my $acronym_data = {
