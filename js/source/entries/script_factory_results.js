@@ -1324,7 +1324,8 @@ function renderModel() {
         h += '<h4>Variance components</h4>' + table(R.variance_components, [{ k: 'trait', l: 'Trait' }, { k: 'component', l: 'Component', f: v => esc(prettyComp(v)) }, { k: 'variance', l: 'Variance' }], { id: 'sfd_dt_vc' });
     }
     h += '<h4>Trials</h4>' + table(R.trials, [{ k: 'trial', l: 'Trial' }, { k: 'location', l: 'Location' }, { k: 'year', l: 'Year' }, { k: 'design', l: 'Design' },
-        { k: 'spatial_layout', l: 'Row/col', f: v => v ? 'yes' : '' }, { k: 'n_plots', l: 'Plots', f: v => v }, { k: 'n_accessions', l: 'Accessions', f: v => v }]);
+        { k: 'spatial_layout', l: 'Row/col', f: v => v ? 'yes' : '' }, { k: 'n_plots', l: 'Plots', f: v => v }, { k: 'n_accessions', l: 'Accessions', f: v => v },
+        { k: 'factors_not_used', l: 'Not used as model factor', f: v => esc(v || '') }]);
     h += '<h4><a data-toggle="collapse" href="#sfd_recipe">Script definition <span class="caret"></span></a></h4><pre id="sfd_recipe" class="collapse" style="max-height:400px;overflow:auto;font-size:11px">' + esc(JSON.stringify(R.recipe || {}, null, 2)) + '</pre>';
     $('#sfd_model').html(h);
     if (arr(R.stage1).length) dataTable('#sfd_dt_stage1', { pageLength: 10 });

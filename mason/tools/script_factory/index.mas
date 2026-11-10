@@ -67,7 +67,6 @@ $blupf90_available => 0
           <p class="sf-help">Tick a dataset: it loads right away. It should contain trials, accessions and at least one numeric trait. Plot-level observations are used.</p>
           <div id="sf_dataset_select"></div>
           <div class="sf-inline-row">
-            <label class="sf-check"><input type="checkbox" id="sf_dataset_outliers" /> Exclude outliers already flagged in the dataset</label>
             <button class="btn btn-primary" id="sf_load_dataset" style="display:none"><span class="glyphicon glyphicon-download-alt"></span> Load dataset</button>
           </div>
           <div id="sf_dataset_message"></div>
@@ -171,7 +170,7 @@ $blupf90_available => 0
               <button class="btn btn-default btn-sm" id="sf_preview_madr" style="display:none"><span class="glyphicon glyphicon-flash"></span> Flag with BH-MADR</button>
             </div>
           </div>
-          <p class="sf-help">Each box shows one trial. <span class="sf-dot sf-dot-flag"></span> flagged by the rule, <span class="sf-dot sf-dot-excl"></span> excluded by you. Click a point to exclude it or bring it back.</p>
+          <p class="sf-help">Each box shows one trial. <span class="sf-dot sf-dot-flag"></span> flagged by the rule, <span class="sf-dot sf-dot-excl"></span> excluded (by you, or marked as outlier in Breedbase). Click a point to exclude it or bring it back.</p>
           <div id="sf_explorer_plot" class="sf-plot"></div>
           <div id="sf_explorer_summary"></div>
         </div>
@@ -190,7 +189,7 @@ $blupf90_available => 0
               <button class="btn btn-link btn-sm dropdown-toggle" data-toggle="dropdown" id="sf_unmark_menu">Remove marks <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right">
                 <li><a href="#" class="sf-mark" data-action="unmark_dataset">Remove the dataset outlier mark</a></li>
-                <li><a href="#" class="sf-mark" data-action="unmark_database">Remove the database outlier mark</a></li>
+                <li id="sf_unmark_database_item"><a href="#" class="sf-mark" data-action="unmark_database">Remove the database outlier mark</a></li>
               </ul>
             </div>
           </div>
@@ -638,15 +637,16 @@ $blupf90_available => 0
 % my $user_email = '';
 % if ($c->user()) { my $p = $c->user()->get_object(); $user_email = $p->get_contact_email() || $p->get_private_email() || ''; }
 % my $can_mark_database = ($c->user() && grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
+% my $can_unmark_database = ($c->user() && grep { $_ eq 'curator' } $c->user()->roles()) ? 1 : 0;
 <script>
 jQuery(document).ready(function() {
   window.jsMod['script_factory'].init({
     can_mark_database: <% $can_mark_database %>,
+    can_unmark_database: <% $can_unmark_database %>,
     recipe_id: "<% $recipe_id && $recipe_id =~ /^\d+$/ ? $recipe_id : '' %>",
     dataset_id: "<% $dataset_id && $dataset_id =~ /^\d+$/ ? $dataset_id : '' %>",
     analysis_id: "<% $analysis_id && $analysis_id =~ /^\d+$/ ? $analysis_id : '' %>",
     run_id: "<% $run_id && $run_id =~ /^sf_run_[A-Za-z0-9_]+$/ ? $run_id : '' %>",
-    check_outliers: "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>",
     blupf90_available: <% $blupf90_available ? 1 : 0 %>,
     user_email: "<% $user_email =~ /^[^\s"<>\\]+@[^\s"<>\\]+$/ ? $user_email : '' %>"
   });
@@ -760,6 +760,7 @@ table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-src { display: inline-block; border-radius: 10px; padding: 0 8px; font-size: 11px; margin-right: 3px; }
 .sf-src-rule { background: #ffe4e6; color: #be123c; }
 .sf-src-ind { background: #e5e7eb; color: #111; }
+.sf-src-mark { background: #fef3c7; color: #92400e; }
 .sf-badge-ds { background: #2563eb; }
 .sf-badge-db { background: #7c3aed; }
 .sf-run-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
@@ -783,6 +784,7 @@ table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-terms select { max-width: 360px; }
 .sf-term-hint { font-size: 12px; color: #6b7280; width: 32%; }
 .sf-term-hint .warn { color: #b45309; }
+.sf-warn-text { color: #b45309; }
 .sf-check-inline { display: inline-block; margin-right: 14px; }
 .sf-trt { border: 1px solid var(--sf-border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
 .sf-trt-head { margin-bottom: 6px; }

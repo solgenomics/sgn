@@ -14,7 +14,7 @@
 
 import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
 
-const VERSION = '1.4';
+const VERSION = '1.5';
 const SVGNS = 'http://www.w3.org/2000/svg';
 const ZONE_COLORS = ['#2b7a4b', '#2563eb', '#d97706', '#9333ea', '#dc2626', '#0891b2', '#65a30d', '#db2777', '#4b5563', '#b45309'];
 const DESIGNS = {
@@ -35,7 +35,7 @@ const state = {
     traits: [],             // selected full trait names
     plotData: null,         // response of /plot_data
     plotDataKey: '',
-    exclusions: {},         // "unit|trait" -> {unit, trait, trial, accession, value}
+    exclusions: {},         // "unit|trait" -> {unit, trait, trial, accession, value, marked}; marked: 'dataset' | 'database' | 'both' for values marked in Breedbase
     madrFlags: {},          // "unit|trait" -> true (from a preview run)
     outlierRows: [],        // current full outlier list (rule + individual)
     outlierSel: {},         // "unit|trait" -> true, selected in the list
@@ -428,7 +428,7 @@ function loadDataset() {
     // the dataset loads as soon as it is ticked: only the latest choice counts
     const seq = state.loadSeq = (state.loadSeq || 0) + 1;
 
-    post('/ajax/script_factory/prepare', { dataset_id: id, dataset_trait_outliers: $('#sf_dataset_outliers').is(':checked') ? 1 : 0 })
+    post('/ajax/script_factory/prepare', { dataset_id: id })
         .then(r => {
             if (seq !== state.loadSeq) return;
             const keepTraits = state.dataset ? state.traits.map(shortTrait) : null;
@@ -440,6 +440,7 @@ function loadDataset() {
             state.madrPreviewDone = false;
             state.outlierSel = {};
             state.outlierStatus = {};
+            excludeMarked(true);
             state.results = null;
             state.lastRun = null;
             state.runFailed = false;
@@ -455,7 +456,9 @@ function loadDataset() {
                 $('#sf_recipe_trait_warning').html('');
             }
             state.traits.forEach(t => { if (!state.indexCfg[t]) state.indexCfg[t] = { weight: 0, direction: 'increase' }; });
-            $('#sf_dataset_message').html(r.traits.length ? '' : alertBox('warning', 'No numeric trait was found in this dataset.'));
+            const nMarked = arr(r.marked_outliers).length;
+            $('#sf_dataset_message').html(r.traits.length ? (nMarked ? alertBox('info', '<span class="glyphicon glyphicon-flag"></span> <b>' + nMarked + '</b> value(s) of this dataset are marked as outliers in Breedbase. ' +
+                'They are excluded in step 2 (only those values, not the whole plots); you can bring them back there.') : '') : alertBox('warning', 'No numeric trait was found in this dataset.'));
             renderDatasetOverview();
             renderExclusions();
             renderPipeline();
@@ -465,17 +468,42 @@ function loadDataset() {
         .finally(() => $('#sf_load_dataset').prop('disabled', false));
 }
 
+// factor support of a trial (rep, block, row, col), computed by the server with
+// the same rules the R pipeline applies: {ok, why}
+function sup(t, f) {
+    const s = t.support && t.support[f];
+    if (s) return s;
+    const ok = f === 'rep' ? t.n_reps > 1 : f === 'block' ? t.n_blocks > 1 : t.has_rowcol;
+    return { ok: !!ok, why: ok ? '' : 'not recorded' };
+}
+const FACTOR_NAMES = { rep: 'replicate', block: 'block', row: 'row', col: 'column' };
+// factors a trial records but cannot support (a single replicate or block is not news)
+function factorsOff(t) {
+    return Object.keys(FACTOR_NAMES).filter(f => !sup(t, f).ok && !/^(one replicate|one block|no row|no column|not recorded|the blocks are the replicates)/.test(sup(t, f).why))
+        .map(f => FACTOR_NAMES[f] + ' (' + sup(t, f).why + ')');
+}
+
 function detectDesign(t) {
     const txt = String(t.design || '').toLowerCase();
+    const repOk = sup(t, 'rep').ok;
+    const blockOk = sup(t, 'block').ok;
+    const entriesRep = t.support ? !!t.support.entries_replicated : t.replicated;
     let d;
     if (/row.?col|rowcol|spatial|p-rep|prep/.test(txt)) d = 'row_column';
-    else if (/augmented|madii|aug/.test(txt)) d = 'augmented';
-    else if (/alpha|lattice|incomplete/.test(txt) || (t.n_reps > 1 && t.n_blocks > t.n_reps)) d = 'alpha_lattice';
-    else if (/rcbd|randomi[sz]ed complete block/.test(txt) || t.n_reps > 1 || t.n_blocks > 1) d = 'rcbd';
+    else if (/augmented|madii|aug/.test(txt) || (!entriesRep && t.replicated && blockOk)) d = 'augmented';
+    else if (/alpha|lattice|incomplete/.test(txt) || (repOk && blockOk && t.n_blocks > t.n_reps)) d = 'alpha_lattice';
+    else if (/rcbd|randomi[sz]ed complete block/.test(txt) || repOk) d = 'rcbd';
     else if (/crd|completely random/.test(txt) || t.replicated) d = 'crd';
     else d = 'unreplicated';
     if (!t.replicated && d !== 'augmented') d = 'unreplicated';
     return d;
+}
+
+// count of a design factor, crossed out when the data cannot support it
+function factorCell(t, f, n) {
+    const s = sup(t, f);
+    const shown = !s.ok && n > 1 && !/^(one |the blocks are the replicates)/.test(s.why);
+    return '<td>' + (shown ? '<span class="sf-warn-text" title="Not used as a model factor: ' + esc(s.why) + '"><s>' + n + '</s> <span class="glyphicon glyphicon-ban-circle"></span></span>' : n) + '</td>';
 }
 
 function renderDatasetOverview() {
@@ -491,7 +519,7 @@ function renderDatasetOverview() {
         h += '<tr><td>' + (t.trial_id ? '<a href="/breeders/trial/' + esc(t.trial_id) + '" target="_blank">' + esc(t.trial) + '</a>' : esc(t.trial)) + '</td>' +
             '<td>' + esc(t.location) + '</td><td>' + esc(t.year) + '</td>' +
             '<td><span class="label label-default">' + esc(DESIGNS[d]) + '</span>' + (t.design ? ' <small class="sf-muted">(' + esc(t.design) + ')</small>' : '') + '</td>' +
-            '<td>' + t.n_plots + '</td><td>' + t.n_accessions + '</td><td>' + t.n_reps + '</td><td>' + t.n_blocks + '</td>' +
+            '<td>' + t.n_plots + '</td><td>' + t.n_accessions + '</td>' + factorCell(t, 'rep', t.n_reps) + factorCell(t, 'block', t.n_blocks) +
             '<td>' + (t.has_rowcol ? '<span class="glyphicon glyphicon-th" title="Row and column coordinates available"></span> ' + t.n_rows + '&times;' + t.n_cols : '<span class="sf-muted">no row/col</span>') + '</td></tr>';
     });
     h += '</tbody></table>';
@@ -709,7 +737,7 @@ function drawExplorer() {
     const yl = svgEl('text', { x: 14, y: (H - M.b + M.t) / 2, transform: 'rotate(-90 14 ' + ((H - M.b + M.t) / 2) + ')', 'text-anchor': 'middle', fill: '#374151', 'font-weight': 600 }, svg);
     yl.textContent = shortTrait(trait);
 
-    let nFlag = 0, nExcl = 0;
+    let nFlag = 0, nExcl = 0, nMark = 0;
     trials.forEach((tr, i) => {
         const rows = byTrial[tr];
         const cx = M.l + bw * i + bw / 2;
@@ -724,8 +752,10 @@ function drawExplorer() {
         rows.forEach(r => {
             const key = r[0] + '|' + trait;
             const excl = !!state.exclusions[key];
+            const mark = excl && !!state.exclusions[key].marked;
             const flag = !!flags[r[0]];
-            if (excl) nExcl++;
+            if (excl && !mark) nExcl++;
+            if (mark) nMark++;
             if (flag) nFlag++;
             const c = svgEl('circle', {
                 cx: cx + (hash(r[0]) - 0.5) * bw * 0.6, cy: ys(r[ti]), r: (excl || flag) ? 4 : 2.6,
@@ -734,7 +764,7 @@ function drawExplorer() {
             }, svg);
             c.setAttribute('data-unit', r[0]);
             const title = svgEl('title', {}, c);
-            title.textContent = r[0] + '\n' + r[2] + '\nvalue: ' + r[ti] + (r[3] ? '\nrep ' + r[3] : '') + (r[5] !== null && r[5] !== undefined ? '\nrow ' + r[5] + ', col ' + r[6] : '') + (flag ? '\nflagged by the rule' : '') + (excl ? '\nexcluded by you (click to restore)' : '\nclick to exclude');
+            title.textContent = r[0] + '\n' + r[2] + '\nvalue: ' + r[ti] + (r[3] ? '\nrep ' + r[3] : '') + (r[5] !== null && r[5] !== undefined ? '\nrow ' + r[5] + ', col ' + r[6] : '') + (flag ? '\nflagged by the rule' : '') + (mark ? '\nmarked as outlier in Breedbase: excluded (click to use it)' : excl ? '\nexcluded by you (click to restore)' : '\nclick to exclude');
             c.addEventListener('click', () => toggleExclusion(r, trait));
         });
         const lab = svgEl('text', { x: cx, y: H - M.b + 12, 'text-anchor': 'end', transform: 'rotate(-40 ' + cx + ' ' + (H - M.b + 12) + ')', fill: '#374151' }, svg);
@@ -748,9 +778,23 @@ function drawExplorer() {
     if (method === 'madr') msg += Object.keys(state.madrFlags).length || state.madrPreviewDone
         ? ', <b style="color:#e11d48">' + nFlag + '</b> flagged by BH-MADR'
         : ' &middot; BH-MADR needs a model fit: click <i>Flag with BH-MADR</i> to preview the flagged points (it is applied anyway when you run the analysis).';
-    msg += ', <b>' + nExcl + '</b> excluded by you.';
+    msg += ', <b>' + nExcl + '</b> excluded by you' + (nMark ? ', <b>' + nMark + '</b> excluded as marked in Breedbase' : '') + '.';
     $('#sf_explorer_summary').html('<p class="sf-help">' + msg + '</p>');
     renderExclusions();   // the full outlier list follows the rule and the exclusions
+}
+
+// values marked as outliers in Breedbase (dataset or database): exclude them
+// (on = true) or use them again (on = false). Their status badges come along.
+function excludeMarked(on) {
+    arr(state.dataset && state.dataset.marked_outliers).forEach(m => {
+        const key = m.unit + '|' + m.trait;
+        state.outlierStatus[key] = { dataset: m.dataset ? 1 : 0, database: m.database ? 1 : 0 };
+        if (!on) { if (state.exclusions[key] && state.exclusions[key].marked) delete state.exclusions[key]; return; }
+        if (!state.exclusions[key]) {
+            state.exclusions[key] = { unit: m.unit, trait: m.trait, trial: m.trial, accession: m.accession, value: Number(m.value),
+                marked: m.dataset && m.database ? 'both' : m.dataset ? 'dataset' : 'database' };
+        }
+    });
 }
 
 function toggleExclusion(r, trait) {
@@ -777,7 +821,8 @@ function collectOutliers() {
             const key = r[0] + '|' + trait;
             const rule = !!flags[r[0]];
             const ind = !!state.exclusions[key];
-            if (rule || ind) out.push({ key: key, unit: r[0], trial: r[1], accession: r[2], trait: trait, value: r[ti], rule: rule, ind: ind, ruleLabel: ruleLabel });
+            const marked = ind && !!state.exclusions[key].marked;
+            if (rule || ind) out.push({ key: key, unit: r[0], trial: r[1], accession: r[2], trait: trait, value: r[ti], rule: rule, ind: ind && !marked, marked: marked, ruleLabel: ruleLabel });
         });
     });
     return out;
@@ -805,11 +850,15 @@ function renderExclusions() {
     const rows = all.filter(o => !filter.val() || o.trait === filter.val());
     state.outlierVisible = rows;
 
-    const nRule = all.filter(o => o.rule).length, nInd = all.filter(o => o.ind).length;
+    const nRule = all.filter(o => o.rule).length, nInd = all.filter(o => o.ind).length, nMarked = all.filter(o => o.marked).length;
+    const nMarkedAll = arr(state.dataset && state.dataset.marked_outliers).filter(m => state.traits.indexOf(m.trait) >= 0).length;
     $('#sf_outlier_count').text(all.length);
     const method = radio('sf_outlier_method');
     let bd = '<b>' + nRule + '</b> flagged by ' + (method === 'iqr' ? 'the IQR rule' : method === 'madr' ? 'BH-MADR' : 'no rule') +
-        ' &middot; <b><span id="sf_exclusion_count">' + nInd + '</span></b> excluded by you';
+        ' &middot; <b><span id="sf_exclusion_count">' + nInd + '</span></b> excluded by you' +
+        (nMarkedAll ? ' &middot; <b>' + nMarked + '</b> of ' + nMarkedAll + ' marked in Breedbase excluded ' +
+            (nMarked ? '<button class="btn btn-link btn-xs sf-marked-toggle" data-on="0">use them</button>' : '') +
+            (nMarked < nMarkedAll ? '<button class="btn btn-link btn-xs sf-marked-toggle" data-on="1">exclude ' + (nMarked ? 'all of them' : 'them') + '</button>' : '') : '');
     if (method === 'madr' && !state.madrPreviewDone) bd += ' &middot; <i>click "Flag with BH-MADR" above to list the BH-MADR outliers</i>';
     if (state.dataset && state.dataset.dataset_n_outliers) bd += ' &middot; this dataset already has <b>' + state.dataset.dataset_n_outliers + '</b> dataset outlier(s)';
     $('#sf_outlier_breakdown').html(bd);
@@ -829,9 +878,9 @@ function renderExclusions() {
             const sel = !!state.outlierSel[o.key];
             h += '<tr class="' + (sel ? 'sel' : '') + '"><td><input type="checkbox" class="sf-outlier-cb" data-key="' + esc(o.key) + '"' + (sel ? ' checked' : '') + ' /></td>' +
                 '<td>' + esc(o.unit) + '</td><td>' + esc(o.trial) + '</td><td>' + esc(o.accession) + '</td><td>' + esc(shortTrait(o.trait)) + '</td><td>' + fmt(o.value) + '</td>' +
-                '<td>' + (o.rule ? '<span class="sf-src sf-src-rule">' + esc(o.ruleLabel) + '</span>' : '') + (o.ind ? '<span class="sf-src sf-src-ind">you</span>' : '') + '</td>' +
+                '<td>' + (o.rule ? '<span class="sf-src sf-src-rule">' + esc(o.ruleLabel) + '</span>' : '') + (o.ind ? '<span class="sf-src sf-src-ind">you</span>' : '') + (o.marked ? '<span class="sf-src sf-src-mark" title="Marked as outlier in Breedbase: excluded when the dataset was loaded">Breedbase mark</span>' : '') + '</td>' +
                 '<td class="sf-outlier-status" data-key="' + esc(o.key) + '">' + statusBadges(o.key) + '</td>' +
-                '<td>' + (o.ind ? '<button class="btn btn-link btn-xs sf-restore" data-key="' + esc(o.key) + '">restore</button>' : '') + '</td></tr>';
+                '<td>' + (o.ind || o.marked ? '<button class="btn btn-link btn-xs sf-restore" data-key="' + esc(o.key) + '">restore</button>' : '') + '</td></tr>';
         });
         h += '</tbody></table>';
         $('#sf_outlier_table').html(h);
@@ -857,6 +906,7 @@ function updateOutlierToolbar() {
     const what = nSel ? nSel + ' selected' : (n === 1 ? 'the listed outlier' : 'all ' + n);
     const owner = !!(state.dataset && state.dataset.dataset_is_owner);
     const canDb = String(cfg.can_mark_database) === '1';
+    const canUnmarkDb = String(cfg.can_unmark_database) === '1';
     $('#sf_outlier_selected').text(nSel ? nSel + ' selected' : (n ? 'None ticked: the buttons apply to all ' + n + ' listed' : ''));
     $('#sf_mark_dataset').prop('disabled', !n || !owner)
         .html('<span class="glyphicon glyphicon-flag"></span> Mark ' + (n ? what + ' ' : '') + 'as dataset outliers')
@@ -864,7 +914,12 @@ function updateOutlierToolbar() {
     $('#sf_mark_database').prop('disabled', !n || !canDb)
         .html('<span class="glyphicon glyphicon-hdd"></span> Mark ' + (n ? what + ' ' : '') + 'as database outliers')
         .attr('title', canDb ? 'Flag these values as outliers in the database, for all users' : 'Only curators and breeders can mark database outliers');
-    $('#sf_unmark_menu').prop('disabled', !n || (!owner && !canDb));
+    $('#sf_unmark_menu').prop('disabled', !n || (!owner && !canUnmarkDb));
+    // like the phenotype QC tool: only curators remove database outlier marks
+    $('#sf_unmark_database_item').toggleClass('disabled', !canUnmarkDb)
+        .attr('title', canUnmarkDb ? '' : 'Only curators can remove the database outlier mark');
+    $('#sf_unmark_database_item').prev().toggleClass('disabled', !owner)
+        .attr('title', owner ? '' : 'Only the owner of the dataset can change its outliers');
     const why = [];
     if (n && !owner) why.push('dataset outliers can only be marked by the owner of the dataset');
     if (n && !canDb) why.push('database outliers can only be marked by curators and breeders');
@@ -899,7 +954,7 @@ const MARK_TEXT = {
 // items: [{key, unit, trait}]; msgBox: where to report
 function markOutliers(items, action, msgBox) {
     if (!items.length || !state.dataset) return Promise.resolve();
-    if (action === 'database' && !confirm('Mark ' + items.length + ' value(s) as outliers in the database?\n\nThey will be excluded for ALL users, in every dataset, analysis and tool that excludes outliers.\n\nNote: when a dataset excludes database outliers, Breedbase leaves out the WHOLE plot (all its traits), not only the marked value. To drop only the value, use dataset outliers instead.\n\nA curator or breeder can remove the mark later.')) return Promise.resolve();
+    if (action === 'database' && !confirm('Mark ' + items.length + ' value(s) as outliers in the database?\n\nThey will be excluded for ALL users, in every dataset, analysis and tool that excludes outliers.\n\nNote: when a dataset excludes database outliers, Breedbase leaves out the WHOLE plot (all its traits), not only the marked value. To drop only the value, use dataset outliers instead.\n\nOnly a curator can remove the mark later.')) return Promise.resolve();
     if (action === 'unmark_database' && !confirm('Remove the database outlier mark from ' + items.length + ' value(s)? They will be used again by all tools.')) return Promise.resolve();
     $(msgBox).html('<p class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Saving...</p>');
     return post('/ajax/script_factory/outliers/mark', { dataset_id: state.dataset.dataset_id, action: action, items: JSON.stringify(items.map(o => ({ unit: o.unit, trait: o.trait }))) })
@@ -919,7 +974,10 @@ function markOutliers(items, action, msgBox) {
 }
 
 function exclusionsPayload() {
-    return Object.keys(state.exclusions).map(k => ({ unit: state.exclusions[k].unit, trait: state.exclusions[k].trait }));
+    return Object.keys(state.exclusions).map(k => {
+        const e = state.exclusions[k];
+        return e.marked ? { unit: e.unit, trait: e.trait, source: e.marked } : { unit: e.unit, trait: e.trait };
+    });
 }
 
 function previewMadr() {
@@ -949,15 +1007,16 @@ function trialModel(t) {
     const override = state.designOverrides[t.trial];
     const design = override && override !== 'auto' ? override : detectDesign(t);
     if (t.has_rowcol && (s1 === 'spats' || s1 === 'auto')) {
-        return { design: design, text: 'SpATS: y ~ accession' + (t.n_reps > 1 ? ' + rep' : '') + ' + PSANOVA(col, row) + (1|row) + (1|col)', spats: true };
+        return { design: design, text: 'SpATS: y ~ accession' + (sup(t, 'rep').ok ? ' + rep' : '') + ' + PSANOVA(col, row)' + (sup(t, 'row').ok ? ' + (1|row)' : '') + (sup(t, 'col').ok ? ' + (1|col)' : ''), spats: true, off: factorsOff(t) };
     }
+    const r = sup(t, 'rep').ok, b = sup(t, 'block').ok;
     let terms = [];
-    if (design === 'rcbd' && t.n_reps > 1) terms = ['(1|rep)'];
-    if (design === 'alpha_lattice') terms = (t.n_reps > 1 ? ['(1|rep)'] : []).concat(t.n_blocks > 1 ? ['(1|rep:block)'] : []);
-    if (design === 'augmented' && t.n_blocks > 1) terms = ['(1|block)'];
-    if (design === 'row_column') terms = (t.n_reps > 1 ? ['(1|rep)'] : []).concat(['(1|rep:row)', '(1|rep:col)']);
+    if (design === 'rcbd' && r) terms = ['(1|rep)'];
+    if (design === 'alpha_lattice') terms = (r ? ['(1|rep)'] : []).concat(b ? ['(1|rep:block)'] : []);
+    if (design === 'augmented' && b) terms = ['(1|block)'];
+    if (design === 'row_column') terms = (r ? ['(1|rep)'] : []).concat(sup(t, 'row').ok ? ['(1|rep:row)'] : [], sup(t, 'col').ok ? ['(1|rep:col)'] : []);
     if (design === 'unreplicated') return { design: design, text: 'raw values (no replication, no error estimate)', warn: true };
-    return { design: design, text: 'y ~ accession' + (terms.length ? ' + ' + terms.join(' + ') : ''), note: s1 === 'spats' && !t.has_rowcol ? 'no row/col: design model used' : '' };
+    return { design: design, text: 'y ~ accession' + (terms.length ? ' + ' + terms.join(' + ') : ''), note: s1 === 'spats' && !t.has_rowcol ? 'no row/col: design model used' : '', off: factorsOff(t) };
 }
 
 function renderDesignTable() {
@@ -974,7 +1033,8 @@ function renderDesignTable() {
         h += '<tr><td>' + esc(t.trial) + '<br/><small class="sf-muted">' + esc(t.location) + ' ' + esc(t.year) + '</small></td>' +
             '<td><select class="form-control input-sm sf-design-override" data-trial="' + esc(t.trial) + '">' + opts + '</select></td>' +
             '<td><code>' + esc(m.text) + '</code>' + (m.spats ? ' <span class="label label-success">spatial</span>' : '') +
-            (m.warn ? ' <span class="label label-warning">unreplicated</span>' : '') + (m.note ? ' <small class="sf-muted">' + esc(m.note) + '</small>' : '') + '</td></tr>';
+            (m.warn ? ' <span class="label label-warning">unreplicated</span>' : '') + (m.note ? ' <small class="sf-muted">' + esc(m.note) + '</small>' : '') +
+            (m.off && m.off.length ? '<br/><small class="sf-warn-text"><span class="glyphicon glyphicon-ban-circle"></span> not used: ' + esc(m.off.join('; ')) + '</small>' : '') + '</td></tr>';
     });
     h += '</tbody></table>';
     $('#sf_design_table').html(h);
@@ -1063,7 +1123,8 @@ function suggestion() {
     const trials = ds.trials.map(t => {
         const layout = [t.n_reps > 1 ? t.n_reps + ' reps' : '', t.n_blocks > 1 ? t.n_blocks + ' blocks' : '',
             t.has_rowcol ? t.n_rows + ' rows x ' + t.n_cols + ' cols' : '', t.n_check_plots ? t.n_check_plots + ' check plots' : '',
-            t.replicated ? '' : 'no replicated entries'].filter(Boolean).join(', ');
+            t.replicated ? '' : 'no replicated entries'].filter(Boolean).join(', ') +
+            (factorsOff(t).length ? '. Not used as factor: ' + factorsOff(t).join('; ') : '');
         return { t: t, design: detectDesign(t), stored: t.design || '', layout: layout || 'no replicates or blocks recorded' };
     });
     const nT = trials.length;
@@ -1247,9 +1308,13 @@ function singleData() {
     const uniq = k => { const o = {}; tr.forEach(t => { o[t[k] || ''] = 1; }); return Object.keys(o).length; };
     return {
         n_trials: tr.length,
-        rep_trials: tr.filter(t => t.n_reps > 1).length,
-        block_trials: tr.filter(t => t.n_blocks > 1 && t.n_blocks > t.n_reps).length,
-        rc_trials: tr.filter(t => t.has_rowcol).length,
+        rep_trials: tr.filter(t => sup(t, 'rep').ok).length,
+        block_trials: tr.filter(t => sup(t, 'block').ok).length,
+        rc_trials: tr.filter(t => sup(t, 'row').ok || sup(t, 'col').ok).length,
+        row_trials: tr.filter(t => sup(t, 'row').ok).length,
+        col_trials: tr.filter(t => sup(t, 'col').ok).length,
+        // why a factor is left out, per reason: {why: [trials]}
+        why: f => { const o = {}; tr.filter(t => !sup(t, f).ok).forEach(t => { (o[sup(t, f).why] = o[sup(t, f).why] || []).push(t.trial); }); return o; },
         incomplete: designs.some(d => d === 'alpha_lattice' || d === 'augmented'),
         rowcol_design: designs.some(d => d === 'row_column'),
         n_locations: uniq('location'),
@@ -1269,14 +1334,21 @@ function singleBuilderFormula() {
     const known = !!D;
     if (r.env !== 'none') add(r.env === 'random' ? '(1|trial)' : 'trial', !known || D.n_trials > 1, 'trial (one trial)');
     const repOn = r.rep === 'auto' ? (!known || D.rep_trials > 0) : r.rep !== 'none';
-    if (repOn) add(r.rep === 'fixed' ? 'trial:rep' : '(1|trial:rep)', !known || D.rep_trials > 0, 'replicate (one per trial)');
+    if (repOn) add(r.rep === 'fixed' ? 'trial:rep' : '(1|trial:rep)', !known || D.rep_trials > 0, 'replicate (' + (known ? Object.keys(D.why('rep')).join(', ') : '') + ')');
     const blockOn = r.block === 'auto' ? (known ? D.incomplete && D.block_trials > 0 : true) : r.block !== 'none';
-    if (blockOn) add(r.block === 'fixed' ? 'trial:rep:block' : '(1|trial:rep:block)', !known || D.block_trials > 0, 'block (blocks equal replicates)');
+    if (blockOn) add(r.block === 'fixed' ? 'trial:rep:block' : '(1|trial:rep:block)', !known || D.block_trials > 0, 'block (' + (known ? Object.keys(D.why('block')).join(', ') : '') + ')');
     const rcOn = r.rowcol === 'auto' ? (known ? D.rowcol_design || (D.rc_trials === D.n_trials && D.n_trials > 0) : false) : r.rowcol !== 'none';
-    if (rcOn) { add('(1|trial:row)', !known || D.rc_trials > 0, 'row/column (no row and column numbers)'); if (!known || D.rc_trials > 0) terms.push('(1|trial:col)'); }
+    if (rcOn) {
+        add('(1|trial:row)', !known || D.row_trials > 0, 'row (' + (known ? Object.keys(D.why('row')).join(', ') : '') + ')');
+        add('(1|trial:col)', !known || D.col_trials > 0, 'column (' + (known ? Object.keys(D.why('col')).join(', ') : '') + ')');
+    }
     if (r.trend === 'linear') add(!known || D.n_trials > 1 ? 'trial:rowN + trial:colN' : 'rowN + colN', !known || D.rc_trials > 0, 'linear trend (no row and column numbers)');
     r.gxe.forEach(g => {
         const n = !known ? 2 : g === 'trial' ? D.n_trials : g === 'location' ? D.n_locations : D.n_years;
+        if (known && g !== 'trial' && r.gxe.indexOf('trial') >= 0 && n > 1 && n === D.n_trials) {
+            dropped.push('accession x ' + g + ' (each ' + g + ' has one trial: the same as accession x trial)');
+            return;
+        }
         add('(1|accession:' + g + ')', n > 1, 'accession x ' + g + ' (one ' + g + ')');
     });
     r.covariates.forEach(t => terms.push(covName(t)));
@@ -1322,6 +1394,12 @@ function checkFormula(txt) {
         return { ok: false, msg: 'character "' + tk + '" is not allowed' };
     }
     if (depth !== 0) return { ok: false, msg: 'unbalanced parentheses' };
+    const D = singleData();
+    if (D) {
+        const used = toks.filter(x => FACTOR_NAMES[x]);
+        const off = Object.keys(FACTOR_NAMES).filter(f => used.indexOf(f) >= 0 && D[f + '_trials'] === 0);
+        if (off.length) return { ok: false, msg: off.map(f => '"' + f + '" cannot be used: ' + Object.keys(D.why(f)).join(', ')).join('; ') };
+    }
     const random = /\(\s*1\s*\|\s*accession\s*\)/.test(rhs);
     const fixedPart = rhs.replace(/\([^()]*\|[^()]*\)/g, '');
     const fixed = fixedPart.split('+').map(x => x.trim()).indexOf('accession') >= 0;
@@ -1340,13 +1418,25 @@ function renderSingleHints() {
     $('#sf_single_formula_check').html($.trim($('#sf_single_formula').val()) ?
         (chk.ok ? '<small style="color:#2b7a4b"><span class="glyphicon glyphicon-ok"></span> Valid formula: genotype ' + (chk.random ? 'random (BLUPs)' : 'fixed (BLUEs)') + '</small>' :
             '<small style="color:#dc2626"><span class="glyphicon glyphicon-exclamation-sign"></span> ' + esc(chk.msg) + '</small>') : '');
-    if (!D) { $('.sf-term-hint').html('<span class="sf-muted">load a dataset</span>'); return; }
+    if (!D) {
+        $('.sf-term-hint').html('<span class="sf-muted">load a dataset</span>');
+        $('#sf_single_rep, #sf_single_block, #sf_single_rowcol').find('option').prop('disabled', false).removeAttr('title');
+        return;
+    }
     const of = (n, tot, what) => '<span' + (n ? '' : ' class="warn"') + '>' + n + ' of ' + tot + ' trial(s) ' + what + '</span>';
     hint('genotype', '');
     hint('env', D.n_trials > 1 ? D.n_trials + ' trials' : '<span class="warn">one trial: no environment effect</span>');
-    hint('rep', of(D.rep_trials, D.n_trials, 'with more than one replicate'));
-    hint('block', of(D.block_trials, D.n_trials, 'with blocks inside replicates') + (D.incomplete ? '' : '<br/>automatic: only for alpha-lattice / augmented'));
-    hint('rowcol', of(D.rc_trials, D.n_trials, 'with row and column numbers'));
+    const whyList = f => Object.entries(D.why(f)).map(([w, ts]) => '<br/><small class="sf-muted">left out in ' + esc(ts.length > 3 ? ts.length + ' trials' : ts.join(', ')) + ': ' + esc(w) + '</small>').join('');
+    hint('rep', of(D.rep_trials, D.n_trials, 'where the entries are replicated') + (D.rep_trials < D.n_trials ? whyList('rep') : ''));
+    hint('block', of(D.block_trials, D.n_trials, 'with usable blocks') + (D.block_trials < D.n_trials ? whyList('block') : '') + (D.incomplete ? '' : '<br/>automatic: only for alpha-lattice / augmented'));
+    hint('rowcol', of(D.rc_trials, D.n_trials, 'with usable rows / columns') + (D.rc_trials < D.n_trials ? whyList('row') : ''));
+    // the smart block: a factor no trial supports cannot be put in the model
+    [['#sf_single_rep', D.rep_trials, 'rep'], ['#sf_single_block', D.block_trials, 'block'], ['#sf_single_rowcol', D.rc_trials, 'row']].forEach(([id, n, f]) => {
+        const sel = $(id);
+        const why = n ? '' : 'Not supported by this dataset: ' + Object.keys(D.why(f)).join(', ');
+        sel.find('option[value=random], option[value=fixed]').prop('disabled', !n).attr('title', why);
+        if (!n && ['random', 'fixed'].indexOf(sel.val()) >= 0) sel.val('auto');
+    });
     hint('trend', of(D.rc_trials, D.n_trials, 'with row and column numbers'));
     hint('gxe', D.n_trials + ' trial(s), ' + D.n_locations + ' location(s), ' + D.n_years + ' year(s)');
 }
@@ -1422,8 +1512,11 @@ function renderPipeline() {
     const items = [];
     items.push({ t: 'Data', d: state.dataset ? esc(state.dataset.dataset_name) + '<br/>' + state.traits.length + ' trait(s), ' + state.dataset.trials.length + ' trial(s)' : 'no dataset loaded', off: !state.dataset });
     const o = r.outliers;
-    const nEx = Object.keys(state.exclusions).length;
-    items.push({ t: 'Quality control', d: (o.method === 'iqr' ? 'IQR k = ' + o.k + ' by ' + o.group_by.replace('_', ' &times; ') : o.method === 'madr' ? 'BH-MADR, &alpha; = ' + o.alpha : 'no automatic rule') + (nEx ? '<br/>' + nEx + ' individual exclusion(s)' : ''), off: o.method === 'none' && !nEx });
+    const exKeys = Object.keys(state.exclusions).filter(k => state.traits.indexOf(state.exclusions[k].trait) >= 0);
+    const nMk = exKeys.filter(k => state.exclusions[k].marked).length;
+    const nEx = exKeys.length - nMk;
+    items.push({ t: 'Quality control', d: (o.method === 'iqr' ? 'IQR k = ' + o.k + ' by ' + o.group_by.replace('_', ' &times; ') : o.method === 'madr' ? 'BH-MADR, &alpha; = ' + o.alpha : 'no automatic rule') +
+        (nEx ? '<br/>' + nEx + ' individual exclusion(s)' : '') + (nMk ? '<br/>' + nMk + ' value(s) marked as outliers in Breedbase' : ''), off: o.method === 'none' && !nEx && !nMk });
     if (r.strategy === 'two_stage') {
         items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] + trtChip(r.treatments.use, 'adjusted for ') });
         items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r) });
@@ -1995,7 +2088,6 @@ export function init(options) {
     $ = window.jQuery;
     cfg = options || {};
 
-    if (String(cfg.check_outliers) !== '1') $('#sf_dataset_outliers').closest('label').hide();
 
     // pipeline of a stored analysis or of a run (Manage > Analyses, job list, dashboard)
     const pipelineP = (cfg.analysis_id || cfg.run_id)
@@ -2031,7 +2123,6 @@ export function init(options) {
         $('input[name=sf_dataset_checkbox]').not(this).prop('checked', false);
         loadDataset();
     });
-    $('#sf_dataset_outliers').on('change', () => { if (selectedDatasetId()) loadDataset(); });
     $('#sf_traits').on('change', '.sf-trait-cb', onTraitsChanged);
     $('#sf_treatments').on('change', 'input', onTreatmentsChanged);
     $('#sf_traits_all').on('click', () => { $('.sf-trait-cb').prop('checked', true); onTraitsChanged(); });
@@ -2050,6 +2141,11 @@ export function init(options) {
     $('#sf_explorer_trait').on('change', drawExplorer);
     $('#sf_preview_madr').on('click', previewMadr);
     $('#sf_madr_alpha').on('change', () => { state.madrFlags = {}; state.madrPreviewDone = false; if (state.plotData) drawExplorer(); });
+    // values marked in Breedbase: use them all again / exclude them all
+    $('#sf_outlier_breakdown').on('click', '.sf-marked-toggle', function() {
+        excludeMarked(String($(this).data('on')) === '1');
+        drawExplorer(); renderPipeline();
+    });
     $('#sf_outlier_table').on('click', '.sf-restore', function() {
         delete state.exclusions[$(this).data('key')];
         drawExplorer(); renderPipeline();
@@ -2072,7 +2168,7 @@ export function init(options) {
     });
     $(document).on('click', '.sf-outlier-toolbar .sf-mark', function(e) {
         e.preventDefault();
-        if ($(this).prop('disabled')) return;
+        if ($(this).prop('disabled') || $(this).closest('li').hasClass('disabled')) return;
         markOutliers(outlierTargets(), $(this).data('action'), '#sf_outlier_message');
     });
     // results tab: mark everything the run removed

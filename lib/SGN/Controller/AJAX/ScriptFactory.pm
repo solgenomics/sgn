@@ -291,7 +291,6 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     return if !_require_login($c);
 
     my $dataset_id = $c->req->param('dataset_id');
-    my $exclude_outliers = $c->req->param('dataset_trait_outliers') ? 1 : 0;
     if (!$dataset_id || $dataset_id !~ /^\d+$/) {
         $c->stash->{rest} = { error => 'Please select a dataset.' };
         return;
@@ -310,8 +309,11 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
             people_schema => $people_schema,
             schema => $schema,
             sp_dataset_id => $dataset_id,
-            exclude_dataset_outliers => $exclude_outliers,
-            exclude_phenotype_outlier => $exclude_outliers,
+            # All values are loaded: outliers are handled in step 2 (rules, values
+            # excluded by hand, dataset / database marks shown per value), so a value
+            # is never dropped before the user sees it, and never as a whole plot.
+            exclude_dataset_outliers => 0,
+            exclude_phenotype_outlier => 0,
             file_name => $tempfile,
             quotes => 0,
         );
@@ -392,6 +394,11 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         }
         my ($rv, $cv) = ($col->($r, 'rowNumber'), $col->($r, 'colNumber'));
         $t->{rc}++ if _is_number($rv) && _is_number($cv);
+        push @{$t->{plots}}, {
+            acc => $acc, rep => $col->($r, 'replicate'), block => $col->($r, 'blockNumber'),
+            row => (_is_number($rv) ? $rv : undef), col => (_is_number($cv) ? $cv : undef),
+            check => (lc($col->($r, 'entryType') // '') =~ /^(check|checks|control)$/ ? 1 : 0),
+        };
     }
 
     my @trials;
@@ -415,6 +422,7 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
             has_rowcol => $has_rowcol,
             replicated => $replicated ? 1 : 0,
             n_check_plots => $t->{n_checks} // 0,
+            support => _factor_support($t->{plots} || []),
         };
     }
 
@@ -424,12 +432,23 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     my %locations = map { ($_->{location} // '') => 1 } @trials;
     my %years = map { ($_->{year} // '') => 1 } @trials;
 
+    # values marked as outliers in Breedbase: step 2 starts with them excluded
+    # (only the marked value, never the whole plot)
+    my %unit_info;
+    foreach my $r (@plot_rows) {
+        my $unit = $col->($r, 'observationUnitName');
+        $unit_info{$unit} = [ $col->($r, 'studyName'), $col->($r, 'germplasmName') ] if defined $unit;
+    }
+    my $marked = try { _marked_outliers($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info) }
+                 catch { print STDERR "Script Factory: marked outliers of dataset $dataset_id not read: $_\n"; [] };
+
     $c->stash->{rest} = {
         token => $token,
         dataset_id => $dataset_id,
         dataset_name => $ds->name(),
         dataset_is_owner => (($ds->sp_person_id() // -1) == _user_id($c)) ? 1 : 0,
         dataset_n_outliers => scalar(@{ $ds->outliers() || [] }),
+        marked_outliers => $marked,
         phenotype_file => $pheno_file,    # archived as training data when the analysis is stored
         traits => \@traits,
         trials => \@trials,
@@ -487,6 +506,87 @@ sub plot_data : Path('/ajax/script_factory/plot_data') Args(0) {
 }
 
 # ---------------------------------------------------------------------------
+# Factor support ("smart block") of one trial: which design factors the data
+# can support. Same rules as factor_support() in the R pipeline, which applies
+# them to the run; here they tell the page which options to allow.
+#   rep    a typical test entry (checks excluded) is in >= 2 replicates
+#   block  more blocks than replicates, >= 2 plots per block, and some entry
+#          in more than one block
+#   row,   numbers on >= 90% of the plots, >= 2 levels, >= 2 plots per level,
+#   col    not the same grouping as replicate or block
+# plots: [{acc, rep, block, row, col, check}]
+# ---------------------------------------------------------------------------
+sub _n_levels {
+    my %u = map { $_ => 1 } grep { defined($_) && $_ ne '' } @_;
+    return scalar(keys %u);
+}
+
+sub _median {
+    my @v = sort { $a <=> $b } @_;
+    return 0 if !@v;
+    return @v % 2 ? $v[$#v / 2] : ($v[@v / 2 - 1] + $v[@v / 2]) / 2;
+}
+
+# the groupings a and b (array refs) are the same partition
+sub _same_grouping {
+    my ($a, $b) = @_;
+    my @k = grep { defined($a->[$_]) && defined($b->[$_]) } 0 .. $#$a;
+    return 0 if !@k;
+    my $na = _n_levels(map { $a->[$_] } @k);
+    return $na == _n_levels(map { $b->[$_] } @k) && $na == _n_levels(map { $a->[$_] . "\t" . $b->[$_] } @k) ? 1 : 0;
+}
+
+sub _factor_support {
+    my $plots = shift;
+    my $yes = { ok => 1, why => '' };
+    my $no = sub { return { ok => 0, why => shift } };
+    my @p = grep { defined $_->{acc} } @$plots;
+
+    # effective replicate: the block column holds it when there is one replicate
+    my @eff = _n_levels(map { $_->{rep} } @p) > 1 ? map { $_->{rep} } @p
+            : _n_levels(map { $_->{block} } @p) > 1 ? map { $_->{block} } @p
+            : map { '1' } @p;
+    my @test = grep { !$p[$_]->{check} } 0 .. $#p;
+    @test = 0 .. $#p if !@test;
+    my (%reps_of, %copies, %check_copies);
+    foreach my $i (@test) { $reps_of{$p[$i]->{acc}}->{$eff[$i] // ''} = 1; $copies{$p[$i]->{acc}}++; }
+    $check_copies{$_->{acc}}++ for grep { $_->{check} } @p;
+    my $checks_repeated = grep { $_ > 1 } values %check_copies;
+    my %sp = (entries_replicated => (_median(values %copies) >= 2 ? 1 : 0));
+
+    $sp{rep} = _n_levels(@eff) < 2 ? $no->('one replicate')
+             : _median(map { scalar(keys %$_) } values %reps_of) < 2
+                 ? $no->('the test entries are in one replicate only' . ($checks_repeated ? ', only the checks are repeated' : ''))
+             : $yes;
+    my @rep_used = $sp{rep}->{ok} ? @eff : map { '1' } @p;
+
+    my @bid = map { defined($p[$_]->{block}) && $p[$_]->{block} ne '' ? $rep_used[$_] . "\t" . $p[$_]->{block} : undef } 0 .. $#p;
+    my $n_with_block = grep { defined } @bid;
+    my %blocks_of;
+    $blocks_of{$p[$_]->{acc}}->{$bid[$_]} = 1 for grep { defined $bid[$_] } 0 .. $#p;
+    $sp{block} = _n_levels(map { $_->{block} } @p) < 2 ? $no->('one block')
+               : _n_levels(@bid) <= _n_levels(@rep_used) ? $no->('the blocks are the replicates')
+               : $n_with_block / _n_levels(@bid) < 2 ? $no->('one plot per block')
+               : !(grep { keys(%$_) > 1 } values %blocks_of) ? $no->('no entry is in more than one block, so block effects cannot be separated from the genotypes')
+               : $yes;
+    my @blk_used = $sp{block}->{ok} ? @bid : map { undef } @p;
+
+    my $rc = (grep { defined($_->{row}) && defined($_->{col}) } @p) >= 0.9 * @p;
+    foreach my $f (['row', 'row'], ['col', 'column']) {
+        my ($k, $nm) = @$f;
+        my @x = map { $_->{$k} } @p;
+        my $n = _n_levels(@x);
+        my @in_rep = map { defined($x[$_]) ? $rep_used[$_] . "\t" . $x[$_] : undef } 0 .. $#p;
+        $sp{$k} = (!$rc || $n < 2) ? $no->("no $nm numbers")
+                : (grep { defined } @x) / $n < 2 ? $no->("one plot per $nm")
+                : ($sp{rep}->{ok} && _same_grouping(\@in_rep, \@rep_used)) ? $no->("each $nm is a replicate")
+                : ($sp{block}->{ok} && _same_grouping(\@in_rep, \@blk_used)) ? $no->("each $nm is a block")
+                : $yes;
+    }
+    return \%sp;
+}
+
+# ---------------------------------------------------------------------------
 # marking outliers in Breedbase
 #
 #   dataset outliers:  phenotype ids in the dataset's "outliers" list (as the
@@ -497,9 +597,17 @@ sub plot_data : Path('/ajax/script_factory/plot_data') Args(0) {
 #                      every search with exclude_phenotype_outlier.
 # ---------------------------------------------------------------------------
 
+# Same rules as the phenotype quality control tool: curators and breeders can
+# mark database outliers (storeoutliers), only curators can remove the mark
+# (restoreoutliers), so a mark set by a curator is never undone by a breeder.
 sub _can_mark_database {
     my $c = shift;
     return (grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
+}
+
+sub _can_unmark_database {
+    my $c = shift;
+    return (grep { $_ eq 'curator' } $c->user()->roles()) ? 1 : 0;
 }
 
 # items: [{unit, trait}] -> { "unit|trait" => [phenotype_id, ...] } plus database flags
@@ -544,6 +652,50 @@ sub _resolve_phenotypes {
     return (\%ids, \%in_db, $outlier_type_id);
 }
 
+# Values of the dataset (plots of its trials, its traits) marked as outliers:
+# dataset outliers (the dataset's phenotype id list) and database outliers
+# (phenotypeprop phenotype_outlier).
+# Returns [{unit, trait, trial, accession, value, dataset, database}].
+sub _marked_outliers {
+    my ($schema, $ds, $trait_names, $unit_info) = @_;
+    my %ds_outliers = map { $_ => 1 } grep { defined && /^\d+$/ } @{ $ds->outliers() || [] };
+    my $trials = [ map { ref($_) ? $_->[0] : $_ } @{ $ds->retrieve_trials() || [] } ];
+    return [] if !@$trials || !@$trait_names || !%$unit_info;
+
+    my %trait_of;
+    foreach my $t (@$trait_names) {
+        my $row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $t);
+        $trait_of{$row->cvterm_id()} = $t if $row;
+    }
+    return [] if !%trait_of;
+
+    my $outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $sth = $schema->storage->dbh()->prepare(
+        "SELECT stock.uniquename, phenotype.cvalue_id, phenotype.value, phenotype.phenotype_id,
+                EXISTS (SELECT 1 FROM phenotypeprop pp WHERE pp.phenotype_id = phenotype.phenotype_id AND pp.type_id = ?)
+           FROM phenotype
+           JOIN nd_experiment_phenotype nep ON nep.phenotype_id = phenotype.phenotype_id
+           JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id AND nes.type_id = ?
+           JOIN nd_experiment_project nepr ON nepr.nd_experiment_id = nep.nd_experiment_id
+           JOIN stock ON stock.stock_id = nes.stock_id
+          WHERE nepr.project_id = ANY(?) AND phenotype.cvalue_id = ANY(?)
+            AND (phenotype.phenotype_id = ANY(?)
+                 OR EXISTS (SELECT 1 FROM phenotypeprop pp WHERE pp.phenotype_id = phenotype.phenotype_id AND pp.type_id = ?))");
+    $sth->execute($outlier_type_id, $experiment_type_id, $trials, [ keys %trait_of ], [ keys %ds_outliers ], $outlier_type_id);
+
+    my %marked;
+    while (my ($unit, $cvterm_id, $value, $phenotype_id, $in_db) = $sth->fetchrow_array()) {
+        next if !$unit_info->{$unit};    # plots of the dataset only
+        my $key = "$unit|$trait_of{$cvterm_id}";
+        my $m = $marked{$key} ||= { unit => $unit, trait => $trait_of{$cvterm_id}, trial => $unit_info->{$unit}->[0],
+                                    accession => $unit_info->{$unit}->[1], value => $value, dataset => 0, database => 0 };
+        $m->{dataset} = 1 if $ds_outliers{$phenotype_id};
+        $m->{database} = 1 if $in_db;
+    }
+    return [ map { $marked{$_} } sort keys %marked ];
+}
+
 sub mark_outliers : Path('/ajax/script_factory/outliers/mark') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -567,13 +719,18 @@ sub mark_outliers : Path('/ajax/script_factory/outliers/mark') Args(0) {
     return if $c->stash->{rest};
     my $is_owner = (($ds->sp_person_id() // -1) == $sp_person_id) ? 1 : 0;
     my $can_db = _can_mark_database($c);
+    my $can_unmark_db = _can_unmark_database($c);
 
     if ($action =~ /dataset$/ && !$is_owner) {
         $c->stash->{rest} = { error => 'Only the owner of the dataset can change its outliers. You can copy the dataset to your own account and mark them there.' };
         return;
     }
-    if ($action =~ /database$/ && !$can_db) {
+    if ($action eq 'database' && !$can_db) {
         $c->stash->{rest} = { error => 'Only curators and breeders can mark outliers in the database.' };
+        return;
+    }
+    if ($action eq 'unmark_database' && !$can_unmark_db) {
+        $c->stash->{rest} = { error => 'Only curators can remove the database outlier mark.' };
         return;
     }
 
@@ -626,6 +783,7 @@ sub mark_outliers : Path('/ajax/script_factory/outliers/mark') Args(0) {
         dataset_n_outliers => scalar(keys %ds_outliers),
         is_owner => $is_owner,
         can_mark_database => $can_db,
+        can_unmark_database => $can_unmark_db,
     };
 }
 

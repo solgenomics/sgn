@@ -37,7 +37,7 @@ suppressPackageStartupMessages({
   library(lme4)
 })
 
-SF_VERSION <- "1.4"
+SF_VERSION <- "1.5"
 
 # -----------------------------------------------------------------------------
 # Arguments
@@ -258,21 +258,27 @@ log_step("Traits: ", paste(short_trait(traits), collapse = ", "))
 # -----------------------------------------------------------------------------
 n_levels <- function(x) length(unique(x[!is.na(x) & x != ""]))
 
-detect_trial_design <- function(d) {
+detect_trial_design <- function(d, sp = NULL) {
   txt <- tolower(paste(unique(d$design_raw[!is.na(d$design_raw)]), collapse = " "))
   n_rep <- n_levels(d$rep)
   n_block <- n_levels(d$block)
   has_rowcol <- sum(!is.na(d$row) & !is.na(d$col)) >= 0.9 * nrow(d) && n_levels(d$row) > 1 && n_levels(d$col) > 1
   block_ne_rep <- n_rep > 0 && n_block > 0 && any(d$block != d$rep, na.rm = TRUE)
   replicated <- any(table(d$accession) > 1)
+  # with the factor support (factor_support()): a replicate only counts when
+  # the test entries are repeated across replicates, a block only when blocks
+  # are linked by common entries
+  rep_ok <- if (is.null(sp)) n_rep > 1 else sp$rep$ok
+  block_ok <- if (is.null(sp)) n_block > 1 else sp$block$ok
+  entries_rep <- if (is.null(sp)) replicated else sp$entries_replicated
 
   design <- if (grepl("row.?col|rowcol|spatial|p-rep|prep", txt)) {
     "row_column"
-  } else if (grepl("augmented|madii|\\bmad\\b|aug", txt)) {
+  } else if (grepl("augmented|madii|\\bmad\\b|aug", txt) || (!entries_rep && replicated && block_ok)) {
     "augmented"
-  } else if (grepl("alpha|lattice|incomplete", txt) || (n_rep > 1 && n_block > n_rep && block_ne_rep)) {
+  } else if (grepl("alpha|lattice|incomplete", txt) || (rep_ok && block_ok && n_block > n_rep && block_ne_rep)) {
     "alpha_lattice"
-  } else if (grepl("rcbd|randomized complete block|randomised complete block", txt) || n_rep > 1 || n_block > 1) {
+  } else if (grepl("rcbd|randomized complete block|randomised complete block", txt) || rep_ok) {
     "rcbd"
   } else if (grepl("crd|completely random", txt) || replicated) {
     "crd"
@@ -343,6 +349,86 @@ effective_rep_all <- character(nrow(dat))
 for (tr in trials) { ii <- which(dat$trial == tr); effective_rep_all[ii] <- effective_rep(dat[ii, ]) }
 dat$rep_eff <- effective_rep_all
 
+# -----------------------------------------------------------------------------
+# Factor support ("smart block"): before any model is built, every design
+# factor of a trial is checked against the data. A factor the data cannot
+# support is switched off for that trial (one level), so no model uses it:
+# stage 1, SpATS, BH-MADR, the single-stage builder and custom formulas.
+# Same rules as _factor_support() in SGN::Controller::AJAX::ScriptFactory
+# (shown in the page before the run).
+#   rep    a typical test entry (checks excluded) is in >= 2 replicates;
+#          replicated checks alone do not make a replicate factor
+#   block  blocks subdivide the replicates (more blocks than replicates,
+#          >= 2 plots per block) and some entry is in more than one block
+#          (otherwise block effects cannot be separated from genotypes)
+#   row,   row / column numbers on >= 90% of the plots, >= 2 levels, >= 2
+#   col    plots per level, and not the same grouping as replicate or block
+# -----------------------------------------------------------------------------
+same_grouping <- function(a, b) {
+  k <- !is.na(a) & !is.na(b)
+  a <- a[k]; b <- b[k]
+  length(a) > 0 && n_levels(a) == n_levels(b) && n_levels(paste(a, b)) == n_levels(a)
+}
+
+factor_support <- function(d) {
+  yes <- list(ok = TRUE, why = "")
+  no <- function(why) list(ok = FALSE, why = why)
+  test <- d$check != "check"
+  if (!any(test)) test <- rep(TRUE, nrow(d))
+  reps_per_entry <- tapply(d$rep_eff[test], d$accession[test], function(v) length(unique(v)))
+  copies_per_entry <- as.numeric(table(d$accession[test]))
+  checks_repeated <- any(table(d$accession[!test]) > 1)
+  sp <- list(entries_replicated = median(copies_per_entry) >= 2)
+
+  sp$rep <- if (n_levels(d$rep_eff) < 2) no("one replicate") else if (median(reps_per_entry) < 2)
+    no(paste0("the test entries are in one replicate only", if (checks_repeated) ", only the checks are repeated" else "")) else yes
+  rep_used <- if (sp$rep$ok) d$rep_eff else rep("1", nrow(d))
+
+  has_b <- !is.na(d$block) & d$block != ""
+  bid <- ifelse(has_b, paste(rep_used, d$block), NA)
+  sp$block <- if (n_levels(d$block) < 2) no("one block") else
+    if (n_levels(bid) <= n_levels(rep_used)) no("the blocks are the replicates") else
+    if (sum(has_b) / n_levels(bid) < 2) no("one plot per block") else
+    if (!any(tapply(bid[has_b], d$accession[has_b], function(v) length(unique(v))) > 1))
+      no("no entry is in more than one block, so block effects cannot be separated from the genotypes") else yes
+  blk_used <- if (sp$block$ok) bid else rep(NA, nrow(d))
+
+  rc <- sum(!is.na(d$row) & !is.na(d$col)) >= 0.9 * nrow(d)
+  for (f in c("row", "col")) {
+    x <- d[[f]]
+    nm <- if (f == "row") "row" else "column"
+    sp[[f]] <- if (!rc || n_levels(x) < 2) no(paste0("no ", nm, " numbers")) else
+      if (sum(!is.na(x)) / n_levels(x) < 2) no(paste0("one plot per ", nm)) else
+      if (sp$rep$ok && same_grouping(ifelse(is.na(x), NA, paste(rep_used, x)), rep_used)) no(paste0("each ", nm, " is a replicate")) else
+      if (sp$block$ok && same_grouping(ifelse(is.na(x), NA, paste(rep_used, x)), blk_used)) no(paste0("each ", nm, " is a block")) else yes
+  }
+  sp
+}
+
+FACTOR_LABEL <- c(rep = "Replicate", block = "Block", row = "Row", col = "Column")
+dat$row_off <- FALSE
+dat$col_off <- FALSE
+for (tr in trials) {
+  ii <- which(dat$trial == tr)
+  d <- dat[ii, ]
+  sp <- factor_support(d)
+  trial_info[[tr]]$support <- sp
+  # re-detect the design with the support (an override still wins)
+  di <- detect_trial_design(d, sp)
+  override <- opt(opt(opt(recipe, "stage1", list()), "design_overrides", list()), tr, NULL)
+  if (is.null(override) || override == "auto" || override == "") {
+    trial_info[[tr]]$design <- di$design
+    trial_info[[tr]]$design_label <- di$design_label
+  }
+  # switch off what the data cannot support; report only factors that were
+  # really recorded (a single replicate or block needs no warning)
+  if (!sp$rep$ok) dat$rep_eff[ii] <- "1"
+  if (!sp$block$ok) dat$block[ii] <- "0"   # one level: no block effect in this trial
+  for (f in c("row", "col")) if (!sp[[f]]$ok) dat[[paste0(f, "_off")]][ii] <- TRUE
+  off <- Filter(function(f) !sp[[f]]$ok && !grepl("^(one replicate|one block|no row|no column|the blocks are the replicates)", sp[[f]]$why), names(FACTOR_LABEL))
+  if (length(off)) add_warning(tr, ": not used as model factor(s): ", paste0(tolower(FACTOR_LABEL[off]), " (", vapply(off, function(f) sp[[f]]$why, ""), ")", collapse = "; "), ".")
+}
+
 n_before <- sapply(traits, function(t) sum(!is.na(dat[[t]])))
 
 if (out_method == "iqr") {
@@ -392,9 +478,16 @@ if (!is.na(exclusions_file) && file.exists(exclusions_file)) {
     for (k in seq_len(nrow(ex))) {
       tt <- if (is.null(ex$trait) || is.na(ex$trait[k]) || ex$trait[k] == "") traits else intersect(ex$trait[k], traits)
       ii <- which(dat$unit == ex$unit[k])
+      # values marked as outliers in Breedbase, pre-excluded in step 2
+      src <- if (is.null(ex$source)) NA_character_ else ex$source[k]
+      reason <- switch(if (is.na(src)) "" else src,
+                       dataset = "Marked as dataset outlier in Breedbase",
+                       database = "Marked as database outlier in Breedbase",
+                       both = "Marked as dataset and database outlier in Breedbase",
+                       "Excluded individually")
       for (t in tt) {
         bad <- ii[!is.na(dat[[t]][ii])]
-        flag_outlier(bad, t, "Excluded individually")
+        flag_outlier(bad, t, reason)
         dat[[t]][bad] <- NA
       }
     }
@@ -423,6 +516,73 @@ if (identical(opt(recipe, "stop_after", ""), "outliers")) {
 var_comp <- function(fit) {
   vc <- as.data.frame(VarCorr(fit))
   setNames(vc$vcov, vc$grp)
+}
+
+# Terms of a fitted lme4 / lm model the data could not estimate. lme4 drops
+# rank-deficient fixed-effect columns and fits a zero variance to random terms
+# it cannot separate (e.g. trial:rep when each trial has one rep) with only a
+# message, which fit_quietly muffles; lm leaves those coefficients NA. Returns
+# readable notes so they reach the run warnings instead of passing silently.
+inestimable_terms <- function(m) {
+  notes <- character()
+  mf <- tryCatch(model.frame(m), error = function(e) NULL)
+  if (is.null(mf)) return(notes)
+  # fixed effects
+  nobars_fn <- if (requireNamespace("reformulas", quietly = TRUE)) reformulas::nobars else lme4::nobars
+  fx_fml <- if (inherits(m, "merMod")) nobars_fn(formula(m)) else formula(m)
+  X <- tryCatch(model.matrix(fx_fml, mf), error = function(e) NULL)
+  dropped <- if (inherits(m, "merMod")) unname(attr(getME(m, "X"), "col.dropped")) else which(is.na(coef(m)))
+  if (!is.null(X) && length(dropped)) {
+    labels <- attr(terms(fx_fml), "term.labels")
+    asg <- attr(X, "assign")
+    for (k in sort(unique(asg[dropped]))) {
+      if (k == 0) next
+      n_all <- sum(asg == k)
+      n_out <- sum(asg[dropped] == k)
+      notes <- c(notes, if (n_out == n_all) paste0("fixed term ", labels[k], " could not be estimated (confounded with other terms) and was dropped")
+                        else paste0(n_out, " of ", n_all, " effects of fixed term ", labels[k], " could not be estimated (confounded with other terms) and were dropped"))
+    }
+  }
+  # random effects: a grouping factor with the same levels as another term of
+  # the model is not identifiable (lme4 still splits the variance between the
+  # two, arbitrarily); otherwise a zero variance means it had no effect
+  if (inherits(m, "merMod")) {
+    vc <- as.data.frame(VarCorr(m))
+    vc <- vc[vc$grp != "Residual" & is.na(vc$var2), , drop = FALSE]
+    total <- sum(vc$vcov) + sigma(m)^2
+    fl <- getME(m, "flist")
+    fx_factors <- intersect(attr(terms(fx_fml), "term.labels"), names(mf)[vapply(mf, function(x) is.factor(x) || is.character(x), logical(1))])
+    cands <- c(lapply(setNames(fx_factors, fx_factors), function(o) factor(mf[[o]])), lapply(fl, factor))
+    reported <- character()
+    for (i in seq_len(nrow(vc))) {
+      g <- vc$grp[i]
+      if (is.null(fl[[g]])) next
+      gf <- factor(fl[[g]])
+      same <- names(cands)[!(names(cands) %in% c(g, reported)) & vapply(cands, function(f) nlevels(f) == nlevels(gf) && nlevels(interaction(gf, f, drop = TRUE)) == nlevels(gf), logical(1))]
+      if (length(same)) reported <- c(reported, g)
+      if (length(same)) notes <- c(notes, paste0("random term ", g, " cannot be separated from ", same[1], " (one ", sub(".*:", "", g), " level per ", same[1],
+                                                 "), so its variance is not estimable; remove it from the model"))
+      else if (is.finite(vc$vcov[i]) && vc$vcov[i] <= 1e-8 * total)
+        notes <- c(notes, paste0("random term ", g, " was estimated with zero variance, so it has no effect on the results"))
+      if (length(same)) next
+      # design factors switched off per trial are already reported by the factor gate
+      if (grepl("(^|:|_)(rep|block|row|col)$", g)) next
+      # partly confounded: nested in an environment term, with a single level
+      # in some environments (e.g. trial:rep and an unreplicated trial)
+      for (f in intersect(c("trial", "location", "year"), setdiff(names(cands), g))) {
+        ff <- cands[[f]]
+        if (nlevels(interaction(gf, ff, drop = TRUE)) != nlevels(gf)) next   # not nested in f
+        n_in <- tapply(gf, ff, function(x) length(unique(x)))
+        one <- names(n_in)[!is.na(n_in) & n_in == 1]
+        if (!length(one)) next
+        notes <- c(notes, paste0("random term ", g, " has a single level in ", length(one), " of ", length(n_in), " ", f, "(s) (",
+                                 paste(head(one, 5), collapse = ", "), if (length(one) > 5) ", ...", "): there it cannot be separated from ", f,
+                                 ", so only the other ", f, "s estimate its variance"))
+        break
+      }
+    }
+  }
+  notes
 }
 
 # adjusted means (BLUEs) of accessions from a model with accession as fixed effect
@@ -820,7 +980,7 @@ fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model") {
       gv <- accession_blues(m, d)
       mu <- NA_real_
     }
-    fit <- list(values = gv, vc = vc, resid = as.numeric(residuals(m)), notes = character(), random = random, mu = mu, engine = "R")
+    fit <- list(values = gv, vc = vc, resid = as.numeric(residuals(m)), notes = inestimable_terms(m), random = random, mu = mu, engine = "R")
   }
   fit$notes <- c(notes, fit$notes)
   fit$ancestors <- NULL
@@ -863,8 +1023,8 @@ design_terms <- function(design, d) {
   if (design == "augmented" && n_levels(d$block) > 1) terms <- "(1|block)"
   if (design == "row_column") {
     if (has_rep) terms <- c(terms, "(1|rep_eff)")
-    if (n_levels(d$row) > 1) terms <- c(terms, "(1|rep_eff:row_f)")
-    if (n_levels(d$col) > 1) terms <- c(terms, "(1|rep_eff:col_f)")
+    if (n_levels(d$row) > 1 && !any(d$row_off)) terms <- c(terms, "(1|rep_eff:row_f)")
+    if (n_levels(d$col) > 1 && !any(d$col_off)) terms <- c(terms, "(1|rep_eff:col_f)")
   }
   terms
 }
@@ -888,9 +1048,11 @@ add_model_factors <- function(d) {
   d$rep <- factor(d$rep_eff); d$block <- factor(d$block)
   d$tr_rep <- factor(paste(d$trial, d$rep_eff))
   d$tr_block <- factor(paste(d$trial, d$rep_eff, d$block))
-  d$tr_row <- factor(ifelse(is.na(d$rowN), NA, paste(d$trial, d$rowN)))
-  d$tr_col <- factor(ifelse(is.na(d$colN), NA, paste(d$trial, d$colN)))
-  d$row <- factor(d$rowN); d$col <- factor(d$colN)
+  # rows / columns switched off by factor_support() keep one level in their
+  # trial (the numeric rowN / colN trends still use the positions)
+  d$tr_row <- factor(ifelse(is.na(d$rowN), NA, paste(d$trial, ifelse(d$row_off, "off", d$rowN))))
+  d$tr_col <- factor(ifelse(is.na(d$colN), NA, paste(d$trial, ifelse(d$col_off, "off", d$colN))))
+  d$row <- factor(ifelse(d$row_off & !is.na(d$rowN), 0, d$rowN)); d$col <- factor(ifelse(d$col_off & !is.na(d$colN), 0, d$colN))
   d
 }
 
@@ -989,7 +1151,7 @@ fit_stage1 <- function(d, info, trait) {
     nseg <- c(max(1, ceiling(nc / 2)), max(1, ceiling(nr / 2)))
     has_rep <- n_levels(d$rep_eff) > 1
     d$rowN <- d$row; d$colN <- d$col
-    rc_random <- c(if (nr > 1) "row_f", if (nc > 1) "col_f")
+    rc_random <- c(if (nr > 1 && !any(d$row_off)) "row_f", if (nc > 1 && !any(d$col_off)) "col_f")
     # Candidate specifications: replicate as fixed effect first; when blocks
     # are aligned with rows/columns the fixed replicate effect is collinear
     # with the spatial surface, so fall back to replicate as random effect.
@@ -1016,7 +1178,7 @@ fit_stage1 <- function(d, info, trait) {
                           se = pr$standard.errors, stringsAsFactors = FALSE)
       res$model <- sprintf("SpATS: y ~ accession%s + PSANOVA(col, row, nseg = c(%d, %d))%s%s",
                            spec$label, nseg[1], nseg[2], spec$rlabel,
-                           if (length(rc_random)) " + (1|row) + (1|col)" else "")
+                           if (length(rc_random)) paste0(" + (1|", sub("_f$", "", rc_random), ")", collapse = "") else "")
       res$var_e <- fF$psi[1]
       fR <- spats_fit(spec, TRUE)
       if (!inherits(fR, "error")) {
@@ -1073,6 +1235,8 @@ fit_stage1 <- function(d, info, trait) {
   }
   means <- accession_blues(fit, d)
   res$model <- paste(deparse(fml_fixed, width.cutoff = 500), collapse = "")
+  lost <- inestimable_terms(fit)
+  if (length(lost)) add_warning("Stage 1, ", info$trial, " / ", short_trait(trait), ": ", paste(lost, collapse = "; "), ".")
   res$var_e <- if (inherits(fit, "merMod")) sigma(fit)^2 else summary(fit)$sigma^2
 
   fml_random <- as.formula(model_text(design, c(trt_fx, terms), TRUE))
@@ -1254,6 +1418,14 @@ if (strategy == "two_stage") {
     if (ss_mode == "custom") {
       if (cov_name(t) %in% custom$vars) { add_warning(short_trait(t), " is a covariate of the custom formula; it cannot be analysed with its own value as covariate and was skipped."); next }
       fml_txt <- custom$text
+      # design factors switched off in every trial (factor_support)
+      off <- Filter(function(v) v %in% names(FACTOR_LABEL) && !any(vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$support[[v]]$ok, logical(1))), custom$vars)
+      if (length(off)) {
+        add_warning(short_trait(t), ": the custom formula uses ", paste0("'", off, "'", collapse = ", "), " but the data do not support ", if (length(off) > 1) "these factors" else "this factor",
+                    " in any trial (", paste(vapply(off, function(v) paste0(v, ": ", paste(unique(vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$support[[v]]$why, "")), collapse = ", ")), ""), collapse = "; "),
+                    "); remove ", if (length(off) > 1) "them" else "it", " from the formula.")
+        next
+      }
       one <- Filter(function(v) v %in% c("trial", "location", "year", "check", "rep", "block") && n_levels(d[[v]]) < 2, custom$vars)
       if (length(one)) {
         add_warning(short_trait(t), ": the custom formula uses ", paste0("'", one, "'", collapse = ", "), " but ", if (length(one) > 1) "these variables have" else "it has",
@@ -1271,17 +1443,19 @@ if (strategy == "two_stage") {
       }
       # environment (trial) main effect
       if (ss_env != "none") add_term(if (ss_env == "random") "(1|trial)" else "trial", n_tr > 1, "trial (only one trial)", "trial")
+      # why a design factor is not in the model: the factor_support() reasons
+      why_off <- function(f) paste(unique(vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$support[[f]]$why, "")) , collapse = ", ")
       # replicates within trials
       rep_on <- if (ss_rep == "auto") n_levels(d$tr_rep) > n_tr else ss_rep != "none"
-      if (rep_on) add_term(if (ss_rep == "fixed") "tr_rep" else "(1|tr_rep)", n_levels(d$tr_rep) > n_tr, "replicate within trial (one replicate per trial)", "tr_rep")
+      if (rep_on) add_term(if (ss_rep == "fixed") "tr_rep" else "(1|tr_rep)", n_levels(d$tr_rep) > n_tr, paste0("replicate within trial (", why_off("rep"), ")"), "tr_rep")
       # incomplete blocks within replicates
       block_on <- if (ss_block == "auto") any(designs %in% c("alpha_lattice", "augmented")) && n_levels(d$tr_block) > n_levels(d$tr_rep) else ss_block != "none"
-      if (block_on) add_term(if (ss_block == "fixed") "tr_block" else "(1|tr_block)", n_levels(d$tr_block) > n_levels(d$tr_rep), "block within replicate (blocks equal replicates)", "tr_block")
+      if (block_on) add_term(if (ss_block == "fixed") "tr_block" else "(1|tr_block)", n_levels(d$tr_block) > n_levels(d$tr_rep), paste0("block within replicate (", why_off("block"), ")"), "tr_block")
       # rows and columns within trials
       rc_on <- if (ss_rowcol == "auto") any(designs == "row_column") || all_rc else ss_rowcol != "none"
       if (rc_on) {
-        add_term("(1|tr_row)", n_levels(d$tr_row) > n_tr && sum(!is.na(d$row)) > 0, "row within trial (no row numbers)", "tr_row")
-        add_term("(1|tr_col)", n_levels(d$tr_col) > n_tr && sum(!is.na(d$col)) > 0, "column within trial (no column numbers)", "tr_col")
+        add_term("(1|tr_row)", n_levels(d$tr_row) > n_tr && sum(!is.na(d$row)) > 0, paste0("row within trial (", why_off("row"), ")"), "tr_row")
+        add_term("(1|tr_col)", n_levels(d$tr_col) > n_tr && sum(!is.na(d$col)) > 0, paste0("column within trial (", why_off("col"), ")"), "tr_col")
       }
       # linear field trend within trials
       if (ss_trend == "linear") {
@@ -1291,6 +1465,10 @@ if (strategy == "two_stage") {
       # genotype x environment interactions
       for (gx in ss_gxe) {
         n_lv <- n_levels(d[[gx]])
+        if (gx != "trial" && "trial" %in% ss_gxe && n_lv > 1 && same_grouping(as.character(d[[gx]]), as.character(d$trial))) {
+          dropped <- c(dropped, paste0("accession x ", gx, " (each ", gx, " has one trial: the same as accession x trial)"))
+          next
+        }
         add_term(paste0("(1|accession:", gx, ")"), n_lv > 1, paste0("accession x ", gx, " (only one ", gx, ")"), gx)
       }
       # treatments: fixed main effect (unless the trial effect already holds it,
@@ -1309,8 +1487,10 @@ if (strategy == "two_stage") {
       # covariates
       for (cv in cov_vars) {
         if (cv == cov_name(t)) next   # a trait is never its own covariate
-        ok <-sum(!is.na(d[[cv]])) > 0.5 * nrow(d) && n_levels(d[[cv]]) > 1
-        add_term(cv, ok, paste0("covariate ", sub("^cov_", "", cv), " (missing or constant)"), cv)
+        ok <- sum(!is.na(d[[cv]])) > 0.5 * nrow(d) && n_levels(d[[cv]]) > 1
+        # constant within every trial: held by a fixed trial effect
+        held <- ok && ss_env == "fixed" && n_tr > 1 && !any(tapply(d[[cv]], d$trial, function(x) n_levels(x) > 1))
+        add_term(cv, ok && !held, paste0("covariate ", sub("^cov_", "", cv), if (held) " (constant within each trial: held by the trial effect)" else " (missing or constant)"), cv)
       }
       # checks vs test entries (separates the check mean from the population
       # the BLUPs shrink to); only with the genotype random
@@ -1700,7 +1880,9 @@ variance_components <- if (length(variance_components)) do.call(rbind, variance_
 
 trial_table <- do.call(rbind, lapply(trial_info, function(x) data.frame(
   trial = x$trial, location = x$location, year = x$year, design = x$design_label,
-  spatial_layout = x$has_rowcol, n_plots = x$n_plots, n_accessions = x$n_accessions, stringsAsFactors = FALSE)))
+  spatial_layout = x$has_rowcol, n_plots = x$n_plots, n_accessions = x$n_accessions,
+  factors_not_used = paste(unlist(lapply(names(FACTOR_LABEL), function(f) if (!x$support[[f]]$ok && !grepl("^(one replicate|one block|no row|no column|the blocks are the replicates)", x$support[[f]]$why))
+    paste0(tolower(FACTOR_LABEL[[f]]), " (", x$support[[f]]$why, ")"))), collapse = "; "), stringsAsFactors = FALSE)))
 
 result <- list(
   version = SF_VERSION,
