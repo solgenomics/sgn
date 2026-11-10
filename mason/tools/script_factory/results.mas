@@ -328,6 +328,11 @@ jQuery(document).ready(function() {
 .sfd-scroll { overflow: auto; max-height: 640px; }
 .sfd-map-wrap { position: relative; }
 #sfd_map { height: 420px; border-radius: 8px; border: 1px solid var(--b); z-index: 1; }
+#sfd_zone_map { height: 460px; border-radius: 8px; border: 1px solid var(--b); z-index: 1; }
+.sfd-zm { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.45); color: #fff; font: bold 12px/22px sans-serif; text-align: center; }
+.sfd-zm.off { opacity: .45; }
+.sfd-zmat td { min-width: 52px; text-align: center; }
+.sfd-zmat th.r { text-align: left; white-space: nowrap; }
 .sfd-legend { position: absolute; right: 10px; bottom: 22px; z-index: 500; background: rgba(255,255,255,.95); border: 1px solid var(--b); border-radius: 8px; padding: 6px 10px; font-size: 12px; max-width: 240px; }
 .sfd-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
 .sfd-legend .bar { height: 10px; border-radius: 4px; margin: 4px 0 2px; width: 180px; }

@@ -39,6 +39,7 @@ const S = {          // view state
     selPct: 10,
     mapColor: 'mean',
     zoneTarget: null,
+    zoneAccession: null,    // genotype shown on the zone map
     mapAccession: '',
     fieldTrial: null,
     fieldLayer: 'value',
@@ -47,6 +48,7 @@ const S = {          // view state
 };
 let map = null;
 let mapLayer = null;
+let zmap = null;     // map of the zones section
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -1065,17 +1067,190 @@ function renderGxeHeat() {
 // zones, outliers, model
 // ---------------------------------------------------------------------------
 
+// location(s) of an environment and their coordinates / altitude
+function envCoords(m) {
+    // an environment may span several locations ("A, PR, B, RS"): use the first known one
+    const txt = String(m.location || '');
+    const names = [txt].concat(Object.keys(LOCS).filter(n => txt.indexOf(n) >= 0).sort((x, y) => txt.indexOf(x) - txt.indexOf(y)));
+    for (let i = 0; i < names.length; i++) {
+        const c = LOCS[names[i]];
+        if (c) return { name: names[i], lat: Number(c.latitude), lon: Number(c.longitude), alt: num(c.altitude) };
+    }
+    return null;
+}
+
+function zoneNames(z) {
+    const names = [];
+    arr(z.membership).forEach(m => { if (names.indexOf(m.zone) < 0) names.push(m.zone); });
+    return names.sort((a, b) => Number(a.replace(/\D/g, '')) - Number(b.replace(/\D/g, '')));
+}
+
+// altitude and latitude ranges of a zone
+function zoneGeo(z, zn) {
+    const pts = arr(z.membership).filter(m => m.zone === zn).map(envCoords).filter(Boolean);
+    const alt = pts.map(p => p.alt).filter(x => x !== null);
+    const lat = pts.map(p => p.lat);
+    const range = (v, d, u) => !v.length ? '' : Math.min.apply(null, v) === Math.max.apply(null, v) ? fmt(v[0], d) + u : fmt(Math.min.apply(null, v), d) + ' to ' + fmt(Math.max.apply(null, v), d) + u;
+    return { alt: range(alt, 0, ' m'), lat: range(lat, 2, '\u00b0'), n: pts.length, altMean: alt.length ? mean(alt) : null };
+}
+
+// every accession x zone (rank 1 = best in the zone), when the run provides it
+function genotypeZones(z) {
+    const by = {};
+    arr(z.genotype_zones).forEach(r => { (by[r.accession] = by[r.accession] || {})[r.zone] = r; });
+    return by;
+}
+
+// accession placed best over the zones (mean relative rank)
+function bestAccessions(z) {
+    const by = genotypeZones(z);
+    return Object.keys(by).map(a => {
+        const rs = Object.keys(by[a]).map(k => by[a][k].rank / by[a][k].n_ranked);
+        return { a: a, score: mean(rs), nz: rs.length };
+    }).sort((x, y) => (y.nz - x.nz) || (x.score - y.score)).map(x => x.a);
+}
+
+function convexHull(pts) {
+    const p = pts.slice().sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    if (p.length < 3) return p;
+    const cross = (o, a, b) => (a[1] - o[1]) * (b[0] - o[0]) - (a[0] - o[0]) * (b[1] - o[1]);
+    const lower = [], upper = [];
+    p.forEach(x => { while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], x) <= 0) lower.pop(); lower.push(x); });
+    p.slice().reverse().forEach(x => { while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], x) <= 0) upper.pop(); upper.push(x); });
+    return lower.slice(0, -1).concat(upper.slice(0, -1));
+}
+
+function renderZoneMap(z) {
+    if (zmap) { zmap.remove(); zmap = null; }
+    const el = document.getElementById('sfd_zone_map');
+    if (!el) return;
+    const acc = S.zoneAccession;
+    const gz = genotypeZones(z);
+    const envs = arr(z.membership).map(m => Object.assign({}, m, { c: envCoords(m) }));
+    const placed = envs.filter(m => m.c);
+    if (!placed.length) {
+        el.innerHTML = '<div class="alert alert-info">None of the locations has coordinates. Add latitude and longitude in <a href="/breeders/locations" target="_blank">Manage locations</a>.</div>';
+        return;
+    }
+    zmap = L.map(el, { scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors' }).addTo(zmap);
+    // environments sharing a location are fanned out around it
+    const atLoc = {};
+    placed.forEach(m => { (atLoc[m.c.lat + ',' + m.c.lon] = atLoc[m.c.lat + ',' + m.c.lon] || []).push(m); });
+    const bounds = [];
+    Object.keys(atLoc).forEach(k => {
+        const list = atLoc[k];
+        list.forEach((m, i) => {
+            const r = list.length > 1 ? 0.035 * Math.sqrt(list.length) : 0;
+            const a = 2 * Math.PI * i / list.length;
+            m.ll = [m.c.lat + r * Math.sin(a), m.c.lon + r * Math.cos(a) / Math.max(0.2, Math.cos(m.c.lat * Math.PI / 180))];
+            bounds.push(m.ll);
+        });
+    });
+    // zone areas
+    zoneNames(z).forEach(zn => {
+        const pts = [];
+        placed.filter(m => m.zone === zn).forEach(m => { if (!pts.some(p => p[0] === m.c.lat && p[1] === m.c.lon)) pts.push([m.c.lat, m.c.lon]); });
+        const col = zoneColor(zn);
+        const hl = acc && gz[acc] && gz[acc][zn];
+        const style = { color: col, weight: 2, fillColor: col, fillOpacity: hl ? 0.10 + 0.25 * (1 - (hl.rank - 1) / Math.max(1, hl.n_ranked - 1)) : 0.12, opacity: 0.7 };
+        if (pts.length >= 3) L.polygon(convexHull(pts), style).addTo(zmap);
+        else if (pts.length === 2) L.polyline(pts, { color: col, weight: 14, opacity: 0.25 }).addTo(zmap);
+        else if (pts.length === 1) L.circle(pts[0], Object.assign({ radius: 12000 }, style)).addTo(zmap);
+    });
+    // environments
+    placed.forEach(m => {
+        const zr = acc && gz[acc] ? gz[acc][m.zone] : null;
+        const label = acc ? (zr ? zr.rank : '&ndash;') : '';
+        const col = zoneColor(m.zone);
+        const icon = L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13],
+            html: '<div class="sfd-zm" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);color:#fff;font:bold 12px/22px sans-serif;text-align:center;background:' + col + (acc && !zr ? ';opacity:.45' : '') + '">' + label + '</div>' });
+        const top = arr(z.top).filter(x => x.zone === m.zone).slice(0, 5);
+        let pop = '<b style="font-size:14px">' + esc(m.env) + '</b><br/>' + esc(m.c.name) + (m.year ? ' &middot; ' + esc(m.year) : '') +
+            '<br/>' + (m.c.alt !== null ? 'Altitude <b>' + fmt(m.c.alt, 0) + ' m</b> &middot; ' : '') + fmt(m.c.lat, 3) + ', ' + fmt(m.c.lon, 3) +
+            '<div style="margin-top:4px"><span class="sfd-zone-chip" style="background:' + col + '">' + esc(m.zone) + '</span></div>';
+        if (acc) pop += '<div style="margin-top:4px">' + esc(acc) + ': ' + (zr ? 'rank <b>' + zr.rank + '</b> of ' + zr.n_ranked + ' in ' + esc(m.zone) : 'not tested in ' + esc(m.zone)) + '</div>';
+        if (top.length) pop += '<div style="margin-top:4px"><b>Best in ' + esc(m.zone) + '</b><ol style="padding-left:18px;margin:2px 0">' + top.map(x => '<li>' + accLink(x.accession) + '</li>').join('') + '</ol></div>';
+        L.marker(m.ll, { icon: icon }).bindPopup(pop, { maxWidth: 320 }).bindTooltip(esc(m.env) + ' (' + esc(m.zone) + ')').addTo(zmap);
+    });
+    zmap.on('popupopen', ev => {
+        $(ev.popup.getElement()).find('[data-acc]').on('click', function(e) { e.stopPropagation(); toggleShort($(this).attr('data-acc')); });
+    });
+    if (bounds.length === 1) zmap.setView(bounds[0], 8); else zmap.fitBounds(bounds, { padding: [30, 30], maxZoom: 10 });
+    setTimeout(() => zmap && zmap.invalidateSize(), 50);
+    const missing = envs.filter(m => !m.c).map(m => m.env);
+    $('#sfd_zone_map_note').html(missing.length ? 'Not on the map (no coordinates): ' + missing.map(esc).join(', ') + '.' : '');
+}
+
+// where one accession does best
+function renderZoneAccession(z) {
+    const acc = S.zoneAccession;
+    const gz = genotypeZones(z)[acc];
+    if (!acc || !gz) { $('#sfd_zone_acc_info').html('<p class="sfd-help">Choose a genotype to see its rank in every zone.</p>'); return; }
+    const rows = zoneNames(z).map(zn => Object.assign({ zone: zn }, gz[zn] || { rank: null }));
+    const tested = rows.filter(r => r.rank !== null);
+    const best = tested.slice().sort((a, b) => a.rank / a.n_ranked - b.rank / b.n_ranked)[0];
+    let h = best ? '<p><b>' + accLink(acc) + '</b> does best in <span class="sfd-zone-chip" style="background:' + zoneColor(best.zone) + '">' + esc(best.zone) + '</span> (rank ' + best.rank + ' of ' + best.n_ranked + ').</p>' : '';
+    h += table(rows, [
+        { k: 'zone', l: 'Zone', f: v => '<span class="sfd-zone-chip" style="background:' + zoneColor(v) + '">' + esc(v) + '</span>' + (best && v === best.zone ? ' <span class="glyphicon glyphicon-star" style="color:#d97706" title="best zone"></span>' : '') },
+        { k: 'rank', l: 'Rank', f: (v, r) => v === null ? '<span class="sfd-help">not tested</span>' : '<b>' + v + '</b> <span class="sfd-help">of ' + r.n_ranked + '</span>' },
+        { k: 'value', l: 'Mean ' + esc(z.target) },
+        { k: 'n_env', l: 'Envs', f: v => v === undefined ? '' : v },
+        { k: 'zone', l: 'Altitude', f: v => esc(zoneGeo(z, v).alt) }]);
+    $('#sfd_zone_acc_info').html(h);
+}
+
+// rank of the best accessions of every zone in all zones
+function zoneMatrix(z) {
+    const gz = genotypeZones(z);
+    const zn = zoneNames(z);
+    const pick = [];
+    zn.forEach(k => {
+        Object.keys(gz).filter(a => gz[a][k] && gz[a][k].rank <= 3).sort((a, b) => gz[a][k].rank - gz[b][k].rank)
+            .forEach(a => { if (pick.indexOf(a) < 0) pick.push(a); });
+    });
+    if (!pick.length) return '';
+    let h = '<h4>Best genotypes by zone</h4><p class="sfd-help">The top 3 of each zone and their rank in every other zone (1 = best). Green: among the best of the zone. Click a genotype to see it on the map.</p>' +
+        '<div class="sfd-scroll"><table class="sfd-heat sfd-zmat"><thead><tr><th></th>' +
+        zn.map(k => '<th style="border-bottom:3px solid ' + zoneColor(k) + '">' + esc(k) + '<br/><small class="sfd-help">' + esc(zoneGeo(z, k).alt) + '</small></th>').join('') + '</tr></thead><tbody>';
+    pick.forEach(a => {
+        h += '<tr><th class="r"><a href="#" class="sfd-zone-pick" data-a="' + esc(a) + '">' + esc(a) + '</a></th>' + zn.map(k => {
+            const r = gz[a][k];
+            if (!r) return '<td style="background:#f3f4f6" title="not tested">&ndash;</td>';
+            const f = r.n_ranked > 1 ? (r.rank - 1) / (r.n_ranked - 1) : 0;
+            const bg = f <= 0.1 ? '#166534' : f <= 0.25 ? '#22c55e' : f <= 0.5 ? '#bbf7d0' : f <= 0.75 ? '#f7f7f7' : '#fde68a';
+            return '<td style="background:' + bg + ';color:' + textOn(bg) + '" title="' + esc(a) + ' in ' + esc(k) + ': rank ' + r.rank + ' of ' + r.n_ranked + ', mean ' + fmt(r.value) + ', ' + r.n_env + ' env(s)">' + r.rank + '</td>';
+        }).join('') + '</tr>';
+    });
+    return h + '</tbody></table></div>';
+}
+
 function renderZones() {
     const z = D.zones.find(x => x.target === S.zoneTarget) || D.zones[0];
     if (!z) return;
-    const names = [];
-    arr(z.membership).forEach(m => { if (names.indexOf(m.zone) < 0) names.push(m.zone); });
-    let h = '<p><b>' + esc(z.target) + '</b>: <b>' + z.n_zones + '</b> zone(s) by ' + (z.method === 'lin' ? 'the Lin (1982) G&times;E test' : 'genetic correlation clustering') +
-        '. <a href="#sfd_map_section" class="sfd-zones-on-map"><span class="glyphicon glyphicon-map-marker"></span> Show on the map</a></p><div class="row">';
+    const names = zoneNames(z);
+    const hasGz = arr(z.genotype_zones).length > 0;
+    const accs = hasGz ? bestAccessions(z) : [];
+    if (S.zoneAccession && accs.indexOf(S.zoneAccession) < 0) S.zoneAccession = null;
+    let h = '<p><b>' + esc(z.target) + '</b>: <b>' + z.n_zones + '</b> zone(s) by ' + (z.method === 'lin' ? 'the Lin (1982) G&times;E test' : 'genetic correlation clustering') + '.</p>' +
+        '<div class="row"><div class="col-md-8"><div id="sfd_zone_map" style="height:460px;border-radius:8px;border:1px solid #e5e7eb;z-index:1"></div><div class="sfd-help" id="sfd_zone_map_note"></div>' +
+        '<div class="sfd-help" style="margin-top:4px">Each marker is an environment, coloured by its zone; shaded areas join the locations of a zone. ' +
+        (hasGz ? 'With a genotype chosen, the markers show its rank in that zone and the zones where it ranks best are shaded darker.' : '') + '</div></div>' +
+        '<div class="col-md-4"><div class="sfd-card">' +
+        (hasGz ? '<label class="sfd-help" for="sfd_zone_acc">Where does this genotype do best?</label>' +
+            '<select class="form-control input-sm" id="sfd_zone_acc"><option value="">&ndash; choose a genotype &ndash;</option>' +
+            accs.map(a => '<option value="' + esc(a) + '"' + (a === S.zoneAccession ? ' selected' : '') + '>' + esc(a) + '</option>').join('') + '</select>' +
+            '<div id="sfd_zone_acc_info" style="margin-top:8px"></div>'
+            : '<p class="sfd-help">Run the analysis again to see the rank of every genotype in every zone.</p>') +
+        '</div></div></div>';
+    if (hasGz) h += zoneMatrix(z);
+    h += '<div class="row">';
     names.forEach(zn => {
         const envs = arr(z.membership).filter(m => m.zone === zn);
         const top = arr(z.top).filter(x => x.zone === zn);
+        const geo = zoneGeo(z, zn);
         h += '<div class="col-lg-6"><div class="sfd-card" style="border-top:4px solid ' + zoneColor(zn) + '"><h4 style="margin-top:0"><span class="sfd-zone-chip" style="background:' + zoneColor(zn) + '">' + esc(zn) + '</span> ' + envs.length + ' environment(s)</h4>' +
+            (geo.n ? '<p class="sfd-help"><span class="glyphicon glyphicon-map-marker"></span> Altitude ' + (esc(geo.alt) || 'unknown') + ' &middot; latitude ' + esc(geo.lat) + '</p>' : '') +
             '<p class="sfd-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
             table(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions', f: v => accLink(v) }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: 'No accession tested in all environments of this zone.' }) + '</div></div>';
     });
@@ -1101,6 +1276,8 @@ function renderZones() {
             { k: 'compatible', l: 'Same zone?', f: v => v ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '<span class="glyphicon glyphicon-remove" style="color:#dc2626"></span>' }]);
     }
     $('#sfd_zones').html(h);
+    renderZoneMap(z);
+    if (hasGz) renderZoneAccession(z);
 }
 
 function renderOutliers() {
@@ -1224,6 +1401,19 @@ function initControls() {
     $('#sfd_sel_pct').on('input change', function() { S.selPct = Number($(this).val()); renderSelection(); });
     $('#sfd_gxe_rows, #sfd_gxe_scale').on('change', renderGxeHeat);
     $('#sfd_zone_target').on('change', function() { S.zoneTarget = $(this).val(); $('#sfd_map_zone_target').val(S.zoneTarget); renderZones(); if (S.mapColor === 'zone') renderMap(); });
+    $('#sfd_zones').on('change', '#sfd_zone_acc', function() {
+        S.zoneAccession = $(this).val() || null;
+        const z = D.zones.find(x => x.target === S.zoneTarget) || D.zones[0];
+        renderZoneMap(z); renderZoneAccession(z);
+    });
+    $('#sfd_zones').on('click', '.sfd-zone-pick', function(e) {
+        e.preventDefault();
+        S.zoneAccession = $(this).attr('data-a');
+        $('#sfd_zone_acc').val(S.zoneAccession);
+        const z = D.zones.find(x => x.target === S.zoneTarget) || D.zones[0];
+        renderZoneMap(z); renderZoneAccession(z);
+        document.getElementById('sfd_zone_map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
     $(document).on('click', '.sfd-zones-on-map', function() {
         S.mapColor = 'zone'; $('#sfd_map_color').val('zone'); renderMap();
     });

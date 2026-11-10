@@ -425,9 +425,12 @@ function loadDataset() {
     }
     $('#sf_dataset_message').html('<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh sf-spin"></span> Retrieving phenotypes. Large datasets can take a minute...</div>');
     $('#sf_load_dataset').prop('disabled', true);
+    // the dataset loads as soon as it is ticked: only the latest choice counts
+    const seq = state.loadSeq = (state.loadSeq || 0) + 1;
 
     post('/ajax/script_factory/prepare', { dataset_id: id, dataset_trait_outliers: $('#sf_dataset_outliers').is(':checked') ? 1 : 0 })
         .then(r => {
+            if (seq !== state.loadSeq) return;
             const keepTraits = state.dataset ? state.traits.map(shortTrait) : null;
             state.dataset = r;
             state.plotData = null;
@@ -458,7 +461,7 @@ function loadDataset() {
             renderPipeline();
             renderQuickRun();
         })
-        .catch(e => $('#sf_dataset_message').html(alertBox('danger', esc(e.message))))
+        .catch(e => { if (seq === state.loadSeq) $('#sf_dataset_message').html(alertBox('danger', esc(e.message))); })
         .finally(() => $('#sf_load_dataset').prop('disabled', false));
 }
 
@@ -2022,6 +2025,13 @@ export function init(options) {
 
     // step 1
     $('#sf_load_dataset').on('click', loadDataset);
+    // ticking a dataset loads it (one dataset at a time)
+    $('#sf_dataset_select').on('change', 'input[name=sf_dataset_checkbox]', function() {
+        if (!$(this).is(':checked')) return;
+        $('input[name=sf_dataset_checkbox]').not(this).prop('checked', false);
+        loadDataset();
+    });
+    $('#sf_dataset_outliers').on('change', () => { if (selectedDatasetId()) loadDataset(); });
     $('#sf_traits').on('change', '.sf-trait-cb', onTraitsChanged);
     $('#sf_treatments').on('change', 'input', onTreatmentsChanged);
     $('#sf_traits_all').on('click', () => { $('.sf-trait-cb').prop('checked', true); onTraitsChanged(); });

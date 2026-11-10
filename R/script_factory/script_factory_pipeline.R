@@ -1610,12 +1610,27 @@ if (isTRUE(opt(zones_cfg, "enabled", FALSE)) && !is.null(stage1_means)) {
       ord <- head(ord, z_top)
       data.frame(zone = paste0("Zone ", k), rank = seq_along(ord), accession = ord, value = unname(v[ord]), n_env = unname(n_env[ord]), stringsAsFactors = FALSE)
     }))
+    # every accession in every zone: mean, rank inside the zone (1 = best),
+    # environments tested (where each genotype does best)
+    higher_better <- !(tname %in% decreasing_targets)
+    genotype_zones <- do.call(rbind, lapply(seq_along(zr$groups), function(k) {
+      sub <- m[, colnames(m) %in% zr$groups[[k]], drop = FALSE]
+      v <- rowMeans(sub, na.rm = TRUE)
+      n_env <- rowSums(!is.na(sub))
+      keep <- is.finite(v)
+      if (!any(keep)) return(NULL)
+      v <- v[keep]; n_env <- n_env[keep]
+      data.frame(zone = paste0("Zone ", k), accession = names(v), value = unname(v), n_env = unname(n_env),
+                 rank = rank(if (higher_better) -v else v, ties.method = "min"), n_ranked = length(v), stringsAsFactors = FALSE, row.names = NULL)
+    }))
     zone_results[[length(zone_results) + 1]] <- list(
       target = tname, method = method_used,
       n_zones = length(zr$groups),
+      higher_is_better = higher_better,
       membership = membership,
       pairwise = zr$pairwise, correlation = zr$correlation,
-      top = top)
+      top = top,
+      genotype_zones = genotype_zones)
   }
 }
 

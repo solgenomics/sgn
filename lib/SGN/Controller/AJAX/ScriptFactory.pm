@@ -724,14 +724,9 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
 
     my $job;
     try {
-        $job = CXGN::Job->new({
+        $job = CXGN::Job->new({ _job_args($c,
             schema => $schema,
             people_schema => $people_schema,
-            dbhost => $c->config->{dbhost},
-            dbname => $c->config->{dbname},
-            dbuser => $c->config->{dbuser},
-            dbpass => $c->config->{dbpass},
-            basepath => $c->config->{basepath},
             sp_person_id => $sp_person_id,
             name => ($mode eq 'preview' ? 'Script Factory outlier preview' : 'Script Factory analysis') . ($recipe->{name} ? ": $recipe->{name}" : ''),
             job_type => 'script_factory_analysis',
@@ -745,14 +740,22 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
                 do_cleanup => 0,
                 max_cluster_jobs => 1_000_000_000,
             },
-        });
-        $job->submit();
+        ) });
+        if (_slurm_ready($c)) {
+            $job->submit();
+        } else {
+            print STDERR "Script Factory: no Slurm node available, starting run $run_id on the web server\n";
+            $job->store();
+            _start_local($job, $cmd);
+            $meta{started_locally} = 1;
+        }
     } catch {
         $c->stash->{rest} = { error => "Could not submit the analysis: $_" };
     };
     return if $c->stash->{rest};
 
     $meta{job_id} = $job->sp_job_id();
+    $meta{cmd} = $cmd;    # to start the run on the web server if the queue cannot
     write_file("$run_base.meta.json", encode_json(\%meta));
 
     $c->stash->{rest} = { job_id => $job->sp_job_id(), run_id => $run_id };
@@ -929,6 +932,41 @@ sub _run_programs {
     return [ sort { $b->{n_plots} <=> $a->{n_plots} } values %p ];
 }
 
+# ---------------------------------------------------------------------------
+# Job start. With the Slurm backend a run waits in the queue until a node
+# takes it; when no node can (node down, drained or invalid, e.g. after the
+# container was recreated) the run would wait forever. Then it is started at
+# once on the web server, detached from the request, with the same command and
+# the same job record.
+# ---------------------------------------------------------------------------
+sub _slurm_ready {
+    my $c = shift;
+    return 1 if lc($c->config->{backend} // '') ne 'slurm';
+    my $out = `timeout 5 sinfo -h -o %t 2>/dev/null` // '';
+    # usable node states; a trailing * ~ # ! % $ @ marks a node that is not responding or powered down
+    return scalar(grep { /^\s*(idle|mix|mixed|alloc|allocated|comp|completing)\s*$/ } split /\n/, $out);
+}
+
+sub _start_local {
+    my ($job, $cmd) = @_;
+    my $finish = try { $job->generate_finish_timestamp_cmd() } catch { '' };
+    my $full = "($cmd$finish)";
+    system('setsid nohup bash -c ' . _shell_quote($full) . ' > /dev/null 2>&1 < /dev/null &');
+    $job->update_status('submitted');
+}
+
+sub _job_args {
+    my ($c, %args) = @_;
+    return (
+        dbhost => $c->config->{dbhost},
+        dbname => $c->config->{dbname},
+        dbuser => $c->config->{dbuser},
+        dbpass => $c->config->{dbpass},
+        basepath => $c->config->{basepath},
+        %args,
+    );
+}
+
 sub _write_run_meta {
     my ($c, $run_id, $meta) = @_;
     write_file(_work_dir($c) . "/$run_id.meta.json", encode_json($meta));
@@ -1020,7 +1058,7 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
     my ($schema, $people_schema, $sp_person_id) = _schemas($c);
     my $job;
     try {
-        $job = CXGN::Job->new({ schema => $schema, people_schema => $people_schema, sp_job_id => $job_id });
+        $job = CXGN::Job->new({ _job_args($c, schema => $schema, people_schema => $people_schema, sp_job_id => $job_id) });
     } catch {
         $c->stash->{rest} = { error => 'This analysis job no longer exists.' };
     };
@@ -1037,7 +1075,17 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
     my $log_file = "$run_base.log";
     # the job backend may be unreachable (or its client library out of date);
     # the run's own files tell us when it is done, so never die here
-    my $status = try { $job->check_status() } catch { print STDERR "Script Factory: cannot check status of job $job_id: $_"; '' };
+    my $meta = _run_meta($c, $run_id) || {};
+    # still in the queue and no node can take it: start it here, now
+    if (!-e $log_file && !$meta->{started_locally} && $meta->{cmd} && ($meta->{job_id} // '') eq $job_id && !_slurm_ready($c)) {
+        print STDERR "Script Factory: job $job_id waits for an unavailable Slurm node, starting run $run_id on the web server\n";
+        try { $job->cancel() } catch { print STDERR "Script Factory: could not cancel the queued job $job_id: $_" };
+        $meta->{started_locally} = 1;
+        _write_run_meta($c, $run_id, $meta);
+        _start_local($job, $meta->{cmd});
+    }
+    # a run started on the web server has no backend to ask: its files tell when it is done
+    my $status = $meta->{started_locally} ? '' : try { $job->check_status() } catch { print STDERR "Script Factory: cannot check status of job $job_id: $_"; '' };
     $status ||= 'submitted';
     my $progress = '';
     my $halted = 0;

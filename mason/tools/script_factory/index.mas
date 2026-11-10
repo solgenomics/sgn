@@ -64,11 +64,11 @@ $blupf90_available => 0
       <section class="sf-step" data-step="1">
         <div class="sf-card">
           <h3>Choose a dataset</h3>
-          <p class="sf-help">The dataset should contain trials, accessions and at least one numeric trait. Plot-level observations are used.</p>
+          <p class="sf-help">Tick a dataset: it loads right away. It should contain trials, accessions and at least one numeric trait. Plot-level observations are used.</p>
           <div id="sf_dataset_select"></div>
           <div class="sf-inline-row">
             <label class="sf-check"><input type="checkbox" id="sf_dataset_outliers" /> Exclude outliers already flagged in the dataset</label>
-            <button class="btn btn-primary" id="sf_load_dataset"><span class="glyphicon glyphicon-download-alt"></span> Load dataset</button>
+            <button class="btn btn-primary" id="sf_load_dataset" style="display:none"><span class="glyphicon glyphicon-download-alt"></span> Load dataset</button>
           </div>
           <div id="sf_dataset_message"></div>
         </div>
