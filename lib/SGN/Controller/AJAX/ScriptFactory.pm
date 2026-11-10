@@ -198,6 +198,84 @@ sub _write_pedigree {
     };
 }
 
+# management factor types (sgn.conf management_factor_types), used to merge
+# management factor projects of one type into one factor
+sub _treatment_types {
+    my $c = shift;
+    my $types = $c->config->{management_factor_types} // '';
+    my @t = grep { length } map { s/^\s+|\s+$//gr } split /,/, $types;
+    return @t ? \@t : [ 'Fertilizer', 'Fungicide', 'Irrigation', 'Drought', 'Herbicide', 'Weeding', 'Pruning', 'Hormone treatment', 'Light treatment' ];
+}
+
+# Treatment factors of the dataset, derived like the R pipeline does:
+# management factor columns of one type become one factor (levels = rest of
+# the project names), treatment variables are a factor each; 'none' where a
+# plot has no value.
+sub _treatment_factors {
+    my ($c, $keys, $idx, $plot_rows, $legacy_cols, $treatment_cols) = @_;
+    my $types = _treatment_types($c);
+    my %legacy = map { $_ => 1 } @$legacy_cols;
+    my $applied = sub { my $v = shift; return defined($v) && $v !~ /^\s*(0|NA)?\s*$/ };
+    my $var_name = sub { (my $v = shift) =~ s/[^A-Za-z0-9]+/_/g; $v =~ s/^_+|_+$//g; return "trt_$v" };
+    my (%factors, @order);
+    foreach my $col (@$treatment_cols) {
+        my ($name, $level, $source);
+        if ($legacy{$col}) {
+            $source = 'management factor';
+            ($name, $level) = ($col, 'applied');
+            foreach my $type (@$types) {
+                (my $re = quotemeta($type)) =~ s/(\\ |_)+/[_ ]/g;
+                if ($col =~ /(?:^|[_ ])($re)(?:[_ ]|$)(.*)$/i) {
+                    $name = $type;
+                    ($level = $2) =~ s/[_ ]+/ /g;
+                    $level =~ s/^\s+|\s+$//g;
+                    $level = $col if $level eq '';
+                    last;
+                }
+            }
+        } else {
+            $source = 'treatment variable';
+            ($name = $col) =~ s/\|.*$//;
+        }
+        my $var = $var_name->($name);
+        my $f = $factors{$var} ||= do { push @order, $var; { name => $name, variable => $var, source => $source, values => [] } };
+        my $i = $idx->{$col};
+        for my $r (0 .. $#$plot_rows) {
+            my $v = $plot_rows->[$r]->[$i];
+            next if !$applied->($v);
+            my $l = $legacy{$col} ? $level : ($v =~ s/^\s+|\s+$//gr);
+            my $cur = $f->{values}->[$r];
+            $f->{values}->[$r] = (!defined($cur) || $cur eq $l) ? $l : "$cur + $l";
+        }
+    }
+    my $trial_i = $idx->{studyName};
+    my @out;
+    foreach my $var (@order) {
+        my $f = $factors{$var};
+        my (%n, %by_trial);
+        for my $r (0 .. $#$plot_rows) {
+            my $l = $f->{values}->[$r] // 'none';
+            $n{$l}++;
+            $by_trial{ defined($trial_i) ? ($plot_rows->[$r]->[$trial_i] // '') : '' }->{$l}++;
+        }
+        next if !grep { $_ ne 'none' } keys %n;
+        my $within = grep { keys(%$_) > 1 } values %by_trial;
+        my %trial_level = map { my @l = sort keys %{$by_trial{$_}}; ($_ => (@l == 1 ? $l[0] : '(mixed)')) } keys %by_trial;
+        my %between = map { $_ => 1 } values %trial_level;
+        push @out, {
+            name => $f->{name},
+            variable => $var,
+            source => $f->{source},
+            levels => [ map { { level => $_, n_plots => $n{$_} } } sort keys %n ],
+            varies_within_trials => $within ? 1 : 0,
+            n_trials_with_levels => scalar(grep { $_ ne 'none' } values %trial_level),
+            n_trial_levels => scalar(keys %between),
+            by_trial => [ map { { trial => $_, levels => join(', ', sort keys %{$by_trial{$_}}) } } sort keys %by_trial ],
+        };
+    }
+    return \@out;
+}
+
 sub _is_number {
     my $v = shift;
     return defined($v) && $v =~ /^\s*-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?\s*$/ ? 1 : 0;
@@ -251,16 +329,23 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
 
     my ($keys, $idx, $rows) = _read_pheno_file($pheno_file);
 
+    # treatments are not traits: management factor columns come after 'notes',
+    # treatment variables belong to the experiment treatment ontologies
+    my $notes_i = $idx->{notes};
+    my @legacy_trt_cols = defined($notes_i) ? @$keys[ $notes_i + 1 .. $#$keys ] : ();
+    my %is_treatment = map { $_ => 1 } (@legacy_trt_cols, grep { /\|(EXPERIMENT_TREATMENT|COMP_EXP_TREATMENT):/ } @$keys);
+
     my %trait_names = map { $_->[1] => 1 } @{$traits_in_ds || []};
-    my @trait_cols = grep { exists($trait_names{$_}) } @$keys;
+    my @trait_cols = grep { exists($trait_names{$_}) && !$is_treatment{$_} } @$keys;
     if (!@trait_cols) {
         # fall back to the columns after the seedlot block of the file
         my $start = $idx->{availableGermplasmSeedlotUniquenames};
-        @trait_cols = grep { $_ ne 'notes' } @$keys[ ($start // $#$keys) + 1 .. $#$keys ] if defined $start;
+        @trait_cols = grep { $_ ne 'notes' && !$is_treatment{$_} } @$keys[ ($start // $#$keys) + 1 .. $#$keys ] if defined $start;
     }
 
     my $level_i = $idx->{observationLevel};
     my @plot_rows = grep { !defined($level_i) || !defined($_->[$level_i]) || $_->[$level_i] eq '' || lc($_->[$level_i]) eq 'plot' } @$rows;
+    my $treatments = _treatment_factors($c, $keys, $idx, \@plot_rows, \@legacy_trt_cols, [ grep { $is_treatment{$_} } @$keys ]);
 
     my @traits;
     foreach my $t (@trait_cols) {
@@ -353,6 +438,8 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         n_locations => scalar(keys %locations),
         n_years => scalar(keys %years),
         pedigree => $pedigree,
+        treatments => $treatments,
+        treatment_types => _treatment_types($c),
         # breeding programs of the trials, most plots first (default program of a stored analysis)
         programs => [ sort { $b->{n_plots} <=> $a->{n_plots} } values %programs ],
     };
@@ -964,6 +1051,12 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
 
     my $done = ($halted || $status eq 'finished' || $status eq 'failed' || $status eq 'timed_out' || $status eq 'canceled');
     if (!$done && !-e $results_file) {
+        if (!-e $log_file) {
+            # the job has not started: it is still waiting for the cluster
+            my $waited = time() - ((stat("$run_base.recipe.json"))[9] // time());
+            $progress = 'Waiting in the job queue (not started yet)';
+            $progress .= sprintf(' for %d min. The job cluster may be busy or down; if this lasts, please contact the site administrator.', $waited / 60) if $waited > 120;
+        }
         $c->stash->{rest} = { status => 'running', progress => $progress };
         return;
     }
@@ -976,6 +1069,8 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
         my $log = -e $log_file ? read_file($log_file) : '';
         my @err = grep { /Error|error|stop|Execution halted/ } split /\n/, $log;
         my $msg = join("\n", @err[ ($#err > 5 ? $#err - 5 : 0) .. $#err ]) || "The analysis job ended with status '$status' without producing results.";
+        # say where it stopped (last progress line of the pipeline) before the R details
+        $msg = "The analysis stopped at: $progress\n\nDetails:\n$msg" if $progress;
         $c->stash->{rest} = { status => 'failed', error => $msg };
         return;
     }

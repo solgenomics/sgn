@@ -109,6 +109,13 @@ $blupf90_available => 0
             <div id="sf_recipe_trait_warning"></div>
             <div class="sf-trait-grid" id="sf_traits"></div>
           </div>
+
+          <div class="sf-card" id="sf_treatments_card" style="display:none">
+            <h3>Treatments</h3>
+            <p class="sf-help">Treatments recorded on the trials (management factors such as fertilizer, and treatment variables). They are not traits:
+              they can enter the models as factors. Management factors of one type are merged into one factor, plots without it are level <i>none</i>.</p>
+            <div id="sf_treatments"></div>
+          </div>
         </div>
         <div class="sf-nav"><span></span><button class="btn btn-primary sf-next" data-goto="2">Next: Quality control <span class="glyphicon glyphicon-chevron-right"></span></button></div>
       </section>
@@ -777,6 +784,14 @@ table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-term-hint { font-size: 12px; color: #6b7280; width: 32%; }
 .sf-term-hint .warn { color: #b45309; }
 .sf-check-inline { display: inline-block; margin-right: 14px; }
+.sf-trt { border: 1px solid var(--sf-border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.sf-trt-head { margin-bottom: 6px; }
+.sf-trt-levels { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.sf-trt-level { padding: 2px 8px; border-radius: 12px; background: #eef2f7; font-size: 12px; }
+.sf-trt-level.none { background: #f6f6f6; color: var(--sf-muted); }
+.sf-trt-level small { color: var(--sf-muted); }
+.sf-trt .sf-check { display: block; font-weight: normal; margin: 2px 0; }
+.sf-trt .sf-check.dis { opacity: .55; }
 .sf-cov-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
 .sf-cov-list label { margin: 0; padding: 3px 10px; border: 1px solid #d1d5db; border-radius: 14px; font-weight: normal; cursor: pointer; font-size: 12px; }
 .sf-cov-list label.on { background: #e8f3ec; border-color: #2b7a4b; color: #1f5c38; }

@@ -14,7 +14,7 @@
 
 import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
 
-const VERSION = '1.2';
+const VERSION = '1.4';
 const SVGNS = 'http://www.w3.org/2000/svg';
 const ZONE_COLORS = ['#2b7a4b', '#2563eb', '#d97706', '#9333ea', '#dc2626', '#0891b2', '#65a30d', '#db2777', '#4b5563', '#b45309'];
 const DESIGNS = {
@@ -45,6 +45,7 @@ const state = {
     zoneTargets: { index: true },
     designOverrides: {},    // trial -> design
     singleCov: {},          // full trait -> true, covariates of the single-stage model
+    trt: null,              // {use: {name: true}, gxt: {name: true}} treatments in the models; null = defaults of the dataset
     pendingRecipe: null,    // recipe loaded before a dataset
     script: { id: null, name: null, description: '', is_public: 0, is_owner: 1 },
     lastRun: null,          // {key, finishedAt, seconds} of the last successful run
@@ -191,6 +192,7 @@ function buildRecipe() {
         stage1: { model: radio('sf_stage1_model'), design_overrides: overrides },
         stage2: { genotype: $('#sf_stage2_genotype').val(), weighting: $('#sf_stage2_weighting').val() },
         single: singleRecipe(),
+        treatments: treatmentRecipe(),
         index: index,
         zones: {
             enabled: $('#sf_zones_enabled').is(':checked'),
@@ -234,6 +236,9 @@ function applyRecipe(r) {
     if (s2.genotype) $('#sf_stage2_genotype').val(s2.genotype);
     if (s2.weighting) $('#sf_stage2_weighting').val(s2.weighting);
     applySingle(r.single || {});
+    const tr = r.treatments;
+    state.trt = tr ? { use: toSet(tr.use), gxt: toSet(tr.gxt) } : null;
+    renderTreatments();
 
     const ix = r.index || {};
     $('#sf_index_enabled').prop('checked', !!ix.enabled);
@@ -300,6 +305,7 @@ function renderQuickRun() {
         chip('Traits', r.traits.map(t => esc(shortTrait(t))).join(', ') || 'none', r.traits.length > 0) +
         chip('QC', o.method === 'iqr' ? 'IQR k = ' + o.k : o.method === 'madr' ? 'BH-MADR' : 'none', o.method !== 'none') +
         chip('Model', r.strategy === 'two_stage' ? 'two stages' : 'single stage', true) +
+        (datasetTreatments().length ? chip('Treatments', [].concat(r.treatments.use, r.treatments.gxt.map(n => 'G&times;' + esc(n))).map(x => x.indexOf('G&times;') === 0 ? x : esc(x)).join(', ') || 'not used', r.treatments.use.length + r.treatments.gxt.length > 0) : '') +
         chip('Index', r.index.enabled ? (r.index.method === 'rank_sum' ? 'rank sum' : 'Z-score') + ', top ' + r.index.selection_pct + '%' : 'off', r.index.enabled) +
         chip('Zones', r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin test' : 'correlation') : 'off', r.zones.enabled));
     const problems = validateRecipe(r);
@@ -488,6 +494,7 @@ function renderDatasetOverview() {
     h += '</tbody></table>';
     $('#sf_trials_table').html(h);
     renderTraits();
+    renderTreatments();
     // covariates of a script loaded before the dataset: match them by name
     const cov = {};
     Object.keys(state.singleCov).forEach(t => { const m = matchTrait(t); if (m) cov[m] = true; });
@@ -495,6 +502,73 @@ function renderDatasetOverview() {
     renderSingleCovariates();
     $('#sf_dataset_overview').show();
 }
+
+// ---------------------------------------------------------------------------
+// treatments (management factors, treatment variables): not traits, but
+// factors the models can adjust for
+// ---------------------------------------------------------------------------
+function toSet(a) { const o = {}; arr(a).forEach(x => { o[x] = true; }); return o; }
+
+function datasetTreatments() { return (state.dataset && state.dataset.treatments) || []; }
+
+// genotype x treatment needs a treatment applied to whole trials, with fewer
+// levels than trials (else it is genotype x trial)
+function gxtPossible(f) { return f.n_trial_levels > 1 && f.n_trial_levels < ((state.dataset && state.dataset.trials.length) || 0); }
+
+// choices of the user or of a script; without them the defaults of the
+// dataset: adjust for treatments that vary inside trials (whole-trial
+// treatments are held by the trial effect)
+function trtState() {
+    if (state.trt) return state.trt;
+    const d = { use: {}, gxt: {} };
+    datasetTreatments().forEach(f => { if (f.varies_within_trials) d.use[f.name] = true; });
+    return d;
+}
+
+function treatmentRecipe() {
+    const t = trtState();
+    const names = datasetTreatments().map(f => f.name);
+    const keep = o => Object.keys(o).filter(n => o[n] && (!state.dataset || names.indexOf(n) >= 0));
+    return { use: keep(t.use), gxt: keep(t.gxt), types: (state.dataset && state.dataset.treatment_types) || [] };
+}
+
+function renderTreatments() {
+    const list = datasetTreatments();
+    $('#sf_treatments_card').toggle(list.length > 0);
+    if (!list.length) { $('#sf_treatments').html(''); return; }
+    const t = trtState();
+    const nT = state.dataset.trials.length;
+    $('#sf_treatments').html(list.map(f => {
+        const lv = f.levels.map(l => '<span class="sf-trt-level' + (l.level === 'none' ? ' none' : '') + '">' + esc(l.level) + ' <small>' + l.n_plots + '</small></span>').join(' ');
+        const where = f.varies_within_trials ? '<span class="label label-info">varies within trials</span>'
+            : '<span class="label label-default">whole trials</span> <small class="sf-muted">' + f.n_trials_with_levels + ' of ' + nT + ' trial(s) treated</small>';
+        const useHelp = f.varies_within_trials ? 'Stage 1 / the single-stage model compare genotypes at the same treatment level.'
+            : 'Applied to whole trials: with the trial as fixed effect this is already held by the trial effect (used when the trial is random or not modelled).';
+        const gx = gxtPossible(f);
+        return '<div class="sf-trt" data-name="' + esc(f.name) + '">' +
+            '<div class="sf-trt-head"><b>' + esc(f.name) + '</b> <small class="sf-muted">' + esc(f.source) + ' &middot; <code>' + esc(f.variable) + '</code></small> ' + where + '</div>' +
+            '<div class="sf-trt-levels">' + lv + '</div>' +
+            '<label class="sf-check"><input type="checkbox" class="sf-trt-use"' + (t.use[f.name] ? ' checked' : '') + ' /> Adjust for ' + esc(f.name) + ' (fixed effect) <small class="sf-muted">' + esc(useHelp) + '</small></label>' +
+            '<label class="sf-check' + (gx ? '' : ' dis') + '"><input type="checkbox" class="sf-trt-gxt"' + (t.gxt[f.name] && gx ? ' checked' : '') + (gx ? '' : ' disabled') + ' /> Genotype &times; ' + esc(f.name) +
+            ' <small class="sf-muted">' + (gx ? 'random interaction: do the genotypes rank differently under each ' + esc(f.name) + ' level?' : 'needs ' + esc(f.name) + ' applied to whole trials, with more trials than levels') + '</small></label>' +
+            '</div>';
+    }).join(''));
+}
+
+function onTreatmentsChanged() {
+    const t = state.trt = Object.assign({ use: {}, gxt: {} }, state.trt);
+    $('#sf_treatments .sf-trt').each(function() {
+        const name = $(this).data('name');
+        t.use[name] = $(this).find('.sf-trt-use').is(':checked');
+        t.gxt[name] = $(this).find('.sf-trt-gxt').is(':checked');
+    });
+    renderPipeline();
+    renderModelPreview();
+    renderSingleHints();
+    renderQuickRun();
+}
+
+function treatmentVars() { return datasetTreatments().map(f => f.variable); }
 
 function renderTraits() {
     if (!state.dataset) return;
@@ -1029,6 +1103,15 @@ function suggestion() {
     S.covariates = (strategy === 'single_stage') ? ds.traits.filter(t => COV_HINT.test(t.short)).map(t => t.name) : [];
     if (S.covariates.length) item('covariates', 'Covariates', S.covariates.join('|'), S.covariates.map(shortTrait).join(', '), 'Plant stand and similar counts explain part of the plot-to-plot variation of yield-type traits.');
     S.gxe = nT > 1 ? ['trial'] : [];
+    const trts = datasetTreatments();
+    S.trt = { use: trts.filter(f => f.varies_within_trials).map(f => f.name), gxt: trts.filter(gxtPossible).map(f => f.name) };
+    if (trts.length) {
+        const txt = [].concat(S.trt.use.map(n => 'adjust for ' + n), S.trt.gxt.map(n => 'G\u00d7' + n)).join(', ') || 'not in the model';
+        const why = trts.map(f => f.name + (f.varies_within_trials ? ' varies within trials: genotypes are compared at the same level'
+            : gxtPossible(f) ? ' is applied to whole trials (' + f.n_trial_levels + ' levels over ' + nT + ' trials): its main effect is part of the trial effect; G\u00d7' + f.name + ' shows whether rankings change with it'
+            : ' is applied to whole trials and cannot be separated from them')).join('. ') + '.';
+        item('treatments', 'Treatments', [S.trt.use.slice().sort().join('|'), S.trt.gxt.slice().sort().join('|')].join(';'), txt, why);
+    }
     return S;
 }
 
@@ -1042,6 +1125,7 @@ function currentChoice(key) {
         case 'genetic': return $('#sf_gen_model').val();
         case 'check': return $('#sf_check').val();
         case 'covariates': return Object.keys(state.singleCov).sort().join('|');
+        case 'treatments': { const t = treatmentRecipe(); return [t.use.slice().sort().join('|'), t.gxt.slice().sort().join('|')].join(';'); }
     }
     return null;
 }
@@ -1090,6 +1174,8 @@ function applySuggestion() {
     $('#sf_gen_model').val(S.genetic);
     $('#sf_check').val(S.check);
     state.designOverrides = {};
+    state.trt = { use: toSet(S.trt.use), gxt: toSet(S.trt.gxt) };
+    renderTreatments();
     if (S.strategy === 'single_stage') {
         setRadio('sf_single_mode', 'builder');
         ['#sf_single_rep', '#sf_single_block', '#sf_single_rowcol'].forEach(id => $(id).val('auto'));
@@ -1191,6 +1277,16 @@ function singleBuilderFormula() {
         add('(1|accession:' + g + ')', n > 1, 'accession x ' + g + ' (one ' + g + ')');
     });
     r.covariates.forEach(t => terms.push(covName(t)));
+    const tr = treatmentRecipe();
+    datasetTreatments().forEach(f => {
+        const nLv = f.levels.length;
+        if (tr.use.indexOf(f.name) >= 0) {
+            if (nLv < 2) dropped.push(f.name + ' (one level)');
+            else if (r.env === 'fixed' && D && D.n_trials > 1 && !f.varies_within_trials) dropped.push(f.name + ' main effect (constant within each trial: held by the trial effect)');
+            else terms.push(f.variable);
+        }
+        if (tr.gxt.indexOf(f.name) >= 0) add('(1|accession:' + f.variable + ')', nLv > 1, 'accession x ' + f.name + ' (one level)');
+    });
     const g = geneticRecipe();
     if (r.genotype !== 'fixed') {
         const nChk = known ? D.n_check_plots : 1;
@@ -1204,7 +1300,7 @@ function singleBuilderFormula() {
 function checkFormula(txt) {
     let rhs = String(txt || '').replace(/[\r\n\t]+/g, ' ').replace(/^\s*y\s*~/, '').trim();
     if (!rhs) return { ok: false, msg: 'write the formula of the model' };
-    const allowed = Object.keys(FORMULA_VARS).concat(Object.keys(state.singleCov).map(covName));
+    const allowed = Object.keys(FORMULA_VARS).concat(Object.keys(state.singleCov).map(covName), treatmentVars());
     const toks = rhs.match(/[A-Za-z_][A-Za-z0-9_.]*|[0-9]+(\.[0-9]+)?|\s+|./g) || [];
     let depth = 0;
     for (let i = 0; i < toks.length; i++) {
@@ -1233,8 +1329,10 @@ function checkFormula(txt) {
 function renderSingleHints() {
     const D = singleData();
     const hint = (k, h) => $('.sf-term-hint[data-hint=' + k + ']').html(h);
-    $('#sf_single_vars').html(Object.keys(FORMULA_VARS).concat(Object.keys(state.singleCov).map(covName)).map(v =>
-        '<span class="label label-default sf-var" data-v="' + esc(v) + '" title="' + esc(FORMULA_VARS[v] || 'covariate') + '">' + esc(v) + '</span>').join(' '));
+    const trtTitle = {};
+    datasetTreatments().forEach(f => { trtTitle[f.variable] = 'treatment ' + f.name + ' (' + f.levels.length + ' levels)'; });
+    $('#sf_single_vars').html(Object.keys(FORMULA_VARS).concat(Object.keys(state.singleCov).map(covName), treatmentVars()).map(v =>
+        '<span class="label label-default sf-var" data-v="' + esc(v) + '" title="' + esc(FORMULA_VARS[v] || trtTitle[v] || 'covariate') + '">' + esc(v) + '</span>').join(' '));
     const chk = checkFormula($('#sf_single_formula').val());
     $('#sf_single_formula_check').html($.trim($('#sf_single_formula').val()) ?
         (chk.ok ? '<small style="color:#2b7a4b"><span class="glyphicon glyphicon-ok"></span> Valid formula: genotype ' + (chk.random ? 'random (BLUPs)' : 'fixed (BLUEs)') + '</small>' :
@@ -1324,8 +1422,8 @@ function renderPipeline() {
     const nEx = Object.keys(state.exclusions).length;
     items.push({ t: 'Quality control', d: (o.method === 'iqr' ? 'IQR k = ' + o.k + ' by ' + o.group_by.replace('_', ' &times; ') : o.method === 'madr' ? 'BH-MADR, &alpha; = ' + o.alpha : 'no automatic rule') + (nEx ? '<br/>' + nEx + ' individual exclusion(s)' : ''), off: o.method === 'none' && !nEx });
     if (r.strategy === 'two_stage') {
-        items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] });
-        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') + geneticChip(r) });
+        items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] + trtChip(r.treatments.use, 'adjusted for ') });
+        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r) });
     } else {
         let d;
         if (r.single.mode === 'custom') {
@@ -1336,6 +1434,7 @@ function renderPipeline() {
                 (r.single.gxe.length ? '<br/>G&times;' + r.single.gxe.join(', G&times;') : '<br/>no G&times;E') +
                 (r.single.trend === 'linear' ? ', linear trend' : '') + (r.single.covariates.length ? ', ' + r.single.covariates.length + ' covariate(s)' : '');
         }
+        if (r.single.mode !== 'custom') d += trtChip(r.treatments.use, 'adjusted for ') + trtChip(r.treatments.gxt, 'G&times;');
         items.push({ t: 'Single stage', d: d + geneticChip(r) });
     }
     const nIdx = Object.keys(r.index.traits).length;
@@ -1345,6 +1444,8 @@ function renderPipeline() {
     $('#sf_pipeline').html('<ul class="sf-flow">' + items.map(i => '<li class="' + (i.off ? 'off' : '') + '"><b>' + i.t + '</b>' + i.d + '</li>').join('') + '</ul>');
     updateRunButton();   // any change to the pipeline may make the last results stale
 }
+
+function trtChip(names, prefix) { return names.length ? '<br/>' + prefix + names.map(esc).join(', ' + prefix) : ''; }
 
 // ---------------------------------------------------------------------------
 // step 6 - run
@@ -1922,6 +2023,7 @@ export function init(options) {
     // step 1
     $('#sf_load_dataset').on('click', loadDataset);
     $('#sf_traits').on('change', '.sf-trait-cb', onTraitsChanged);
+    $('#sf_treatments').on('change', 'input', onTreatmentsChanged);
     $('#sf_traits_all').on('click', () => { $('.sf-trait-cb').prop('checked', true); onTraitsChanged(); });
     $('#sf_traits_none').on('click', () => { $('.sf-trait-cb').prop('checked', false); onTraitsChanged(); });
 
