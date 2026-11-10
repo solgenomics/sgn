@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "common_context_prefixes": [
+    "navigation.",
+    "auth."
+  ],
+  "common_sources": [
+    "lib/SGN/Controller/AJAX/User.pm",
+    "mason/i18n/language_selector.mas",
+    "mason/site/footer/body.mas",
+    "mason/site/footer/common.mas",
+    "mason/site/header/head.mas",
+    "mason/site/login_dialog.mas",
+    "mason/site/toolbar/about.mas",
+    "mason/site/toolbar/analyze.mas",
+    "mason/site/toolbar/login.mas",
+    "mason/site/toolbar/manage.mas",
+    "mason/site/toolbar/search.mas",
+    "mason/site/toolbar/search_menu.mas"
+  ],
+  "source_workflows": {
+    "lib/SGN/Controller/AJAX/User.pm": "global",
+    "mason/i18n/language_selector.mas": "global",
+    "mason/site/footer/body.mas": "global",
+    "mason/site/footer/common.mas": "global",
+    "mason/site/header/head.mas": "global",
+    "mason/site/login_dialog.mas": "global",
+    "mason/site/toolbar/about.mas": "global",
+    "mason/site/toolbar/analyze.mas": "global",
+    "mason/site/toolbar/login.mas": "global",
+    "mason/site/toolbar/manage.mas": "global",
+    "mason/site/toolbar/search.mas": "global",
+    "mason/site/toolbar/search_menu.mas": "global"
+  }
+}

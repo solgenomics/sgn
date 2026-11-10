@@ -160,6 +160,13 @@ sub render : ActionClass('RenderView') { }
 sub end : Private {
     my ( $self, $c ) = @_;
 
+    # Translated pages differ by language; tell browsers and caches.
+    # (HTML pages already get "Vary: Cookie" below, for the language cookie.)
+    if ($c->config->{i18n_enabled}) {
+        $c->res->headers->header('Content-Language' => $c->i18n->locale);
+        $c->res->headers->push_header('Vary', 'Accept-Language');
+        $c->res->headers->push_header('Vary', 'X-SGN-Locale');
+    }
     return if @{$c->error};
 
     # don't try to render a default view if this was handled by a CGI

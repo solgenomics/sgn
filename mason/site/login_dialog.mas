@@ -19,28 +19,28 @@ $goto_url => '/'
         <div class="modal-content">
             <div class="modal-header" style="text-align:center">
 %  if (!$c->config->{require_login}) {
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('auth.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
 %  }
-                <h3 class="modal-title" id="site_login_dialog_title">Login</h3>
+                <h3 class="modal-title" id="site_login_dialog_title"><% $c->i18n->p('auth.login.title', 'Login') |h %></h3>
             </div>
             <div class="modal-body">
                 <form id="login_form" name="login_form">
                     <div class="container-fluid">
 
 % if ($c->config->{default_login_janedoe}) {
-                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" value="janedoe"/>
+                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="<% $c->i18n->p('auth.login.username', 'Username') |h %>" type="text" value="janedoe"/>
                         <br />
-                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" value="secretpw"/>
+                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="<% $c->i18n->p('auth.login.password', 'Password') |h %>" type="password" value="secretpw"/>
 % } else {
                         <div class="input-group">
-                            <input class="form-control" id="username" name="username" placeholder="Username" type="text" tabindex="1" />
+                            <input class="form-control" id="username" name="username" placeholder="<% $c->i18n->p('auth.login.username', 'Username') |h %>" type="text" tabindex="1" />
                             <span class="input-group-btn">
                                 <button id="forgot_username_modal_show" class="btn btn-default" type="button" tabindex="4">&nbsp;<span class="glyphicon glyphicon-question-sign"></span>&nbsp;</button>
                             </span>
                         </div>
                         <br />
                         <div class="input-group">
-                            <input class="form-control" id="password" name="password" placeholder="Password" type="password" tabindex="2" />
+                            <input class="form-control" id="password" name="password" placeholder="<% $c->i18n->p('auth.login.password', 'Password') |h %>" type="password" tabindex="2" />
                             <span class="input-group-btn">
                                 <button id="reset_password_modal_show" class="btn btn-default" type="button" tabindex="5">&nbsp;<span class="glyphicon glyphicon-question-sign"></span>&nbsp;</button>
                             </span>
@@ -49,15 +49,15 @@ $goto_url => '/'
                         <br />
 
                         <div>
-                            <input type="checkbox" id="show_password"> Show Password
+                            <input type="checkbox" id="show_password"> <% $c->i18n->p('auth.login.show_password', 'Show Password') |h %>
                         </div>
                         <br />
 
                         <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
 
                         <div>
-                            <button class="btn btn-default" id="new_user_modal_show" style="float:left" tabindex="6">New User</button>
-                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right" tabindex="3">Login</button>
+                            <button class="btn btn-default" id="new_user_modal_show" style="float:left" tabindex="6"><% $c->i18n->p('auth.login.new_user', 'New User') |h %></button>
+                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right" tabindex="3"><% $c->i18n->p('auth.login.title', 'Login') |h %></button>
                         </div>
                     </div>
                 </form>
@@ -78,7 +78,7 @@ $goto_url => '/'
             </div>
             <div class="modal-footer">
 %  if (!$c->config->{require_login}) {
-                <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+                <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left"><% $c->i18n->p('auth.common.close', 'Close') |h %></button>
 %  }
             </div>
         </div>
@@ -367,14 +367,14 @@ jQuery(document).ready( function() {
         event.preventDefault();
         var form_data = jQuery('#login_form').serialize();
         if (!jQuery('#username').val() || !jQuery('#password').val()) { 
-            alert('Please enter a username and password');
+            alert(SGN.t('auth.login.credentials_missing', 'Please enter a username and password'));
             return;
         }
         jQuery.ajax( { 
             url: '/ajax/user/login',
             method: 'POST',
             data: form_data,
-            error: function(r) { alert('An error occurred! Sorry!');  },
+            error: function(r) { alert(SGN.t('auth.network_error', 'An error occurred! Sorry!'));  },
             success: function(r) {
                 if (r.error) { 
                     alert(r.error);

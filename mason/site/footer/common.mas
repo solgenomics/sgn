@@ -24,7 +24,7 @@
     <div class="modal-content">
       <div class="modal-header">
 	      <center>
-          <h4 class="modal-title" id="workingModalDialog">Working</h4>
+          <h4 class="modal-title" id="workingModalDialog"><% $c->i18n->p('interface.working', 'Working') |h %></h4>
 	      </center>
       </div>
       <div class="modal-body">
@@ -51,7 +51,7 @@
     <div class="modal-content">
       <div class="modal-header">
 	<center>
-          <h4 class="modal-title" id="progressModalDialog">Progress</h4>
+          <h4 class="modal-title" id="progressModalDialog"><% $c->i18n->p('interface.progress', 'Progress') |h %></h4>
 	</center>
       </div>
       <div class="modal-body">

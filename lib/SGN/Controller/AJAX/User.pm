@@ -36,16 +36,16 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $login_info = $login->login_user($username, $password);
 
     if (exists($login_info->{incorrect_password}) && $login_info->{incorrect_password} == 1) {
-	$c->stash->{rest} = { error => "Login credentials are incorrect. Please try again." };
+	$c->stash->{rest} = { error => $c->i18n->p('account.server.incorrect_credentials', 'Login credentials are incorrect. Please try again.') };
 	return;
     }
     elsif (exists($login_info->{account_disabled}) && $login_info->{account_disabled}) {
-	$c->stash->{rest} = { error => "This account has been deactivated due to $login_info->{account_disabled}. Please contact the database administrator to re-instate the account." };
+	$c->stash->{rest} = { error => $c->i18n->p('account.server.disabled_account', 'This account has been deactivated due to %{reason}. Please contact the database administrator to re-instate the account.', {reason => $login_info->{account_disabled}}) };
 	return;
     }
     else {
 	$c->stash->{rest} = {
-	    message => "Login successful",
+	    message => $c->i18n->p('account.server.login_success', 'Login successful'),
 	    goto_url => $goto_url
 	};
     }
@@ -58,7 +58,7 @@ sub logout :Path('/ajax/user/logout') Args(0) {
     my $login = CXGN::Login->new($c->dbc->dbh());
     $login->logout_user();
 
-    $c->stash->{rest} = { message => "User successfully logged out." };
+    $c->stash->{rest} = { message => $c->i18n->p('account.server.logout_success', 'User successfully logged out.') };
 }
 
 sub logout_externally :Path('/ajax/user/logout_externally') QueryParam('redirect_uri') {
@@ -72,7 +72,7 @@ sub logout_externally :Path('/ajax/user/logout_externally') QueryParam('redirect
     $login->logout_user();
 #    $c->stash->{redirect_uri} = $redirect_uri;
 #    $c->stash->{template} = '/site/toolbar/logout_externally.mas';
-    $c->stash->{rest} = { message => "User successfully logged out." };
+    $c->stash->{rest} = { message => $c->i18n->p('account.server.logout_success', 'User successfully logged out.') };
 }
 
 sub new_account :Path('/ajax/user/new') Args(0) {
@@ -607,17 +607,29 @@ sub get_login_button_html :Path('/ajax/user/login_button_html') Args(0) {
     my $self = shift;
     my $c = shift;
     eval {
+	# Button labels are inserted into HTML below, so escape them here.
+	my %label = (
+	    login => encode_entities($c->i18n->p('navigation.login.sign_in', 'Login')),
+	    main_site => encode_entities($c->i18n->p('navigation.login.main_site', 'main site')),
+	    main_site_title => encode_entities($c->i18n->p('navigation.login.main_site_title', 'log in on main site')),
+	    profile => encode_entities($c->i18n->p('navigation.login.profile', 'My Profile')),
+	    lists => encode_entities($c->i18n->p('navigation.login.lists', 'Lists')),
+	    datasets => encode_entities($c->i18n->p('navigation.login.datasets', 'Datasets')),
+	    calendar_title => encode_entities($c->i18n->p('navigation.login.calendar_title', 'Your Calendar')),
+	    calendar => encode_entities($c->i18n->p('navigation.login.calendar', 'Calendar')),
+	    logout => encode_entities($c->i18n->p('navigation.login.sign_out', 'Logout')),
+	);
 	my $production_site = $c->config->{main_production_site_url};
 	my $html = "";
 	# if the site is a mirror, gray out the login/logout links
 	if( $c->config->{'is_mirror'} ) {
 	    print STDERR "generating login button for mirror site...\n";
 	    $html = <<HTML;
-	    <a style="line-height: 1.2; text-decoration: underline; background: none" href="$production_site" title="log in on main site">main site</a>
+	    <a style="line-height: 1.2; text-decoration: underline; background: none" href="$production_site" title="$label{main_site_title}">$label{main_site}</a>
 	} elsif ( $c->config->{disable_login} ) {
 	    <li class="dropdown">
 		<div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
-		<button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+		<button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">$label{login}</button>
 		</div>
 		</li>
 
@@ -629,7 +641,7 @@ HTML
   <li class="dropdown">
       <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
 	<a href="/user/login">
-          <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+          <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">$label{login}</button>
 	</a>
       </div>
   </li>
@@ -641,17 +653,17 @@ HTML
     my $username = $c->user->get_username();
     $html = <<HTML;
     <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
-        <button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
-        <button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
-            <span class="glyphicon glyphicon-align-justify" ></span>&nbsp;<span class="hidden-sm">Lists</span>
+        <button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="$label{profile}">$username</button>
+        <button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="$label{lists}" onClick="show_lists();">
+            <span class="glyphicon glyphicon-align-justify" ></span>&nbsp;<span class="hidden-sm">$label{lists}</span>
         </button>
-        <button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets" onClick="window.location='/search/datasets';">
-            <span class="glyphicon glyphicon-list" style="transform: rotate(90deg)"></span>&nbsp;<span class="hidden-sm">Datasets</span>
+        <button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="$label{datasets}" onClick="window.location='/search/datasets';">
+            <span class="glyphicon glyphicon-list" style="transform: rotate(90deg)"></span>&nbsp;<span class="hidden-sm">$label{datasets}</span>
         </button>
-        <button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">
-            Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
+        <button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="$label{calendar_title}">
+            $label{calendar}&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
         </button>
-        <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
+        <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="$label{logout}"></button>
       </div>
 HTML
 
@@ -660,7 +672,7 @@ HTML
       $html = qq |
       <li class="dropdown">
         <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
-            <button id="site_login_button" name="site_login_button" class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px; position-absolute: 10,10,100,10">Login</button>
+            <button id="site_login_button" name="site_login_button" class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px; position-absolute: 10,10,100,10">$label{login}</button>
         </div>
       </li>
  |;

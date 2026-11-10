@@ -1,0 +1,14 @@
+# SGN source files with translatable interface text.
+# Keep in sync with locale/workflows.json.
+lib/SGN/Controller/AJAX/User.pm
+mason/i18n/language_selector.mas
+mason/site/footer/body.mas
+mason/site/footer/common.mas
+mason/site/header/head.mas
+mason/site/login_dialog.mas
+mason/site/toolbar/about.mas
+mason/site/toolbar/analyze.mas
+mason/site/toolbar/login.mas
+mason/site/toolbar/manage.mas
+mason/site/toolbar/search.mas
+mason/site/toolbar/search_menu.mas

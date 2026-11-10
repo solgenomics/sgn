@@ -1,0 +1,18 @@
+# Synthetic Arabic messages for the i18n unit tests: each form shows its index.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+"X-SGN-Language-Name: العربية\n"
+"X-SGN-Direction: rtl\n"
+
+msgctxt "trials.count"
+msgid "%{count} trial found"
+msgid_plural "%{count} trials found"
+msgstr[0] "ar[0] %{count}"
+msgstr[1] "ar[1] %{count}"
+msgstr[2] "ar[2] %{count}"
+msgstr[3] "ar[3] %{count}"
+msgstr[4] "ar[4] %{count}"
+msgstr[5] "ar[5] %{count}"

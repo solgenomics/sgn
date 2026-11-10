@@ -1,0 +1,14 @@
+# Synthetic Brazilian Portuguese messages for the i18n unit tests.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-SGN-Language-Name: Português do Brasil\n"
+"X-SGN-Direction: ltr\n"
+
+msgctxt "trials.count"
+msgid "%{count} trial found"
+msgid_plural "%{count} trials found"
+msgstr[0] "pt-BR[0] %{count}"
+msgstr[1] "pt-BR[1] %{count}"

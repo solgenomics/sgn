@@ -1,4 +1,16 @@
 <%init>
+  use HTML::Entities qw(encode_entities);
+
+  # Translate the whole sentence, then put the two HTML pieces into it.
+  my %location_parts = (
+      site_name => '<span style="font-face:arial;font-size:10pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span>',
+      institute => '<a href="https://btiscience.org">Boyce Thompson Institute</a>',
+  );
+  my $location = encode_entities($c->i18n->p('footer.location',
+      '%{site_name} is located at the %{institute}.',
+      { site_name => '%{site_name}', institute => '%{institute}' }));
+  $location =~ s/%\{(site_name|institute)\}/$location_parts{$1}/g;
+
   my $tag;
     my $commit;
     my $updated;
@@ -23,7 +35,7 @@
     <div class="container-fluid">
       <div class="row">
           <div class="col-12 col-md-9">
-            <span style="font-face:arial;font-size:10pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span> is located at the <a href="https://btiscience.org">Boyce Thompson Institute</a>.<br />
+            <% $location %><br />
             <a href="https://btiscience.org"><img src="/static/img/bti_logo_2024.png" width="200"></a>
           </div>
 
@@ -31,7 +43,7 @@
           <div class="col-12 col-md-3">
             <div class="git-version">
               <p>
-                <strong>Version</strong>
+                <strong><% $c->i18n->p('footer.version', 'Version') |h %></strong>
                 <br />
 % if($isGit == 0) {
                 <span class="git-version-commit"><a href="https://github.com/solgenomics/sgn/commits/<% $commit %>"><% $commit %></a></span>&nbsp;

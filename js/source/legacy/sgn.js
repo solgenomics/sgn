@@ -1,3 +1,65 @@
+/**
+ * English fallbacks for SGN.t and SGN.tn.
+ *
+ * This file is loaded on every page. When interface translation is enabled,
+ * /i18n/runtime.js is loaded first and defines the translating versions; these
+ * fallbacks are then not installed. With translation off they return the
+ * English text, so code can always call SGN.t and SGN.tn.
+ */
+(function (root) {
+    var api = root.SGN = root.SGN || {};
+
+    function format(text, variables) {
+        variables = variables || {};
+        if (typeof variables !== 'object' || Array.isArray(variables)) {
+            throw new Error('Named variables must be an object');
+        }
+        return text.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (_, name) {
+            var value = variables[name];
+            if (!Object.prototype.hasOwnProperty.call(variables, name) || value == null ||
+                typeof value === 'object' || typeof value === 'function') {
+                throw new Error('Missing or invalid named variable: ' + name);
+            }
+            return String(value);
+        });
+    }
+
+    /**
+     * Translate one message.
+     * @param {string} context Message key, for example "navigation.manage.menu".
+     * @param {string} text Exact English text, used when there is no translation.
+     * @param {Object} [variables] Values for %{name} placeholders.
+     * @returns {string} Plain text; insert it with textContent or jQuery .text().
+     */
+    if (!api.t) api.t = function (context, text, variables) {
+        if (api.i18n) return api.i18n.p(context, text, variables);
+        if (typeof context !== 'string' || typeof text !== 'string') {
+            throw new Error('Translation context and text must be strings');
+        }
+        return format(text, variables);
+    };
+
+    /**
+     * Translate a message that depends on a count.
+     * @param {string} context Message key.
+     * @param {string} one English singular text.
+     * @param {string} many English plural text.
+     * @param {number} count Non-negative integer that selects the form.
+     * @param {Object} [variables] Values for %{name} placeholders.
+     * @returns {string} Plain text.
+     */
+    if (!api.tn) api.tn = function (context, one, many, count, variables) {
+        if (api.i18n) return api.i18n.np(context, one, many, count, variables);
+        if (!Number.isSafeInteger(count) || count < 0) {
+            throw new Error('Plural count must be a nonnegative safe integer');
+        }
+        if (typeof context !== 'string' || typeof one !== 'string' || typeof many !== 'string') {
+            throw new Error('Translation context and texts must be strings');
+        }
+        return format(count === 1 ? one : many, variables);
+    };
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
 // stub out some problematic things
 var docroot = '/';
 

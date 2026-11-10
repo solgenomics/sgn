@@ -18,6 +18,9 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <& toolbar/search.mas &>
+% if ($c->config->{i18n_enabled}) {
+        <li class="sgn-language-control"><& /i18n/language_selector.mas &></li>
+% }
         <& toolbar/login.mas &>
       </ul>
     </div>
@@ -75,6 +78,28 @@
 <script>
 
 jQuery(document).ready(function() {
+% if ($c->config->{i18n_enabled}) {
+  // Translated menus and the language selector can make the fixed navigation
+  // bar taller. Keep the page content below it; a very tall bar scrolls with
+  // the page so it cannot hide page controls.
+  var navbar = document.querySelector('nav.navbar-fixed-top');
+  var originalPadding = parseFloat(window.getComputedStyle(document.body).paddingTop) || 0;
+  function fitTranslatedNavigation() {
+    if (!navbar) { return; }
+    var height = Math.ceil(navbar.getBoundingClientRect().height);
+    var inFlow = height > window.innerHeight / 2;
+    var position = inFlow ? 'static' : '';
+    var padding = (inFlow ? 0 : Math.max(originalPadding, height)) + 'px';
+    if (navbar.style.position !== position) { navbar.style.position = position; }
+    if (document.body.style.paddingTop !== padding) { document.body.style.paddingTop = padding; }
+  }
+  fitTranslatedNavigation();
+  window.addEventListener('resize', fitTranslatedNavigation);
+  if (window.ResizeObserver && navbar) {
+    new ResizeObserver(fitTranslatedNavigation).observe(navbar);
+  }
+  jQuery('#myNavbar').on('shown.bs.collapse hidden.bs.collapse', fitTranslatedNavigation);
+% }
   if (jQuery(document).width() > 768) {
     jQuery(".menu_click_dropdown").removeClass("dropdown-toggle");
     jQuery(".menu_click_dropdown").removeAttr("data-toggle");

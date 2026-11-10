@@ -1,0 +1,18 @@
+# Synthetic Portuguese messages for the i18n unit tests.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: pt\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-SGN-Language-Name: Português\n"
+"X-SGN-Direction: ltr\n"
+
+msgctxt "controls.save"
+msgid "Save"
+msgstr "Salvar (pt)"
+
+msgctxt "trials.count"
+msgid "%{count} trial found"
+msgid_plural "%{count} trials found"
+msgstr[0] "pt[0] %{count}"
+msgstr[1] "pt[1] %{count}"

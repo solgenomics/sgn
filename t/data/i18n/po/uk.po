@@ -1,0 +1,82 @@
+# Synthetic Ukrainian messages for the i18n unit tests. Not real translations.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: uk\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-SGN-Language-Name: Українська\n"
+"X-SGN-Direction: ltr\n"
+
+msgctxt "controls.save"
+msgid "Save"
+msgstr "Зберегти"
+
+msgctxt "seedlots.save"
+msgid "Save"
+msgstr "Зберегти партію"
+
+msgctxt ""
+msgid "Save"
+msgstr "Зберегти без контексту"
+
+msgctxt "trial.named"
+msgid "Created trial %{name}."
+msgstr "Створено дослід %{name}."
+
+msgctxt "trials.count"
+msgid "%{count} trial found"
+msgid_plural "%{count} trials found"
+msgstr[0] "Знайдено %{count} дослід"
+msgstr[1] "Знайдено %{count} досліди"
+msgstr[2] "Знайдено %{count} дослідів"
+
+msgctxt "broken.placeholder"
+msgid "Menu"
+msgstr "Меню %{oops}"
+
+msgctxt "broken.plural"
+msgid "%{count} file"
+msgid_plural "%{count} files"
+msgstr[0] "%{count} файл"
+msgstr[1] "%{count} файли %{total}"
+msgstr[2] "%{count} файлів"
+
+msgctxt "language.select"
+msgid "Language"
+msgstr "Мова"
+
+msgctxt "language.apply"
+msgid "Apply"
+msgstr "Застосувати"
+
+msgctxt "navigation.manage.menu"
+msgid "Manage"
+msgstr "Керування"
+
+msgctxt "navigation.search.menu"
+msgid "Search"
+msgstr "Пошук"
+
+msgctxt "navigation.analyze.kinship"
+msgid "Kinship & Inbreeding"
+msgstr "Спорідненість і інбридинг"
+
+msgctxt "navigation.login.sign_in"
+msgid "Login"
+msgstr "Увійти"
+
+msgctxt "navigation.login.confirm_logout"
+msgid "Are you sure you want to log out?"
+msgstr "Вийти з облікового запису?"
+
+msgctxt "auth.login.title"
+msgid "Login"
+msgstr "Вхід"
+
+msgctxt "footer.version"
+msgid "Version"
+msgstr "Версія"
+
+msgctxt "footer.location"
+msgid "%{site_name} is located at the %{institute}."
+msgstr "%{site_name} розміщено в %{institute}."
