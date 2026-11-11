@@ -1,11 +1,11 @@
 
 =head1 NAME
 
-SGN::Controller::ScriptFactory - page for the Script Factory analysis builder
+SGN::Controller::ScriptFactory - page for the Analysis Pipeline analysis builder
 
 =head1 DESCRIPTION
 
-The Script Factory lets users build a phenotypic analysis pipeline step by
+The Analysis Pipeline lets users build a phenotypic analysis pipeline step by
 step (outlier removal, single or two stage models, selection index and
 environmental zoning), run it on a dataset, store the results as an analysis
 and save the pipeline as a reusable script.

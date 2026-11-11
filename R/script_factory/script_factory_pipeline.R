@@ -1,5 +1,5 @@
 # =============================================================================
-# Breedbase Script Factory - analysis pipeline
+# Breedbase Analysis Pipeline - phenotypic analysis of a dataset
 # =============================================================================
 #
 # Runs a configurable phenotypic analysis pipeline ("recipe") on a Breedbase
@@ -25,11 +25,11 @@
 # Usage:
 #   Rscript script_factory_pipeline.R <phenotype_file> <recipe_json> <output_json> [exclusions_json] [output_prefix]
 #
-# When exported from the Script Factory page, the recipe is embedded at the top
+# When exported from the Analysis Pipeline page, the recipe is embedded at the top
 # of the script as RECIPE_JSON and the usage becomes:
 #   Rscript my_script.R <phenotype_file> <output_json>
 #
-# Author: Breedbase Script Factory
+# Author: Breedbase Analysis Pipeline
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -810,7 +810,7 @@ f90_fit <- function(d, fixed_terms = character(), random_terms = character(), ge
               quote = FALSE, row.names = FALSE, col.names = FALSE)
   writeLines(names(cols), file.path(wd, "data_columns.txt"))
   v0 <- max(var(d$y), 1e-6) / (n_random + 1)
-  par <- c("# BLUPF90+ parameter file written by the Breedbase Script Factory",
+  par <- c("# BLUPF90+ parameter file written by the Breedbase Analysis Pipeline",
            paste0("# model: y ~ ", if (genotype_random) "(1|accession)" else "accession",
                   if (length(labs)) paste0(" + ", paste(labs, collapse = " + ")),
                   if (length(random_terms)) paste0(" + ", paste0("(1|", names(rcodes)[names(rcodes) != "accession"], ")", collapse = " + ")),

@@ -2,11 +2,11 @@
 
 =head1 NAME
 
-/tools/script_factory/results.mas - Script Factory decision dashboard of one analysis run
+/tools/script_factory/results.mas - Analysis Pipeline decision dashboard of one analysis run
 
 =head1 DESCRIPTION
 
-All the results of a Script Factory run on one page: maps of the trial
+All the results of an Analysis Pipeline run on one page: maps of the trial
 locations and of the field layouts, trait distributions and correlations,
 interactive selection with a shortlist, genotype x environment stability,
 environmental zones, outliers and model details. Data come from
@@ -31,7 +31,7 @@ $run_id => ''
 
   <div class="sfd-hero">
     <div>
-      <div class="sfd-kicker"><a href="/tools/script_factory"><span class="glyphicon glyphicon-wrench"></span> Script Factory</a> &rsaquo; Decision dashboard</div>
+      <div class="sfd-kicker"><a href="/tools/script_factory"><span class="glyphicon glyphicon-wrench"></span> Analysis Pipeline</a> &rsaquo; Decision dashboard</div>
       <h2 id="sfd_title">Loading analysis&hellip;</h2>
       <div id="sfd_subtitle" class="sfd-subtitle"></div>
     </div>
@@ -40,7 +40,7 @@ $run_id => ''
         <button class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-download"></span> Downloads <span class="caret"></span></button>
         <ul class="dropdown-menu dropdown-menu-right" id="sfd_downloads"></ul>
       </div>
-      <a class="btn btn-default" id="sfd_pipeline" style="display:none" title="Open every step of this analysis in the Script Factory"><span class="glyphicon glyphicon-random"></span> Open pipeline</a>
+      <a class="btn btn-default" id="sfd_pipeline" style="display:none" title="Open every step of this analysis in the Analysis Pipeline"><span class="glyphicon glyphicon-random"></span> Open pipeline</a>
       <button class="btn btn-primary" id="sfd_store" style="display:none"><span class="glyphicon glyphicon-floppy-disk"></span> Store analysis</button>
       <button class="btn btn-default" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print</button>
     </div>

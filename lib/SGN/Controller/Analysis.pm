@@ -70,9 +70,9 @@ sub analysis_detail :Path('/analyses') Args(1) {
     $c->stash->{has_col_and_row_numbers} = $a->has_col_and_row_numbers();
     $c->stash->{identifier_prefix} = $c->config->{identifier_prefix};
     $c->stash->{analysis_metadata} = $a->metadata();
-    # analyses made with the Script Factory link back to their pipeline
+    # analyses made with the Analysis Pipeline link back to their pipeline
     my $saved_model = eval { $a->saved_model() } || {};
-    $c->stash->{script_factory} = (($saved_model->{model_properties} || {})->{application_name} // '') eq 'Breedbase Script Factory' ? 1 : 0;
+    $c->stash->{script_factory} = (($saved_model->{model_properties} || {})->{application_name} // '') =~ /^Breedbase (?:Analysis Pipeline|Script Factory)$/ ? 1 : 0;
     $c->stash->{user_can_modify} = $user->check_roles("submitter") || $user->check_roles("curator");
     $c->stash->{template} = '/analyses/detail.mas';
 }

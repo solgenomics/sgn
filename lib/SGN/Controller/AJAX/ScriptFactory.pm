@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::ScriptFactory - AJAX backend for the Script Factory
+SGN::Controller::AJAX::ScriptFactory - AJAX backend for the Analysis Pipeline
 
 =head1 DESCRIPTION
 
@@ -45,6 +45,7 @@ use CXGN::Dataset::File;
 use CXGN::Job;
 use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
+use CXGN::Trial;
 use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -70,7 +71,7 @@ sub _user_id {
 sub _require_login {
     my $c = shift;
     if (!$c->user()) {
-        $c->stash->{rest} = { error => 'You must be logged in to use the Script Factory.' };
+        $c->stash->{rest} = { error => 'You must be logged in to use the Analysis Pipeline.' };
         return 0;
     }
     return 1;
@@ -440,7 +441,7 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         $unit_info{$unit} = [ $col->($r, 'studyName'), $col->($r, 'germplasmName') ] if defined $unit;
     }
     my $marked = try { _marked_outliers($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info) }
-                 catch { print STDERR "Script Factory: marked outliers of dataset $dataset_id not read: $_\n"; [] };
+                 catch { print STDERR "Analysis Pipeline: marked outliers of dataset $dataset_id not read: $_\n"; [] };
 
     $c->stash->{rest} = {
         token => $token,
@@ -774,7 +775,7 @@ sub mark_outliers : Path('/ajax/script_factory/outliers/mark') Args(0) {
             database => (grep { $in_db->{$_} } @p) ? 1 : 0,
         };
     }
-    print STDERR "Script Factory: $action on dataset $dataset_id by person $sp_person_id, $changed phenotype(s) changed\n" if $action ne 'check';
+    print STDERR "Analysis Pipeline: $action on dataset $dataset_id by person $sp_person_id, $changed phenotype(s) changed\n" if $action ne 'check';
 
     $c->stash->{rest} = {
         status => \%status,
@@ -886,7 +887,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
             schema => $schema,
             people_schema => $people_schema,
             sp_person_id => $sp_person_id,
-            name => ($mode eq 'preview' ? 'Script Factory outlier preview' : 'Script Factory analysis') . ($recipe->{name} ? ": $recipe->{name}" : ''),
+            name => ($mode eq 'preview' ? 'Analysis Pipeline outlier preview' : 'Analysis Pipeline run') . ($recipe->{name} ? ": $recipe->{name}" : ''),
             job_type => 'script_factory_analysis',
             cmd => $cmd,
             results_page => ($mode eq 'preview' ? '/tools/script_factory' : "/tools/script_factory/results/$run_id"),
@@ -902,7 +903,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
         if (_slurm_ready($c)) {
             $job->submit();
         } else {
-            print STDERR "Script Factory: no Slurm node available, starting run $run_id on the web server\n";
+            print STDERR "Analysis Pipeline: no Slurm node available, starting run $run_id on the web server\n";
             $job->store();
             _start_local($job, $cmd);
             $meta{started_locally} = 1;
@@ -1152,7 +1153,7 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
     my $dir = _work_dir($c);
     if (!$meta || !-e "$dir/$run_id.results.json") {
         $c->stash->{rest} = { error => (-e "$dir/$run_id.recipe.json" && !-e "$dir/$run_id.results.json" && $meta
-            ? 'This analysis has no results yet: it is still running or it failed. Check it on the Script Factory page.'
+            ? 'This analysis has no results yet: it is still running or it failed. Check it on the Analysis Pipeline page.'
             : 'The results of this analysis are no longer available (temporary files are cleaned regularly). Run the script again, or store the analysis to keep its results.') };
         return;
     }
@@ -1236,14 +1237,14 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
     my $meta = _run_meta($c, $run_id) || {};
     # still in the queue and no node can take it: start it here, now
     if (!-e $log_file && !$meta->{started_locally} && $meta->{cmd} && ($meta->{job_id} // '') eq $job_id && !_slurm_ready($c)) {
-        print STDERR "Script Factory: job $job_id waits for an unavailable Slurm node, starting run $run_id on the web server\n";
-        try { $job->cancel() } catch { print STDERR "Script Factory: could not cancel the queued job $job_id: $_" };
+        print STDERR "Analysis Pipeline: job $job_id waits for an unavailable Slurm node, starting run $run_id on the web server\n";
+        try { $job->cancel() } catch { print STDERR "Analysis Pipeline: could not cancel the queued job $job_id: $_" };
         $meta->{started_locally} = 1;
         _write_run_meta($c, $run_id, $meta);
         _start_local($job, $meta->{cmd});
     }
     # a run started on the web server has no backend to ask: its files tell when it is done
-    my $status = $meta->{started_locally} ? '' : try { $job->check_status() } catch { print STDERR "Script Factory: cannot check status of job $job_id: $_"; '' };
+    my $status = $meta->{started_locally} ? '' : try { $job->check_status() } catch { print STDERR "Analysis Pipeline: cannot check status of job $job_id: $_"; '' };
     $status ||= 'submitted';
     my $progress = '';
     my $halted = 0;
@@ -1324,12 +1325,12 @@ sub _standalone_script {
     my $script = <<"HEADER";
 # =============================================================================
 # $name
-# Generated by the Breedbase Script Factory on $date
+# Generated by the Breedbase Analysis Pipeline on $date
 # Author: @{[ $user->get_first_name() ]} @{[ $user->get_last_name() ]}
 #
 # How to use it on another dataset or another year:
 #   1. In Breedbase, download the phenotypes of a dataset or of your trials
-#      (tab-delimited "plot" level file, the same file the Script Factory uses).
+#      (tab-delimited "plot" level file, the same file the Analysis Pipeline uses).
 #   2. Run:  Rscript $file_name.R <phenotype_file.txt> <results.json>
 #      For the mother/father or pedigree (A matrix) models, also download the
 #      pedigree of the accessions (Accession, Female_Parent, Male_Parent) and add
@@ -1401,6 +1402,11 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         $c->stash->{rest} = { error => "An analysis with the name \"$name\" already exists. Please choose another name." };
         return;
     }
+    # the model of the analysis is saved under the same name (CXGN::AnalysisModel::SaveModel refuses a used one)
+    if ($schema->resultset("NaturalDiversity::NdProtocol")->find({ name => $name })) {
+        $c->stash->{rest} = { error => "A model with the name \"$name\" already exists. Please choose another name." };
+        return;
+    }
 
     my $results = _load_results($c, $run_id);
     if (!$results->{store} || !@{ $results->{store}->{accession_names} || [] }) {
@@ -1425,10 +1431,10 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
     }
     my $f90 = ($results->{engine} // '') eq 'blupf90';
     my %h2 = map { $_->{trait} => $_->{h2} } @{ $results->{stage2} || [] };
-    my $protocol = 'Script Factory ' . (($results->{strategy} // '') eq 'two_stage' ? 'two-stage' : 'single-stage') . ' analysis: '
+    my $protocol = 'Analysis Pipeline ' . (($results->{strategy} // '') eq 'two_stage' ? 'two-stage' : 'single-stage') . ' analysis: '
         . join('; ', map { ($_->{trait} // '') . ': ' . ($_->{model} // '') } @{ $results->{stage2} || [] });
     my $summary = {
-        method => 'Breedbase Script Factory',
+        method => 'Breedbase Analysis Pipeline',
         strategy => $results->{strategy},
         engine => $f90 ? 'BLUPF90+' : 'R',
         genetic_model => $results->{genetic_model} // 'iid',
@@ -1510,7 +1516,7 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
             analysis_model_language => $f90 ? 'BLUPF90+' : 'R',
             analysis_model_type => 'mixed_model_lmer',     # protocol_type cvterm (db/00131)
             analysis_model_properties => $recipe,
-            analysis_model_application_name => 'Breedbase Script Factory',
+            analysis_model_application_name => 'Breedbase Analysis Pipeline',
             analysis_model_application_version => $results->{version} // '',
             analysis_model_file => $model_file,
             analysis_model_file_type => 'script_factory_script',
@@ -1527,21 +1533,68 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
     } catch {
         { error => "The analysis could not be stored: $_" };
     };
+    if (!$saved || !$saved->{success} || !$saved->{analysis_id}) {
+        # a failed store must not leave a half-created analysis or model behind:
+        # the name could not be used again. Both did not exist before this call.
+        _remove_failed_store($c, $schema, $metadata_schema, $phenome_schema, $people_schema, $name);
+    }
     if ($saved && $saved->{success} && $saved->{analysis_id}) {
         $meta->{stored} = { analysis_id => $saved->{analysis_id}, name => $name };
         _write_run_meta($c, $run_id, $meta);
+        _rename_job($people_schema, $meta->{job_id}, $sp_person_id, $name);
     }
     $c->stash->{rest} = $saved;
 }
 
+# Remove the analysis project (with its analysis instances) and the model that
+# a failed store created under $name. The callers check that neither existed
+# before the store, so only what this attempt created is removed.
+sub _remove_failed_store {
+    my ($c, $schema, $metadata_schema, $phenome_schema, $people_schema, $name) = @_;
+    try {
+        if (my $project = $schema->resultset("Project::Project")->find({ name => $name })) {
+            my $trial = CXGN::Trial->new({ bcs_schema => $schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema,
+                people_schema => $people_schema, trial_id => $project->project_id() });
+            my $error = ($trial->delete_metadata() // '') . ($trial->delete_field_layout() // '') . ($trial->delete_project_entry() // '');
+            print STDERR "Analysis Pipeline: removed the partly stored analysis \"$name\" (" . $project->project_id() . ")" . ($error ? ": $error" : '') . "\n";
+        }
+        if (my $protocol = $schema->resultset("NaturalDiversity::NdProtocol")->find({ name => $name })) {
+            my $dbh = $schema->storage->dbh();
+            $dbh->do("DELETE FROM nd_experiment WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM nd_experiment_protocol WHERE nd_protocol_id = ?)", undef, $protocol->nd_protocol_id());
+            $dbh->do("DELETE FROM nd_protocol WHERE nd_protocol_id = ?", undef, $protocol->nd_protocol_id());
+            print STDERR "Analysis Pipeline: removed the model of the failed analysis \"$name\" (" . $protocol->nd_protocol_id() . ")\n";
+        }
+    } catch {
+        print STDERR "Analysis Pipeline: could not remove the partly stored analysis \"$name\": $_\n";
+    };
+}
+
+# The job of a stored run takes the name of the analysis, so the jobs list of
+# the user's profile and the analysis pages show the same name. Its results
+# link still opens the decision dashboard of the run. Only the owner's own job
+# is changed.
+sub _rename_job {
+    my ($people_schema, $job_id, $sp_person_id, $name) = @_;
+    return if !$job_id || $job_id !~ /^\d+$/;
+    try {
+        my $row = $people_schema->resultset('SpJob')->find({ sp_job_id => $job_id });
+        return if !$row || ($row->sp_person_id() // '') ne $sp_person_id;
+        my $args = decode_json($row->args() || '{}');
+        $args->{name} = $name;
+        $row->update({ args => encode_json($args) });
+    } catch {
+        print STDERR "Analysis Pipeline: could not rename job $job_id: $_\n";
+    };
+}
+
 # ---------------------------------------------------------------------------
-# stored analyses: follow the pipeline of an analysis in the Script Factory
+# stored analyses: follow the pipeline of an analysis in the Analysis Pipeline
 # ---------------------------------------------------------------------------
 
 # model properties that describe the stored model rather than the recipe
 my @MODEL_INFO_KEYS = qw(application_name application_version model_is_public model_language protocol script_factory_version name dataset_id);
 
-# A Script Factory analysis the user may follow: its recipe, dataset, owner and
+# An Analysis Pipeline analysis the user may follow: its recipe, dataset, owner and
 # archived files. Returns { error => ... } when it cannot be followed.
 sub _stored_analysis {
     my ($c, $analysis_id) = @_;
@@ -1559,7 +1612,7 @@ sub _stored_analysis {
     return { error => 'This analysis does not exist.' } if !$analysis;
     my $model = (try { $analysis->saved_model() } catch { undef }) || {};
     my $props = $model->{model_properties} || {};
-    return { error => 'This analysis was not made with the Script Factory.' } if ($props->{application_name} // '') ne 'Breedbase Script Factory';
+    return { error => 'This analysis was not made with the Analysis Pipeline.' } if ($props->{application_name} // '') !~ /^Breedbase (?:Analysis Pipeline|Script Factory)$/;
 
     my ($owner_id) = $schema->storage->dbh->selectrow_array(
         'SELECT sp_person_id FROM phenome.project_owner WHERE project_id = ? ORDER BY project_owner_id LIMIT 1', undef, $analysis_id);
@@ -1640,13 +1693,13 @@ sub analysis_run_id {
     return { error => $info->{error} } if $info->{error};
     my $run_id = _restore_analysis_run($c, $info);
     return { run_id => $run_id } if $run_id;
-    return { error => 'The results dashboard of this analysis is not available: it was stored before the Script Factory archived its results. '
+    return { error => 'The results dashboard of this analysis is not available: it was stored before the Analysis Pipeline archived its results. '
         . 'You can still <a href="/tools/script_factory?analysis_id=' . $info->{analysis_id} . '">open its pipeline</a> and run it again, '
         . 'or see the stored values on the <a href="/analyses/' . $info->{analysis_id} . '">analysis page</a>.' };
 }
 
 # Recipe and dataset of a stored analysis or of a run, to open the pipeline in
-# the Script Factory.
+# the Analysis Pipeline.
 sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
     my $self = shift;
     my $c = shift;

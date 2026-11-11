@@ -1,5 +1,5 @@
 /*
- * Script Factory - "Store analysis" form (mason/tools/script_factory/store_dialog.mas)
+ * Analysis Pipeline - "Store analysis" form (mason/tools/script_factory/store_dialog.mas)
  *
  * Shared by the builder page (entries/script_factory.js) and the results
  * dashboard (entries/script_factory_results.js). The form is pre-filled from
@@ -37,11 +37,11 @@ export function storeDefaults(res, ctx) {
     const h2 = arr(res.stage2).filter(x => x.h2 !== null && x.h2 !== undefined && isFinite(x.h2)).map(x => x.trait + ' ' + Number(x.h2).toFixed(2));
     const desc = (ctx.scriptName ? 'Script "' + ctx.scriptName + '". ' : '') +
         (res.strategy === 'two_stage' ? 'Two-stage' : 'Single-stage') + ' analysis of dataset "' + dsName + '" (' +
-        s.n_trials + ' trials, ' + s.n_accessions + ' accessions) with the Breedbase Script Factory: ' +
+        s.n_trials + ' trials, ' + s.n_accessions + ' accessions) with the Breedbase Analysis Pipeline: ' +
         (res.value_label || 'BLUP') + 's fitted with ' + engine + (genetic ? ', ' + genetic : '') +
         (ctx.outlierMethod && ctx.outlierMethod !== 'none' ? ', outliers removed by ' + String(ctx.outlierMethod).toUpperCase() : '') +
         '. Traits: ' + arr(s.traits).join(', ') + '.' + (h2.length ? ' Heritability: ' + h2.join(', ') + '.' : '');
-    return { name: (ctx.scriptName || 'Script Factory') + ' - ' + dsName + ' - ' + stamp, description: desc, year: d.getFullYear() };
+    return { name: (ctx.scriptName || 'Analysis Pipeline') + ' - ' + dsName + ' - ' + stamp, description: desc, year: d.getFullYear() };
 }
 
 // Open the form.
@@ -50,12 +50,22 @@ export function storeDefaults(res, ctx) {
 //   opts.ctx       see storeDefaults()
 //   opts.programs  [{id, name}] breeding programs of the dataset (first one preselected)
 //   opts.onStored  function(analysis_id, name) called once stored
+// run whose name and description are in the form
+let lastRunId = null;
+
 export function openStoreDialog(opts) {
     const $ = window.jQuery;
     const res = opts.res;
     const def = storeDefaults(res, opts.ctx || {});
-    $('#sf_store_name').val(def.name);
-    $('#sf_store_description').val(def.description);
+    // name and description must be written by the user: the suggestions are
+    // only placeholders. Text typed for this run is kept if the dialog is reopened.
+    if (lastRunId !== opts.runId) {
+        $('#sf_store_name').val('');
+        $('#sf_store_description').val('');
+        lastRunId = opts.runId;
+    }
+    $('#sf_store_name').attr('placeholder', 'e.g. ' + def.name).closest('.form-group').removeClass('has-error');
+    $('#sf_store_description').attr('placeholder', 'e.g. ' + def.description).closest('.form-group').removeClass('has-error');
     $('#sf_store_year').val(def.year);
     $('#sf_store_message').html('');
     $('#sf_store_submit').prop('disabled', false).html('<span class="glyphicon glyphicon-floppy-disk"></span> Save');
@@ -113,8 +123,12 @@ function submit(opts) {
     const program = $('#sf_store_program').val();
     const year = $.trim($('#sf_store_year').val());
     const msg = (type, h) => $('#sf_store_message').html(alertBox(type, h));
-    if (!name) return msg('warning', 'Please give the analysis a name.');
-    if (!description) return msg('warning', 'Please give a description.');
+    $('#sf_store_name').closest('.form-group').toggleClass('has-error', !name);
+    $('#sf_store_description').closest('.form-group').toggleClass('has-error', !description);
+    if (!name || !description) {
+        (!name ? $('#sf_store_name') : $('#sf_store_description')).trigger('focus');
+        return msg('warning', 'Please write ' + (!name && !description ? 'a name and a description' : !name ? 'a name' : 'a description') + ' for the analysis (they identify it in Breedbase).');
+    }
     if (!program) return msg('warning', 'Please choose a breeding program.');
     if (!/^\d{4}$/.test(year)) return msg('warning', 'Please give the year (e.g. ' + new Date().getFullYear() + ').');
     if (!opts.runId) return msg('danger', 'This run cannot be stored (no run id); please run the analysis again.');

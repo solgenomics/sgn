@@ -1,7 +1,7 @@
 /*
- * Script Factory - decision dashboard (/tools/script_factory/results/<run_id>)
+ * Analysis Pipeline - decision dashboard (/tools/script_factory/results/<run_id>)
  *
- * Shows every result of one Script Factory run on a single page to support
+ * Shows every result of one Analysis Pipeline run on a single page to support
  * selection decisions: trial locations on a map, field layouts, trait
  * distributions and correlations, an interactive selection (rank by the
  * index or any trait, any selection intensity), performance and stability
@@ -280,7 +280,7 @@ function saveShortList() {
     const name = prompt('Name of the new accession list:', 'Shortlist ' + (META.dataset_name || META.script_name || '') + ' ' + new Date().toISOString().slice(0, 10));
     if (!name) return;
     const lo = new CXGN.List();
-    const id = lo.newList(name.trim(), 'Shortlisted with the Script Factory decision dashboard');
+    const id = lo.newList(name.trim(), 'Shortlisted with the Analysis Pipeline decision dashboard');
     if (!id) return;   // newList already alerts when the name exists
     lo.addBulk(id, S.shortlist);
     lo.setListType(id, 'accessions');
@@ -383,7 +383,7 @@ function invalidateRank() { rankCache = null; }
 
 function renderHeader() {
     const rc = R.recipe || {};
-    const name = META.script_name || rc.name || 'Script Factory analysis';
+    const name = META.script_name || rc.name || 'Analysis Pipeline run';
     $('#sfd_title').text(name);
     document.title = name + ' - Decision dashboard';
     const chips = [];
@@ -1483,7 +1483,7 @@ function renderAll() {
     safely('ranking', renderRankTable);
 }
 
-// open the steps of this analysis in the Script Factory: the stored analysis
+// open the steps of this analysis in the Analysis Pipeline: the stored analysis
 // when there is one (it outlives the temporary run files), else the run
 function initPipelineLink() {
     const stored = R.stored && R.stored.analysis_id;
@@ -1516,14 +1516,14 @@ export function init(options) {
     initTooltip();
     if (!cfg.run_id) {
         $('#sfd_title').text('Decision dashboard');
-        $('#sfd_message').html('<div class="alert alert-warning">No analysis was given. Run an analysis on the <a href="/tools/script_factory">Script Factory</a> page and open its dashboard from the results.</div>');
+        $('#sfd_message').html('<div class="alert alert-warning">No analysis was given. Run an analysis on the <a href="/tools/script_factory">Analysis Pipeline</a> page and open its dashboard from the results.</div>');
         return;
     }
     $.ajax({ url: '/ajax/script_factory/results', data: { run_id: cfg.run_id }, dataType: 'json' })
         .done(r => {
             if (r.error) {
                 $('#sfd_title').text('Decision dashboard');
-                $('#sfd_message').html('<div class="alert alert-warning">' + esc(r.error) + ' <a href="/tools/script_factory">Go to the Script Factory</a>.</div>');
+                $('#sfd_message').html('<div class="alert alert-warning">' + esc(r.error) + ' <a href="/tools/script_factory">Go to the Analysis Pipeline</a>.</div>');
                 return;
             }
             R = r.results; META = r.meta || {}; LOCS = r.locations || {};

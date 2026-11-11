@@ -36,7 +36,7 @@ $script_factory => 0
 </%args>
 
 % my $details_buttons = $script_factory
-%     ? '<a class="btn btn-sm btn-primary" style="margin:3px" href="/tools/script_factory?analysis_id=' . $analysis_id . '" title="Open every step of this analysis in the Script Factory"><span class="glyphicon glyphicon-random"></span> Open pipeline in Script Factory</a>'
+%     ? '<a class="btn btn-sm btn-primary" style="margin:3px" href="/tools/script_factory?analysis_id=' . $analysis_id . '" title="Open every step of this analysis in the Analysis Pipeline"><span class="glyphicon glyphicon-random"></span> Open pipeline in Analysis Pipeline</a>'
 %     . '<a class="btn btn-sm btn-default" style="margin:3px" href="/tools/script_factory/analysis/' . $analysis_id . '"><span class="glyphicon glyphicon-stats"></span> Results dashboard</a>'
 %     : '';
 

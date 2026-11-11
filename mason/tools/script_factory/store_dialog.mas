@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/tools/script_factory/store_dialog.mas - "Store analysis" form of the Script Factory, shared by the
+/tools/script_factory/store_dialog.mas - "Store analysis" form of the Analysis Pipeline, shared by the
 builder page and the results dashboard (logic in js/source/modules/script_factory_store.js)
 
 =cut
@@ -20,12 +20,12 @@ builder page and the results dashboard (logic in js/source/modules/script_factor
         <p class="help-block">Everything is filled in from this run; change anything you like. The genotype values become an analysis (visible under Manage &gt; Analyses) and the script is kept as its model, so the analysis can be traced and repeated.</p>
         <form class="form-horizontal" onsubmit="return false;">
           <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label" for="sf_store_name">Analysis name</label>
-            <div class="col-sm-9"><input class="form-control" id="sf_store_name" type="text" /></div>
+            <label class="col-sm-3 control-label" for="sf_store_name">Analysis name <span class="text-danger">*</span></label>
+            <div class="col-sm-9"><input class="form-control" id="sf_store_name" type="text" required /></div>
           </div>
           <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label" for="sf_store_description">Description</label>
-            <div class="col-sm-9"><textarea class="form-control" id="sf_store_description" rows="3"></textarea></div>
+            <label class="col-sm-3 control-label" for="sf_store_description">Description <span class="text-danger">*</span></label>
+            <div class="col-sm-9"><textarea class="form-control" id="sf_store_description" rows="3" required></textarea></div>
           </div>
           <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label" for="sf_store_program">Breeding program</label>

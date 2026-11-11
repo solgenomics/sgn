@@ -1,5 +1,5 @@
 /*
- * Script Factory - front end for /tools/script_factory
+ * Analysis Pipeline - front end for /tools/script_factory
  *
  * Builds an analysis "recipe" step by step (data, quality control, model,
  * selection index, environmental zones), runs it as a background job through
@@ -723,14 +723,26 @@ function drawExplorer() {
     const minV = Math.min.apply(null, all), maxV = Math.max.apply(null, all);
     const pad = (maxV - minV) * 0.05 || 1;
     const y0 = minV - pad, y1 = maxV + pad;
-    const M = { l: 60, r: 16, t: 14, b: 90 };
-    const bw = Math.max(46, Math.min(110, 820 / trials.length));
+    // layout from the space available and the label lengths, so that nothing
+    // is cut: rotated trial names need room below and, for the first trial,
+    // to the left; the boxes fill the card width (scroll only when crowded)
+    const CH = 6.3;                                    // ~width of one 11px character
+    const fmtLabel = tr => tr.length > 32 ? tr.slice(0, 31) + '…' : tr;
+    const ticks = niceTicks(y0, y1, 6);
+    const tickW = Math.max.apply(null, ticks.map(v => String(v).length)) * CH;
+    const avail = Math.max(320, (box.clientWidth || 820) - 4);
+    let bw = Math.max(22, Math.min(110, (avail - Math.max(60, tickW + 34) - 16) / trials.length));
+    const ang = bw < 34 ? 70 : 40, rad = ang * Math.PI / 180;
+    const labLen = trials.map(tr => fmtLabel(tr).length * CH);
+    const M = { l: Math.max(60, tickW + 34, labLen[0] * Math.cos(rad) - bw / 2 + 8), r: 16, t: 14,
+        b: 24 + Math.max.apply(null, labLen) * Math.sin(rad) };
+    bw = Math.max(22, Math.min(110, (avail - M.l - M.r) / trials.length));
     const W = M.l + M.r + bw * trials.length;
-    const H = 380;
+    const H = M.t + 330 + M.b;
     const ys = v => M.t + (H - M.t - M.b) * (1 - (v - y0) / (y1 - y0));
 
     const svg = svgEl('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, 'font-family': 'sans-serif', 'font-size': 11 }, box);
-    niceTicks(y0, y1, 6).forEach(v => {
+    ticks.forEach(v => {
         svgEl('line', { x1: M.l, x2: W - M.r, y1: ys(v), y2: ys(v), stroke: '#eef1f4' }, svg);
         const tx = svgEl('text', { x: M.l - 6, y: ys(v) + 4, 'text-anchor': 'end', fill: '#6b7280' }, svg);
         tx.textContent = v;
@@ -768,8 +780,8 @@ function drawExplorer() {
             title.textContent = r[0] + '\n' + r[2] + '\nvalue: ' + r[ti] + (r[3] ? '\nrep ' + r[3] : '') + (r[5] !== null && r[5] !== undefined ? '\nrow ' + r[5] + ', col ' + r[6] : '') + (flag ? '\nflagged by the rule' : '') + (mark ? '\nmarked as outlier in Breedbase: excluded (click to use it)' : excl ? '\nexcluded by you (click to restore)' : '\nclick to exclude');
             c.addEventListener('click', () => toggleExclusion(r, trait));
         });
-        const lab = svgEl('text', { x: cx, y: H - M.b + 12, 'text-anchor': 'end', transform: 'rotate(-40 ' + cx + ' ' + (H - M.b + 12) + ')', fill: '#374151' }, svg);
-        lab.textContent = tr.length > 22 ? tr.slice(0, 21) + '…' : tr;
+        const lab = svgEl('text', { x: cx, y: H - M.b + 12, 'text-anchor': 'end', transform: 'rotate(-' + ang + ' ' + cx + ' ' + (H - M.b + 12) + ')', fill: '#374151' }, svg);
+        lab.textContent = fmtLabel(tr);
         svgEl('title', {}, lab).textContent = tr;
     });
 
@@ -1475,11 +1487,14 @@ function renderIndexFormula() {
     const parts = state.traits.filter(t => Number((state.indexCfg[t] || {}).weight) !== 0).map(t => {
         const c = state.indexCfg[t];
         const sign = (c.direction === 'decrease' ? -1 : 1) * Number(c.weight);
-        return (sign < 0 ? '- ' : '+ ') + Math.abs(sign) + ' * ' + (radio('sf_index_method') === 'rank_sum' ? 'rank(' + shortTrait(t) + ')' : 'z(' + shortTrait(t) + ')');
+        // rank sum: the direction is inside the rank (rank 1 = lowest value when lower is better)
+        return (sign < 0 ? '- ' : '+ ') + Math.abs(sign) + ' * ' + (radio('sf_index_method') === 'rank_sum'
+            ? 'rank(' + shortTrait(t) + ', ' + (c.direction === 'decrease' ? 'lowest' : 'highest') + ' = 1)'
+            : 'z(' + shortTrait(t) + ')');
     });
     let f;
     if (!parts.length) f = '# give a non-zero weight to at least one trait';
-    else if (radio('sf_index_method') === 'rank_sum') f = 'I = -(' + parts.map(p => p.replace(/^[+-] /, '')).join(' + ') + ')    # rank 1 = best in the desired direction';
+    else if (radio('sf_index_method') === 'rank_sum') f = 'I = -(' + parts.map(p => p.replace(/^[+-] /, '')).join(' + ') + ')    # rank 1 = best value in the chosen direction; lower rank sum = better';
     else f = 'I = ' + parts.join(' ').replace(/^\+ /, '');
     $('#sf_index_formula').text(f + '\nselect the top ' + $('#sf_selection_pct').val() + '% of accessions');
 }
@@ -1939,7 +1954,7 @@ function createList() {
     if (!name) { alert('Please enter a list name.'); return; }
     if (typeof CXGN === 'undefined' || !CXGN.List) { alert('The list tools are not available on this page.'); return; }
     const lo = new CXGN.List();
-    const id = lo.newList(name, 'Selected with the Script Factory');
+    const id = lo.newList(name, 'Selected with the Analysis Pipeline');
     if (!id) return;   // newList already alerts when the name exists
     lo.addBulk(id, items);
     lo.setListType(id, 'accessions');
@@ -2048,7 +2063,7 @@ function importJSON(file) {
         try {
             const obj = JSON.parse(reader.result);
             const recipe = obj.recipe || obj;
-            if (!recipe.strategy && !recipe.traits) throw new Error('This file is not a Script Factory script.');
+            if (!recipe.strategy && !recipe.traits) throw new Error('This file is not an Analysis Pipeline script.');
             state.script = { id: null, name: obj.name || recipe.name || file.name.replace(/\.json$/, ''), description: obj.description || '', is_public: 0, is_owner: 1 };
             state.scriptLoaded = true;
             applyRecipe(recipe);
@@ -2260,6 +2275,12 @@ export function init(options) {
     // step 6
     $('#sf_run').on('click', runAnalysis);
     $('#sf_save_analysis').on('click', openStoreAnalysis);
+    // the trait explorer fills the card width: redraw it when the window is resized
+    let resizeTimer = null;
+    $(window).on('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => { if ($('#sf_explorer_plot').is(':visible')) drawExplorer(); }, 200);
+    });
     $('#sf_save_list').on('click', openSaveList);
     $('#sf_list_submit').on('click', createList);
     $('#sf_export_r').on('click', e => { e.preventDefault(); exportR(); });

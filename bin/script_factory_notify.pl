@@ -2,13 +2,13 @@
 
 =head1 NAME
 
-script_factory_notify.pl - email the owner of a Script Factory run when it ends
+script_factory_notify.pl - email the owner of an Analysis Pipeline run when it ends
 
 =head1 SYNOPSIS
 
   perl -I<sgn>/lib bin/script_factory_notify.pl <run_base> [--dry-run]
 
-Appended to the job command of a Script Factory run (/ajax/script_factory/run)
+Appended to the job command of an Analysis Pipeline run (/ajax/script_factory/run)
 when the user asks to be notified. Reads <run_base>.meta.json (address, site
 URL, script and dataset names), <run_base>.results.json and <run_base>.log, and
 sends a short summary with a link to the results dashboard, or the end of the
@@ -48,7 +48,7 @@ if ($results && $results->{genotype_values}) {
     my $engine = ($results->{engine} // '') eq 'blupf90' ? 'BLUPF90+' : 'R';
     my $genetic = { pedigree => ', pedigree (A matrix)', parents => ', mother + father effects' }->{ $results->{genetic_model} // '' } // '';
     my $n_warn = scalar(@{ $as_list->($results->{warnings}) });
-    $subject = "Breedbase Script Factory: $name finished";
+    $subject = "Breedbase Analysis Pipeline: $name finished";
     $body = join("\n",
         "$name on dataset \"$dataset\" has finished.",
         "",
@@ -61,22 +61,22 @@ if ($results && $results->{genotype_values}) {
         "See the results, compare and select accessions, and store the analysis:",
         "$site/tools/script_factory/results/$run_id",
         "",
-        "-- Breedbase Script Factory",
+        "-- Breedbase Analysis Pipeline",
     );
 } else {
-    my @log = -e "$run_base.log" ? grep { !/^(CXGN::Contact|Breedbase Script Factory:)/ } split(/\n/, read_file("$run_base.log")) : ();
+    my @log = -e "$run_base.log" ? grep { !/^(CXGN::Contact|Breedbase Analysis Pipeline:)/ } split(/\n/, read_file("$run_base.log")) : ();
     my @tail = @log > 15 ? @log[-15 .. -1] : @log;
-    $subject = "Breedbase Script Factory: $name did not finish";
+    $subject = "Breedbase Analysis Pipeline: $name did not finish";
     $body = join("\n",
         "$name on dataset \"$dataset\" stopped with an error.",
         "",
         "Last lines of the log:",
         (map { "  $_" } @tail),
         "",
-        "Check the settings and run it again from the Script Factory:",
+        "Check the settings and run it again from the Analysis Pipeline:",
         "$site/tools/script_factory",
         "",
-        "-- Breedbase Script Factory",
+        "-- Breedbase Analysis Pipeline",
     );
 }
 
@@ -87,4 +87,4 @@ if ($dry_run) {
 
 require CXGN::Contact;
 CXGN::Contact::send_email($subject, $body, $to);
-print STDERR "Script Factory: notification for $to handed to the mailer\n";
+print STDERR "Analysis Pipeline: notification for $to handed to the mailer\n";

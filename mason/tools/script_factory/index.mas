@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/tools/script_factory/index.mas - Script Factory: build, run, store and reuse analysis pipelines
+/tools/script_factory/index.mas - Analysis Pipeline: build, run, store and reuse analysis pipelines
 
 =head1 AUTHOR
 
@@ -28,7 +28,7 @@ $blupf90_available => 0
   <!-- ===================== header ===================== -->
   <div class="sf-hero">
     <div class="sf-hero-text">
-      <h2><span class="glyphicon glyphicon-wrench"></span> Script Factory</h2>
+      <h2><span class="glyphicon glyphicon-wrench"></span> Analysis Pipeline</h2>
       <p>Build your phenotypic analysis step by step: clean the data, fit single or two-stage models, combine traits in a selection index and find environmental zones. Run it, store the results, and save the script to reuse on another dataset or year.</p>
     </div>
     <div class="sf-hero-actions">
@@ -107,13 +107,6 @@ $blupf90_available => 0
             </div>
             <div id="sf_recipe_trait_warning"></div>
             <div class="sf-trait-grid" id="sf_traits"></div>
-          </div>
-
-          <div class="sf-card" id="sf_treatments_card" style="display:none">
-            <h3>Treatments</h3>
-            <p class="sf-help">Treatments recorded on the trials (management factors such as fertilizer, and treatment variables). They are not traits:
-              they can enter the models as factors. Management factors of one type are merged into one factor, plots without it are level <i>none</i>.</p>
-            <div id="sf_treatments"></div>
           </div>
         </div>
         <div class="sf-nav"><span></span><button class="btn btn-primary sf-next" data-goto="2">Next: Quality control <span class="glyphicon glyphicon-chevron-right"></span></button></div>
@@ -358,6 +351,13 @@ $blupf90_available => 0
             <div id="sf_single_covariates" class="sf-cov-list"></div>
             <small class="sf-muted">Fixed linear effect of another trait measured on the same plots (e.g. stand count). In a written formula a selected covariate is available by the name shown in brackets. A trait is never used as a covariate of itself.</small>
           </div>
+        </div>
+
+        <div class="sf-card" id="sf_treatments_card" style="display:none">
+          <h3>Treatments</h3>
+          <p class="sf-help">Treatments recorded on the trials (management factors such as fertilizer, and treatment variables). They are not traits:
+            they can enter the models as factors. Management factors of one type are merged into one factor, plots without it are level <i>none</i>.</p>
+          <div id="sf_treatments"></div>
         </div>
 
         <div class="sf-card" id="sf_genetic_card">

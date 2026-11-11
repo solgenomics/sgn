@@ -242,6 +242,20 @@ sub store_composed_term {
             type_id    => $variable_relationship->cvterm_id()
         });
 
+        # A trait composed with a statistical term (SGNSTAT, e.g. "adjusted means
+        # from BLUPs") holds values computed by an analysis: they are continuous
+        # and can be outside the scale of the measured trait (a BLUP can be
+        # negative, the mean of a 1-9 score is not one of the categories). Its
+        # value rules (format, categories, range, default) are therefore not
+        # copied from the measured trait; descriptions are.
+        my $is_statistic = $schema->resultset('Cv::Cvterm')->search(
+            { 'me.cvterm_id' => { -in => \@component_ids }, 'db.name' => 'SGNSTAT' },
+            { join => { dbxref => 'db' } }
+        )->count();
+        my %value_rule_type_ids = $is_statistic ? map { $_->cvterm_id() => 1 } $schema->resultset('Cv::Cvterm')->search(
+            { name => { -in => [ qw(trait_format trait_categories trait_minimum trait_maximum trait_default_value) ] } }
+        )->all() : ();
+
         foreach my $component_id (@component_ids) {
             my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
                 subject_id => $component_id,
@@ -253,6 +267,7 @@ sub store_composed_term {
             my $component = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $component_id });
             my $component_props_rs = $component->cvtermprops();
             while ( my $component_prop = $component_props_rs->next() ) {
+                next if $value_rule_type_ids{ $component_prop->type_id() };
                 my $new_term_prop = $schema->resultset('Cv::Cvtermprop')->find_or_create({
                     cvterm_id => $new_term->cvterm_id(),
                     type_id   => $component_prop->type_id(),

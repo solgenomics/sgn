@@ -1,5 +1,5 @@
 /*
- * Script Factory - analysis log
+ * Analysis Pipeline - analysis log
  *
  * The R pipeline reports every adaptation it makes to the data (design
  * factors left out, SpATS replaced by the design model, trials without an

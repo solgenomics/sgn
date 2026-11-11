@@ -611,9 +611,9 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
         my $application_name = $saved_model->{model_properties}->{application_name} ? $saved_model->{model_properties}->{application_name} : '';
         my $application_version = $saved_model->{model_properties}->{application_version} ? $saved_model->{model_properties}->{application_version} : '';
         my $model_language = $saved_model->{model_properties}->{model_language} ? $saved_model->{model_properties}->{model_language} : '';
-        # analyses made with the Script Factory link back to their pipeline
-        my $pipeline_link = $application_name eq 'Breedbase Script Factory'
-            ? ' <a class="btn btn-default btn-xs" href="/tools/script_factory?analysis_id='.$a->get_trial_id().'" title="Open every step of this analysis in the Script Factory"><span class="glyphicon glyphicon-random"></span> Pipeline</a>'
+        # analyses made with the Analysis Pipeline link back to their pipeline
+        my $pipeline_link = $application_name =~ /^Breedbase (?:Analysis Pipeline|Script Factory)$/
+            ? ' <a class="btn btn-default btn-xs" href="/tools/script_factory?analysis_id='.$a->get_trial_id().'" title="Open every step of this analysis in the Analysis Pipeline"><span class="glyphicon glyphicon-random"></span> Pipeline</a>'
             : '';
         push @table, [
             '<a href="/analyses/'.$a->get_trial_id().'">'.$a->name()."</a>".$pipeline_link,
