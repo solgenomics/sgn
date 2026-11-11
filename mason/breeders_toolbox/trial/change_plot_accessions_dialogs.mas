@@ -65,7 +65,7 @@ $trial_stock_type
                         <b>new_plot_name:</b> new name for plot.<br>
                         <b>seedlot_name:</b> the seedlot the plot was planted from, where it is another one than now (a plot without a seed transaction gets one with Upload Seedlots Planted In Trial).<br>
                         <div class="list-group-item-warning" >
-                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Plot numbers, blocks and, except in completely randomized designs, replicates are kept; check plots follow their accessions. Phenotypes stay with their plots. You may need to reprint labels after the changes are applied.</i></p>
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Plot numbers and blocks are kept; when an accession gains or loses plots, its replicates are numbered again by plot number, in every design; check plots follow their accessions. Phenotypes stay with their plots. You may need to reprint labels after the changes are applied.</i></p>
                         </div>
                     </div>
 

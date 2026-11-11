@@ -34,7 +34,7 @@ export function summaryLines(summary, planned, maxItems = 10) {
     lines.push(`${summary.changed} plot(s) ${planned ? "will get" : "got"} another accession${changes.length ? ":" : "."}`);
     list(changes, (c) => `${c.plot_name}: ${c.old_stock_name} -> ${c.new_stock_name}`);
     if (summary.replicates_changed) {
-        lines.push(`${summary.replicates_changed} replicate number(s) ${planned ? "will be" : "were"} numbered again by plot number (completely randomized design).`);
+        lines.push(`${summary.replicates_changed} replicate number(s) ${planned ? "will be" : "were"} numbered again by plot number.`);
     }
     if (summary.checks && summary.checks.length) {
         lines.push(`Check plots ${planned ? "that will change" : "that changed"}:`);

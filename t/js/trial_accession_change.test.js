@@ -1,5 +1,6 @@
+// Run with the other JavaScript tests: cd js && npm install && node run-tests.js
 import test from "tape";
-import { summaryLines, showSummary, changeWithPreview, confirmDialog, nothingChanges, plainText, changedPlots } from "../source/entries/trial_accession_change.js";
+import { summaryLines, showSummary, changeWithPreview, confirmDialog, nothingChanges, plainText, changedPlots } from "../../js/source/entries/trial_accession_change.js";
 
 const empty = { changed: 0, replicates_changed: 0, checks: [], renamed: [], not_renamed: [], entry_numbers: [], warnings: [] };
 

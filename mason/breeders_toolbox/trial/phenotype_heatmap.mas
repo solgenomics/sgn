@@ -1325,8 +1325,6 @@ jQuery(document).ready( function() {
           jQuery('#hm_replace_accessions_dialog_message').modal("show");
       }
     }
-      });
-    }
 
     jQuery('#pheno_heatmap_onswitch').click( function() {
         jQuery("#trait_heatmap").css("display", "none");
