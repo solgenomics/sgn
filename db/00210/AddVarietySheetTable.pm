@@ -15,8 +15,8 @@ see the perldoc of parent class for more details.
 =head1 DESCRIPTION
 
 This patch adds the table phenome.variety_sheet, which stores commercial
-variety release sheets (see CXGN::VarietySheet). Each row belongs to one
-accession and holds the sheet content as JSON, a commercial name, the owner and
+variety release profiles (see CXGN::VarietySheet). Each row belongs to one
+accession and holds the profile content as JSON, a commercial name, the owner and
 a status (draft or published).
 
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
@@ -43,7 +43,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Adds the phenome.variety_sheet table for commercial variety release sheets
+Adds the phenome.variety_sheet table for commercial variety release profiles
 
 has '+prereq' => (
     default => sub {

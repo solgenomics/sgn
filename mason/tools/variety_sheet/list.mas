@@ -4,9 +4,9 @@
 <& /util/import_javascript.mas, classes => ['jquery'], entries => ['variety_sheet'] &>
 <& /tools/variety_sheet/sheet_css.mas &>
 
-<& /page/page_title.mas, title => "Variety Sheets" &>
+<& /page/page_title.mas, title => "Variety Profiles" &>
 
-<p><a class="btn btn-primary" href="/tools/variety_sheet"><span class="glyphicon glyphicon-plus"></span> New variety sheet</a></p>
+<p><a class="btn btn-primary" href="/tools/variety_sheet"><span class="glyphicon glyphicon-plus"></span> New variety profile</a></p>
 <div id="variety_sheet_list"><span class="text-muted">Loading…</span></div>
 
 <script>

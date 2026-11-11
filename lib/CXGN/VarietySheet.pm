@@ -2,19 +2,19 @@ package CXGN::VarietySheet;
 
 =head1 NAME
 
-CXGN::VarietySheet - commercial variety release sheets built from Breedbase data
+CXGN::VarietySheet - commercial variety release profiles built from Breedbase data
 
 =head1 DESCRIPTION
 
-A variety sheet is a commercial summary of one accession: a commercial name,
+A variety profile is a commercial summary of one accession: a commercial name,
 pedigree, testing evidence (trials, locations, years), head-to-head performance
 against check varieties, trait ratings (e.g. disease reactions), photos and
-free-text sections. The sheet content is stored as JSON in phenome.variety_sheet
-(db patch AddVarietySheetTable). The numbers shown on a sheet are a snapshot
-taken when the sheet was saved, so a published sheet does not change when new
+free-text sections. The profile content is stored as JSON in phenome.variety_sheet
+(db patch AddVarietySheetTable). The numbers shown on a profile are a snapshot
+taken when the profile was saved, so a published profile does not change when new
 data arrive; the editor can refresh them.
 
-The class methods below collect the data the sheet editor needs.
+The class methods below collect the data the profile editor needs.
 
 =head1 AUTHOR
 
@@ -517,7 +517,7 @@ sub analysis_performance {
     return { source => 'analysis', analysis_id => $analysis_id + 0, analysis_name => $aname, traits => \@out };
 }
 
-# ---- sheet storage ----
+# ---- profile storage ----
 
 sub _decode_row {
     my $r = shift;
@@ -536,6 +536,19 @@ sub get_sheet {
     my ($class, $schema, $sheet_id) = @_;
     my $r = $schema->storage->dbh->selectrow_hashref("SELECT $SHEET_COLS FROM $SHEET_FROM WHERE v.variety_sheet_id=?", undef, $sheet_id);
     return _decode_row($r);
+}
+
+# For viewers who cannot edit: drop the pedigree when the owner chose to hide
+# it, so the parents are not sent in the page or the JSON either.
+sub strip_hidden {
+    my ($class, $row) = @_;
+    my $s = $row && $row->{sheet};
+    return $row unless ref $s eq 'HASH' && ref $s->{options} eq 'HASH';
+    if (exists $s->{options}{show_pedigree} && !$s->{options}{show_pedigree}) {
+        delete $s->{pedigree};
+        $s->{text}{pedigree} = '' if ref $s->{text} eq 'HASH';
+    }
+    return $row;
 }
 
 sub list_sheets {

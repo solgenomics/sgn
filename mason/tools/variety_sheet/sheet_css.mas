@@ -1,6 +1,6 @@
 <%doc>
-Styles for variety sheets: the sheet itself (.vs-sheet, shared by the editor
-preview and the sheet page), the editor (.vs-editor) and print layout.
+Styles for variety profiles: the profile itself (.vs-sheet, shared by the editor
+preview and the profile page), the editor (.vs-editor) and print layout.
 </%doc>
 <style>
 .vs-sheet { --vs-accent: #1f5f3f; --vs-ink: #1d2327; --vs-muted: #5f6b73; --vs-line: #dfe3e6; --vs-good: #1e7b45; --vs-bad: #b4541a;

@@ -1,6 +1,6 @@
 /*
- * Commercial variety sheets: step-by-step editor (/tools/variety_sheet),
- * sheet page (/variety_sheet/<id>) and list (/variety_sheets).
+ * Commercial variety profiles: step-by-step editor (/tools/variety_sheet),
+ * profile page (/variety_sheet/<id>) and list (/variety_sheets).
  *
  * The same renderSheet() draws the preview in the editor and the published
  * page, so what the breeder sees is what gets printed.
@@ -97,7 +97,7 @@ function traitResult(results, traitId) {
     return results && results.traits ? results.traits.find(t => t.trait_id == traitId) : null;
 }
 
-/* ------------------------------------------------------------ default sheet */
+/* ------------------------------------------------------------ default profile */
 
 function newSheet(acc) {
     // yield first (it becomes the headline trait), one trait per label, then by number of trials
@@ -134,7 +134,7 @@ function newSheet(acc) {
         characteristics: [],
         text: { pedigree: '', market: '', production: '', disease: '', recommendations: '', acknowledgements: '', availability: '', contact: '' },
         images: [],
-        options: { show_map: true, show_pct_chart: true, show_year_chart: true, show_stats: true, show_testing: true, accent: ACCENTS[0], photo_columns: 3 },
+        options: { show_pedigree: true, show_map: true, show_pct_chart: true, show_year_chart: true, show_stats: true, show_testing: true, accent: ACCENTS[0], photo_columns: 3 },
     };
     s.text.pedigree = autoPedigree(s);
     return s;
@@ -238,7 +238,7 @@ function suggestRating(t, r) {
     return f < 0.25 ? 'Resistant' : f < 0.45 ? 'Moderately resistant' : f < 0.6 ? 'Intermediate' : f < 0.75 ? 'Moderately susceptible' : 'Susceptible';
 }
 
-/* ---------------------------------------------------------------- the sheet */
+/* ---------------------------------------------------------------- the profile */
 
 function renderSheet(s, opts) {
     opts = opts || {};
@@ -286,7 +286,7 @@ function renderSheet(s, opts) {
 
     // text sections
     const sec = (title, body) => body ? `<section class="vs-sec"><h2>${title}</h2>${body}</section>` : '';
-    h += sec('Pedigree', rich(s.text.pedigree));
+    if (o.show_pedigree !== false) h += sec('Pedigree', rich(s.text.pedigree));
     h += sec('Market features', rich(s.text.market));
     let prod = rich(s.text.production);
     if (o.show_testing !== false && autoTesting(s)) prod = `<p>${esc(autoTesting(s))}</p>` + prod;
@@ -480,7 +480,7 @@ function drawMaps(root, s) {
         if ($(this).find('.vs-map-ph').length) return;
         const locs = (s.evidence.location_list || []).filter(l => l.lat !== null && l.lon !== null && l.lat !== undefined && !(l.lat == 0 && l.lon == 0));
         if (!locs.length) return;
-        try { this._vsMap = makeMap(this, locs, s); } catch (err) { console.log('variety sheet map: ' + err); }
+        try { this._vsMap = makeMap(this, locs, s); } catch (err) { console.log('variety profile map: ' + err); }
     });
 }
 
@@ -592,7 +592,7 @@ class Editor {
     }
 
     preview() {
-        if (!this.sheet) { this.root.find('.vs-preview').html('<div class="text-muted vs-empty">The sheet appears here as you build it.</div>'); return; }
+        if (!this.sheet) { this.root.find('.vs-preview').html('<div class="text-muted vs-empty">The profile appears here as you build it.</div>'); return; }
         if (STEPS[this.step].key === 'publish') {
             const el = this.root.find('.vs-full-preview');
             el.html(renderSheet(this.sheet, { url: this.sheetId ? location.origin + '/variety_sheet/' + this.sheetId : '' }));
@@ -614,7 +614,7 @@ class Editor {
             <span class="input-group-btn"><button class="btn btn-primary btn-lg" id="vs_accession_go">Load</button></span>
           </div>
           <div id="vs_acc_info">${acc ? this.accessionCard() : ''}</div>
-          <h4 class="vs-h4">Variety sheets</h4><div id="vs_sheet_list"><span class="text-muted">Loading\u2026</span></div>`);
+          <h4 class="vs-h4">Variety profiles</h4><div id="vs_sheet_list"><span class="text-muted">Loading\u2026</span></div>`);
         const input = p.find('#vs_accession');
         if (input.autocomplete) input.autocomplete({ source: '/ajax/stock/accession_autocomplete', minLength: 2, select: (e, ui) => { input.val(ui.item.value); this.findAccession(ui.item.value); } });
         p.on('click', '#vs_accession_go', () => this.findAccession(input.val()));
@@ -642,9 +642,9 @@ class Editor {
               <tr><th>Programs</th><td>${esc((e.programs || []).join(', ')) || '<span class="text-muted">\u2013</span>'}</td></tr>
               <tr><th>Stored analyses</th><td>${a.analyses.length ? plural(a.analyses.length, 'analysis', 'analyses') : '<span class="text-muted">none</span>'}</td></tr>
             </table>
-            ${!e.trials ? '<div class="alert alert-warning">This accession has no field trial data yet. You can still write a sheet, but the testing summary and performance tables will be empty.</div>' : ''}
+            ${!e.trials ? '<div class="alert alert-warning">This accession has no field trial data yet. You can still write a profile, but the testing summary and performance tables will be empty.</div>' : ''}
             ${mine.length ? `<p><b>${plural(mine.length, 'sheet')} already exist for this accession.</b> Open one below or start a new one.</p>` : ''}
-            ${this.sheet && this.sheet.stock_id == a.stock_id ? `<p class="text-success"><span class="glyphicon glyphicon-ok"></span> ${this.sheetId ? 'Editing sheet #' + this.sheetId : 'New sheet started'} \u2014 continue with <b>Next</b>.</p>` : `<button class="btn btn-success vs-new-sheet"><span class="glyphicon glyphicon-plus"></span> Start a sheet for ${esc(a.accession_name)}</button>`}
+            ${this.sheet && this.sheet.stock_id == a.stock_id ? `<p class="text-success"><span class="glyphicon glyphicon-ok"></span> ${this.sheetId ? 'Editing profile #' + this.sheetId : 'New profile started'} \u2014 continue with <b>Next</b>.</p>` : `<button class="btn btn-success vs-new-sheet"><span class="glyphicon glyphicon-plus"></span> Start a profile for ${esc(a.accession_name)}</button>`}
           </div></div>`;
     }
 
@@ -652,7 +652,7 @@ class Editor {
         try {
             const r = await ajax('/ajax/variety_sheet/list');
             const el = this.root.find('#vs_sheet_list');
-            if (!r.sheets.length) { el.html('<p class="text-muted">No variety sheets yet.</p>'); return; }
+            if (!r.sheets.length) { el.html('<p class="text-muted">No variety profiles yet.</p>'); return; }
             el.html(`<table class="table table-condensed table-hover"><thead><tr><th>Commercial name</th><th>Accession</th><th>Status</th><th>Owner</th><th>Updated</th><th></th></tr></thead><tbody>` +
                 r.sheets.map(s => `<tr><td><a href="/variety_sheet/${s.variety_sheet_id}" target="_blank">${esc(s.commercial_name)}</a></td><td>${esc(s.accession_name)}</td>
                   <td><span class="label label-${s.status === 'published' ? 'success' : 'default'}">${esc(s.status)}</span></td><td>${esc(s.owner || '')}</td><td>${esc(s.modified_date)}</td>
@@ -685,7 +685,7 @@ class Editor {
             this.sheet.evidence_as_of = today();
             this.sheet.pedigree = this.acc.pedigree;
         }
-        if (!this.acc.can_edit) this.message('You can look at variety sheets, but only curators, breeders and submitters can save them.', 'warning');
+        if (!this.acc.can_edit) this.message('You can look at variety profiles, but only curators, breeders and submitters can save them.', 'warning');
         if (!keepSheet && !this.acc.sheets.length && this.acc.can_edit) this.startNewSheet(true);
         this.go(keepSheet ? this.step : 0);
     }
@@ -710,12 +710,12 @@ class Editor {
             history.replaceState(null, '', '/tools/variety_sheet?sheet_id=' + id);
             this.step = 1;
             await this.loadAccession(r.stock_id, true);
-            this.root.find('.vs-save-state').text(`Sheet #${id} (${r.status})`);
+            this.root.find('.vs-save-state').text(`Profile #${id} (${r.status})`);
         } catch (err) { this.message(esc(err.message), 'danger'); }
     }
 
     async deleteSheet(id) {
-        if (!confirm('Delete this variety sheet? This cannot be undone.')) return;
+        if (!confirm('Delete this variety profile? This cannot be undone.')) return;
         try {
             await ajax('/ajax/variety_sheet/delete', { method: 'POST', data: { sheet_id: id } });
             if (this.sheetId == id) { this.sheet = null; this.sheetId = null; this.dirty = false; }
@@ -738,7 +738,7 @@ class Editor {
           <div class="panel panel-default"><div class="panel-heading"><b>Save the name in Breedbase</b></div><div class="panel-body">
             <div class="checkbox"><label><input type="checkbox" id="vs_opt_released" ${this.nameOptions.released_variety_name ? 'checked' : ''}> As the <b>released variety name</b> of ${esc(a.accession_name)} <span class="text-muted">\u2014 shown in the accession's "Released variety name" box; the official name.</span></label></div>
             <div class="checkbox"><label><input type="checkbox" id="vs_opt_synonym" ${this.nameOptions.synonym ? 'checked' : ''}> As a <b>synonym</b> <span class="text-muted">\u2014 searches, lists and uploads then find the accession by its commercial name.</span></label></div>
-            <p class="help-block">The name is stored when you save the sheet. Leave both unticked to keep the name on the sheet only (e.g. while the name is still confidential). The experimental name ${esc(a.accession_name)} stays the record's identifier, so trial history is kept.${a.can_save_names ? '' : ' <b>Your role cannot change accession properties</b>; the name will stay on the sheet.'}</p>
+            <p class="help-block">The name is stored when you save the profile. Leave both unticked to keep the name on the profile only (e.g. while the name is still confidential). The experimental name ${esc(a.accession_name)} stays the record's identifier, so trial history is kept.${a.can_save_names ? '' : ' <b>Your role cannot change accession properties</b>; the name will stay on the profile.'}</p>
           </div></div>
           <div class="row">
             <div class="col-sm-8 form-group"><label>Tagline</label><input class="form-control vs-bind" data-k="tagline" value="${esc(s.tagline)}" placeholder="e.g. High-yielding chipping potato with excellent cold-storage chip color"></div>
@@ -750,6 +750,7 @@ class Editor {
           </div>
           <div class="form-group"><label>Developed by</label><input class="form-control vs-bind" data-k="developed_by" value="${esc(s.developed_by)}"></div>
           <div class="form-group"><label>Pedigree</label> <button class="btn btn-xs btn-link vs-auto" data-k="pedigree"><span class="glyphicon glyphicon-flash"></span> Write it from Breedbase</button>
+            <label class="checkbox-inline pull-right" style="padding-top:0"><input type="checkbox" class="vs-bind-opt" data-k="show_pedigree" ${s.options.show_pedigree !== false ? 'checked' : ''}> Show pedigree on the profile</label>
             <textarea class="form-control vs-bind-text" data-k="pedigree" rows="4">${esc(s.text.pedigree)}</textarea>
             <p class="help-block">Use *italic* for species names and **bold** for emphasis. Add the story behind the name here too.</p></div>`);
         this.bindCommon(p);
@@ -770,7 +771,7 @@ class Editor {
             if (name !== (this.sheet.commercial_name || '').trim()) return;
             this.nameCheck = r;
             if (r.conflicts.length) {
-                el.html(`<span class="text-danger"><span class="glyphicon glyphicon-warning-sign"></span> Already used by ${r.conflicts.map(c => `<a href="/stock/${c.stock_id}/view" target="_blank">${esc(c.name)}</a> (${esc(c.as)})`).join(', ')}. It can only stay on the sheet.</span>`);
+                el.html(`<span class="text-danger"><span class="glyphicon glyphicon-warning-sign"></span> Already used by ${r.conflicts.map(c => `<a href="/stock/${c.stock_id}/view" target="_blank">${esc(c.name)}</a> (${esc(c.as)})`).join(', ')}. It can only stay on the profile.</span>`);
                 this.root.find('#vs_opt_released, #vs_opt_synonym').prop({ checked: false, disabled: true });
                 this.nameOptions = { released_variety_name: false, synonym: false };
             } else {
@@ -888,7 +889,7 @@ class Editor {
         el.off().on('change', 'input[type=checkbox]', e => {
             const id = +$(e.target).data('id');
             if (e.target.checked) {
-                if (perf.checks.length >= 4) { e.target.checked = false; this.message('Up to 4 checks keep the sheet readable.', 'warning'); return; }
+                if (perf.checks.length >= 4) { e.target.checked = false; this.message('Up to 4 checks keep the profile readable.', 'warning'); return; }
                 perf.checks.push({ stock_id: id, name: $(e.target).data('name') + '' });
                 if (!perf.primary_check_id) perf.primary_check_id = id;
             } else {
@@ -919,7 +920,7 @@ class Editor {
             const perf = this.sheet.performance;
             if (m.stock_id == this.sheet.stock_id) { this.message('That is the variety itself.', 'warning'); return; }
             if (!perf.checks.some(c => c.stock_id == m.stock_id)) {
-                if (perf.checks.length >= 4) { this.message('Up to 4 checks keep the sheet readable.', 'warning'); return; }
+                if (perf.checks.length >= 4) { this.message('Up to 4 checks keep the profile readable.', 'warning'); return; }
                 perf.checks.push({ stock_id: m.stock_id, name: m.name });
                 if (!perf.primary_check_id) perf.primary_check_id = m.stock_id;
             }
@@ -950,7 +951,7 @@ class Editor {
         if (!avail.length) { el.html('<p class="text-muted">No numeric traits available.</p>'); return; }
         const chosen = perf.traits.map(t => t.trait_id);
         const ordered = perf.traits.map(t => avail.find(a => a.trait_id == t.trait_id) || t).concat(avail.filter(a => chosen.indexOf(a.trait_id) < 0));
-        el.html(`<div class="vs-trait-table-wrap"><table class="table table-condensed vs-trait-table"><thead><tr><th></th><th>Trait</th><th>Label on the sheet</th><th>Unit</th><th>Better</th><th>${perf.source === 'analysis' ? 'Entries' : 'Trials'}</th><th></th></tr></thead><tbody>` +
+        el.html(`<div class="vs-trait-table-wrap"><table class="table table-condensed vs-trait-table"><thead><tr><th></th><th>Trait</th><th>Label on the profile</th><th>Unit</th><th>Better</th><th>${perf.source === 'analysis' ? 'Entries' : 'Trials'}</th><th></th></tr></thead><tbody>` +
             ordered.map(t => {
                 const cfg = perf.traits.find(x => x.trait_id == t.trait_id);
                 const on = !!cfg;
@@ -1149,9 +1150,9 @@ class Editor {
         const own = a.images.filter(i => i.own).length;
         p.html(`
           <h3>5. Photos</h3>
-          <p class="text-muted">Pick the photos for the sheet (6 works well: plant, leaf, flower, fruit or tuber, cross-section, field). They come from the accession and from its plots and plants.
+          <p class="text-muted">Pick the photos for the profile (6 works well: plant, leaf, flower, fruit or tuber, cross-section, field). They come from the accession and from its plots and plants.
             <a href="/image/add?type_id=${a.stock_id}&action=new&type=stock&refering_page=${encodeURIComponent('/stock/' + a.stock_id + '/view')}" target="_blank">Upload new photos</a> to the accession, then <a href="#" id="vs_reload_images">reload</a>.</p>
-          <h4 class="vs-h4">On the sheet <small>${s.images.length} selected</small></h4>
+          <h4 class="vs-h4">On the profile <small>${s.images.length} selected</small></h4>
           <div id="vs_selected_photos"></div>
           <div class="form-inline vs-pad"><label>Columns&nbsp;</label><select class="form-control input-sm vs-bind-opt" data-k="photo_columns">${[2, 3, 4].map(n => `<option ${s.options.photo_columns == n ? 'selected' : ''} value="${n}">${n}</option>`).join('')}</select></div>
           <h4 class="vs-h4">Available <small>
@@ -1223,7 +1224,7 @@ class Editor {
           ${missing.length ? `<div class="alert alert-warning">Still missing: ${missing.join(', ')}.</div>` : ''}
           <div class="row">
             <div class="col-md-8">
-              <div class="form-group"><label>Show</label><div>${chk('show_testing', 'testing summary')} ${chk('show_pct_chart', '% of check chart')} ${chk('show_year_chart', 'by-year chart')} ${chk('show_map', 'map of test locations')} ${chk('show_stats', 'significance stars')}</div></div>
+              <div class="form-group"><label>Show</label><div>${chk('show_pedigree', 'pedigree')} ${chk('show_testing', 'testing summary')} ${chk('show_pct_chart', '% of check chart')} ${chk('show_year_chart', 'by-year chart')} ${chk('show_map', 'map of test locations')} ${chk('show_stats', 'significance stars')}</div></div>
             </div>
             <div class="col-md-4">
               <div class="form-group"><label>Accent color</label><div class="vs-accents">${ACCENTS.map(c => `<a href="#" class="vs-accent ${o.accent === c ? 'on' : ''}" data-c="${c}" style="background:${c}"></a>`).join('')}<input type="color" class="vs-bind-opt" data-k="accent" value="${esc(o.accent)}"></div></div>
@@ -1238,7 +1239,7 @@ class Editor {
             ${this.acc.can_edit ? `<button class="btn btn-default" id="vs_save_draft2"><span class="glyphicon glyphicon-floppy-disk"></span> Save draft</button>
             <button class="btn btn-success" id="vs_publish"><span class="glyphicon glyphicon-globe"></span> ${this.status === 'published' ? 'Update published sheet' : 'Publish'}</button>` : ''}
             <button class="btn btn-default" id="vs_print"><span class="glyphicon glyphicon-print"></span> Print / save as PDF</button>
-            ${this.sheetId ? `<a class="btn btn-link" href="/variety_sheet/${this.sheetId}" target="_blank">Open sheet page</a>` : ''}
+            ${this.sheetId ? `<a class="btn btn-link" href="/variety_sheet/${this.sheetId}" target="_blank">Open profile page</a>` : ''}
             <span class="text-muted vs-pub-state">${this.status === 'published' ? 'Published: anyone with the link can see it.' : 'Drafts are visible to you and curators only.'}</span>
           </div>
           <div class="vs-full-preview"></div>`);
@@ -1253,7 +1254,7 @@ class Editor {
         const s = this.sheet;
         if (!s) return;
         if (!(s.commercial_name || '').trim()) { this.message('Give the variety a commercial name first (step 2).', 'warning'); this.go(1); return; }
-        if (status === 'published' && this.status !== 'published' && !confirm('Publish this sheet? Anyone with the link will be able to see it.')) return;
+        if (status === 'published' && this.status !== 'published' && !confirm('Publish this profile? Anyone with the link will be able to see it.')) return;
         const opts = (this.nameCheck && this.nameCheck.conflicts.length) || !this.acc.can_save_names ? {} : this.nameOptions;
         const btns = this.root.find('.vs-save-draft, #vs_save_draft2, #vs_publish').prop('disabled', true);
         try {
@@ -1262,7 +1263,7 @@ class Editor {
             this.status = r.status;
             this.dirty = false;
             history.replaceState(null, '', '/tools/variety_sheet?sheet_id=' + r.sheet_id);
-            this.root.find('.vs-save-state').text(`Saved ${new Date().toLocaleTimeString()} \u00b7 sheet #${r.sheet_id} (${r.status})`);
+            this.root.find('.vs-save-state').text(`Saved ${new Date().toLocaleTimeString()} \u00b7 profile #${r.sheet_id} (${r.status})`);
             const msgs = (r.messages || []).map(esc);
             if (r.status === 'published') msgs.unshift(`Published. Share this link: <a href="${r.url}" target="_blank">${esc(location.origin + r.url)}</a>`);
             this.message(msgs.join('<br>') || 'Saved.', 'success');
@@ -1278,13 +1279,13 @@ function newSheetSkeleton() {
         version: VERSION, performance: { source: 'trials', checks: [], traits: [], results: null }, ratings: { traits: [], results: null },
         characteristics: [], images: [], evidence: {},
         text: { pedigree: '', market: '', production: '', disease: '', recommendations: '', acknowledgements: '', availability: '', contact: '' },
-        options: { show_map: true, show_pct_chart: true, show_year_chart: true, show_stats: true, show_testing: true, accent: ACCENTS[0], photo_columns: 3 },
+        options: { show_pedigree: true, show_map: true, show_pct_chart: true, show_year_chart: true, show_stats: true, show_testing: true, accent: ACCENTS[0], photo_columns: 3 },
     };
 }
 
 /* -------------------------------------------------------------- entry points */
 
-// photos whose file is missing on the server: hidden on the sheet, flagged in the editor
+// photos whose file is missing on the server: hidden on the profile, flagged in the editor
 let imageGuard = false;
 function guardImages() {
     if (imageGuard) return;
@@ -1322,7 +1323,7 @@ export function initList(root) {
         const pub = r.sheets.filter(s => s.status === 'published');
         const drafts = r.sheets.filter(s => s.status !== 'published');
         const card = s => `<a class="vs-card" href="/variety_sheet/${s.variety_sheet_id}"><b>${esc(s.commercial_name)}</b><span>${esc(s.accession_name)}</span><small>${esc(s.owner || '')} \u00b7 ${esc(s.modified_date)}</small></a>`;
-        el.html((pub.length ? `<div class="vs-cards">${pub.map(card).join('')}</div>` : '<p class="text-muted">No published variety sheets yet.</p>') +
+        el.html((pub.length ? `<div class="vs-cards">${pub.map(card).join('')}</div>` : '<p class="text-muted">No published variety profiles yet.</p>') +
             (drafts.length ? `<h4 class="vs-h4">Drafts</h4><div class="vs-cards">${drafts.map(card).join('')}</div>` : ''));
     }).catch(err => el.html(`<p class="text-danger">${esc(err.message)}</p>`));
 }

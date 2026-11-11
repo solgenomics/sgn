@@ -7,9 +7,9 @@ $sheet_id => undef
 <& /util/import_javascript.mas, classes => ['jquery', 'jqueryui', 'CXGN.Login'], entries => ['variety_sheet'] &>
 <& /tools/variety_sheet/sheet_css.mas &>
 
-<& /page/page_title.mas, title => "Variety Release Sheet" &>
+<& /page/page_title.mas, title => "Variety Release Profile" &>
 
-<p class="text-muted" style="margin-top:-6px">Build a commercial sheet for a new variety from the data already in the database: testing history, head-to-head results against checks, disease reactions and photos. Save it as a draft, publish it as a web page, or print it as a PDF. <a href="/variety_sheets">See all sheets</a>.</p>
+<p class="text-muted" style="margin-top:-6px">Build a commercial profile for a new variety from the data already in the database: testing history, head-to-head results against checks, disease reactions and photos. Save it as a draft, publish it as a web page, or print it as a PDF. <a href="/variety_sheets">See all profiles</a>.</p>
 
 <div id="variety_sheet_editor"></div>
 

@@ -2,7 +2,7 @@ package SGN::Controller::AJAX::VarietySheet;
 
 =head1 NAME
 
-SGN::Controller::AJAX::VarietySheet - endpoints for the commercial variety sheet editor
+SGN::Controller::AJAX::VarietySheet - endpoints for the commercial variety profile editor
 
 =head1 DESCRIPTION
 
@@ -39,7 +39,7 @@ sub _person_id {
     return $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 }
 
-# curators, breeders and submitters can make sheets
+# curators, breeders and submitters can make profiles
 sub _can_edit {
     my ($self, $c) = @_;
     return 0 unless $c->user();
@@ -59,8 +59,8 @@ sub _fail {
 
 sub _require_editor {
     my ($self, $c) = @_;
-    $self->_fail($c, 'You must be logged in to edit variety sheets.') unless $c->user();
-    $self->_fail($c, 'Only curators, breeders and submitters can edit variety sheets.') unless $self->_can_edit($c);
+    $self->_fail($c, 'You must be logged in to edit variety profiles.') unless $c->user();
+    $self->_fail($c, 'Only curators, breeders and submitters can edit variety profiles.') unless $self->_can_edit($c);
 }
 
 sub _int_list {
@@ -213,7 +213,7 @@ sub performance : Path('/ajax/variety_sheet/performance') Args(0) {
 
 =head2 GET /ajax/variety_sheet/list[?stock_id=]
 
-Published sheets plus the user's own drafts (curators see all).
+Published profiles plus the user's own drafts (curators see all).
 
 =cut
 
@@ -240,12 +240,13 @@ sub get_sheet : Path('/ajax/variety_sheet/get') Args(0) {
     my ($id) = _int_list($c->req->param('sheet_id'));
     $self->_fail($c, 'sheet_id is required.') unless $id;
     my $row = CXGN::VarietySheet->get_sheet($self->_schema($c), $id);
-    $self->_fail($c, 'Variety sheet not found.') unless $row;
+    $self->_fail($c, 'Variety profile not found.') unless $row;
     my $pid = $self->_person_id($c) // -1;
     my $own = ($row->{sp_person_id} // -2) == $pid;
-    $self->_fail($c, 'This variety sheet is a draft that belongs to another user.')
+    $self->_fail($c, 'This variety profile is a draft that belongs to another user.')
         unless $row->{status} eq 'published' || $own || $self->_is_curator($c);
     $row->{can_edit} = ($own || $self->_is_curator($c)) ? 1 : 0;
+    CXGN::VarietySheet->strip_hidden($row) unless $row->{can_edit};
     $c->stash->{rest} = $row;
 }
 
@@ -254,7 +255,7 @@ sub get_sheet : Path('/ajax/variety_sheet/get') Args(0) {
 data = { sheet_id?, stock_id, status:'draft'|'published', sheet:{...},
          name_options:{ released_variety_name:0|1, synonym:0|1 } }
 
-Saves the sheet and, if asked, stores the commercial name on the accession.
+Saves the profile and, if asked, stores the commercial name on the accession.
 
 =cut
 
@@ -275,7 +276,7 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     $self->_fail($c, 'The commercial name is too long (max 100 characters).') if length($name) > 100;
     $sheet->{commercial_name} = $name;
     my $size = length(encode_json($sheet));
-    $self->_fail($c, 'The sheet is too large.') if $size > 2_000_000;
+    $self->_fail($c, 'The profile is too large.') if $size > 2_000_000;
 
     my $accession_type = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my ($accession_name) = $schema->storage->dbh->selectrow_array(
@@ -285,10 +286,10 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     my $pid = $self->_person_id($c);
     if ($sheet_id) {
         my $row = CXGN::VarietySheet->get_sheet($schema, $sheet_id);
-        $self->_fail($c, 'Variety sheet not found.') unless $row;
-        $self->_fail($c, 'Only the owner of this sheet or a curator can change it.')
+        $self->_fail($c, 'Variety profile not found.') unless $row;
+        $self->_fail($c, 'Only the owner of this profile or a curator can change it.')
             unless ($row->{sp_person_id} // -1) == $pid || $self->_is_curator($c);
-        $self->_fail($c, 'The sheet belongs to a different accession.') unless $row->{stock_id} == $stock_id;
+        $self->_fail($c, 'The profile belongs to a different accession.') unless $row->{stock_id} == $stock_id;
     }
 
     # commercial name on the accession
@@ -298,7 +299,7 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
         my $check = CXGN::VarietySheet->check_name($schema, $name, $stock_id);
         if (@{ $check->{conflicts} }) {
             $self->_fail($c, "The name '$name' is already used by " . join(', ', map { "$_->{name} (as $_->{as})" } @{ $check->{conflicts} })
-                . ". Choose another name or keep it on the sheet only.");
+                . ". Choose another name or keep it on the profile only.");
         }
         my $stock_row = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
         my @added;
@@ -311,7 +312,7 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
             push @added, 'synonym';
         }
         if (@added) {
-            my $note = "Variety sheet: added '$name' as " . join(' and ', @added);
+            my $note = "Variety profile: added '$name' as " . join(' and ', @added);
             try {
                 CXGN::Stock->new({ schema => $schema, stock_id => $stock_id, is_saving => 1, sp_person_id => $pid,
                                    user_name => $c->user->get_object()->get_username(), modification_note => $note })->store();
@@ -339,8 +340,8 @@ sub delete : Path('/ajax/variety_sheet/delete') Args(0) {
     $self->_fail($c, 'sheet_id is required.') unless $id;
     my $schema = $self->_schema($c);
     my $row = CXGN::VarietySheet->get_sheet($schema, $id);
-    $self->_fail($c, 'Variety sheet not found.') unless $row;
-    $self->_fail($c, 'Only the owner of this sheet or a curator can delete it.')
+    $self->_fail($c, 'Variety profile not found.') unless $row;
+    $self->_fail($c, 'Only the owner of this profile or a curator can delete it.')
         unless ($row->{sp_person_id} // -1) == $self->_person_id($c) || $self->_is_curator($c);
     CXGN::VarietySheet->delete_sheet($schema, $id);
     $c->stash->{rest} = { success => 1 };

@@ -8,7 +8,7 @@ $title => ''
 <& /tools/variety_sheet/sheet_css.mas &>
 
 <div class="vs-view-bar">
-  <a class="btn btn-default btn-sm" href="/variety_sheets"><span class="glyphicon glyphicon-th-large"></span> All variety sheets</a>
+  <a class="btn btn-default btn-sm" href="/variety_sheets"><span class="glyphicon glyphicon-th-large"></span> All variety profiles</a>
   <span id="vs_edit_link"></span>
   <button class="btn btn-primary btn-sm" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print / save as PDF</button>
 </div>

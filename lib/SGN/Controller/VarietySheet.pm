@@ -2,13 +2,13 @@ package SGN::Controller::VarietySheet;
 
 =head1 NAME
 
-SGN::Controller::VarietySheet - pages for commercial variety release sheets
+SGN::Controller::VarietySheet - pages for commercial variety release profiles
 
 =head1 DESCRIPTION
 
 /tools/variety_sheet          step-by-step editor (login required)
-/variety_sheet/<id>           the sheet itself (published sheets are public)
-/variety_sheets               list of sheets
+/variety_sheet/<id>           the profile itself (published profiles are public)
+/variety_sheets               list of profiles
 
 See L<CXGN::VarietySheet> and L<SGN::Controller::AJAX::VarietySheet>.
 
@@ -45,11 +45,12 @@ sub view :Path('/variety_sheet') :Args(1) {
     my $curator = $c->user && $c->user->check_roles('curator');
     my $own = $row && ($row->{sp_person_id} // -2) == $pid;
     if (!$row || ($row->{status} ne 'published' && !$own && !$curator)) {
-        $c->stash->{message} = 'This variety sheet does not exist or has not been published.';
+        $c->stash->{message} = 'This variety profile does not exist or has not been published.';
         $c->stash->{template} = '/generic_message.mas';
         return;
     }
     $row->{can_edit} = ($own || $curator) ? 1 : 0;
+    CXGN::VarietySheet->strip_hidden($row) unless $row->{can_edit};
     # embedded in a <script> block: escape characters that could close it
     my $json = JSON::XS->new->ascii->canonical->encode($row);
     $json =~ s/</\\u003c/g;
