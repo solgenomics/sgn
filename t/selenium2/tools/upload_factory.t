@@ -318,10 +318,13 @@ $t->while_logged_in_as("curator", sub {
 
     click_select_option('upload_genotype_location_select', '//select[@id="upload_genotype_location_select"]/option[@title="Cornell Biotech"]', "genotype data location");
 
+    $t->find_element_ok('genotype_data_intertek_info_select', 'id', 'find intertek marker info file autocomplete')->send_keys("Intertek_SNP_info");
+    sleep(2);
+
     $t->find_element_ok(
-        "//select[\@id='genotype_data_intertek_info_select']/option[contains(text(),'Intertek_SNP_info.csv')]",
+        "//ul[contains(\@class,'ui-autocomplete')]//li[contains(.,'Intertek_SNP_info.csv')]",
         "xpath",
-        "select intertek marker info file"
+        "select intertek marker info file from autocomplete"
     )->click();
     sleep(1);
 

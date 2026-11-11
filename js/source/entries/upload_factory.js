@@ -88,6 +88,89 @@ var upload_type_dict = {
 
 export var archived_files_list = [];
 
+const FILE_AUTOCOMPLETE_ID_REGEX = /\s*\(ID:\s*(\d+)\)\s*$/;
+
+// Attach an archived file autocomplete to a text input. Suggestions are strings of the form
+// "<basename> (ID: <file_id>)". options.extensions (array) and options.exclude_file_id are
+// passed through to the server to filter the results.
+function init_file_autocomplete(selector, options = {}) {
+    jQuery(selector).autocomplete({
+        minLength: 0,
+        source: function(request, response) {
+            let data = { term: request.term };
+            if (options.extensions && options.extensions.length > 0) {
+                data.extensions = options.extensions.join(',');
+            }
+            if (options.exclude_file_id) {
+                data.exclude_file_id = options.exclude_file_id;
+            }
+            jQuery.ajax({
+                url: '/ajax/file/autocomplete',
+                type: 'GET',
+                data: data,
+                success: function(result) {
+                    if (result && result.error) {
+                        console.log(result.error);
+                        response([]);
+                    } else {
+                        response(result);
+                    }
+                },
+                error: function() {
+                    response([]);
+                }
+            });
+        },
+        select: options.select
+    }).on('keydown', function(event) {
+        // some of these inputs live inside a <form>, and Enter would otherwise submit it
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    }).on('focus', function() {
+        // show recent files immediately so users don't have to know what to type
+        if (!jQuery(this).val()) {
+            jQuery(this).autocomplete('search', '');
+        }
+    });
+}
+
+// Parse a value produced by init_file_autocomplete back into {id, name}. Returns null if the
+// value is empty, and {id: null, name: value} if it does not end in a file ID.
+function parse_file_autocomplete(value) {
+    value = (value || '').trim();
+    if (!value) {
+        return null;
+    }
+    const match = value.match(FILE_AUTOCOMPLETE_ID_REGEX);
+    if (!match) {
+        return { id: null, name: value };
+    }
+    return { id: match[1], name: value.replace(FILE_AUTOCOMPLETE_ID_REGEX, '') };
+}
+
+// Read a file autocomplete input. If required, alerts and returns undefined when nothing valid
+// was chosen. If optional, returns null when empty, but still alerts and returns undefined when
+// something was typed that is not a valid autocompleted file.
+function read_file_autocomplete(selector, label, required) {
+    const parsed = parse_file_autocomplete(jQuery(selector).val());
+    if (!parsed) {
+        if (required) {
+            alert(`Please select ${label}.`);
+            return undefined;
+        }
+        return null;
+    }
+    if (!parsed.id) {
+        alert(`Could not determine the file ID for ${label}. Please choose a file from the autocomplete suggestions.`);
+        return undefined;
+    }
+    return parsed;
+}
+
+const IMAGE_FILE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'tif', 'tiff'];
+const SPREADSHEET_FILE_EXTENSIONS = ['xlsx', 'xls'];
+
 export var job_dict = {};
 
 export function load_archived_files_table(user_id, interval) {
@@ -475,19 +558,9 @@ export function process_file(file_data, upload_type, config) {
                 },
             });
             get_select_box("locations", "upload_genotype_location_select_div", {'id': 'upload_genotype_location_select', 'name': 'upload_genotype_location_select'});
-            // also populate the select dropdown with the file choices
-            let intertek_info_select = jQuery('#genotype_data_intertek_info_select');
-            intertek_info_select.empty();
-            archived_files_list.forEach(item => {
-                const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
-                intertek_info_select.append(opt);
-            });
-            let kasp_info_select = jQuery('#genotype_data_kasp_info_select');
-            kasp_info_select.empty();
-            archived_files_list.forEach(item => {
-                const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
-                kasp_info_select.append(opt);
-            });
+            // file autocompletes for the additional marker info files
+            init_file_autocomplete('#genotype_data_intertek_info_select', { exclude_file_id : file_data.file_id });
+            init_file_autocomplete('#genotype_data_kasp_info_select', { exclude_file_id : file_data.file_id });
             jQuery('#genotype_data_upload_type_choice_select').on('change', display_genotyping_data_upload_additional_choices);
             jQuery('#genotype_data_upload_choices_next_btn').on('click', {file_data : file_data}, populate_genotyping_data_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
@@ -568,13 +641,7 @@ export function process_file(file_data, upload_type, config) {
         case 'fieldbook_phenotypes' : 
             display_fieldbook_upload_choices();
             jQuery('#fieldbook_upload_next_btn').on('click', {file_data:file_data}, populate_fieldbook_validate_submit_data);
-            let fieldbook_zipfile_select = jQuery('#upload_fieldbook_images_select');
-            archived_files_list.forEach(item => {
-                if (item.filename.includes(".zip")) {
-                    const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
-                    fieldbook_zipfile_select.append(opt);
-                }
-            });
+            init_file_autocomplete('#upload_fieldbook_images_select', { extensions : ['zip'], exclude_file_id : file_data.file_id });
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'datacollector_spreadsheet' : 
@@ -644,11 +711,7 @@ export function process_file(file_data, upload_type, config) {
             jQuery('#metabolomics_upload_file_format_select_div').hide();
             jQuery('#metabolomics_upload_next_btn_div').show();
             jQuery('#metabolomics_upload_next_btn').on('click', {file_data : file_data}, populate_metabolomics_validate_submit_data);
-            let metabolomics_details_select = jQuery('#upload_metabolomics_details_select');
-            archived_files_list.forEach(item => {
-                const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
-                metabolomics_details_select.append(opt);
-            });
+            init_file_autocomplete('#upload_metabolomics_details_select', { exclude_file_id : file_data.file_id });
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'transcriptomics' : 
@@ -657,29 +720,25 @@ export function process_file(file_data, upload_type, config) {
             jQuery('#transcriptomics_upload_file_format_select_div').hide();
             jQuery('#transcriptomics_upload_next_btn_div').show();
             jQuery('#transcriptomics_upload_next_btn').on('click', {file_data : file_data}, populate_transcriptomics_validate_submit_data);
-            let transcriptomics_details_select = jQuery('#upload_transcriptomics_details_select');
-            archived_files_list.forEach(item => {
-                const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
-                transcriptomics_details_select.append(opt);
-            });
+            init_file_autocomplete('#upload_transcriptomics_details_select', { exclude_file_id : file_data.file_id });
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'images' : 
             display_images_upload_choices();
-            let images_select = jQuery('#upload_images_select_more');
-            archived_files_list.forEach(item => {
-                if ((item.filename.includes(".png") || item.filename.includes(".jpg") || item.filename.includes(".jpeg") || item.filename.includes(".webp") || item.filename.includes(".tif") || item.filename.includes(".tiff")) && !file_data.file_name.endsWith(item.filename)) {
-                    const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
-                    images_select.append(opt);
+            init_file_autocomplete('#upload_images_select_more', {
+                extensions : IMAGE_FILE_EXTENSIONS,
+                exclude_file_id : file_data.file_id,
+                select : function(event, ui) {
+                    // add the chosen image to the list of additional images and clear the input
+                    add_additional_image_file(ui.item.value);
+                    jQuery(this).val('');
+                    return false;
                 }
             });
-            let pheno_select = jQuery('#upload_images_select_pheno');
-            archived_files_list.forEach(item => {
-                if (item.filename.includes(".xlsx") || item.filename.includes(".xls")) {
-                    const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
-                    pheno_select.append(opt);
-                }
+            jQuery('#upload_images_select_more_list').on('click', '.remove-additional-image-btn', function() {
+                jQuery(this).closest('li').remove();
             });
+            init_file_autocomplete('#upload_images_select_pheno', { extensions : SPREADSHEET_FILE_EXTENSIONS, exclude_file_id : file_data.file_id });
             jQuery('#upload_images_type').on('change', display_images_additional_upload_choices);
             jQuery('#image_upload_next_btn').on('click', {file_data : file_data}, populate_image_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
@@ -1146,10 +1205,10 @@ function display_genotyping_data_upload_choices() {
             '</div>' +
             '<br><br><br><br>' + 
             '<div id="genotype_data_intertek_info_div" hidden>'+
-                '<br><br><p><b>Select Intertek information file:</b></p><br><select id="genotype_data_intertek_info_select"></select>'+
+                '<br><br><p><b>Select Intertek information file:</b></p><br><input type="text" class="form-control" id="genotype_data_intertek_info_select" name="genotype_data_intertek_info_select" placeholder="Start typing a file name...">'+
             '</div><br>'+
             '<div id="genotype_data_kasp_info_div" hidden>'+
-                '<br><br><p><b>Select KASP marker information file:</b></p><br><select id="genotype_data_kasp_info_select"></select>'+
+                '<br><br><p><b>Select KASP marker information file:</b></p><br><input type="text" class="form-control" id="genotype_data_kasp_info_select" name="genotype_data_kasp_info_select" placeholder="Start typing a file name...">'+
             '</div>'+
             '<br><br><br><div id="genotype_data_choices_next_btn_div" hidden><button class="btn btn-primary" id="genotype_data_upload_choices_next_btn">Next</button></div>');
 }
@@ -1319,9 +1378,7 @@ function display_metabolomics_upload_choices() {
             '<div class="form-group">' + 
                 '<label class="col-sm-7 control-label">Select a details file:</label>' + 
                 '<br>' + 
-                '<select class="form-control" id="upload_metabolomics_details_select" name="upload_metabolomics_details_select">'+
-                    '<option value>Select...</option>'+
-                '</select>'+
+                '<input type="text" class="form-control" id="upload_metabolomics_details_select" name="upload_metabolomics_details_select" placeholder="Start typing a file name...">'+
             '</div>' + 
         '   <button id="metabolomics_upload_next_btn" class="btn btn-primary">Next</button>' + 
         '</div>'
@@ -1350,9 +1407,7 @@ function display_transcriptomics_upload_choices() {
             '<div class="form-group">' + 
                 '<label class="col-sm-7 control-label">Select a details file:</label>' + 
                 '<br>' + 
-                '<select class="form-control" id="upload_transcriptomics_details_select" name="upload_transcriptomics_details_select">'+
-                    '<option value>Select...</option>'+
-                '</select>'+
+                '<input type="text" class="form-control" id="upload_transcriptomics_details_select" name="upload_transcriptomics_details_select" placeholder="Start typing a file name...">'+
             '</div>' + 
         '   <button id="transcriptomics_upload_next_btn" class="btn btn-primary">Next</button>' + 
         '</div>'
@@ -1429,9 +1484,7 @@ function display_fieldbook_upload_choices() {
             '<div class="form-group">' +
                 '<label class="col-sm-6 control-label">Optional: Images ZipFile (.zip):</label>' + 
                  '<div class="col-sm-6" >'+
-                    '<select class="form-control" id="upload_fieldbook_images_select" name="upload_fieldbook_images_select">'+
-                       ' <option value>Select...</option>'+
-                    '</select>'+
+                    '<input type="text" class="form-control" id="upload_fieldbook_images_select" name="upload_fieldbook_images_select" placeholder="Start typing a .zip file name...">'+
                ' </div>'+
             '</div>' +
         '</form>' + 
@@ -1501,22 +1554,37 @@ function display_images_upload_choices() {
         '<div id="upload_images_select_more_div" class="form-group" hidden>'+
             '<label class="col-sm-6 control-label">Select additional images: </label>'+
             '<div class="col-sm-6" >'+
-                '<select class="form-control" id="upload_images_select_more" name="upload_images_select_more" multiple>'+
-                    //'<option value>Select...</option>'+
-                '</select>'+
+                '<input type="text" class="form-control" id="upload_images_select_more" name="upload_images_select_more" placeholder="Start typing an image file name...">'+
+                '<ul class="list-group" id="upload_images_select_more_list" style="margin-top:5px;"></ul>'+
            ' </div>'+
         '</div>'+
         '<div id ="upload_images_select_pheno_spreadsheet_div" class="form-group" hidden>' +
             '<label class="col-sm-6 control-label">Select phenotyping spreadsheet: </label>'+
             '<div class="col-sm-6" >'+
-                '<select class="form-control" id="upload_images_select_pheno" name="upload_images_select_pheno" single>'+
-                    '<option value>Select...</option>'+
-                '</select>'+
+                '<input type="text" class="form-control" id="upload_images_select_pheno" name="upload_images_select_pheno" placeholder="Start typing a spreadsheet file name...">'+
            ' </div>'+
         '</div>' +
         '<br>' + 
         '<button id="image_upload_next_btn" class="btn btn-primary">Next</button>'
     );
+}
+
+// Add an autocompleted image file to the list of additional images to upload, ignoring duplicates.
+function add_additional_image_file(value) {
+    const parsed = parse_file_autocomplete(value);
+    if (!parsed || !parsed.id) {
+        return;
+    }
+    const list = jQuery('#upload_images_select_more_list');
+    if (list.find(`li[data-file-id="${parsed.id}"]`).length > 0) {
+        return;
+    }
+    const li = jQuery('<li class="list-group-item"></li>')
+        .attr('data-file-id', parsed.id)
+        .attr('data-file-name', parsed.name)
+        .text(parsed.name + ' ');
+    li.append('<button type="button" class="btn btn-xs btn-danger pull-right remove-additional-image-btn"><span class="glyphicon glyphicon-remove"></span></button>');
+    list.append(li);
 }
 
 function display_images_additional_upload_choices() {
@@ -1783,7 +1851,10 @@ function populate_genotyping_data_validate_submit_data(event) {
     }
 
     if (genotype_data_format == "genotype_data_intertek") {
-        let intertek_info_file = {id: jQuery('#genotype_data_intertek_info_select').val(), name : jQuery('#genotype_data_intertek_info_select option:selected').text()};
+        let intertek_info_file = read_file_autocomplete('#genotype_data_intertek_info_select', 'an Intertek information file', true);
+        if (!intertek_info_file) {
+            return;
+        }
         populate_validate_submit_data(genotype_data_format, file_data, {
             intertek_info_file_id : intertek_info_file.id,
             intertek_info_file_name : intertek_info_file.name,
@@ -1796,7 +1867,10 @@ function populate_genotyping_data_validate_submit_data(event) {
             data_location : data_location
         });
     } else if (genotype_data_format == "genotype_data_kasp") {
-        let kasp_info_file = {id: jQuery('#genotype_data_kasp_info_select').val(), name : jQuery('#genotype_data_kasp_info_select option:selected').text()};
+        let kasp_info_file = read_file_autocomplete('#genotype_data_kasp_info_select', 'a KASP marker information file', true);
+        if (!kasp_info_file) {
+            return;
+        }
         populate_validate_submit_data(genotype_data_format, file_data, {
             kasp_info_file_id : kasp_info_file.id,
             kasp_info_file_name : kasp_info_file.name,
@@ -1987,9 +2061,12 @@ function populate_treatment_spreadsheet_validate_submit_data(event) {
 
 function populate_fieldbook_validate_submit_data(event) {
     let file_data = event.data.file_data;
-    let image_zipfile_select = jQuery('#upload_fieldbook_images_select option:selected');
-    let image_zipfile_id = image_zipfile_select.val();
-    let image_zipfile_name = image_zipfile_select.text();
+    let image_zipfile = read_file_autocomplete('#upload_fieldbook_images_select', 'an images zipfile', false);
+    if (image_zipfile === undefined) {
+        return;
+    }
+    let image_zipfile_id = image_zipfile ? image_zipfile.id : null;
+    let image_zipfile_name = image_zipfile ? image_zipfile.name : null;
     let data_level = jQuery('#upload_fieldbook_data_level').val();
 
     if (image_zipfile_id) {
@@ -2049,13 +2126,12 @@ function populate_metabolomics_validate_submit_data(event) {
         alert ('Please select a metabolomics protocol.');
         return;
     }
-    let metabolomics_details_id = jQuery('#upload_metabolomics_details_select option:selected').val();
-    let metabolomics_details_name = jQuery('#upload_metabolomics_details_select option:selected').text();
-
-    if (!metabolomics_details_id) {
-        alert("Please select a details file.");
+    let metabolomics_details = read_file_autocomplete('#upload_metabolomics_details_select', 'a details file', true);
+    if (!metabolomics_details) {
         return;
     }
+    let metabolomics_details_id = metabolomics_details.id;
+    let metabolomics_details_name = metabolomics_details.name;
 
     populate_validate_submit_data('metabolomics', file_data, {
         details_file : metabolomics_details_name,
@@ -2078,13 +2154,12 @@ function populate_transcriptomics_validate_submit_data(event) {
         alert ('Please select a transcriptomics protocol.');
         return;
     }
-    let transcriptomics_details_id = jQuery('#upload_transcriptomics_details_select option:selected').val();
-    let transcriptomics_details_name = jQuery('#upload_transcriptomics_details_select option:selected').text();
-
-    if (!transcriptomics_details_id) {
-        alert("Please select a details file.");
+    let transcriptomics_details = read_file_autocomplete('#upload_transcriptomics_details_select', 'a details file', true);
+    if (!transcriptomics_details) {
         return;
     }
+    let transcriptomics_details_id = transcriptomics_details.id;
+    let transcriptomics_details_name = transcriptomics_details.name;
 
     populate_validate_submit_data('transcriptomics', file_data, {
         details_file : transcriptomics_details_name,
@@ -2100,15 +2175,26 @@ function populate_image_validate_submit_data(event) {
 
     let selected_files = [];
     if (image_upload_type == "images_phenotypes") {
-        jQuery('#upload_images_select_pheno option:selected').each(function(){
-            selected_files.push({id : jQuery(this).val(), name : jQuery(this).text()});
-        });
-    } else {
-        jQuery('#upload_images_select_more option:selected').each(function(){
-            selected_files.push({id : jQuery(this).val(), name : jQuery(this).text()});
+        let pheno_spreadsheet = read_file_autocomplete('#upload_images_select_pheno', 'a phenotyping spreadsheet', true);
+        if (!pheno_spreadsheet) {
+            return;
+        }
+        selected_files.push(pheno_spreadsheet);
+    } else if (image_upload_type) {
+        // an image typed into the input but not yet added to the list is still included
+        if (jQuery('#upload_images_select_more').val().trim()) {
+            let typed_image = read_file_autocomplete('#upload_images_select_more', 'an additional image', false);
+            if (!typed_image) {
+                return;
+            }
+            add_additional_image_file(jQuery('#upload_images_select_more').val());
+            jQuery('#upload_images_select_more').val('');
+        }
+        jQuery('#upload_images_select_more_list li').each(function(){
+            selected_files.push({id : jQuery(this).attr('data-file-id'), name : jQuery(this).attr('data-file-name')});
         });
     }
-    
+
 
     if (!image_upload_type) {
         alert("Select an image upload type.");
