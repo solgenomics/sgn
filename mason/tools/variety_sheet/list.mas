@@ -1,0 +1,14 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery'], entries => ['variety_sheet'] &>
+<& /tools/variety_sheet/sheet_css.mas &>
+
+<& /page/page_title.mas, title => "Variety Sheets" &>
+
+<p><a class="btn btn-primary" href="/tools/variety_sheet"><span class="glyphicon glyphicon-plus"></span> New variety sheet</a></p>
+<div id="variety_sheet_list"><span class="text-muted">Loading…</span></div>
+
+<script>
+  jQuery(function () { window.jsMod['variety_sheet'].initList('#variety_sheet_list'); });
+</script>

@@ -1,0 +1,25 @@
+<%args>
+$stock_id => undef
+$sheet_id => undef
+</%args>
+
+<& /util/import_css.mas, paths => ['leaflet.css'] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'jqueryui', 'CXGN.Login'], entries => ['variety_sheet'] &>
+<& /tools/variety_sheet/sheet_css.mas &>
+
+<& /page/page_title.mas, title => "Variety Release Sheet" &>
+
+<p class="text-muted" style="margin-top:-6px">Build a commercial sheet for a new variety from the data already in the database: testing history, head-to-head results against checks, disease reactions and photos. Save it as a draft, publish it as a web page, or print it as a PDF. <a href="/variety_sheets">See all sheets</a>.</p>
+
+<div id="variety_sheet_editor"></div>
+
+<script>
+  jQuery(function () {
+    window.jsMod['variety_sheet'].initEditor('#variety_sheet_editor', {
+      stock_id: <% $stock_id ? int($stock_id) : 'null' %>,
+      sheet_id: <% $sheet_id ? int($sheet_id) : 'null' %>
+    });
+    // the editor prints the full preview of step 6
+    jQuery(window).on('beforeprint', function () { jQuery('.vs-full-preview').addClass('vs-print-root'); });
+  });
+</script>

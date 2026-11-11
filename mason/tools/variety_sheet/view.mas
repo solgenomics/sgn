@@ -1,0 +1,26 @@
+<%args>
+$sheet_json
+$title => ''
+</%args>
+
+<& /util/import_css.mas, paths => ['leaflet.css'] &>
+<& /util/import_javascript.mas, classes => ['jquery'], entries => ['variety_sheet'] &>
+<& /tools/variety_sheet/sheet_css.mas &>
+
+<div class="vs-view-bar">
+  <a class="btn btn-default btn-sm" href="/variety_sheets"><span class="glyphicon glyphicon-th-large"></span> All variety sheets</a>
+  <span id="vs_edit_link"></span>
+  <button class="btn btn-primary btn-sm" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print / save as PDF</button>
+</div>
+<div id="variety_sheet_view" class="vs-print-root"></div>
+
+<script>
+  jQuery(function () {
+    var row = <% $sheet_json %>;
+    document.title = (row.commercial_name || row.accession_name) + ' – variety sheet';
+    if (row.can_edit) {
+      jQuery('#vs_edit_link').html('<a class="btn btn-default btn-sm" href="/tools/variety_sheet?sheet_id=' + row.variety_sheet_id + '"><span class="glyphicon glyphicon-pencil"></span> Edit' + (row.status === 'published' ? '' : ' (draft)') + '</a>');
+    }
+    window.jsMod['variety_sheet'].initView('#variety_sheet_view', row);
+  });
+</script>
