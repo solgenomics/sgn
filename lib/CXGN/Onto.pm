@@ -619,7 +619,7 @@ sub store_observation_variable_trait_method_scale {
 
 
 #
-# Recursively get the children (and all granchildren, etc) of the specified cvterm
+# Recursively get the children (and all grandchildren, etc) of the specified cvterm
 # ARGS:
 #   - cvterm_id = id of the root cvterm
 # RETURNS: an arrayref of hashes of the children of the cvterm, with the following keys:
