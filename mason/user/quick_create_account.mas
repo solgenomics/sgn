@@ -28,6 +28,7 @@
          var form_data = jQuery('#quick_create_account_input_form').serialize();
          jQuery.ajax( { 
             url : '/ajax/user/quick_create_account',
+            method : 'POST',
             data: form_data,
             success: function(r) { 
               if (r.error) { alert(r.error); }

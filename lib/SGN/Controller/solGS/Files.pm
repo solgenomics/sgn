@@ -872,7 +872,8 @@ sub create_file_id {
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
 	    $file_id = $combo_pops_id;
 	    $c->stash->{data_set_type} = 'combined_populations';
-    } elsif ($referer =~ /$selection_pages/) {
+    } elsif ($referer =~ /$selection_pages/
+	     || ($referer =~ /pca\/analysis\// && $training_pop_id && $selection_pop_id)) {
     	if ($selection_pop_id) {
     	    $file_id =  $selection_pop_id  && $selection_pop_id !~ /^$training_pop_id$/ ?
     		$training_pop_id . '-' . $selection_pop_id :

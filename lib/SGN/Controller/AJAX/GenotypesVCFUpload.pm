@@ -34,6 +34,7 @@ use CXGN::File;
 use CXGN::Job;
 use File::Basename qw | basename dirname|;
 use JSON;
+use Encode qw(decode FB_CROAK);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -232,6 +233,11 @@ sub upload_genotype_verify_POST : Args(0) {
         if ($upload_vcf) {
             $upload_original_name = $upload_vcf->filename();
             $upload_tempfile = $upload_vcf->tempname;
+            my $utf8_error = _check_utf8_file($upload_tempfile);
+            if ($utf8_error) {
+                $c->stash->{rest} = { error => "The uploaded file $upload_original_name $utf8_error" };
+                $c->detach();
+            }
             $subdirectory = "genotype_vcf_upload";
             $parser_plugin = 'VCF';
 
@@ -241,6 +247,7 @@ sub upload_genotype_verify_POST : Args(0) {
             #version that gets archived (and used for loading) below. It is archived using
             #the same archive_filename/timestamp as the transposed file, so that it can be
             #found later by swapping the genotype_vcf_upload directory for genotype_vcf_archive.
+            #The archived original is gzipped, so it is stored as <basename>.gz.
             my $original_uploader = CXGN::UploadFile->new({
                 tempfile => $upload_tempfile,
                 subdirectory => "genotype_vcf_archive",
@@ -254,6 +261,21 @@ sub upload_genotype_verify_POST : Args(0) {
             });
             my ($archived_original_vcf_id, $archived_original_vcf) = $original_uploader->archive();
             if (!$archived_original_vcf) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
+            }
+            my $gzip_error;
+            try {
+                CXGN::File->new({
+                    file_id => $archived_original_vcf_id,
+                    metadata_schema => $metadata_schema,
+                    archive_path => $c->config->{archive_path}
+                })->gzip_file();
+            } catch {
+                $gzip_error = $_;
+            };
+            if ($gzip_error) {
+                print STDERR "Could not gzip $archived_original_vcf: $gzip_error\n";
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
                 $c->detach();
             }
@@ -291,8 +313,10 @@ sub upload_genotype_verify_POST : Args(0) {
                 close($F);
                 close($Fout);
                 $upload_tempfile = $temp_file_transposed;
-                $upload_original_name = basename($temp_file_transposed);
-                $subdirectory = "genotype_transposed_vcf_upload";
+                #NOTE: $upload_original_name and $subdirectory are intentionally left as the
+                #original uploaded filename and genotype_vcf_upload, so that the transposed file
+                #archived below shares the same archive basename as the original file archived
+                #above (in genotype_vcf_archive).
                 $parser_plugin = 'transposedVCF';
             }
 
@@ -321,6 +345,12 @@ sub upload_genotype_verify_POST : Args(0) {
                 archive_path => $c->config->{archive_path}
             });
             $archived_filename_with_path = $archived_vcf->get_path();
+            my $utf8_error = _check_utf8_file($archived_filename_with_path);
+            if ($utf8_error) {
+                my $archived_vcf_name = $archived_vcf->filename() || $archived_vcf->basename();
+                $c->stash->{rest} = { error => "The uploaded file $archived_vcf_name $utf8_error" };
+                $c->detach();
+            }
             $archived_main_file_id = $archived_vcf_file_id;
             $parser_plugin = 'VCF';
         }
@@ -328,6 +358,11 @@ sub upload_genotype_verify_POST : Args(0) {
     if ($upload_transposed_vcf) {
         $upload_original_name = $upload_transposed_vcf->filename();
         $upload_tempfile = $upload_transposed_vcf->tempname;
+        my $utf8_error = _check_utf8_file($upload_tempfile);
+        if ($utf8_error) {
+            $c->stash->{rest} = { error => "The uploaded file $upload_original_name $utf8_error" };
+            $c->detach();
+        }
         $subdirectory = "genotype_transposed_vcf_upload";
         $parser_plugin = 'transposedVCF';
         $genotype_file_type = 'genotype_data_vcf';
@@ -743,6 +778,21 @@ sub upload_genotype_verify_POST : Args(0) {
     }
 
     $c->stash->{rest} = $job_args->{result};
+}
+
+#Returns an error message if the file contains bytes that are not valid UTF-8, otherwise undef.
+sub _check_utf8_file {
+    my $filename = shift;
+    open(my $F, "<:raw", $filename) || die "Can't open file $filename\n";
+    while (my $line = <$F>) {
+        if (!eval { decode('UTF-8', $line, FB_CROAK); 1 }) {
+            my $line_number = $.;
+            close($F);
+            return "is not valid UTF-8 (line $line_number). Please save it with UTF-8 encoding and upload again.";
+        }
+    }
+    close($F);
+    return;
 }
 
 1;

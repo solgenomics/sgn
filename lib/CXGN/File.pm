@@ -36,6 +36,8 @@ use File::Slurp qw( write_file read_file );
 use File::Path qw( make_path );
 use JSON::Any;
 use Try::Tiny;
+use Digest::MD5;
+use IO::Compress::Gzip qw(gzip $GzipError);
 use CXGN::Metadata::Schema;
 
 use strict;
@@ -514,6 +516,35 @@ sub obsolete_file {
     } catch {
         die "Error obsoleting file: $_";
     };
+}
+
+=head2 gzip_file()
+
+Compresses the archived file in place: writes <basename>.gz next to it, removes the
+uncompressed original, and updates the md_files row (basename and md5checksum) so that
+it points to the compressed file. Dies on failure, leaving the original file in place.
+
+=cut
+
+sub gzip_file {
+    my $self = shift;
+    my $path = $self->get_path();
+    my $gz_path = "$path.gz";
+
+    gzip($path => $gz_path) or die "Could not gzip $path: $GzipError\n";
+
+    open(my $F, "<", $gz_path) || die "Can't open file $gz_path\n";
+    binmode $F;
+    my $md5 = Digest::MD5->new();
+    $md5->addfile($F);
+    close($F);
+
+    $self->basename($self->basename().".gz");
+    $self->md5checksum($md5->hexdigest());
+    $self->store();
+    unlink $path;
+
+    return $gz_path;
 }
 
 =head1 CLASS METHODS

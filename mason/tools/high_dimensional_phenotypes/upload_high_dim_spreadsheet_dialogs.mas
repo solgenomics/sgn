@@ -539,6 +539,8 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                                 </div>
                             </div>
 
+                            <!-- Set to 1 when storing: warnings (e.g. negative spectral values) were already shown on verify -->
+                            <input type="hidden" id="upload_nirs_spreadsheet_ignore_warnings" name="ignore_warnings" value="">
                             <input type="hidden" id="upload_nirs_spreadsheet_protocol_id" name="upload_nirs_spreadsheet_protocol_id" type="text">
                             <input type="hidden" id="upload_nirs_spreadsheet_protocol_name" name="upload_nirs_spreadsheet_protocol_name" type="text">
                             <input type="hidden" id="upload_nirs_spreadsheet_protocol_desc" name="upload_nirs_spreadsheet_protocol_desc" type="text">
@@ -917,6 +919,7 @@ jQuery(document).ready(function() {
         else {
             jQuery('#working_msg').html("Verifying NIRS File and Data");
             jQuery('#working_modal').modal("show");
+            jQuery('#upload_nirs_spreadsheet_ignore_warnings').val('');
             jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_verify');
             jQuery('#upload_nirs_spreadsheet_file_form').submit();
         }
@@ -962,18 +965,15 @@ jQuery(document).ready(function() {
                 }
             }
             if (response.warning) {
+                // NIRS store does not support overwriting/skipping previously stored values,
+                // so only the actual warnings are shown (no generic phenotype-upload header/checkbox)
                 var warningarrayLength = response.warning.length;
-                if (warningarrayLength > 0) {
+                for (var i = 0; i < warningarrayLength; i++) {
                     message_text += "<li class='list-group-item list-group-item-warning'>";
+
                     message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                    message_text += response.warning[i];
                     message_text += "</li>";
-                    for (var i = 0; i < warningarrayLength; i++) {
-                        message_text += "<li class='list-group-item list-group-item-warning'>";
-                        message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                        message_text += response.warning[i];
-                        message_text += "</li>";
-                    }
                 }
             }
             message_text += "</ul>";
@@ -988,6 +988,7 @@ jQuery(document).ready(function() {
                 else {
                     jQuery('#working_msg').html("Storing NIRS File and Data");
                     jQuery('#working_modal').modal("show");
+                    jQuery('#upload_nirs_spreadsheet_ignore_warnings').val('1');
                     jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_store');
                     jQuery('#upload_nirs_spreadsheet_file_form').submit();
                 }

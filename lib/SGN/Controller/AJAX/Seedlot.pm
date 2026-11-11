@@ -49,6 +49,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $trial_name = $params->{trial_name};
     my $trial_usage = $params->{trial_usage};
     my $material_type = $params->{material_type};
+    my $exclude_discarded = $params->{exclude_discarded};
 
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
@@ -91,6 +92,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $trial_name,
         $trial_usage,
         $material_type,
+        $exclude_discarded
     );
     my @seedlots;
     foreach my $sl (@$list) {

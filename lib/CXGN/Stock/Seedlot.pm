@@ -159,7 +159,7 @@ has 'seedlot_id' => (
 
 =head2 Accessor location_code()
 
-A string specifiying where the seedlot is stored. On the backend,
+A string specifying where the seedlot is stored. On the backend,
 this is stored the nd_geolocation description field.
 
 =cut
@@ -180,7 +180,7 @@ has 'nd_geolocation_id' => (
 
 =head2 Accessor box_name()
 
-A string specifiying box where the seedlot is stored. On the backend,
+A string specifying box where the seedlot is stored. On the backend,
 this is stored as a stockprop.
 
 =cut
@@ -349,6 +349,7 @@ sub list_seedlots {
     my $trial_usage = shift; # transaction type (either 'source', 'sink', or 'source|sink')
                              # where the trial is the source, sink, or either of the matching seedlot's seed
     my $material_type = shift;
+    my $exclude_discarded = shift;
 
     select(STDERR);
     $| = 1;
@@ -366,6 +367,7 @@ sub list_seedlots {
     my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
     my $location_code_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "location_code", "stock_property")->cvterm_id();
     my $material_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "material_type", "stock_property")->cvterm_id();
+    my $discarded_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "discarded_metadata", "stock_property")->cvterm_id();
 
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
@@ -424,35 +426,58 @@ sub list_seedlots {
         {'stock_relationship_objects' => 'subject'}
     );
 
-    if ($minimum_count || $minimum_weight || $quality || $only_good_quality || $box_name || $material_type) {
-        if ($minimum_count) {
-            print STDERR "Minimum count $minimum_count\n";
-            $search_criteria{'stockprops.value'} = { '<>' => 'NA' };
-            $search_criteria{'stockprops.value::numeric'}  = { '>=' => $minimum_count };
-            $search_criteria{'stockprops.type_id'}  = $current_count_cvterm_id;
-        } elsif ($minimum_weight) {
-            print STDERR "Minimum weight $minimum_weight\n";
-            $search_criteria{'stockprops.value'} = { '<>' => 'NA' };
-            $search_criteria{'stockprops.value::numeric'}  = { '>=' => $minimum_weight };
-            $search_criteria{'stockprops.type_id'}  = $current_weight_cvterm_id;
-        }
-        if ($quality) {
-            print STDERR "Quality $quality\n";
-            $search_criteria{'stockprops.value' } = { '=' => $quality };
-            $search_criteria{'stockprops.type_id' } = $seedlot_quality_cvterm_id;
-        }
-        if ($box_name) {
-            print STDERR "Box Name $box_name\n";
-            $search_criteria{'stockprops.value'} = { 'ilike' => '%'.$box_name.'%' };
-            $search_criteria{'stockprops.type_id'} = $location_code_cvterm_id;
-        }
-        if ($material_type) {
-            print STDERR "Material type $material_type\n";
-            $search_criteria{'stockprops.value' } = { '=' => $material_type };
-            $search_criteria{'stockprops.type_id' } = $material_type_cvterm_id;
-        }
+    # combined seedlot filters
+    my @seedlot_filters;
 
-        push @seedlot_search_joins, 'stockprops';
+    # function to build a seedlot filter
+    # arguments:
+    #   prop_type_id = stock prop cvterm id
+    #   value_cond = stock prop value search criteria
+    #   exclude = true to use a not in operator
+    my $add_stockprop_filter = sub {
+        my ($prop_type_id, $value_cond, $exclude) = @_;
+        my $sq = $schema->resultset("Stock::Stockprop")->search({
+            'me.type_id' => $prop_type_id,
+            %$value_cond
+        })->get_column('me.stock_id')->as_query;
+
+        # adds a sub-query to include only matching seedlots by stock ids
+        if ($exclude) {
+            push @seedlot_filters, { 'me.stock_id' => { -not_in => $sq } };
+        }
+        else {
+            push @seedlot_filters, { 'me.stock_id' => { -in => $sq } };
+        }
+    };
+
+    if ($minimum_count) {
+        print STDERR "Minimum count $minimum_count\n";
+        $add_stockprop_filter->($current_count_cvterm_id, {
+            'me.value' => { '~' => '^[0-9]+(\.[0-9]+)?$' },
+            'me.value::numeric' => { '>=' => $minimum_count }
+        });
+    } elsif ($minimum_weight) {
+        print STDERR "Minimum weight $minimum_weight\n";
+        $add_stockprop_filter->($current_weight_cvterm_id, {
+            'me.value' => { '~' => '^[0-9]+(\.[0-9]+)?$' },
+            'me.value::numeric' => { '>=' => $minimum_weight }
+        });
+    }
+    if ($quality) {
+        print STDERR "Quality $quality\n";
+        $add_stockprop_filter->($seedlot_quality_cvterm_id, { 'me.value' => $quality });
+    }
+    if ($box_name) {
+        print STDERR "Box Name $box_name\n";
+        $add_stockprop_filter->($location_code_cvterm_id, { 'me.value' => { 'ilike' => '%'.$box_name.'%' } });
+    }
+    if ($material_type) {
+        print STDERR "Material type $material_type\n";
+        $add_stockprop_filter->($material_type_cvterm_id, { 'me.value' => $material_type });
+    }
+    if ($exclude_discarded) {
+        print STDERR "Exclude Discarded Seedlots\n";
+        $add_stockprop_filter->($discarded_type_cvterm_id, { 'me.value' => { '!=' => undef } }, 1);
     }
 
     if ($trial_name && $trial_usage) {
@@ -492,8 +517,11 @@ sub list_seedlots {
         }
 
         # Add Seedlot IDs as filter to overall seedlot query
-        $search_criteria{'me.stock_id'} = { -in => \@seedlot_ids };
+        push @seedlot_filters, { 'me.stock_id' => { -in => \@seedlot_ids } };
     }
+
+    # combine all of the seedlot filters with an AND condition
+    $search_criteria{'-and'} = \@seedlot_filters if @seedlot_filters;
 
     my $rs = $schema->resultset("Stock::Stock")->search(
         \%search_criteria,
@@ -1389,8 +1417,8 @@ sub _update_seedlot_location {
     if($nd_exp->count != 1){
         die "There should be exactly one nd_experiment for any single seedlot!";
     }
-    my $nd = $nd_exp->first();
-    $nd->update({nd_geolocation_id=>$self->nd_geolocation_id});
+    my $experiment = $nd_exp->first();
+    $experiment->update({nd_geolocation_id=>$self->nd_geolocation_id});
 }
 
 sub _store_seedlot_accession {
@@ -1925,7 +1953,7 @@ sub delete_using_list {
                     - maxPage: the number of the last page
                     - pageSize: (max) number of results per page
                     - total: total number of results
-                    - results: an arrayref of hases of the seedlot's stored events, with the following keys:
+                    - results: an arrayref of hashes of the seedlot's stored events, with the following keys:
                         - stock_id: the unique id of the seedlot
                         - uniquename: the unique name of the seedlot
                         - stockprop_id: the unique id of the maintenance event

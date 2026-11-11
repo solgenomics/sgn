@@ -6,6 +6,7 @@ use Data::Dumper;
 use CXGN::Trait;
 use CXGN::Trait::Search;
 use CXGN::BreederSearch;
+use CXGN::BrAPI::v2::ObservationVariables;
 
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
@@ -39,12 +40,39 @@ sub search : Path('/ajax/search/traits') Args(0) {
         context => $c
     });
 
-    my $name_spaces_str = $c->config->{onto_root_namespaces};
-    my @name_spaces_pairs = split(", ",$name_spaces_str);
-    my @name_spaces = map { s/ .*//r } @name_spaces_pairs;
+    my @cvprop_type_names = ('trait_ontology', 'composed_trait_ontology');
+
+    # Derive the db names (name spaces) of the cvs tagged as trait ontologies:
+    # cvterm (cv type name) -> cvprop.type_id -> cvprop.cv_id -> cvterm -> dbxref -> db
+    my $cvprop_type_rs = $schema->resultset("Cv::Cvterm")->search({
+        name => { -in => \@cvprop_type_names }
+    });
+    my @cvprop_type_ids = map { $_->cvterm_id() } $cvprop_type_rs->all();
+
+    my $cvprop_rs = $schema->resultset("Cv::Cvprop")->search({
+        type_id => { -in => \@cvprop_type_ids }
+    });
+
+    my @name_spaces;
+    my %seen_name_space;
+    while (my $cvprop = $cvprop_rs->next()) {
+        my $cvterm = $schema->resultset("Cv::Cvterm")->search(
+            { cv_id => $cvprop->cv_id() },
+            { order_by => 'cvterm_id' }
+        )->first();
+        next if !$cvterm;
+
+        my $dbxref = $schema->resultset("General::Dbxref")->find({ dbxref_id => $cvterm->dbxref_id() });
+        next if !$dbxref;
+
+        my $db = $schema->resultset("General::Db")->find({ db_id => $dbxref->db_id() });
+        next if !$db;
+
+        push @name_spaces, $db->name() if !$seen_name_space{$db->name()}++;
+    }
 
     my $result = $observation_variables->observation_variable_ontologies({
-        cvprop_type_names => ['trait_ontology', 'composed_trait_ontology'],
+        cvprop_type_names => \@cvprop_type_names,
         name_spaces => \@name_spaces
     });
 
