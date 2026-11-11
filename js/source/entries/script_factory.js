@@ -928,9 +928,9 @@ function updateOutlierToolbar() {
         .html('<span class="glyphicon glyphicon-hdd"></span> Mark ' + (n ? what + ' ' : '') + 'as database outliers')
         .attr('title', canDb ? 'Flag these values as outliers in the database, for all users' : 'Only curators and breeders can mark database outliers');
     $('#sf_unmark_menu').prop('disabled', !n || (!owner && !canUnmarkDb));
-    // like the phenotype QC tool: only curators remove database outlier marks
+    // curators and breeders remove database outlier marks (the server checks it too)
     $('#sf_unmark_database_item').toggleClass('disabled', !canUnmarkDb)
-        .attr('title', canUnmarkDb ? '' : 'Only curators can remove the database outlier mark');
+        .attr('title', canUnmarkDb ? '' : 'Only curators and breeders can remove the database outlier mark');
     $('#sf_unmark_database_item').prev().toggleClass('disabled', !owner)
         .attr('title', owner ? '' : 'Only the owner of the dataset can change its outliers');
     const why = [];
@@ -967,7 +967,7 @@ const MARK_TEXT = {
 // items: [{key, unit, trait}]; msgBox: where to report
 function markOutliers(items, action, msgBox) {
     if (!items.length || !state.dataset) return Promise.resolve();
-    if (action === 'database' && !confirm('Mark ' + items.length + ' value(s) as outliers in the database?\n\nThey will be excluded for ALL users, in every dataset, analysis and tool that excludes outliers.\n\nNote: when a dataset excludes database outliers, Breedbase leaves out the WHOLE plot (all its traits), not only the marked value. To drop only the value, use dataset outliers instead.\n\nOnly a curator can remove the mark later.')) return Promise.resolve();
+    if (action === 'database' && !confirm('Mark ' + items.length + ' value(s) as outliers in the database?\n\nThey will be excluded for ALL users, in every dataset, analysis and tool that excludes outliers.\n\nNote: when a dataset excludes database outliers, Breedbase leaves out the WHOLE plot (all its traits), not only the marked value. To drop only the value, use dataset outliers instead.\n\nOnly a curator or a breeder can remove the mark later.')) return Promise.resolve();
     if (action === 'unmark_database' && !confirm('Remove the database outlier mark from ' + items.length + ' value(s)? They will be used again by all tools.')) return Promise.resolve();
     $(msgBox).html('<p class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Saving...</p>');
     return post('/ajax/script_factory/outliers/mark', { dataset_id: state.dataset.dataset_id, action: action, items: JSON.stringify(items.map(o => ({ unit: o.unit, trait: o.trait }))) })

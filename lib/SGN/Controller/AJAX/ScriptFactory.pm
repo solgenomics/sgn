@@ -598,9 +598,9 @@ sub _factor_support {
 #                      every search with exclude_phenotype_outlier.
 # ---------------------------------------------------------------------------
 
-# Same rules as the phenotype quality control tool: curators and breeders can
-# mark database outliers (storeoutliers), only curators can remove the mark
-# (restoreoutliers), so a mark set by a curator is never undone by a breeder.
+# Curators and breeders can mark database outliers and remove the mark: in the
+# analysis tools breeders have the same power as curators. (The phenotype
+# quality control tool lets only curators remove the mark, restoreoutliers.)
 sub _can_mark_database {
     my $c = shift;
     return (grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
@@ -608,7 +608,7 @@ sub _can_mark_database {
 
 sub _can_unmark_database {
     my $c = shift;
-    return (grep { $_ eq 'curator' } $c->user()->roles()) ? 1 : 0;
+    return (grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
 }
 
 # items: [{unit, trait}] -> { "unit|trait" => [phenotype_id, ...] } plus database flags
@@ -731,7 +731,7 @@ sub mark_outliers : Path('/ajax/script_factory/outliers/mark') Args(0) {
         return;
     }
     if ($action eq 'unmark_database' && !$can_unmark_db) {
-        $c->stash->{rest} = { error => 'Only curators can remove the database outlier mark.' };
+        $c->stash->{rest} = { error => 'Only curators and breeders can remove the database outlier mark.' };
         return;
     }
 

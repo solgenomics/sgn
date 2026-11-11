@@ -639,7 +639,7 @@ $blupf90_available => 0
 % my $user_email = '';
 % if ($c->user()) { my $p = $c->user()->get_object(); $user_email = $p->get_contact_email() || $p->get_private_email() || ''; }
 % my $can_mark_database = ($c->user() && grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
-% my $can_unmark_database = ($c->user() && grep { $_ eq 'curator' } $c->user()->roles()) ? 1 : 0;
+% my $can_unmark_database = ($c->user() && grep { $_ eq 'curator' || $_ eq 'breeder' } $c->user()->roles()) ? 1 : 0;
 <script>
 jQuery(document).ready(function() {
   window.jsMod['script_factory'].init({
