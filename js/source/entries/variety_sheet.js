@@ -685,7 +685,7 @@ class Editor {
             this.sheet.evidence_as_of = today();
             this.sheet.pedigree = this.acc.pedigree;
         }
-        if (!this.acc.can_edit) this.message('You can look at variety profiles, but only curators, breeders and submitters can save them.', 'warning');
+        if (!this.acc.can_edit) this.message('You can look at variety profiles, but only curators can save them.', 'warning');
         if (!keepSheet && !this.acc.sheets.length && this.acc.can_edit) this.startNewSheet(true);
         this.go(keepSheet ? this.step : 0);
     }

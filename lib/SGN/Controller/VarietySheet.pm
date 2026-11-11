@@ -6,7 +6,7 @@ SGN::Controller::VarietySheet - pages for commercial variety release profiles
 
 =head1 DESCRIPTION
 
-/tools/variety_sheet          step-by-step editor (login required)
+/tools/variety_sheet          step-by-step editor (curators only)
 /variety_sheet/<id>           the profile itself (published profiles are public)
 /variety_sheets               list of profiles
 
@@ -24,6 +24,11 @@ sub editor :Path('/tools/variety_sheet') :Args(0) {
     my ($self, $c) = @_;
     if (!$c->user) {
         $c->res->redirect($c->uri_for('/user/login', { goto_url => $c->req->uri->path_query }));
+        return;
+    }
+    if (!$c->user->check_roles('curator')) {
+        $c->stash->{message} = 'Only curators can create or edit variety profiles. <a href="/variety_sheets">See the published profiles</a>.';
+        $c->stash->{template} = '/generic_message.mas';
         return;
     }
     my ($stock_id) = grep { /^\d+$/ } ($c->req->param('stock_id') // '');
@@ -49,7 +54,7 @@ sub view :Path('/variety_sheet') :Args(1) {
         $c->stash->{template} = '/generic_message.mas';
         return;
     }
-    $row->{can_edit} = ($own || $curator) ? 1 : 0;
+    $row->{can_edit} = $curator ? 1 : 0;
     CXGN::VarietySheet->strip_hidden($row) unless $row->{can_edit};
     # embedded in a <script> block: escape characters that could close it
     my $json = JSON::XS->new->ascii->canonical->encode($row);

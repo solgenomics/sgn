@@ -39,11 +39,10 @@ sub _person_id {
     return $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 }
 
-# curators, breeders and submitters can make profiles
+# only curators can create, edit or delete profiles
 sub _can_edit {
     my ($self, $c) = @_;
-    return 0 unless $c->user();
-    return (any { $_ eq 'curator' || $_ eq 'breeder' || $_ eq 'submitter' } $c->user->roles()) ? 1 : 0;
+    return $self->_is_curator($c);
 }
 
 sub _is_curator {
@@ -60,7 +59,7 @@ sub _fail {
 sub _require_editor {
     my ($self, $c) = @_;
     $self->_fail($c, 'You must be logged in to edit variety profiles.') unless $c->user();
-    $self->_fail($c, 'Only curators, breeders and submitters can edit variety profiles.') unless $self->_can_edit($c);
+    $self->_fail($c, 'Only curators can create or edit variety profiles.') unless $self->_can_edit($c);
 }
 
 sub _int_list {
@@ -227,7 +226,7 @@ sub list : Path('/ajax/variety_sheet/list') Args(0) {
     }
     my $rows = CXGN::VarietySheet->list_sheets($self->_schema($c), $f);
     my $pid = $self->_person_id($c) // -1;
-    $_->{can_edit} = ($self->_is_curator($c) || ($_->{sp_person_id} // -2) == $pid) ? 1 : 0 for @$rows;
+    $_->{can_edit} = $self->_is_curator($c) for @$rows;
     $c->stash->{rest} = { sheets => $rows };
 }
 
@@ -245,7 +244,7 @@ sub get_sheet : Path('/ajax/variety_sheet/get') Args(0) {
     my $own = ($row->{sp_person_id} // -2) == $pid;
     $self->_fail($c, 'This variety profile is a draft that belongs to another user.')
         unless $row->{status} eq 'published' || $own || $self->_is_curator($c);
-    $row->{can_edit} = ($own || $self->_is_curator($c)) ? 1 : 0;
+    $row->{can_edit} = $self->_is_curator($c);
     CXGN::VarietySheet->strip_hidden($row) unless $row->{can_edit};
     $c->stash->{rest} = $row;
 }

@@ -240,7 +240,7 @@ my $released_variety_link = '<button class="btn btn-default btn-sm" style="margi
 
 if ($person_id && ($submitter || $curator || $sequencer)) { $released_variety_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="released_variety_link" >Add released variety name</button> |; }
 
-if ($type_name eq 'accession') { $released_variety_link .= qq | <a class="btn btn-default btn-sm" style="margin:3px" href="/tools/variety_sheet?stock_id=$stock_id"><span class="glyphicon glyphicon-file"></span> Variety profile</a> |; }
+if ($type_name eq 'accession' && $curator) { $released_variety_link .= qq | <a class="btn btn-default btn-sm" style="margin:3px" href="/tools/variety_sheet?stock_id=$stock_id"><span class="glyphicon glyphicon-file"></span> Variety profile</a> |; }
 
 </%perl>
 
