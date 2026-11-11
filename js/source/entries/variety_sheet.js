@@ -134,7 +134,8 @@ function newSheet(acc) {
         characteristics: [],
         text: { pedigree: '', market: '', production: '', disease: '', recommendations: '', acknowledgements: '', availability: '', contact: '' },
         images: [],
-        options: { show_pedigree: true, show_map: true, show_pct_chart: true, show_year_chart: true, show_stats: true, show_testing: true, accent: ACCENTS[0], photo_columns: 3 },
+        decisions: (acc.meetings || []).map(decisionLink),
+        options: { show_pedigree: true, show_decisions: true, show_map: true, show_pct_chart: true, show_year_chart: true, show_stats: true, show_testing: true, accent: ACCENTS[0], photo_columns: 3 },
     };
     s.text.pedigree = autoPedigree(s);
     return s;
@@ -222,6 +223,25 @@ function autoDisease(s) {
     const order = ['Resistant', 'Moderately resistant', 'Tolerant', 'Intermediate', 'Moderately susceptible', 'Susceptible'];
     const parts = order.filter(k => groups[k]).map(k => `${k} to ${listText(groups[k].map(x => x.toLowerCase()))}`);
     return parts.length ? parts.join('. ') + '.' : '';
+}
+
+/* ------------------------------------------------------- decision meetings */
+
+// what the profile keeps from a meeting (meeting comments stay in the meeting)
+function decisionLink(m) {
+    return { meeting_id: m.meeting_id, meeting_name: m.meeting_name, date: m.date, location: m.location,
+             program: m.program, decision: m.decision, previous_stage: m.previous_stage, new_stage: m.new_stage };
+}
+function meetingUrl(id) { return '/ajax/decisionmeeting/meeting_report_html?meeting_id=' + encodeURIComponent(id); }
+function stageText(d) {
+    if (d.previous_stage && d.new_stage && d.previous_stage !== d.new_stage) return `${esc(d.previous_stage)} \u2192 ${esc(d.new_stage)}`;
+    return esc(d.new_stage || d.previous_stage || '');
+}
+function decisionTable(rows, linkMeetings) {
+    return '<table class="vs-table vs-decisions"><thead><tr><th>Date</th><th>Meeting</th><th>Program</th><th>Decision</th><th>Stage</th></tr></thead><tbody>' +
+        rows.map(d => `<tr><td>${esc(d.date)}</td><td>${linkMeetings ? `<a href="${meetingUrl(d.meeting_id)}" target="_blank">${esc(d.meeting_name)}</a>` : esc(d.meeting_name)}</td>` +
+                      `<td>${esc(d.program)}</td><td>${esc(capital(d.decision || ''))}</td><td>${stageText(d)}</td></tr>`).join('') +
+        '</tbody></table>';
 }
 
 function capital(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
@@ -334,6 +354,10 @@ function renderSheet(s, opts) {
     }
 
     h += sec('Recommendations', rich(s.text.recommendations));
+
+    // decision trail
+    const dec = (s.decisions || []).filter(d => d && d.meeting_id);
+    if (o.show_decisions !== false && dec.length) h += sec('Decision history', decisionTable(dec, opts.link_meetings));
 
     // photos
     if ((s.images || []).length) {
@@ -595,10 +619,10 @@ class Editor {
         if (!this.sheet) { this.root.find('.vs-preview').html('<div class="text-muted vs-empty">The profile appears here as you build it.</div>'); return; }
         if (STEPS[this.step].key === 'publish') {
             const el = this.root.find('.vs-full-preview');
-            el.html(renderSheet(this.sheet, { url: this.sheetId ? location.origin + '/variety_sheet/' + this.sheetId : '' }));
+            el.html(renderSheet(this.sheet, { url: this.sheetId ? location.origin + '/variety_sheet/' + this.sheetId : '', link_meetings: true }));
             drawMaps(el, this.sheet);
         } else {
-            this.root.find('.vs-preview').html(renderSheet(this.sheet, { static_map: true }));
+            this.root.find('.vs-preview').html(renderSheet(this.sheet, { static_map: true, link_meetings: true }));
         }
     }
 
@@ -643,7 +667,7 @@ class Editor {
               <tr><th>Stored analyses</th><td>${a.analyses.length ? plural(a.analyses.length, 'analysis', 'analyses') : '<span class="text-muted">none</span>'}</td></tr>
             </table>
             ${!e.trials ? '<div class="alert alert-warning">This accession has no field trial data yet. You can still write a profile, but the testing summary and performance tables will be empty.</div>' : ''}
-            ${mine.length ? `<p><b>${plural(mine.length, 'sheet')} already exist for this accession.</b> Open one below or start a new one.</p>` : ''}
+            ${mine.length ? `<p><b>${plural(mine.length, 'profile')} already exist for this accession.</b> Open one below or start a new one.</p>` : ''}
             ${this.sheet && this.sheet.stock_id == a.stock_id ? `<p class="text-success"><span class="glyphicon glyphicon-ok"></span> ${this.sheetId ? 'Editing profile #' + this.sheetId : 'New profile started'} \u2014 continue with <b>Next</b>.</p>` : `<button class="btn btn-success vs-new-sheet"><span class="glyphicon glyphicon-plus"></span> Start a profile for ${esc(a.accession_name)}</button>`}
           </div></div>`;
     }
@@ -752,14 +776,48 @@ class Editor {
           <div class="form-group"><label>Pedigree</label> <button class="btn btn-xs btn-link vs-auto" data-k="pedigree"><span class="glyphicon glyphicon-flash"></span> Write it from Breedbase</button>
             <label class="checkbox-inline pull-right" style="padding-top:0"><input type="checkbox" class="vs-bind-opt" data-k="show_pedigree" ${s.options.show_pedigree !== false ? 'checked' : ''}> Show pedigree on the profile</label>
             <textarea class="form-control vs-bind-text" data-k="pedigree" rows="4">${esc(s.text.pedigree)}</textarea>
-            <p class="help-block">Use *italic* for species names and **bold** for emphasis. Add the story behind the name here too.</p></div>`);
+            <p class="help-block">Use *italic* for species names and **bold** for emphasis. Add the story behind the name here too.</p></div>
+          <div id="vs_decisions"></div>`);
         this.bindCommon(p);
+        this.renderDecisions();
         const nameInput = p.find('#vs_name');
         nameInput.on('input', () => { s.commercial_name = nameInput.val(); this.markDirty(); clearTimeout(this._nc); this._nc = setTimeout(() => this.checkName(), 400); });
         p.on('change', '#vs_opt_released', e => { this.nameOptions.released_variety_name = e.target.checked; });
         p.on('change', '#vs_opt_synonym', e => { this.nameOptions.synonym = e.target.checked; });
         if (!a.can_save_names) p.find('#vs_opt_released, #vs_opt_synonym').prop({ checked: false, disabled: true });
         this.checkName();
+    }
+
+    renderDecisions() {
+        const s = this.sheet, a = this.acc, el = this.root.find('#vs_decisions');
+        if (!Array.isArray(s.decisions)) s.decisions = [];
+        const rows = (a.meetings || []).slice();
+        s.decisions.forEach(d => { if (!rows.some(m => m.meeting_id == d.meeting_id)) rows.push(d); });
+        const linked = id => s.decisions.some(d => d.meeting_id == id);
+        let h = `<div class="form-group"><label>Decision meetings</label> ${a.require_meeting ? '<span class="label label-warning">at least one required to publish</span>' : '<small class="text-muted">(optional)</small>'}
+            <label class="checkbox-inline pull-right" style="padding-top:0"><input type="checkbox" class="vs-bind-opt" data-k="show_decisions" ${s.options.show_decisions !== false ? 'checked' : ''}> Show decision history on the profile</label>`;
+        if (!rows.length) {
+            h += `<p class="text-muted">${esc(a.accession_name)} has not been discussed in any decision meeting yet. Record the release decision in <a href="/breeders/meeting" target="_blank">Decision Meetings</a> and it will appear here.</p>`;
+        } else {
+            h += '<p class="help-block">Tick the meetings that led to this release. They are shown on the profile as its decision history (meeting comments are not).</p>' +
+                 '<div class="vs-trait-table-wrap"><table class="table table-condensed"><thead><tr><th></th><th>Date</th><th>Meeting</th><th>Program</th><th>Decision</th><th>Stage</th><th>Comment</th></tr></thead><tbody>' +
+                 rows.map(m => `<tr><td><input type="checkbox" class="vs-dec" data-id="${esc(m.meeting_id)}" ${linked(m.meeting_id) ? 'checked' : ''}></td><td>${esc(m.date)}</td>` +
+                               `<td><a href="${meetingUrl(m.meeting_id)}" target="_blank">${esc(m.meeting_name)}</a></td><td>${esc(m.program)}</td><td>${esc(capital(m.decision || ''))}</td>` +
+                               `<td>${stageText(m)}</td><td class="small">${esc(m.comment || '')}</td></tr>`).join('') +
+                 '</tbody></table></div>';
+        }
+        el.html(h + '</div>');
+        el.off('change.vsdec').on('change.vsdec', '.vs-dec', e => {
+            const id = $(e.target).data('id');
+            if (e.target.checked) {
+                const m = rows.find(r => r.meeting_id == id);
+                if (m && !linked(id)) s.decisions.push(decisionLink(m));
+            } else {
+                s.decisions = s.decisions.filter(d => d.meeting_id != id);
+            }
+            s.decisions.sort((x, y) => String(x.date || '').localeCompare(String(y.date || '')));
+            this.markDirty();
+        });
     }
 
     async checkName() {
@@ -1224,7 +1282,7 @@ class Editor {
           ${missing.length ? `<div class="alert alert-warning">Still missing: ${missing.join(', ')}.</div>` : ''}
           <div class="row">
             <div class="col-md-8">
-              <div class="form-group"><label>Show</label><div>${chk('show_pedigree', 'pedigree')} ${chk('show_testing', 'testing summary')} ${chk('show_pct_chart', '% of check chart')} ${chk('show_year_chart', 'by-year chart')} ${chk('show_map', 'map of test locations')} ${chk('show_stats', 'significance stars')}</div></div>
+              <div class="form-group"><label>Show</label><div>${chk('show_pedigree', 'pedigree')} ${chk('show_decisions', 'decision history')} ${chk('show_testing', 'testing summary')} ${chk('show_pct_chart', '% of check chart')} ${chk('show_year_chart', 'by-year chart')} ${chk('show_map', 'map of test locations')} ${chk('show_stats', 'significance stars')}</div></div>
             </div>
             <div class="col-md-4">
               <div class="form-group"><label>Accent color</label><div class="vs-accents">${ACCENTS.map(c => `<a href="#" class="vs-accent ${o.accent === c ? 'on' : ''}" data-c="${c}" style="background:${c}"></a>`).join('')}<input type="color" class="vs-bind-opt" data-k="accent" value="${esc(o.accent)}"></div></div>
@@ -1237,7 +1295,7 @@ class Editor {
           </div>
           <div class="vs-publish-bar">
             ${this.acc.can_edit ? `<button class="btn btn-default" id="vs_save_draft2"><span class="glyphicon glyphicon-floppy-disk"></span> Save draft</button>
-            <button class="btn btn-success" id="vs_publish"><span class="glyphicon glyphicon-globe"></span> ${this.status === 'published' ? 'Update published sheet' : 'Publish'}</button>` : ''}
+            <button class="btn btn-success" id="vs_publish"><span class="glyphicon glyphicon-globe"></span> ${this.status === 'published' ? 'Update published profile' : 'Publish'}</button>` : ''}
             <button class="btn btn-default" id="vs_print"><span class="glyphicon glyphicon-print"></span> Print / save as PDF</button>
             ${this.sheetId ? `<a class="btn btn-link" href="/variety_sheet/${this.sheetId}" target="_blank">Open profile page</a>` : ''}
             <span class="text-muted vs-pub-state">${this.status === 'published' ? 'Published: anyone with the link can see it.' : 'Drafts are visible to you and curators only.'}</span>
@@ -1254,6 +1312,9 @@ class Editor {
         const s = this.sheet;
         if (!s) return;
         if (!(s.commercial_name || '').trim()) { this.message('Give the variety a commercial name first (step 2).', 'warning'); this.go(1); return; }
+        if (status === 'published' && this.acc.require_meeting && !(s.decisions || []).some(d => d && d.meeting_id)) {
+            this.message('Link this profile to at least one decision meeting before publishing it (step 2).', 'warning'); this.go(1); return;
+        }
         if (status === 'published' && this.status !== 'published' && !confirm('Publish this profile? Anyone with the link will be able to see it.')) return;
         const opts = (this.nameCheck && this.nameCheck.conflicts.length) || !this.acc.can_save_names ? {} : this.nameOptions;
         const btns = this.root.find('.vs-save-draft, #vs_save_draft2, #vs_publish').prop('disabled', true);
@@ -1277,9 +1338,9 @@ class Editor {
 function newSheetSkeleton() {
     return {
         version: VERSION, performance: { source: 'trials', checks: [], traits: [], results: null }, ratings: { traits: [], results: null },
-        characteristics: [], images: [], evidence: {},
+        characteristics: [], images: [], evidence: {}, decisions: [],
         text: { pedigree: '', market: '', production: '', disease: '', recommendations: '', acknowledgements: '', availability: '', contact: '' },
-        options: { show_pedigree: true, show_map: true, show_pct_chart: true, show_year_chart: true, show_stats: true, show_testing: true, accent: ACCENTS[0], photo_columns: 3 },
+        options: { show_pedigree: true, show_decisions: true, show_map: true, show_pct_chart: true, show_year_chart: true, show_stats: true, show_testing: true, accent: ACCENTS[0], photo_columns: 3 },
     };
 }
 
@@ -1313,7 +1374,7 @@ export function initView(root, row) {
     const sheet = Object.assign(newSheetSkeleton(), row.sheet);
     sheet.text = Object.assign(newSheetSkeleton().text, sheet.text || {});
     sheet.options = Object.assign(newSheetSkeleton().options, sheet.options || {});
-    el.html(renderSheet(sheet, { url: location.origin + '/variety_sheet/' + row.variety_sheet_id }));
+    el.html(renderSheet(sheet, { url: location.origin + '/variety_sheet/' + row.variety_sheet_id, link_meetings: !!row.can_edit }));
     drawMaps(el, sheet);
 }
 

@@ -45,6 +45,12 @@ sub _can_edit {
     return $self->_is_curator($c);
 }
 
+# sgn_local.conf: variety_profile_require_meeting 1
+sub _require_meeting {
+    my ($self, $c) = @_;
+    return ($c->config->{variety_profile_require_meeting} // '') =~ /^\s*(1|yes|true|on)\s*$/i ? 1 : 0;
+}
+
 sub _is_curator {
     my ($self, $c) = @_;
     return $c->user() && $c->user->check_roles('curator') ? 1 : 0;
@@ -121,6 +127,9 @@ sub accession_summary : Path('/ajax/variety_sheet/accession_summary') Args(0) {
     $self->_fail($c, $r->{error}) if $r->{error};
     $r->{images} = $self->_images($c, $schema, $stock_id);
     $r->{can_edit} = $self->_can_edit($c);
+    $r->{require_meeting} = $self->_require_meeting($c);
+    # meeting decisions and comments are internal: only the editors (curators) get them
+    $r->{meetings} = [] unless $r->{can_edit};
     $r->{can_save_names} = ($c->user() && (any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'breeder' } $c->user->roles())) ? 1 : 0;
     $c->stash->{rest} = $r;
 }
@@ -274,6 +283,9 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     $self->_fail($c, 'A commercial name is required.') unless length $name;
     $self->_fail($c, 'The commercial name is too long (max 100 characters).') if length($name) > 100;
     $sheet->{commercial_name} = $name;
+    $self->_fail($c, 'Link this profile to at least one decision meeting before publishing it.')
+        if $status eq 'published' && $self->_require_meeting($c)
+           && !(ref $sheet->{decisions} eq 'ARRAY' && grep { ref $_ eq 'HASH' && $_->{meeting_id} } @{ $sheet->{decisions} });
     my $size = length(encode_json($sheet));
     $self->_fail($c, 'The profile is too large.') if $size > 2_000_000;
 

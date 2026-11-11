@@ -85,7 +85,45 @@ sub accession_summary {
     $r{analyses} = $class->analyses_with_accession($schema, $stock_id);
     $r{suggested_checks} = $class->suggested_checks($schema, $stock_id);
     $r{sheets} = $class->list_sheets($schema, { stock_id => $stock_id });
+    $r{meetings} = $class->decision_meetings($schema, $stock_id);
     return \%r;
+}
+
+=head2 decision_meetings($schema, $stock_id)
+
+Every decision meeting (project with design 'Meeting') where the accession
+was discussed, oldest first, with the decision taken for it in each one:
+[{ meeting_id, meeting_name, date, location, program, decision,
+   previous_stage, new_stage, comment }]
+
+=cut
+
+sub decision_meetings {
+    my ($class, $schema, $stock_id) = @_;
+    my $json_type = _cvterm_id($schema, 'meeting_json', 'project_property');
+    return [] unless $json_type;
+    my $rows = eval {
+        $schema->storage->dbh->selectall_arrayref(
+            "WITH m AS (
+                 SELECT DISTINCT ON (pp.project_id) pp.project_id, p.name, pp.value
+                   FROM projectprop pp JOIN project p ON p.project_id = pp.project_id
+                  WHERE pp.type_id = ? AND pp.value LIKE '%' || ? || '%'
+                  ORDER BY pp.project_id, pp.projectprop_id DESC)
+             SELECT m.project_id, m.name, m.value::jsonb->>'meeting_name', m.value::jsonb->>'date',
+                    coalesce(m.value::jsonb->>'location_name', m.value::jsonb->>'location'),
+                    e->>'breeding_program', e->>'decision', e->>'previous_stage', e->>'new_stage',
+                    coalesce(nullif(e->>'save_comment', ''), e->>'notes')
+               FROM m, jsonb_array_elements(CASE WHEN jsonb_typeof(m.value::jsonb->'accessions') = 'array'
+                                                 THEN m.value::jsonb->'accessions' ELSE '[]'::jsonb END) e
+              WHERE e->>'stock_id' = ?
+              ORDER BY 4 NULLS FIRST, 1",
+            undef, $json_type, $stock_id, "$stock_id");
+    } || [];
+    return [ map { {
+        meeting_id => $_->[0] + 0, meeting_name => $_->[2] || $_->[1], date => $_->[3] // '', location => $_->[4] // '',
+        program => $_->[5] // '', decision => $_->[6] // '', previous_stage => $_->[7] // '', new_stage => $_->[8] // '',
+        comment => $_->[9] // '',
+    } } @$rows ];
 }
 
 =head2 pedigree($schema, $stock_id)
@@ -538,8 +576,8 @@ sub get_sheet {
     return _decode_row($r);
 }
 
-# For viewers who cannot edit: drop the pedigree when the owner chose to hide
-# it, so the parents are not sent in the page or the JSON either.
+# For viewers who cannot edit: drop the pedigree / decision history when the
+# owner chose to hide them, so they are not sent in the page or the JSON either.
 sub strip_hidden {
     my ($class, $row) = @_;
     my $s = $row && $row->{sheet};
@@ -548,6 +586,7 @@ sub strip_hidden {
         delete $s->{pedigree};
         $s->{text}{pedigree} = '' if ref $s->{text} eq 'HASH';
     }
+    delete $s->{decisions} if exists $s->{options}{show_decisions} && !$s->{options}{show_decisions};
     return $row;
 }
 
