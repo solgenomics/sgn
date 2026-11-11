@@ -1,69 +1,293 @@
 {
- "about": "Small synthetic browser message files for the i18n unit tests. Not real translations.",
- "catalogs": {
-  "ar": {
-   "api": 1,
-   "direction": "rtl",
-   "languageName": "العربية",
-   "locale": "ar",
-   "messages": {
-    "trials.count\u0004%{count} trial found": {"forms": ["ar[0] %{count}", "ar[1] %{count}", "ar[2] %{count}", "ar[3] %{count}", "ar[4] %{count}", "ar[5] %{count}"], "plural": "%{count} trials found"}
-   },
-   "nplurals": 6,
-   "pluralAst": {"expr": {"expr": {"expr": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 0}, "type": "EQ"}, "falsey": {"expr": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 1}, "type": "EQ"}, "falsey": {"expr": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 2}, "type": "EQ"}, "falsey": {"expr": {"left": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 100}, "type": "MOD"}, "right": {"type": "NUM", "val": 3}, "type": "GTE"}, "right": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 100}, "type": "MOD"}, "right": {"type": "NUM", "val": 10}, "type": "LTE"}, "type": "AND"}, "falsey": {"expr": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 100}, "type": "MOD"}, "right": {"type": "NUM", "val": 11}, "type": "GTE"}, "falsey": {"type": "NUM", "val": 5}, "truthy": {"type": "NUM", "val": 4}, "type": "TERNARY"}, "truthy": {"type": "NUM", "val": 3}, "type": "TERNARY"}, "truthy": {"type": "NUM", "val": 2}, "type": "TERNARY"}, "truthy": {"type": "NUM", "val": 1}, "type": "TERNARY"}, "truthy": {"type": "NUM", "val": 0}, "type": "TERNARY"}, "type": "GROUP"}, "type": "GROUP"},
-   "pluralForms": "nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);",
-   "schema": 1
-  },
-  "pt-BR": {
-   "api": 1,
-   "direction": "ltr",
-   "locale": "pt-BR",
-   "messages": {
-    "trials.count\u0004%{count} trial found": {"forms": ["pt-BR[0] %{count}", "pt-BR[1] %{count}"], "plural": "%{count} trials found"}
-   },
-   "nplurals": 2,
-   "pluralAst": {"expr": {"expr": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 1}, "type": "GT"}, "type": "GROUP"}, "type": "GROUP"},
-   "pluralForms": "nplurals=2; plural=(n > 1);",
-   "schema": 1
-  },
-  "pt-PT": {
-   "api": 1,
-   "direction": "ltr",
-   "locale": "pt-PT",
-   "messages": {
-    "trials.count\u0004%{count} trial found": {"forms": ["pt-PT[0] %{count}", "pt-PT[1] %{count}"], "plural": "%{count} trials found"}
-   },
-   "nplurals": 2,
-   "pluralAst": {"expr": {"expr": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 1}, "type": "NEQ"}, "type": "GROUP"}, "type": "GROUP"},
-   "pluralForms": "nplurals=2; plural=(n != 1);",
-   "schema": 1
-  },
-  "uk": {
-   "api": 1,
-   "direction": "ltr",
-   "languageName": "Українська",
-   "locale": "uk",
-   "messages": {
-    "\u0004Save": {"forms": ["Зберегти без контексту"], "plural": null},
-    "auth.login.title\u0004Login": {"forms": ["Вхід"], "plural": null},
-    "controls.save\u0004Save": {"forms": ["Зберегти"], "plural": null},
-    "footer.location\u0004%{site_name} is located at the %{institute}.": {"forms": ["%{site_name} розміщено в %{institute}."], "plural": null},
-    "footer.version\u0004Version": {"forms": ["Версія"], "plural": null},
-    "language.apply\u0004Apply": {"forms": ["Застосувати"], "plural": null},
-    "language.select\u0004Language": {"forms": ["Мова"], "plural": null},
-    "navigation.analyze.kinship\u0004Kinship & Inbreeding": {"forms": ["Спорідненість і інбридинг"], "plural": null},
-    "navigation.login.confirm_logout\u0004Are you sure you want to log out?": {"forms": ["Вийти з облікового запису?"], "plural": null},
-    "navigation.login.sign_in\u0004Login": {"forms": ["Увійти"], "plural": null},
-    "navigation.manage.menu\u0004Manage": {"forms": ["Керування"], "plural": null},
-    "navigation.search.menu\u0004Search": {"forms": ["Пошук"], "plural": null},
-    "seedlots.save\u0004Save": {"forms": ["Зберегти партію"], "plural": null},
-    "trial.named\u0004Created trial %{name}.": {"forms": ["Створено дослід %{name}."], "plural": null},
-    "trials.count\u0004%{count} trial found": {"forms": ["Знайдено %{count} дослід", "Знайдено %{count} досліди", "Знайдено %{count} дослідів"], "plural": "%{count} trials found"}
-   },
-   "nplurals": 3,
-   "pluralAst": {"expr": {"expr": {"expr": {"left": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 10}, "type": "MOD"}, "right": {"type": "NUM", "val": 1}, "type": "EQ"}, "right": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 100}, "type": "MOD"}, "right": {"type": "NUM", "val": 11}, "type": "NEQ"}, "type": "AND"}, "falsey": {"expr": {"left": {"left": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 10}, "type": "MOD"}, "right": {"type": "NUM", "val": 2}, "type": "GTE"}, "right": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 10}, "type": "MOD"}, "right": {"type": "NUM", "val": 4}, "type": "LTE"}, "type": "AND"}, "right": {"expr": {"left": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 100}, "type": "MOD"}, "right": {"type": "NUM", "val": 10}, "type": "LT"}, "right": {"left": {"left": {"type": "VAR"}, "right": {"type": "NUM", "val": 100}, "type": "MOD"}, "right": {"type": "NUM", "val": 20}, "type": "GTE"}, "type": "OR"}, "type": "GROUP"}, "type": "AND"}, "falsey": {"type": "NUM", "val": 2}, "truthy": {"type": "NUM", "val": 1}, "type": "TERNARY"}, "truthy": {"type": "NUM", "val": 0}, "type": "TERNARY"}, "type": "GROUP"}, "type": "GROUP"},
-   "pluralForms": "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);",
-   "schema": 1
+  "about": "Small synthetic browser message files for the i18n unit tests. Not real translations.",
+  "catalogs": {
+    "ar": {
+      "api": 1,
+      "direction": "rtl",
+      "languageName": "العربية",
+      "locale": "ar",
+      "messages": {
+        "trials.count\u0004%{count} trial found": {
+          "forms": [
+            "ar[0] %{count}",
+            "ar[1] %{count}",
+            "ar[2] %{count}",
+            "ar[3] %{count}",
+            "ar[4] %{count}",
+            "ar[5] %{count}"
+          ],
+          "plural": "%{count} trials found"
+        }
+      },
+      "nplurals": 6,
+      "pluralAst": {
+        "expr": {
+          "expr": {
+            "expr": {
+              "left": { "type": "VAR" },
+              "right": { "type": "NUM", "val": 0 },
+              "type": "EQ"
+            },
+            "falsey": {
+              "expr": {
+                "left": { "type": "VAR" },
+                "right": { "type": "NUM", "val": 1 },
+                "type": "EQ"
+              },
+              "falsey": {
+                "expr": {
+                  "left": { "type": "VAR" },
+                  "right": { "type": "NUM", "val": 2 },
+                  "type": "EQ"
+                },
+                "falsey": {
+                  "expr": {
+                    "left": {
+                      "left": {
+                        "left": { "type": "VAR" },
+                        "right": { "type": "NUM", "val": 100 },
+                        "type": "MOD"
+                      },
+                      "right": { "type": "NUM", "val": 3 },
+                      "type": "GTE"
+                    },
+                    "right": {
+                      "left": {
+                        "left": { "type": "VAR" },
+                        "right": { "type": "NUM", "val": 100 },
+                        "type": "MOD"
+                      },
+                      "right": { "type": "NUM", "val": 10 },
+                      "type": "LTE"
+                    },
+                    "type": "AND"
+                  },
+                  "falsey": {
+                    "expr": {
+                      "left": {
+                        "left": { "type": "VAR" },
+                        "right": { "type": "NUM", "val": 100 },
+                        "type": "MOD"
+                      },
+                      "right": { "type": "NUM", "val": 11 },
+                      "type": "GTE"
+                    },
+                    "falsey": { "type": "NUM", "val": 5 },
+                    "truthy": { "type": "NUM", "val": 4 },
+                    "type": "TERNARY"
+                  },
+                  "truthy": { "type": "NUM", "val": 3 },
+                  "type": "TERNARY"
+                },
+                "truthy": { "type": "NUM", "val": 2 },
+                "type": "TERNARY"
+              },
+              "truthy": { "type": "NUM", "val": 1 },
+              "type": "TERNARY"
+            },
+            "truthy": { "type": "NUM", "val": 0 },
+            "type": "TERNARY"
+          },
+          "type": "GROUP"
+        },
+        "type": "GROUP"
+      },
+      "pluralForms": "nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);",
+      "schema": 1
+    },
+    "pt-BR": {
+      "api": 1,
+      "direction": "ltr",
+      "locale": "pt-BR",
+      "messages": {
+        "trials.count\u0004%{count} trial found": {
+          "forms": ["pt-BR[0] %{count}", "pt-BR[1] %{count}"],
+          "plural": "%{count} trials found"
+        }
+      },
+      "nplurals": 2,
+      "pluralAst": {
+        "expr": {
+          "expr": {
+            "left": { "type": "VAR" },
+            "right": { "type": "NUM", "val": 1 },
+            "type": "GT"
+          },
+          "type": "GROUP"
+        },
+        "type": "GROUP"
+      },
+      "pluralForms": "nplurals=2; plural=(n > 1);",
+      "schema": 1
+    },
+    "pt-PT": {
+      "api": 1,
+      "direction": "ltr",
+      "locale": "pt-PT",
+      "messages": {
+        "trials.count\u0004%{count} trial found": {
+          "forms": ["pt-PT[0] %{count}", "pt-PT[1] %{count}"],
+          "plural": "%{count} trials found"
+        }
+      },
+      "nplurals": 2,
+      "pluralAst": {
+        "expr": {
+          "expr": {
+            "left": { "type": "VAR" },
+            "right": { "type": "NUM", "val": 1 },
+            "type": "NEQ"
+          },
+          "type": "GROUP"
+        },
+        "type": "GROUP"
+      },
+      "pluralForms": "nplurals=2; plural=(n != 1);",
+      "schema": 1
+    },
+    "uk": {
+      "api": 1,
+      "direction": "ltr",
+      "languageName": "Українська",
+      "locale": "uk",
+      "messages": {
+        "\u0004Save": { "forms": ["Зберегти без контексту"], "plural": null },
+        "auth.login.title\u0004Login": { "forms": ["Вхід"], "plural": null },
+        "controls.save\u0004Save": { "forms": ["Зберегти"], "plural": null },
+        "footer.location\u0004%{site_name} is located at the %{institute}.": {
+          "forms": ["%{site_name} розміщено в %{institute}."],
+          "plural": null
+        },
+        "footer.version\u0004Version": { "forms": ["Версія"], "plural": null },
+        "language.apply\u0004Apply": {
+          "forms": ["Застосувати"],
+          "plural": null
+        },
+        "language.select\u0004Language": { "forms": ["Мова"], "plural": null },
+        "navigation.analyze.kinship\u0004Kinship & Inbreeding": {
+          "forms": ["Спорідненість і інбридинг"],
+          "plural": null
+        },
+        "navigation.login.confirm_logout\u0004Are you sure you want to log out?": {
+          "forms": ["Вийти з облікового запису?"],
+          "plural": null
+        },
+        "navigation.login.sign_in\u0004Login": {
+          "forms": ["Увійти"],
+          "plural": null
+        },
+        "navigation.manage.menu\u0004Manage": {
+          "forms": ["Керування"],
+          "plural": null
+        },
+        "navigation.search.menu\u0004Search": {
+          "forms": ["Пошук"],
+          "plural": null
+        },
+        "seedlots.save\u0004Save": {
+          "forms": ["Зберегти партію"],
+          "plural": null
+        },
+        "trial.named\u0004Created trial %{name}.": {
+          "forms": ["Створено дослід %{name}."],
+          "plural": null
+        },
+        "trials.count\u0004%{count} trial found": {
+          "forms": [
+            "Знайдено %{count} дослід",
+            "Знайдено %{count} досліди",
+            "Знайдено %{count} дослідів"
+          ],
+          "plural": "%{count} trials found"
+        }
+      },
+      "nplurals": 3,
+      "pluralAst": {
+        "expr": {
+          "expr": {
+            "expr": {
+              "left": {
+                "left": {
+                  "left": { "type": "VAR" },
+                  "right": { "type": "NUM", "val": 10 },
+                  "type": "MOD"
+                },
+                "right": { "type": "NUM", "val": 1 },
+                "type": "EQ"
+              },
+              "right": {
+                "left": {
+                  "left": { "type": "VAR" },
+                  "right": { "type": "NUM", "val": 100 },
+                  "type": "MOD"
+                },
+                "right": { "type": "NUM", "val": 11 },
+                "type": "NEQ"
+              },
+              "type": "AND"
+            },
+            "falsey": {
+              "expr": {
+                "left": {
+                  "left": {
+                    "left": {
+                      "left": { "type": "VAR" },
+                      "right": { "type": "NUM", "val": 10 },
+                      "type": "MOD"
+                    },
+                    "right": { "type": "NUM", "val": 2 },
+                    "type": "GTE"
+                  },
+                  "right": {
+                    "left": {
+                      "left": { "type": "VAR" },
+                      "right": { "type": "NUM", "val": 10 },
+                      "type": "MOD"
+                    },
+                    "right": { "type": "NUM", "val": 4 },
+                    "type": "LTE"
+                  },
+                  "type": "AND"
+                },
+                "right": {
+                  "expr": {
+                    "left": {
+                      "left": {
+                        "left": { "type": "VAR" },
+                        "right": { "type": "NUM", "val": 100 },
+                        "type": "MOD"
+                      },
+                      "right": { "type": "NUM", "val": 10 },
+                      "type": "LT"
+                    },
+                    "right": {
+                      "left": {
+                        "left": { "type": "VAR" },
+                        "right": { "type": "NUM", "val": 100 },
+                        "type": "MOD"
+                      },
+                      "right": { "type": "NUM", "val": 20 },
+                      "type": "GTE"
+                    },
+                    "type": "OR"
+                  },
+                  "type": "GROUP"
+                },
+                "type": "AND"
+              },
+              "falsey": { "type": "NUM", "val": 2 },
+              "truthy": { "type": "NUM", "val": 1 },
+              "type": "TERNARY"
+            },
+            "truthy": { "type": "NUM", "val": 0 },
+            "type": "TERNARY"
+          },
+          "type": "GROUP"
+        },
+        "type": "GROUP"
+      },
+      "pluralForms": "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);",
+      "schema": 1
+    }
   }
- }
 }

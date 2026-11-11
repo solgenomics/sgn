@@ -1,9 +1,6 @@
 {
   "schema": 1,
-  "common_context_prefixes": [
-    "navigation.",
-    "auth."
-  ],
+  "common_context_prefixes": ["navigation.", "auth."],
   "common_sources": [
     "lib/SGN/Controller/AJAX/User.pm",
     "mason/i18n/language_selector.mas",
