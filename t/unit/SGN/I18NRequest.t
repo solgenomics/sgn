@@ -206,8 +206,9 @@ subtest 'language selector action' => sub {
 
     $c = context(i18n_enabled => 0);
     $c->req->{params}{locale} = 'uk';
-    SGN::Controller::I18N->language($c);
-    is($c->res->status, 405, 'refused when translation is off');
+    my $lived = eval { SGN::Controller::I18N->language($c); 1 };
+    ok(!$lived && $@ =~ /^404/, '/i18n/language is not found when translation is off, as without this feature');
+    ok(!exists $c->res->cookies->{sgn_locale}, '... and no cookie is set');
 };
 
 done_testing();

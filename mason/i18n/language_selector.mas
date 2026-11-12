@@ -20,6 +20,7 @@ The choice is saved in a cookie by SGN::Controller::I18N.
     // Keep the #fragment too, which the server never sees.
     var select = document.getElementById('sgn-language');
     if (!select) return;
+    if (window.SGN && SGN.I18N && SGN.I18N.keepSelectorLanguage) SGN.I18N.keepSelectorLanguage(select, window);
     select.form.addEventListener('submit', function () {
         this.elements.return_to.value = window.location.pathname + window.location.search + window.location.hash;
     });

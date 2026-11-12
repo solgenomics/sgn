@@ -275,6 +275,37 @@
         });
     };
     /**
+     * Keep the language selector showing the language of the page. Some page
+     * scripts reset every <select> on the page (for example on the stock
+     * search page) or bind page-wide <select> handlers (double-click opens a
+     * detail page). After the page has loaded, and when it is shown again from
+     * the browser history, the option marked selected by the server is shown
+     * again, unless the user has changed the selector. Double-clicks on the
+     * selector do not reach other handlers.
+     * @param {Object} select The selector element.
+     * @param {Object} target Usually window.
+     */
+    I18N.keepSelectorLanguage = function (select, target) {
+        var changedByUser = false;
+        function showPageLanguage() {
+            if (changedByUser) return;
+            for (var i = 0; i < select.options.length; i++) {
+                if (select.options[i].defaultSelected) {
+                    select.selectedIndex = i;
+                    return;
+                }
+            }
+        }
+        select.addEventListener('change', function () { changedByUser = true; });
+        select.addEventListener('dblclick', function (event) { event.stopImmediatePropagation(); });
+        // After the load handlers of the page, which may reset selects too.
+        target.addEventListener('load', function () { target.setTimeout(showPageLanguage, 0); });
+        target.addEventListener('pageshow', function (event) {
+            if (event.persisted) changedByUser = false;
+            showPageLanguage();
+        });
+    };
+    /**
      * Define SGN.t and SGN.tn on a global object. They always use the current
      * SGN.i18n, so a later bootstrap can replace the catalog.
      * @param {Object} target Usually window.

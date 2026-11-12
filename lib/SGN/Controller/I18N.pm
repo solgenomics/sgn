@@ -64,10 +64,11 @@ not changed. Unknown languages and external return addresses are rejected.
 
 sub language :Path('/i18n/language') Args(0) {
     my ($self, $c) = @_;
-    if (!$c->config->{i18n_enabled} || $c->req->method ne 'POST') {
+    $c->throw_404 unless $c->config->{i18n_enabled};
+    if ($c->req->method ne 'POST') {
         $c->res->status(405);
         $c->res->headers->header('Allow' => 'POST');
-        $c->res->body('Language selection requires an enabled feature and POST.');
+        $c->res->body('Language selection requires POST.');
         return;
     }
     my $locale = $c->req->param('locale') || '';

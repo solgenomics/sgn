@@ -275,3 +275,34 @@ test('AJAX requests to the same site send the page language', () => {
     assert.deepEqual(send({ crossDomain: false }), { 'X-SGN-Locale': 'uk' }, 'the language actually shown');
     assert.deepEqual(send({ crossDomain: true }), {}, 'no header for other sites');
 });
+
+test('the language selector shows the page language after page scripts reset it', () => {
+    const listeners = (owner) => {
+        const handlers = {};
+        owner.addEventListener = (type, handler) => { (handlers[type] = handlers[type] || []).push(handler); };
+        owner.fire = (type, event) => (handlers[type] || []).forEach((handler) => handler(event || {}));
+        return owner;
+    };
+    const page = listeners({ setTimeout(callback) { callback(); } });
+    const options = [{ defaultSelected: false }, { defaultSelected: true }, { defaultSelected: false }];
+    const select = listeners({ options, selectedIndex: 1 });
+    I18N.keepSelectorLanguage(select, page);
+
+    select.selectedIndex = 0;    // a page script resets every <select>
+    page.fire('load');
+    assert.equal(select.selectedIndex, 1, 'the page language is shown again after load');
+    select.selectedIndex = 0;
+    page.fire('pageshow', { persisted: false });
+    assert.equal(select.selectedIndex, 1, '... and when the page is shown again');
+
+    let stopped = false;
+    select.fire('dblclick', { stopImmediatePropagation() { stopped = true; } });
+    assert.ok(stopped, 'page-wide double-click handlers do not get the selector');
+
+    select.selectedIndex = 2;    // the user picks another language
+    select.fire('change');
+    page.fire('load');
+    assert.equal(select.selectedIndex, 2, 'the choice of the user is kept');
+    page.fire('pageshow', { persisted: true });
+    assert.equal(select.selectedIndex, 1, 'back from the history: the page language again');
+});
