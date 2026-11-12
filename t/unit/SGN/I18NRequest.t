@@ -211,4 +211,22 @@ subtest 'language selector action' => sub {
     ok(!exists $c->res->cookies->{sgn_locale}, '... and no cookie is set');
 };
 
+subtest 'browser messages can be kept per language and build' => sub {
+    my $version = SGN::I18N->new(locale => 'uk', dir => $root)->version;
+    like($version, qr/\A[0-9]+-[0-9]+\z/, 'the version is the time and size of the language file');
+    is(SGN::I18N->new(locale => 'en', dir => $root)->version, '', 'English has no version');
+    my $bootstrap = sub {
+        my (%params) = @_;
+        my $c = context();
+        $c->req->{params} = { workflow => 'trial_card', %params };
+        SGN::Controller::I18N->bootstrap($c);
+        return $c->res->headers->header('Cache-Control');
+    };
+    is($bootstrap->(lang => 'uk', v => $version), 'private, max-age=31536000, immutable',
+        'language from the address and the current version: the browser may keep it');
+    is($bootstrap->(lang => 'uk'), 'private, no-store', 'no version: not stored');
+    is($bootstrap->(lang => 'uk', v => '1-1'), 'private, no-store', 'an old version: not stored');
+    is($bootstrap->(v => $version), 'private, no-store', 'language from the cookie or the browser: not stored');
+};
+
 done_testing();

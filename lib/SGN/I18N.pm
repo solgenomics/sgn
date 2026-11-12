@@ -87,6 +87,7 @@ sub new {
         language_name => 'English',
         chain => [],
         root => $args{dir},
+        version => '',
     }, $class;
     return $self if $requested eq 'en' || !defined $args{dir};
     croak 'Invalid translation directory' if ref $args{dir};
@@ -124,6 +125,11 @@ sub new {
             if length($name) <= 200 && $name !~ /[\x00-\x1f\x7f-\x9f\x{2028}\x{2029}]/;
     }
     $self->{dir} = 'rtl' if $header =~ /^X-SGN-Direction:[ \t]*rtl[ \t]*$/m;
+    # The build replaces all files at once, so the .mo files identify it.
+    $self->{version} = join '.', map {
+        my @stat = stat File::Spec->catfile($args{dir}, 'LocaleData', $_, 'LC_MESSAGES', "$DOMAIN.mo");
+        @stat ? "$stat[9]-$stat[7]" : '0';
+    } @{ $self->{chain} };
     return $self;
 }
 
@@ -131,6 +137,9 @@ sub locale { return $_[0]{locale}; }
 sub dir { return $_[0]{dir}; }
 sub requested_locale { return $_[0]{requested_locale}; }
 sub language_name { return $_[0]{language_name}; }
+sub version { return $_[0]{version}; }
+
+sub gettext_available { local ($_, $@, $!); return _gettext_available(); }
 
 sub _lookup {
     my ($self, @message) = @_;
@@ -373,6 +382,17 @@ Text direction of the language used: C<ltr> or C<rtl>.
 
 Native name of the language (C<English> for English, the tag when the file
 has no name). Escape it when you print it.
+
+=head2 version
+
+A short text that changes when the installed language files change (their
+modification time and size); empty for English. The page puts it into the
+F</i18n/bootstrap.js> address, so browsers can keep that file.
+
+=head2 gettext_available
+
+Class function: true when libintl-perl can be used. The first call without
+it logs the one warning.
 
 =head2 browser_catalog($section)
 

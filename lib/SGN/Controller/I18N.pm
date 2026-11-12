@@ -37,8 +37,11 @@ sub runtime :Path('/i18n/runtime.js') Args(0) {
 
 =head2 bootstrap
 
-GET F</i18n/bootstrap.js?lang=...&workflow=...>: the messages of the request
-language for the browser (the C<common> section plus the page's section).
+GET F</i18n/bootstrap.js?lang=...&workflow=...&v=...>: the messages of the
+request language for the browser (the C<common> section plus the page's
+section). When C<lang> chose the language and C<v> is the version of the
+installed language files, the address alone fixes the answer, so the browser
+may keep it; otherwise it must not be stored.
 
 =cut
 
@@ -47,9 +50,13 @@ sub bootstrap :Path('/i18n/bootstrap.js') Args(0) {
     $c->throw_404 unless $c->config->{i18n_enabled};
     # Catalyst encodes response text. ASCII JSON preserves Unicode as JSON
     # escapes and prevents applying UTF-8 a second time to response bytes.
-    my $json = JSON->new->canonical->ascii->encode($c->i18n->browser_catalog($c->req->param('workflow')));
+    my $i18n = $c->i18n;
+    my $json = JSON->new->canonical->ascii->encode($i18n->browser_catalog(scalar $c->req->param('workflow')));
+    my $version = $c->req->param('v');
+    my $fixed = ($c->stash->{i18n_locale_source} // '') eq 'query'
+        && length($i18n->version) && defined($version) && !ref($version) && $version eq $i18n->version;
     $c->res->content_type('application/javascript; charset=UTF-8');
-    $c->res->headers->header('Cache-Control' => 'private, no-store');
+    $c->res->headers->header('Cache-Control' => $fixed ? 'private, max-age=31536000, immutable' : 'private, no-store');
     $c->res->headers->header('X-Content-Type-Options' => 'nosniff');
     $c->res->body('window.SGN = window.SGN || {}; if (typeof window.SGN.I18N === "function") window.SGN.i18n = new window.SGN.I18N(' . $json . ");\n");
 }

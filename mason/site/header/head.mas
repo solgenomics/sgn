@@ -1,7 +1,7 @@
 <!-- INSERT_HEAD_PRE_HTML -->
 % if ($c->config->{i18n_enabled}) {
 <script src="/i18n/runtime.js"></script>
-<script src="/i18n/bootstrap.js?lang=<% $c->i18n->requested_locale |u %>&amp;workflow=<% $page_section |u %>"></script>
+<script src="/i18n/bootstrap.js?lang=<% $c->i18n->requested_locale |u %>&amp;workflow=<% $page_section |u %>&amp;v=<% $c->i18n->version |u %>"></script>
 % }
 
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -62,8 +62,7 @@ my $page_section = '';
 if ($c->config->{i18n_enabled}) {
     $page_section = SGN::I18N::workflow_for_source(
         $c->path_to('locale', 'workflows.json')->stringify,
-        $c->req->path, $c->stash->{template},
-        $m->request_comp->path, $m->base_comp->path,
+        $c->req->path, $c->stash->{template}, $m->request_comp->path,
     ) // '';
 }
 </%init>

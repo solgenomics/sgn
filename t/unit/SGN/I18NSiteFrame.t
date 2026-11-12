@@ -67,6 +67,7 @@ my $missing = missing_requirement();
     sub user     { return }
     sub get_conf { return $_[0]->config->{ $_[1] } }
     sub path_to  { shift; return Path::Class::file(Cwd::abs_path('.'), @_) }
+    sub finalize_headers { }
 }
 
 my $translations = $missing ? '/nonexistent' : build_translations(tempdir(CLEANUP => 1));
@@ -145,6 +146,8 @@ subtest 'translation on: Ukrainian' => sub {
     like($html, qr{<html lang="uk" dir="ltr" data-sgn-locale="uk">}, 'page language and direction');
     like($html, qr{/i18n/runtime\.js.*/i18n/bootstrap\.js\?lang=uk&workflow=.*/js/page-scripts\.js}s,
         'translation scripts load before the page scripts');
+    like($html, qr{/i18n/bootstrap\.js\?lang=uk&workflow=&v=[0-9]+-[0-9]+"},
+        'a page without its own section gets only the common messages; the address names the build');
     like($html, qr{<!-- INSERT_HEAD_POST_HTML -->\n<script>SGN\.I18N\.sendLocaleWithAjax\(jQuery, window\);</script>},
         'AJAX requests send the page language; set up after the marker where SGN inserts jQuery');
     like($html, qr{>Керування</a>}, 'menu translated');
