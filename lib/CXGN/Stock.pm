@@ -570,20 +570,22 @@ sub BUILD {
     }
 
     if ($stock_id) {
-	my @objects;
-	my $object_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_objects();
-	foreach my $object ($object_rs->all()) {
-	    push @objects, [ $object->object->stock_id, $object->object->uniquename(), $object->type->name() ];
-	}
-	$self->objects(\@objects);
+	# [stock_id, uniquename, relationship type] of the relationship's object
+	# (incoming) and subject (outgoing), read with one query each
+	my $dbh = $self->schema()->storage()->dbh();
+	my $object_h = $dbh->prepare(
+	    "SELECT s.stock_id, s.uniquename, t.name FROM stock_relationship r
+	     JOIN stock s ON s.stock_id = r.object_id JOIN cvterm t ON t.cvterm_id = r.type_id
+	     WHERE r.object_id = ?");
+	$object_h->execute($self->stock_id());
+	$self->objects($object_h->fetchall_arrayref());
 
-	my @subjects;
-	my $subject_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_subjects();
-	foreach my $subject ($subject_rs->all()) {
-	    push @subjects, [ $subject->subject->stock_id, $subject->subject->uniquename(), $subject->type->name() ];
-	}
-
-	$self->subjects(\@subjects);
+	my $subject_h = $dbh->prepare(
+	    "SELECT s.stock_id, s.uniquename, t.name FROM stock_relationship r
+	     JOIN stock s ON s.stock_id = r.subject_id JOIN cvterm t ON t.cvterm_id = r.type_id
+	     WHERE r.subject_id = ?");
+	$subject_h->execute($self->stock_id());
+	$self->subjects($subject_h->fetchall_arrayref());
     }
 
     return $self;
