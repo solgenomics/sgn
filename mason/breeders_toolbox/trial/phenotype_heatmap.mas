@@ -614,7 +614,7 @@ $trial_stock_type => undef
 
                       <div class="form-group">
                         <div class="col-sm-12 list-group-item-warning" >
-                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. If a plot name template is saved in assocation with this trial, it will be used to rename the plot unless a new plot name is manually specified. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
                         </div>
                       </div>
 
@@ -1352,7 +1352,7 @@ jQuery(document).ready( function() {
 
       var new_accession = jQuery('#hm_accession').val();
       var new_plot_name = jQuery('#hm_new_plot_name').val();
-      var old_accession = jQuery('#hm_plot_accession').html();
+      var old_accession = jQuery('#hm_plot_accession').text();
       var old_plot_id = jQuery('#hm_plot_id').html();
       var old_plot_name = jQuery('#hm_plot_name').html();
 
@@ -1384,7 +1384,7 @@ jQuery(document).ready( function() {
         },
         error: function () {
           jQuery('#working_modal').modal("hide");
-          alert('An error occurred replacing plot accession');
+          alert('A server error occurred replacing plot accession - see console.');
         }
       });
     }

@@ -67,6 +67,15 @@ has '_location_code_map' => (
     required => 0
 );
 
+has '_plot_name_template_map' => (
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_plot_name_template_map',
+    reader => '_get_plot_name_template_map',
+    predicate => '_has_plot_name_template_map',
+    required => 0
+);
+
 has 'trial_stock_type' => (
     isa => 'Str',
     is => 'rw',
@@ -82,6 +91,22 @@ has 'trial_name' => (
     reader => 'get_trial_name',
     predicate => 'has_trial_name',
     required => 0
+);
+
+has 'plot_name_template' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_plot_name_template',
+    required => 0,
+    default => ''
+);
+
+has 'breeding_program_name' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_breeding_program_name',
+    required => 0,
+    default => ''
 );
 
 has 'facility_identifiers_included' => (

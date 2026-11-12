@@ -1,6 +1,5 @@
 <%args>
-    $trait_root
-    $db_name
+    $db_names
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
@@ -11,11 +10,15 @@
     <br>
 
    <div class="container-fluid">
-        <form class="form-horizontal" role="form" method="post" id="new_trait_design_form" name="new_trait_design_form">
+        <ul class="nav nav-pills nav-justified" id="new_trait_term_type_tabs" style="width:70%;margin:0 auto 2em auto;">
+            <li class="active"><a data-toggle="pill" href="#new_trait_variable_term_pane">New Trait Variable</a></li>
+            <li><a data-toggle="pill" href="#new_trait_ontology_term_pane">New Ontology (Grouping) Term</a></li>
+        </ul>
+        <form class="form-horizontal" role="form" method="post" id="new_trait_design_form" name="new_trait_design_form" autocomplete="off">
         <div class="form-group">
                 <label class="col-sm-3 control-label"> New trait name: </label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_trait_name" name="new_trait_name" type="text" placeholder="ASCII characters only. Non-ASCII characters and pipes (|) will be removed."/>
+                    <input style="width:70%;" class="form-control" id="new_trait_name" name="new_trait_name" type="text" placeholder="Pipes (|)  will be removed from name."/>
                 </div>
             </div>
             <div class="form-group">
@@ -25,19 +28,34 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Trait format:</label>
+                <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="The ontology that the new term will belong to. This is separate from the parent term(s) that the new term is chained to."></span>&nbsp;Trait ontology:</label>
                 <div class="col-sm-9">
-                    <select style="width:70%;" class="form-control" id="new_trait_format_select" name="new_trait_format_select" type="select">
-                        <option value="Numeric" selected>Numeric</option>
-                        <option value="Categorical">Categorical</option>
-                        <option value="Percent">Percent</option>
-                        <option value="Boolean">Boolean</option>
-                        <option value="Date">Date</option>
-                        <option value="Text">Text</option>
-                        <option value="Counter">Counter</option>
-                        <option value="ontology">Ontology (parent to child terms)</option>
+                    <select style="width:70%;" class="form-control" id="new_trait_ontology_select" name="new_trait_ontology_select" type="select">
+%                   foreach my $ontology_db_name (grep { $_ } map { $_ =~ s/^\s+|\s+$//gr } split(",", $db_names)) {
+                        <option value="<% $ontology_db_name %>"><% $ontology_db_name %></option>
+%                   }
                     </select>
                 </div>
+            </div>
+            <div class="tab-content">
+                <div id="new_trait_variable_term_pane" class="tab-pane active">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Trait format:</label>
+                        <div class="col-sm-9">
+                            <select style="width:70%;" class="form-control" id="new_trait_format_select" name="new_trait_format_select" type="select">
+                                <option value="numeric" selected>Numeric</option>
+                                <option value="categorical">Categorical</option>
+                                <option value="percent">Percent</option>
+                                <option value="boolean">Boolean</option>
+                                <option value="date">Date</option>
+                                <option value="text">Text</option>
+                                <option value="counter">Counter</option>
+                                <option value="image">Photo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="new_trait_ontology_term_pane" class="tab-pane"></div>
             </div>
             <div class="form-group" id="new_trait_repeat_select_container">
                 <label class="col-sm-3 control-label">Measurement type:</label>
@@ -79,6 +97,7 @@
                     </table>
                     <table id="new_trait_categories" style="width:30%;">
                     </table>
+                    <em id="new_trait_category_none" style="display:block;">None added</em>
                     <button id="new_trait_remove_category_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
             </div>
@@ -93,7 +112,22 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                         </tr>
                     </table>
                     <ul id="new_trait_parents" style="text-align:left;width:70%;padding-left:1em;list-style-type:disc;"></ul>
+                    <em id="new_trait_parent_none" style="display:block;">None added</em>
                     <button id="new_trait_remove_parent_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
+                </div>
+            </div>
+            <div class="form-group" id="new_trait_synonyms_container">
+                <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Alternate names for the new term. Synonyms must not already exist in the database."></span>&nbsp;Add synonyms:</label>
+                <div class="col-sm-9">
+                    <table style="width:70%;">
+                        <tr>
+                            <td><input class="form-control" id="new_trait_synonym" name="new_trait_synonym" type="text" placeholder="Optional. Pipes (|) will be removed."/></td>
+                            <td><button id="new_trait_add_synonym_btn" class="btn btn-small btn-success">+</button></td>
+                        </tr>
+                    </table>
+                    <ul id="new_trait_synonyms" style="text-align:left;width:70%;padding-left:1em;list-style-type:disc;"></ul>
+                    <em id="new_trait_synonym_none" style="display:block;">None added</em>
+                    <button id="new_trait_remove_synonym_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
             </div>
         </form>
@@ -101,25 +135,51 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
     </div>
 </div>
 
+<table style="50%">
+    <tr>
+        <td>
+            <select id="trait_ontology_download_select" class="form-control">
+                <option value="">Download trait ontology...</option>
+            </select>
+        </td>
+        <td>
+            <button id="download_ontology_btn" class="btn btn-primary"><span class="glyphicon glyphicon-floppy-save"></span></button>
+        </td>
+    </tr>
+</table>
 
-<button id="download_ontology_btn" class="btn btn-primary">Download Trait Ontology</button>
+
 <br>
 <br>
-<& /ontology/embedded_browser.mas, cvterm => $trait_root &>
+% 
+% my $root_nodes = $db_names =~ s/,/ /gr;
+% 
+<&| /page/info_section.mas, title=>"Trait terms", collapsible=>1 &>
+    <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>1 &>
+</&>
+
 
 <script>
     jQuery(document).ready(function () {
 
-        jQuery('#new_trait_submit_btn').on('click', function () {
+        jQuery('#new_trait_submit_btn').on('click', function (e) {
+
+            let pending_parent_term = jQuery('#new_trait_parent_term').val().trim();
+            if (pending_parent_term && jQuery('#new_trait_parents li').length === 0) {
+                e.preventDefault();
+                alert("Did you finish entering parent terms? You entered " + pending_parent_term + ", but did not add it to the list of parents.");
+                return;
+            }
 
             jQuery('#working_modal').modal("show");
 
             let name = jQuery('#new_trait_name').val();
             let definition = jQuery('#new_trait_definition').val();
-            let format = jQuery('#new_trait_format_select').val();
+            let format = get_new_trait_format();
+            let ontology_db_name = jQuery('#new_trait_ontology_select').val();
             let default_value = jQuery('#new_trait_default_value').val();
-            let minimum = jQuery('#new_trait_minimum').val();
-            let maximum = jQuery('#new_trait_maximum').val();
+            let minimum = jQuery('#new_trait_min_value').val();
+            let maximum = jQuery('#new_trait_max_value').val();
             let repeat_type = jQuery('#new_trait_repeat_select').val();
             let categories = JSON.parse(html_table_to_json(jQuery('#new_trait_categories').html()));
             let cat_list = [];
@@ -135,6 +195,13 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 parent_terms.push(jQuery(this).text());
             });
             let parent_terms_json = JSON.stringify(parent_terms);
+            let synonyms = [];
+            if (format !== 'ontology') {
+                jQuery('#new_trait_synonyms li').each(function() {
+                    synonyms.push(jQuery(this).text());
+                });
+            }
+            let synonyms_json = JSON.stringify(synonyms);
 
             jQuery.ajax({
                 url: '/ajax/trait/create',
@@ -148,11 +215,17 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                     categories : categories,
                     category_details : category_details,
                     parent_terms : parent_terms_json,
-                    repeat_type : repeat_type
+                    synonyms : synonyms_json,
+                    repeat_type : repeat_type,
+                    ontology_db_name : ontology_db_name,
+                    parent_dbs : "<% $db_names %>"
                 },
                 success: function(response) {
                     jQuery('#working_modal').modal("hide");
-                    if (response.error) {
+                    if (response.error && response.term_stored) {
+                        alert(response.error);
+                        window.location.reload();
+                    } else if (response.error) {
                         alert(response.error);
                     } else {
                         alert("New trait saved.");
@@ -168,7 +241,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
         });
 
         jQuery('#new_trait_parent_term').autocomplete({
-            source : '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>"
+            source : '/ajax/cvterm/autocompleteslim' + "?db_names=<% $db_names %>"
         });
 
         jQuery('#new_trait_add_parent_btn').on('click', function(e) {
@@ -177,7 +250,28 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             if (parent_term) {
                 jQuery('<li>').text(parent_term).appendTo('#new_trait_parents');
                 jQuery('#new_trait_remove_parent_btn').show();
+                jQuery('#new_trait_parent_none').hide();
                 jQuery('#new_trait_parent_term').val('');
+            }
+        });
+
+        jQuery('#new_trait_add_synonym_btn').on('click', function(e) {
+            e.preventDefault();
+            let synonym = jQuery('#new_trait_synonym').val().trim();
+            if (synonym) {
+                jQuery('<li>').text(synonym).appendTo('#new_trait_synonyms');
+                jQuery('#new_trait_remove_synonym_btn').show();
+                jQuery('#new_trait_synonym_none').hide();
+                jQuery('#new_trait_synonym').val('');
+            }
+        });
+
+        jQuery('#new_trait_remove_synonym_btn').on('click', function(e) {
+            e.preventDefault();
+            jQuery('#new_trait_synonyms li:last').remove();
+            if (jQuery('#new_trait_synonyms li').length === 0) {
+                jQuery('#new_trait_remove_synonym_btn').hide();
+                jQuery('#new_trait_synonym_none').show();
             }
         });
 
@@ -186,11 +280,34 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             jQuery('#new_trait_parents li:last').remove();
             if (jQuery('#new_trait_parents li').length === 0) {
                 jQuery('#new_trait_remove_parent_btn').hide();
+                jQuery('#new_trait_parent_none').show();
             }
         });
 
+        function get_new_trait_format() {
+            if (jQuery('#new_trait_ontology_term_pane').hasClass('active')) {
+                return 'ontology';
+            }
+            return jQuery('#new_trait_format_select').val();
+        }
+
+        // Prototype.js (loaded by the ontology browser) adds Element#hide, which jQuery calls natively
+        // when Bootstrap triggers 'hide.bs.tab' on the outgoing pill, hiding it. Shadow it on the pills.
+        jQuery('#new_trait_term_type_tabs a[data-toggle="pill"]').each(function () {
+            this.hide = null;
+        });
+
+        jQuery('#new_trait_term_type_tabs a[data-toggle="pill"]').on('shown.bs.tab', function () {
+            update_new_trait_form();
+        });
+
         jQuery('#new_trait_format_select').on('change', function () {
-            let trait_type = jQuery(this).val();
+            update_new_trait_form();
+        });
+
+        function update_new_trait_form() {
+            let trait_type = get_new_trait_format();
+            jQuery('#new_trait_synonyms_container').toggle(trait_type !== 'ontology');
             if (trait_type.toLowerCase() === 'numeric') {
                 jQuery('#new_trait_minimum_value_container').show();
                 jQuery('#new_trait_default_value_container').show();
@@ -268,8 +385,17 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('');
                 jQuery('#new_trait_max_value').val('');
+            } else if (trait_type.toLowerCase() === 'image') {
+                jQuery('#new_trait_minimum_value_container').hide();
+                jQuery('#new_trait_maximum_value_container').hide();
+                jQuery('#new_trait_add_categories_container').hide();
+                jQuery('#new_trait_default_value_container').hide();
+                jQuery('#new_trait_repeat_select_container').show();
+                jQuery('#new_trait_default_value').val('');
+                jQuery('#new_trait_min_value').val('');
+                jQuery('#new_trait_max_value').val('');
             }
-        });
+        }
 
         jQuery('#new_trait_add_category_btn').on('click',function(e) {
             e.preventDefault();
@@ -297,6 +423,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_categories').html(table_str);
                 if (Object.keys(table_elems).length > 0) {
                     jQuery('#new_trait_remove_category_btn').css('display', '');
+                    jQuery('#new_trait_category_none').hide();
                 }
             }
             jQuery('#new_trait_add_category').val('');
@@ -311,23 +438,73 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             delete table_elems[max_key];
             if (Object.keys(table_elems).length == 0) {
                 jQuery('#new_trait_remove_category_btn').css('display', 'none');
+                jQuery('#new_trait_category_none').show();
             }
             table_str = json_to_html_table(table_elems);
             jQuery('#new_trait_categories').html(table_str);
         });
 
-        jQuery('#download_ontology_btn').click(function() {
+        let ontology_db_names = "<% $db_names %>".split(",");
+        ontology_db_names.forEach(function (db_name) {
+            db_name = db_name.trim();
+            if (db_name) {
+                jQuery('#trait_ontology_download_select').append(
+                    jQuery('<option>', { value : db_name, text : db_name })
+                );
+                jQuery('#trait_cvtermpath_rebuild_select').append(
+                    jQuery('<option>', { value : db_name, text : db_name })
+                );
+            }
+        });
+
+        jQuery('#trait_rebuild_cvtermpath_btn').click(function() {
+
+            let db_name = jQuery('#trait_cvtermpath_rebuild_select').val();
+
+            if (!db_name || db_name == null || db_name == "") {
+                alert("Please select a CV before rebuilding its cvterm paths.");
+                return;
+            }
 
             jQuery('#working_modal').modal("show");
 
-            fetch("/ajax/onto/download_obo/<% $db_name %>")
+            jQuery.ajax({
+                url: '/ajax/onto/make_cvtermpath/' + db_name,
+                method: 'GET',
+                success: function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                        return;
+                    }
+                    alert(response.success);
+                },
+                error: function(xhr, status, error) {
+                    jQuery('#working_modal').modal("hide");
+                    alert("An error occurred starting the cvterm path rebuild: " + error);
+                }
+            });
+        });
+
+        jQuery('#download_ontology_btn').click(function() {
+
+            let db_name = jQuery('#trait_ontology_download_select').val();
+
+            if (!db_name || db_name == null || db_name == "") {
+                alert("Please select an ontology.");
+                return;
+            }
+
+            jQuery('#working_modal').modal("show");
+
+            fetch(`/ajax/onto/download_obo/${db_name}`)
                 .then(response => response.blob())
                 .then(blob => {
                     jQuery('#working_modal').modal("hide");
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = "<% $db_name %>.txt";
+                    a.download = `${db_name}.txt`;
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
@@ -339,6 +516,8 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                     console.error('Download failed:', error)
                 });
         });
+
+        // jQuery("[title='ontology browser input form']").hide();
 
         function html_table_to_json(html_str) {
             let list = html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== '');

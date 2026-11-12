@@ -36,6 +36,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Calendar;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -238,7 +239,11 @@ sub search {
         $locations{ $row->nd_geolocation_id() } = $row->description();
     }
 
+    # Filter values can come straight from request parameters, so they are
+    # passed as bind values. The numeric id lists stay inline: Moose only
+    # accepts integers for them (ArrayRef[Int]).
     my @where_clause;
+    my @where_params;
 
     if ($trial_has_tissue_samples){
         push @where_clause, "trial_has_tissue_samples.value IS NOT NULL";
@@ -249,19 +254,19 @@ sub search {
         push @where_clause, "breeding_program.project_id in ($sql)";
     }
     if ($program_list && scalar(@$program_list)>0) {
-        my $sql = join ("','" , @$program_list);
-        my $program_sql = "'" . $sql . "'";
+        my $program_sql = join (",", ("?") x @$program_list);
         push @where_clause, "breeding_program.name in ($program_sql)";
+        push @where_params, @$program_list;
     }
     if ($year_list && scalar(@$year_list)>0) {
-        my $sql = join ("','" , @$year_list);
-        my $year_sql = "'" . $sql . "'";
+        my $year_sql = join (",", ("?") x @$year_list);
         push @where_clause, "year.value in ($year_sql)";
+        push @where_params, @$year_list;
     }
     if ($trial_type_list && scalar(@$trial_type_list)>0) {
-        my $sql = join ("','" , @$trial_type_list);
-        my $trial_type_sql = "'" . $sql . "'";
+        my $trial_type_sql = join (",", ("?") x @$trial_type_list);
         push @where_clause, "(trial_type_name.name in ($trial_type_sql) OR projectprop.value in ($trial_type_sql))";
+        push @where_params, @$trial_type_list, @$trial_type_list;
     }
     if ($trial_id_list && scalar(@$trial_id_list)>0) {
         my $sql = join ("," , @$trial_id_list);
@@ -269,15 +274,16 @@ sub search {
     }
     if ($trial_name_is_exact){
         if ($trial_name_list && scalar(@$trial_name_list)>0) {
-            my $sql = join ("','" , @$trial_name_list);
-            my $trial_sql = "'" . $sql . "'";
+            my $trial_sql = join (",", ("?") x @$trial_name_list);
             push @where_clause, "study.name in ($trial_sql)";
+            push @where_params, @$trial_name_list;
         }
     } else {
         if ($trial_name_list && scalar(@$trial_name_list)>0) {
             my @or_clause;
             foreach (@$trial_name_list){
-                push @or_clause, "study.name LIKE '%".$_."%'";
+                push @or_clause, "study.name LIKE '%' || ? || '%'";
+                push @where_params, $_;
             }
             my $sql = join (" OR " , @or_clause);
             push @where_clause, "($sql)";
@@ -288,19 +294,19 @@ sub search {
         push @where_clause, "folder.project_id in ($sql)";
     }
     if ($folder_name_list && scalar(@$folder_name_list)>0) {
-        my $sql = join ("','" , @$folder_name_list);
-        my $folder_sql = "'" . $sql . "'";
+        my $folder_sql = join (",", ("?") x @$folder_name_list);
         push @where_clause, "folder.name in ($folder_sql)";
+        push @where_params, @$folder_name_list;
     }
     if ($trial_design_list && scalar(@$trial_design_list)>0) {
-        my $sql = join ("','" , @$trial_design_list);
-        my $design_sql = "'" . $sql . "'";
+        my $design_sql = join (",", ("?") x @$trial_design_list);
         push @where_clause, "design.value in ($design_sql)";
+        push @where_params, @$trial_design_list;
     }
     if ($location_id_list && scalar(@$location_id_list)>0) {
-        my $sql = join ("','" , @$location_id_list);
-        my $location_sql = "'" . $sql . "'";
+        my $location_sql = join (",", ("?") x @$location_id_list);
         push @where_clause, "location.value in ($location_sql)";
+        push @where_params, @$location_id_list;
     }
     my $accession_join = '';
     if ( ($accession_list && scalar(@$accession_list)>0) || ($accession_name_list && scalar(@$accession_name_list)>0) ) {
@@ -311,9 +317,9 @@ sub search {
         push @where_clause, "accession.stock_id in ($sql)";
     }
     if ($accession_name_list && scalar(@$accession_name_list)>0) {
-        my $sql = join ("','" , @$accession_name_list);
-        my $accession_sql = "'" . $sql . "'";
+        my $accession_sql = join (",", ("?") x @$accession_name_list);
         push @where_clause, "accession.uniquename in ($accession_sql)";
+        push @where_params, @$accession_name_list;
     }
 
     my $trait_join = '';
@@ -325,21 +331,23 @@ sub search {
 
     my @refSource_whereClause = ();
     foreach my $refSource (@$externalReferenceSources){
-        push @refSource_whereClause, "'$refSource' = ANY(xref.xrefSources)"
+        push @refSource_whereClause, "? = ANY(xref.xrefSources)"
     }
     my $refSource_whereClause_str = join (" OR " ,@refSource_whereClause);
     if ($refSource_whereClause_str){
         push @where_clause, "( $refSource_whereClause_str )";
+        push @where_params, @$externalReferenceSources;
     }
 
     # see  https://plant-breeding-api.readthedocs.io/en/latest/docs/best_practices/Search_Services.html#request-and-response-rules
     my @refId_whereClause = ();
     foreach my $refId (@$externalReferenceIds){
-        push @refId_whereClause, "'$refId' = ANY(xref.xrefIds)"
+        push @refId_whereClause, "? = ANY(xref.xrefIds)"
     }
     my $refId_whereClause_str = join (" OR " ,@refId_whereClause);
     if ($refSource_whereClause_str){
         push @where_clause, "( $refId_whereClause_str )";
+        push @where_params, @$externalReferenceIds;
     }
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
@@ -391,7 +399,7 @@ sub search {
 
     print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
+    $h->execute(@where_params);
 
     my @result;
     my $total_count = 0;
@@ -446,12 +454,12 @@ sub search {
             genotyping_facility_plate_id  => $genotyping_facility_plate_id,
             sampling_facility             => $sampling_facility,
             sampling_trial_sample_type    => $sampling_facility_sample_type,
-            additional_info               => $project_additional_info ? decode_json($project_additional_info) : undef
+            additional_info               => $project_additional_info ? decode_stored_json($project_additional_info) : undef
         };
         $total_count = $full_count;
     }
 
-    #pagination in sql query not possible unitl we have project_class explicitly
+    #pagination in sql query not possible until we have project_class explicitly
     my @data_window;
     if (($limit && defined($limit) || ($offset && defined($offset)))){
         my $start = $offset;

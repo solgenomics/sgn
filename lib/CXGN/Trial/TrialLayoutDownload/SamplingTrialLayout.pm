@@ -43,7 +43,7 @@ sub retrieve {
     my $trial = $self->trial;
     my @output;
 
-    my @possible_cols = ('trial_name', 'year', 'planting_date', 'location', 'sampling_facility', 'sampling_trial_sample_type', 'acquisition_date', 'tissue_sample_name', 'plot_number', 'rep_number', 'source_observation_unit_name', 'accession_name', 'synonyms', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume');
+    my @possible_cols = ('trial_name', 'year', 'planting_date', 'location', 'sampling_facility', 'sampling_trial_sample_type', 'acquisition_date', 'tissue_sample_name', 'plot_number', 'rep_number', 'source_observation_unit_name', 'accession_name', 'synonyms', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'variety');
 
     my @header;
     foreach (@possible_cols){
@@ -63,6 +63,13 @@ sub retrieve {
     my $sampling_type = $schema->resultset("Project::Projectprop")->search({ project_id => $trial->get_trial_id(), type_id => $sampling_trial_sample_type_cvterm_id } )->first->value();
 
     my $pedigree_strings = $self->_get_all_pedigrees(\%design);
+
+    # for accession stockprops like synonym and variety, it is way too slow to create a CXGN::Stock::Accession for each plot.
+    # Instead, there needs to be one big call at the start to retrieve these stockprops and index them for the next loop
+    my %accessionprops = ();
+    if ($selected_cols{"variety"} || $selected_cols{"synonyms"}) {
+        %accessionprops = %{$self->_get_trial_accessionprops()};
+    }
 
     foreach my $key (sort { $a cmp $b} keys %design) {
         my $design_info = $design{$key};
@@ -84,8 +91,9 @@ sub retrieve {
                 } elsif ($_ eq 'tissue_sample_name'){
                     push @$line, $design_info->{'plot_name'};
                 } elsif ($_ eq 'synonyms'){
-                    my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, join ',', @{$accession->synonyms}
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{synonyms} // "";
+                } elsif ($_ eq 'variety'){
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{variety} // "";
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } else {

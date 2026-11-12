@@ -23,6 +23,7 @@ $trial_stock_type
 $trial_stock_count
 $trial_owner
 $latest_trial_activity => undef
+$plot_name_template => undef
 
 </%args>
 
@@ -92,6 +93,18 @@ $dah = _days_since($harvest_date);
 my $display_dap_dah = eval { $c->get_conf('display_dap_dah') } ? 1 : 0;
 my $dap_display = $display_dap_dah ? _limit_days_display($dap, _positive_integer_conf('limit_dap')) : undef;
 my $dah_display = $display_dap_dah ? _limit_days_display($dah, _positive_integer_conf('limit_dah')) : undef;
+
+my ($plot_name_template_name, $plot_name_template_display);
+if ($plot_name_template) {
+    require JSON;
+    my $tmpl = eval { JSON::decode_json($plot_name_template) };
+    if ($tmpl) {
+        ($plot_name_template_name) = keys %$tmpl;
+        my $name_attributes = $tmpl->{$plot_name_template_name}->{name_attributes} || [];
+        my @parts = map { ref $_ eq 'HASH' ? ($_->{text} // '') : '{' . $_ . '}' } @$name_attributes;
+        $plot_name_template_display = join('_', @parts);
+    }
+}
 </%init>
 
 
@@ -276,6 +289,18 @@ my $dah_display = $display_dap_dah ? _limit_days_display($dah, _positive_integer
                         </div>
                     </td>
                 </tr>
+
+% if ($plot_name_template_display) {
+            <tr>
+                <td><b>Plot Name Template</b></td>
+                <td>
+                    <div id="plot_name_template">
+                        <div><b><% $plot_name_template_name %></b></div>
+                        <div><% $plot_name_template_display %></div>
+                    </div>
+                </td>
+            </tr>
+% }
 
         </table>
 

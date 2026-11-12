@@ -7,7 +7,7 @@ use Carp qw/ carp confess croak /;
 use Cache::File;
 use CXGN::Tools::Run;
 use File::Temp qw / tempfile tempdir /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use File::Path qw / make_path /;
 use File::Copy;
@@ -454,7 +454,7 @@ sub correlation_cache_dir {
     my ($self, $c) = @_;
 
     my $corr_analysis_id = $c->stash->{corr_pop_id} || $c->stash->{trial_id} || $c->stash->{training_pop_id};
-    my $corr_cache_dir = catdir($c->stash->{correlation_dir}, $corr_analysis_id, 'cache');
+    my $corr_cache_dir = File::Spec->catdir($c->stash->{correlation_dir}, $corr_analysis_id, 'cache');
 
     return $corr_cache_dir;
 
@@ -464,7 +464,7 @@ sub correlation_cache_dir {
 sub correlation_temp_dir {
     my ($self, $c) = @_;
     my $corr_analysis_id = $c->stash->{corr_pop_id} || $c->stash->{trial_id};
-    my $corr_temp_dir = catdir($c->stash->{correlation_dir}, $corr_analysis_id, 'tempfiles');
+    my $corr_temp_dir = File::Spec->catdir($c->stash->{correlation_dir}, $corr_analysis_id, 'tempfiles');
 
     make_path($corr_temp_dir, { mode => oct('0755') });
 

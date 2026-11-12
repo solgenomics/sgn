@@ -244,15 +244,15 @@ export function WizardDownloads(main_id,wizard){
     var locations = categories.indexOf("locations")!=-1 ? selections["locations"] : [];
     var years = categories.indexOf("years")!=-1 ? selections["years"] : [];
     var tissue_samples = categories.indexOf("tissue_sample")!=-1 ? selections["tissue_sample"] : [];
-    var protocols = categories.indexOf("protocols")!=-1 ? selections["protocols"] : [];
+    var hdp_protocols = categories.indexOf("protocols")!=-1 ? selections["protocols"] : [];
     var instances = categories.indexOf("instances")!=-1 ? selections["instances"] : [];
 
     main.selectAll(".wizard-download-high-dim-phenotypes-info")
       .attr("value",`${trials.length||"Too few"} trials`);
     main.selectAll(".wizard-download-high-dim-phenotypes-protocol-info")
-      .attr("value", protocols.length === 1 ? `${protocols.length} protocols` : protocols.length > 1 ? "Please select only 1 protocol" : "No protocol selected");
+      .attr("value", hdp_protocols.length === 1 ? `${hdp_protocols.length} protocols` : hdp_protocols.length > 1 ? "Please select only 1 protocol" : "No protocol selected");
     main.selectAll(".wizard-download-high-dim-phenotypes")
-      .attr("disabled",trials.length>0 && protocols.length<=1 ? null:true)
+      .attr("disabled",trials.length>0 && hdp_protocols.length<=1 ? null:true)
       .on("click",()=>{
         var trial_ids = JSON.stringify(trials.map(d=>d.id));
         var accession_ids = JSON.stringify(accessions.map(d=>d.id));
@@ -261,7 +261,7 @@ export function WizardDownloads(main_id,wizard){
         var plant_ids = JSON.stringify(plants.map(d=>d.id));
         var location_ids = JSON.stringify(locations.map(d=>d.id));
         var year_ids = JSON.stringify(years.map(d=>d.id));
-        var protocol_ids = JSON.stringify(protocols.map(d=>d.id));
+        var hdp_protocol_ids = JSON.stringify(hdp_protocols.map(d=>d.id));
         var instance_ids = JSON.stringify(instances.map(d=>d.id));
 
         var speed = d3.select(".wizard-download-high-dim-phenotypes-speed").node().value;
@@ -291,7 +291,7 @@ export function WizardDownloads(main_id,wizard){
             plant_list: plant_ids,
             location_list: location_ids,
             year_list: year_ids,
-            protocol_list: protocol_ids,
+            protocol_list: hdp_protocol_ids,
             instance_list: instance_ids,
             //dataLevel: level,
             data_type: "high_dimensional",

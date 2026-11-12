@@ -223,7 +223,7 @@ sub store {
 
 		my $name = $params->{programName} || undef;
 		my $desc = $params->{objective} || 'N/A'; # needs an objective due to db constraints
-		my $external_references = $params->{externalReferences};
+		my $external_references = $params->{externalReferences} || []; # optional in BrAPI
 
 		my $p = CXGN::BreedersToolbox::Projects->new({
 			schema              => $schema,
@@ -238,7 +238,7 @@ sub store {
 			warn $new_program->{'error'};
 
 			my $code = 500;
-			if($new_program->('nameExists') == 1) {
+			if($new_program->{'nameExists'}) {
 				$code = 409;
 			}
 			return CXGN::BrAPI::JSONResponse->return_error($self->status, $new_program->{'error'}, $code);

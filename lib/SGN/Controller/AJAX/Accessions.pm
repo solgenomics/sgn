@@ -355,7 +355,9 @@ sub verify_fuzzy_options_POST : Args(0) {
     my $fuzzy_option_hash = decode_json( encode("utf8", $c->req->param('fuzzy_option_data')));
     my $names_to_add = _parse_list_from_json($c, $c->req->param('names_to_add'));
     #print STDERR Dumper $fuzzy_option_hash;
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } );
+    my $list = $accession_list_id
+        ? CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } )
+        : undef;
 
     my %names_to_add = map {$_ => 1} @$names_to_add;
     foreach my $form_name (keys %$fuzzy_option_hash){
@@ -363,12 +365,12 @@ sub verify_fuzzy_options_POST : Args(0) {
         my $select_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_select'};
         my $fuzzy_option = $fuzzy_option_hash->{$form_name}->{'fuzzy_option'};
         if ($fuzzy_option eq 'replace'){
-            $list->replace_by_name($item_name, $select_name);
+            $list->replace_by_name($item_name, $select_name) if $list;
             delete $names_to_add{$item_name};
         } elsif ($fuzzy_option eq 'keep'){
             $names_to_add{$item_name} = 1;
         } elsif ($fuzzy_option eq 'remove'){
-            $list->remove_by_name($item_name);
+            $list->remove_by_name($item_name) if $list;
             delete $names_to_add{$item_name};
         } elsif ($fuzzy_option eq 'synonymize'){
             my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();

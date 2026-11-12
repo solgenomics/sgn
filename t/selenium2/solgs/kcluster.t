@@ -65,6 +65,7 @@ $d->while_logged_in_as(
     sub {
         $d->get_ok('/cluster/analysis', 'cluster home page'); sleep(5);
 
+        $d->select_datatable_tab('cluster_private_lists');
         $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -85,6 +86,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
+        $d->select_datatable_tab('cluster_private_lists');
         $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
@@ -105,6 +107,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
+        $d->select_datatable_tab('cluster_private_lists');
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -125,6 +128,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
+        $d->select_datatable_tab('cluster_private_lists');
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
@@ -148,6 +152,7 @@ $d->while_logged_in_as(
         remove_tree($cache_dir, {safe => 1});
         sleep(5);
 
+        $d->select_datatable_tab('cluster_private_lists');
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
@@ -168,6 +173,7 @@ $d->while_logged_in_as(
         $d->driver->go_back();
         sleep(5);
 
+        $d->select_datatable_tab('cluster_private_lists');
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
@@ -186,6 +192,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
+        $d->select_datatable_tab('cluster_private_datasets');
         $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -206,6 +213,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
+        $d->select_datatable_tab('cluster_private_datasets');
         $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
@@ -345,6 +353,7 @@ $d->while_logged_in_as(
         $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
         sleep(15);
 
+        $d->select_datatable_tab('list_type_selection_private_lists');
         $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
         sleep(5);
         $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -358,6 +367,7 @@ $d->while_logged_in_as(
         $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
         sleep(15);
 
+        $d->select_datatable_tab('list_type_selection_private_datasets');
         $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'list sel pred')->click();
         sleep(5);
         $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -1013,6 +1023,7 @@ $d->while_logged_in_as(
         $d->find_element_ok('Go back', 'partial_link_text', 'go back to combo trials multi models pg')->click();
         sleep(15);
 
+        $d->select_datatable_tab('list_type_selection_private_lists');
         $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
         sleep(5);
         $d->find_element_ok('queue_job', 'id', 'list type sel pop prediction job queueing')->click();
@@ -1026,6 +1037,7 @@ $d->while_logged_in_as(
         $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
         sleep(5);
 
+        $d->select_datatable_tab('list_type_selection_private_datasets');
         $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel pred')->click();
         sleep(5);
         $d->find_element_ok('queue_job', 'id', 'dataset sel pop prediction job queueing')->click();

@@ -203,10 +203,8 @@ sub parse {
                                     #print STDERR $trait_value." : ".$timestamp."\n";
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
-                                        if ($trait_value ne '.'){
-                                            ### for multiple values or time series, need to store all the values
-                                            push @{$data{$observationunit_name}->{$trait_name} }, [$trait_value, $timestamp];
-                                        }
+                                        ### for multiple values or time series, need to store all the values
+                                        push @{$data{$observationunit_name}->{$trait_name} }, [$trait_value, $timestamp];
                                     }
                                 }
                             }

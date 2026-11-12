@@ -4,8 +4,6 @@ $trial_id
 $stockref => undef
 </%args>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'd3.graphers.nirsDataLineGraph.js', 'd3.d3v4Min' ] &>
 
 <style>

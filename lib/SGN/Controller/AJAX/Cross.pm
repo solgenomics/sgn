@@ -27,7 +27,7 @@ use Data::Dumper;
 use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use Digest::MD5;
 use List::MoreUtils qw /any /;
 use List::MoreUtils 'none';
@@ -39,7 +39,7 @@ use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddProgeniesExistingAccessions;
 use CXGN::Pedigree::AddCrossInfo;
-use CXGN::Pedigree::AddFamilyNames;
+use CXGN::Pedigree::AddFamilyAndMembers;
 use CXGN::Pedigree::AddPopulations;
 use CXGN::Pedigree::AddCrossTransaction;
 use CXGN::Pedigree::ParseUpload;
@@ -48,7 +48,6 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Stock::StockLookup;
 use Carp;
 use File::Path qw(make_path);
-use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
 use JSON;
 use Tie::UrlEncoder; our(%urlencode);
@@ -386,7 +385,7 @@ sub get_membership :Path('/ajax/cross/membership') :Args(1) {
 
     foreach my $r (@$result){
         my ($crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name) =@$r;
-        push @membership_info, [qq{<a href="/breeders/trial/$crossing_experiment_id">$crossing_experiment_name</a>}, $description, qq{<a href = "/family/$family_id/">$family_name</a>}];
+        push @membership_info, [qq{<a href="/breeders/trial/$crossing_experiment_id">$crossing_experiment_name</a>}, $description, qq{<a href = "/stock/$family_id/view">$family_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@membership_info };
@@ -1617,7 +1616,7 @@ sub upload_family_names_POST : Args(0) {
         foreach my $cross_name(keys %family_name_hash){
             my $family_name = $family_name_hash{$cross_name};
 
-            my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({
+            my $family_name_add = CXGN::Pedigree::AddFamilyAndMembers->new({
                 chado_schema => $chado_schema,
                 phenome_schema => $phenome_schema,
                 dbh => $dbh,
@@ -1627,7 +1626,7 @@ sub upload_family_names_POST : Args(0) {
                 family_type => $family_type
             });
 
-            my $return = $family_name_add->add_family_name();
+            my $return = $family_name_add->add_family_and_members();
             my $error;
             if (!$return){
                 $error = "Error adding family name";

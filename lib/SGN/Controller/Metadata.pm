@@ -10,7 +10,7 @@ SGN::Controller::Metadata - stuff involving C<CXGN::Metadata>
 
 =cut
 
-use File::Spec::Functions 'catfile';
+use File::Spec;
 
 BEGIN { extends 'Catalyst::Controller' }
 

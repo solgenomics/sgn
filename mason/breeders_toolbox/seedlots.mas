@@ -166,6 +166,13 @@ $default_seedlot_material_type => undef
                 </div>
             </div>
         </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Discarded: </label>
+            <div class="col-sm-9 form-check form-check-inline align-bottom">
+              <input class="form-check-input" type="checkbox" id="search_seedlot_form_exclude_discarded" />
+              <label class="form-check-label" for="search_seedlot_form_exclude_discarded">exclude discarded seedlots from the search results?</label>
+            </div>
+        </div>
 
     </form>
     <div style="text-align: center">
@@ -227,7 +234,7 @@ $default_seedlot_material_type => undef
 </&>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
-<& /breeders_toolbox/upload_seedlots_dialogs.mas, default_seedlot_material_type=>$default_seedlot_material_type&>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas, default_seedlot_material_type=>$default_seedlot_material_type &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp, default_seedlot_material_type=>$default_seedlot_material_type &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
@@ -237,14 +244,14 @@ $default_seedlot_material_type => undef
 <& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
-<& /breeders_toolbox/upload_transactions_dialogs.mas&>
+<& /breeders_toolbox/upload_transactions_dialogs.mas &>
 <& /breeders_toolbox/add_transactions_using_list.mas &>
 
 
 <script>
 jQuery(document).ready(function(){
     jQuery("#search_seedlot_form_seedlot_name").autocomplete({
-       source: '/ajax/stock/seedlot_name_autocomplete',
+        source: '/ajax/stock/seedlot_name_autocomplete',
     });
     jQuery("#search_seedlot_form_trial_name").autocomplete({
         source: '/ajax/trials/trial_autocomplete'
@@ -252,6 +259,14 @@ jQuery(document).ready(function(){
 
     get_select_box('material_types', 'search_seedlot_form_material_type_div', { 'name' : 'search_seedlot_form_material_type', 'id' : 'search_seedlot_form_material_type', 'empty': 1 });
 
+    // Use the browser's localstorage to save user preference for default exclude discarded option
+    if ( window.localStorage ) {
+        var init = window.localStorage.getItem('SEEDLOT_SEARCH_EXCLUDE_DISCARDED') === 'true';
+        jQuery("#search_seedlot_form_exclude_discarded").prop("checked", init);
+        jQuery("#search_seedlot_form_exclude_discarded").change(function() {
+            window.localStorage.setItem('SEEDLOT_SEARCH_EXCLUDE_DISCARDED', this.checked);
+        });
+    }
 
     var seedlots_table;
 
@@ -297,6 +312,7 @@ jQuery(document).ready(function(){
                     d.trial_name = jQuery('#search_seedlot_form_trial_name').val();
                     d.trial_usage = jQuery('#search_seedlot_form_trial_usage').val();
                     d.material_type = jQuery('#search_seedlot_form_material_type').val();
+                    d.exclude_discarded = jQuery('#search_seedlot_form_exclude_discarded').is(":checked") ? 1 : 0;
                 }
             },
         });

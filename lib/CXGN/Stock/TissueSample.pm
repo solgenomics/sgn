@@ -339,7 +339,11 @@ sub _retrieve_trial {
     my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'field_layout', 'experiment_type')->cvterm_id();
     my $p_rs = $self->stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>[$field_experiment_cvterm_id, $genotyping_experiment_cvterm_id] })->search_related('nd_experiment_projects')->search_related('project');
     if ($p_rs->count != 1){
-        die "There is not one project linked to this stock!";
+        # A count other than one means no single trial can be named for this sample, so the
+        # attribute is left undefined. Raising an exception here caused every caller that read
+        # the accessor to fail. CXGN::BrAPI::v2::Samples tests `$s->get_trial` for truth before
+        # using it, so an undefined value is already handled.
+        return;
     }
     $self->get_trial([$p_rs->first->project_id, $p_rs->first->name]);
 }
@@ -349,7 +353,10 @@ sub _retrieve_plate {
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
     my $p_rs = $self->stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$genotyping_experiment_cvterm_id})->search_related('nd_experiment_projects')->search_related('project');
     if ($p_rs->count != 1){
-        die "There is not one project linked to this stock!";
+        # A tissue sample that is not a well on a genotyping plate has no plate to name. Such
+        # samples are created by the field-trial tissue sample tool and by sampling trials, so
+        # the attribute is left undefined rather than raising an exception.
+        return;
     }
     $self->get_plate([$p_rs->first->project_id, $p_rs->first->name]);
 }

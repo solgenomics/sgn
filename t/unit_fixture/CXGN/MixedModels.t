@@ -18,14 +18,15 @@ my $dir = Cwd::cwd();
 # create tempfile 
 my ($fh, $tempfile) = tempfile( "mixedmodelsXXXXXX", DIR => $dir."/static/documents/tempfiles/", UNLINK => 0 );
 
-my $job_finish_log = $f->config->{job_finish_log} ? $f->config->{job_finish_log} : '/home/production/volume/logs/job_finish.log';
-
 my $job_config = {
     schema => $f->bcs_schema(),
     people_schema => $f->people_schema(),
     name => 'unit_fixture mixed model test',
     user => 41,
-    finish_logfile => $job_finish_log
+    dbhost => $f->config->{dbhost},
+    dbname => $f->config->{dbname},
+    dbuser => $f->config->{dbuser},
+    dbpass => $f->config->{dbpass}
 };
 
 print STDERR "Using tempfile $tempfile\n";

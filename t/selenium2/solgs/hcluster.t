@@ -71,15 +71,12 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->get_ok('/cluster/analysis', 'cluster home page');
     sleep(1);
-    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select clones list')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(5);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->select_datatable_tab('cluster_private_lists');
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(1);
-  $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(5);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -93,15 +90,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $plots_list_name . '"]', 'xpath', 'select plots list')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(5);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->select_datatable_tab('cluster_private_lists');
+    $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
+    $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -115,15 +109,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(5);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->select_datatable_tab('cluster_private_lists');
+    $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(200);
@@ -138,15 +129,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(5);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->select_datatable_tab('cluster_private_lists');
+    $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
      sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(5);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(200);
@@ -159,15 +147,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(5);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->select_datatable_tab('cluster_private_datasets');
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(200);
@@ -180,15 +165,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(5);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->select_datatable_tab('cluster_private_datasets');
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(1);
-    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(200);
@@ -314,11 +296,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(15);
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'accessions list sl pop')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
-    sleep(5);
-    $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
+    $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'accessions list sl pop job queueing')->click();
     sleep(2);
@@ -332,11 +311,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(15);
 
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select dataset sel pop')->click();
-    sleep(5);
-    $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'list sel pred')->click();
+    $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'dataset selection prediction')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'dataset accessions job queueing')->click();
     sleep(2);
@@ -354,18 +330,9 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -200);", $sel_pops);
 
-    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
-    sleep(5);
-    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
-    sleep(5);
-    my $list = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop');
-    $list->click();
-    sleep(5);
-
-    my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
-    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);", $sel_pops);
-    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
-     sleep(15);
+    $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'open list selection population')->click();
+    sleep(15);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -391,14 +358,9 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);", $sel_pops);
     sleep(5);
-    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
-    sleep(5);
-
-    my $dataset = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
-    $dataset->click();
-    sleep(5);
-    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'GO select dataset sel popp')->click();
-     sleep(15);
+    $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'open dataset selection population')->click();
+    sleep(15);
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
@@ -427,13 +389,9 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);", $sel_pops);
     sleep(5);
-    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
-    sleep(5);
-    my $dataset = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
-    $dataset->click();
-    sleep(5);
-    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
-     sleep(15);
+    $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'open dataset selection population')->click();
+    sleep(15);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -930,11 +888,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(15);
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'list sl pop')->click();
-    sleep(10);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
-    sleep(5);
-    $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
+    $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(20);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
@@ -952,11 +907,8 @@ $d->while_logged_in_as("submitter", sub {
   #sleep(5);
 ########
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select dataset sel pop')->click();
-    sleep(5);
-    $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
+    $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'click dataset selection prediction')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'accessions dataset queue')->click();
     sleep(2);
@@ -1072,13 +1024,9 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);", $sel_pops);
     sleep(5);
-    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
-    sleep(5);
-    my $dataset = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
-    $dataset->click();
-    sleep(5);
-    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
-     sleep(15);
+    $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'open dataset selection population')->click();
+    sleep(15);
 
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
@@ -1105,15 +1053,9 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -200);", $sel_pops);
 
-    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
-    sleep(5);
-    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
-    sleep(5);
-    my $list = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop');
-    $list->click();
-    sleep(5);
-    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
-     sleep(15);
+    $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'open list selection population')->click();
+    sleep(15);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);

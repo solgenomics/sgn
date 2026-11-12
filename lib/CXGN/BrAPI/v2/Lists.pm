@@ -7,6 +7,7 @@ use CXGN::BrAPI::JSONResponse;
 use CXGN::TimeUtils;
 use SGN::Model::Cvterm;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -157,7 +158,7 @@ sub _fetch_additional_info {
 	# Convert JSON String ($additional_info_value) to JSON object ($additional_info_json)
 	my $additional_info_json;
 	if ($additional_info_value) {
-		$additional_info_json = JSON::XS::decode_json($additional_info_value);
+		$additional_info_json = decode_stored_json($additional_info_value);
 	}
 	else{
 		$additional_info_json = {};

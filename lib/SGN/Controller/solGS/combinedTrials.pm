@@ -9,7 +9,7 @@ use Cache::File;
 use Carp qw/ carp confess croak /;
 use CXGN::Tools::Run;
 use File::Path qw /make_path/;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file/;
 use File::Copy;
@@ -18,7 +18,7 @@ use JSON;
 use List::MoreUtils qw /uniq/;
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
-use String::CRC;
+use String::CRC32;
 use Try::Tiny;
 use URI::FromHash 'uri';
 
@@ -463,7 +463,7 @@ sub combine_populations : Path('/solgs/combine/populations/trait') Args() {
     my $ret->{status} = 0;
 
     if ( scalar(@pop_ids) > 1 ) {
-        $combo_pops_id                = crc( join( '', @pop_ids ) );
+        $combo_pops_id                = crc32( join( '', @pop_ids ) );
         $c->stash->{combo_pops_id}    = $combo_pops_id;
         $c->stash->{trait_combo_pops} = $ids;
 
@@ -1483,7 +1483,7 @@ sub create_combined_pops_id {
     my ( $self, $c ) = @_;
 
     $c->stash->{combo_pops_id} =
-      crc( join( '', @{ $c->stash->{pops_ids_list} } ) );
+      crc32( join( '', @{ $c->stash->{pops_ids_list} } ) );
 
 }
 

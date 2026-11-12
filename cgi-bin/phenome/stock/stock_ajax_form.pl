@@ -1,8 +1,8 @@
 use strict;
 use warnings;
 
-package CXGN::Phenome::Stock::StockForm;
-my $stock_form = CXGN::Phenome::Stock::StockForm->new();
+package stock_ajax_form;
+my $stock_form = stock_ajax_form->new();
 
 use base qw/CXGN::Page::Form::AjaxFormPage  /;
 
@@ -74,6 +74,9 @@ sub store {
     my $error;
     $stock->species($args{organism});
     $stock->type_id($args{type_id});
+    # CXGN::Stock::store() derives type_id from the type name, so set the name too
+    my $type = $args{type_id} ? $stock->schema->resultset("Cv::Cvterm")->find({ cvterm_id => $args{type_id} }) : undef;
+    $stock->type($type->name) if $type;
     $stock->name($args{uniquename});
     $stock->uniquename($args{uniquename});
     $stock->description($args{description});

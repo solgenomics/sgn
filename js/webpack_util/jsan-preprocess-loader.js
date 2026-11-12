@@ -2,7 +2,6 @@
 
 const path = require('path');
 const fs = require('fs');
-const loaderUtils = require('loader-utils');
 const {
 	JSAN_adaptor,
 	common_js_regex,
@@ -13,7 +12,7 @@ const {
 module.exports = function() {
 	this.cacheable();
 	const callback = this.async();	
-	const options = loaderUtils.getOptions(this);
+	const options = this.getOptions();
 	var rpath = this.resourcePath;
 	fs.readFile(rpath, function read(err, data) {
 	    if (err) {

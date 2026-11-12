@@ -198,13 +198,34 @@ solGS.pca = {
         var pcaArgs;
         var selectedPopDiv = document.getElementById(runPcaElemId);
 
+        var protocolId;
         if (selectedPopDiv) {
             var selectedPopData = selectedPopDiv.dataset;
             var selectedPop = JSON.parse(selectedPopData.selectedPop);
+
+            if (runPcaElemId.match(/save_pcs/)) {
+                return selectedPop;
+            }
+
             pcaPopId = selectedPop.pca_pop_id;
 
             var pcaArgs = selectedPopData.selectedPop;
             pcaArgs = JSON.parse(pcaArgs);
+            if (pcaArgs.data_structure.match(/dataset/)) {
+                var datasetId = pcaArgs.dataset_id;
+                protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+            }
+
+            if (!protocolId) {
+                protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+            }
+
+            var page = `/pca/analysis/${pcaPopId}/gp/${protocolId}`;
+            
+            pcaArgs["analysis_type"] = "pca analysis";
+            pcaArgs["genotyping_protocol_id"] = protocolId;
+            pcaArgs["analysis_page"] = page;
+
             if (!selectedPop.data_type) {
                 pcaArgs["data_type"] = this.getSelectedDataType(pcaPopId);
             }
@@ -337,7 +358,15 @@ solGS.pca = {
             ],
             'rowId': function (a) {
                 return a[6];
-            }
+            },
+            columnDefs: [
+        {
+            targets: [1, 2, 3, 4, 5],
+            orderable: false
+        }
+    ],
+
+    order: [[0, "asc"]]
        
         });
 
@@ -357,17 +386,18 @@ solGS.pca = {
         return pcaPopsRows;
     },
 
-    getPcaPops: function () {
-        var list = new solGSList();
-        var lists = list.getLists(["accessions", "plots", "trials"]);
-        lists = list.addDataStrAttr(lists);
-        lists = list.addDataTypeAttr(lists, "");
-        var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    getPcaPops: function (source, ownership) {
+        if (source === "list") {
+            var list = new solGSList();
+            var lists = list.getLists(["accessions", "plots", "trials"], ownership);
+            lists = list.addDataStrAttr(lists);
+            return list.addDataTypeAttr(lists, "");
+        }
+
+        var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"], ownership);
 
         datasets = solGS.dataset.addDataTypeAttr(datasets, "Population Structure");
-        var pcaPops = [lists, datasets];
-
-        return pcaPops.flat();
+        return datasets;
     },
 
     getDataTypeOpts: function () {
@@ -479,7 +509,7 @@ solGS.pca = {
         var pcaTable =
             `<table id="${tableId}" class="table table-striped"><thead><tr>` +
             "<th>Population</th>" +
-            "<th>Data structure type</th>" +
+            "<th>Data structure</th>" +
             "<th>Compatibility</th>" +
       "<th>Ownership</th>" +
             "<th>Data type</th>" +
@@ -608,8 +638,17 @@ solGS.pca = {
 
     generatePcaUrl: function (pcaPopId) {
         var traitId = jQuery("#trait_id").val();
-        var protocolId =
-            solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+
+        var protocolId;
+        if (pcaPopId.match(/dataset/)) {
+            var datasetId = pcaPopId.replace(/dataset_/g, "");
+            protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+
+        } 
+
+        if (!protocolId) {
+            protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+        }
 
         var solgsPages =
             "solgs/population/" +
@@ -907,6 +946,10 @@ solGS.pca = {
             popName = plotData.list_name;
         }
 
+        if (plotData.pca_pop_name) {
+            popName = plotData.pca_pop_name;
+        }
+
         popName = popName
             ? popName + " (" + plotData.data_type + ")"
             : " (" + plotData.data_type + ")";
@@ -947,7 +990,7 @@ solGS.pca = {
 
                     groupName = "common to: " + groupName.join(", ");
                 } else {
-                    groupName = trialsNames[id];
+                    groupName = trialsNames[id] || id;
                 }
                 legendValues.push([cnt, id, groupName]);
                 cnt++;
@@ -1098,8 +1141,15 @@ jQuery(document).ready(function () {
             var canvas = solGS.pca.canvas;
             var pcaMsgDiv = solGS.pca.pcaMsgDiv;
 
-            var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
-            pcaArgs["analysis_page"] = pcaUrl;
+            if (!pcaArgs.analysis_page) {
+                pcaPopId = pcaArgs.pca_pop_id;
+                var protocolId = pcaArgs.genotyping_protocol_id;
+                var pcaUrl = `/pca/analysis/${pcaPopId}/gp/${protocolId}`;
+                //    solGS.kinship.generateKinshipUrl(kinshipPopId);
+                pcaArgs["analysis_page"] = pcaUrl;
+            }
+        
+    
 
             solGS.pca
                 .checkCachedPca(pcaArgs)
@@ -1120,9 +1170,7 @@ jQuery(document).ready(function () {
                         solGS.pca.cleanUpOnSuccess(pcaPopId);
                     } else {
                         var page = location.pathname;
-                        var pcaUrl = solGS.pca.generatePcaUrl(
-                            pcaArgs.pca_pop_id
-                        );
+                        var pcaUrl = solGS.pca.generatePcaUrl(pcaArgs.pca_pop_id);
                         pcaArgs["analysis_page"] = pcaUrl;
 
                         runPcaBtnId = `#${runPcaBtnId}`;
@@ -1278,17 +1326,13 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
     if (location.pathname.match(/pca\/analysis/)) {
-        pcaPopsDataDiv = solGS.pca.pcaPopsDataDiv;
-        var tableId = "pca_pops_table";
-        var pcaPopsTable = solGS.pca.createTable(tableId);
-        jQuery(pcaPopsDataDiv).append(pcaPopsTable).show();
-
-        var pcaPops = solGS.pca.getPcaPops();
-        var pcaPopsRows = solGS.pca.getPcaPopsRows(pcaPops);
-
-        solGS.pca.displayPcaPopsTable(tableId, pcaPopsRows);
-
-        jQuery("#create_new_list_dataset").show();
+        solGS.dataTableTabs.initialize({
+            prefix: "pca",
+            createTable: function (tableId) { return solGS.pca.createTable(tableId); },
+            getPopulations: function (source, ownership) { return solGS.pca.getPcaPops(source, ownership); },
+            getRows: function (populations) { return solGS.pca.getPcaPopsRows(populations); },
+            displayTable: function (tableId, rows) { solGS.pca.displayPcaPopsTable(tableId, rows); }
+        });
     }
 });
 

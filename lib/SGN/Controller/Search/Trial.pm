@@ -9,7 +9,8 @@ sub trial_search_page : Path('/search/trials/') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{location_id} = $c->req->param('location_id') || 'not_provided';
+    my $location_id = $c->req->param('location_id');
+    $c->stash->{location_id} = ($location_id && $location_id =~ /^[0-9]+\z/) ? $location_id : 'not_provided';
     $c->stash->{template} = '/search/trials.mas';
 
 }

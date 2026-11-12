@@ -45,8 +45,14 @@ GetOptions(
 my $db_patch_path = dirname(abs_path($0));
 chdir($db_patch_path);
 
+# Hand credentials to child processes through the environment rather than
+# on stdin: CXGN::DB::InsertDBH reads PGUSER/PGPASSWORD, and this keeps the
+# password out of the command lines printed below.
+$ENV{PGUSER}     = $dbuser;
+$ENV{PGPASSWORD} = $dbpass;
+
 my @folders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
-my $cmd = "PGPASSWORD=$dbpass psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
+my $cmd = "psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
 my @installed = grep {!/^$/} map {s/^\s+|\s+$//gr} `$cmd`;
 
 for (my $i = 0; $i < (scalar @folders); $i++) {
@@ -62,7 +68,7 @@ for (my $i = 0; $i < (scalar @folders); $i++) {
                 next;
             }
 
-            my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser" . ($test ? ' -t' : '');
+            my $cmd = "mx-run $patch -H $host -D $db -u $editinguser" . ($test ? ' -t' : '');
             print STDERR $cmd . "\n";
             system("bash -c '$cmd'");
 

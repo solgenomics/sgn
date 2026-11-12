@@ -1180,7 +1180,7 @@ CXGN.List.prototype = {
                         html += "<tr><td>"+response.found[i].unique_name+"</td></tr>";
                     }
                     html += "</tbody></table>";
-                    html += "<h2>"+list_type_name+" that are not found in the database, but fuzzy match (names are visibily similar)</h2>";
+                    html += "<h2>"+list_type_name+" that are not found in the database, but fuzzy match (names are visibly similar)</h2>";
                     html += "<table class='table table-hover table-bordered' ><thead><tr><th>Name In Your List</th><th>Found In Database</th><th>Distance Score <span style='position: relative; top: 0: right: 0; cursor: help;' title='The closer the score is to 1.0, the more similar the match'>(?)</span></th></tr></thead><tbody>";
                     for(var i=0; i<response.fuzzy.length; i++){
                         for(j=0; j <response.fuzzy[i].matches.length; j++){
@@ -2067,15 +2067,19 @@ function validate_interactive(response, type, list_id) {
     multiple_wrong_case = response.multiple_wrong_case;
     synonym_matches = response.synonyms;
     multiple_synonym_matches = response.multiple_synonyms;
+    discarded_seedlots = response.discarded;
     valid = response.valid;
 
     //alert("validate_interactive: "+JSON.stringify(response));
     if (warning !== undefined && type != 'accessions' && warning.length != 0) {
-	alert(warning.join(", "));
+        alert(warning.join(", "));
+    }
+    if (type === 'seedlots' && discarded_seedlots && discarded_seedlots.length > 0) {
+        alert(`WARNING: The following seedlots have been discarded: ${discarded_seedlots.join(', ')}`);
     }
     if (type == 'accessions' && valid == 1) {
-	alert("This list passed validation.");
-	return;
+        alert("This list passed validation.");
+        return;
     }
     else if (missing !== undefined  && type != 'accessions' && missing.length == 0) {
         alert("This list passed validation.");
@@ -2262,7 +2266,40 @@ function validate_interactive(response, type, list_id) {
             //return 0;
     	}
     	else {
-	    alert('List did not pass validation because of these items: '+missing.join(", "));
+	    var wc  = wrong_case || [];
+	    var mwc = multiple_wrong_case || [];
+
+	    // build lookups so we can split "missing" into real vs. case problems
+	    var wc_map = {};
+	    wc.forEach(function(p) { wc_map[p[0]] = p[1]; });
+
+	    var mwc_map = {};
+	    mwc.forEach(function(p) {
+		(mwc_map[p[0]] = mwc_map[p[0]] || []).push(p[1]);
+	    });
+
+	    var truly_missing = missing.filter(function(m) {
+		return !wc_map[m] && !mwc_map[m];
+	    });
+
+	    var msg = 'List did not pass validation.\n\n';
+
+	    if (truly_missing.length > 0) {
+		msg += 'Not found in the database:\n    ' + truly_missing.join(', ') + '\n\n';
+	    }
+	    if (wc.length > 0) {
+		msg += 'Wrong case - change these in your list to match the database exactly:\n';
+		wc.forEach(function(p) { msg += '    ' + p[0] + '  to  ' + p[1] + '\n'; });
+		msg += '\n';
+	    }
+	    if (mwc.length > 0) {
+		msg += 'Matches more than one entry by case - fix the spelling manually:\n';
+		Object.keys(mwc_map).forEach(function(k) {
+		    msg += '    ' + k + '  to  ' + mwc_map[k].join(' / ') + '\n';
+		});
+	    }
+
+	    alert(msg);
 	    return 1;
     	}
     }

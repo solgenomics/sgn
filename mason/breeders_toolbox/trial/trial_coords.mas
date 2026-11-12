@@ -416,7 +416,7 @@ jQuery(document).ready( function() {
     jQuery('#working_modal').modal("show");
 
     var new_accession = jQuery('#enter_database_accession').val();
-    var old_accession = jQuery('#edit_plot_accession').html();
+    var old_accession = jQuery('#edit_plot_accession').text();
     var old_plot_id = jQuery('#edit_plot_id').html();
     //alert(new_accession +","+ old_accession +","+ old_plot_id);
 

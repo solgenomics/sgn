@@ -6,7 +6,7 @@ use namespace::autoclean;
 use File::Basename;
 use File::Path qw /make_path /;
 use File::Slurp qw /write_file read_file/;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use List::MoreUtils qw /uniq/;
 
 use JSON;
@@ -113,8 +113,8 @@ sub download_selection_index :Path('/solgs/download/selection/index') Args(1) {
 sub prep_download_si_files {
     my ($self, $c) = @_;
 
-    my $tmp_dir = catfile($c->config->{tempfiles_subdir}, 'selectionindex');
-    my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
+    my $tmp_dir = File::Spec->catfile($c->config->{tempfiles_subdir}, 'selectionindex');
+    my $base_tmp_dir = File::Spec->catfile($c->config->{basepath}, $tmp_dir);
 
     make_path($base_tmp_dir, { mode => oct('0755') });
 
@@ -128,10 +128,10 @@ sub prep_download_si_files {
     $c->controller('solGS::Files')->copy_file($gebvs_sindex_file, $base_tmp_dir);
 
     $sindex_file = fileparse($sindex_file);
-    $sindex_file = catfile($tmp_dir, $sindex_file);
+    $sindex_file = File::Spec->catfile($tmp_dir, $sindex_file);
 
     $gebvs_sindex_file = fileparse($gebvs_sindex_file);
-    $gebvs_sindex_file = catfile($tmp_dir, $gebvs_sindex_file);
+    $gebvs_sindex_file = File::Spec->catfile($tmp_dir, $gebvs_sindex_file);
 
     $c->stash->{download_sindex} = $sindex_file;
     $c->stash->{download_gebvs_sindex} = $gebvs_sindex_file;
@@ -330,7 +330,7 @@ sub selection_index_cache_dir {
 
     $pop_id = $c->stash->{training_pop_id} if !$pop_id;
 
-    my $cache_dir = catdir( $c->stash->{selectionIndex_dir}, $pop_id, 'cache' );
+    my $cache_dir = File::Spec->catdir( $c->stash->{selectionIndex_dir}, $pop_id, 'cache' );
     make_path($cache_dir, { mode => oct('0755') }) unless -d $cache_dir;
 
     return $cache_dir;
@@ -343,7 +343,7 @@ sub selection_index_temp_dir {
 
     $pop_id = $c->stash->{training_pop_id} if !$pop_id;
 
-    my $temp_dir = catdir( $c->stash->{selectionIndex_dir}, $pop_id, 'tempfiles' );
+    my $temp_dir = File::Spec->catdir( $c->stash->{selectionIndex_dir}, $pop_id, 'tempfiles' );
     make_path($temp_dir, { mode => oct('0755') }) unless -d $temp_dir;
 
     return $temp_dir;
