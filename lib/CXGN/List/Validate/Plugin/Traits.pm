@@ -3,6 +3,7 @@ package CXGN::List::Validate::Plugin::Traits;
 
 use Moose;
 use Data::Dumper;
+use CXGN::Onto;
 
 sub name {
     return "traits";
@@ -17,6 +18,17 @@ sub validate {
     my @missing;
     my @wrong_ids;
     my @not_variables;
+    my @wrong_ontology;
+    my @ambiguous;
+
+    # Terms may only come from the root ontologies of these cv types
+    my @root_nodes = CXGN::Onto->new({ schema => $schema })->get_root_nodes(['trait_ontology', 'composed_trait_ontology', 'experiment_treatment_ontology', 'composed_experiment_treatment_ontology']); # each entry is [ cv_id, "DB:accession Term name" ]
+    my %allowed_db_names;
+    foreach my $node (@root_nodes) {
+        my ($root_db_name) = split /:/, $node->[1];
+        $allowed_db_names{$root_db_name} = 1 if $root_db_name;
+    }
+    my @allowed_db_names = sort keys %allowed_db_names;
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
@@ -41,7 +53,37 @@ sub validate {
         $trait_name =~ s/^\s+//;
 
         if (!$context->get_conf('list_trait_require_id') && ($db_name eq '' || $db_name eq $trait_name)) {
-          $db_name = $context->get_conf('trait_ontology_db_name');
+            # No db name given: find which of the allowed ontologies hold a term with this name
+            my @matching_db_names = $schema->resultset("Cv::Cvterm")->search(
+                {
+                    'me.name' => $trait_name,
+                    'db.name' => { -in => \@allowed_db_names },
+                },
+                {
+                    'join' => { 'dbxref' => 'db' },
+                    'distinct' => 1,
+                }
+            )->get_column('db.name')->all();
+
+            if (scalar(@matching_db_names) == 0) {
+                print STDERR "Problem found with term $term: not found in any allowed ontology (".join(', ', @allowed_db_names).")\n";
+                push @missing, $term;
+                push @wrong_ontology, { original_term => $term, allowed_db_names => \@allowed_db_names };
+                next;
+            }
+            if (scalar(@matching_db_names) > 1) {
+                print STDERR "Problem found with term $term: ambiguous, found in ontologies ".join(', ', @matching_db_names)."\n";
+                push @missing, $term;
+                push @ambiguous, { original_term => $term, matching_db_names => [ sort @matching_db_names ] };
+                next;
+            }
+            $db_name = $matching_db_names[0];
+        }
+        elsif (!$allowed_db_names{$db_name}) {
+            print STDERR "Problem found with term $term: db $db_name is not one of the allowed ontologies (".join(', ', @allowed_db_names).")\n";
+            push @missing, $term;
+            push @wrong_ontology, { original_term => $term, allowed_db_names => \@allowed_db_names };
+            next;
         }
 
         my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
@@ -136,7 +178,9 @@ sub validate {
     return {
         missing => \@missing,
         wrong_ids => \@wrong_ids,
-        not_variables => \@not_variables
+        not_variables => \@not_variables,
+        wrong_ontology => \@wrong_ontology,
+        ambiguous => \@ambiguous
     };
 }
 

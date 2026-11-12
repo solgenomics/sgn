@@ -23,7 +23,7 @@
 <meta name="author" content="Breedbase team" />
 
 
-<meta name="date" content="2026-07-16" />
+<meta name="date" content="2026-11-06" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -489,7 +489,7 @@
 <p>Enter the information in the workflow to upload a trial from a spreadsheet.</p>
 <div id="step-1" class="section level4 unnumbered hasAnchor">
 <h4>Step 1:<a href="managing-field-trials.html#step-1" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>The first step is to understand what the format of the trial upload is. It is important to understand that the field layout represents plots in the experiment. Each plot has a globally unique plot_name, a sequential plot_number that is unique in the trial (but not globally unique. e.g. 101, 102, 103 for three separate plots), an accession_name representing what genotype is planted in that plot, and a block_number representing design replication. Each plot can be thought of as having a row_number and a column_number representing the relative position of the plot in a grid (e.g. the top left plot is row 1 column 1 following by row 1 column 2). Each plot can be planted with an amount of seed from a seedlot, where the seedlot_name represents the specific seed packet that was used, and num_seed_per_plot and weight_gram_seed_per_plot represent amount that were transferred from the seedlot_name to the plot_name. Treatments can be applied onto plots using additional column names in your file, where a 1 represents if the treatment was applied to the plot and an empty cell means it was not applied.</p>
+<p>The first step is to understand what the format of the trial upload is. It is important to understand that the field layout represents plots in the experiment. Each plot has a globally unique plot_name, a sequential plot_number that is unique in the trial (but not globally unique. e.g. 101, 102, 103 for three separate plots), an accession_name representing what genotype is planted in that plot, and a block_number representing design replication. Each plot can be thought of as having a row_number and a column_number representing the relative position of the plot in a grid (e.g. the top left plot is row 1 column 1 following by row 1 column 2). Each plot can be planted with an amount of seed from a seedlot, where the seedlot_name represents the specific seed packet that was used, and num_seed_per_plot and weight_gram_seed_per_plot represent amount that were transferred from the seedlot_name to the plot_name. Treatments and phenotypic data can be uploaded at the same time by specifying additional columns. These additional columns are named with the trait name and ontology, as in <em>trait name|TRAIT:0000001</em> or <em>treatment name|EXPERIMENT_TREATMENT:0000001</em>. Treatments and phenotypes can always be added later through uploads on the trial detail page if not included in the trial design upload.</p>
 <p><img src="assets/images/manage_trials_upload_trial_1.png" width="95%" style="display: block; margin: auto;" /></p>
 <p>The following page will allow you to pick a file for upload, including uploading multiple trials at once. On this page you can also inspect the file requirements for both single trial and multi-trial uploads.</p>
 <p><img src="assets/images/manage_trials_upload_trial_2.png" width="95%" style="display: block; margin: auto;" /><img src="assets/images/manage_trials_upload_trial_template.png" width="95%" style="display: block; margin: auto;" /></p>
