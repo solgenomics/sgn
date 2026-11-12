@@ -730,62 +730,69 @@ ORDER BY organism_id ASC;";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
     $sth->execute(@result_stock_ids);
 
-    # Add additional organism and stock properties to the result hash for each stock
-
+    # Add additional organism and stock properties to the result hash for each stock.
+    # The query returns one row per stockprop, so collect the prop values per stock
+    # (de-duplicated, since the pedigree/family joins can repeat rows) and
+    # build the final values once per stock after the loop.
+    my %stock_props;        # stock_id => prop_name => [ values ]
+    my %seen_stock_props;   # stock_id => prop_name => value => 1
     while (my @r = $sth->fetchrow_array()) {
         my $stock_id = $r[0];
         my $organism_id = $r[2];
         my $mother = $r[3] || 'NA';
         my $father = $r[4] || 'NA';
-	my $rel_type = $r[5] || 'NA';
-	my $family_name = $r[6] || undef; # not NA because of test
-	my $create_date = $r[7] || undef; # not NA because it ends up in acquisition date...
-	my $prop_name = $r[8];
-	my $prop_value = $r[9];
-	print STDERR "PROCESSING PROP NAME $prop_name (VALUE $prop_value)\n";
-	# my @synonyms = sort keys %{$syn_json};
+        my $family_name = $r[6] || undef; # not NA because of test
+        my $create_date = $r[7] || undef; # not NA because it ends up in acquisition date...
+        my $prop_name = $r[8];
+        my $prop_value = $r[9];
 
-	if ($prop_name eq "stock_synonym") {
-	    print STDERR "PARSING SYNONYMS!!! ($r[9])\n";
-	    push @{$result_hash{$stock_id}{synonyms}}, $prop_value;
-	}
+        if (!exists($stock_props{$stock_id})) {
+            $stock_props{$stock_id} = {};
+            $result_hash{$stock_id}{synonyms} = [];
+            $result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
+            # add organism props for each stock
+            $result_hash{$stock_id}{speciesAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'species authority'} : undef;
+            $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
+            $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
+            $result_hash{$stock_id}{population_name} = $family_name;
+            $result_hash{$stock_id}{create_date} = $create_date;
+        }
 
-        # my $donor_json = $r[7] ? decode_json(encode("utf8",$r[7])) : {};
-	my @donor_accessions;
-	if ($prop_name eq "donor") {
-	    my $donor = $r[9];  #decode_json(encode("utf8",$r[9])) : {};
-	    #push @donor_accessions, $donor;
-	    $prop_value = $donor; #\@donor_accessions;
-	}
+        # stocks without any stockprops come back with a NULL prop name
+        next if !defined($prop_name) || !defined($prop_value);
+        next if $seen_stock_props{$stock_id}{$prop_name}{$prop_value}++;
 
-	my @puis;
-	if ($prop_name eq "PUI") {
-	    push @puis, $r[9];
-	    $prop_value = join(",",@puis);
-	}
+        if ($prop_name eq "stock_synonym") {
+            push @{$result_hash{$stock_id}{synonyms}}, $prop_value;
+        }
 
-        # my $donor_inst_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
-	my @donor_institutes;
-	if ($prop_name eq "donor_institution") {
-	    my $donor_inst_json = $r[9] ? decode_json(encode("utf8",$r[9])) : {};
-	    @donor_institutes = keys %{$donor_inst_json};
-	    $prop_value = \@donor_institutes;
-	}
+        if ($prop_name eq "donor_institution" || $prop_name eq "donor PUI") {
+            my $json = $prop_value ? decode_json(encode("utf8",$prop_value)) : {};
+            push @{$stock_props{$stock_id}{$prop_name}}, keys %{$json};
+        }
+        else {
+            push @{$stock_props{$stock_id}{$prop_name}}, $prop_value;
+        }
+    }
 
-        # my $donor_pui_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
-	my @donor_puis;
-	if ($prop_name eq "donor PUI") {
-	    my $donor_pui_json = $r[9] ? decode_json(encode("utf8",$r[9])) : {};
-	    @donor_puis = keys %{$donor_pui_json};
-	    $prop_value = \@donor_puis;
-	}
+    foreach my $stock_id (keys %stock_props) {
+        my $props = $stock_props{$stock_id};
 
-	$result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
-        if (! exists( $result_hash{$stock_id}{synonyms} ) ) { $result_hash{$stock_id}{synonyms} = []; }
-	$result_hash{$stock_id}{$prop_name} = $prop_value;
+        foreach my $prop_name (keys %$props) {
+            if ($prop_name eq "donor_institution" || $prop_name eq "donor PUI") {
+                $result_hash{$stock_id}{$prop_name} = $props->{$prop_name};
+            }
+            else {
+                $result_hash{$stock_id}{$prop_name} = join(",", @{$props->{$prop_name}});
+            }
+        }
+        $result_hash{$stock_id}{PUI} = join(",", @{$props->{'PUI'} || []});
 
+        my @donor_accessions = @{$props->{'donor'} || []};
+        my @donor_institutes = @{$props->{'donor_institution'} || []};
+        my @donor_puis = @{$props->{'donor PUI'} || []};
         my @donor_array;
-        if (scalar(@donor_accessions)>0 && scalar(@donor_institutes)>0 && scalar(@donor_puis)>0 && scalar(@donor_accessions) == scalar(@donor_institutes) && scalar(@donor_accessions) == scalar(@donor_puis)){
+        if (scalar(@donor_accessions)>0 && scalar(@donor_accessions) == scalar(@donor_institutes) && scalar(@donor_accessions) == scalar(@donor_puis)){
             for (0 .. scalar(@donor_accessions)-1){
                 push @donor_array, {
                     'donorGermplasmName'=>$donor_accessions[$_],
@@ -796,17 +803,6 @@ ORDER BY organism_id ASC;";
             }
         }
         $result_hash{$stock_id}{donors} = \@donor_array;
-
-	#$result_hash{$stock_id}{documentationURL} = join(",", @puis);
-        # add organism props for each stock
-        $result_hash{$stock_id}{speciesAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'species authority'} : undef;
-        $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
-        $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
-
-
-	$result_hash{$stock_id}{PUI} = join(",", @puis);
-	$result_hash{$stock_id}{population_name} = $family_name;
-        $result_hash{$stock_id}{create_date} = $create_date;
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
@@ -814,14 +810,14 @@ ORDER BY organism_id ASC;";
         my $result_stock_ids_sql = join ",", @result_stock_ids;
         my $stockprop_where = " stock_id IN ($result_stock_ids_sql)";
 
-	my $stockprop_sql = join(", '", @stockprop_view);
+        my $stockprop_sql = join(", '", @stockprop_view);
 
         #$self->_refresh_materialized_stockprop(\@stockprop_view);
 
         #my $stockprop_select_sql .= ', "' . join ('","', @stockprop_view) . '"';
 
         #my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
-	my $stockprop_query = "SELECT stock_id FROM stockprop WHERE $stockprop_where;";
+        my $stockprop_query = "SELECT stock_id FROM stockprop WHERE $stockprop_where;";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
