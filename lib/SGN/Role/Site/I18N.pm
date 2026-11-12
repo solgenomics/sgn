@@ -27,6 +27,9 @@ file is read.
 The language preference changes only interface text. It never changes login,
 the process locale, dates, units or stored data.
 
+A response that used the translator gets C<Content-Language> and
+C<Vary: Accept-Language, Cookie, X-SGN-Locale>.
+
 =head1 METHODS
 
 =head2 i18n_locales
@@ -60,9 +63,10 @@ sub _i18n_translator {
     my $translator = eval { SGN::I18N->new(locale => $locale, dir => $dir) };
     my $error = $@;
     if (!$translator || $translator->locale eq 'en') {
+        # Without libintl-perl, SGN::I18N has already logged the one warning.
         $c->log->warn('Unavailable translation for ' . $locale . ' in ' . $dir . ': '
-            . ($error || 'no installed sgn.mo, or libintl-perl is missing'))
-            if $c->can('log') && !$logged_unavailable{"$locale\0$dir"}++;
+            . ($error || 'no installed sgn.mo'))
+            if SGN::I18N::gettext_available() && $c->can('log') && !$logged_unavailable{"$locale\0$dir"}++;
         $translator = undef;
     }
     $available->{$locale} = $translator;
@@ -118,9 +122,11 @@ sub initialize_i18n {
     my $source = 'disabled';
     if ($c->config->{i18n_enabled}) {
         my $cookie = $c->req->cookies->{sgn_locale};
+        # Scalar context: a missing parameter or header is undef, not an
+        # empty list, and a repeated one does not shift the pairs.
         my @preferences = (
-            [$c->req->param('lang'), 'query'],
-            [$c->req->headers->header('X-SGN-Locale'), 'explicit-header'],
+            [scalar $c->req->param('lang'), 'query'],
+            [scalar $c->req->headers->header('X-SGN-Locale'), 'explicit-header'],
             [$cookie ? $cookie->value : undef, 'cookie'],
         );
         my $header = substr($c->req->headers->header('Accept-Language') || '', 0, 8192);
@@ -167,5 +173,19 @@ sub i18n {
     local ($_, $@, $!);
     return $c->stash->{i18n} || $c->initialize_i18n;
 }
+
+# Every response that used the translator (pages, and AJAX or JSON answers
+# with translated messages) depends on the language: say so to browsers and
+# caches. Responses that did not use it, and every response with
+# translation off, are unchanged.
+before finalize_headers => sub {
+    my ($c) = @_;
+    return unless $c->config->{i18n_enabled};
+    my $translator = $c->stash->{i18n} or return;
+    my $headers = $c->res->headers;
+    $headers->header('Content-Language' => $translator->locale);
+    my %vary = map { lc($_) => 1 } map { split /\s*,\s*/ } $headers->header('Vary');
+    $headers->push_header('Vary', $_) for grep { !$vary{ lc $_ } } qw(Accept-Language Cookie X-SGN-Locale);
+};
 
 1;

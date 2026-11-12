@@ -40,7 +40,14 @@ use SGN::Controller::I18N;
             uri => URI->new('https://example.invalid/search/stocks?tag=A%26B&lang=en'),
         }, shift;
     }
-    sub param   { return $_[0]{params}{ $_[1] } }
+    # Like Catalyst::Request::param: in list context a missing parameter is an
+    # empty list and a repeated one gives all its values.
+    sub param {
+        my ($self, $name) = @_;
+        my $value = $self->{params}{$name};
+        my @values = ref($value) eq 'ARRAY' ? @$value : defined($value) ? ($value) : ();
+        return wantarray ? @values : $values[0];
+    }
     sub cookies { return $_[0]{cookies} }
     sub headers { return $_[0]{headers} }
     sub method  { return $_[0]{method} }
@@ -62,6 +69,7 @@ use SGN::Controller::I18N;
     with 'SGN::Role::Site::I18N';
     sub path_to { shift; return Path::Class::dir('/nonexistent/sgn', @_) }
     sub throw_404 { die "404 not found\n" }
+    sub finalize_headers { }
 }
 
 my $root = build_translations(tempdir(CLEANUP => 1));
@@ -209,6 +217,44 @@ subtest 'language selector action' => sub {
     my $lived = eval { SGN::Controller::I18N->language($c); 1 };
     ok(!$lived && $@ =~ /^404/, '/i18n/language is not found when translation is off, as without this feature');
     ok(!exists $c->res->cookies->{sgn_locale}, '... and no cookie is set');
+};
+
+subtest 'a missing or repeated parameter or header does not confuse the choice' => sub {
+    my $c = context();
+    $c->req->{params}{lang} = ['uk', 'ar'];
+    is($c->i18n->locale, 'uk', 'a repeated lang parameter: the first one');
+    is($c->stash->{i18n_locale_source}, 'query', '... chosen by the address');
+
+    $c = context();
+    $c->req->headers->header('Accept-Language' => 'ar');
+    is($c->i18n->locale, 'ar', 'no lang parameter and no page header: the browser language');
+    is($c->stash->{i18n_locale_source}, 'header', '... from the browser header');
+
+    $c = context();
+    $c->req->headers->push_header('X-SGN-Locale' => $_) for qw(uk ar);
+    is($c->i18n->locale, 'en', 'a repeated page header is ignored');
+    is($c->stash->{i18n_locale_source}, 'default', '... and the site default is used');
+};
+
+subtest 'responses that used the translator say they depend on the language' => sub {
+    my $c = context();
+    $c->req->{params}{lang} = 'uk';
+    $c->i18n;
+    $c->res->headers->push_header('Vary', 'Cookie');    # as Root::end does for HTML
+    $c->finalize_headers;
+    is($c->res->headers->header('Content-Language'), 'uk', 'Content-Language');
+    is(join(', ', $c->res->headers->header('Vary')), 'Cookie, Accept-Language, X-SGN-Locale', 'Vary, each name once');
+
+    my $json = context();    # for example a BrAPI answer: no translated text
+    $json->finalize_headers;
+    ok(!defined $json->res->headers->header('Content-Language'), 'a response without translated text is unchanged');
+    ok(!defined $json->res->headers->header('Vary'), '... no Vary');
+
+    my $off = context(i18n_enabled => 0);
+    $off->i18n;
+    $off->finalize_headers;
+    ok(!defined $off->res->headers->header('Content-Language') && !defined $off->res->headers->header('Vary'),
+        'translation off: headers unchanged');
 };
 
 subtest 'browser messages can be kept per language and build' => sub {
