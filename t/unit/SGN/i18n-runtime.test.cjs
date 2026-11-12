@@ -306,3 +306,11 @@ test('the language selector shows the page language after page scripts reset it'
     page.fire('pageshow', { persisted: true });
     assert.equal(select.selectedIndex, 1, 'back from the history: the page language again');
 });
+
+test('as in GNU gettext and SGN::I18N, the key is the context and the singular text', () => {
+    const uk = translator('uk');
+    assert.equal(uk.np('trials.count', '%{count} trial found', '%{count} trials matched', 5, { count: 5 }), 'Знайдено 5 дослідів',
+        'a changed English plural text alone keeps the translation');
+    assert.equal(uk.p('trials.count', '%{count} trial found', { count: 1 }), 'Знайдено 1 дослід', 'p on a plural message gives its first form');
+    assert.equal(uk.np('controls.save', 'Save', 'Saves', 5), 'Зберегти', 'np on a message without plural forms gives its text');
+});

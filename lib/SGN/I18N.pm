@@ -352,7 +352,10 @@ in C<\%variables>; a missing value is an error. Other braces are literal.
 
 Return the form for C<$count>, using the plural rule of the language file.
 C<$count> must be a non-negative integer. Without a translation, English uses
-C<$one> for 1 and C<$many> otherwise.
+C<$one> for 1 and C<$many> otherwise. As in GNU gettext, the message is found
+by C<$context> and C<$one>: when only C<$many> changes, the old translation is
+used until the translations are updated (C<make templates> marks it fuzzy).
+The browser runtime does the same.
 
 =head2 locale
 

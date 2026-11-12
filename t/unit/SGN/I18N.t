@@ -108,6 +108,13 @@ subtest 'plural forms follow the rules of the language file' => sub {
     is($uk->np('missing', '%{count} trial', '%{count} trials', 21, { count => 21 }), '21 trials',
         'English fallback uses English plural rules');
     is($uk->np('missing', '%{count} trial', '%{count} trials', 1, { count => 1 }), '1 trial', '... singular');
+    # As in GNU gettext, a message is found by its context and singular English
+    # text; the browser runtime does the same (i18n-runtime.test.cjs).
+    is($uk->np('trials.count', '%{count} trial found', '%{count} trials matched', 5, { count => 5 }),
+        'Знайдено 5 дослідів', 'a changed English plural text alone keeps the translation, as in gettext');
+    is($uk->p('trials.count', '%{count} trial found', { count => 1 }), 'Знайдено 1 дослід',
+        'p on a plural message gives its first form');
+    is($uk->np('controls.save', 'Save', 'Saves', 5), 'Зберегти', 'np on a message without plural forms gives its text');
     for my $bad (-1, 1.5, undef, 'many', '9007199254740992') {
         dies_like(sub { $uk->np('trials.count', 'one', 'many', $bad) }, qr/Plural count/, 'invalid count rejected');
     }

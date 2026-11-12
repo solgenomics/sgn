@@ -164,6 +164,8 @@ subtest 'translation on: Ukrainian' => sub {
         'current language selected, shown by its native name');
     like($html, qr{<option value="ar" lang="ar" dir="auto">العربية</option>}, 'other installed language offered');
     like($html, qr{name="return_to" value="/breeders/trials\?program=A%26B"}, 'selector returns to the same page');
+    like($html, qr{SGN\.I18N\.keepSelectorLanguage\(select, window\)},
+        'the selector keeps showing the page language when page scripts reset every <select>');
 };
 
 subtest 'translation on: Arabic is right to left' => sub {

@@ -214,7 +214,9 @@
         var key = context + '\u0004' + text;
         for (var i = 0; i < this.catalogs.length; i++) {
             var entry = this.catalogs[i];
-            if (own(entry.data.messages, key) && entry.data.messages[key].plural === null) {
+            // As in GNU gettext (and SGN::I18N), a message is found by its
+            // context and English text; a plural message gives its first form.
+            if (own(entry.data.messages, key)) {
                 var translated = entry.data.messages[key].forms[0];
                 return render(function () { return format(translated, variables); }, text, variables);
             }
@@ -238,7 +240,9 @@
         var english = count === 1 ? one : many;
         for (var i = 0; i < this.catalogs.length; i++) {
             var entry = this.catalogs[i];
-            if (own(entry.data.messages, key) && entry.data.messages[key].plural === many) {
+            // As in GNU gettext (and SGN::I18N), the English plural text is not
+            // part of the key: only the context and the singular text are.
+            if (own(entry.data.messages, key)) {
                 return render(pluralForm(entry.data, entry.data.messages[key], count, variables), english, variables);
             }
         }
@@ -247,7 +251,8 @@
 
     function pluralForm(catalog, message, count, variables) {
         return function () {
-            var index = evaluatePlural(catalog.pluralAst, count);
+            // A message without plural forms has one text for every count, as in GNU gettext.
+            var index = message.plural === null ? 0 : evaluatePlural(catalog.pluralAst, count);
             if (index < 0 || index >= message.forms.length) throw new Error('Plural index outside catalog forms');
             return format(message.forms[index], variables);
         };
