@@ -407,7 +407,7 @@ sub create_hash_lookups {
            errors should be breaking, warnings not.
    Desc:   uses the data provided to the object, so the corresponding parameters have to be set.
            This includes the values_hash, metadata_hash, triat_list, and stock_list.
-           The function will check if all the provided identifiers are in teh database use list
+           The function will check if all the provided identifiers are in the database use list
            validators. Then each measurement is submitted to the check_measurement function, which
            checks additional properties (see description there).
 
@@ -1008,8 +1008,9 @@ sub store {
                         if ($timestamp eq "") { $timestamp = undef; }
                         $phenotype_object->collect_date($timestamp);
 
-                        $operator = $value_array->[2] ? $value_array->[2] : $operator;
-                        $phenotype_object->operator($operator);
+                        # the collector of this value; without one, the user who uploads
+                        my $collector = $value_array->[2] ? $value_array->[2] : $operator;
+                        $phenotype_object->operator($collector);
 
                         my $observation = $value_array->[3];
 
@@ -1050,7 +1051,7 @@ sub store {
                             $stock_id . ", trait: " .
                             $trait_cvterm->name .
                             ", date: $unique_time" .
-                            ", operator: $operator" .
+                            ", operator: $collector" .
                             ", count: $value_count" .
                             ", observation: $trait_value";
 
@@ -1174,7 +1175,7 @@ sub store {
 
                         #     elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
 
-                        #         print STDERR "TYPE IS MULTIPE OR TIME SERIES...\n";
+                        #         print STDERR "TYPE IS MULTIPLE OR TIME SERIES...\n";
                         #         # otherwise, we deal with a time series and we add a new value
                         #         # if there is no other exact same value with exactly the same timestamp
                         #         #
@@ -1199,7 +1200,7 @@ sub store {
                         #         elsif ($self->remove_values()) {
 
                         #             print STDERR "REMOVE VALUES IS SET...\n";
-                        #             # if observations are emtpy, with this option,
+                        #             # if observations are empty, with this option,
                         #             # remove the measurement from the database
                         #             #
                         #             $phenotype_object->phenotype_id($phenotype_id);
@@ -1249,14 +1250,14 @@ sub store {
                             "observationVariableDbId"=> qq|$observationVariableDbId|,
                             "observationVariableName"=> $trait_cvterm->name,
                             "studyDbId"=> qq|$project_id|,
-                            "uploadedBy"=> $operator ? $operator : "",
+                            "uploadedBy"=> $collector ? $collector : "",
                             "additionalInfo" => $additional_info_stored,
                             "externalReferences" => $external_references_stored,
                             "value" => $trait_value
                             );
 
                         if ($timestamp) { $details{'observationTimeStamp'} = $timestamp }
-                        if ($operator) { $details{'collector'} = $operator }
+                        if ($collector) { $details{'collector'} = $collector }
 
                         push @stored_details, \%details;
 
