@@ -83,13 +83,13 @@ sub new {
     my $schema = $args->{bcs_schema};
     my $trial_id = $args->{trial_id};
 
-    my $trial_rs = $schema->resultset("Project::Projectprop")->search( { project_id => $trial_id },{ join => 'type' });
+    my $trial_rs = $schema->resultset("Project::Projectprop")->search( { project_id => $trial_id },{ prefetch => 'type' });
 
     if ($trial_id && $trial_rs->count() == 0) {
         return CXGN::PhenotypingTrial->new($args);
     }
 
-    my $object;
+    my $is_phenotyping_trial;
     while (my $trial_row = $trial_rs->next()) {
         my $name = $trial_row->type()->name();
         my $val = $trial_row->value();
@@ -134,10 +134,11 @@ sub new {
             return CXGN::AerialImagingEventBandProject->new($args);
         }
         else {
-            $object = CXGN::PhenotypingTrial->new($args);
+            $is_phenotyping_trial = 1;
         }
     }
-    return $object;
+    # build the default object once, after all properties were checked
+    return $is_phenotyping_trial ? CXGN::PhenotypingTrial->new($args) : undef;
 }
 
 =head2 class method get_all_locations()
