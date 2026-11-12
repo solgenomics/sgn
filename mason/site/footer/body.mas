@@ -37,12 +37,12 @@
                 <span class="git-version-commit"><a href="https://github.com/solgenomics/sgn/commits/<% $commit %>"><% $commit %></a></span>&nbsp;
                 <span class="git-version-tag"><a href="https://github.com/solgenomics/sgn/commits/<% $tag %>"><% $tag %></a></span>
 % } else {
-                <span class=""><% $tag %></span>&nbsp;
+            <& /VERSION.mas &>
 % }
                 <br />
                 <span class="git-version-updated"><% $updated %></span>
 		<br /><br />
-		<a target="_new" href="https://brapi.org/"><img src="/documents/img/brapi-logo.svg" width="160" /></a> 
+		<a target="_new" href="https://brapi.org/"><img src="/documents/img/brapi-logo.svg" width="160" /></a>
               </p>
             </div>
           </div>
