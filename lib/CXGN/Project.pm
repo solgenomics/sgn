@@ -1281,6 +1281,38 @@ sub remove_harvest_date {
 }
 
 
+=head2 accessors get_second_harvest_date(), set_second_harvest_date(), remove_second_harvest_date()
+
+Store a second harvest date independently of the primary harvest date, using
+the same calendar format.
+
+=cut
+
+sub get_second_harvest_date {
+    my $self = shift;
+    my $value = $self->_get_projectprop('project_second_harvest_date');
+    return unless $value;
+    return CXGN::Calendar->new({})->display_start_date($value);
+}
+
+sub set_second_harvest_date {
+    my ($self, $date) = @_;
+    my $event = CXGN::Calendar->new({})->check_value_format($date);
+    die "Invalid second harvest date: $date\n" unless $event;
+    $self->_set_projectprop('project_second_harvest_date', $event);
+}
+
+sub remove_second_harvest_date {
+    my $self = shift;
+    my $cvterm = SGN::Model::Cvterm->get_cvterm_row(
+        $self->bcs_schema, 'project_second_harvest_date', 'project_property'
+    );
+    $self->bcs_schema->resultset('Project::Projectprop')->search({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm->cvterm_id(),
+    })->delete();
+}
+
 =head2 accessors get_planting_date(), set_planting_date()
 
  Usage:
@@ -2004,6 +2036,22 @@ sub set_field_size {
     my $self = shift;
     my $value = shift;
     $self->_set_projectprop('field_size', $value);
+}
+
+=head2 accessors get_field_number(), set_field_number()
+
+Store the trial's field identifier as text, preserving leading zeroes and letters.
+
+=cut
+
+sub get_field_number {
+    my $self = shift;
+    return $self->_get_projectprop('field_number');
+}
+
+sub set_field_number {
+    my ($self, $value) = @_;
+    $self->_set_projectprop('field_number', $value);
 }
 
 =head2 accessors get_additional_info(), set_additional_info()
@@ -6337,6 +6385,13 @@ sub update_metadata {
             if ($details->{harvest_date} eq 'remove') { $self->remove_harvest_date($self->get_harvest_date()); }
             else { $self->set_harvest_date($details->{harvest_date}); }
         }
+        if (exists $details->{second_harvest_date}) {
+            if (!defined $details->{second_harvest_date} || $details->{second_harvest_date} eq '' || $details->{second_harvest_date} eq 'remove') {
+                $self->remove_second_harvest_date();
+            }
+            else { $self->set_second_harvest_date($details->{second_harvest_date}); }
+        }
+        if (exists $details->{field_number}) { $self->set_field_number($details->{field_number}); }
         if ($details->{description}) { $self->set_description($details->{description}); }
         if ($details->{field_size}) { $self->set_field_size($details->{field_size}); }
         if ($details->{plot_width}) { $self->set_plot_width($details->{plot_width}); }
