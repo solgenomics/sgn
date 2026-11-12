@@ -15,7 +15,7 @@ my $f = SGN::Test::Fixture->new();
 my $solgs_data = SGN::Test::solGSData->new({
     'fixture' => $f, 
     'accessions_list_subset' => 60, 
-    'plots_list_subset' => 60,
+    'plots_list_subset' => 160,
     'user_id' => 40,
 });
 
@@ -44,14 +44,6 @@ my $accessions_dt_id = 'dataset_' . $accessions_dt->{dataset_id};
 my $plots_dt = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id = 'dataset_' . $plots_dt->{dataset_id};
-
-print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
-print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
-print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
-
-print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
-print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 
 remove_tree($cache_dir, {safe => 1});
@@ -111,9 +103,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(20);
 
-# $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
-   # sleep(4);
-
     $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
@@ -135,9 +124,6 @@ $d->while_logged_in_as("submitter", sub {
     sleep(40);
 
     ### combined trials training population: single trait prediction of trial type selection population
-
-    #$d->get('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'combo trials tr pop page');
-   # sleep(2);
 
     my $sel_pred = $d->find_element('Model accuracy statistics', 'partial_link_text', 'scroll to accuracy');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
@@ -219,6 +205,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -238,6 +225,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
@@ -260,6 +248,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
     $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'dataset accession sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -277,12 +266,11 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
     $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'dataset accessions sel pred')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'dataset accessions sel pred')->click();
     sleep(10);
-
-#$d->get('/solgs/combined/model/2804608595/selection/dataset_5/trait/70741/gp/1', 'combo trials tr pop page');
 
 	my $sel_pred = $d->find_element('Expected genetic gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
@@ -294,16 +282,9 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->driver->go_back();
     sleep(5);
-    # $d->driver->go_back();
-	# sleep(10);
-    # $d->driver->go_back();
-	# sleep(10);
-	$d->find_element_ok('Training population 280', 'partial_link_text', 'back to model page')->click();
-    sleep(5);
-	$d->find_element_ok('Training population 280', 'partial_link_text', 'back to training pop page')->click();
-	sleep(5);
 
-    #$d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
+    my $combo_pops_id = $d->find_element('training_pop_id', 'id')->get_value();
+    $d->get('/solgs/populations/combined/' . $combo_pops_id . '/gp/1', 'combo trials tr pop page');
 
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
     sleep(1);
@@ -343,10 +324,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(5);
-
-	#$d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1');
-
 	sleep(5);
     $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'go back')->click();
     sleep(5);
@@ -354,6 +331,7 @@ $d->while_logged_in_as("submitter", sub {
 	sleep(3);
 
     $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -369,6 +347,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
@@ -378,6 +357,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -395,6 +375,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
     $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
