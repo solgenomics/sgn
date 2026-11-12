@@ -56,6 +56,28 @@ has 'trial_stock_type' => (
 );
 
 
+# Match Stock::get_image_ids()'s default filtering and display order in one query.
+sub _get_plot_image_ids {
+    my ($self, $design) = @_;
+    my @plot_ids = map { $_->{plot_id} } values %$design;
+    my %image_ids;
+    return \%image_ids unless @plot_ids;
+
+    my $sql = "SELECT DISTINCT stock_id, image_id, cvterm.name, stock_image.display_order
+        FROM phenome.stock_image
+        JOIN stock USING(stock_id)
+        JOIN cvterm ON(type_id=cvterm_id)
+        JOIN metadata.md_image USING(image_id)
+        WHERE stock_id = ANY(?) AND obsolete = 'f'
+        ORDER BY stock_id, stock_image.display_order ASC, image_id";
+    my $sth = $self->bcs_schema->storage->dbh()->prepare($sql);
+    $sth->execute(\@plot_ids);
+    while (my ($stock_id, $image_id) = $sth->fetchrow_array()) {
+        push @{$image_ids{$stock_id}}, $image_id;
+    }
+    return \%image_ids;
+}
+
 sub display_fieldmap {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -83,6 +105,7 @@ sub display_fieldmap {
     my @plot_numbers_not_used;
     my $result;
 
+    my $plot_image_ids = $self->_get_plot_image_ids($design);
     my @layout_info;
     while ( my ($k, $v) = (each %$design)) {
         my $plot_number = $k;
@@ -96,11 +119,7 @@ sub display_fieldmap {
         my $plant_names = $v->{plant_names};
         my $plot_number_fromDesign = $v->{plot_number};
 
-    	my $image_id = CXGN::Stock->new({
-    	    schema => $schema,
-    	    stock_id => $plot_id,
-        });
-	my @plot_image_ids = map $_->[0], $image_id->get_image_ids();
+        my @plot_image_ids = @{$plot_image_ids->{$plot_id} || []};
 
         push @plot_numbers_not_used, $plot_number;
         push @plot_numbers_from_design, $plot_number_fromDesign;
