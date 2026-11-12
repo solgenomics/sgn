@@ -183,7 +183,8 @@ before finalize_headers => sub {
     return unless $c->config->{i18n_enabled};
     my $translator = $c->stash->{i18n} or return;
     my $headers = $c->res->headers;
-    $headers->header('Content-Language' => $translator->locale);
+    # A server error can end with Catalyst's English debug page.
+    $headers->header('Content-Language' => $translator->locale) if ($c->res->status || 200) < 500;
     my %vary = map { lc($_) => 1 } map { split /\s*,\s*/ } $headers->header('Vary');
     $headers->push_header('Vary', $_) for grep { !$vary{ lc $_ } } qw(Accept-Language Cookie X-SGN-Locale);
 };

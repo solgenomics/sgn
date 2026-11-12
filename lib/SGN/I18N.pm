@@ -5,6 +5,7 @@ use warnings;
 use utf8;
 use Carp qw(croak);
 use File::Spec;
+use Digest::SHA ();
 use JSON ();
 use POSIX ();
 
@@ -18,6 +19,7 @@ my $GETTEXT;      # undef: not loaded yet; 1: libintl-perl loaded; 0: missing
 my %BOUND_DIR;    # message directory bound to the gettext domain
 my %WARNED;       # warnings already given in this process
 my %WORKFLOWS;    # path => [mtime, size, parsed locale/workflows.json]
+my %VERSIONS;     # "dir\0locale" => [file signature, content digest]
 
 sub _warn_once {
     my ($key, $message) = @_;
@@ -87,7 +89,6 @@ sub new {
         language_name => 'English',
         chain => [],
         root => $args{dir},
-        version => '',
     }, $class;
     return $self if $requested eq 'en' || !defined $args{dir};
     croak 'Invalid translation directory' if ref $args{dir};
@@ -125,11 +126,6 @@ sub new {
             if length($name) <= 200 && $name !~ /[\x00-\x1f\x7f-\x9f\x{2028}\x{2029}]/;
     }
     $self->{dir} = 'rtl' if $header =~ /^X-SGN-Direction:[ \t]*rtl[ \t]*$/m;
-    # The build replaces all files at once, so the .mo files identify it.
-    $self->{version} = join '.', map {
-        my @stat = stat File::Spec->catfile($args{dir}, 'LocaleData', $_, 'LC_MESSAGES', "$DOMAIN.mo");
-        @stat ? "$stat[9]-$stat[7]" : '0';
-    } @{ $self->{chain} };
     return $self;
 }
 
@@ -137,7 +133,35 @@ sub locale { return $_[0]{locale}; }
 sub dir { return $_[0]{dir}; }
 sub requested_locale { return $_[0]{requested_locale}; }
 sub language_name { return $_[0]{language_name}; }
-sub version { return $_[0]{version}; }
+sub version {
+    my ($self) = @_;
+    local ($_, $@, $!);
+    return $self->{version} //= join '.', map { _content_version($self->{root}, $_) } @{ $self->{chain} };
+}
+
+# A digest of the .mo file and the browser files of one language. It is
+# computed once per process, and again when one of the files is replaced
+# or changes size or time.
+sub _content_version {
+    my ($root, $locale) = @_;
+    my @files = (File::Spec->catfile($root, 'LocaleData', $locale, 'LC_MESSAGES', "$DOMAIN.mo"));
+    my $js = File::Spec->catdir($root, 'js', $locale);
+    if (opendir(my $dir, $js)) {
+        push @files, map { File::Spec->catfile($js, $_) } sort grep { /\.json\z/ } readdir $dir;
+        closedir($dir);
+    }
+    my $signature = join "\0", map { my @stat = stat $_; join ':', $_, @stat ? @stat[1, 7, 9] : '-' } @files;
+    my $cached = $VERSIONS{"$root\0$locale"};
+    return $cached->[1] if $cached && $cached->[0] eq $signature;
+    my $sha = Digest::SHA->new(256);
+    for my $file (@files) {
+        $sha->add(substr($file, length $root), "\0");
+        $sha->addfile($file, 'b') if -f $file;
+    }
+    my $digest = substr($sha->hexdigest, 0, 16);
+    $VERSIONS{"$root\0$locale"} = [$signature, $digest];
+    return $digest;
+}
 
 sub gettext_available { local ($_, $@, $!); return _gettext_available(); }
 
@@ -385,9 +409,10 @@ has no name). Escape it when you print it.
 
 =head2 version
 
-A short text that changes when the installed language files change (their
-modification time and size); empty for English. The page puts it into the
-F</i18n/bootstrap.js> address, so browsers can keep that file.
+A short digest of the installed language files (the C<.mo> file and the
+browser files of each language used); empty for English. It changes when
+their content changes. The page puts it into the F</i18n/bootstrap.js>
+address, so browsers can keep that file.
 
 =head2 gettext_available
 

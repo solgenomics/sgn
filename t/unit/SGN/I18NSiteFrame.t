@@ -146,7 +146,7 @@ subtest 'translation on: Ukrainian' => sub {
     like($html, qr{<html lang="uk" dir="ltr" data-sgn-locale="uk">}, 'page language and direction');
     like($html, qr{/i18n/runtime\.js.*/i18n/bootstrap\.js\?lang=uk&workflow=.*/js/page-scripts\.js}s,
         'translation scripts load before the page scripts');
-    like($html, qr{/i18n/bootstrap\.js\?lang=uk&workflow=&v=[0-9]+-[0-9]+"},
+    like($html, qr{/i18n/bootstrap\.js\?lang=uk&workflow=&v=[0-9a-f]{16}"},
         'a page without its own section gets only the common messages; the address names the build');
     like($html, qr{<!-- INSERT_HEAD_POST_HTML -->\n<script>SGN\.I18N\.sendLocaleWithAjax\(jQuery, window\);</script>},
         'AJAX requests send the page language; set up after the marker where SGN inserts jQuery');

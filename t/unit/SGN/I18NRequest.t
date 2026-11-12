@@ -96,7 +96,15 @@ subtest 'turned off: always English, no file is read' => sub {
     is($c->stash->{i18n_locale_source}, 'disabled', 'reason recorded');
     is_deeply($c->log->{warnings}, [], 'nothing logged');
     for my $action (qw(runtime bootstrap)) {
-        my $off = context(i18n_enabled => 0);
+        my $failed = context();
+    $failed->req->{params}{lang} = 'uk';
+    $failed->i18n;
+    $failed->res->status(500);    # may be Catalyst's English debug page
+    $failed->finalize_headers;
+    ok(!defined $failed->res->headers->header('Content-Language'), 'a server error has no Content-Language');
+    like(join(', ', $failed->res->headers->header('Vary')), qr/X-SGN-Locale/, '... but still Vary');
+
+    my $off = context(i18n_enabled => 0);
         my $lived = eval { SGN::Controller::I18N->$action($off); 1 };
         ok(!$lived && $@ =~ /^404/, "/i18n/$action.js is not found, as without this feature");
     }
@@ -250,6 +258,14 @@ subtest 'responses that used the translator say they depend on the language' => 
     ok(!defined $json->res->headers->header('Content-Language'), 'a response without translated text is unchanged');
     ok(!defined $json->res->headers->header('Vary'), '... no Vary');
 
+    my $failed = context();
+    $failed->req->{params}{lang} = 'uk';
+    $failed->i18n;
+    $failed->res->status(500);    # may be Catalyst's English debug page
+    $failed->finalize_headers;
+    ok(!defined $failed->res->headers->header('Content-Language'), 'a server error has no Content-Language');
+    like(join(', ', $failed->res->headers->header('Vary')), qr/X-SGN-Locale/, '... but still Vary');
+
     my $off = context(i18n_enabled => 0);
     $off->i18n;
     $off->finalize_headers;
@@ -259,8 +275,23 @@ subtest 'responses that used the translator say they depend on the language' => 
 
 subtest 'browser messages can be kept per language and build' => sub {
     my $version = SGN::I18N->new(locale => 'uk', dir => $root)->version;
-    like($version, qr/\A[0-9]+-[0-9]+\z/, 'the version is the time and size of the language file');
+    like($version, qr/\A[0-9a-f]{16}\z/, 'the version is a digest of the language files');
+    is(SGN::I18N->new(locale => 'uk', dir => $root)->version, $version, 'the same files give the same version');
     is(SGN::I18N->new(locale => 'en', dir => $root)->version, '', 'English has no version');
+
+    # A rebuild that changes a browser file but keeps its size and time.
+    my $copy = build_translations(tempdir(CLEANUP => 1));
+    my $before = SGN::I18N->new(locale => 'uk', dir => $copy)->version;
+    my $file = "$copy/js/uk/common.json";
+    my @stat = stat $file;
+    my $text = Path::Class::file($file)->slurp(iomode => '<:raw');
+    $text =~ s/"locale"/"LOCALE"/ or die 'test catalog changed';
+    Path::Class::file("$file.new")->spew(iomode => '>:raw', $text);
+    rename("$file.new", $file) or die $!;
+    utime($stat[8], $stat[9], $file) or die $!;
+    is(-s $file, $stat[7], '(same size)');
+    isnt(SGN::I18N->new(locale => 'uk', dir => $copy)->version, $before,
+        'a changed browser file with the same size and time gives a new version');
     my $bootstrap = sub {
         my (%params) = @_;
         my $c = context();

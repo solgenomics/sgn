@@ -39,9 +39,9 @@ sub runtime :Path('/i18n/runtime.js') Args(0) {
 
 GET F</i18n/bootstrap.js?lang=...&workflow=...&v=...>: the messages of the
 request language for the browser (the C<common> section plus the page's
-section). When C<lang> chose the language and C<v> is the version of the
-installed language files, the address alone fixes the answer, so the browser
-may keep it; otherwise it must not be stored.
+section). When C<lang> chose the language and C<v> is the version (content
+digest) of the installed language files, the address alone fixes the answer,
+so the browser may keep it; otherwise it must not be stored.
 
 =cut
 
