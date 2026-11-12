@@ -32,7 +32,7 @@ const GROUPS = [
         key: 'attention', attention: true,
         title: 'Needs your attention',
         help: 'These change what was analysed: a model that could not be fitted, data that were skipped or a software fallback.',
-        match: m => /could not be fitted \(|the model failed|model could not be fitted|not installed|treated as unrelated|was skipped|were skipped|index skipped|could not be packed|requires an enabled|needs at least|from the formula|before full convergence|cannot fit .*lme4 was used/i.test(m) && !/^SpATS could not be fitted for/.test(m)
+        match: m => /could not be fitted \(|the model failed|model could not be fitted|not installed|treated as unrelated|was skipped|were skipped|index skipped|could not be packed|requires an enabled|needs at least|from the formula|before full convergence|cannot fit .*lme4 was used|all accessions were used instead|zones rest on only/i.test(m) && !/^SpATS could not be fitted for/.test(m)
     },
     {
         key: 'design', title: 'Design factors not used in the model',

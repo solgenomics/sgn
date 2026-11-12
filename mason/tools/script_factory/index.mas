@@ -449,8 +449,31 @@ $blupf90_available => 0
                 </select>
               </div>
               <div class="col-sm-6">
-                <label class="sf-label">Best accessions shown per zone</label>
+                <label class="sf-label">Accessions used to group environments</label>
+                <select class="form-control" id="sf_zones_acc_set">
+                  <option value="all">All accessions</option>
+                  <option value="checks">Checks only</option>
+                  <option value="list">Accessions of a list</option>
+                </select>
+                <div id="sf_zones_list_wrap" style="display:none;margin-top:6px">
+                  <select class="form-control input-sm" id="sf_zones_list"></select>
+                </div>
+                <p class="sf-help" id="sf_zones_acc_help" style="margin:4px 0 0">The zones are built from the genotype means of these accessions. The best accessions of each zone are always ranked among all accessions.</p>
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <div class="col-sm-6">
+                <label class="sf-label">Number of top accessions to list per zone</label>
                 <input type="number" class="form-control" id="sf_zones_top" value="10" min="1" max="100" />
+                <p class="sf-help" style="margin:4px 0 0">Only the length of the &ldquo;best accessions&rdquo; table. It does not change which accessions are analysed.</p>
+              </div>
+              <div class="col-sm-6">
+                <label class="sf-label">Rank only accessions tested in at least</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="sf_zones_min_env" value="2" min="1" max="50" />
+                  <span class="input-group-addon">environment(s) of the zone</span>
+                </div>
+                <p class="sf-help" style="margin:4px 0 0">Keeps a line seen in a single environment from topping a zone. Zones with fewer environments use all of theirs.</p>
               </div>
             </div>
             <div class="sf-options sf-options-2" style="margin-top:12px">

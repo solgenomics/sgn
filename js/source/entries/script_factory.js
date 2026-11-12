@@ -15,7 +15,7 @@
 import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
 import { analysisLogHtml, analysisLogSummaryHtml } from '../modules/script_factory_log.js';
 
-const VERSION = '1.5';
+const VERSION = '1.6';
 const SVGNS = 'http://www.w3.org/2000/svg';
 const ZONE_COLORS = ['#2b7a4b', '#2563eb', '#d97706', '#9333ea', '#dc2626', '#0891b2', '#65a30d', '#db2777', '#4b5563', '#b45309'];
 const DESIGNS = {
@@ -44,6 +44,8 @@ const state = {
     outlierChecking: {},    // status requests in flight
     indexCfg: {},           // full trait -> {weight, direction}
     zoneTargets: { index: true },
+    zoneList: null,         // {id, name} Breedbase accession list that defines the zones
+    zoneLists: null,        // {own, pub} accession lists, read once
     designOverrides: {},    // trial -> design
     singleCov: {},          // full trait -> true, covariates of the single-stage model
     trt: null,              // {use: {name: true}, gxt: {name: true}} treatments in the models; null = defaults of the dataset
@@ -202,6 +204,8 @@ function buildRecipe() {
             threshold: Number($('#sf_zones_threshold').val()),
             alpha: Number($('#sf_zones_alpha').val()),
             top_n: Number($('#sf_zones_top').val()),
+            min_env: Math.max(1, Math.round(Number($('#sf_zones_min_env').val()) || 1)),
+            accessions: zoneAccessionsRecipe(),
             targets: targets
         }
     };
@@ -253,6 +257,12 @@ function applyRecipe(r) {
     if (z.threshold !== undefined) $('#sf_zones_threshold').val(z.threshold);
     if (z.alpha) $('#sf_zones_alpha').val(z.alpha);
     if (z.top_n) $('#sf_zones_top').val(z.top_n);
+    // scripts saved before this option ranked every accession (min_env 1)
+    $('#sf_zones_min_env').val(z.min_env || 1);
+    const za = z.accessions || {};
+    $('#sf_zones_acc_set').val(['checks', 'list'].indexOf(za.set) >= 0 ? za.set : 'all');
+    state.zoneList = za.set === 'list' && za.list_id ? { id: String(za.list_id), name: za.list_name || '' } : null;
+    renderZoneListSelect();
 
     if (state.dataset) {
         applyRecipeTraits(r);
@@ -385,6 +395,7 @@ function refreshToggles() {
     const lin = radio('sf_zones_method') === 'lin';
     $('#sf_zones_threshold_wrap').toggle(!lin);
     $('#sf_zones_alpha_wrap').toggle(lin);
+    refreshZoneAccessions();
     $('#sf_stepper li[data-step=4]').toggleClass('off', !$('#sf_index_enabled').is(':checked'));
     $('#sf_stepper li[data-step=5]').toggleClass('off', !$('#sf_zones_enabled').is(':checked'));
 }
@@ -1515,6 +1526,62 @@ function renderZoneTargets() {
     $('#sf_zones_targets').html(h);
 }
 
+// accessions that define the zones: all, the checks or a Breedbase list
+function zoneAccessionsRecipe() {
+    const set = $('#sf_zones_acc_set').val() || 'all';
+    if (set !== 'list') return { set: set };
+    const l = state.zoneList || {};
+    return { set: 'list', list_id: l.id ? Number(l.id) : null, list_name: l.name || '' };
+}
+
+// accession lists of the user and public ones, read once when first needed
+function zoneLists() {
+    if (state.zoneLists) return state.zoneLists;
+    if (typeof CXGN === 'undefined' || !CXGN.List) return null;
+    try {
+        const all = new CXGN.List().getLists(['accessions']);
+        const row = x => ({ id: String(x[0]), name: String(x[1]), count: x[3] });
+        state.zoneLists = { own: arr(all.private_lists).map(row), pub: arr(all.public_lists).map(row) };
+    } catch (e) {
+        state.zoneLists = { own: [], pub: [] };
+    }
+    return state.zoneLists;
+}
+
+function renderZoneListSelect() {
+    if (($('#sf_zones_acc_set').val() || 'all') !== 'list') return;
+    const L = zoneLists();
+    const cur = state.zoneList;
+    const opt = l => '<option value="' + esc(l.id) + '"' + (cur && cur.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.count !== undefined && l.count !== null ? ' (' + l.count + ')' : '') + '</option>';
+    let h = '<option value="">Choose an accession list...</option>';
+    if (!L) h = '<option value="">The list tools are not available on this page</option>';
+    else {
+        const known = L.own.concat(L.pub).some(l => cur && l.id === cur.id);
+        // a list saved in the script that is not visible here (deleted or private to someone else)
+        if (cur && !known) h += '<option value="' + esc(cur.id) + '" selected>' + esc(cur.name || 'list ' + cur.id) + ' (not available)</option>';
+        if (L.own.length) h += '<optgroup label="Your lists">' + L.own.map(opt).join('') + '</optgroup>';
+        if (L.pub.length) h += '<optgroup label="Public lists">' + L.pub.map(opt).join('') + '</optgroup>';
+        if (!L.own.length && !L.pub.length) h += '<option value="" disabled>You have no accession lists</option>';
+    }
+    $('#sf_zones_list').html(h);
+}
+
+function refreshZoneAccessions() {
+    const set = $('#sf_zones_acc_set').val() || 'all';
+    $('#sf_zones_list_wrap').toggle(set === 'list');
+    if (set === 'list' && !$('#sf_zones_list option').length) renderZoneListSelect();
+    const D = state.dataset;
+    const nChk = D ? arr(D.trials).reduce((a, t) => a + (t.n_check_plots || 0), 0) : 0;
+    let help = 'The zones are built from the genotype means of all accessions.';
+    if (set === 'checks') {
+        help = 'The zones are built from the checks only (entries marked as check), which are usually tested in every environment. ' +
+            (D ? (nChk ? nChk + ' check plot(s) in this dataset.' : '<b>No entry is marked as check in this dataset.</b>') : '');
+    } else if (set === 'list') {
+        help = 'The zones are built from the accessions of the list that are in the dataset (for example long-term entries tested everywhere).';
+    }
+    $('#sf_zones_acc_help').html(help + ' The best accessions of each zone are always ranked among all accessions. Correlations need at least 5 accessions in common between two environments.');
+}
+
 // ---------------------------------------------------------------------------
 // pipeline summary
 // ---------------------------------------------------------------------------
@@ -1551,7 +1618,7 @@ function renderPipeline() {
     }
     const nIdx = Object.keys(r.index.traits).length;
     items.push({ t: 'Selection index', d: r.index.enabled ? (r.index.method === 'rank_sum' ? 'rank sum' : 'weighted Z-score') + ', ' + nIdx + ' trait(s), top ' + r.index.selection_pct + '%' : 'off', off: !r.index.enabled });
-    items.push({ t: 'Environmental zones', d: r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin G&times;E test' : 'correlation clustering') + ' by ' + r.zones.unit.replace('_', ' &times; ') + '<br/>' + r.zones.targets.map(x => x === 'index' ? 'index' : esc(shortTrait(x))).join(', ') : 'off', off: !r.zones.enabled });
+    items.push({ t: 'Environmental zones', d: r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin G&times;E test' : 'correlation clustering') + ' by ' + r.zones.unit.replace('_', ' &times; ') + (r.zones.accessions.set === 'checks' ? ', on the checks' : r.zones.accessions.set === 'list' ? ', on list ' + esc(r.zones.accessions.list_name || '') : '') + '<br/>' + r.zones.targets.map(x => x === 'index' ? 'index' : esc(shortTrait(x))).join(', ') : 'off', off: !r.zones.enabled });
 
     $('#sf_pipeline').html('<ul class="sf-flow">' + items.map(i => '<li class="' + (i.off ? 'off' : '') + '"><b>' + i.t + '</b>' + i.d + '</li>').join('') + '</ul>');
     updateRunButton();   // any change to the pipeline may make the last results stale
@@ -1574,6 +1641,8 @@ function validateRecipe(r) {
     if (r.zones.enabled && !r.zones.targets.length) problems.push('Choose what to group environments on (step 5).');
     if (r.zones.enabled && r.zones.targets.indexOf('index') >= 0 && !r.index.enabled) problems.push('Zoning on the index requires the selection index (step 4).');
     if (r.zones.enabled && state.dataset && state.dataset.trials.length < 2) problems.push('Environmental zoning needs at least two trials.');
+    if (r.zones.enabled && r.zones.accessions.set === 'list' && !r.zones.accessions.list_id) problems.push('Choose the accession list used to group environments (step 5).');
+    if (r.zones.enabled && r.zones.accessions.set === 'checks' && state.dataset && !arr(state.dataset.trials).some(t => t.n_check_plots > 0)) problems.push('No entry is marked as check in this dataset: group environments on all accessions or on a list (step 5).');
     return problems;
 }
 
@@ -1874,7 +1943,9 @@ function renderZoneResults(zones) {
         arr(z.membership).forEach(m => { if (zoneNames.indexOf(m.zone) < 0) zoneNames.push(m.zone); });
         const color = zn => ZONE_COLORS[(zoneNames.indexOf(zn)) % ZONE_COLORS.length];
         h += '<div class="tab-pane' + (i === 0 ? ' active' : '') + '" id="sf_zone_' + i + '">';
-        h += '<p><b>' + esc(z.target) + '</b>: <b>' + z.n_zones + '</b> zone(s) using ' + (z.method === 'lin' ? 'the Lin (1982) G&times;E test' : 'genetic correlation clustering') + '.</p>';
+        h += '<p><b>' + esc(z.target) + '</b>: <b>' + z.n_zones + '</b> zone(s) using ' + (z.method === 'lin' ? 'the Lin (1982) G&times;E test' : 'genetic correlation clustering') +
+            (z.accessions_used ? ' on ' + esc(z.accessions_used) + (z.n_accessions_used ? ' (' + z.n_accessions_used + ')' : '') : '') + '.' +
+            (Number(z.min_env) > 1 ? ' Ranked: accessions tested in at least ' + Number(z.min_env) + ' environment(s) of the zone.' : '') + '</p>';
 
         h += '<div class="row">';
         zoneNames.forEach(zn => {
@@ -1883,7 +1954,7 @@ function renderZoneResults(zones) {
             h += '<div class="col-md-6"><div class="sf-card" style="border-top:4px solid ' + color(zn) + '">' +
                 '<h4 style="margin-top:0"><span class="sf-zone-chip" style="background:' + color(zn) + '">' + esc(zn) + '</span> ' + envs.length + ' environment(s)</h4>' +
                 '<p class="sf-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
-                simpleTable(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions' }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: 'No accession tested in all environments of this zone.' }) +
+                simpleTable(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions' }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: Number(z.min_env) > 1 ? 'No accession tested in at least ' + Number(z.min_env) + ' environment(s) of this zone.' : 'No accession with values in this zone.' }) +
                 '</div></div>';
         });
         h += '</div>';
@@ -2091,7 +2162,7 @@ function newScript() {
     state.designOverrides = {};
     state.indexCfg = {};
     state.zoneTargets = { index: true };
-    applyRecipe({ strategy: 'two_stage', engine: 'lme4', genetic: { model: 'iid', check: 'auto' }, outliers: { method: 'none', group_by: 'trial', k: 1.5, alpha: 0.05 }, stage1: { model: 'auto' }, stage2: { genotype: 'random', weighting: 'inverse_se2' }, single: { mode: 'builder', genotype: 'random', env: 'fixed', rep: 'auto', block: 'auto', rowcol: 'auto', trend: 'none', gxe: ['trial'], covariates: [], formula: '' }, index: { enabled: false, method: 'zscore', selection_pct: 10 }, zones: { enabled: false, unit: 'trial', method: 'correlation', threshold: 0.5, alpha: 0.05, top_n: 10, targets: ['index'] } });
+    applyRecipe({ strategy: 'two_stage', engine: 'lme4', genetic: { model: 'iid', check: 'auto' }, outliers: { method: 'none', group_by: 'trial', k: 1.5, alpha: 0.05 }, stage1: { model: 'auto' }, stage2: { genotype: 'random', weighting: 'inverse_se2' }, single: { mode: 'builder', genotype: 'random', env: 'fixed', rep: 'auto', block: 'auto', rowcol: 'auto', trend: 'none', gxe: ['trial'], covariates: [], formula: '' }, index: { enabled: false, method: 'zscore', selection_pct: 10 }, zones: { enabled: false, unit: 'trial', method: 'correlation', threshold: 0.5, alpha: 0.05, top_n: 10, min_env: 2, accessions: { set: 'all' }, targets: ['index'] } });
     if (state.dataset) { state.traits = state.dataset.traits.map(t => t.name); renderTraits(); }
     renderExclusions();
     setScriptName();
@@ -2270,6 +2341,13 @@ export function init(options) {
         state.zoneTargets[$(this).val()] = $(this).is(':checked');
         $(this).closest('.sf-trait').toggleClass('on', $(this).is(':checked'));
         renderPipeline();
+    });
+
+    $('#sf_zones_list').on('change', function() {
+        const id = $(this).val();
+        state.zoneList = id ? { id: id, name: $(this).find('option:selected').text().replace(/ \((\d+|not available)\)$/, '') } : null;
+        renderPipeline();
+        renderQuickRun();
     });
 
     // step 6

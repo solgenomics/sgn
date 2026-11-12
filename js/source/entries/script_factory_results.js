@@ -1235,7 +1235,9 @@ function renderZones() {
     const hasGz = arr(z.genotype_zones).length > 0;
     const accs = hasGz ? bestAccessions(z) : [];
     if (S.zoneAccession && accs.indexOf(S.zoneAccession) < 0) S.zoneAccession = null;
-    let h = '<p><b>' + esc(z.target) + '</b>: <b>' + z.n_zones + '</b> zone(s) by ' + (z.method === 'lin' ? 'the Lin (1982) G&times;E test' : 'genetic correlation clustering') + '.</p>' +
+    let h = '<p><b>' + esc(z.target) + '</b>: <b>' + z.n_zones + '</b> zone(s) by ' + (z.method === 'lin' ? 'the Lin (1982) G&times;E test' : 'genetic correlation clustering') +
+        (z.accessions_used ? ' on ' + esc(z.accessions_used) + (z.n_accessions_used ? ' (' + z.n_accessions_used + ')' : '') : '') + '.' +
+        (Number(z.min_env) > 1 ? ' Ranked: accessions tested in at least ' + Number(z.min_env) + ' environment(s) of the zone.' : '') + '</p>' +
         '<div class="row"><div class="col-md-8"><div id="sfd_zone_map" style="height:460px;border-radius:8px;border:1px solid #e5e7eb;z-index:1"></div><div class="sfd-help" id="sfd_zone_map_note"></div>' +
         '<div class="sfd-help" style="margin-top:4px">Each marker is an environment, coloured by its zone; shaded areas join the locations of a zone. ' +
         (hasGz ? 'With a genotype chosen, the markers show its rank in that zone and the zones where it ranks best are shaded darker.' : '') + '</div></div>' +
@@ -1255,7 +1257,7 @@ function renderZones() {
         h += '<div class="col-lg-6"><div class="sfd-card" style="border-top:4px solid ' + zoneColor(zn) + '"><h4 style="margin-top:0"><span class="sfd-zone-chip" style="background:' + zoneColor(zn) + '">' + esc(zn) + '</span> ' + envs.length + ' environment(s)</h4>' +
             (geo.n ? '<p class="sfd-help"><span class="glyphicon glyphicon-map-marker"></span> Altitude ' + (esc(geo.alt) || 'unknown') + ' &middot; latitude ' + esc(geo.lat) + '</p>' : '') +
             '<p class="sfd-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
-            table(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions', f: v => accLink(v) }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: 'No accession tested in all environments of this zone.' }) + '</div></div>';
+            table(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions', f: v => accLink(v) }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: Number(z.min_env) > 1 ? 'No accession tested in at least ' + Number(z.min_env) + ' environment(s) of this zone.' : 'No accession with values in this zone.' }) + '</div></div>';
     });
     h += '</div>';
     if (z.correlation && arr(z.correlation.environments).length) {

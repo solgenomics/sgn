@@ -37,7 +37,7 @@ suppressPackageStartupMessages({
   library(lme4)
 })
 
-SF_VERSION <- "1.5"
+SF_VERSION <- "1.6"
 
 # -----------------------------------------------------------------------------
 # Arguments
@@ -1727,6 +1727,43 @@ if (isTRUE(opt(zones_cfg, "enabled", FALSE)) && !is.null(stage1_means)) {
   z_thr <- as.numeric(opt(zones_cfg, "threshold", 0.5))
   z_top <- as.numeric(opt(zones_cfg, "top_n", 10))
   targets <- unlist(opt(zones_cfg, "targets", list("index")))
+  z_min_common <- max(5, as.numeric(opt(zones_cfg, "min_common", 5)))
+  # minimum environments of a zone an accession must be tested in to be ranked
+  # there (capped by the size of the zone); 1 = every accession, as before 1.6
+  z_min_env <- max(1, suppressWarnings(as.integer(opt(zones_cfg, "min_env", 1))), na.rm = TRUE)
+
+  # accessions that define the zones (the rankings always cover all accessions):
+  # all, the checks (entry type check/control) or a Breedbase list (items added
+  # by the web server)
+  z_acc_cfg <- opt(zones_cfg, "accessions", list())
+  z_acc_set <- opt(z_acc_cfg, "set", "all")
+  z_acc_label <- "all accessions"
+  z_acc <- NULL
+  if (z_acc_set %in% c("checks", "list")) {
+    all_acc <- unique(as.character(dat$accession))
+    if (z_acc_set == "checks") {
+      want <- names(acc_is_check)[acc_is_check %in% TRUE]
+      what <- "check accessions"
+      z_acc_label <- "check accessions"
+    } else {
+      want <- trimws(as.character(unlist(opt(z_acc_cfg, "items", list()))))
+      lname <- opt(z_acc_cfg, "list_name", "")
+      what <- paste0("accessions of the list", if (nzchar(lname)) paste0(" '", lname, "'") else "")
+      z_acc_label <- what
+      n_out <- length(setdiff(want, all_acc))
+      if (n_out > 0 && length(intersect(want, all_acc)) >= 3)
+        add_warning("Zoning: ", n_out, " of the ", length(unique(want)), " ", what, " are not in the dataset and were ignored.")
+    }
+    z_acc <- intersect(all_acc, want)
+    if (length(z_acc) < 3) {
+      add_warning("Zoning: only ", length(z_acc), " ", what, " in the dataset (at least 3 are needed to group environments); all accessions were used instead.")
+      z_acc <- NULL
+      z_acc_label <- "all accessions"
+    } else if (length(z_acc) < z_min_common) {
+      add_warning("Zoning: the zones rest on only ", length(z_acc), " ", what, "; correlations between environments on so few accessions are unreliable.")
+      z_min_common <- length(z_acc)
+    }
+  }
 
   # environment-level genotype values (average of trial means inside an env)
   env_vals <- aggregate(value ~ accession + env + trait, data = stage1_means, FUN = mean)
@@ -1764,15 +1801,18 @@ if (isTRUE(opt(zones_cfg, "enabled", FALSE)) && !is.null(stage1_means)) {
   for (tname in names(target_list)) {
     tv <- target_list[[tname]]
     m <- tapply(tv$values$value, list(tv$values$accession, tv$values$env), mean)
+    # the zones are built on the chosen accessions only
+    m_zone <- if (is.null(z_acc)) m else m[rownames(m) %in% z_acc, , drop = FALSE]
     method_used <- z_method
     zr <- NULL
     if (z_method == "lin" && !is.na(tv$trait)) {
       d <- dat[!is.na(dat[[tv$trait]]), ]
+      if (!is.null(z_acc)) d <- d[as.character(d$accession) %in% z_acc, ]
       d$y <- d[[tv$trait]]
       zr <- lin_zones(d, z_alpha)
     } else {
       if (z_method == "lin") method_used <- "correlation"
-      zr <- cor_zones(m, z_thr, max(5, as.numeric(opt(zones_cfg, "min_common", 5))))
+      zr <- cor_zones(m_zone, z_thr, z_min_common)
     }
     if (is.null(zr)) { add_warning("Zoning for ", tname, " needs at least two environments."); next }
     membership <- do.call(rbind, lapply(seq_along(zr$groups), function(k) data.frame(zone = paste0("Zone ", k), env = zr$groups[[k]], stringsAsFactors = FALSE)))
@@ -1784,7 +1824,7 @@ if (isTRUE(opt(zones_cfg, "enabled", FALSE)) && !is.null(stage1_means)) {
       sub <- m[, colnames(m) %in% envs, drop = FALSE]
       v <- rowMeans(sub, na.rm = TRUE)
       n_env <- rowSums(!is.na(sub))
-      v <- v[is.finite(v)]
+      v <- v[is.finite(v) & n_env >= min(z_min_env, length(envs))]
       if (!length(v)) return(NULL)
       ord <- names(sort(v, decreasing = !(tname %in% decreasing_targets)))
       ord <- head(ord, z_top)
@@ -1797,7 +1837,7 @@ if (isTRUE(opt(zones_cfg, "enabled", FALSE)) && !is.null(stage1_means)) {
       sub <- m[, colnames(m) %in% zr$groups[[k]], drop = FALSE]
       v <- rowMeans(sub, na.rm = TRUE)
       n_env <- rowSums(!is.na(sub))
-      keep <- is.finite(v)
+      keep <- is.finite(v) & n_env >= min(z_min_env, length(zr$groups[[k]]))
       if (!any(keep)) return(NULL)
       v <- v[keep]; n_env <- n_env[keep]
       data.frame(zone = paste0("Zone ", k), accession = names(v), value = unname(v), n_env = unname(n_env),
@@ -1807,6 +1847,9 @@ if (isTRUE(opt(zones_cfg, "enabled", FALSE)) && !is.null(stage1_means)) {
       target = tname, method = method_used,
       n_zones = length(zr$groups),
       higher_is_better = higher_better,
+      accessions_used = z_acc_label,
+      n_accessions_used = if (is.null(z_acc)) nrow(m) else nrow(m_zone),
+      min_env = z_min_env,
       membership = membership,
       pairwise = zr$pairwise, correlation = zr$correlation,
       top = top,

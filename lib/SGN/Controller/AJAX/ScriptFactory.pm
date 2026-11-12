@@ -112,6 +112,22 @@ sub _schemas {
     return ($schema, $people_schema, $sp_person_id);
 }
 
+# items of the accession list that defines the environmental zones; the list
+# must belong to the user or be public. Returns an array ref, or an error text.
+sub _zone_list_items {
+    my ($c, $list_id) = @_;
+    return 'Choose the accession list used to group environments (step 5).' if !defined($list_id) || $list_id !~ /^\d+$/;
+    my $dbh = $c->dbc->dbh();
+    my ($owner, $is_public) = $dbh->selectrow_array('SELECT owner, is_public FROM sgn_people.list WHERE list_id = ?', undef, $list_id);
+    return 'The accession list chosen to group environments no longer exists; choose another one (step 5).' if !defined($owner) && !defined($is_public);
+    return 'You do not have access to the accession list chosen to group environments.' if !$is_public && ($owner // -1) != (_user_id($c) // -2);
+    my $items = $dbh->selectcol_arrayref('SELECT content FROM sgn_people.list_item WHERE list_id = ? ORDER BY list_item_id', undef, $list_id);
+    my %seen;
+    my @items = grep { defined($_) && $_ ne '' && !$seen{$_}++ } map { my $x = $_; $x =~ s/^\s+|\s+$//g; $x } @{$items || []};
+    return 'The accession list chosen to group environments is empty.' if !@items;
+    return \@items;
+}
+
 sub _read_pheno_file {
     my $file = shift;
     open(my $F, "<", $file) or die "Cannot open phenotype file\n";
@@ -828,6 +844,19 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     if (($single->{mode} // '') eq 'custom' && ($single->{formula} // '') !~ /^[A-Za-z0-9_.\s+\-*\/:|()~]*$/) {
         $c->stash->{rest} = { error => 'The custom model formula contains characters that are not allowed. Use variable names, + - * / : | ( ) 0 and 1 only.' };
         return;
+    }
+
+    # environmental zones on a Breedbase accession list: the list is read here
+    # (own or public lists only) and its items go to R inside the recipe
+    my $zones = ref($recipe->{zones}) eq 'HASH' ? $recipe->{zones} : {};
+    my $zacc = ref($zones->{accessions}) eq 'HASH' ? $zones->{accessions} : undef;
+    if ($zones->{enabled} && $zacc && ($zacc->{set} // '') eq 'list') {
+        my $items = _zone_list_items($c, $zacc->{list_id});
+        if (!ref($items)) {
+            $c->stash->{rest} = { error => $items };
+            return;
+        }
+        $zacc->{items} = $items;
     }
 
     my $dir = _work_dir($c);
