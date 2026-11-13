@@ -32,7 +32,7 @@ const GROUPS = [
         key: 'attention', attention: true,
         title: 'Needs your attention',
         help: 'These change what was analysed: a model that could not be fitted, data that were skipped or a software fallback.',
-        match: m => /could not be fitted \(|the model failed|model could not be fitted|not installed|treated as unrelated|was skipped|were skipped|index skipped|could not be packed|requires an enabled|needs at least|from the formula|before full convergence|cannot fit .*lme4 was used|all accessions were used instead|zones rest on only|model could not be used \(|genotypes of the genotyping protocol could not be retrieved|no marker passed/i.test(m) && !/accessions have no genotypes in /.test(m) && !/^SpATS could not be fitted for/.test(m)
+        match: m => /could not be fitted \(|the model failed|model could not be fitted|not installed|treated as unrelated|was skipped|were skipped|index skipped|could not be packed|requires an enabled|needs at least|from the formula|cannot fit .*lme4 was used|all accessions were used instead|zones rest on only|model could not be used \(|genotypes of the genotyping protocol could not be retrieved|no marker passed/i.test(m) && !/accessions have no genotypes in /.test(m) && !/AI-REML|EM-REML/.test(m) && !/^SpATS could not be fitted for/.test(m)
     },
     {
         key: 'design', title: 'Design factors not used in the model',
@@ -61,6 +61,21 @@ const GROUPS = [
         help: 'Too few replicated plots to estimate the residual variance. The accession means of these trials were used, without standard errors (they get an average weight in stage 2).',
         match: m => /no error variance can be estimated/.test(m),
         split: m => { const r = /^(.+?): no error variance can be estimated \((.+)\); /.exec(m); return r && { where: r[1], detail: r[2] }; }
+    },
+    {
+        key: 'convergence', title: 'Convergence notes',
+        help: 'How the variance estimation (REML) of some fits ended. Reaching the round limit with settled estimates is harmless; a fit that did not settle was refitted with EM-REML first, which is steadier when a variance is close to zero (a replicate or block effect the trial hardly has).',
+        match: m => /AI-REML|EM-REML/.test(m),
+        split: m => {
+            const r = /^(.+?): (.+?)\.?$/.exec(m);
+            if (!r) return null;
+            const d = r[2];
+            const detail = /already settled/.test(d) ? 'round limit reached with settled estimates: reliable'
+                : /which converged/.test(d) ? 'refitted with EM-REML first: converged'
+                : /still changing/.test(d) ? 'still changing after the EM-REML refit: variance estimates approximate'
+                : /before full convergence/.test(d) ? 'stopped at the round limit (run before this check was added)' : d;
+            return { where: r[1], detail: detail };
+        }
     },
     {
         key: 'variance', title: 'Model terms simplified',

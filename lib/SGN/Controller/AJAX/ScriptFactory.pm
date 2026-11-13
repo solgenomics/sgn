@@ -42,6 +42,7 @@ use DateTime;
 use Try::Tiny;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Job;
 use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
@@ -354,8 +355,26 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
             file_name => $tempfile,
             quotes => 0,
         );
-        $ds->retrieve_phenotypes($pheno_file);
         $traits_in_ds = $ds->retrieve_traits();
+    } catch {
+        $c->stash->{rest} = { error => "Could not open the dataset: $_" };
+    };
+    return if $c->stash->{rest};
+
+    # Breedbase reads datasets from the phenotype search cache (materialized
+    # views), which on a large database can be hours behind new uploads. When
+    # the cache does not hold every value of the dataset's trials, the dataset
+    # is read from the database tables instead, so the summary and the
+    # analysis always use all of its data.
+    my $cache = try { _phenotype_cache_check($schema, $ds, $traits_in_ds) }
+                catch { print STDERR "Analysis Pipeline: phenotype cache of dataset $dataset_id not checked: $_\n"; undef };
+    my $source = ($cache && @{$cache->{stale}}) ? 'database' : 'cache';
+    try {
+        if ($source eq 'database') {
+            _write_native_phenotypes($schema, $ds, $traits_in_ds, $pheno_file);
+        } else {
+            $ds->retrieve_phenotypes($pheno_file);
+        }
     } catch {
         $c->stash->{rest} = { error => "Could not retrieve the dataset phenotypes: $_" };
     };
@@ -501,6 +520,10 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         n_accessions => scalar(keys %accessions),
         n_locations => scalar(keys %locations),
         n_years => scalar(keys %years),
+        # where the phenotypes were read from: 'cache' (search cache, up to date)
+        # or 'database' (tables, because the cache missed values of stale_trials)
+        phenotype_source => $source,
+        stale_trials => $cache ? $cache->{stale} : [],
         pedigree => $pedigree,
         treatments => $treatments,
         treatment_types => _treatment_types($c),
@@ -543,10 +566,28 @@ sub plot_data : Path('/ajax/script_factory/plot_data') Args(0) {
         push @out, \@rec if $has_value;
     }
 
+    # every measurement of the traits measured more than once per plot (the
+    # dataset file has their plot mean), in date order: the page shows them as
+    # the value per plot chosen for the model (mean, sum, first, last...)
+    my %repeated;
+    my %wanted = map { $_ => 1 } @traits;
+    my $rep_file = _work_dir($c) . "/$token.repeated.txt";
+    if (-e $rep_file) {
+        open(my $fh, '<', $rep_file) or die "Cannot read $rep_file: $!";
+        while (my $line = <$fh>) {
+            chomp $line;
+            my ($unit, $trait, $value) = split /\t/, $line;
+            next if !defined($trait) || !$wanted{$trait} || !_is_number($value);
+            push @{ $repeated{$trait}->{$unit} }, $value + 0;
+        }
+        close($fh);
+    }
+
     $c->stash->{rest} = {
         columns => [ qw | unit trial accession rep block row col |, @traits ],
         traits => \@traits,
         rows => \@out,
+        repeated => \%repeated,
     };
 }
 
@@ -695,6 +736,68 @@ sub _resolve_phenotypes {
         $in_db{$phenotype_id} = 1 if $is_outlier;
     }
     return (\%ids, \%in_db, $outlier_type_id);
+}
+
+# Compares, for each trial of the dataset, the plot values of its traits in the
+# database tables with those in the phenotype search cache
+# (materialized_phenotype_jsonb_table), counting distinct phenotype ids on both
+# sides. Only the dataset's trials are read, so it stays fast on a large
+# database. Returns { stale => [trial names whose counts differ] }.
+sub _phenotype_cache_check {
+    my ($schema, $ds, $traits) = @_;
+    my %trial_name = map { ref($_) ? ($_->[0] => $_->[1]) : ($_ => $_) } @{ $ds->retrieve_trials() || [] };
+    my @trial_ids = grep { defined && /^\d+$/ } keys %trial_name;
+    return { stale => [] } if !@trial_ids;
+    # no traits in the dataset: all traits, as the dataset search does
+    my @trait_ids = grep { defined && /^\d+$/ } map { ref($_) ? $_->[0] : $_ } @{ $traits || [] };
+    my $dbh = $schema->storage->dbh();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+
+    my $trait_sql = @trait_ids ? 'AND phenotype.cvalue_id = ANY(?)' : '';
+    my $tables = $dbh->selectall_arrayref(
+        "SELECT nepr.project_id, count(DISTINCT phenotype.phenotype_id)
+           FROM nd_experiment_project nepr
+           JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nepr.nd_experiment_id
+           JOIN stock unit ON unit.stock_id = nes.stock_id AND unit.type_id = ?
+           JOIN nd_experiment_phenotype nep ON nep.nd_experiment_id = nepr.nd_experiment_id
+           JOIN phenotype ON phenotype.phenotype_id = nep.phenotype_id
+          WHERE nepr.project_id = ANY(?) AND phenotype.value IS NOT NULL $trait_sql
+          GROUP BY nepr.project_id", undef, $plot_type_id, \@trial_ids, (@trait_ids ? \@trait_ids : ()));
+
+    my $trait_json_sql = @trait_ids ? "AND (o->>'trait_id')::int = ANY(?)" : '';
+    my $cached = $dbh->selectall_arrayref(
+        "SELECT m.trial_id, count(DISTINCT o->>'phenotype_id')
+           FROM public.materialized_phenotype_jsonb_table m
+           CROSS JOIN LATERAL jsonb_array_elements(m.observations) o
+          WHERE m.trial_id = ANY(?) AND m.observationunit_type_name = 'plot' $trait_json_sql
+          GROUP BY m.trial_id", undef, \@trial_ids, (@trait_ids ? \@trait_ids : ()));
+
+    my %n_tables = map { $_->[0] => $_->[1] } @$tables;
+    my %n_cached = map { $_->[0] => $_->[1] } @$cached;
+    my @stale = sort map { $trial_name{$_} } grep { ($n_tables{$_} // 0) != ($n_cached{$_} // 0) } @trial_ids;
+    return { stale => \@stale };
+}
+
+# Writes the dataset's phenotype file as CXGN::Dataset::File does (tab
+# separated, no quotes), but read with the Native search, from the database
+# tables instead of the search cache. Same filters as
+# CXGN::Dataset::retrieve_phenotypes; outliers are kept (step 2 handles them).
+sub _write_native_phenotypes {
+    my ($schema, $ds, $traits, $file) = @_;
+    my $ids = sub { [ grep { defined } map { ref($_) ? $_->[0] : $_ } @{ $_[0] || [] } ] };
+    my $matrix = CXGN::Phenotypes::PhenotypeMatrix->new(
+        search_type => 'Native',
+        bcs_schema => $schema,
+        data_level => $ds->data_level(),
+        trait_list => $ids->($traits),
+        trial_list => $ids->($ds->retrieve_trials()),
+        accession_list => $ids->($ds->retrieve_accessions()),
+        exclude_phenotype_outlier => 0,
+    );
+    my @rows = $matrix->get_phenotype_matrix();
+    no warnings 'uninitialized';
+    write_file($file, map { my $s = join("\t", @$_); $s =~ s/[\r\n]//g; "$s\n" } @rows);
+    return scalar(@rows);
 }
 
 # Values of the dataset (plots of its trials, its traits) marked as outliers:

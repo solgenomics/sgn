@@ -468,11 +468,52 @@ iqr_k <- as.numeric(opt(out_cfg, "k", 1.5))
 madr_alpha <- as.numeric(opt(out_cfg, "alpha", 0.05))
 
 outlier_rows <- list()
-flag_outlier <- function(idx, trait, reason) {
+flag_outlier <- function(idx, trait, reason, value = dat[[trait]][idx]) {
   if (length(idx) == 0) return(invisible())
   outlier_rows[[length(outlier_rows) + 1]] <<- data.frame(
     unit = dat$unit[idx], trial = dat$trial[idx], accession = dat$accession[idx],
-    trait = trait, value = dat[[trait]][idx], reason = reason, stringsAsFactors = FALSE)
+    trait = trait, value = value, reason = reason, stringsAsFactors = FALSE)
+}
+
+# Per trait: the side the rules flag (outliers$side: "high" | "low", default
+# both) and, for traits measured several times per plot, the value per plot
+# the rules judge (outliers$view: mean | sum | first | last, default mean),
+# which may differ from the value the model uses (repeated$traits).
+per_trait_opt <- function(name, allowed) {
+  h <- opt(out_cfg, name, list())
+  out <- list()
+  for (key in names(h)) {
+    full <- match_trait(key)
+    v <- as.character(unlist(h[[key]]))[1]
+    if (!is.na(full) && !is.na(v) && v %in% allowed) out[[full]] <- v
+  }
+  out
+}
+out_side <- per_trait_opt("side", c("high", "low"))
+out_view <- per_trait_opt("view", c("mean", "sum", "first", "last", "max", "min"))
+is_rep_trait <- function(t) !is.null(rep_long) && any(rep_long$trait == t)
+# values the rules judge for trait t, aligned with the rows of dat
+judged_values <- function(t) {
+  y <- dat[[t]]
+  if (!is_rep_trait(t)) return(y)
+  how <- if (is.null(out_view[[t]])) "mean" else out_view[[t]]
+  rl <- rep_long[rep_long$trait == t, ]
+  vals <- vapply(split(seq_len(nrow(rl)), rl$unit), function(i) rep_summary_fun(rl$value[i], rl$day[i], how), numeric(1))
+  v <- unname(vals[as.character(dat$unit)])
+  ifelse(is.na(y), NA_real_, ifelse(is.na(v), y, v))
+}
+keep_side <- function(t, high) {
+  s <- out_side[[t]]
+  if (is.null(s)) rep(TRUE, length(high)) else if (s == "high") high else !high
+}
+how_text <- function(t) {
+  w <- character()
+  if (!is.null(out_side[[t]])) w <- c(w, paste(out_side[[t]], "values only"))
+  if (is_rep_trait(t)) {
+    how <- if (is.null(out_view[[t]])) "mean" else out_view[[t]]
+    w <- c(w, paste0("judged on the ", if (how == "mean") "plot mean" else REP_LABEL[[how]], " of the repeated measurements"))
+  }
+  if (length(w)) paste0(", ", paste(w, collapse = ", ")) else ""
 }
 
 group_vector <- function(by) {
@@ -572,7 +613,7 @@ n_before <- sapply(traits, function(t) sum(!is.na(dat[[t]])))
 if (out_method == "iqr") {
   g <- group_vector(out_group)
   for (t in traits) {
-    y <- dat[[t]]
+    y <- judged_values(t)
     for (lvl in unique(g)) {
       ii <- which(g == lvl & !is.na(y))
       if (length(ii) < 4) next
@@ -580,8 +621,8 @@ if (out_method == "iqr") {
       iqr <- q[2] - q[1]
       lo <- q[1] - iqr_k * iqr
       hi <- q[2] + iqr_k * iqr
-      bad <- ii[y[ii] < lo | y[ii] > hi]
-      flag_outlier(bad, t, sprintf("IQR (k = %.2g) within %s", iqr_k, gsub("_", " x ", out_group)))
+      bad <- ii[(y[ii] > hi & keep_side(t, TRUE)) | (y[ii] < lo & keep_side(t, FALSE))]
+      flag_outlier(bad, t, paste0(sprintf("IQR (k = %.2g) within %s", iqr_k, gsub("_", " x ", out_group)), how_text(t)), y[bad])
       dat[[t]][bad] <- NA
     }
   }
@@ -589,12 +630,13 @@ if (out_method == "iqr") {
   # Bernal-Vasquez, Utz & Piepho (2016): Bonferroni-Holm test on residuals
   # re-scaled by the median absolute deviation (BH-MADR).
   for (t in traits) {
+    yj <- judged_values(t)
     for (tr in trials) {
-      ii <- which(dat$trial == tr & !is.na(dat[[t]]))
+      ii <- which(dat$trial == tr & !is.na(yj))
       d <- dat[ii, ]
       if (nrow(d) < 6 || n_levels(d$accession) < 2) next
       fml <- if (n_levels(d$rep_eff) > 1) y ~ accession + rep_eff else y ~ accession
-      d$y <- d[[t]]
+      d$y <- yj[ii]
       fit <- tryCatch(lm(fml, data = d), error = function(e) NULL)
       if (is.null(fit) || df.residual(fit) < 2) next
       r <- residuals(fit)
@@ -606,8 +648,9 @@ if (out_method == "iqr") {
       if (!is.finite(madv) || madv <= 1e-8 * max(sd(d$y), 1e-300)) next
       z <- r[inf] / madv
       p <- 2 * pnorm(-abs(z))
-      bad <- ii[inf][p.adjust(p, "holm") < madr_alpha]
-      flag_outlier(bad, t, sprintf("BH-MADR (alpha = %.2g)", madr_alpha))
+      # the side of a value: above (positive residual) or below what the model expects
+      bad <- ii[inf][p.adjust(p, "holm") < madr_alpha & keep_side(t, r[inf] > 0)]
+      flag_outlier(bad, t, paste0(sprintf("BH-MADR (alpha = %.2g)", madr_alpha), how_text(t)), yj[bad])
       dat[[t]][bad] <- NA
     }
   }
@@ -1559,8 +1602,20 @@ if (isTRUE(opt(idx_cfg, "enabled", FALSE))) {
       v <- stage2_summary$h2[stage2_summary$trait == short_trait(t)]
       if (length(v)) v[1] else NA_real_
     }
+    # selection accuracy: mean over the accessions of sqrt(1 - PEV / var_g)
+    # (genotype random, from the standard errors of the BLUPs), otherwise
+    # sqrt(H2) (accuracy of selection on entry means)
+    accuracy_of <- function(t) {
+      vg <- if (is.null(stage2_summary)) NA_real_ else suppressWarnings(as.numeric(stage2_summary$var_g[stage2_summary$trait == short_trait(t)][1]))
+      se <- suppressWarnings(as.numeric(genotype_values$se[genotype_values$trait == t]))
+      se <- se[is.finite(se)]
+      if (genotype_random && is.finite(vg) && vg > 0 && length(se)) return(list(value = mean(sqrt(pmax(0, 1 - se^2 / vg))), basis = "pev"))
+      h2 <- h2_of(t)
+      if (is.finite(h2)) list(value = sqrt(max(0, h2)), basis = "h2") else list(value = NA_real_, basis = "")
+    }
     gains <- do.call(rbind, lapply(traits_ok, function(t) {
       x <- w2[[t]]; xs <- x[w2$selected]
+      ac <- accuracy_of(t)
       s <- mean(xs, na.rm = TRUE) - mean(x, na.rm = TRUE)
       h2 <- h2_of(t)
       data.frame(trait = short_trait(t), in_index = t %in% names(idx_traits_cfg),
@@ -1570,10 +1625,14 @@ if (isTRUE(opt(idx_cfg, "enabled", FALSE))) {
                  selection_differential = s, selection_differential_pct = 100 * s / abs(mean(x, na.rm = TRUE)),
                  h2 = h2,
                  expected_gain = if (!genotype_random && is.finite(h2)) h2 * s else s,
+                 accuracy = ac$value, accuracy_basis = ac$basis,
                  stringsAsFactors = FALSE)
     }))
+    # accuracy of the index: mean of its traits' accuracies, weighted by |weight|
+    ia <- gains[gains$in_index & is.finite(gains$accuracy), ]
+    index_accuracy <- if (!nrow(ia)) NA_real_ else if (sum(abs(ia$weight)) > 0) sum(abs(ia$weight) * ia$accuracy) / sum(abs(ia$weight)) else mean(ia$accuracy)
     index_result <- list(method = method, selection_pct = sel_pct, n_selected = n_sel, n_ranked = nrow(w2),
-                         table = w2, gains = gains,
+                         table = w2, gains = gains, accuracy = index_accuracy,
                          note = if (genotype_random) "Values are BLUPs (already shrunk by heritability): the expected gain equals the selection differential on BLUPs." else "Expected gain = h2 x selection differential on BLUEs.")
   }
 }

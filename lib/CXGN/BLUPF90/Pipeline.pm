@@ -33,8 +33,11 @@ results file has the same content as the one of the R pipeline
 store dialog and the logs work the same with both engines.
 
 Differences with the R engine: SpATS (an R package) is not available;
-trials with a row x column layout get random row and column effects within
-replicate plus linear row and column trends in stage 1. Custom formulas
+trials with a row x column layout get a SpATS-like 2D P-spline surface
+(CXGN::BLUPF90::Spatial: one smoothing variance instead of SpATS's separate
+row and column smoothing), linear row / column trends and random row and
+column effects within replicate in stage 1 (on real trials its stage-1
+BLUEs correlate 0.98-1.00 with SpATS's). Custom formulas
 are limited to the terms BLUPF90+ fits (fixed terms, (1|a) and (1|a:b)).
 
 Progress lines start with "[script_factory]" and warnings with "WARNING: ",
@@ -58,6 +61,7 @@ use File::Path qw(remove_tree make_path);
 use Time::Local qw(timegm);
 use List::Util qw(sum min max first);
 use CXGN::BLUPF90;
+use CXGN::BLUPF90::Spatial;
 use CXGN::BLUPF90::Stats qw(mean var sd median quantile7 mad holm harmonic_mean pnorm_upper pf_upper cor
                             hclust_average cutree_height backfit n_levels uniq);
 
@@ -97,6 +101,7 @@ sub list { my $v = shift; return () if !defined($v); return ref($v) eq 'ARRAY' ?
 sub pretty_model {
     my $x = shift // '';
     $x =~ s/\btr_date\b/date/g; $x =~ s/\bdate_f\b/date/g; $x =~ s/\bplot_u\b/plot/g; $x =~ s/\bmday\b/days/g;
+    $x =~ s/\(1\|surface\)/PSpline(col, row)/g; $x =~ s/\brcN\b/rowN:colN/g;
     return $x;
 }
 sub sig { my $v = shift; return NA if !defined($v) || $v !~ /\d/ || $v =~ /nan|inf/i; return 0 + sprintf('%.8g', $v); }
@@ -106,6 +111,37 @@ sub warn_msg {
     my $msg = pretty_model(join('', map { $_ // '' } @m));
     push @{$self->{warnings}}, $msg;
     print STDERR "WARNING: $msg\n";
+}
+
+# notes of a fit as log messages: convergence notes (AI-REML / EM-REML) each
+# on their own line, so the analysis log files them under "Convergence
+# notes"; the other notes of the fit together
+sub fit_notes {
+    my ($self, $where, $notes) = @_;
+    my @conv = grep { /AI-REML|EM-REML/ } @{ $notes || [] };
+    my @other = grep { !/AI-REML|EM-REML/ } @{ $notes || [] };
+    $self->warn_msg("$where: ", join('; ', @other), ".") if @other;
+    $self->warn_msg("$where: $_.") for @conv;
+}
+
+# P-spline surface covariance of a trial, over the positions of all its plots
+# (built once, shared by every trait and fit of the trial); undef when the
+# field is too small (the reason is kept in surface_error)
+sub _trial_surface {
+    my ($self, $trial) = @_;
+    return $self->{surface}->{$trial} if exists $self->{surface}->{$trial};
+    my $d = $self->{dat};
+    my @ii = @{ $self->{rows_of}->{$trial} || [] };
+    (my $safe = $trial) =~ s/[^A-Za-z0-9_.-]+/_/g;
+    my $dir = $self->output_prefix . '_blupf90';
+    make_path($dir) if !-d $dir;
+    my $file = "$dir/surface_$safe.txt";
+    my $s = eval {
+        CXGN::BLUPF90::Spatial::surface_covariance({ row => [ map { $d->{row}->[$_] } @ii ], col => [ map { $d->{col}->[$_] } @ii ], file => $file });
+    };
+    if (!$s) { ($self->{surface_error}->{$trial} = $@ // 'unknown error') =~ s/\s+$//; return $self->{surface}->{$trial} = undef; }
+    $s->{file} = $file;
+    return $self->{surface}->{$trial} = $s;
 }
 sub step { my ($self, @m) = @_; print STDERR "[script_factory] ", join('', map { $_ // '' } @m), "\n"; }
 sub warn_once { my ($self, $key, @m) = @_; return if $self->{warned}->{$key}++; $self->warn_msg(@m); }
@@ -146,7 +182,7 @@ sub _run {
 
     my %reason = (pedigree => 'pedigree (A matrix)', genomic => 'genomic (G matrix)', single_step => 'single-step (H matrix)');
     my $why = $reason{ opt($recipe, 'engine_reason', '') // '' };
-    $self->warn_msg("The $why model is fitted by BLUPF90+, so the whole analysis ran on the BLUPF90+ engine (without R: no SpATS in stage 1).") if $why;
+    $self->warn_msg("The $why model is fitted by BLUPF90+, so the whole analysis ran on the BLUPF90+ engine (without R: trials with rows and columns get a SpATS-like P-spline surface in stage 1).") if $why;
     $self->_read_data();
     $self->_treatments();
     $self->_select_traits();
@@ -401,6 +437,7 @@ sub _repeated {
         foreach (@s) { $sxy += ($_->{day} - $mx) * ($_->{value} - $my); $sxx += ($_->{day} - $mx)**2; }
         return $sxx > 0 ? $sxy / $sxx : undef;
     };
+    $self->{rep_summ} = $summ;    # also used by the outlier rules (outliers.view)
     my $info = sub {
         my ($full, $how) = @_;
         my $ms = $long{$full};
@@ -622,19 +659,52 @@ sub _outliers {
     my $alpha = opt($cfg, 'alpha', 0.05) + 0;
     my @rows;
     my $flag = sub {
-        my ($idx, $t, $reason) = @_;
+        my ($idx, $t, $reason, $vals) = @_;
         foreach my $i (@$idx) {
-            push @rows, { unit => $d->{unit}->[$i], trial => $d->{trial}->[$i], accession => $d->{accession}->[$i], trait => $t, value => $d->{$t}->[$i], reason => $reason };
+            push @rows, { unit => $d->{unit}->[$i], trial => $d->{trial}->[$i], accession => $d->{accession}->[$i], trait => $t,
+                          value => $vals ? $vals->[$i] : $d->{$t}->[$i], reason => $reason };
             $d->{$t}->[$i] = undef;
         }
     };
     my %n_before = map { my $t = $_; $t => scalar(grep { defined } @{$d->{$t}}) } @{$self->{traits}};
     my $n = $self->{n};
+
+    # per trait: the side the rules flag (outliers.side: high | low, default
+    # both) and, for traits measured several times per plot, the value per plot
+    # the rules judge (outliers.view: mean | sum | first | last, default mean),
+    # which may differ from the value the model uses (repeated.traits)
+    my (%side, %view);
+    foreach my $pair ([ \%side, 'side', qr/^(high|low)$/ ], [ \%view, 'view', qr/^(mean|sum|first|last|max|min)$/ ]) {
+        my $h = opt($cfg, $pair->[1], {});
+        next if ref($h) ne 'HASH';
+        foreach my $key (keys %$h) {
+            my $full = $self->match_trait($key) or next;
+            my $v = (list($h->{$key}))[0] // '';
+            $pair->[0]->{$full} = $v if $v =~ $pair->[2];
+        }
+    }
+    my $is_rep = sub { my $l = ($self->{rep_long} || {})->{ $_[0] }; return $l && @$l ? 1 : 0 };
+    my $judged = sub {    # values the rules judge, aligned with the rows of $d
+        my $t = shift;
+        return $d->{$t} if !$is_rep->($t);
+        my %by; push @{$by{$_->{unit}}}, $_ for @{ $self->{rep_long}->{$t} };
+        my $how = $view{$t} // 'mean';
+        my %val = map { $_ => $self->{rep_summ}->($by{$_}, $how) } keys %by;
+        return [ map { defined($d->{$t}->[$_]) ? ($val{ $d->{unit}->[$_] } // $d->{$t}->[$_]) : undef } 0 .. $n - 1 ];
+    };
+    my $keep_side = sub { my ($t, $high) = @_; my $s = $side{$t} // ''; return $s eq 'high' ? $high : $s eq 'low' ? !$high : 1 };
+    my $how_text = sub {
+        my $t = shift;
+        my @w;
+        push @w, "$side{$t} values only" if $side{$t};
+        push @w, 'judged on the ' . (($view{$t} // 'mean') eq 'mean' ? 'plot mean' : $REP_LABEL{ $view{$t} }) . ' of the repeated measurements' if $is_rep->($t);
+        return @w ? ', ' . join(', ', @w) : '';
+    };
     if ($method eq 'iqr') {
         my @g = map { $group eq 'trial_rep' ? "$d->{trial}->[$_] $d->{rep_eff}->[$_]" : $group eq 'trial_accession' ? "$d->{trial}->[$_] $d->{accession}->[$_]" : $group eq 'all' ? 'all' : $d->{trial}->[$_] } 0 .. $n - 1;
         (my $gl = $group) =~ s/_/ x /g;
         foreach my $t (@{$self->{traits}}) {
-            my $y = $d->{$t};
+            my $y = $judged->($t);
             my %by; push @{$by{$g[$_]}}, $_ for grep { defined $y->[$_] } 0 .. $n - 1;
             foreach my $lvl (uniq(@g)) {
                 my $ii = $by{$lvl} or next;
@@ -642,7 +712,8 @@ sub _outliers {
                 my @v = map { $y->[$_] } @$ii;
                 my ($q1, $q3) = (quantile7(0.25, @v), quantile7(0.75, @v));
                 my ($lo, $hi) = ($q1 - $k * ($q3 - $q1), $q3 + $k * ($q3 - $q1));
-                $flag->([ grep { $y->[$_] < $lo || $y->[$_] > $hi } @$ii ], $t, sprintf("IQR (k = %s) within %s", 0 + sprintf('%.2g', $k), $gl));
+                $flag->([ grep { ($y->[$_] > $hi && $keep_side->($t, 1)) || ($y->[$_] < $lo && $keep_side->($t, 0)) } @$ii ], $t,
+                        sprintf("IQR (k = %s) within %s", 0 + sprintf('%.2g', $k), $gl) . $how_text->($t), $y);
             }
         }
     }
@@ -651,8 +722,9 @@ sub _outliers {
         # re-scaled by the median absolute deviation (BH-MADR); residuals of
         # y ~ accession (+ replicate) by least squares
         foreach my $t (@{$self->{traits}}) {
+            my $y = $judged->($t);
             foreach my $tr (@{$self->{trials}}) {
-                my @ii = grep { defined $d->{$t}->[$_] } @{$self->{rows_of}->{$tr}};
+                my @ii = grep { defined $y->[$_] } @{$self->{rows_of}->{$tr}};
                 my @acc = map { $d->{accession}->[$_] } @ii;
                 next if @ii < 6 || n_levels(@acc) < 2;
                 my @rep = map { $d->{rep_eff}->[$_] } @ii;
@@ -660,17 +732,19 @@ sub _outliers {
                 push @f, \@rep if n_levels(@rep) > 1;
                 my $df = @ii - n_levels(@acc) - (n_levels(@rep) > 1 ? n_levels(@rep) - 1 : 0);
                 next if $df < 2;
-                my $r = backfit([ map { $d->{$t}->[$_] } @ii ], \@f);
+                my $r = backfit([ map { $y->[$_] } @ii ], \@f);
                 # entries with a single plot have a residual of zero by construction:
                 # they neither enter the MAD nor can be tested
                 my %na; $na{$_}++ for @acc;
                 my @inf = grep { $na{ $acc[$_] } > 1 } 0 .. $#ii;
                 next if @inf < 3;
                 my $m = mad(map { $r->[$_] } @inf);
-                next if !$m || $m <= 1e-8 * (sd(map { $d->{$t}->[$_] } @ii) || 1);
+                next if !$m || $m <= 1e-8 * (sd(map { $y->[$_] } @ii) || 1);
                 my @p = map { 2 * pnorm_upper(abs($r->[$_] / $m)) } @inf;
                 my @adj = holm(@p);
-                $flag->([ map { $ii[ $inf[$_] ] } grep { $adj[$_] < $alpha } 0 .. $#inf ], $t, sprintf("BH-MADR (alpha = %s)", 0 + sprintf('%.2g', $alpha)));
+                # the side of a value: above (positive residual) or below what the model expects
+                $flag->([ map { $ii[ $inf[$_] ] } grep { $adj[$_] < $alpha && $keep_side->($t, $r->[ $inf[$_] ] > 0) } 0 .. $#inf ], $t,
+                        sprintf("BH-MADR (alpha = %s)", 0 + sprintf('%.2g', $alpha)) . $how_text->($t), $y);
             }
         }
     }
@@ -1039,19 +1113,38 @@ sub _stage1_plan {
     my @terms = _design_terms($spatial ? 'row_column' : $design, $d);
     my @fx = (@trt, @cv, @rep_fx);
     my $label_design = $info->{design_label};
+    my %ucov;
     if ($spatial) {
-        # SpATS is an R package: the BLUPF90+ engine corrects the field trend
-        # with row and column effects within replicate and linear trends
-        push @fx, grep { n_levels(@{$d->{$_ eq 'rowN' ? 'row' : 'col'}}) > 2 } qw(rowN colN);
-        $self->warn_once('spats', "SpATS (an R package) is not part of the BLUPF90+ engine: trials with rows and columns were analysed with random row and column effects within replicate and linear row / column trends in stage 1 (choose the R engine for SpATS).");
-        $label_design = 'Row-column (spatial)';
+        # SpATS-like field trend: a 2D P-spline surface (one smoothing variance,
+        # CXGN::BLUPF90::Spatial) with its unpenalised part as fixed linear
+        # trends (rowN, colN, rowN:colN), plus row and column effects within
+        # replicate. Falls back to the trends alone when the field is too
+        # small for a surface.
+        my @lin = grep { n_levels(@{$d->{$_ eq 'rowN' ? 'row' : 'col'}}) > 2 } qw(rowN colN);
+        push @fx, @lin;
+        my $surf = $self->_trial_surface($info->{trial});
+        if ($surf && @lin == 2) {
+            my ($mr, $mc) = (mean(grep { defined } @{$d->{rowN}}) // 0, mean(grep { defined } @{$d->{colN}}) // 0);
+            $d->{rcN} = [ map { defined($d->{rowN}->[$_]) && defined($d->{colN}->[$_]) ? ($d->{rowN}->[$_] - $mr) * ($d->{colN}->[$_] - $mc) : undef } 0 .. nrow($d) - 1 ];
+            push @fx, 'rcN';
+            my %lv = map { $_ => 1 } @{ $surf->{levels} };
+            my @key = map { defined($d->{rowN}->[$_]) && defined($d->{colN}->[$_]) && $lv{ ($d->{rowN}->[$_] + 0) . ':' . ($d->{colN}->[$_] + 0) } ? ($d->{rowN}->[$_] + 0) . ':' . ($d->{colN}->[$_] + 0) : undef } 0 .. nrow($d) - 1;
+            $ucov{surface} = { file => $surf->{file}, levels => $surf->{levels}, key => \@key };
+            push @terms, 'surface';
+            $self->warn_once('spats', "Trials with rows and columns: the BLUPF90+ engine models the field trend with a 2D P-spline surface (SpATS-like: one smoothing variance instead of SpATS's separate row and column smoothing), linear row and column trends and random row and column effects within replicate.");
+            $label_design = 'Row-column (P-spline surface)';
+        }
+        else {
+            $self->warn_msg("$info->{trial}: the field is too small for a P-spline surface (" . ($surf ? 'no row and column trend' : $self->{surface_error}->{ $info->{trial} } // 'fewer than three rows or columns') . "); random row and column effects and linear trends were used.");
+            $label_design = 'Row-column (spatial)';
+        }
     }
     push @terms, @rep_rnd;
     $res{design} = $label_design if $spatial;
 
     my $lab = "stage1_$info->{trial}_" . short_trait($trait);
-    my $blue = { data => $d, fixed => \@fx, random => \@terms, genotype_random => 0, label => "${lab}_blue" };
-    my $blup = { data => $d, fixed => \@fx, random => \@terms, genotype_random => 1, label => "${lab}_blup" };
+    my $blue = { data => $d, fixed => \@fx, random => \@terms, genotype_random => 0, label => "${lab}_blue", user_cov => \%ucov };
+    my $blup = { data => $d, fixed => \@fx, random => \@terms, genotype_random => 1, label => "${lab}_blup", user_cov => \%ucov };
     my $h2_of = sub {
         my ($vg, $vc) = @_;
         my ($r, $mm) = (plots_per_acc($d), meas_per_plot($d));
@@ -1079,7 +1172,7 @@ sub _stage1_plan {
                     } };
             }
             my %r = (%res, model => pretty_model("BLUPF90+: " . _model_text(0, \@fx, \@terms)), var_e => $fb->{vc}->{Residual});
-            $self->warn_msg("Stage 1, $info->{trial} / ", short_trait($trait), ": ", join('; ', @{$fb->{notes}}), ".") if @{$fb->{notes}};
+            $self->fit_notes("Stage 1, $info->{trial} / " . short_trait($trait), $fb->{notes});
             if (!$fr->{error}) {
                 $r{var_g} = $fr->{vc}->{accession};
                 $r{h2} = $h2_of->($r{var_g}, $fr->{vc});
@@ -1222,7 +1315,7 @@ sub _stage2 {
             next;
         }
         $f = $self->finish_fit($specs[$k], $f, $md);
-        $self->warn_msg("Stage 2, ", short_trait($t), ": ", join('; ', @{$f->{notes}}), ".") if @{$f->{notes}};
+        $self->fit_notes("Stage 2, " . short_trait($t), $f->{notes});
         my $vc = $f->{vc};
         if ($grandom) {
             $res->{var_g} = sum(0, map { $vc->{$_} // 0 } qw(accession mother father));
@@ -1468,7 +1561,7 @@ sub _single_stage {
             next;
         }
         $f = $self->finish_fit($specs[$k], $f, $d);
-        $self->warn_msg(short_trait($t), ": ", join('; ', @{$f->{notes}}), ".") if @{$f->{notes}};
+        $self->fit_notes(short_trait($t), $f->{notes});
         my $vc = $f->{vc};
         $res->{engine_used} = 'BLUPF90+';
         $res->{pedigree_used} = $f->{pedigree} ? $TRUE : $FALSE;
@@ -1583,7 +1676,21 @@ sub _index {
     my $nsel = max(1, int(@t * $pct / 100 + 0.5));
     $_->{selected} = $_->{rank} <= $nsel ? $TRUE : $FALSE for @t;
     my %h2 = map { $_->{trait} => $_->{h2} } @{$self->{stage2_summary} || []};
+    my %vg = map { $_->{trait} => $_->{var_g} } @{$self->{stage2_summary} || []};
     my $grandom = $self->{genotype_random};
+    # selection accuracy: mean over the accessions of sqrt(1 - PEV / var_g)
+    # (genotype random, from the standard errors of the BLUPs), otherwise
+    # sqrt(H2) (accuracy of selection on entry means)
+    my %se_of;
+    push @{ $se_of{ $_->{trait} } }, $_->{se} for grep { defined($_->{se}) && $_->{se} =~ /\d/ } @{$self->{genotype_values}};
+    my $accuracy = sub {
+        my $tr = shift;
+        my ($v, $h2) = ($vg{ short_trait($tr) }, $h2{ short_trait($tr) });
+        if ($grandom && defined($v) && $v > 0 && $se_of{$tr} && @{ $se_of{$tr} }) {
+            return ({ value => mean(map { sqrt(max(0, 1 - $_ * $_ / $v)) } @{ $se_of{$tr} }), basis => 'pev' });
+        }
+        return defined($h2) ? { value => sqrt(max(0, $h2)), basis => 'h2' } : { value => undef, basis => '' };
+    };
     my @gains;
     foreach my $tr (@{$self->{traits_ok}}) {
         my @x = map { $_->{$tr} } @t;
@@ -1595,10 +1702,15 @@ sub _index {
         push @gains, { trait => short_trait($tr), in_index => $in ? $TRUE : $FALSE, weight => $in ? opt($tc{$tr}, 'weight', 0) + 0 : 0,
                        direction => $in ? opt($tc{$tr}, 'direction', 'increase') : '', mean_population => $mp, mean_selected => $ms,
                        selection_differential => $s, selection_differential_pct => (defined($s) && $mp) ? 100 * $s / abs($mp) : undef,
-                       h2 => $h2, expected_gain => (!$grandom && defined($h2) && defined($s)) ? $h2 * $s : $s };
+                       h2 => $h2, expected_gain => (!$grandom && defined($h2) && defined($s)) ? $h2 * $s : $s,
+                       accuracy => $accuracy->($tr)->{value}, accuracy_basis => $accuracy->($tr)->{basis} };
     }
+    # accuracy of the index: mean of its traits' accuracies, weighted by |weight|
+    my @acc = grep { $_->{in_index} && defined($_->{accuracy}) } @gains;
+    my $wsum = sum(map { abs($_->{weight}) } @acc) || 0;
+    my $ix_acc = !@acc ? undef : $wsum > 0 ? sum(map { abs($_->{weight}) * $_->{accuracy} } @acc) / $wsum : mean(map { $_->{accuracy} } @acc);
     foreach my $r (@t) { foreach my $k (keys %$r) { next if $k !~ /\|/; $r->{ short_trait($k) } = delete $r->{$k}; } }
-    $self->{index} = { method => $method, selection_pct => $pct, n_selected => $nsel, n_ranked => scalar(@t), table => \@t, gains => \@gains,
+    $self->{index} = { method => $method, selection_pct => $pct, n_selected => $nsel, n_ranked => scalar(@t), table => \@t, gains => \@gains, accuracy => $ix_acc,
                        note => $grandom ? 'Values are BLUPs (already shrunk by heritability): the expected gain equals the selection differential on BLUPs.' : 'Expected gain = h2 x selection differential on BLUEs.' };
 }
 

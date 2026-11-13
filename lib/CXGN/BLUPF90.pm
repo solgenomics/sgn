@@ -176,7 +176,7 @@ sub program {
 
 sub is_numeric_var {
     my ($self, $v) = @_;
-    return 1 if $v =~ /^(rowN|colN|mday|cov_.+)$/;
+    return 1 if $v =~ /^(rowN|colN|rcN|mday|cov_.+)$/;
     return (grep { $_ eq $v } @{$self->numeric}) ? 1 : 0;
 }
 
@@ -375,8 +375,17 @@ sub prepare {
         else { $rcodes{accession} = $acc; }
         push @rnames, 'accession';
     }
+    # random effects with a supplied covariance (user_cov: name -> {file,
+    # levels, key}: covariance over 'levels', the level key of every record)
+    my $ucov = $spec->{user_cov} || {};
     foreach my $rt (@{ $spec->{random} || [] }) {
         next if $rt eq 'accession' || $rcodes{$rt};
+        if (my $u = $ucov->{$rt}) {
+            my %pos; $pos{ $u->{levels}->[$_] } = $_ + 1 for 0 .. $#{ $u->{levels} };
+            $rcodes{$rt} = { code => [ map { defined($_) ? $pos{$_} // 0 : 0 } @{ $u->{key} } ], n => scalar(@{ $u->{levels} }), labels => $u->{levels}, file => $u->{file} };
+            push @rnames, $rt;
+            next;
+        }
         my $cd = _codes($d, [ split /:/, $rt ], $n);
         next if $cd->{n} < 2;
         $rcodes{$rt} = $cd;
@@ -403,6 +412,13 @@ sub prepare {
                'EFFECTS: POSITIONS_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT[EFFECT NESTED]', @eff,
                'RANDOM_RESIDUAL VALUES', sprintf('%.10g', $v0));
     foreach my $k (0 .. $#rnames) {
+        if (my $uf = $rcodes{ $rnames[$k] }->{file}) {
+            # covariance supplied: blupf90+ inverts it (user_file_inv); path
+            # relative to the fit folder so the folders can be re-run elsewhere
+            push @par, 'RANDOM_GROUP', $first_random + $k, 'RANDOM_TYPE', 'user_file_inv',
+                       'FILE', File::Spec->abs2rel(File::Spec->rel2abs($uf), $wd), '(CO)VARIANCES', sprintf('%.10g', $v0);
+            next;
+        }
         my $animal = $ped && $rnames[$k] eq 'accession';
         # add_an_upginb: the relationship inverse with the inbreeding of every
         # individual (inbred lines; the genomic module's A22 includes it too)
@@ -477,8 +493,7 @@ sub run {
     my @todo = grep { $_ && !$_->{done} } @$jobs;
     return if !@todo;
     my $prog = $self->program() or die "blupf90+ is not installed\n";
-    # blupf90+ keeps large arrays on the stack (segfaults with the 8 MB default)
-    my $cmd = "ulimit -s unlimited 2>/dev/null || ulimit -s \$(ulimit -H -s) 2>/dev/null; export OMP_STACKSIZE=64M OMP_NUM_THREADS=1; echo f90.par | '$prog' > blupf90.out 2>&1";
+    my $cmd = _command($prog);
     my $pm = Parallel::ForkManager->new(@todo > 1 ? $self->max_parallel : 0);
     # wait for children without polling (the default sleeps 1 s between checks)
     $pm->set_waitpid_blocking_sleep(0) if $pm->can("set_waitpid_blocking_sleep");
@@ -486,12 +501,56 @@ sub run {
         $job->{done} = 1;
         $pm->start and next;
         my $t0 = time();
+        # without forking (a single job) this runs in the caller: come back
+        my $cwd = File::Spec->rel2abs('.');
         chdir($job->{dir});
         system('bash', '-c', $cmd);
+        chdir($cwd);
         if (open(my $T, '>', "$job->{dir}/elapsed.txt")) { printf $T "%.3f\n", time() - $t0; close($T); }
         $pm->finish(0);
     }
     $pm->wait_all_children;
+}
+
+# shell command that runs blupf90+ in the current folder
+sub _command {
+    my $prog = shift;
+    # blupf90+ keeps large arrays on the stack (segfaults with the 8 MB default)
+    return "ulimit -s unlimited 2>/dev/null || ulimit -s \$(ulimit -H -s) 2>/dev/null; export OMP_STACKSIZE=64M OMP_NUM_THREADS=1; echo f90.par | '$prog' > blupf90.out 2>&1";
+}
+
+# convergence value of blupf90+ (the one compared with conv_crit 1e-9) below
+# which AI-REML estimates count as settled when the round limit is reached
+our $STABLE_DELTA = 1e-6;
+our $EM_ROUNDS = 50;    # EM-REML rounds before AI-REML when a fit is refitted
+
+# A fit that reached the round limit: settled (only the strict criterion was
+# missed), or refitted once with EM-REML rounds first (steadier near zero
+# variances), in the same folder. Returns the convergence note, or undef when
+# the fit was refitted (the caller reads it again).
+sub _round_limit {
+    my ($self, $job, $out) = @_;
+    my @delta = map { /In round\s+\d+\s+convergence=\s*(\S+)/ ? $1 + 0 : () } @$out;
+    my $last = @delta ? $delta[-1] : undef;
+    if (defined($last) && $last < $STABLE_DELTA) {
+        return sprintf("AI-REML reached the %d-round limit with the estimates already settled (last convergence value %.1e); the results are reliable", $MAX_ROUNDS, $last);
+    }
+    if (!$job->{em_refit}) {
+        my $wd = $job->{dir};
+        my @par = grep { !/^OPTION (maxrounds|EM-REML)\b/ } _read_lines("$wd/f90.par");
+        _write_lines("$wd/f90.par", @par, "OPTION EM-REML $EM_ROUNDS", 'OPTION maxrounds ' . (2 * $MAX_ROUNDS));
+        rename("$wd/blupf90.out", "$wd/blupf90_ai-reml.out");
+        unlink("$wd/solutions");
+        my $prog = $self->program() or return;
+        my $cwd = File::Spec->rel2abs('.');
+        chdir($wd);
+        system('bash', '-c', _command($prog));
+        chdir($cwd);
+        $job->{em_refit} = 1;
+        return;
+    }
+    return sprintf("estimates still changing after a refit with %d EM-REML rounds first (%d rounds in all, last convergence value %s); a variance component is probably close to zero, so the variance estimates of this fit are approximate",
+                   $EM_ROUNDS, 2 * $MAX_ROUNDS, defined($last) ? sprintf('%.1e', $last) : 'unknown');
 }
 
 # Results of a fit run by run():
@@ -542,7 +601,15 @@ sub read {
             if ($out[$i] =~ /Residual variance/ && !defined($vc{Residual})) { ($vc{Residual} = $out[$i + 1]) =~ s/^\s+|\s+$//g; }
         }
         $vc{$_} += 0 for keys %vc;
-        push @notes, "AI-REML stopped at $MAX_ROUNDS rounds before full convergence" if $rounds >= $MAX_ROUNDS;
+        my $limit = $job->{em_refit} ? 2 * $MAX_ROUNDS : $MAX_ROUNDS;
+        if ($rounds >= $limit) {
+            my $note = $self->_round_limit($job, \@out);
+            return $self->read($job) if !defined($note);    # refitted with EM-REML first
+            push @notes, $note;
+        }
+        elsif ($job->{em_refit}) {
+            push @notes, "AI-REML did not settle in $MAX_ROUNDS rounds; refitted with $EM_ROUNDS EM-REML rounds first, which converged";
+        }
     }
     else {
         # least squares: residual variance from the residuals, standard errors rescaled

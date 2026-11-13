@@ -64,7 +64,7 @@ $blupf90_available => 0
       <section class="sf-step" data-step="1">
         <div class="sf-card">
           <h3>Choose a dataset</h3>
-          <p class="sf-help">Tick a dataset: it loads right away. It should contain trials, accessions and at least one numeric trait. Plot-level observations are used.</p>
+          <p class="sf-help">Tick one dataset: it loads right away. It should contain trials, accessions and at least one numeric trait. Plot-level observations are used.</p>
           <div id="sf_dataset_select"></div>
           <div class="sf-inline-row">
             <button class="btn btn-primary" id="sf_load_dataset" style="display:none"><span class="glyphicon glyphicon-download-alt"></span> Load dataset</button>
@@ -90,6 +90,7 @@ $blupf90_available => 0
 
         <div id="sf_dataset_overview" style="display:none">
           <div class="sf-stats" id="sf_dataset_stats"></div>
+          <div id="sf_cache_note"></div>
 
           <div class="sf-card">
             <h3>Trials and designs</h3>
@@ -110,7 +111,7 @@ $blupf90_available => 0
             <div class="sf-trait-grid" id="sf_traits"></div>
           </div>
         </div>
-        <div class="sf-nav"><span></span><button class="btn btn-primary sf-next" data-goto="2">Next: Quality control <span class="glyphicon glyphicon-chevron-right"></span></button></div>
+        <div class="sf-nav"><span></span><button class="btn btn-primary sf-next" data-goto="2" id="sf_step1_next" disabled>Select a dataset</button></div>
       </section>
 
       <!-- ===================== step 2 ===================== -->
@@ -161,10 +162,24 @@ $blupf90_available => 0
             <h3>Outlier explorer</h3>
             <div class="form-inline">
               <select class="form-control input-sm" id="sf_explorer_trait"></select>
+              <span id="sf_explorer_rep" style="display:none">
+                <label class="sf-label" for="sf_explorer_rep_how" style="margin:0 4px 0 8px">Repeated values</label>
+                <select class="form-control input-sm" id="sf_explorer_rep_how"></select>
+              </span>
+              <span id="sf_explorer_side" style="display:none" title="Which outliers the rule flags for this trait: values that are too high, too low, or both. Clicking a point still excludes it on either side.">
+                <label class="sf-label" for="sf_explorer_side_how" style="margin:0 4px 0 8px">Flag</label>
+                <select class="form-control input-sm" id="sf_explorer_side_how">
+                  <option value="both">Both sides</option>
+                  <option value="high">High values only</option>
+                  <option value="low">Low values only</option>
+                </select>
+              </span>
+              <button class="btn btn-link btn-sm" id="sf_apply_all" style="display:none" title="Use this trait's Flag choice (and its Repeated values choice, for traits measured several times per plot) for every trait. Each trait can still be changed afterwards."><span class="glyphicon glyphicon-duplicate"></span> Apply to all traits</button>
+              <span class="sf-apply-all-msg" id="sf_apply_all_msg" style="display:none"></span>
               <button class="btn btn-default btn-sm" id="sf_preview_madr" style="display:none"><span class="glyphicon glyphicon-flash"></span> Flag with BH-MADR</button>
             </div>
           </div>
-          <p class="sf-help">Each box shows one trial. <span class="sf-dot sf-dot-flag"></span> flagged by the rule, <span class="sf-dot sf-dot-excl"></span> excluded (by you, or marked as outlier in Breedbase). Click a point to exclude it or bring it back.</p>
+          <p class="sf-help">Each box shows one trial. <span class="sf-dot sf-dot-flag"></span> flagged by the rule. Click a point to remove it: removed values (and values marked as outliers in Breedbase) leave the plot, and the boxes are redrawn without them. Bring them back from the list below.</p>
           <div id="sf_explorer_plot" class="sf-plot"></div>
           <div id="sf_explorer_summary"></div>
         </div>
@@ -172,8 +187,8 @@ $blupf90_available => 0
         <div class="sf-card">
           <div class="sf-card-head">
             <h3>All outliers <span class="badge" id="sf_outlier_count">0</span></h3>
-            <select class="form-control input-sm" id="sf_outlier_filter" style="width:auto"></select>
           </div>
+          <div class="sf-outlier-traits" id="sf_outlier_traits"></div>
           <p class="sf-help" id="sf_outlier_breakdown"></p>
           <div class="sf-outlier-toolbar">
             <span class="sf-muted" id="sf_outlier_selected">0 selected</span>
@@ -564,6 +579,11 @@ $blupf90_available => 0
           </div>
         </div>
 
+        <div class="sf-card sf-review-card" id="sf_model_review" style="display:none">
+          <div class="sf-card-head"><h3><span class="glyphicon glyphicon-education"></span> A second look at your model</h3></div>
+          <div id="sf_model_review_body"></div>
+        </div>
+
         <div id="sf_results" style="display:none">
           <div class="sf-card sf-actions-card">
             <h3>Results</h3>
@@ -805,6 +825,12 @@ jQuery(document).ready(function() {
 .sf-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; }
 .sf-dot-flag { background: #e11d48; }
 .sf-dot-excl { background: #111; }
+.sf-stat-acc .v small { font-size: 12px; font-weight: 600; margin-left: 2px; }
+.sf-stat-acc.sf-acc-high .v { color: #2b7a4b; }
+.sf-stat-acc.sf-acc-moderate .v { color: #b7791f; }
+.sf-stat-acc.sf-acc-low .v { color: #9b2c2c; }
+.sf-trait-check { margin: 6px 0 0; padding-left: 20px; }
+.sf-apply-all-msg { font-size: 12px; color: #2b7a4b; margin-left: 4px; }
 .sf-run-progress { font-size: 14px; }
 .sf-spin { animation: sf-spin 1.2s linear infinite; }
 @keyframes sf-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -819,6 +845,30 @@ jQuery(document).ready(function() {
 table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-outlier-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--sf-bg); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
 .sf-outlier-toolbar #sf_outlier_selected { margin-right: auto; font-size: 13px; }
+.sf-outlier-traits { margin: 0 0 8px; font-size: 13px; }
+.sf-review-card { border-left: 4px solid #7aa7c7; }
+.sf-review-list { list-style: none; padding: 0; margin: 8px 0; }
+.sf-review-list li { display: flex; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; background: #f5f9fc; }
+.sf-review-list li.sf-review-note { background: #f7f7f5; }
+.sf-review-list li > .glyphicon { margin-top: 3px; color: #4a7fa5; }
+.sf-review-list li.sf-review-note > .glyphicon { color: #8a8f98; }
+.sf-review-list p { margin: 4px 0 0; font-size: 13px; }
+.sf-review-tag { margin-left: 8px; font-size: 11px; color: #4a7fa5; background: #e3eef6; border-radius: 10px; padding: 1px 8px; }
+.sf-review-note .sf-review-tag { color: #6b7280; background: #ececea; }
+.sf-review-fix { color: #2b6a43; }
+.sf-review-ok { padding: 10px 12px; border-radius: 8px; background: #eef7f1; color: #2b6a43; }
+.sf-review-alt { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--sf-border); }
+.sf-review-alt h4 { font-size: 15px; }
+.sf-review-compare th, .sf-review-compare td { text-align: center; }
+.sf-review-compare td:first-child, .sf-review-compare th:first-child { text-align: left; }
+.sf-agree-hi { color: #2b7a4b; font-weight: 600; }
+.sf-agree-mid { color: #8a6d3b; font-weight: 600; }
+.sf-agree-lo { color: #a94442; font-weight: 600; }
+.sf-review-choose-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.sf-review-chosen { color: #2b7a4b; font-weight: 600; }
+.sf-rep-reminder { margin-top: 4px; font-size: 12px; color: #8a6d3b; }
+.sf-outlier-traits .sf-outlier-trait { margin: 0 12px 4px 0; padding-left: 20px; }
+.sf-outlier-traits .badge { font-weight: 500; }
 .sf-outlier-table { max-height: 420px; overflow-y: auto; border: 1px solid var(--sf-border); border-radius: 8px; }
 .sf-outlier-table table { margin: 0; }
 .sf-outlier-table thead th { position: sticky; top: 0; background: #fff; z-index: 1; box-shadow: 0 1px 0 var(--sf-border); }

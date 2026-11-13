@@ -14,6 +14,7 @@
 
 import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
 import { analysisLogHtml, analysisLogSummaryHtml } from '../modules/script_factory_log.js';
+import { reviewModel, reviewResults, suggestedRecipe, compareRuns } from '../modules/script_factory_review.js';
 
 const VERSION = '1.7';
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -34,8 +35,12 @@ const state = {
     step: 1,
     dataset: null,          // response of /prepare
     traits: [],             // selected full trait names
-    plotData: null,         // response of /plot_data
+    plotRaw: null,          // response of /plot_data (plot means and every repeated measurement)
+    plotData: null,         // plotRaw with each repeated trait as its value per plot (refreshPlotView)
     plotDataKey: '',
+    outlierView: {},        // trait -> value per plot the outlier rules judge (repeated traits): sum | first | last (default mean)
+    outlierSide: {},        // trait -> side the rules flag: high | low (default both)
+    outlierTraitOff: {},    // traits unticked in the outlier list (their outliers are not listed or marked)
     exclusions: {},         // "unit|trait" -> {unit, trait, trial, accession, value, marked}; marked: 'dataset' | 'database' | 'both' for values marked in Breedbase
     madrFlags: {},          // "unit|trait" -> true (from a preview run)
     outlierRows: [],        // current full outlier list (rule + individual)
@@ -56,9 +61,12 @@ const state = {
     runFailed: false,
     scriptLoaded: false,    // a saved or imported script was applied (enables "Run whole script")
     missingTraits: [],      // script traits not found in the loaded dataset
+    traitCheck: null,       // script traits vs dataset traits: {missing, byName: [{script, dataset}], extra} (traitCheckHtml)
+    scriptRecipe: null,     // recipe of the loaded saved script (its traits are applied again to another dataset)
     job: null,
     results: null,
     pollTimer: null,
+    review: null,           // model review of the last run: {recipe, findings, after, suggested, main, alt, chosen} (renderReview)
     elapsedTimer: null
 };
 
@@ -188,7 +196,9 @@ function buildRecipe() {
             method: radio('sf_outlier_method'),
             group_by: $('#sf_iqr_group').val(),
             k: Number($('#sf_iqr_k').val()),
-            alpha: Number($('#sf_madr_alpha').val())
+            alpha: Number($('#sf_madr_alpha').val()),
+            side: perTrait(state.outlierSide, t => true),
+            view: perTrait(state.outlierView, t => !state.dataset || !!repeatedInfo(t))
         },
         strategy: radio('sf_strategy'),
         engine: radio('sf_engine') || 'lme4',
@@ -238,6 +248,11 @@ function applyRecipe(r) {
     if (o.group_by) $('#sf_iqr_group').val(o.group_by);
     if (o.k) $('#sf_iqr_k').val(o.k);
     if (o.alpha) $('#sf_madr_alpha').val(o.alpha);
+    state.outlierSide = {};
+    state.outlierView = {};
+    Object.keys(o.side || {}).forEach(t => { if (/^(high|low)$/.test(o.side[t])) state.outlierSide[matchTrait(t) || t] = o.side[t]; });
+    Object.keys(o.view || {}).forEach(t => { if (PLOT_SUMMARY[o.view[t]]) state.outlierView[matchTrait(t) || t] = o.view[t]; });
+    if (state.plotRaw) refreshPlotView();
 
     setRadio('sf_strategy', r.strategy || 'two_stage');
     setRadio('sf_engine', r.engine === 'blupf90' && cfg.blupf90_available ? 'blupf90' : 'lme4');
@@ -315,11 +330,29 @@ function applyRecipeTraits(r) {
     });
 
     state.missingTraits = missing;
-    $('#sf_recipe_trait_warning').html(missing.length
-        ? alertBox('warning', '<span class="glyphicon glyphicon-warning-sign"></span> The script uses trait(s) that are not in this dataset: <b>' + missing.map(esc).join(', ') + '</b>. They will be skipped.')
-        : '');
+    // same name but another variable (ontology term), and dataset traits the script does not use
+    const byName = arr(r.traits).map(t => ({ script: t, dataset: matchTrait(t) })).filter(x => x.dataset && x.dataset !== x.script && /\|/.test(x.script));
+    const used = {};
+    arr(r.traits).forEach(t => { const m = matchTrait(t); if (m) used[m] = true; });
+    const extra = state.dataset.traits.map(t => t.name).filter(n => !used[n]);
+    state.traitCheck = arr(r.traits).length ? { missing: missing, byName: byName, extra: extra } : null;
+    $('#sf_recipe_trait_warning').html(traitCheckHtml());
     renderTraits();
     renderQuickRun();
+}
+
+// warning when the traits of a script and of the dataset differ
+function traitCheckHtml() {
+    const c = state.traitCheck;
+    if (!c || (!c.missing.length && !c.byName.length && !c.extra.length)) return '';
+    const term = t => { const i = t.indexOf('|'); return i >= 0 ? t.slice(i + 1) : t; };
+    const li = [];
+    if (c.missing.length) li.push('<li><b>Not in this dataset, so skipped:</b> ' + c.missing.map(esc).join(', ') + '</li>');
+    if (c.byName.length) li.push('<li><b>Same name, different variable:</b> ' + c.byName.map(x => esc(shortTrait(x.dataset)) + ' (script ' + esc(term(x.script)) + ', dataset ' + esc(term(x.dataset)) + ')').join(', ') +
+        '. They were matched by name; check that they are the same measurement.</li>');
+    if (c.extra.length) li.push('<li><b>In this dataset but not in the script, so not analysed:</b> ' + c.extra.map(t => esc(shortTrait(t))).join(', ') + '. Tick them under <i>Traits to analyse</i> if you want them.</li>');
+    return alertBox('warning', '<span class="glyphicon glyphicon-warning-sign"></span> <b>The traits of ' + (state.script.name ? 'the script <i>' + esc(state.script.name) + '</i>' : 'the script') +
+        ' do not all match this dataset.</b><ul class="sf-trait-check">' + li.join('') + '</ul>');
 }
 
 // "Run whole script": shown when a saved script and a dataset are both loaded
@@ -341,9 +374,8 @@ function renderQuickRun() {
         chip('Zones', r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin test' : 'correlation') : 'off', r.zones.enabled));
     const problems = validateRecipe(r);
     let warn = '';
-    if (state.missingTraits.length) warn += 'Not in this dataset, skipped: <b>' + state.missingTraits.map(esc).join(', ') + '</b>. ';
     if (problems.length) warn += problems.map(esc).join(' ');
-    $('#sf_quick_run_warning').html(warn ? alertBox(problems.length ? 'danger' : 'warning', warn) : '');
+    $('#sf_quick_run_warning').html(traitCheckHtml() + (warn ? alertBox('danger', warn) : ''));
     const s = runState();
     $('#sf_quick_run_btn')
         .toggleClass('btn-success', s !== 'done').toggleClass('btn-primary', s === 'done')
@@ -459,27 +491,36 @@ function loadDataset() {
     $('#sf_load_dataset').prop('disabled', true);
     // the dataset loads as soon as it is ticked: only the latest choice counts
     const seq = state.loadSeq = (state.loadSeq || 0) + 1;
+    state.datasetLoading = true;
+    updateStep1Next();
 
     post('/ajax/script_factory/prepare', { dataset_id: id })
         .then(r => {
             if (seq !== state.loadSeq) return;
             const keepTraits = state.dataset ? state.traits.map(shortTrait) : null;
             state.dataset = r;
+            state.plotRaw = null;
             state.plotData = null;
             state.plotDataKey = '';
             state.exclusions = {};
             state.madrFlags = {};
             state.madrPreviewDone = false;
             state.outlierSel = {};
+            state.outlierTraitOff = {};
+            state.outlierFocus = null;
             state.outlierStatus = {};
             excludeMarked(true);
             state.results = null;
             state.lastRun = null;
             state.runFailed = false;
             $('#sf_results').hide();
+            state.review = null;
+            renderReview();
             if (state.pendingRecipe) {
                 applyRecipeTraits(state.pendingRecipe);
                 state.pendingRecipe = null;
+            } else if (state.scriptLoaded && state.scriptRecipe) {
+                applyRecipeTraits(state.scriptRecipe);    // a loaded script keeps its traits on every dataset
             } else if (keepTraits && keepTraits.length) {
                 state.traits = r.traits.map(t => t.name).filter(n => keepTraits.indexOf(shortTrait(n)) >= 0);
                 $('#sf_recipe_trait_warning').html('');
@@ -497,7 +538,21 @@ function loadDataset() {
             renderQuickRun();
         })
         .catch(e => { if (seq === state.loadSeq) $('#sf_dataset_message').html(alertBox('danger', esc(e.message))); })
-        .finally(() => $('#sf_load_dataset').prop('disabled', false));
+        .finally(() => {
+            $('#sf_load_dataset').prop('disabled', false);
+            if (seq === state.loadSeq) { state.datasetLoading = false; updateStep1Next(); }
+        });
+}
+
+// "Next" of step 1 says what is missing until a dataset is loaded and a trait chosen
+function updateStep1Next() {
+    const b = $('#sf_step1_next');
+    const ready = !!state.dataset && !state.datasetLoading && state.traits.length > 0;
+    const text = state.datasetLoading ? '<span class="glyphicon glyphicon-refresh sf-spin"></span> Loading the dataset...'
+        : !state.dataset ? 'Select a dataset'
+        : !state.traits.length ? 'Select at least one trait'
+        : 'Next: Quality control <span class="glyphicon glyphicon-chevron-right"></span>';
+    b.prop('disabled', !ready).html(text);
 }
 
 // factor support of a trial (rep, block, row, col), computed by the server with
@@ -544,6 +599,10 @@ function renderDatasetOverview() {
     $('#sf_dataset_stats').html(
         stat(r.trials.length, 'Trials') + stat(r.n_locations, 'Locations') + stat(r.n_years, 'Years') +
         stat(r.n_accessions, 'Accessions') + stat(r.n_plots, 'Plots') + stat(r.traits.length, 'Numeric traits'));
+    const stale = r.stale_trials || [];
+    $('#sf_cache_note').html(r.phenotype_source === 'database' ? alertBox('info', '<span class="glyphicon glyphicon-refresh"></span> ' +
+        "Breedbase's phenotype search cache is not up to date for " + stale.length + ' trial(s) of this dataset (' + stale.map(esc).join(', ') +
+        '), so the data were read directly from the database: the summary and the analysis use every value. Loading may take a little longer until the cache is refreshed.') : '');
 
     let h = '<table class="table table-condensed table-hover"><thead><tr><th>Trial</th><th>Location</th><th>Year</th><th>Design</th><th>Plots</th><th>Accessions</th><th>Reps</th><th>Blocks</th><th>Layout</th></tr></thead><tbody>';
     r.trials.forEach(t => {
@@ -557,7 +616,7 @@ function renderDatasetOverview() {
     h += '</tbody></table>';
     $('#sf_trials_table').html(h);
     const rpt = (r.repeated || []).filter(x => x.n_repeated_units > 0);
-    $("#sf_repeated_note").html(rpt.length ? alertBox('info', '<span class="glyphicon glyphicon-repeat"></span> <b>Repeated measurements:</b> ' +
+    $("#sf_repeated_note").html(rpt.length ? alertBox('warning', '<span class="glyphicon glyphicon-repeat"></span> <b>Repeated measurements:</b> ' +
         rpt.map(x => "<b>" + esc(x.short) + '</b> (up to ' + x.max_n + ' values on ' + x.n_repeated_units + ' of ' + x.n_units + ' plots' + (x.n_dates > 1 ? ', ' + x.n_dates + ' dates' : ', same date') + ')').join(', ') +
         '. The table below shows their plot means; choose how each is used (mean, last, area under the curve, every measurement...) under <i>Repeated measurements</i> in step 3, where Breedbase suggests a choice.') : '');
     renderTraits();
@@ -569,6 +628,11 @@ function renderDatasetOverview() {
     const rp = {};
     Object.keys(state.repeated).forEach(t => { const m = matchTrait(t); if (m) rp[m] = state.repeated[t]; });
     state.repeated = rp;
+    ['outlierView', 'outlierSide'].forEach(k => {
+        const o = {};
+        Object.keys(state[k]).forEach(t => { const m = matchTrait(t); if (m) o[m] = state[k][t]; });
+        state[k] = o;
+    });
     renderRepeated();
     renderSingleCovariates();
     $('#sf_dataset_overview').show();
@@ -607,6 +671,7 @@ function applyRepeated(rp) {
     state.repeated = {};
     const tr = rp.traits || {};
     Object.keys(tr).forEach(t => { state.repeated[matchTrait(t) || t] = tr[t]; });
+    if (state.plotRaw) refreshPlotView();
     $('#sf_repeated_time').val(rp.time === 'linear' ? 'linear' : 'date');
     $('#sf_repeated_gxtime').prop('checked', !!rp.gxtime);
     renderRepeated();
@@ -639,7 +704,7 @@ function renderRepeated() {
         const used = [state.traits.indexOf(x.trait) >= 0 ? '<span class="label label-primary">analysed</span>' : '', state.singleCov[x.trait] ? '<span class="label label-info">covariate' + (cur === 'all' ? ' (plot mean)' : '') + '</span>' : ''].filter(Boolean).join(' ') || '<span class="sf-muted">not selected</span>';
         h += '<tr><td title="' + esc(x.trait) + '"><b>' + esc(x.short) + '</b></td><td>' + esc(x.repeat_type === 'single' ? 'single (but several values stored)' : x.repeat_type.replace('_', ' ')) + '</td>' +
             '<td>' + x.n_repeated_units + ' of ' + x.n_units + '</td><td>' + x.max_n + '</td><td>' + range(x) + '</td>' +
-            '<td><select class="form-control input-sm sf-rep-summary" data-trait="' + esc(x.trait) + '">' + opts + '</select></td><td>' + used + '</td></tr>';
+            '<td><select class="form-control input-sm sf-rep-summary" data-trait="' + esc(x.trait) + '">' + opts + '</select>' + outlierReminder(x.trait) + '</td><td>' + used + '</td></tr>';
     });
     h += '</tbody></table></div>';
     const typeOnly = list.filter(x => !x.n_repeated_units);
@@ -657,6 +722,22 @@ function renderRepeated() {
     const gxOk = $('#sf_repeated_time').val() !== 'linear';
     $('#sf_repeated_gxtime').prop('disabled', !gxOk);
     if (!gxOk) $('#sf_repeated_gxtime').prop('checked', false);
+}
+
+// reminder under the value used by the model: outliers of the trait were found
+// on another value per plot (step 2), and / or on one side only
+function outlierReminder(trait) {
+    const rule = radio('sf_outlier_method') !== 'none';
+    const excl = Object.keys(state.exclusions).some(k => state.exclusions[k].trait === trait && !state.exclusions[k].marked);
+    if (!rule && !excl) return '';
+    const how = explorerHow(trait), side = outlierSide(trait);
+    const sameValue = how === repeatedChoice(trait);
+    if (sameValue && side === 'both') return '';
+    const w = [];
+    if (!sameValue) w.push('on the <b>' + esc(explorerHowText(trait)) + '</b>');
+    if (side !== 'both' && rule) w.push('<b>' + side + ' values only</b>');
+    return '<div class="sf-rep-reminder"><span class="glyphicon glyphicon-info-sign"></span> Outliers of this trait were found ' + w.join(', ') + ' (step 2)' +
+        (sameValue ? '' : '; the model uses the value chosen here') + '.</div>';
 }
 
 // Suggested value per plot of each trait measured several times per plot:
@@ -796,7 +877,105 @@ function ensurePlotData() {
     const key = state.dataset.token + '|' + state.traits.join('\t');
     if (state.plotData && state.plotDataKey === key) return Promise.resolve(state.plotData);
     return post('/ajax/script_factory/plot_data', { token: state.dataset.token, traits: JSON.stringify(state.traits) })
-        .then(r => { state.plotData = r; state.plotDataKey = key; return r; });
+        .then(r => { state.plotRaw = r; state.plotDataKey = key; refreshPlotView(); return state.plotData; });
+}
+
+// Value per plot of a trait measured several times per plot that the outlier
+// rules judge (step 2), chosen apart from the value the model uses (step 3):
+// e.g. outliers found on the last measurement, model on the mean. vals are in
+// date order.
+const PLOT_SUMMARY = {
+    mean: v => v.reduce((a, b) => a + b, 0) / v.length,
+    sum: v => v.reduce((a, b) => a + b, 0),
+    first: v => v[0],
+    last: v => v[v.length - 1],
+    max: v => Math.max.apply(null, v),
+    min: v => Math.min.apply(null, v)
+};
+const EXPLORER_REP = [['mean', 'Average'], ['sum', 'Sum'], ['first', 'First value'], ['last', 'Last value']];
+
+// value per plot judged by the outlier rules for a repeated trait
+function explorerHow(trait) { return PLOT_SUMMARY[state.outlierView[trait]] ? state.outlierView[trait] : 'mean'; }
+function explorerHowText(trait) { return (EXPLORER_REP.find(o => o[0] === explorerHow(trait)) || ['', 'Average'])[1].toLowerCase(); }
+function outlierSide(trait) { return state.outlierSide[trait] || 'both'; }
+
+// recipe object of a per-trait setting: selected traits with a non-default value
+function perTrait(map, keep) {
+    const out = {};
+    state.traits.forEach(t => { if (map[t] && map[t] !== 'mean' && map[t] !== 'both' && keep(t)) out[t] = map[t]; });
+    return out;
+}
+
+// state.plotData = state.plotRaw with the values of repeated traits replaced
+// by their value per plot; exclusions follow the shown values
+function refreshPlotView() {
+    const raw = state.plotRaw;
+    if (!raw) { state.plotData = null; return; }
+    const rep = raw.repeated || {};
+    const traits = Object.keys(rep).filter(t => raw.columns.indexOf(t) >= 0 && explorerHow(t) !== 'mean');
+    if (!traits.length) { state.plotData = raw; }
+    else {
+        const cols = traits.map(t => [raw.columns.indexOf(t), rep[t], PLOT_SUMMARY[explorerHow(t)]]);
+        state.plotData = Object.assign({}, raw, {
+            rows: raw.rows.map(r => {
+                const c = r.slice();
+                cols.forEach(([i, units, f]) => { const v = units[r[0]]; if (v && v.length) c[i] = f(v); });
+                return c;
+            })
+        });
+    }
+    const pd = state.plotData;
+    const byUnit = {};
+    pd.rows.forEach(r => { byUnit[r[0]] = r; });
+    Object.keys(state.exclusions).forEach(k => {
+        const e = state.exclusions[k], r = byUnit[e.unit], i = pd.columns.indexOf(e.trait);
+        if (r && i >= 0 && r[i] !== null && r[i] !== undefined) e.value = r[i];
+    });
+}
+
+// per-trait selectors of the explorer: value per plot (repeated traits only)
+// and the side the rules flag
+function renderExplorerRepeated(trait) {
+    const box = $('#sf_explorer_rep');
+    const info = trait && repeatedInfo(trait);
+    $('#sf_explorer_side').toggle(!!trait).find('select').val(trait ? outlierSide(trait) : 'both');
+    $('#sf_apply_all').toggle(state.traits.length > 1);
+    if (!info) { box.hide().find('select').html(''); return; }
+    const cur = explorerHow(trait);
+    box.show().find('select').html(EXPLORER_REP.map(o => '<option value="' + o[0] + '"' + (o[0] === cur ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join(''))
+        .attr('title', shortTrait(trait) + ' has up to ' + info.max_n + ' values on ' + info.n_repeated_units + ' of ' + info.n_units +
+            ' plots. Outliers are found on the value chosen here; the model uses the value chosen in step 3 (Repeated measurements).');
+}
+
+// copies the shown trait's Flag choice to every trait, and its Repeated values
+// choice to every trait measured several times per plot (once: each trait
+// can still be changed on its own afterwards)
+function applyOutlierSettingsToAll(trait) {
+    const side = outlierSide(trait);
+    const repTraits = state.traits.filter(t => repeatedInfo(t));
+    const view = repeatedInfo(trait) ? explorerHow(trait) : null;
+    state.traits.forEach(t => { if (side === 'both') delete state.outlierSide[t]; else state.outlierSide[t] = side; });
+    if (view) repTraits.forEach(t => { if (view === 'mean') delete state.outlierView[t]; else state.outlierView[t] = view; });
+    onOutlierSettingChanged();
+    const what = '"' + ({ both: 'Both sides', high: 'High values only', low: 'Low values only' })[side] + '"' + (view && repTraits.length > 1 ? ' and "' + explorerHowText(trait) + '"' : '');
+    $('#sf_apply_all_msg').html('<span class="glyphicon glyphicon-ok"></span> ' + esc(what) + ' now used for all ' + state.traits.length + ' traits.').show().delay(4000).fadeOut(600);
+}
+
+// the outlier list shows the explorer's trait: switching traits starts from
+// that trait alone, so it is clear what has (not) been done for it yet
+function focusOutlierList(trait) {
+    state.outlierFocus = trait;
+    state.outlierTraitOff = {};
+    state.traits.forEach(t => { if (t !== trait) state.outlierTraitOff[t] = true; });
+}
+
+// a per-trait outlier setting changed: plot, flags and the step 3 reminder follow
+function onOutlierSettingChanged() {
+    state.madrFlags = {};
+    state.madrPreviewDone = false;
+    refreshPlotView();
+    drawExplorer();
+    renderPipeline();
 }
 
 // client-side mirror of the IQR rule in the R pipeline
@@ -833,7 +1012,8 @@ function iqrFlags(trait) {
         if (rows.length < 4) return;
         const s = rows.map(r => r[ti]).sort((a, b) => a - b);
         const q1 = quantile(s, 0.25), q3 = quantile(s, 0.75), iqr = q3 - q1;
-        rows.forEach(r => { if (r[ti] < q1 - k * iqr || r[ti] > q3 + k * iqr) flags[r[0]] = true; });
+        const side = outlierSide(trait);
+        rows.forEach(r => { if ((side !== 'low' && r[ti] > q3 + k * iqr) || (side !== 'high' && r[ti] < q1 - k * iqr)) flags[r[0]] = true; });
     });
     return flags;
 }
@@ -859,6 +1039,8 @@ function renderExplorer() {
     const cur = sel.val();
     sel.html(state.traits.map(t => '<option value="' + esc(t) + '">' + esc(shortTrait(t)) + '</option>').join(''));
     if (cur && state.traits.indexOf(cur) >= 0) sel.val(cur);
+    // first view of a trait: the list starts with that trait only (ticks kept while it stays shown)
+    if (sel.val() && state.outlierFocus !== sel.val()) focusOutlierList(sel.val());
     $('#sf_explorer_plot').html('<div class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Loading observations...</div>');
     ensurePlotData()
         .then(() => drawExplorer())
@@ -870,19 +1052,26 @@ function drawExplorer() {
     const pd = state.plotData;
     const box = document.getElementById('sf_explorer_plot');
     box.innerHTML = '';
+    renderExplorerRepeated(trait);
     if (!trait || !pd) return;
     const ti = pd.columns.indexOf(trait);
     const flags = ruleFlags(trait);
 
+    // removed values (excluded by you or marked in Breedbase) leave the plot:
+    // boxes and axis are drawn from what the analysis will use
     const byTrial = {};
     const all = [];
+    let nExcl = 0, nMark = 0, nObs = 0;
     pd.rows.forEach(r => {
         if (r[ti] === null || r[ti] === undefined) return;
+        nObs++;
+        const ex = state.exclusions[r[0] + '|' + trait];
+        if (ex) { if (ex.marked) nMark++; else nExcl++; return; }
         (byTrial[r[1]] = byTrial[r[1]] || []).push(r);
         all.push(r[ti]);
     });
     const trials = Object.keys(byTrial).sort();
-    if (!trials.length) { box.innerHTML = '<p class="sf-muted">No observations for this trait.</p>'; return; }
+    if (!trials.length) { box.innerHTML = '<p class="sf-muted">' + (nObs ? 'Every value of this trait was removed: restore some in the list below.' : 'No observations for this trait.') + '</p>'; return; }
 
     const minV = Math.min.apply(null, all), maxV = Math.max.apply(null, all);
     const pad = (maxV - minV) * 0.05 || 1;
@@ -914,11 +1103,11 @@ function drawExplorer() {
     const yl = svgEl('text', { x: 14, y: (H - M.b + M.t) / 2, transform: 'rotate(-90 14 ' + ((H - M.b + M.t) / 2) + ')', 'text-anchor': 'middle', fill: '#374151', 'font-weight': 600 }, svg);
     yl.textContent = shortTrait(trait);
 
-    let nFlag = 0, nExcl = 0, nMark = 0;
+    let nFlag = 0;
     trials.forEach((tr, i) => {
         const rows = byTrial[tr];
         const cx = M.l + bw * i + bw / 2;
-        const kept = rows.filter(r => !flags[r[0]] && !state.exclusions[r[0] + '|' + trait]).map(r => r[ti]).sort((a, b) => a - b);
+        const kept = rows.filter(r => !flags[r[0]]).map(r => r[ti]).sort((a, b) => a - b);
         if (kept.length) {
             const q1 = quantile(kept, 0.25), q2 = quantile(kept, 0.5), q3 = quantile(kept, 0.75);
             const w = bw * 0.55;
@@ -927,21 +1116,15 @@ function drawExplorer() {
             svgEl('line', { x1: cx - w / 2, x2: cx + w / 2, y1: ys(q2), y2: ys(q2), stroke: '#1f5f3a', 'stroke-width': 2 }, svg);
         }
         rows.forEach(r => {
-            const key = r[0] + '|' + trait;
-            const excl = !!state.exclusions[key];
-            const mark = excl && !!state.exclusions[key].marked;
             const flag = !!flags[r[0]];
-            if (excl && !mark) nExcl++;
-            if (mark) nMark++;
             if (flag) nFlag++;
             const c = svgEl('circle', {
-                cx: cx + (hash(r[0]) - 0.5) * bw * 0.6, cy: ys(r[ti]), r: (excl || flag) ? 4 : 2.6,
-                fill: excl ? '#111' : flag ? '#e11d48' : '#2b7a4b', 'fill-opacity': (excl || flag) ? 0.95 : 0.45,
-                stroke: excl ? '#fff' : 'none'
+                cx: cx + (hash(r[0]) - 0.5) * bw * 0.6, cy: ys(r[ti]), r: flag ? 4 : 2.6,
+                fill: flag ? '#e11d48' : '#2b7a4b', 'fill-opacity': flag ? 0.95 : 0.45
             }, svg);
             c.setAttribute('data-unit', r[0]);
             const title = svgEl('title', {}, c);
-            title.textContent = r[0] + '\n' + r[2] + '\nvalue: ' + r[ti] + (r[3] ? '\nrep ' + r[3] : '') + (r[5] !== null && r[5] !== undefined ? '\nrow ' + r[5] + ', col ' + r[6] : '') + (flag ? '\nflagged by the rule' : '') + (mark ? '\nmarked as outlier in Breedbase: excluded (click to use it)' : excl ? '\nexcluded by you (click to restore)' : '\nclick to exclude');
+            title.textContent = r[0] + '\n' + r[2] + '\nvalue: ' + r[ti] + (r[3] ? '\nrep ' + r[3] : '') + (r[5] !== null && r[5] !== undefined ? '\nrow ' + r[5] + ', col ' + r[6] : '') + (flag ? '\nflagged by the rule' : '') + '\nclick to remove it';
             c.addEventListener('click', () => toggleExclusion(r, trait));
         });
         const lab = svgEl('text', { x: cx, y: H - M.b + 12, 'text-anchor': 'end', transform: 'rotate(-' + ang + ' ' + cx + ' ' + (H - M.b + 12) + ')', fill: '#374151' }, svg);
@@ -950,14 +1133,18 @@ function drawExplorer() {
     });
 
     const method = radio('sf_outlier_method');
-    let msg = '<b>' + all.length + '</b> observations';
+    let msg = '<b>' + all.length + '</b> ' + (repeatedInfo(trait) ? 'plot values (' + esc(explorerHowText(trait)) + ' of the repeated measurements)' : 'observations');
+    if (outlierSide(trait) !== 'both' && method !== 'none') msg += ', the rule flags <b>' + (outlierSide(trait) === 'high' ? 'high' : 'low') + ' values only</b>';
     if (method === 'iqr') msg += ', <b style="color:#e11d48">' + nFlag + '</b> flagged by the IQR rule';
     if (method === 'madr') msg += Object.keys(state.madrFlags).length || state.madrPreviewDone
         ? ', <b style="color:#e11d48">' + nFlag + '</b> flagged by BH-MADR'
         : ' &middot; BH-MADR needs a model fit: click <i>Flag with BH-MADR</i> to preview the flagged points (it is applied anyway when you run the analysis).';
-    msg += ', <b>' + nExcl + '</b> excluded by you' + (nMark ? ', <b>' + nMark + '</b> excluded as marked in Breedbase' : '') + '.';
+    msg += '.';
+    if (nExcl || nMark) msg += ' <span class="sf-muted"><span class="glyphicon glyphicon-eye-close"></span> Not shown: <b>' + nExcl + '</b> removed by you' + (nMark ? ', <b>' + nMark + '</b> marked as outliers in Breedbase' : '') +
+        '. They are left out of the analysis; restore them in the list below.</span>';
     $('#sf_explorer_summary').html('<p class="sf-help">' + msg + '</p>');
     renderExclusions();   // the full outlier list follows the rule and the exclusions
+    renderRepeated();     // step 3 reminds how the outliers of repeated traits were found
 }
 
 // values marked as outliers in Breedbase (dataset or database): exclude them
@@ -1017,14 +1204,18 @@ function renderExclusions() {
     const all = collectOutliers();
     state.outlierRows = all;
 
-    // trait filter
-    const filter = $('#sf_outlier_filter');
-    const cur = filter.val() || '';
+    // trait filter: one checkbox per trait (all ticked by default); the list
+    // and the mark buttons follow the ticked traits
     const counts = {};
     all.forEach(o => { counts[o.trait] = (counts[o.trait] || 0) + 1; });
-    filter.html('<option value="">All traits (' + all.length + ')</option>' + state.traits.map(t => '<option value="' + esc(t) + '">' + esc(shortTrait(t)) + ' (' + (counts[t] || 0) + ')</option>').join(''));
-    filter.val(state.traits.indexOf(cur) >= 0 ? cur : '');
-    const rows = all.filter(o => !filter.val() || o.trait === filter.val());
+    const shown = t => !state.outlierTraitOff[t];
+    const nOn = state.traits.filter(shown).length;
+    $('#sf_outlier_traits').html(state.traits.length > 1 ? '<span class="sf-muted">Traits:</span> ' +
+        state.traits.map(t => '<label class="checkbox-inline sf-outlier-trait"><input type="checkbox" class="sf-outlier-trait-cb" value="' + esc(t) + '"' + (shown(t) ? ' checked' : '') + ' /> ' +
+            esc(shortTrait(t)) + ' <span class="badge">' + (counts[t] || 0) + '</span></label>').join('') +
+        ' <button class="btn btn-link btn-xs sf-outlier-traits-all" data-on="1"' + (nOn === state.traits.length ? ' disabled' : '') + '>all</button>' +
+        '<button class="btn btn-link btn-xs sf-outlier-traits-all" data-on="0"' + (!nOn ? ' disabled' : '') + '>none</button>' : '');
+    const rows = all.filter(o => shown(o.trait));
     state.outlierVisible = rows;
 
     const nRule = all.filter(o => o.rule).length, nInd = all.filter(o => o.ind).length, nMarked = all.filter(o => o.marked).length;
@@ -1046,7 +1237,10 @@ function renderExclusions() {
     Object.keys(state.outlierSel).forEach(k => { if (!listed[k]) delete state.outlierSel[k]; });
 
     if (!rows.length) {
-        $('#sf_outlier_table').html('<p class="sf-muted" style="padding:10px">No outliers' + (all.length ? ' for this trait' : '') + '. Choose a rule above or click points in the plot to exclude them.</p>');
+        const on = state.traits.filter(shown);
+        $('#sf_outlier_table').html('<p class="sf-muted" style="padding:10px"><span class="glyphicon glyphicon-info-sign"></span> ' +
+            (on.length === 1 ? 'Nothing flagged or excluded for <b>' + esc(shortTrait(on[0])) + '</b> yet.' : !on.length ? 'No trait is ticked above.' : 'Nothing flagged or excluded for the ticked traits yet.') +
+            ' Choose a rule above or click points in the plot to exclude them.</p>');
     } else {
         const allSel = rows.every(o => state.outlierSel[o.key]);
         let h = '<table class="table table-condensed table-hover"><thead><tr><th style="width:28px"><input type="checkbox" id="sf_outlier_all"' + (allSel ? ' checked' : '') + ' title="Select all listed" /></th>' +
@@ -1067,11 +1261,12 @@ function renderExclusions() {
 }
 
 function selectedOutliers() {
-    return (state.outlierRows || []).filter(o => state.outlierSel[o.key]);
+    // ticked rows of the ticked traits only
+    return (state.outlierVisible || []).filter(o => state.outlierSel[o.key]);
 }
 
 // the values the mark buttons act on: the ticked rows, or every listed
-// outlier (current trait filter) when none is ticked
+// outlier (of the ticked traits) when no row is ticked
 function outlierTargets() {
     const sel = selectedOutliers();
     return sel.length ? sel : (state.outlierVisible || []);
@@ -1144,7 +1339,15 @@ function markOutliers(items, action, msgBox) {
             if (r.not_found) m += ' ' + r.not_found + ' could not be matched to a stored phenotype.';
             if (t[1] === 'dataset') m += ' The dataset now has <b>' + r.dataset_n_outliers + '</b> outlier(s).';
             $(msgBox).html(alertBox(r.not_found ? 'warning' : 'success', m));
-            if (state.plotData) renderExclusions();
+            // values marked in Breedbase are left out (as when the dataset loads); a
+            // value no longer marked anywhere comes back unless you removed it yourself
+            items.forEach((o, i) => {
+                const k = keys[i], st = state.outlierStatus[k] || {}, ex = state.exclusions[k];
+                const marked = st.dataset && st.database ? 'both' : st.dataset ? 'dataset' : st.database ? 'database' : null;
+                if (marked) state.exclusions[k] = Object.assign({ unit: o.unit, trait: o.trait, trial: o.trial, accession: o.accession, value: o.value }, ex || {}, { marked: marked });
+                else if (ex && ex.marked) delete state.exclusions[k];
+            });
+            if (state.plotData) drawExplorer();
             renderPipeline();
         })
         .catch(e => $(msgBox).html(alertBox('danger', esc(e.message))));
@@ -1186,7 +1389,7 @@ function trialModel(t) {
     if (t.has_rowcol && (s1 === 'spats' || s1 === 'auto') && effectiveEngine() === 'blupf90') {
         const r0 = sup(t, 'rep').ok;
         const rc = (r0 ? ['(1|rep)'] : []).concat(sup(t, 'row').ok ? ['(1|rep:row)'] : [], sup(t, 'col').ok ? ['(1|rep:col)'] : []);
-        return { design: design, text: 'BLUPF90+: y ~ accession + rowN + colN' + (rc.length ? ' + ' + rc.join(' + ') : ''), spats: true, note: 'SpATS is R only: row and column effects + linear trends', off: factorsOff(t) };
+        return { design: design, text: 'BLUPF90+: y ~ accession + rowN + colN + rowN:colN + PSpline(col, row)' + (rc.length ? ' + ' + rc.join(' + ') : ''), spats: true, note: 'SpATS-like P-spline surface (BLUPF90+)', off: factorsOff(t) };
     }
     if (t.has_rowcol && (s1 === 'spats' || s1 === 'auto')) {
         return { design: design, text: 'SpATS: y ~ accession' + (sup(t, 'rep').ok ? ' + rep' : '') + ' + PSANOVA(col, row)' + (sup(t, 'row').ok ? ' + (1|row)' : '') + (sup(t, 'col').ok ? ' + (1|col)' : ''), spats: true, off: factorsOff(t) };
@@ -1204,8 +1407,8 @@ function trialModel(t) {
 function renderDesignTable() {
     const f90 = effectiveEngine() === 'blupf90';
     const sp = $('input[name=sf_stage1_model][value=spats]').closest('label');
-    sp.toggleClass('dis', f90).find('.sf-option-text').html(f90
-        ? 'Not available with BLUPF90+ (SpATS is an R package): trials with rows and columns get random row and column effects within replicate and linear row / column trends.'
+    sp.toggleClass('dis', false).find('.sf-option-text').html(f90
+        ? 'With BLUPF90+: a SpATS-like 2D P-spline surface (one smoothing variance instead of separate row and column smoothing) plus linear trends and row and column effects. Its results agree closely with SpATS.'
         : '2D P-spline surface (Rodr&iacute;guez-&Aacute;lvarez et al., 2018) plus row and column effects.');
     if (!state.dataset) return;
     let h = '<table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Stage 1 model</th></tr></thead><tbody>';
@@ -1846,6 +2049,7 @@ function geneticChip(r) {
 }
 
 function renderPipeline() {
+    updateStep1Next();
     const r = buildRecipe();
     const items = [];
     items.push({ t: 'Data', d: state.dataset ? esc(state.dataset.dataset_name) + '<br/>' + state.traits.length + ' trait(s), ' + state.dataset.trials.length + ' trial(s)' : 'no dataset loaded', off: !state.dataset });
@@ -2006,6 +2210,8 @@ function runAnalysis() {
         $('#sf_run_elapsed').text('(' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + ')');
     }, 1000);
 
+    startReview(recipe);
+
     const notify = $('#sf_notify').is(':checked') && !!cfg.user_email;
     post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full', dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: notify ? 1 : 0 })
         .then(job => {
@@ -2020,6 +2226,7 @@ function runAnalysis() {
             state.resultsRecipe = recipe;
             state.lastRun = { key: key, finishedAt: new Date(), seconds: Math.round((Date.now() - t0) / 1000) };
             renderResults();
+            reviewMainDone(state.results, recipe);
         })
         .catch(e => {
             state.results = null;
@@ -2034,6 +2241,172 @@ function runAnalysis() {
             updateRunButton();
             renderQuickRun();
         });
+}
+
+// ---------------------------------------------------------------------------
+// model review: a second look at the model while it runs (never blocks it).
+// Findings come from the settings and the dataset before the run, and from
+// the results after it. Their fixes make a suggested model that can be run
+// too; the two runs are compared and the researcher keeps either one.
+// ---------------------------------------------------------------------------
+
+function reviewContext(corr) {
+    const ds = state.dataset;
+    const D = singleData();
+    const p = genoProtocol();
+    return {
+        trials: arr(ds && ds.trials).map(t => ({
+            trial: t.trial, design: state.designOverrides[t.trial] && state.designOverrides[t.trial] !== 'auto' ? state.designOverrides[t.trial] : detectDesign(t),
+            n_plots: t.n_plots, n_accessions: t.n_accessions, has_rowcol: !!t.has_rowcol,
+            rep: sup(t, 'rep').ok, block: sup(t, 'block').ok, row: sup(t, 'row').ok, col: sup(t, 'col').ok
+        })),
+        n_locations: D ? D.n_locations : 0,
+        n_years: D ? D.n_years : 0,
+        rowcolAuto: D ? (D.rowcol_design || (D.rc_trials === D.n_trials && D.n_trials > 0)) : false,
+        blockAuto: D ? (D.incomplete && D.block_trials > 0) : false,
+        short: shortTrait,
+        corr: corr || {},
+        genotyped: p && ds ? { n_genotyped: p.n_genotyped, n_accessions: ds.n_accessions } : null
+    };
+}
+
+// plot-level correlation of each analysed trait with each covariate
+function traitCovariateCorr(recipe) {
+    const covs = arr(recipe.covariates);
+    if (!covs.length || !state.dataset) return Promise.resolve({});
+    const cols = recipe.traits.concat(covs).filter((v, i, a) => a.indexOf(v) === i);
+    return post('/ajax/script_factory/plot_data', { token: state.dataset.token, traits: JSON.stringify(cols) }).then(pd => {
+        const out = {};
+        recipe.traits.forEach(t => {
+            const i = pd.columns.indexOf(t);
+            covs.forEach(c => {
+                const j = pd.columns.indexOf(c);
+                if (i < 0 || j < 0 || c === t) return;
+                const xy = pd.rows.filter(r => r[i] !== null && r[j] !== null && r[i] !== undefined && r[j] !== undefined).map(r => [r[i], r[j]]);
+                if (xy.length < 10) return;
+                const n = xy.length, mx = xy.reduce((a, p) => a + p[0], 0) / n, my = xy.reduce((a, p) => a + p[1], 0) / n;
+                let sxy = 0, sxx = 0, syy = 0;
+                xy.forEach(p => { sxy += (p[0] - mx) * (p[1] - my); sxx += (p[0] - mx) ** 2; syy += (p[1] - my) ** 2; });
+                if (sxx > 0 && syy > 0) (out[t] = out[t] || {})[c] = sxy / Math.sqrt(sxx * syy);
+            });
+        });
+        return out;
+    }).catch(() => ({}));
+}
+
+function startReview(recipe) {
+    const rv = state.review = { recipe: recipe, findings: [], after: [], suggested: null, main: null, alt: null, chosen: 'main', loading: true };
+    renderReview();
+    traitCovariateCorr(recipe).then(corr => {
+        if (state.review !== rv) return;
+        const r = reviewModel(recipe, reviewContext(corr));
+        rv.findings = r.findings;
+        rv.loading = false;
+        updateSuggested(rv);
+        renderReview();
+    });
+}
+
+// suggested model from every finding with a fix (before and after the run)
+function updateSuggested(rv) {
+    if (rv.alt) return;    // already run: keep what was compared
+    rv.suggested = suggestedRecipe(rv.recipe, rv.findings.concat(rv.after));
+}
+
+function reviewMainDone(res, recipe) {
+    const rv = state.review;
+    if (!rv || rv.recipe !== recipe) return;
+    rv.main = { results: res, recipe: recipe, key: state.lastRun.key };
+    rv.after = reviewResults(res, recipe, arr(state.dataset && state.dataset.trials).some(t => t.has_rowcol));
+    updateSuggested(rv);
+    renderReview();
+}
+
+// what the suggested model changes, in words
+function suggestedChanges(rv) {
+    return rv.findings.concat(rv.after).filter(x => typeof x.apply === 'function' && x.fix).map(x => x.fix).filter((v, i, a) => a.indexOf(v) === i);
+}
+
+function runSuggested() {
+    const rv = state.review;
+    if (!rv || !rv.suggested || (rv.alt && rv.alt.job)) return;
+    rv.alt = { job: { pending: true }, recipe: rv.suggested, results: null, error: null };
+    renderReview();
+    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(rv.suggested), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full',
+        dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: 0 })
+        .then(job => { rv.alt.job = job; renderReview(); return pollJob(job, null); })
+        .then(res => { res.run_id = rv.alt.job.run_id; rv.alt.results = res; })
+        .catch(e => { rv.alt.error = e.message; })
+        .finally(() => { rv.alt.job = null; if (state.review === rv) renderReview(); });
+}
+
+// keep the results of one of the two runs: the results tabs, storing and the
+// settings on the page follow it
+function chooseRun(which) {
+    const rv = state.review;
+    const run = which === 'alt' ? rv && rv.alt : rv && rv.main;
+    if (!run || !run.results) return;
+    rv.chosen = which;
+    applyRecipe(run.recipe);
+    state.results = run.results;
+    state.resultsRecipe = run.recipe;
+    state.lastRun = Object.assign({}, state.lastRun || { finishedAt: new Date(), seconds: 0 }, { key: runKey() });
+    renderResults();
+    renderReview();
+    updateRunButton();
+}
+
+function renderReview() {
+    const rv = state.review;
+    const box = $('#sf_model_review');
+    if (!rv) { box.hide(); return; }
+    box.show();
+    const items = rv.findings.concat(rv.after);
+    const icon = l => l === 'look' ? 'eye-open' : 'info-sign';
+    let h = '<p class="sf-help">Your analysis runs exactly as you set it up. Meanwhile, here is a friendly second look at the model, the kind of thing a colleague might point out. ' +
+        'None of it means something is wrong: you know your trials best, and you decide what to keep.</p>';
+    if (rv.loading) h += '<p class="sf-muted"><span class="glyphicon glyphicon-refresh sf-spin"></span> Looking at the model...</p>';
+    else if (!items.length) {
+        h += '<div class="sf-review-ok"><span class="glyphicon glyphicon-thumbs-up"></span> Nothing to point out' + (rv.main ? ' in the model or in the results' : ' so far') +
+            ': no field effect adjusted twice, and every term has data to support it.' + (rv.main ? '' : ' The results will get a quick look too when they are ready.') + '</div>';
+    } else {
+        h += '<ul class="sf-review-list">' + items.map(x => '<li class="sf-review-' + x.level + '"><span class="glyphicon glyphicon-' + icon(x.level) + '"></span><div><b>' + esc(x.title) + '</b>' +
+            '<span class="sf-review-tag">' + (x.level === 'look' ? 'worth a look' : 'good to know') + '</span><p>' + esc(x.text) + '</p>' +
+            (x.fix ? '<p class="sf-review-fix"><span class="glyphicon glyphicon-leaf"></span> Idea: ' + esc(x.fix) + '</p>' : '') + '</div></li>').join('') + '</ul>';
+        if (!rv.main) h += '<p class="sf-muted"><small>The results will get a quick look too when they are ready.</small></p>';
+    }
+    h += renderReviewRuns(rv);
+    $('#sf_model_review_body').html(h);
+}
+
+function renderReviewRuns(rv) {
+    const changes = suggestedChanges(rv);
+    if (!rv.suggested && !rv.alt) return '';
+    let h = '<div class="sf-review-alt"><h4><span class="glyphicon glyphicon-transfer"></span> Try the suggested model side by side</h4>';
+    if (!rv.alt) {
+        return h + '<p>The suggested model is your model with ' + (changes.length > 1 ? 'these changes' : 'this change') + ': ' + changes.map(esc).join(' ') + ' ' +
+            'It runs next to yours, and you can compare both and keep the one you prefer. Your run is not touched.</p>' +
+            '<button class="btn btn-default btn-sm" id="sf_run_suggested"><span class="glyphicon glyphicon-play"></span> Also run the suggested model</button></div>';
+    }
+    if (rv.alt.job) return h + '<p><span class="glyphicon glyphicon-refresh sf-spin"></span> The suggested model is running' + (rv.main ? '' : ', next to yours') + '...</p></div>';
+    if (rv.alt.error) return h + alertBox('warning', 'The suggested model could not be run: ' + esc(rv.alt.error) + ' Your results are not affected.') + '</div>';
+    if (!rv.main) return h + '<p><span class="glyphicon glyphicon-ok"></span> The suggested model is done. The comparison appears as soon as your run finishes.</p></div>';
+
+    const dec = t => { const m = matchTrait(t); return !!(m && state.indexCfg[m] && state.indexCfg[m].direction === 'decrease'); };
+    const rows = compareRuns(rv.main.results, rv.alt.results, dec);
+    const f = v => v === null || v === undefined ? '&ndash;' : fmt(v);
+    const agree = r => r === null ? '&ndash;' : '<span class="' + (r >= 0.95 ? 'sf-agree-hi' : r >= 0.8 ? 'sf-agree-mid' : 'sf-agree-lo') + '">' + r.toFixed(2) + '</span>';
+    h += '<div class="table-responsive"><table class="table table-condensed sf-review-compare"><thead><tr><th rowspan="2">Trait</th><th colspan="3">Your model</th><th colspan="3">Suggested model</th><th rowspan="2" title="Correlation of the genotype values of the two models">Agreement</th><th rowspan="2" title="Accessions in the best 10% with both models">Same top 10%</th></tr>' +
+        '<tr><th>H&sup2;</th><th>&sigma;&sup2;<sub>G</sub></th><th>&sigma;&sup2;<sub>e</sub></th><th>H&sup2;</th><th>&sigma;&sup2;<sub>G</sub></th><th>&sigma;&sup2;<sub>e</sub></th></tr></thead><tbody>' +
+        rows.map(x => '<tr><td><b>' + esc(x.trait) + '</b></td><td>' + f(x.a.h2) + '</td><td>' + f(x.a.var_g) + '</td><td>' + f(x.a.var_e) + '</td><td>' + f(x.b.h2) + '</td><td>' + f(x.b.var_g) + '</td><td>' + f(x.b.var_e) + '</td>' +
+            '<td>' + agree(x.r) + '</td><td>' + (x.top ? x.top.same + ' of ' + x.top.n : '&ndash;') + '</td></tr>').join('') + '</tbody></table></div>';
+    h += '<p class="sf-help">How to read it: when both models agree (agreement close to 1, the same top accessions), the simpler one is the safer choice, since it gives the same answer with less to estimate. ' +
+        'When they disagree, the heritability alone does not decide it: a higher H&sup2; can come from fitting noise. Choose the model whose terms you can explain from how the trials were laid out.</p>';
+    const btn = (w, label) => rv.chosen === w
+        ? '<span class="sf-review-chosen"><span class="glyphicon glyphicon-ok"></span> ' + label + ': shown in the results</span>'
+        : '<button class="btn btn-default btn-sm sf-review-choose" data-run="' + w + '">Use ' + label.toLowerCase() + '</button>';
+    h += '<div class="sf-review-choose-bar">' + btn('main', 'Your model') + btn('alt', 'Suggested model') + '</div>';
+    return h + '</div>';
 }
 
 // ---------------------------------------------------------------------------
@@ -2148,21 +2521,46 @@ function h2Badge(v) {
     return '<span style="display:inline-block;min-width:44px;padding:1px 6px;border-radius:10px;color:#fff;background:' + c + ';text-align:center">' + x.toFixed(2) + '</span>';
 }
 
+// selection accuracy (0-1): how closely the genotype values follow the true genetic values
+function accuracyBadge(v) {
+    if (v === null || v === undefined || isNaN(Number(v))) return '&ndash;';
+    const a = Number(v);
+    const c = a >= 0.8 ? '#2b7a4b' : a >= 0.6 ? '#b7791f' : '#9b2c2c';
+    return '<b style="color:' + c + '">' + a.toFixed(2) + '</b>';
+}
+
+function accuracyStat(ix) {
+    if (ix.accuracy === null || ix.accuracy === undefined) {
+        return '<div class="sf-stat sf-stat-acc" title="The accuracy comes from the genetic variance, which is only estimated when the genotype is a random effect (BLUPs). ' +
+            'With the genotype as a fixed effect (BLUEs), choose Random under Genotype in step 3 to see it.">' +
+            '<div class="v sf-muted">n/a</div><div class="l">Selection accuracy</div></div>';
+    }
+    const a = Number(ix.accuracy);
+    const word = a >= 0.8 ? 'high' : a >= 0.6 ? 'moderate' : 'low';
+    const per = arr(ix.gains).filter(g => g.in_index && g.accuracy !== null && g.accuracy !== undefined).map(g => g.trait + ': ' + Number(g.accuracy).toFixed(2)).join(', ');
+    return '<div class="sf-stat sf-stat-acc sf-acc-' + word + '" title="Selection accuracy of the index: mean accuracy of its traits, weighted by their index weights (' + esc(per) + '). ' +
+        'It says how closely the ranking follows the true genetic values: 1 would be perfect.">' +
+        '<div class="v">' + a.toFixed(2) + ' <small>' + word + '</small></div><div class="l">Selection accuracy</div></div>';
+}
+
 function renderIndexResults(ix, label) {
     const table = arr(ix.table);
     const traitCols = table.length ? Object.keys(table[0]).filter(k => ['accession', 'index', 'rank', 'selected'].indexOf(k) < 0) : [];
     let h = '<div class="sf-stats">' +
         '<div class="sf-stat"><div class="v">' + ix.n_selected + ' / ' + ix.n_ranked + '</div><div class="l">Selected accessions</div></div>' +
         '<div class="sf-stat"><div class="v">' + ix.selection_pct + '%</div><div class="l">Selection intensity</div></div>' +
-        '<div class="sf-stat"><div class="v">' + (ix.method === 'rank_sum' ? 'Rank sum' : 'Z-score') + '</div><div class="l">Method</div></div></div>';
+        '<div class="sf-stat"><div class="v">' + (ix.method === 'rank_sum' ? 'Rank sum' : 'Z-score') + '</div><div class="l">Method</div></div>' +
+        accuracyStat(ix) + '</div>';
     h += '<h4>Expected response to selection</h4>' + simpleTable(ix.gains, [
         { k: 'trait', l: 'Trait' }, { k: 'in_index', l: 'In index', f: v => v ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '' },
         { k: 'weight', l: 'Weight', f: (v, r) => r.in_index ? fmt(v, 2) + (r.direction === 'decrease' ? ' &darr;' : ' &uarr;') : '' },
         { k: 'mean_population', l: 'Population mean' }, { k: 'mean_selected', l: 'Selected mean' },
         { k: 'selection_differential', l: 'Selection differential' },
         { k: 'selection_differential_pct', l: 'S %', f: v => '<b style="color:' + (Number(v) >= 0 ? '#2b7a4b' : '#dc2626') + '">' + fmt(v, 1) + '%</b>' },
-        { k: 'expected_gain', l: 'Expected gain' }
-    ]) + '<p class="sf-help">' + esc(ix.note) + '</p>';
+        { k: 'expected_gain', l: 'Expected gain' },
+        { k: 'accuracy', l: 'Accuracy', f: v => accuracyBadge(v) }
+    ]) + '<p class="sf-help">' + esc(ix.note) + ' Accuracy: how closely the genotype values follow the true genetic values (0 to 1), from their standard errors ' +
+        '(&radic;(1 &minus; PEV / &sigma;&sup2;<sub>G</sub>)), or &radic;H&sup2; when the genotype is a fixed effect.</p>';
     h += '<h4>Top accessions</h4><div id="sf_index_chart" class="sf-plot"></div>';
     h += '<h4>Ranking</h4>' + simpleTable(table, [
         { k: 'rank', l: 'Rank', f: v => v }, { k: 'accession', l: 'Accession', f: v => '<a href="/stock/' + encodeURIComponent(v) + '/view" target="_blank">' + esc(v) + '</a>' },
@@ -2348,6 +2746,7 @@ function loadScript(id, andRun) {
         .then(r => {
             state.script = { id: r.is_owner ? r.recipe_id : null, name: r.name, description: r.description, is_public: r.is_public, is_owner: r.is_owner };
             state.scriptLoaded = true;
+            state.scriptRecipe = r.recipe;
             applyRecipe(r.recipe);
             setScriptName();
             $('#sf_library_modal').modal('hide');
@@ -2421,7 +2820,9 @@ function newScript() {
     if (!confirm('Start a new script? Your current settings will be reset (the loaded dataset is kept).')) return;
     state.script = { id: null, name: null, description: '', is_public: 0, is_owner: 1 };
     state.scriptLoaded = false;
+    state.scriptRecipe = null;
     state.missingTraits = [];
+    state.traitCheck = null;
     $('#sf_pipeline_banner').html('');
     $('#sf_recipe_trait_warning').html('');
     renderQuickRun();
@@ -2496,7 +2897,10 @@ export function init(options) {
 
     // step 2
     $('input[name=sf_outlier_method], #sf_iqr_k, #sf_iqr_group').on('change', () => { if (state.plotData) drawExplorer(); });
-    $('#sf_explorer_trait').on('change', drawExplorer);
+    $('#sf_explorer_trait').on('change', function() {
+        focusOutlierList($(this).val());
+        drawExplorer();
+    });
     $('#sf_preview_madr').on('click', previewMadr);
     $('#sf_madr_alpha').on('change', () => { state.madrFlags = {}; state.madrPreviewDone = false; if (state.plotData) drawExplorer(); });
     // values marked in Breedbase: use them all again / exclude them all
@@ -2508,7 +2912,33 @@ export function init(options) {
         delete state.exclusions[$(this).data('key')];
         drawExplorer(); renderPipeline();
     });
-    $('#sf_outlier_filter').on('change', renderExclusions);
+    $('#sf_outlier_traits').on('change', '.sf-outlier-trait-cb', function() {
+        if ($(this).is(':checked')) delete state.outlierTraitOff[$(this).val()]; else state.outlierTraitOff[$(this).val()] = true;
+        renderExclusions();
+    });
+    $('#sf_outlier_traits').on('click', '.sf-outlier-traits-all', function() {
+        state.outlierTraitOff = {};
+        if (String($(this).data('on')) === '0') state.traits.forEach(t => { state.outlierTraitOff[t] = true; });
+        renderExclusions();
+    });
+    $('#sf_explorer_rep select').on('change', function() {
+        const t = $('#sf_explorer_trait').val();
+        if (!t) return;
+        const v = $(this).val();
+        if (v === 'mean') delete state.outlierView[t]; else state.outlierView[t] = v;
+        onOutlierSettingChanged();
+    });
+    $('#sf_explorer_side select').on('change', function() {
+        const t = $('#sf_explorer_trait').val();
+        if (!t) return;
+        const v = $(this).val();
+        if (v === 'both') delete state.outlierSide[t]; else state.outlierSide[t] = v;
+        onOutlierSettingChanged();
+    });
+    $('#sf_apply_all').on('click', function() {
+        const t = $('#sf_explorer_trait').val();
+        if (t) applyOutlierSettingsToAll(t);
+    });
     $('#sf_outlier_table').on('change', '.sf-outlier-cb', function() {
         const k = $(this).data('key');
         if ($(this).is(':checked')) state.outlierSel[k] = true; else delete state.outlierSel[k];
@@ -2632,6 +3062,8 @@ export function init(options) {
 
     // step 6
     $('#sf_run').on('click', runAnalysis);
+    $('#sf_model_review').on('click', '#sf_run_suggested', runSuggested);
+    $('#sf_model_review').on('click', '.sf-review-choose', function() { chooseRun($(this).data('run')); });
     $('#sf_save_analysis').on('click', openStoreAnalysis);
     // the trait explorer fills the card width: redraw it when the window is resized
     let resizeTimer = null;
