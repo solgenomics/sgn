@@ -744,7 +744,10 @@ sub apply {
 A digest of what a plan changes, to make sure that apply() carries out the
 plan the user saw in a preview. It names the old stock of every plot too: a
 plot that someone else changed after the preview would get the new stock
-with the same plan otherwise, and that change would be lost unseen.
+with the same plan otherwise, and that change would be lost unseen. It names
+the samples in other trials that get the new stock and the number of changed
+plots with phenotypes too: a curator who saw a preview without them would
+change them unseen otherwise.
 
 =cut
 
@@ -758,6 +761,8 @@ sub plan_digest {
         (map { "check $_->{plot_id} $_->{new}" } @{$plan->{checks}}),
         (map { "entry $_->{stock_id} $_->{entry_number}" } @{$plan->{entry_numbers}}),
         (map { "seedlot $_->{type} $_->{transaction_id} $_->{plot_id} $_->{seedlot_id}" } @{$plan->{seedlots}}),
+        (map { "sample $_->{stock_id}" } @{$plan->{external_samples} || []}),
+        "phenotyped plots ".($plan->{plots_with_phenotypes} || 0),
     );
     return md5_hex(encode_utf8(join("\n", sort @parts)));
 }

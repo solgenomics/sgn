@@ -111,20 +111,23 @@ for (i in rangeTraits) {
   missingReplicates$limitRep <- missingReplicates$replicates - missingReplicates$missingData
   missingReplicates <- missingReplicates[missingReplicates$limitRep > 1,]
 
-  # Filtering the dataset
-  phenoData <- phenoData[phenoData$germplasmName %in% missingReplicates$germplasmName,]
+  # Filtering the dataset: a copy for this trait, so the next trait starts from all accessions
+  traitData <- phenoData[phenoData$germplasmName %in% missingReplicates$germplasmName & !is.na(phenoData[[outcome]]),]
    
   
   print(paste0('outcome ', outcome))
   
-  # the block effect is the block number, one level per block; the replicate counts the plots of an accession
-  # (a single block stays a constant, which lmer drops from the fixed effects)
-  if (length(unique(phenoData$blockNumber)) > 1) {
-    phenoData$blockNumber <- as.factor(phenoData$blockNumber)
+  # the block effect is the block number, one level per block in which this trait was observed;
+  # the replicate counts the plots of an accession (a single block stays a constant, which lmer
+  # drops from the fixed effects)
+  if (length(unique(traitData$blockNumber)) > 1) {
+    traitData$blockNumber <- as.factor(traitData$blockNumber)
+  } else {
+    traitData$blockNumber <- 1
   }
   model <- lmer(get(outcome)~ (1|germplasmName) + blockNumber,
                 na.action = na.exclude,
-                data=phenoData)
+                data=traitData)
   
   
   # variance = as.data.frame(VarCorr(model))

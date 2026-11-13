@@ -47,7 +47,6 @@ row <- "rowNumber"
 col <- "colNumber"
 userPheno$R <- as.factor(userPheno$rowNumber)
 userPheno$blockNumber <- as.factor(userPheno$blockNumber)
-hasBlocks <- nlevels(userPheno$blockNumber) > 1
 userPheno$C <- as.factor(userPheno$colNumber)
 
 ################################################################################
@@ -78,6 +77,8 @@ for (i in 2:length(userResponse)) {
     write(paste("userResponsedata:", userPheno[userResponse[i]]), stderr())
 
     ## Fit the model without spatial variation ##
+    # the block effect only when this trait was observed in two or more blocks
+    hasBlocks <- length(unique(userPheno$blockNumber[!is.na(userPheno[[userResponse[i]]])])) > 1
     modArg <- paste(userResponse[i], " ~ ", userID, if (hasBlocks) paste(" + ", block) else "", sep = "")
     write(paste("modArg:", modArg), stderr())
     mod <- mmer(

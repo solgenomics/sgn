@@ -282,6 +282,18 @@ scenario 'apply carries out only the plan of the preview' => sub {
     # the same request again, after the trial changed: its plan is another one
     dies_with(sub { $ac->apply([ { plot_id => $plot{10}, new_stock_id => $acc{4} } ], { rename_plots => 'none', plan_digest => $digest }) }, qr/The trial changed after the preview, so the changes are not the ones you saw/, 'another plan is refused');
     is(linked_stock($plot{10}, 'plot_of'), 'test_accession2', 'and changes nothing');
+
+    # phenotypes stored on the plot after the preview: the curator did not see them
+    my $later = [ { plot_id => $plot{12}, new_stock_id => $acc{1} } ];
+    my $before = linked_stock($plot{12}, 'plot_of');
+    my $later_digest = $ac->summary($ac->plan($later, { rename_plots => 'none' }))->{plan_digest};
+    my $geolocation = $schema->resultset('NaturalDiversity::NdGeolocation')->search({})->first;
+    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({ nd_geolocation_id => $geolocation->nd_geolocation_id, type_id => cvterm_id('phenotyping_experiment', 'experiment_type') });
+    $experiment->create_related('nd_experiment_stocks', { stock_id => $plot{12}, type_id => cvterm_id('phenotyping_experiment', 'experiment_type') });
+    my $phenotype = $schema->resultset('Phenotype::Phenotype')->create({ uniquename => 'review phenotype of test_trial212', observable_id => 70741, value => '30' });
+    $experiment->create_related('nd_experiment_phenotypes', { phenotype_id => $phenotype->phenotype_id });
+    dies_with(sub { $ac->apply($later, { rename_plots => 'none', plan_digest => $later_digest }) }, qr/The trial changed after the preview/, 'phenotypes stored after the preview change the plan');
+    is(linked_stock($plot{12}, 'plot_of'), $before, 'and nothing is changed');
 };
 
 

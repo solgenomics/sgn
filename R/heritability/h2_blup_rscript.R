@@ -25,11 +25,6 @@ names <- colnames(pheno)
 allTraits <- grep("CO_", names, value = TRUE)
 library(dplyr)
 pheno <- pheno[,colnames(pheno) %in% c("locationName", "germplasmName", "studyYear", "blockNumber","replicate", allTraits)]
-# the block effect: one level per block, not a numeric trend; a single block stays a
-# constant, which lmer drops from the fixed effects
-if (length(unique(pheno$blockNumber)) > 1) {
-  pheno$blockNumber <- as.factor(pheno$blockNumber)
-}
 names <- colnames(pheno)
 new_names <- gsub(".CO_.*","", names)
 new_names <- gsub("\\."," ",new_names)
@@ -77,13 +72,21 @@ resp_var = c()
 j = 1
 tryCatch({ for(i in 6:ncol(pheno)){
     outcome = colnames(pheno)[i]    
-    # the block effect is the block number; the replicate counts the plots of an accession
+    # the block effect is the block number; the replicate counts the plots of an accession.
+    # One level per block in which this trait was observed, not a numeric trend; with a
+    # single block it stays a constant, which lmer drops from the fixed effects
+    traitData <- pheno[!is.na(pheno[[outcome]]), ]
+    if (length(unique(traitData$blockNumber)) > 1) {
+      traitData$blockNumber <- as.factor(traitData$blockNumber)
+    } else {
+      traitData$blockNumber <- 1
+    }
     if (szreps > 1){
       if (szloc == 1){
         if (szyr == 1){
           model <- lmer(get(outcome)~(1|germplasmName)+blockNumber,
                         na.action = na.exclude,
-                        data=pheno)
+                        data=traitData)
           variance = as.data.frame(VarCorr(model))
           gvar = variance [1,"vcov"]
           envar = 0
@@ -91,7 +94,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
         }else{
           model <- lmer(get(outcome) ~ (1|germplasmName) + blockNumber + studyYear,
                         na.action = na.exclude,
-                        data=pheno)
+                        data=traitData)
           variance = as.data.frame(VarCorr(model))
           gvar = variance [1,"vcov"]
           envar = 0
@@ -101,7 +104,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
         if (szyr == 1){
           model <- lmer(get(outcome) ~ (1|germplasmName) + blockNumber + (1|locationName),
                         na.action = na.exclude,
-                        data=pheno)
+                        data=traitData)
           variance = as.data.frame(VarCorr(model))
           gvar = variance [1,"vcov"]
           envar = variance [2, "vcov"]
@@ -109,7 +112,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
         }else{
           model <- lmer(get(outcome) ~ (1|germplasmName) + blockNumber + (1|locationName) + studyYear,
                         na.action = na.exclude,
-                        data=pheno)
+                        data=traitData)
           variance = as.data.frame(VarCorr(model))
           gvar = variance [1,"vcov"]
           envar = variance [2, "vcov"]
@@ -121,7 +124,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
         if (szyr == 1){
           model <- lmer(get(outcome)~(1|germplasmName) + blockNumber,
                         na.action = na.exclude,
-                        data=pheno)
+                        data=traitData)
           variance = as.data.frame(VarCorr(model))
           gvar = variance [1,"vcov"]
           envar = 0
@@ -129,7 +132,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
         }else{
           model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + blockNumber,
                         na.action = na.exclude,
-                        data=pheno)
+                        data=traitData)
           variance = as.data.frame(VarCorr(model))
           gvar = variance [1,"vcov"]
           envar = 0
@@ -139,7 +142,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
         if (szyr ==1){
           model <- lmer(get(outcome)~(1|germplasmName)+ (1|locationName) +  blockNumber,
                         na.action = na.exclude,
-                        data=pheno)
+                        data=traitData)
           variance = as.data.frame(VarCorr(model))
           gvar = variance [1,"vcov"]
           envar = variance [2, "vcov"]
@@ -147,7 +150,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
         }else{
           model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + (1|locationName) + blockNumber,
                         na.action = na.exclude,
-                        data=pheno)
+                        data=traitData)
           variance = as.data.frame(VarCorr(model))
           gvar = variance [1,"vcov"]
           envar = variance [2, "vcov"]

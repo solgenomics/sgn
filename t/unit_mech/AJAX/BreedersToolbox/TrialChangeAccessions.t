@@ -511,6 +511,24 @@ subtest 'BrAPI PUT observationunits changes the germplasm of a plot' => sub {
     is(plot_state($plot{10})->{accession}, 'test_accession1', 'germplasm changed');
     is(plot_state($plot{10})->{name}, 'test_trial210', 'name kept');
     is(cached_accession('test_trial210'), 'test_accession1', 'cached layout');
+    my $service_rep = plot_state($plot{10})->{rep};
+    restore();
+
+    # a client that reads the plot, changes its germplasm and sends it back also sends the old
+    # replicate; the replicate of the service stays
+    my $with_rep = encode_json({ germplasmDbId => "$acc{1}", germplasmName => 'test_accession1', studyDbId => "$trial_id",
+        observationUnitPosition => { observationLevel => { levelName => 'plot' },
+            observationLevelRelationships => [ { levelName => 'rep', levelCode => '99' } ] } });
+    $resp = $ua->put("$base/brapi/v2/observationunits/$plot{10}", Content => $with_rep);
+    ok($resp->is_success, 'PUT with the old replicate succeeds') or diag($resp->decoded_content);
+    is(plot_state($plot{10})->{accession}, 'test_accession1', 'germplasm changed');
+    is(plot_state($plot{10})->{rep}, $service_rep, 'the replicate is the one of the service, not the one sent');
+    restore();
+    $resp = $ua->put("$base/brapi/v2/observationunits/$plot{10}", Content => encode_json({ germplasmDbId => "$original->{10}->{accession_id}",
+        studyDbId => "$trial_id", observationUnitPosition => { observationLevel => { levelName => 'plot' },
+            observationLevelRelationships => [ { levelName => 'rep', levelCode => '7' } ] } }));
+    ok($resp->is_success, 'PUT of a replicate without a change of germplasm succeeds') or diag($resp->decoded_content);
+    is(plot_state($plot{10})->{rep}, '7', 'without a change of germplasm the replicate sent is stored');
     restore();
 
     # the rights of the trial page: a submitter of the trial's breeding program, not of another one

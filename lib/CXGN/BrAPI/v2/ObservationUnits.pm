@@ -472,6 +472,7 @@ sub observationunits_update {
         # }
 
 
+        my $accession_changed;
         if(defined $accession_id){
             # Speed can be improved here by adding a simple query
             my $layout_accession_search = CXGN::Trial::TrialLayoutSearch->new(
@@ -511,6 +512,7 @@ sub observationunits_update {
                     # a trial with phenotypes or seedlots keeps its germplasm here, also for a curator
                     my $error_response = $self->_change_plot($c, $user_id, { plot_id => $observation_unit_db_id, new_stock_id => $accession_id }, 1);
                     return $error_response if $error_response;
+                    $accession_changed = 1;
                 }
             }
         }
@@ -548,7 +550,8 @@ sub observationunits_update {
         }
         if ($block_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$block_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$block_number },{ key=>'stockprop_c1' }); }
         if ($is_a_control){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$is_a_control_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$is_a_control },{ key=>'stockprop_c1' }); }
-        if ($rep_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$rep_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$rep_number },{ key=>'stockprop_c1' }); }
+        # the change of accession renumbered the replicates; the replicate sent with it is the old one
+        if ($rep_number && !$accession_changed){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$rep_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$rep_number },{ key=>'stockprop_c1' }); }
         if ($range_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$range_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$range_number },{ key=>'stockprop_c1' }); }
         if ($row_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$row_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$row_number },{ key=>'stockprop_c1' }); }
         if ($col_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$col_number },{ key=>'stockprop_c1' }); }
