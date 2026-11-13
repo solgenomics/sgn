@@ -47,6 +47,7 @@ use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2028,6 +2029,264 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
 # ---------------------------------------------------------------------------
 # saved scripts (recipes)
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# decision meetings: stored analyses as evidence of a meeting's decisions
+# ---------------------------------------------------------------------------
+# A link is kept in the meeting's meeting_json project property, as
+# related_analyses: [{analysis_id, name, linked_by, linked_at}]. Saving the
+# meeting's decisions keeps it (it merges into the stored JSON), and a saved
+# meeting is closed: its links no longer change.
+
+# who may link analyses to meetings: the roles that create meetings
+# (decision_role) or take part in them (meeting_role)
+sub _can_link_meetings {
+    my $c = shift;
+    my %ok;
+    foreach my $k (qw(decision_role meeting_role)) {
+        my $v = $c->config->{$k};
+        foreach my $x (ref($v) eq 'ARRAY' ? @$v : ($v // '')) {
+            $ok{lc($_)} = 1 for grep { $_ ne '' } map { s/^\s+|\s+$//gr } split /,/, ($x // '');
+        }
+    }
+    return (grep { $ok{lc($_ // '')} } $c->user()->roles()) ? 1 : 0;
+}
+
+# meeting_json as stored: written as characters or as UTF-8 octets (see
+# CXGN::JSONUtils); always written back as characters (accents in names)
+sub _decode_meeting {
+    my $text = shift;
+    return {} if !defined $text;
+    my $d = eval { decode_stored_json($text) };
+    return ref($d) eq 'HASH' ? $d : {};
+}
+
+sub _meeting_is_saved {
+    my $d = shift;
+    foreach my $k (qw(saved is_saved meeting_saved decisions_saved)) {
+        my $v = $d->{$k};
+        next if !defined $v;
+        return 1 if (ref($v) && $v) || (!ref($v) && ($v eq '1' || lc($v) eq 'true'));
+    }
+    return 1 if ($d->{saved_at} // '') ne '' || lc($d->{saved_status} // $d->{status} // '') =~ /^(successfully|saved)$/;
+    return 0;
+}
+
+# [{meeting_id, name, date, year, location, programs, saved, prop (row), data}] of every meeting
+sub _meetings {
+    my ($schema, $meeting_id) = @_;
+    my $design = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
+    my $mj = SGN::Model::Cvterm->get_cvterm_row($schema, 'meeting_json', 'project_property');
+    return [] if !$design || !$mj;
+    my $rs = $schema->resultset('Project::Projectprop')->search(
+        { 'me.type_id' => $mj->cvterm_id(), ($meeting_id ? ('me.project_id' => $meeting_id) : ()),
+          'me.project_id' => { -in => $schema->resultset('Project::Projectprop')->search({ type_id => $design->cvterm_id(), value => 'Meeting' })->get_column('project_id')->as_query } },
+        { prefetch => 'project', order_by => { -desc => 'me.projectprop_id' } });
+    my (%seen, @out);
+    while (my $prop = $rs->next()) {
+        next if $seen{ $prop->project_id() }++;
+        my $d = _decode_meeting($prop->value());
+        my @programs = @{ ref($d->{breeding_program_names}) eq 'ARRAY' ? $d->{breeding_program_names} : [ grep { defined && $_ ne '' } ($d->{breeding_program_name}) ] };
+        push @out, { meeting_id => $prop->project_id() + 0, name => $prop->project()->name(), date => $d->{date}, year => $d->{year},
+                     location => $d->{location}, programs => \@programs, saved => _meeting_is_saved($d) ? 1 : 0, prop => $prop, data => $d };
+    }
+    return [ sort { $a->{saved} <=> $b->{saved} || ($b->{date} // '') cmp ($a->{date} // '') } @out ];
+}
+
+# Stored Analysis Pipeline analyses the user can open (own, public, or all for curators)
+sub _pipeline_analyses {
+    my $c = shift;
+    my ($schema, undef, $sp_person_id) = _schemas($c);
+    my $curator = $c->user()->check_roles('curator') ? 1 : 0;
+    my $rows = $schema->storage->dbh()->selectall_arrayref(
+        "SELECT p.project_id, p.name, pp.value, po.sp_person_id,
+                coalesce((SELECT npp.value->>'model_is_public' FROM nd_experiment_project nepr
+                            JOIN nd_experiment_protocol nep ON nep.nd_experiment_id = nepr.nd_experiment_id
+                            JOIN nd_protocolprop npp ON npp.nd_protocol_id = nep.nd_protocol_id
+                            JOIN cvterm t ON t.cvterm_id = npp.type_id AND t.name = 'analysis_model_properties'
+                           WHERE nepr.project_id = p.project_id LIMIT 1), 'yes'),
+                sp.first_name || ' ' || sp.last_name
+           FROM projectprop pp
+           JOIN cvterm c ON c.cvterm_id = pp.type_id AND c.name = 'analysis_metadata_json'
+           JOIN project p ON p.project_id = pp.project_id
+           LEFT JOIN phenome.project_owner po ON po.project_id = p.project_id
+           LEFT JOIN sgn_people.sp_person sp ON sp.sp_person_id = po.sp_person_id
+          WHERE pp.value LIKE '%Breedbase Analysis Pipeline%'");
+    # metadata of other tools is not always valid JSON: parsed here, one by one
+    foreach my $r (@$rows) {
+        my $m = eval { JSON->new->utf8(utf8::is_utf8($r->[2]) ? 0 : 1)->decode($r->[2]) } || {};
+        $r->[2] = (($m->{result_summary} || {})->{method} // '') eq 'Breedbase Analysis Pipeline' ? ($m->{create_timestamp} // '') : undef;
+    }
+    $rows = [ sort { ($b->[2] // '') cmp ($a->[2] // '') } grep { defined $_->[2] } @$rows ];
+    my (%seen, @out);
+    foreach my $r (@$rows) {
+        my ($id, $name, $created, $owner, $public, $owner_name) = @$r;
+        next if $seen{$id}++;
+        my $mine = defined($owner) && $owner == $sp_person_id ? 1 : 0;
+        next if !$mine && $public eq 'no' && !$curator;
+        push @out, { analysis_id => $id + 0, name => $name, created => $created, owner => $owner_name, is_owner => $mine };
+    }
+    return \@out;
+}
+
+# GET: meetings and whether the analysis is linked to each
+sub meetings : Path('/ajax/script_factory/meetings') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+    my ($schema) = _schemas($c);
+    my $analysis_id = $c->req->param('analysis_id') // '';
+    my @rows = map { my $m = $_; my %l = map { ($_->{analysis_id} // '') => 1 } @{ ref($m->{data}->{related_analyses}) eq 'ARRAY' ? $m->{data}->{related_analyses} : [] };
+        +{ (map { $_ => $m->{$_} } qw(meeting_id name date year location programs saved)), linked => $l{$analysis_id} ? 1 : 0,
+          n_analyses => scalar(keys %l), n_accessions => scalar(@{ ref($m->{data}->{accessions}) eq 'ARRAY' ? $m->{data}->{accessions} : [] }) } } @{ _meetings($schema) };
+    $c->stash->{rest} = { meetings => \@rows, can_link => _can_link_meetings($c) };
+}
+
+# POST meeting_id, analysis_id, action (link | unlink)
+sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+    my $meeting_id = $c->req->param('meeting_id') // '';
+    my $analysis_id = $c->req->param('analysis_id') // '';
+    my $action = ($c->req->param('action') // 'link') eq 'unlink' ? 'unlink' : 'link';
+    if (!_can_link_meetings($c)) {
+        $c->stash->{rest} = { error => 'Only participants of decision meetings (the roles set in the site configuration) can add analyses to a meeting.' };
+        return;
+    }
+    if ($meeting_id !~ /^\d+$/ || $analysis_id !~ /^\d+$/) {
+        $c->stash->{rest} = { error => 'Choose a meeting and a stored analysis.' };
+        return;
+    }
+    my ($schema) = _schemas($c);
+    my $info = _stored_analysis($c, $analysis_id);
+    if ($info->{error}) {
+        $c->stash->{rest} = { error => $info->{error} };
+        return;
+    }
+    my $err;
+    try {
+        $schema->txn_do(sub {
+            my ($m) = @{ _meetings($schema, $meeting_id) };
+            die "This decision meeting does not exist.\n" if !$m;
+            die "This meeting is closed (its decisions were saved): its evidence can no longer change.\n" if $m->{saved};
+            my $d = $m->{data};
+            my @list = grep { ref($_) eq 'HASH' && ($_->{analysis_id} // '') ne $analysis_id } @{ ref($d->{related_analyses}) eq 'ARRAY' ? $d->{related_analyses} : [] };
+            if ($action eq 'link') {
+                my $person = $c->user()->get_object();
+                push @list, { analysis_id => $analysis_id + 0, name => $info->{name}, linked_by => join(' ', grep { $_ } ($person->get_first_name(), $person->get_last_name())),
+                              linked_at => DateTime->now()->ymd() };
+            }
+            $d->{related_analyses} = \@list;
+            $m->{prop}->update({ value => JSON->new->canonical(1)->encode($d) });
+        });
+    } catch { $err = "$_"; $err =~ s/\s+$//; $err =~ s/ at \S+ line \d+\.?$//; $err =~ s/^\{UNKNOWN\}:\s*//; };
+    $c->stash->{rest} = $err ? { error => $err } : { success => 1, action => $action };
+}
+
+# GET meeting_id: the analyses linked to a meeting, with what the page shows of them
+sub meeting_analyses : Path('/ajax/script_factory/meetings/analyses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+    my $meeting_id = $c->req->param('meeting_id') // '';
+    my ($schema) = _schemas($c);
+    my ($m) = $meeting_id =~ /^\d+$/ ? @{ _meetings($schema, $meeting_id) } : ();
+    if (!$m) {
+        $c->stash->{rest} = { error => 'This decision meeting does not exist.' };
+        return;
+    }
+    my @linked = grep { ref($_) eq 'HASH' && ($_->{analysis_id} // '') =~ /^\d+$/ } @{ ref($m->{data}->{related_analyses}) eq 'ARRAY' ? $m->{data}->{related_analyses} : [] };
+    my $all = _pipeline_analyses($c);
+    my %visible = map { $_->{analysis_id} => $_ } @$all;
+    my @accessions = grep { defined && $_ ne '' } map { ref($_) eq 'HASH' ? $_->{accession} : undef } @{ ref($m->{data}->{accessions}) eq 'ARRAY' ? $m->{data}->{accessions} : [] };
+    $c->stash->{rest} = {
+        meeting => { (map { $_ => $m->{$_} } qw(meeting_id name date year location programs saved)), accessions => \@accessions },
+        can_link => (_can_link_meetings($c) && !$m->{saved}) ? 1 : 0,
+        analyses => [ map { +{ %$_, %{ $visible{ $_->{analysis_id} } || { hidden => 1 } } } } @linked ],
+        available => $all,
+    };
+}
+
+# GET analysis_id: per accession evidence of a stored analysis (genotype values,
+# ranks, selection index, environmental zones), for a decision meeting
+sub decision_evidence : Path('/ajax/script_factory/decision_evidence') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+    my $analysis_id = $c->req->param('analysis_id') // '';
+    my $r = analysis_run_id($c, $analysis_id);
+    if ($r->{error}) {
+        $c->stash->{rest} = { error => $r->{error} };
+        return;
+    }
+    my $res = try { _load_results($c, $r->{run_id}) } catch { undef };
+    if (!$res) {
+        $c->stash->{rest} = { error => 'The results of this analysis cannot be read.' };
+        return;
+    }
+    my $as_list = sub { my $x = shift; return !defined($x) ? [] : ref($x) eq 'ARRAY' ? $x : [$x] };
+    my @traits = @{ $as_list->(($res->{summary} || {})->{traits}) };
+    my %idx_dir = map { (s/\|.*$//r) => ($res->{recipe}->{index}->{traits}->{$_}->{direction} // 'increase') } keys %{ (($res->{recipe} || {})->{index} || {})->{traits} || {} };
+    my %s2 = map { ($_->{trait} // '') => $_ } @{ $as_list->($res->{stage2}) };
+    my %se;
+    foreach my $g (@{ $as_list->($res->{genotype_values_long}) }) { $se{ $g->{accession} }->{ $g->{trait} } = $g->{se}; }
+    my %rows;
+    foreach my $g (@{ $as_list->($res->{genotype_values}) }) {
+        my $a = $g->{accession} // next;
+        $rows{$a} = { accession => $a, values => { map { $_ => (defined $g->{$_} ? { v => $g->{$_}, se => $se{$a}->{$_} } : undef) } @traits } };
+    }
+    # rank of every accession for each trait (1 = best: lower is better when the index says so)
+    foreach my $t (@traits) {
+        my $down = ($idx_dir{$t} // 'increase') eq 'decrease';
+        my @a = sort { $down ? $rows{$a}->{values}->{$t}->{v} <=> $rows{$b}->{values}->{$t}->{v} : $rows{$b}->{values}->{$t}->{v} <=> $rows{$a}->{values}->{$t}->{v} }
+                grep { $rows{$_}->{values}->{$t} } keys %rows;
+        $rows{ $a[$_] }->{values}->{$t}->{rank} = $_ + 1 for 0 .. $#a;
+    }
+    my $ix = $res->{index};
+    if ($ix && ref($ix->{table}) eq 'ARRAY') {
+        foreach my $t (@{$ix->{table}}) {
+            my $row = $rows{ $t->{accession} // '' } or next;
+            $row->{index} = $t->{index};
+            $row->{index_rank} = $t->{rank};
+            $row->{selected} = $t->{selected} ? 1 : 0;
+        }
+    }
+    # best zone of every accession (rank inside the zone)
+    foreach my $z (@{ $as_list->($res->{zones}) }) {
+        foreach my $gz (@{ $as_list->($z->{genotype_zones}) }) {
+            my $row = $rows{ $gz->{accession} // '' } or next;
+            my $cur = $row->{zones}->{ $z->{target} };
+            $row->{zones}->{ $z->{target} } = { zone => $gz->{zone}, rank => $gz->{rank}, n => $gz->{n_ranked} }
+                if !$cur || ($gz->{rank} / ($gz->{n_ranked} || 1)) < ($cur->{rank} / ($cur->{n} || 1));
+        }
+    }
+    # stock ids of the accessions (links to their pages)
+    if (%rows) {
+        my ($schema) = _schemas($c);
+        my $ids = $schema->storage->dbh()->selectall_arrayref(
+            "SELECT s.uniquename, s.stock_id FROM stock s JOIN cvterm t ON t.cvterm_id = s.type_id AND t.name = 'accession' WHERE s.uniquename = ANY(?)",
+            undef, [ keys %rows ]);
+        $rows{ $_->[0] }->{stock_id} = $_->[1] + 0 for grep { $rows{ $_->[0] } } @$ids;
+    }
+    my $info = _stored_analysis($c, $analysis_id);
+    $c->stash->{rest} = {
+        analysis_id => $analysis_id + 0,
+        name => $info->{name},
+        description => $info->{description},
+        dashboard => "/tools/script_factory/analysis/$analysis_id",
+        value_label => $res->{value_label} // 'BLUP',
+        strategy => $res->{strategy},
+        engine => $res->{engine},
+        genetic_model => $res->{genetic_model},
+        genomic => $res->{genomic},
+        traits => [ map { +{ trait => $_, h2 => ($s2{$_} || {})->{h2}, n_trials => ($s2{$_} || {})->{n_trials}, direction => $idx_dir{$_} // '' } } @traits ],
+        index => $ix ? { method => $ix->{method}, selection_pct => $ix->{selection_pct}, n_selected => $ix->{n_selected} } : undef,
+        zone_targets => [ map { $_->{target} } @{ $as_list->($res->{zones}) } ],
+        n_trials => ($res->{summary} || {})->{n_trials},
+        rows => [ map { $rows{$_} } sort keys %rows ],
+    };
+}
 
 sub _recipe_table_exists {
     my $dbh = shift;

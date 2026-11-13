@@ -42,6 +42,7 @@ $run_id => ''
       </div>
       <a class="btn btn-default" id="sfd_pipeline" style="display:none" title="Open every step of this analysis in the Analysis Pipeline"><span class="glyphicon glyphicon-random"></span> Open pipeline</a>
       <button class="btn btn-primary" id="sfd_store" style="display:none"><span class="glyphicon glyphicon-floppy-disk"></span> Store analysis</button>
+      <button class="btn btn-default" id="sfd_meeting" title="Use this analysis as evidence in a decision meeting"><span class="glyphicon glyphicon-briefcase"></span> Decision meeting</button>
       <button class="btn btn-default" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print</button>
     </div>
   </div>
@@ -387,3 +388,22 @@ jQuery(document).ready(function() {
   .sfd-hero h2, .sfd-kicker, .sfd-kicker a { color: #111; }
 }
 </style>
+
+<div class="modal fade" id="sfd_meeting_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title"><span class="glyphicon glyphicon-briefcase"></span> Use this analysis in a decision meeting</h4>
+      </div>
+      <div class="modal-body">
+        <p class="sfd-help">The results of this analysis (genotype values and ranks per trait, selection index, zones) are shown next to the decisions of the meetings you add it to, on the <a href="/breeders/meeting" target="_blank">Decision Meeting</a> page, and listed in the meeting report. A meeting keeps a permanent record, so only stored analyses can be added, and only while the meeting is open (not saved).</p>
+        <div id="sfd_meeting_body"></div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-default" href="/breeders/meeting" target="_blank">Open the Decision Meeting page</a>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

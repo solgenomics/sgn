@@ -2610,6 +2610,17 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
         s/"/&quot;/g;
     }
 
+    # analyses linked to the meeting as evidence (Analysis Pipeline)
+    my $analyses_html = '';
+    if (ref($data->{related_analyses}) eq 'ARRAY' && @{$data->{related_analyses}}) {
+        my $esc = sub { my $x = shift // ''; $x =~ s/&/&amp;/g; $x =~ s/</&lt;/g; $x =~ s/>/&gt;/g; $x =~ s/"/&quot;/g; return $x; };
+        $analyses_html = "<h2>Analyses used as evidence</h2>\n<ul>\n" . join('', map {
+            my $id = ($_->{analysis_id} // '') =~ /^(\d+)$/ ? $1 : '';
+            "<li><a href=\"/tools/script_factory/analysis/$id\">" . $esc->($_->{name} // "analysis $id") . "</a>"
+                . ($_->{linked_by} ? ' (added by ' . $esc->($_->{linked_by}) . ($_->{linked_at} ? ', ' . $esc->($_->{linked_at}) : '') . ')' : '') . "</li>\n"
+        } grep { ref($_) eq 'HASH' } @{$data->{related_analyses}}) . "</ul>\n";
+    }
+
     my $attendees_html = '';
     if (ref($attendees) eq 'ARRAY') {
         my @safe_attendees = map {
@@ -2700,6 +2711,7 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
   <h2>Meeting Notes</h2>
   <div class="notes">$meeting_notes</div>
 
+  $analyses_html
   <h2>Decisions</h2>
   <table>
     <thead>

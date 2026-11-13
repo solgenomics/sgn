@@ -1,0 +1,74 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/decision_meeting/analysis_evidence_section.mas - analyses that support the decisions of a meeting
+
+=head1 DESCRIPTION
+
+Stored Analysis Pipeline analyses linked to the selected decision meeting
+(meeting_json related_analyses) and, for a chosen analysis, the evidence per
+accession: genotype values and ranks per trait, selection index, environmental
+zones. Analyses are linked here or from the results page of an analysis
+(/tools/script_factory/results/...). Code: js/source/entries/script_factory_meeting.js,
+endpoints /ajax/script_factory/meetings* and /ajax/script_factory/decision_evidence.
+
+=head1 AUTHOR
+
+Chris Simoes <ccs263@cornell.edu>
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, entries => ['script_factory_meeting'] &>
+
+<style>
+.sfm-card { border: 1px solid #d9dee5; border-radius: 6px; padding: 8px 10px; margin: 0 8px 8px 0; display: inline-block; vertical-align: top; min-width: 260px; max-width: 420px; background: #fff; cursor: pointer; }
+.sfm-card.on { border-color: #2b7a4b; box-shadow: 0 0 0 2px #e8f3ec; }
+.sfm-card .sfm-card-title { font-weight: 600; }
+.sfm-card .sfm-card-meta { font-size: 11px; color: #6b7280; }
+.sfm-card .btn-xs { margin-top: 4px; }
+.sfm-chip { display: inline-block; padding: 1px 7px; margin: 1px 2px; border-radius: 10px; background: #eef2ff; color: #3730a3; font-size: 11px; }
+.sfm-sel { color: #1f5c38; font-weight: 600; }
+.sfm-in { color: #2b7a4b; }
+.sfm-muted { color: #6b7280; }
+.sfm-rank { color: #6b7280; font-size: 11px; }
+#sfm_table td, #sfm_table th { white-space: nowrap; }
+#sfm_add_row { margin: 6px 0 12px 0; }
+</style>
+
+<div class="well">
+  <&| /page/info_section.mas,
+       title => 'Analysis evidence',
+       is_subsection => 1, collapsible => 1, collapsed => 0,
+       subtitle => 'Stored Analysis Pipeline results that support the decisions of the selected meeting'
+  &>
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div id="sfm_status" class="sfm-muted">Select a meeting in the Meeting Tracker to see the analyses that support its decisions.</div>
+        <div id="sfm_body" style="display:none">
+          <div id="sfm_linked"></div>
+          <div id="sfm_add_row" class="form-inline" style="display:none">
+            <select class="form-control input-sm" id="sfm_add_select" style="min-width:320px"></select>
+            <button class="btn btn-success btn-sm" id="sfm_add_btn"><span class="glyphicon glyphicon-link"></span> Add to this meeting</button>
+            <small class="sfm-muted">Stored analyses of the Analysis Pipeline (yours and public ones). Analyses can also be added from their results page.</small>
+          </div>
+          <div id="sfm_evidence" style="display:none">
+            <div id="sfm_summary" style="margin-bottom:8px"></div>
+            <div class="form-inline" style="margin-bottom:6px">
+              <label class="checkbox-inline"><input type="checkbox" id="sfm_only_meeting" checked /> Only accessions of this meeting</label>
+              <label class="checkbox-inline"><input type="checkbox" id="sfm_only_selected" /> Only accessions selected by the index</label>
+              <button class="btn btn-default btn-xs" id="sfm_csv" style="margin-left:12px"><span class="glyphicon glyphicon-download-alt"></span> CSV</button>
+            </div>
+            <div class="table-responsive"><table id="sfm_table" class="table table-striped table-bordered table-condensed" width="100%"></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </&>
+</div>
+
+<script>
+  jQuery(function() { window.jsMod['script_factory_meeting'].init(); });
+</script>

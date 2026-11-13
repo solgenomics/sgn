@@ -1520,6 +1520,44 @@ function initPipelineLink() {
     $('#sfd_pipeline').attr('href', '/tools/script_factory?' + (stored ? 'analysis_id=' + encodeURIComponent(R.stored.analysis_id) : 'run_id=' + encodeURIComponent(cfg.run_id))).show();
 }
 
+// decision meetings: add the stored analysis as evidence of a meeting
+function renderMeetings() {
+    const body = $('#sfd_meeting_body');
+    const id = R.stored && R.stored.analysis_id;
+    if (!id) {
+        body.html('<div class="alert alert-info">This run is not stored yet. ' + (META.is_owner
+            ? 'Store it first (it becomes a permanent Breedbase analysis), then add it to a meeting. <button class="btn btn-primary btn-sm" id="sfd_meeting_store"><span class="glyphicon glyphicon-floppy-disk"></span> Store analysis</button>'
+            : 'Only its owner can store it.') + '</div>');
+        return;
+    }
+    body.html('<span class="glyphicon glyphicon-refresh"></span> Loading the meetings...');
+    $.ajax({ url: '/ajax/script_factory/meetings', data: { analysis_id: id }, dataType: 'json', cache: false }).done(r => {
+        if (r.error) { body.html('<div class="alert alert-danger">' + esc(r.error) + '</div>'); return; }
+        const list = r.meetings || [];
+        if (!list.length) { body.html('<div class="alert alert-info">No decision meeting exists yet. Create one on the <a href="/breeders/meeting" target="_blank">Decision Meeting</a> page.</div>'); return; }
+        let h = r.can_link ? '' : '<div class="alert alert-warning">Your account cannot add analyses to meetings (decision meeting roles of the site configuration).</div>';
+        h += '<table class="table table-condensed table-hover"><thead><tr><th>Meeting</th><th>Date</th><th>Programs</th><th>Location</th><th>Status</th><th></th></tr></thead><tbody>' +
+            list.map(m => '<tr><td><b>' + esc(m.name) + '</b><br/><small class="sfd-help">' + (m.n_accessions ? m.n_accessions + ' accessions, ' : '') + m.n_analyses + ' analysis(es)</small></td>' +
+                '<td>' + esc(m.date || '') + '</td><td>' + esc((m.programs || []).join(', ')) + '</td><td>' + esc(m.location || '') + '</td>' +
+                '<td>' + (m.saved ? '<span class="label label-default">saved</span>' : '<span class="label label-success">open</span>') + (m.linked ? ' <span class="label label-primary">uses this analysis</span>' : '') + '</td>' +
+                '<td>' + (m.saved || !r.can_link ? '' : '<button class="btn btn-xs ' + (m.linked ? 'btn-default' : 'btn-success') + ' sfd-meeting-link" data-id="' + esc(m.meeting_id) + '" data-action="' + (m.linked ? 'unlink' : 'link') + '">' +
+                    (m.linked ? '<span class="glyphicon glyphicon-remove"></span> Remove' : '<span class="glyphicon glyphicon-link"></span> Add') + '</button>') + '</td></tr>').join('') + '</tbody></table>';
+        body.html(h);
+    }).fail(() => body.html('<div class="alert alert-danger">The meetings could not be loaded.</div>'));
+}
+
+function initMeetings() {
+    $('#sfd_meeting').on('click', () => { renderMeetings(); $('#sfd_meeting_modal').modal('show'); });
+    $('#sfd_meeting_body').on('click', '#sfd_meeting_store', () => { $('#sfd_meeting_modal').modal('hide'); $('#sfd_store').trigger('click'); });
+    $('#sfd_meeting_body').on('click', '.sfd-meeting-link', function() {
+        const btn = $(this).prop('disabled', true);
+        $.ajax({ url: '/ajax/script_factory/meetings/link', type: 'POST', dataType: 'json',
+                 data: { meeting_id: btn.data('id'), analysis_id: R.stored.analysis_id, action: btn.data('action') } })
+            .done(r => { if (r.error) { btn.prop('disabled', false); $('#sfd_meeting_body').prepend('<div class="alert alert-danger">' + esc(r.error) + '</div>'); } else renderMeetings(); })
+            .fail(() => btn.prop('disabled', false));
+    });
+}
+
 // store the analysis from the dashboard (the owner of the run only)
 function initStore() {
     if (!META.is_owner) return;
@@ -1561,6 +1599,7 @@ export function init(options) {
             initControls();
             renderAll();
             initStore();
+    initMeetings();
             initPipelineLink();
         })
         .fail(x => {
