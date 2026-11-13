@@ -334,6 +334,9 @@ export function init(main_div) {
         $('#mixed_models_blues_results_div').html('');
         accession_names = adjusted_blups_data = blups_data = adjusted_blues_data = blues_data = traits = model_properties = input_file = undefined;
 
+        // all runs of this page use the same files: do not start a second run before this one is done
+        $('#run_mixed_model_button').prop('disabled', true);
+
         $('#working_modal').modal("show");
         $.ajax({
             "url": '/ajax/mixedmodels/run',
@@ -404,6 +407,9 @@ export function init(main_div) {
             },
             "error": function (r) {
                 alert(r);
+            },
+            "complete": function () {
+                $('#run_mixed_model_button').prop('disabled', false);
             }
         });
     });

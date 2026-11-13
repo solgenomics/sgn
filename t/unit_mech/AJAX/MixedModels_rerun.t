@@ -58,16 +58,13 @@ is_deeply($run1->{traits}, [ $trait ], 'run 1 results have the trait name of the
 # run 2: germplasm as fixed factor must not show the BLUPs of run 1
 #
 my $run2 = run_model( [ 'germplasmName' ], [ 'replicate' ]);
+is($run2->{error}, undef, 'run 2 has no error');
 ok(!$run2->{adjusted_blups_data}, 'run 2 does not return the adjusted BLUPs of run 1');
 ok(!$run2->{blups_data}, 'run 2 does not return the BLUPs of run 1');
-if (!$run2->{error}) {
-    is($run2->{method}, 'fixed', 'run 2 computed BLUEs');
-    ok($run2->{adjusted_blues_data}, 'run 2 returned adjusted BLUEs');
-    is_deeply($run2->{traits}, [ $trait ], 'run 2 results have the trait name of the dataset, not the R name');
-}
-else {
-    diag("run 2 returned an error: $run2->{error}");
-}
+is($run2->{method}, 'fixed', 'run 2 computed BLUEs');
+is_deeply($run2->{traits}, [ $trait ], 'run 2 results have the trait name of the dataset, not the R name');
+my @blues = grep { defined } map { $_->{$trait}->[0] } values %{$run2->{adjusted_blues_data} || {}};
+ok(scalar(@blues) > 0, 'run 2 returned adjusted BLUE values ('.scalar(@blues).' accessions)');
 
 # run 3: a model without a random factor fails in lme4; it must show an error, not old results
 #
