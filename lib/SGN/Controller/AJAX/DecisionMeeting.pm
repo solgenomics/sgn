@@ -2617,7 +2617,8 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
         $analyses_html = "<h2>Analyses used as evidence</h2>\n<ul>\n" . join('', map {
             my $id = ($_->{analysis_id} // '') =~ /^(\d+)$/ ? $1 : '';
             "<li><a href=\"/tools/script_factory/analysis/$id\">" . $esc->($_->{name} // "analysis $id") . "</a>"
-                . ($_->{linked_by} ? ' (added by ' . $esc->($_->{linked_by}) . ($_->{linked_at} ? ', ' . $esc->($_->{linked_at}) : '') . ')' : '') . "</li>\n"
+                . ($_->{linked_by} ? ' (added by ' . $esc->($_->{linked_by}) . ($_->{linked_at} ? ', ' . $esc->($_->{linked_at}) : '') . ')' : '')
+                . ($_->{after_save} ? ' <em>(added after the decisions were saved)</em>' : '') . "</li>\n"
         } grep { ref($_) eq 'HASH' } @{$data->{related_analyses}}) . "</ul>\n";
     }
 

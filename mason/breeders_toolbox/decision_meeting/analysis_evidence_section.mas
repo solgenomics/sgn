@@ -35,7 +35,12 @@ Chris Simoes <ccs263@cornell.edu>
 .sfm-muted { color: #6b7280; }
 .sfm-rank { color: #6b7280; font-size: 11px; }
 #sfm_table td, #sfm_table th { white-space: nowrap; }
-#sfm_add_row { margin: 6px 0 12px 0; }
+.sfm-panel { border: 1px solid #d9dee5; border-radius: 6px; padding: 8px 10px; margin: 0 0 12px 0; background: #fafbfc; }
+.sfm-list { max-height: 260px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; }
+.sfm-list label { display: block; font-weight: normal; margin: 0; padding: 4px 8px; border-bottom: 1px solid #f1f3f5; cursor: pointer; }
+.sfm-list label:hover { background: #f5f8fb; }
+.sfm-list input { margin-right: 6px; }
+.sfm-late { color: #92400e; font-size: 11px; }
 </style>
 
 <div class="well">
@@ -49,11 +54,34 @@ Chris Simoes <ccs263@cornell.edu>
         <div id="sfm_status" class="sfm-muted">Select a meeting in the Meeting Tracker to see the analyses that support its decisions.</div>
         <div id="sfm_body" style="display:none">
           <div id="sfm_linked"></div>
-          <div id="sfm_add_row" class="form-inline" style="display:none">
-            <select class="form-control input-sm" id="sfm_add_select" style="min-width:320px"></select>
-            <button class="btn btn-success btn-sm" id="sfm_add_btn"><span class="glyphicon glyphicon-link"></span> Add to this meeting</button>
-            <small class="sfm-muted">Stored analyses of the Analysis Pipeline (yours and public ones). Analyses can also be added from their results page.</small>
+          <div id="sfm_actions" style="display:none; margin: 4px 0 10px 0">
+            <button class="btn btn-success btn-sm" id="sfm_add_toggle"><span class="glyphicon glyphicon-plus"></span> Add analyses</button>
+            <button class="btn btn-default btn-sm" id="sfm_remove_toggle"><span class="glyphicon glyphicon-minus"></span> Remove analyses</button>
+            <button class="btn btn-link btn-sm" id="sfm_history_toggle"><span class="glyphicon glyphicon-time"></span> History of changes</button>
           </div>
+          <div id="sfm_add_row" class="sfm-panel" style="display:none">
+            <div class="form-inline" style="margin-bottom:6px">
+              <input type="text" class="form-control input-sm" id="sfm_add_filter" placeholder="Search by name, owner or date" style="min-width:280px" />
+              <label class="checkbox-inline"><input type="checkbox" id="sfm_add_mine" /> Only my analyses</label>
+              <button class="btn btn-default btn-xs" id="sfm_add_all" style="margin-left:8px">Check all shown</button>
+              <button class="btn btn-default btn-xs" id="sfm_add_none">Uncheck all</button>
+            </div>
+            <div id="sfm_add_list" class="sfm-list"></div>
+            <div style="margin-top:6px">
+              <button class="btn btn-success btn-sm" id="sfm_add_btn" disabled><span class="glyphicon glyphicon-link"></span> Add checked analyses</button>
+              <button class="btn btn-default btn-sm" id="sfm_add_cancel">Close</button>
+              <small class="sfm-muted">Stored Analysis Pipeline analyses (yours and public ones). An analysis can also be added from its results page.</small>
+            </div>
+          </div>
+          <div id="sfm_remove_row" class="sfm-panel" style="display:none">
+            <div style="margin-bottom:6px">Check the analyses to remove from the evidence of this meeting (the analyses themselves are not changed).</div>
+            <div id="sfm_remove_list" class="sfm-list"></div>
+            <div style="margin-top:6px">
+              <button class="btn btn-danger btn-sm" id="sfm_remove_btn" disabled><span class="glyphicon glyphicon-remove"></span> Remove checked analyses</button>
+              <button class="btn btn-default btn-sm" id="sfm_remove_cancel">Close</button>
+            </div>
+          </div>
+          <div id="sfm_history" class="sfm-panel" style="display:none"></div>
           <div id="sfm_evidence" style="display:none">
             <div id="sfm_summary" style="margin-bottom:8px"></div>
             <div class="form-inline" style="margin-bottom:6px">

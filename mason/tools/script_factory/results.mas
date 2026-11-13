@@ -397,7 +397,7 @@ jQuery(document).ready(function() {
         <h4 class="modal-title"><span class="glyphicon glyphicon-briefcase"></span> Use this analysis in a decision meeting</h4>
       </div>
       <div class="modal-body">
-        <p class="sfd-help">The results of this analysis (genotype values and ranks per trait, selection index, zones) are shown next to the decisions of the meetings you add it to, on the <a href="/breeders/meeting" target="_blank">Decision Meeting</a> page, and listed in the meeting report. A meeting keeps a permanent record, so only stored analyses can be added, and only while the meeting is open (not saved).</p>
+        <p class="sfd-help">The results of this analysis (genotype values and ranks per trait, selection index, zones) are shown next to the decisions of the meetings you add it to, on the <a href="/breeders/meeting" target="_blank">Decision Meeting</a> page, and listed in the meeting report. A meeting keeps a permanent record, so only stored analyses can be added. Analyses can be added or removed even after the decisions are saved: the decisions do not change, a late addition is flagged, and every change is kept in the meeting's history.</p>
         <div id="sfd_meeting_body"></div>
       </div>
       <div class="modal-footer">

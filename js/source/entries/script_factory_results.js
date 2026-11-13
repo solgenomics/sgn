@@ -1539,8 +1539,8 @@ function renderMeetings() {
         h += '<table class="table table-condensed table-hover"><thead><tr><th>Meeting</th><th>Date</th><th>Programs</th><th>Location</th><th>Status</th><th></th></tr></thead><tbody>' +
             list.map(m => '<tr><td><b>' + esc(m.name) + '</b><br/><small class="sfd-help">' + (m.n_accessions ? m.n_accessions + ' accessions, ' : '') + m.n_analyses + ' analysis(es)</small></td>' +
                 '<td>' + esc(m.date || '') + '</td><td>' + esc((m.programs || []).join(', ')) + '</td><td>' + esc(m.location || '') + '</td>' +
-                '<td>' + (m.saved ? '<span class="label label-default">saved</span>' : '<span class="label label-success">open</span>') + (m.linked ? ' <span class="label label-primary">uses this analysis</span>' : '') + '</td>' +
-                '<td>' + (m.saved || !r.can_link ? '' : '<button class="btn btn-xs ' + (m.linked ? 'btn-default' : 'btn-success') + ' sfd-meeting-link" data-id="' + esc(m.meeting_id) + '" data-action="' + (m.linked ? 'unlink' : 'link') + '">' +
+                '<td>' + (m.saved ? '<span class="label label-default" title="Decisions saved: an analysis added now is flagged as added after the decisions">decisions saved</span>' : '<span class="label label-success">open</span>') + (m.linked ? ' <span class="label label-primary">uses this analysis</span>' : '') + '</td>' +
+                '<td>' + (!r.can_link ? '' : '<button class="btn btn-xs ' + (m.linked ? 'btn-default' : 'btn-success') + ' sfd-meeting-link" data-id="' + esc(m.meeting_id) + '" data-action="' + (m.linked ? 'unlink' : 'link') + '">' +
                     (m.linked ? '<span class="glyphicon glyphicon-remove"></span> Remove' : '<span class="glyphicon glyphicon-link"></span> Add') + '</button>') + '</td></tr>').join('') + '</tbody></table>';
         body.html(h);
     }).fail(() => body.html('<div class="alert alert-danger">The meetings could not be loaded.</div>'));

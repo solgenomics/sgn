@@ -2035,8 +2035,9 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
 # ---------------------------------------------------------------------------
 # A link is kept in the meeting's meeting_json project property, as
 # related_analyses: [{analysis_id, name, linked_by, linked_at}]. Saving the
-# meeting's decisions keeps it (it merges into the stored JSON), and a saved
-# meeting is closed: its links no longer change.
+# meeting's decisions keeps it (it merges into the stored JSON). Analyses can
+# be added or removed after the decisions are saved (flagged after_save); every
+# change is kept in analyses_history [{action, analysis_id, name, by, on}].
 
 # who may link analyses to meetings: the roles that create meetings
 # (decision_role) or take part in them (meeting_role)
@@ -2079,8 +2080,9 @@ sub _meetings {
     my $mj = SGN::Model::Cvterm->get_cvterm_row($schema, 'meeting_json', 'project_property');
     return [] if !$design || !$mj;
     my $rs = $schema->resultset('Project::Projectprop')->search(
-        { 'me.type_id' => $mj->cvterm_id(), ($meeting_id ? ('me.project_id' => $meeting_id) : ()),
-          'me.project_id' => { -in => $schema->resultset('Project::Projectprop')->search({ type_id => $design->cvterm_id(), value => 'Meeting' })->get_column('project_id')->as_query } },
+        { 'me.type_id' => $mj->cvterm_id(),
+          'me.project_id' => [ -and => { -in => $schema->resultset('Project::Projectprop')->search({ type_id => $design->cvterm_id(), value => 'Meeting' })->get_column('project_id')->as_query },
+                                       ($meeting_id ? ({ '=' => $meeting_id }) : ()) ] },
         { prefetch => 'project', order_by => { -desc => 'me.projectprop_id' } });
     my (%seen, @out);
     while (my $prop = $rs->next()) {
@@ -2142,46 +2144,72 @@ sub meetings : Path('/ajax/script_factory/meetings') Args(0) {
     $c->stash->{rest} = { meetings => \@rows, can_link => _can_link_meetings($c) };
 }
 
-# POST meeting_id, analysis_id, action (link | unlink)
+# POST meeting_id, analysis_id (one id or a comma separated list), action (link | unlink).
+# Links can change after the decisions are saved: the decisions stay as they
+# were, analyses added later are flagged (after_save) and every change is kept
+# in analyses_history.
 sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
     my $self = shift;
     my $c = shift;
     return if !_require_login($c);
     my $meeting_id = $c->req->param('meeting_id') // '';
-    my $analysis_id = $c->req->param('analysis_id') // '';
+    my @ids = do { my %s; grep { !$s{$_}++ } grep { /^\d+$/ } map { s/^\s+|\s+$//gr } split /,/, ($c->req->param('analysis_id') // '') };
     my $action = ($c->req->param('action') // 'link') eq 'unlink' ? 'unlink' : 'link';
     if (!_can_link_meetings($c)) {
         $c->stash->{rest} = { error => 'Only participants of decision meetings (the roles set in the site configuration) can add analyses to a meeting.' };
         return;
     }
-    if ($meeting_id !~ /^\d+$/ || $analysis_id !~ /^\d+$/) {
-        $c->stash->{rest} = { error => 'Choose a meeting and a stored analysis.' };
+    if ($meeting_id !~ /^\d+$/ || !@ids) {
+        $c->stash->{rest} = { error => 'Choose a meeting and at least one stored analysis.' };
         return;
     }
     my ($schema) = _schemas($c);
-    my $info = _stored_analysis($c, $analysis_id);
-    if ($info->{error}) {
-        $c->stash->{rest} = { error => $info->{error} };
-        return;
+    # an analysis is added only if the user can open it; a removed one may no longer exist
+    my %info;
+    if ($action eq 'link') {
+        foreach my $id (@ids) {
+            my $i = _stored_analysis($c, $id);
+            if ($i->{error}) {
+                $c->stash->{rest} = { error => "Analysis $id: $i->{error}" };
+                return;
+            }
+            $info{$id} = $i;
+        }
     }
-    my $err;
+    my $person = $c->user()->get_object();
+    my $who = join(' ', grep { $_ } ($person->get_first_name(), $person->get_last_name()));
+    my $today = DateTime->now()->ymd();
+    my ($err, $n) = (undef, 0);
     try {
         $schema->txn_do(sub {
             my ($m) = @{ _meetings($schema, $meeting_id) };
             die "This decision meeting does not exist.\n" if !$m;
-            die "This meeting is closed (its decisions were saved): its evidence can no longer change.\n" if $m->{saved};
-            my $d = $m->{data};
-            my @list = grep { ref($_) eq 'HASH' && ($_->{analysis_id} // '') ne $analysis_id } @{ ref($d->{related_analyses}) eq 'ARRAY' ? $d->{related_analyses} : [] };
-            if ($action eq 'link') {
-                my $person = $c->user()->get_object();
-                push @list, { analysis_id => $analysis_id + 0, name => $info->{name}, linked_by => join(' ', grep { $_ } ($person->get_first_name(), $person->get_last_name())),
-                              linked_at => DateTime->now()->ymd() };
+            # locked and read again: no concurrent change of the meeting is lost
+            my $prop = $schema->resultset('Project::Projectprop')->search({ projectprop_id => $m->{prop}->projectprop_id() }, { for => 'update' })->single();
+            my $d = _decode_meeting($prop->value());
+            $m->{saved} = _meeting_is_saved($d);
+            my @list = grep { ref($_) eq 'HASH' && ($_->{analysis_id} // '') =~ /^\d+$/ } @{ ref($d->{related_analyses}) eq 'ARRAY' ? $d->{related_analyses} : [] };
+            my %have = map { $_->{analysis_id} => $_ } @list;
+            my @history = grep { ref($_) eq 'HASH' } @{ ref($d->{analyses_history}) eq 'ARRAY' ? $d->{analyses_history} : [] };
+            foreach my $id (@ids) {
+                if ($action eq 'link') {
+                    next if $have{$id};
+                    push @list, { analysis_id => $id + 0, name => $info{$id}->{name}, linked_by => $who, linked_at => $today, ($m->{saved} ? (after_save => 1) : ()) };
+                } else {
+                    next if !$have{$id};
+                    @list = grep { $_->{analysis_id} != $id } @list;
+                }
+                push @history, { action => ($action eq 'link' ? 'added' : 'removed'), analysis_id => $id + 0, name => ($info{$id} ? $info{$id}->{name} : $have{$id}->{name}),
+                                 by => $who, on => $today, ($m->{saved} ? (after_save => 1) : ()) };
+                $n++;
             }
+            return if !$n;
             $d->{related_analyses} = \@list;
-            $m->{prop}->update({ value => JSON->new->canonical(1)->encode($d) });
+            $d->{analyses_history} = \@history;
+            $prop->update({ value => JSON->new->canonical(1)->encode($d) });
         });
     } catch { $err = "$_"; $err =~ s/\s+$//; $err =~ s/ at \S+ line \d+\.?$//; $err =~ s/^\{UNKNOWN\}:\s*//; };
-    $c->stash->{rest} = $err ? { error => $err } : { success => 1, action => $action };
+    $c->stash->{rest} = $err ? { error => $err } : { success => 1, action => $action, changed => $n };
 }
 
 # GET meeting_id: the analyses linked to a meeting, with what the page shows of them
@@ -2202,7 +2230,8 @@ sub meeting_analyses : Path('/ajax/script_factory/meetings/analyses') Args(0) {
     my @accessions = grep { defined && $_ ne '' } map { ref($_) eq 'HASH' ? $_->{accession} : undef } @{ ref($m->{data}->{accessions}) eq 'ARRAY' ? $m->{data}->{accessions} : [] };
     $c->stash->{rest} = {
         meeting => { (map { $_ => $m->{$_} } qw(meeting_id name date year location programs saved)), accessions => \@accessions },
-        can_link => (_can_link_meetings($c) && !$m->{saved}) ? 1 : 0,
+        can_link => _can_link_meetings($c),
+        history => [ grep { ref($_) eq q{HASH} } @{ ref($m->{data}->{analyses_history}) eq q{ARRAY} ? $m->{data}->{analyses_history} : [] } ],
         analyses => [ map { +{ %$_, %{ $visible{ $_->{analysis_id} } || { hidden => 1 } } } } @linked ],
         available => $all,
     };
@@ -2220,7 +2249,9 @@ sub decision_evidence : Path('/ajax/script_factory/decision_evidence') Args(0) {
         $c->stash->{rest} = { error => $r->{error} };
         return;
     }
-    my $res = try { _load_results($c, $r->{run_id}) } catch { undef };
+    # the results file as written by the pipeline (_load_results drops the
+    # standard errors of genotype_values_long and publishes files: not needed here)
+    my $res = try { decode_json(read_file(_work_dir($c) . "/$r->{run_id}.results.json")) } catch { undef };
     if (!$res) {
         $c->stash->{rest} = { error => 'The results of this analysis cannot be read.' };
         return;
@@ -2281,8 +2312,10 @@ sub decision_evidence : Path('/ajax/script_factory/decision_evidence') Args(0) {
         genetic_model => $res->{genetic_model},
         genomic => $res->{genomic},
         traits => [ map { +{ trait => $_, h2 => ($s2{$_} || {})->{h2}, n_trials => ($s2{$_} || {})->{n_trials}, direction => $idx_dir{$_} // '' } } @traits ],
-        index => $ix ? { method => $ix->{method}, selection_pct => $ix->{selection_pct}, n_selected => $ix->{n_selected} } : undef,
+        index => $ix ? { method => $ix->{method}, selection_pct => $ix->{selection_pct}, n_selected => $ix->{n_selected}, n_ranked => $ix->{n_ranked},
+                         traits => [ grep { exists $idx_dir{$_} } @traits ] } : undef,
         zone_targets => [ map { $_->{target} } @{ $as_list->($res->{zones}) } ],
+        zone_min_env => { map { ($_->{target} // '') => $_->{min_env} } @{ $as_list->($res->{zones}) } },
         n_trials => ($res->{summary} || {})->{n_trials},
         rows => [ map { $rows{$_} } sort keys %rows ],
     };
