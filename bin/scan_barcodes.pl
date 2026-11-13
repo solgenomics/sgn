@@ -81,13 +81,13 @@ foreach my $f (@files) {
 
     foreach my $symbol ($image->get_symbols()) {
 
-	print STDERR join(", ", $symbol->get_data())."\n";
+	print STDERR join(", ", $f, $symbol->get_data(), "1")."\n";
     }
 
     print STDERR "DONE\n";
 
 #    $scanner->recycle_image($scanner, $image);
-    next();
+
 
     print STDERR "PROCESSING IMAGE $f\n";
     $step = 1;
@@ -116,5 +116,5 @@ foreach my $f (@files) {
 	if (!$output) { $step=4; }
     }
 
-    print join("\t", $f, $output, $step)."\n";
+    print "OUTPUT: ".join("\t", $f, $output, $step)."\n";
 }
