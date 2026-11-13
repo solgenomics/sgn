@@ -954,17 +954,20 @@ sub download_sra_biosample_action : Path('/breeders/trials/sra/download') Args(0
         return;
     }
 
+    # Zip: BioSample attributes sheet, SRA metadata table (TSV) and a README
     $c->tempfiles_subdir('download');
-    my $rel_file = $c->tempfile(TEMPLATE => 'download/sra_biosample_XXXX') . '.xlsx';
+    my $rel_file = $c->tempfile(TEMPLATE => 'download/sra_submission_XXXX') . '.zip';
     my $tempfile = $c->config->{basepath} . '/' . $rel_file;
-    $export->write_xlsx($tempfile);
+    $export->write_submission_package($tempfile);
 
     my $time_stamp    = strftime "%Y-%m-%dT%H%M%S", localtime();
-    my $download_name = "sra_biosample_export_$time_stamp.xlsx";
+    my $download_name = "sra_submission_$time_stamp.zip";
 
-    $c->res->content_type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->content_type('application/zip');
     $c->res->header('Content-Disposition', qq[attachment; filename="$download_name"]);
-    $c->res->body(read_file($tempfile, binmode => ':raw'));
+    # Scalar context: in list context read_file returns lines and body() would get only the first
+    my $output = read_file($tempfile, binmode => ':raw');
+    $c->res->body($output);
 }
 
 # sra download -- end

@@ -2,7 +2,7 @@ package CXGN::Phenotypes::SRAExport;
 
 =head1 NAME
 
-CXGN::Phenotypes::SRAExport - NCBI BioSample (Plant.1.0) sheet for tissue samples
+CXGN::Phenotypes::SRAExport - NCBI BioSample and SRA metadata sheets for tissue samples
 
 =head1 SYNOPSIS
 
@@ -15,13 +15,20 @@ CXGN::Phenotypes::SRAExport - NCBI BioSample (Plant.1.0) sheet for tissue sample
       trial_ids         => [ ... ],   # or
       nd_protocol_id    => $id,       # transcriptomics protocol
   });
+  # zip with biosample_attributes.xlsx, sra_metadata.tsv and README.txt
+  my $result = $export->write_submission_package($zip_path);
+
+  # or the sheets on their own
   my $sample_count = $export->write_xlsx($filepath);
+  my $warnings     = $export->write_sra_metadata_tsv($filepath);
 
 =head1 DESCRIPTION
 
-Writes the NCBI BioSample "Plant; version 1.0" batch template, the
-attributes sheet needed before depositing reads in SRA, for a set of
-tissue samples. The output matches NCBI's Plant.1.0.xlsx: sheet name,
+Writes the two sheets NCBI needs to deposit reads in SRA for a set of
+tissue samples: the BioSample attributes sheet (write_xlsx) and the SRA
+metadata table (write_sra_metadata_tsv, documented below).
+
+The BioSample sheet is the "Plant; version 1.0" batch template. The output matches NCBI's Plant.1.0.xlsx: sheet name,
 comment rows, header colours and definitions, column widths and the 'sex'
 dropdown.
 
@@ -41,13 +48,48 @@ NCBI rejects a sheet in which two rows are identical once sample_name,
 sample_title and description are ignored. If that still happens after the
 fields above, a breedbase_sample_name custom attribute is added.
 
-Mandatory fields with no value are written as 'missing'.
+Mandatory fields with no value are written as 'missing', including one field
+of each blue group (isolate/cultivar/ecotype and age/dev_stage).
 
 =cut
 
 use Moose;
 use Excel::Writer::XLSX;
 use CXGN::Trial;
+use Archive::Zip qw(:ERROR_CODES);
+use Encode qw(encode);
+use File::Temp qw(tempdir);
+use JSON qw(decode_json);
+
+# NCBI SRA controlled vocabularies, copied from the 'Library and Platform Terms'
+# sheet of NCBI's SRA metadata template (SRA_metadata.xlsx).
+my @SRA_SELECTIONS = (
+    'RANDOM', 'PCR', 'RANDOM PCR', 'RT-PCR', 'HMPR', 'MF', 'CF-S', 'CF-M', 'CF-H', 'CF-T', 'MDA',
+    'MSLL', 'cDNA', 'ChIP', 'MNase', 'DNAse', 'Hybrid Selection', 'Reduced Representation',
+    'Restriction Digest', '5-methylcytidine antibody', 'MBD2 protein methyl-CpG binding domain',
+    'CAGE', 'RACE', 'size fractionation', 'Padlock probes capture method', 'other', 'unspecified',
+    'cDNA_oligo_dT', 'cDNA_randomPriming', 'Inverse rRNA', 'Oligo-dT', 'PolyA',
+    'repeat fractionation',
+);
+my %SRA_INSTRUMENTS = (
+    _LS454 => [ '454 GS', '454 GS 20', '454 GS FLX', '454 GS FLX+', '454 GS FLX Titanium', '454 GS Junior' ],
+    ILLUMINA => [ 'HiSeq X Five', 'HiSeq X Ten', 'Illumina Genome Analyzer', 'Illumina Genome Analyzer II', 'Illumina Genome Analyzer IIx', 'Illumina HiScanSQ', 'Illumina HiSeq 1000', 'Illumina HiSeq 1500', 'Illumina HiSeq 2000', 'Illumina HiSeq 2500', 'Illumina HiSeq 3000', 'Illumina HiSeq 4000', 'Illumina HiSeq X', 'Illumina MiSeq', 'Illumina MiSeq i100', 'Illumina MiniSeq', 'Illumina NovaSeq 6000', 'Illumina NovaSeq X', 'Illumina NovaSeq X Plus', 'Illumina iSeq 100', 'NextSeq 1000', 'NextSeq 2000', 'NextSeq 500', 'NextSeq 550' ],
+    HELICOS => [ 'Helicos HeliScope' ],
+    ABI_SOLID => [ 'AB 5500 Genetic Analyzer', 'AB 5500xl Genetic Analyzer', 'AB 5500x-Wl Genetic Analyzer', 'AB SOLiD 3 Plus System', 'AB SOLiD 4 System', 'AB SOLiD 4hq System', 'AB SOLiD PI System', 'AB SOLiD System', 'AB SOLiD System 2.0', 'AB SOLiD System 3.0' ],
+    COMPLETE_GENOMICS => [ 'Complete Genomics' ],
+    PACBIO_SMRT => [ 'PacBio RS', 'PacBio RS II', 'Revio', 'Sequel', 'Sequel II', 'Sequel IIe', 'Onso' ],
+    ION_TORRENT => [ 'Ion Torrent PGM', 'Ion Torrent Proton', 'Ion Torrent S5 XL', 'Ion Torrent S5', 'Ion Torrent Genexus', 'Ion GeneStudio S5', 'Ion GeneStudio S5 Plus', 'Ion GeneStudio S5 Prime' ],
+    CAPILLARY => [ 'AB 310 Genetic Analyzer', 'AB 3130 Genetic Analyzer', 'AB 3130xL Genetic Analyzer', 'AB 3500 Genetic Analyzer', 'AB 3500xL Genetic Analyzer', 'AB 3730 Genetic Analyzer', 'AB 3730xL Genetic Analyzer' ],
+    OXFORD_NANOPORE => [ 'GridION', 'MinION', 'PromethION' ],
+    BGISEQ => [ 'BGISEQ-50', 'BGISEQ-500', 'MGISEQ-2000RS' ],
+    DNBSEQ => [ 'DNBSEQ-G400', 'DNBSEQ-G50', 'DNBSEQ-T7', 'DNBSEQ-G400 FAST' ],
+    ELEMENT => [ 'Element AVITI' ],
+    GENAPSYS => [ 'GS111' ],
+    GENEMIND => [ 'FASTASeq 300', 'GenoCare 1600', 'GenoLab M' ],
+    TAPESTRI => [ 'Tapestri' ],
+    ULTIMA => [ 'UG 100' ],
+    VELA_DIAGNOSTICS => [ 'Sentosa SQ301' ],
+);
 
 has 'bcs_schema'        => ( isa => 'Bio::Chado::Schema',     is => 'ro', required => 1 );
 has 'people_schema'     => ( isa => 'CXGN::People::Schema',   is => 'ro', required => 1 );
@@ -114,7 +156,7 @@ sub write_xlsx {
     my $self     = shift;
     my $tempfile = shift;
 
-    my ($sample_data, $sample_order) = $self->_collect_sample_data();
+    my ($sample_data, $sample_order) = $self->_sample_data();
     die "No tissue samples found to export.\n" unless @$sample_order;
     my %sample_data  = %$sample_data;
     my @sample_order = @$sample_order;
@@ -278,6 +320,296 @@ sub write_xlsx {
 
     return scalar(@sample_order);
 }
+
+=head2 write_sra_metadata_tsv($filepath)
+
+Writes the NCBI SRA metadata table as tab-separated text (UTF-8), the format
+the SRA Submission Portal's 'SRA Metadata' step accepts: a header row with
+NCBI's column names, then one row per tissue sample (one EXPERIMENT per sample).
+
+Library fields come from the transcriptomics protocol the sample has data in
+(nd_protocolprop 'high_dimensional_phenotype_protocol_properties'). Values that
+are not NCBI terms are left empty and reported as warnings. Breedbase does not
+store raw read files, so filetype and filename columns are left for the user.
+
+Returns an arrayref of warnings. Dies if there are no tissue samples.
+
+=cut
+
+# Column order of NCBI's SRA metadata template (SRA_data sheet)
+my @SRA_COLUMNS = qw(sample_name library_ID title library_strategy library_source library_selection
+    library_layout platform instrument_model design_description filetype filename filename2 filename3
+    filename4 assembly fasta_file);
+
+sub write_sra_metadata_tsv {
+    my $self     = shift;
+    my $filepath = shift;
+
+    my ($sample_data, $sample_order) = $self->_sample_data();
+    die "No tissue samples found to export.\n" unless @$sample_order;
+    my ($rows, $warnings) = $self->_sra_metadata_rows();
+
+    open(my $fh, '>:encoding(UTF-8)', $filepath) or die "Cannot write $filepath: $!\n";
+    print $fh join("\t", @SRA_COLUMNS), "\n";
+    foreach my $row (@$rows) {
+        # Tabs or line breaks inside a value would break the table
+        print $fh join("\t", map { my $v = $row->{$_} // ''; $v =~ s/[\t\r\n]+/ /g; $v } @SRA_COLUMNS), "\n";
+    }
+    close($fh) or die "Cannot write $filepath: $!\n";
+
+    return $warnings;
+}
+
+=head2 write_submission_package($zip_path)
+
+Writes a zip with everything for an SRA submission:
+  biosample_attributes.xlsx   BioSample Plant.1.0 sheet (write_xlsx)
+  sra_metadata.tsv            SRA metadata table (write_sra_metadata_tsv)
+  README.txt                  what to upload where, and what still needs filling in
+
+Returns { sample_count => N, warnings => [ ... ] }.
+
+=cut
+
+sub write_submission_package {
+    my $self     = shift;
+    my $zip_path = shift;
+
+    my $dir = tempdir(CLEANUP => 1);
+    my $sample_count = $self->write_xlsx("$dir/biosample_attributes.xlsx");
+    my $warnings     = $self->write_sra_metadata_tsv("$dir/sra_metadata.tsv");
+
+    my $readme = join("\n",
+        "NCBI SRA submission files exported from Breedbase ($sample_count tissue samples)",
+        "",
+        "1. biosample_attributes.xlsx",
+        "   Upload on the 'Attributes' tab of the BioSample submission",
+        "   (https://submit.ncbi.nlm.nih.gov/subs/biosample/), or as the sample attributes",
+        "   step of the SRA submission wizard.",
+        "",
+        "2. sra_metadata.tsv",
+        "   Upload on the 'SRA Metadata' step of the SRA submission",
+        "   (https://submit.ncbi.nlm.nih.gov/subs/sra/). Each row is one experiment;",
+        "   sample_name matches biosample_attributes.xlsx.",
+        "",
+        "Still to fill in before uploading:",
+        map({ "  - $_" } @$warnings),
+        "",
+    );
+
+    my $zip = Archive::Zip->new();
+    $zip->addFile("$dir/biosample_attributes.xlsx", 'biosample_attributes.xlsx');
+    $zip->addFile("$dir/sra_metadata.tsv", 'sra_metadata.tsv');
+    $zip->addString(encode('UTF-8', $readme), 'README.txt');
+    $zip->writeToFileNamed($zip_path) == AZ_OK or die "Cannot write $zip_path\n";
+
+    return { sample_count => $sample_count, warnings => $warnings };
+}
+
+# One SRA metadata row per sample. Returns (\@rows, \@warnings).
+sub _sra_metadata_rows {
+    my $self = shift;
+    my ($sample_data, $sample_order) = $self->_sample_data();
+    my $protocols = $self->_transcriptomics_protocols($sample_order);
+
+    my (@rows, @warnings, %library_cache, $samples_without_protocol);
+    foreach my $stock_id (@$sample_order) {
+        my $s        = $sample_data->{$stock_id};
+        my $protocol = $protocols->{$stock_id};
+
+        my $library = {};
+        if ($protocol) {
+            $library_cache{ $protocol->{nd_protocol_id} } //= do {
+                my ($fields, $protocol_warnings) = _sra_library_fields($protocol);
+                push @warnings, @$protocol_warnings;
+                $fields;
+            };
+            $library = $library_cache{ $protocol->{nd_protocol_id} };
+        } else {
+            $samples_without_protocol++;
+        }
+
+        # e.g. "RNA-Seq of Zea mays: seed, P14"
+        my @described = grep { defined && $_ ne '' && $_ ne 'missing' } ($s->{tissue}, $s->{cultivar});
+        my $title = join(': ', grep { defined } ($s->{organism} ne 'missing' ? $s->{organism} : undef),
+            (@described ? join(', ', @described) : undef));
+        $title = "$library->{library_strategy} of $title" if $library->{library_strategy} && $title;
+
+        push @rows, {
+            %$library,
+            sample_name => $s->{sample_name},     # must match the BioSample sheet
+            library_ID  => $s->{sample_name},     # one library per sample, so unique
+            title       => $title,
+        };
+    }
+
+    push @warnings, "$samples_without_protocol sample(s) have no transcriptomics protocol, so their library and platform columns are empty."
+        if $samples_without_protocol;
+    push @warnings, "filetype and filename columns: Breedbase does not store raw read files. Enter the file type (e.g. fastq) and exact file names for each library; paired files go on the same row.";
+
+    return (\@rows, \@warnings);
+}
+
+# Transcriptomics protocol for each sample: { stock_id => { nd_protocol_id, name, description, props } }.
+# When a sample is in several, nd_protocol_id (if set) wins, otherwise the lowest protocol id.
+sub _transcriptomics_protocols {
+    my $self      = shift;
+    my $stock_ids = shift;
+    return {} unless @$stock_ids;
+
+    my $dbh = $self->bcs_schema->storage->dbh;
+
+    # Which transcriptomics protocol(s) each sample has data in
+    my $placeholders = join(',', ('?') x scalar(@$stock_ids));
+    # (Protocol type filtered in a subquery: joining nd_protocol/cvterm directly
+    # lets the planner rescan nd_experiment_stock per protocol link, ~40s for 433 samples.)
+    my $h = $dbh->prepare("
+        SELECT DISTINCT nes.stock_id, nep.nd_protocol_id
+        FROM nd_experiment_stock nes
+        JOIN nd_experiment_protocol nep ON nep.nd_experiment_id = nes.nd_experiment_id
+        WHERE nes.stock_id IN ($placeholders)
+        AND nep.nd_protocol_id IN (
+            SELECT np.nd_protocol_id
+            FROM nd_protocol np
+            JOIN cvterm pt ON pt.cvterm_id = np.type_id
+            WHERE pt.name = 'high_dimensional_phenotype_transcriptomics_protocol')
+        ORDER BY nep.nd_protocol_id;");
+    $h->execute(@$stock_ids);
+
+    my $preferred = $self->nd_protocol_id;
+    my %stock_protocol;
+    while (my ($stock_id, $protocol_id) = $h->fetchrow_array()) {
+        next if $stock_protocol{$stock_id} && !($preferred && $protocol_id == $preferred);
+        $stock_protocol{$stock_id} = $protocol_id;
+    }
+
+    # Each protocol's properties, once, without the (large) gene/header lists
+    my $props_h = $dbh->prepare("
+        SELECT np.name, np.description,
+               (npp.value::jsonb - 'header_column_names' - 'header_column_details')::text
+        FROM nd_protocol np
+        LEFT JOIN (
+            nd_protocolprop npp
+            JOIN cvterm ppt ON ppt.cvterm_id = npp.type_id
+                           AND ppt.name = 'high_dimensional_phenotype_protocol_properties'
+        ) ON npp.nd_protocol_id = np.nd_protocol_id
+        WHERE np.nd_protocol_id = ?;");
+    my %protocol_info;
+    foreach my $protocol_id (keys %{{ map { $_ => 1 } values %stock_protocol }}) {
+        $props_h->execute($protocol_id);
+        my ($name, $description, $props_json) = $props_h->fetchrow_array();
+        $protocol_info{$protocol_id} = {
+            nd_protocol_id => $protocol_id,
+            name           => $name,
+            description    => $description,
+            props          => (eval { decode_json($props_json // '{}') } || {}),
+        };
+    }
+
+    return { map { $_ => $protocol_info{ $stock_protocol{$_} } } keys %stock_protocol };
+}
+
+# Maps a transcriptomics protocol onto SRA library columns. Returns (\%fields, \@warnings).
+sub _sra_library_fields {
+    my $protocol = shift;
+    my $p        = $protocol->{props};
+    my $name     = $protocol->{name};
+    my @warnings;
+
+    my %fields = (
+        library_strategy => 'RNA-Seq',
+        library_source   => 'TRANSCRIPTOMIC',
+    );
+
+    # Instrument model and platform, matched to NCBI terms ("NextSeq 500" -> ILLUMINA / "NextSeq 500")
+    my $model = _clean($p->{instrument_model});
+    my ($platform, $instrument) = _match_instrument($model);
+    if ($instrument) {
+        $fields{platform}         = $platform;
+        $fields{instrument_model} = $instrument;
+    } else {
+        push @warnings, $model
+            ? "Protocol '$name': instrument model '$model' is not an NCBI instrument_model term. Choose one in sra_metadata.tsv."
+            : "Protocol '$name' has no instrument model. Choose platform and instrument_model in sra_metadata.tsv.";
+        my $platform_text = _clean($p->{sequencing_platform});
+        if ($platform_text) {
+            (my $key = uc $platform_text) =~ s/[\s-]+/_/g;
+            $key = { PACBIO => 'PACBIO_SMRT', '454' => '_LS454', LS454 => '_LS454', NANOPORE => 'OXFORD_NANOPORE' }->{$key} // $key;
+            $fields{platform} = $key if $SRA_INSTRUMENTS{$key};
+        }
+    }
+
+    # Layout: 'layout' property, or a "/single" or "/paired" suffix in read_length (e.g. "86/single")
+    foreach my $text (_clean($p->{layout}), _clean($p->{read_length})) {
+        next unless $text;
+        if    ($text =~ /paired/i) { $fields{library_layout} = 'paired'; last }
+        elsif ($text =~ /single/i) { $fields{library_layout} = 'single'; last }
+    }
+    push @warnings, "Protocol '$name' has no library layout (single or paired). Choose one in sra_metadata.tsv."
+        unless $fields{library_layout};
+
+    # Library selection: library_method if it is an NCBI term ("poly(A)" -> PolyA)
+    my $method = _clean($p->{library_method});
+    my ($selection) = $method ? grep { _vocab_key($_) eq _vocab_key($method) } @SRA_SELECTIONS : ();
+    if ($selection) {
+        $fields{library_selection} = $selection;
+    } else {
+        push @warnings, $method
+            ? "Protocol '$name': library method '$method' is not an NCBI library_selection term (e.g. PolyA, cDNA, Inverse rRNA). Choose one in sra_metadata.tsv."
+            : "Protocol '$name' has no library method. Choose library_selection (e.g. PolyA, cDNA) in sra_metadata.tsv.";
+    }
+
+    # Free-text methods description from whatever the protocol records
+    my @design = grep { defined } (
+        _clean($protocol->{description}),
+        map { my ($label, $key) = @$_; my $v = _clean($p->{$key}); defined $v ? "$label: $v" : undef } (
+            [ 'Library method',          'library_method' ],
+            [ 'Nucleic acid extraction', 'nucleic_acid_extraction_method' ],
+            [ 'Read length',             'read_length' ],
+            [ 'Library comments',        'library_comments' ],
+            [ 'Sequencing center',       'sequencing_center' ],
+            [ 'Reference genome',        'genome_version' ],
+            [ 'Annotation',              'annotation_version' ],
+        ),
+    );
+    $fields{design_description} = join('; ', @design) if @design;
+
+    return (\%fields, \@warnings);
+}
+
+sub _match_instrument {
+    my $model = shift;
+    return () unless $model;
+    my $key = _vocab_key($model);
+    foreach my $platform (sort keys %SRA_INSTRUMENTS) {
+        foreach my $instrument (@{ $SRA_INSTRUMENTS{$platform} }) {
+            return ($platform, $instrument) if _vocab_key($instrument) eq $key;
+        }
+    }
+    return ();
+}
+
+# Comparison key for vocabulary terms: case, punctuation and an "Illumina" prefix ignored
+sub _vocab_key {
+    my $v = lc shift;
+    $v =~ s/^illumina\s+//;
+    $v =~ s/[^a-z0-9+]//g;
+    return $v;
+}
+
+# Trimmed value, or undef for empty/placeholder values ('', 'blank', 'NA', 'none', 'null')
+sub _clean {
+    my $v = shift;
+    return undef unless defined $v;
+    $v =~ s/^\s+|\s+$//g;
+    return undef if $v eq '' || $v =~ m{^(?:blank|n/?a|none|null)$}i;
+    return $v;
+}
+
+# Sample data is gathered once per object and shared by both sheets
+has '_sample_data_cache' => ( is => 'ro', lazy => 1, init_arg => undef,
+    default => sub { [ $_[0]->_collect_sample_data() ] } );
+sub _sample_data { @{ $_[0]->_sample_data_cache } }
 
 # Gathers the attribute values for each tissue sample.
 # Returns (\%sample_data keyed by stock_id, \@sample_order sorted by name).
@@ -476,9 +808,10 @@ sub _collect_sample_data {
         for my $col (qw(organism collection_date geo_loc_name tissue)) {
             $sample_data{$stock_id}{$col} //= 'missing';
         }
-        # BLUE group: at least one of isolate / cultivar / ecotype is required
+        # BLUE groups: at least one attribute of each group is required
         my $s = $sample_data{$stock_id};
-        $s->{isolate} = 'missing' unless grep { defined $s->{$_} } qw(isolate cultivar ecotype);
+        $s->{isolate}   = 'missing' unless grep { defined $s->{$_} } qw(isolate cultivar ecotype);   # Organism group
+        $s->{dev_stage} = 'missing' unless grep { defined $s->{$_} } qw(age dev_stage);              # Age/stage group
     }
 
     return (\%sample_data, \@sample_order);
