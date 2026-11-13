@@ -911,6 +911,13 @@ sub store {
         my $overwrite_count = 0;
         my $remove_count = 0;
 
+        # the stored observation named by an observationDbId (BrAPI PUT); the time is compared as a time, not as text
+        my $stored_observation_h = $schema->storage->dbh()->prepare("SELECT phenotype.value, phenotype.operator, nd_experiment_stock.stock_id, phenotype.cvalue_id, phenotype.collect_date IS DISTINCT FROM CAST(? AS TIMESTAMP)
+            FROM phenotype
+            JOIN nd_experiment_phenotype USING (phenotype_id)
+            JOIN nd_experiment_stock USING (nd_experiment_id)
+            WHERE phenotype.phenotype_id = ?");
+
         # print STDERR "(store) values hash ".Dumper($self->values_hash());
         # foreach my $plot_name (@plot_list) {
         foreach my $plot_name (keys %{$self->values_hash()}) {
@@ -1015,9 +1022,6 @@ sub store {
 
                         print STDERR "OBSERVATION = $observation\n";
 
-                        #if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
-                        #$phenotype_object->phenotype_id($observation);
-
                         my $image_id = $value_array->[4];
 
                         if (defined($image_id) && ($image_id eq "")) { $image_id = undef; }
@@ -1073,8 +1077,20 @@ sub store {
 
                         my $old_value;
                         my $old_phenotype_id;
+                        my $time_or_operator_changed;
 
-                        if ($repeat_type eq "single") {
+                        if ($observation) {
+                            # an observationDbId names the stored observation to update, whatever the repeat type
+                            $stored_observation_h->execute($timestamp, $observation);
+                            my ($stored_value, $stored_operator, $stored_stock_id, $stored_cvterm_id, $time_changed) = $stored_observation_h->fetchrow_array();
+                            if (!defined($stored_stock_id) || $stored_stock_id != $stock_id || $stored_cvterm_id != $trait_cvterm_id) {
+                                die "observationDbId $observation does not belong to observation unit $plot_name and trait $trait_name\n";
+                            }
+                            $old_value = $stored_value;
+                            $old_phenotype_id = $observation;
+                            $time_or_operator_changed = $time_changed || (($stored_operator // '') ne ($phenotype_object->operator() // ''));
+                        }
+                        elsif ($repeat_type eq "single") {
                             $old_value = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
                             $old_phenotype_id = $self->unique_trait_stock_phenotype_id()->{$trait_cvterm_id, $stock_id};
                         }
@@ -1088,6 +1104,11 @@ sub store {
                         if ($self->overwrite_values()) {
                             $plot_trait_uniquename .= ", overwritten: $upload_date, old_value=$old_value";
                             $phenotype_object->uniquename($plot_trait_uniquename);
+                        }
+
+                        # an update by observationDbId that changes only the time or the collector is stored, not skipped as an identical value
+                        if ($time_or_operator_changed) {
+                            $phenotype_object->old_value(undef);
                         }
 
                         #print STDERR "\nREPEAT TYPE for $trait_cvterm_id: $repeat_type\n\n";

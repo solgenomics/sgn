@@ -129,6 +129,7 @@ sub parse {
     my %data = ();
     my %seen = ();
     my (@observations, @unit_dbids, @variables, @values, @timestamps);
+    my @observation_units_and_variables;
 
     foreach my $obs (@data){
 
@@ -152,6 +153,7 @@ sub parse {
 
         if ($obs_db_id && defined $obs_db_id) {
             push @observations, $obs_db_id;
+            push @observation_units_and_variables, [$obs_db_id, $obsunit_db_id, $variable_db_id];
         } else {
             ## If observationDbId is undefined, check that same trait, stock, and timestamp triplet doesn't already exist in the database
             my $unique_observation = $self->check_unique_var_unit_time($schema, $trait_cvterm, $obsunit_db_id, $timestamp);
@@ -188,6 +190,25 @@ sub parse {
             $parse_result{'error'} = "The following observations do not exist in the database: ".@observations_missing;
             #print STDERR "Invalid observations: @observations_missing\n";
             return \%parse_result;
+        }
+
+        ## An observationDbId names the stored observation to update; it cannot move to another unit or variable
+        my $stored_observation_q = "SELECT nd_experiment_stock.stock_id, phenotype.cvalue_id
+            FROM phenotype
+            JOIN nd_experiment_phenotype USING (phenotype_id)
+            JOIN nd_experiment_stock USING (nd_experiment_id)
+            WHERE phenotype.phenotype_id = ?";
+        my $stored_observation_h = $schema->storage->dbh()->prepare($stored_observation_q);
+        foreach my $requested (@observation_units_and_variables) {
+            my ($obs_db_id, $obsunit_db_id, $variable_db_id) = @$requested;
+            $stored_observation_h->execute($obs_db_id);
+            my ($stored_unit, $stored_variable) = $stored_observation_h->fetchrow_array();
+            if (!defined($stored_unit) || $stored_unit ne $obsunit_db_id || $stored_variable ne $variable_db_id) {
+                $stored_unit //= '';
+                $stored_variable //= '';
+                $parse_result{'error'} = "observationDbId $obs_db_id belongs to observationUnitDbId $stored_unit and observationVariableDbId $stored_variable, not to observationUnitDbId $obsunit_db_id and observationVariableDbId $variable_db_id";
+                return \%parse_result;
+            }
         }
     }
 
