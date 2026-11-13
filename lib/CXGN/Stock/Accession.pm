@@ -503,7 +503,7 @@ sub _store_accession {
         die $return if $return;
     }
     if ($self->additional_info) {
-        $self->_update_stockprop('stock_additional_info', encode_json $self->additional_info);
+        $self->_update_stockprop_raw('stock_additional_info', encode_json $self->additional_info);
     }
 
     if($self->pedigree){
