@@ -180,6 +180,11 @@ sub get_genotyping_protocol_chromosomes : Path('/ajax/breeder/search/genotyping_
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
   my $self = shift;
   my $c = shift;
+  if (!$c->user()) {
+    # Without a login check anyone can start one refresh after another and keep the database busy.
+    $c->stash->{rest} = { error => 'You must be logged in to refresh the search views.' };
+    return;
+  }
   my $matviews = $c->req->param('matviews') || 'fullview'; #can be "fullview" or "stockprop"
 
   print STDERR "dbname=" . $c->config->{dbname} ."\n";
