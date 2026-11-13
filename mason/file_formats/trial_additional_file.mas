@@ -1,0 +1,39 @@
+<div class="modal fade" id="trial_upload_additional_file_info_dialog" name="trial_upload_additional_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="trialUploadAdditionalFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialUploadAdditionalFileInfoDialog">Upload Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading any additional files you may have for a trial.</b>
+                    <br/><br/>
+                    <p>Possible additional files include, but are not limited to:</p>
+                    <ul>
+                        <li>Trial Related Images, such as a physical field image or an aerial picture of the field.</li>
+                        <li>Trial Related Documentation, such as protocols or permits for the trial.</li>
+                        <li>Trial Related Reports, such as supplementary information or publications.</li>
+                        <li>Trial Related Recordings, whether audio or video.</li>
+                    </ul>
+                    <br/>
+                    <p><b>Uploading multiple files</b></p>
+                    <ul>
+                        <li>You can select several files at once to upload.</li>
+                        <li>The result for each file is shown in the upload dialog. If one file fails, the others are still uploaded.</li>
+                    </ul>
+                    <br/>
+                    <p><b>Adding files to a collection</b></p>
+                    <ul>
+                        <li>Use <b>Add to Collection</b> to put the uploaded files into a file collection, either one you can edit or a new one created with the name and description you enter.</li>
+                        <li>The collection is checked (or created) before any file is uploaded, so a problem with it stops the upload instead of leaving files outside the collection.</li>
+                        <li>Only files that upload successfully are added. A file can belong to several collections, and removing it from a collection does not delete the file.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_upload_additional_file_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

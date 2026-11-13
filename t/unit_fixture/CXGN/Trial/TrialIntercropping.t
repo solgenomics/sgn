@@ -36,11 +36,13 @@ for my $extension ("csv", "xls", "xlsx") {
         archive_filename => "trial_layout_example_intercropping.$extension",
         timestamp        => $timestamp,
         user_id          => 41,
-        user_role        => 'curator'
+        user_role        => 'curator',
+        metadata_schema  => $metadata_schema,
+        file_type        => 'trials'
     });
 
     # store uploaded temprarly file info in archive
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     ok($archived_filename_with_path, "Uploaded file archived");
     ok($md5, "Uploaded file md5");

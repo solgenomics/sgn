@@ -20,6 +20,8 @@ CXGN::File::Search - an object to handle searching for stored files
      uploader_username_list  => \@uploader_username_list,
      uploader_id_list        => \@uploader_id_list,
      collection_id_list      => \@collection_id_list,
+     tag_list                => \@tag_list,
+     interval                => '3 months',
      include_obsolete_files  => 0,
      limit                   => $limit,
      offset                  => $offset,
@@ -41,6 +43,13 @@ Obsolescence is decided by the file's md_metadata row via the shared
 CXGN::Collection $FILE_OBSOLETE_SQL predicate so the collection modules and
 this one can't drift.
 
+A file's create_date is md_files.create_timestamp, the time it was archived,
+which is the same column the archived files table restricts by. Its tags come
+from md_files.tags, a comma separated list managed by CXGN::File (for example
+"processed" once a file has been used in a completed upload). Placeholder rows
+with the basename 'none' are left out, as they are everywhere else archived
+files are listed.
+
 =head1 AUTHORS
 
 =cut
@@ -51,6 +60,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use CXGN::Collection;   # for $FILE_OBSOLETE_SQL
+use CXGN::File;         # for %VALID_ARCHIVE_INTERVALS
 
 has 'bcs_schema' => (
     isa      => 'Bio::Chado::Schema',
@@ -118,6 +128,20 @@ has 'collection_id_list' => (
     is  => 'rw',
 );
 
+# Only files that carry ALL of these tags. Tags are matched whole and
+# case-insensitively, so "process" does not match a file tagged "processed".
+has 'tag_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is  => 'rw',
+);
+
+# Only files archived within this interval, one of the keys of
+# %CXGN::File::VALID_ARCHIVE_INTERVALS. Undef or "all time" means no restriction.
+has 'interval' => (
+    isa => 'Str|Undef',
+    is  => 'rw',
+);
+
 has 'include_obsolete_files' => (
     isa     => 'Bool|Undef',
     is      => 'rw',
@@ -149,6 +173,8 @@ sub search {
     my $uploader_usernames_exact       = $self->uploader_usernames_exact;
     my $uploader_id_list               = $self->uploader_id_list;
     my $collection_id_list             = $self->collection_id_list;
+    my $tag_list                       = $self->tag_list;
+    my $interval                       = $self->interval;
     my $include_obsolete_files         = $self->include_obsolete_files;
 
     my @where_clause;
@@ -159,6 +185,13 @@ sub search {
     my @and_clause;
     my @and_clause_terms;
     my @question_mark_values;
+
+    if (defined($interval) && !exists($CXGN::File::VALID_ARCHIVE_INTERVALS{$interval})) {
+        die "\"$interval\" is not a valid time interval.\n";
+    }
+
+    # placeholder rows, not real files
+    push @where_clause, "files.basename != 'none'";
 
     if ($file_id_list && scalar(@$file_id_list) > 0) {
         my $placeholders = join(",", ("?") x scalar(@$file_id_list));
@@ -233,6 +266,23 @@ sub search {
         push @question_mark_values, @$collection_id_list;
     }
 
+    if ($tag_list && scalar(@$tag_list) > 0) {
+        foreach my $requested_tag (@$tag_list) {
+            my $tag = $requested_tag; # a copy, so the caller's list is left alone
+            $tag =~ s/^\s+|\s+$//g;
+            next unless length $tag;
+            # escape LIKE wildcards so a tag is matched literally
+            $tag =~ s/([\\%_])/\\$1/g;
+            push @where_clause, "(',' || COALESCE(files.tags, '') || ',') ilike ?";
+            push @question_mark_values, '%,' . $tag . ',%';
+        }
+    }
+
+    if (defined($interval) && $interval ne 'all time') {
+        push @where_clause, "files.create_timestamp > NOW() - ?::interval";
+        push @question_mark_values, $interval;
+    }
+
     if (!$include_obsolete_files) {
         push @where_clause, $CXGN::Collection::FILE_OBSOLETE_SQL;
     }
@@ -257,9 +307,9 @@ sub search {
     my $offset_clause = $self->offset ? " OFFSET " . $self->offset : '';
 
     my $q = "SELECT files.file_id, files.basename, files.dirname, files.filetype,
-        files.comment, files.md5checksum, files.metadata_id,
+        files.comment, files.tags, files.md5checksum, files.metadata_id,
         file_metadata.create_person_id AS sp_person_id, uploader.username,
-        to_char (file_metadata.create_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD') as create_date,
+        to_char (files.create_timestamp, 'YYYY-MM-DD') as create_date,
         to_char (file_metadata.modified_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD') as modified_date,
         file_metadata.obsolete,
         count(files.file_id) OVER() AS full_count
@@ -269,7 +319,7 @@ sub search {
         LEFT JOIN sgn_people.sp_person AS uploader
                ON (uploader.sp_person_id = file_metadata.create_person_id)
         $where_clause
-        ORDER BY files.file_id DESC
+        ORDER BY files.create_timestamp DESC, files.file_id DESC
         $limit_clause
         $offset_clause;";
 
@@ -279,7 +329,7 @@ sub search {
 
     my @result;
     my $total_count = 0;
-    while (my ($file_id, $basename, $dirname, $filetype, $comment, $md5checksum,
+    while (my ($file_id, $basename, $dirname, $filetype, $comment, $tags, $md5checksum,
                $metadata_id, $sp_person_id, $username, $create_date,
                $modified_date, $obsolete, $full_count) = $h->fetchrow_array()) {
         push @result, {
@@ -288,6 +338,7 @@ sub search {
             dirname     => $dirname,
             filetype    => $filetype,
             comment     => $comment,
+            tags        => [ sort grep { length } split(/,/, $tags // '') ],
             md5checksum => $md5checksum,
             metadata_id => $metadata_id,
             sp_person_id => $sp_person_id,

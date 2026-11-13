@@ -10,11 +10,19 @@ SGN::Controller::AJAX::Search::File - AJAX search endpoint for stored files
 Mirrors SGN::Controller::AJAX::Search::Image: DataTables serverSide params,
 optional html_select_box checkbox column, rows formatted as arrays.
 
+Requires a logged in user. Any logged in user can search every archived file;
+results are not restricted to the files the user uploaded.
+
 POST params:
   file_name            - composite: matches basename OR comment (ilike)
   file_type            - filetype (ilike); comma list supported
   file_uploader        - uploader username (ilike)
-  collection_id_list   - only files in these collections (comma list ok)
+  file_tag             - only files carrying all of these tags (comma list ok),
+                         e.g. "processed"
+  file_interval        - only files archived within this interval, one of the
+                         intervals in %CXGN::File::VALID_ARCHIVE_INTERVALS
+                         (e.g. "3 months"); default "all time"
+  collection_id        - only files in these collections (comma list ok)
   html_select_box      - name of the checkbox input rendered in column 0
   length / start / draw - DataTables serverSide
 
@@ -25,6 +33,7 @@ use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
+use CXGN::File;
 use CXGN::File::Search;
 
 __PACKAGE__->config(
@@ -39,7 +48,14 @@ sub file_search_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    # Any logged in user can search all archived files (the search filters by uploader), but
+    # archived files are not public, so anonymous requests are refused.
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to search files." };
+        return;
+    }
+
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
     my $params = $c->req->params() || {};
 
@@ -77,6 +93,18 @@ sub file_search_POST : Args(0) {
         }
     }
 
+    my @tag_list;
+    if (exists($params->{file_tag}) && $params->{file_tag}) {
+        my @raw_tags = ref($params->{file_tag}) eq 'ARRAY' ? @{ $params->{file_tag} } : ($params->{file_tag});
+        @tag_list = grep { length } map { my $t = $_; $t =~ s/^\s+|\s+$//g; $t } map { split /,/ } @raw_tags;
+    }
+
+    my $interval = $params->{file_interval} || 'all time';
+    if (!exists($CXGN::File::VALID_ARCHIVE_INTERVALS{$interval})) {
+        $c->stash->{rest} = { error => "\"$interval\" is not a valid time interval." };
+        return;
+    }
+
     my $limit = $params->{length};
     my $offset = $params->{start};
 
@@ -87,6 +115,8 @@ sub file_search_POST : Args(0) {
         filetype_list           => \@filetype_list,
         uploader_username_list  => \@uploader_list,
         collection_id_list      => \@collection_id_list,
+        tag_list                => \@tag_list,
+        interval                => $interval,
         limit                   => $limit,
         offset                  => $offset,
     });
@@ -111,6 +141,7 @@ sub file_search_POST : Args(0) {
                 ? "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{sp_person_id}."' >".$_->{username}."</a>"
                 : '',
             $_->{create_date},
+            join(', ', @{ $_->{tags} }),
         );
         push @return, \@line;
     }

@@ -78,7 +78,12 @@ use JSON::Any;
 use File::Spec;
 use CXGN::Tools::Run;
 use CXGN::People::Schema;
+use CXGN::Metadata::Schema;
+use CXGN::File;
 use Try::Tiny;
+
+use strict;
+use warnings;
 
 =head1 ACCESSORS
 
@@ -182,11 +187,22 @@ has 'finish_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_f
 
 Current status of the job. May be stored in DB or may be gathered from the job backend (and then stored)
 
+One of:
+
+ submitted - queued or running
+ finished  - completed successfully
+ failed    - completed unsuccessfully
+ timed_out - ran too long and was stopped
+ canceled  - stopped by a user
+ consumed  - finished, and its results have since been used by another process (for example, a
+             validation job whose data was committed as a final upload). Only a finished job can
+             be consumed; see consume(). Like finished, it is a successful end state.
+
 =cut 
 
 has 'status' => ( 
     isa => 'Maybe[Str]',
-    isa => enum([qw( submitted finished failed timed_out canceled )]), 
+    isa => enum([qw( submitted finished failed timed_out canceled consumed )]), 
     is => 'rw'
 );
 
@@ -259,7 +275,9 @@ has 'cxgn_tools_run_config' => (isa => 'Maybe[HashRef]', is => 'rw', predicate =
 
 =head2 cmd()
 
-The command submitted to be run.
+The command submitted to be run. If the command contains the placeholder __SP_JOB_ID__, submit()
+replaces it with this job's id once the job row has been created. Use this to let a background
+script report its own messages and finish status back into the job that started it.
 
 =cut
 
@@ -310,7 +328,7 @@ sub BUILD {
         }
 
     } else { #existing job, retrieve from DB
-        my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+        my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
         if (!$row) { die "The job with id ".$self->sp_job_id()." does not exist"; }
         my $job_args = $row->args() ? JSON::Any->decode($row->args()) : undef;
         $self->type_id($row->type_id());
@@ -333,6 +351,28 @@ sub BUILD {
     }
 }
 
+=head2 _prepare_people_schema($people_schema)
+
+Internal helper. people_schema() and schema() (and often metadata_schema()/phenome_schema())
+are frequently constructed by callers sharing one physical database handle across all four
+DBIx::Class schema objects, each with its own C<on_connect_do> that sets the search path for
+its own schema (see e.g. bin/upload_genotype_data.pl). DBIx::Class only runs a schema's
+on_connect_do the first time that particular schema object issues a query, so if any of the
+other schema objects sharing the connection gets queried for the first time after
+people_schema has already connected, it silently overwrites the shared connection's search
+path with its own, leaving sgn_people off of it. Every SpJob query after that then fails with
+"relation sp_job does not exist", even though people_schema itself was configured correctly.
+Call this immediately before any SpJob query to force sgn_people back onto the search path
+regardless of what else has touched the shared connection since.
+
+=cut
+
+sub _prepare_people_schema {
+    my $people_schema = shift;
+    $people_schema->storage->dbh->do('SET search_path TO public, sgn, sgn_people');
+    return $people_schema;
+}
+
 =head2 check_status()
 
 Checks the status of the job and updates it (including finish_timestamp) as necessary. Returns current job status, or nothing if job is not yet submitted.
@@ -344,15 +384,20 @@ sub check_status {
 
     my $backend_id = $self->backend_id();
 
-    if ($self->status() eq "canceled" || $self->status() eq "failed" || $self->status() eq "timed_out" || $self->status() eq "finished") { #just return a finish state if already recorded
+    if ($self->status() eq "canceled" || $self->status() eq "failed" || $self->status() eq "timed_out" || $self->status() eq "finished" || $self->status() eq "consumed") { #just return a finish state if already recorded
         return $self->status();
     }
 
     my $finish_timestamp = $self->finish_timestamp();
     if ($finish_timestamp) {
-        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out") { #if theres a timestamp and the job doesn't already have and end state, then mark it as done
-            $self->status("finished");
-            $self->store();
+        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out" && $self->status() ne "consumed") { #if there's a timestamp and the job doesn't already have and end state, then mark it as done
+            # A job whose script reports its own result has not succeeded just because it
+            # ended. Normally record_exit() has already caught this; this covers jobs whose
+            # command did not pass on an exit code.
+            if (!$self->fail_if_unreported()) {
+                $self->status("finished");
+                $self->store();
+            }
         } 
     } else { # no finish timestamp in db. Is this job running? Or did it die?
         if (defined($backend_id)) {
@@ -370,7 +415,7 @@ sub check_status {
                 if ($age > 1) {
                     $self->status("timed_out");
                     $self->store();
-                } else { # no backend, no create timestamp, no finish timestamp, but hasnt been running long
+                } else { # no backend, no create timestamp, no finish timestamp, but hasn't been running long
                     $self->status("submitted");
                     $self->store();
                 }
@@ -394,7 +439,7 @@ sub delete {
         die "Deletion has no meaning for jobs that have not yet been stored.\n";
     } 
 
-    my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+    my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
     if (!$row){
         die "The specified job does not exist in the database.\n";
@@ -430,6 +475,34 @@ sub cancel {
     } catch {
         die "Error canceling job: $_\n";
     } ;
+}
+
+=head2 consume()
+
+Marks a finished job as consumed, recording that its results have been used by another process,
+such as a validation job whose data was committed as a final upload. Dies unless the job is
+finished; jobs that are still in progress, failed, timed out or were canceled cannot be consumed.
+Consuming an already consumed job does nothing, since its results can be used more than once.
+The job is consumed whether or not whatever used its results goes on to succeed.
+
+=cut
+
+sub consume {
+    my $self = shift;
+
+    if (!$self->has_sp_job_id()) {
+        die "Only stored jobs can be consumed.\n";
+    }
+
+    my $status = $self->check_status() // '';
+
+    return if $status eq "consumed";
+
+    if ($status ne "finished") {
+        die "Job ".$self->sp_job_id()." cannot be consumed because it is not finished (its status is \"$status\").\n";
+    }
+
+    $self->update_status("consumed");
 }
 
 =head2 submit()
@@ -468,6 +541,14 @@ sub submit {
 
     my $sp_job_id = $self->store();
 
+    # A background script that reports its own success/error messages needs to know which job
+    # it belongs to, but the id doesn't exist until the row above is created. Commands can use
+    # __SP_JOB_ID__ as a placeholder and have it filled in here.
+    if ($cmd =~ m/__SP_JOB_ID__/) {
+        $cmd =~ s/__SP_JOB_ID__/$sp_job_id/g;
+        $self->cmd($cmd);
+    }
+
     my $finish_timestamp_cmd = $self->generate_finish_timestamp_cmd();
 
     my $job;
@@ -488,7 +569,7 @@ sub submit {
         $status = 'submitted';
     } catch {
         $self->update_status('failed');
-        die "An error occured trying to submit a background job.\n$_\n";
+        die "An error occurred trying to submit a background job.\n$_\n";
     } ;
 
     $self->backend_id($backend_id);
@@ -511,7 +592,7 @@ sub store {
     try {
         
         if ($self->has_sp_job_id()) {
-            my $row = $self->people_schema()->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
+            my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
             $row->backend_id($self->backend_id());
             $row->create_timestamp($self->create_timestamp() ? $self->create_timestamp() : DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
             $row->finish_timestamp($self->finish_timestamp());
@@ -534,7 +615,7 @@ sub store {
             if ($cvterm_row) {
                 $cvterm_id = $cvterm_row->cvterm_id();
             } 
-            my $row = $self->people_schema()->resultset("SpJob")->create({
+            my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->create({
                 backend_id => $self->backend_id(),
                 args => JSON::Any->encode({
                     cxgn_tools_run_config => $self->cxgn_tools_run_config(),
@@ -583,10 +664,13 @@ sub generate_finish_timestamp_cmd {
 
     my $sp_job_id = $self->sp_job_id();
 
+    # The job's exit code is saved before the timestamp is recorded and given back as the exit
+    # code of the whole command, so that the backend (and record_finish_timestamp.pl) see whether
+    # the job's own command failed, rather than whether recording the timestamp did.
     return ";
-
-perl $basepath/bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id ;
-
+sp_job_exit_code=\$?;
+perl $basepath/bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id -e \$sp_job_exit_code ;
+exit \$sp_job_exit_code
 ";
 }
 
@@ -600,7 +684,7 @@ check for a finish timestamp before the object has been destroyed and reformed.
 sub retrieve_finish_timestamp {
     my $self = shift;
 
-    my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+    my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
     my $finish_timestamp = $row->finish_timestamp() ? $row->finish_timestamp() : "";
     $self->finish_timestamp($finish_timestamp);
@@ -609,7 +693,7 @@ sub retrieve_finish_timestamp {
 
 =head2 update_status($status)
 
-Update the status of the job and store with the new value. 
+Update the status of the job and store with the new value.
 
 =cut
 
@@ -623,6 +707,110 @@ sub update_status {
 
     $self->status($new_status);
     $self->store();
+
+    if ($new_status eq "finished") {
+        $self->_tag_final_upload_file();
+    }
+}
+
+=head2 _tag_final_upload_file()
+
+Internal helper called by update_status() whenever a job finishes successfully.
+Final upload jobs (job_type "upload" with a true "final_upload" key in
+additional_args) carry the file_id of the file they uploaded in additional_args;
+tag that file "processed" now that the upload job it belongs to is done. Does
+nothing for jobs that aren't final uploads.
+
+=cut
+
+sub _tag_final_upload_file {
+    my $self = shift;
+
+    my $additional_args = $self->additional_args();
+    my $file_id = $additional_args ? $additional_args->{file_id} : undef;
+
+    return unless $self->has_type() && $self->job_type() eq "upload" && $additional_args->{final_upload} && $file_id;
+
+    my $metadata_schema = CXGN::Metadata::Schema->connect(sub { $self->schema->storage->dbh() });
+    my $file = CXGN::File->new({
+        file_id => $file_id,
+        metadata_schema => $metadata_schema,
+        archive_path => '' # not needed to add a tag; only used by get_path()
+    });
+    $file->add_tag("processed");
+}
+
+=head2 reports_own_result()
+
+True for jobs whose command records its own end state and messages on the job, which is every
+upload job (validations and final uploads). For these, a job that ends without having recorded
+a result has failed, whatever its exit code.
+
+=cut
+
+sub reports_own_result {
+    my $self = shift;
+    my $additional_args = $self->additional_args() || {};
+    return ($self->has_type() && ($self->job_type() // '') eq 'upload'
+        && ($additional_args->{final_upload} || $additional_args->{is_validation})) ? 1 : 0;
+}
+
+=head2 record_exit($exit_code)
+
+Called by bin/record_finish_timestamp.pl once a job's command has ended, with the command's exit
+code. A job that is still "submitted" at that point ended without recording an end state; it is
+marked failed, with a message saying so, if its command failed or if it was supposed to report its
+own result. Other jobs that exit cleanly are left for check_status() to mark finished.
+
+=cut
+
+sub record_exit {
+    my $self = shift;
+    my $exit_code = shift;
+    return $self->fail_if_unreported($exit_code);
+}
+
+=head2 fail_if_unreported($exit_code, $reason)
+
+If the job has not recorded an end state, and either its command failed ($exit_code is non-zero,
+or $reason says how the job was stopped) or it reports its own result, marks it failed and adds an
+error message explaining that it ended without reporting a result, so that its report is never
+empty. Returns true if it marked the job failed.
+
+=cut
+
+sub fail_if_unreported {
+    my $self = shift;
+    my $exit_code = shift;
+    my $reason = shift;
+
+    my $status = $self->status() // '';
+    return 0 if $status ne '' && $status ne 'submitted';
+
+    if (!$reason) {
+        if (defined($exit_code) && $exit_code =~ /^\d+$/ && $exit_code != 0) {
+            if ($exit_code > 128) {
+                my $signal = $exit_code - 128;
+                $reason = "was stopped by signal $signal";
+                $reason .= " (usually because it ran out of memory)" if $signal == 9;
+            } else {
+                $reason = "exited with code $exit_code";
+            }
+        } elsif ($self->reports_own_result()) {
+            $reason = "ended";
+        } else {
+            return 0;
+        }
+    }
+
+    my $message = "Job ".($self->sp_job_id() // '')." $reason without reporting a result. A site administrator can find out why in the job's error log.";
+
+    $self->additional_args({}) if !$self->additional_args();
+    my $existing = $self->additional_args->{error_messages};
+    $self->additional_args->{error_messages} = $existing ? "$existing<br>$message" : $message;
+
+    $self->update_status('failed');
+    return 1;
 }
 
 =head2 run_object()
@@ -685,6 +873,17 @@ sub update_status_from_backend {
         $job_status = $self->_age_in_days() > 1 ? 'failed' : 'submitted';
     }
 
+    # The job has ended without its script recording a result (the script records an end state
+    # itself, so it would not be checked here otherwise). Say why, rather than leaving an empty
+    # report, and do not call a job that had to report its own result a success.
+    if ($job_status eq 'failed') {
+        $self->fail_if_unreported(undef, "was stopped by the job queue (".($backend_state // "unknown state").")");
+        return wantarray ? ($self->status(), $backend_state) : $self->status();
+    }
+    if ($job_status eq 'finished' && $self->fail_if_unreported()) {
+        return wantarray ? ($self->status(), $backend_state) : $self->status();
+    }
+
     $self->update_status($job_status);
 
     return wantarray
@@ -737,16 +936,46 @@ sub get_default_cxgn_tools_run_config {
     return $cxgn_tools_run_config;
 }
 
-=head2 wait()
+=head2 wait($timeout)
 
-Blocking wait. Returns control when the job is finished. 
+Blocking wait. Returns control when the job is finished.
+
+Waits at most $timeout seconds, defaulting to four hours, which is long enough for
+anything that legitimately runs this long (a genomic selection model, say) and short
+enough that a job that will never finish does not hold its caller forever. A caller
+that knows its job should be quicker than that should say so: a web request waiting
+on an upload blocks a server worker for as long as it waits, so an upload that stalls
+takes a worker with it until the timeout expires.
+
+Gives up by canceling the job and recording it as timed out, then dies, so that a
+caller who cannot do anything useful without the job's results hears about it instead
+of reading them back as though the job had finished.
 
 =cut 
 
 sub wait {
     my $self = shift;
+    my $timeout = shift;
+    $timeout = 14400 if !defined($timeout);
 
+    # Elapsed time, not iterations: every pass shells out to the workload manager, so counting
+    # loops would make the timeout mean something other than what it says.
+    my $started = time();
     while($self->alive()) {
+        if (time() - $started >= $timeout) {
+            # A job that cannot be canceled is still a job that timed out, so record and report
+            # that either way rather than letting the workload manager's failure stand in for it.
+            my $cancel_error;
+            try {
+                $self->cancel();
+            } catch {
+                $cancel_error = $_;
+            } ;
+            $self->update_status('timed_out');
+            my $message = "Job ".$self->sp_job_id()." did not finish within $timeout seconds.\n";
+            $message .= $cancel_error if $cancel_error;
+            die $message;
+        }
         sleep (1);
     }
 
@@ -789,7 +1018,7 @@ sub get_user_submitted_jobs {
     
     my $rs;
     if ($user_role eq 'curator') {
-        $rs = $people_schema->resultset("SpJob")->search(
+        $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search(
             {},
             {
                 join     => 'sp_person',
@@ -801,7 +1030,7 @@ sub get_user_submitted_jobs {
             },
         );
     } else {
-        $rs = $people_schema->resultset("SpJob")->search(
+        $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search(
             { 'me.sp_person_id' => $sp_person_id },
             { order_by => { -desc => 'me.create_timestamp' } },
         );
@@ -834,7 +1063,7 @@ sub delete_dead_jobs {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( {status => { in => ['failed', 'timed_out'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( {status => { in => ['failed', 'timed_out'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -852,7 +1081,7 @@ sub delete_dead_jobs {
     } else {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -900,7 +1129,7 @@ sub delete_jobs_older_than {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search();
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search();
             while(my $row = $rs->next()) {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
@@ -926,7 +1155,7 @@ sub delete_jobs_older_than {
     } else {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
             while(my $row = $rs->next()) {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
@@ -954,7 +1183,7 @@ sub delete_jobs_older_than {
 
 =head2 delete_finished_jobs(bcs_schema, people_schema, user_id, is_curator)
 
-Deletes finished and canceled jobs for the given user. All finished and canceled jobs if curator.
+Deletes finished, consumed and canceled jobs for the given user. All such jobs if curator.
 
 =cut
 
@@ -972,7 +1201,7 @@ sub delete_finished_jobs {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( { status => { in => ['finished', 'canceled'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { status => { in => ['finished', 'consumed', 'canceled'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -990,7 +1219,7 @@ sub delete_finished_jobs {
     } else {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'consumed', 'canceled'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -1006,6 +1235,291 @@ sub delete_finished_jobs {
             die "Encountered an error trying to delete jobs: $_\n";
         } ;
     }
+}
+
+=head2 delete_finished_upload_jobs(bcs_schema, people_schema, user_id)
+
+Deletes file upload jobs that have finished (including consumed) or canceled for the given user. Does not include validation jobs, which are still "in progress" even if the job itself has a finished status
+
+=cut
+
+sub delete_finished_upload_jobs {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.\n";
+    } 
+
+    eval {
+        my @job_ids;
+        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'consumed', 'canceled'] } });
+        while(my $row = $rs->next()) {
+            push @job_ids, $row->sp_job_id();
+        }
+        foreach my $job_id (@job_ids){
+            my $job = $class->new({
+                people_schema => $people_schema,
+                schema => $bcs_schema,
+                sp_job_id => $job_id
+            });
+            if ($job->job_type() eq "upload" && $job->additional_args->{final_upload}) {
+                $job->delete();
+            }
+        }
+    };
+
+    if ($@) {
+        die "Encountered an error trying to delete jobs: $@\n";
+    }
+}
+
+=head2 delete_dead_upload_jobs(bcs_schema, people_schema, user_id)
+
+Deletes failed and timed out upload jobs for the given user
+
+=cut
+
+sub delete_dead_upload_jobs {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.\n";
+    } 
+
+    eval {
+        my @job_ids;
+        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+        while(my $row = $rs->next()) {
+            push @job_ids, $row->sp_job_id();
+        }
+        foreach my $job_id (@job_ids){
+            my $job = $class->new({
+                people_schema => $people_schema,
+                schema => $bcs_schema,
+                sp_job_id => $job_id
+            });
+            if ($job->job_type() eq "upload" && $job->additional_args->{final_upload}) {
+                $job->delete();
+            }
+        }
+    };
+
+    if ($@) {
+        die "Encountered an error trying to delete jobs: $@\n";
+    }
+}
+
+=head2 get_user_in_progress_uploads(bcs_schema, people_schema, user_id, user_role)
+
+Gets all in-progress upload jobs attributed to that user. Gets all upload jobs if curator. 
+Note that "in progress" does not mean the same thing as a background job status. If validation and 
+final upload are carried out in two steps with different background jobs, they are considered part 
+of the same upload. Thus, you may retrieve a "finished" job_id that corresponds to a validation step,
+but the upload is in-progress because the final step must be completed. File ids and other data in
+the additional arguments hash will tie different jobs together in this way. 
+
+=cut
+
+sub get_user_in_progress_uploads {
+
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+    my $user_role = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.";
+    }
+
+    my @user_uploads;
+
+    my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
+    my $cv_id = $cv_rs->cv_id();
+    my $cvterm_row = $bcs_schema->resultset("Cv::Cvterm")->find({name => "upload", cv_id => $cv_id});
+
+    my $upload_cvterm_id = $cvterm_row->cvterm_id();
+
+    my $uploads_rs;
+    if ($user_role eq "curator") {
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+    } else {
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+    }
+
+    while (my $upload = $uploads_rs->next()) {
+        my $job_args = JSON::Any->decode($upload->args());
+        my $job_id = $upload->sp_job_id();
+        my $job = CXGN::Job->new({
+            schema => $bcs_schema,
+            people_schema => $people_schema,
+            sp_job_id => $job_id
+        });
+        my $status = $job->check_status();
+        if (!$job_args->{additional_args}->{is_validation} && $status eq "submitted") {# validation jobs don't belong in this set. They have a separate function
+            if ($user_role eq "curator") {
+                push @user_uploads, {
+                    job_id => $job->sp_job_id(), 
+                    user_id => $job->sp_person_id(),
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
+                };
+            } else {
+                push @user_uploads, {
+                    job_id => $job->sp_job_id(), 
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
+                };
+            }
+        }  
+    }
+    
+    return \@user_uploads;
+}
+
+=head2 get_user_completed_uploads(bcs_schema, people_schema, user_id, user_role)
+
+Get all completed upload jobs for this user. Gets all jobs if curator. 
+Completed upload jobs are jobs that have a finished status and have a "final_upload"
+attribute in the args hash.
+
+=cut
+
+sub get_user_completed_uploads {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+    my $user_role = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.";
+    }
+
+    my @user_uploads;
+
+    my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
+    my $cv_id = $cv_rs->cv_id();
+    my $cvterm_row = $bcs_schema->resultset("Cv::Cvterm")->find({name => "upload", cv_id => $cv_id});
+
+    my $upload_cvterm_id = $cvterm_row->cvterm_id();
+
+    my $uploads_rs;
+    if ($user_role eq "curator") {
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+    } else {
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+    }
+
+    while (my $upload = $uploads_rs->next()) {
+        my $job_args = JSON::Any->decode($upload->args());
+        my $job_id = $upload->sp_job_id();
+        my $job = CXGN::Job->new({
+            schema => $bcs_schema,
+            people_schema => $people_schema,
+            sp_job_id => $job_id
+        });
+        my $status = $job->check_status();
+        if ($job_args->{additional_args}->{final_upload} && $status ne "submitted" ) { #This includes failed, canceled, etc.
+            if ($user_role eq "curator") {
+                push @user_uploads, {
+                    job_id => $job->sp_job_id(), 
+                    user_id => $job->sp_person_id(),
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
+                };
+            } else {
+                push @user_uploads, {
+                    job_id => $job->sp_job_id(), 
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
+                };
+            }
+        }  
+    }
+    
+    return \@user_uploads;
+}
+
+=head2 get_user_in_progress_validations(bcs_schema, people_schema, user_id, user_role)
+
+Get all running validation jobs for this user. Gets all validation jobs for curators. 
+Validation jobs are determined by the "is_validation" attribute in the additional arguments hash. 
+
+=cut
+
+sub get_user_in_progress_validations {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+    my $user_role = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.";
+    }
+
+    my @user_validations;
+
+    my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
+    my $cv_id = $cv_rs->cv_id();
+    my $cvterm_row = $bcs_schema->resultset("Cv::Cvterm")->find({name => "upload", cv_id => $cv_id});
+
+    my $upload_cvterm_id = $cvterm_row->cvterm_id();
+
+    my $validation_rs;
+    if ($user_role eq "curator") {
+        $validation_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+    } else {
+        $validation_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+    }
+
+    while (my $validation = $validation_rs->next()) {
+        my $job_args = JSON::Any->decode($validation->args());
+        my $job_id = $validation->sp_job_id();
+        my $job = CXGN::Job->new({
+            schema => $bcs_schema,
+            people_schema => $people_schema,
+            sp_job_id => $job_id
+        });
+        my $status = $job->check_status();
+        if ($job_args->{additional_args}->{is_validation}) { #get all validation jobs, don't care about status here
+            if ($user_role eq "curator") {
+                push @user_validations, {
+                    job_id => $job->sp_job_id(), 
+                    user_id => $job->sp_person_id(),
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
+                };
+            } else {
+                push @user_validations, {
+                    job_id => $job->sp_job_id(), 
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
+                };
+            }
+        }  
+    }
+    
+    return \@user_validations;
 }
 
 1;

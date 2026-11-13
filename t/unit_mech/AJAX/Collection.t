@@ -238,6 +238,41 @@ ok($file_row, 'file search finds the fixture file');
 is($file_row->{basename}, $fixture_file_basename, 'file search returns the basename');
 is($file_row->{username}, 'johndoe', 'file search returns the uploader');
 
+# create_date is when the file was archived (md_files.create_timestamp), which the
+# dbpatch that added that column filled in from the timestamp in the basename
+is($file_row->{create_date}, '2017-04-21', 'file search create_date is the archive timestamp');
+is_deeply($file_row->{tags}, [], 'untagged file has no tags');
+
+# tags and the archive interval
+#
+$dbh->do("UPDATE metadata.md_files SET tags = 'reviewed,processed' WHERE file_id = ?", undef, $second_file_id);
+
+($files, $files_total) = CXGN::File::Search->new({ bcs_schema => $schema, file_id_list => [ $second_file_id ] })->search();
+is_deeply($files->[0]->{tags}, [ 'processed', 'reviewed' ], 'file search returns the tags, sorted');
+
+($files, $files_total) = CXGN::File::Search->new({ bcs_schema => $schema, tag_list => [ 'processed' ] })->search();
+ok((grep { $_->{file_id} == $second_file_id } @$files), 'tag filter matches a tagged file');
+ok(!(grep { $_->{file_id} == $fixture_file_id } @$files), 'tag filter excludes an untagged file');
+
+($files, $files_total) = CXGN::File::Search->new({ bcs_schema => $schema, tag_list => [ 'PROCESSED', 'reviewed' ] })->search();
+ok((grep { $_->{file_id} == $second_file_id } @$files), 'tag filter matches every listed tag, case insensitively');
+
+($files, $files_total) = CXGN::File::Search->new({ bcs_schema => $schema, tag_list => [ 'process' ] })->search();
+ok(!(grep { $_->{file_id} == $second_file_id } @$files), 'tag filter matches whole tags only');
+
+($files, $files_total) = CXGN::File::Search->new({ bcs_schema => $schema, tag_list => [ 'processed', 'missing' ] })->search();
+ok(!(grep { $_->{file_id} == $second_file_id } @$files), 'tag filter needs all listed tags');
+
+($files, $files_total) = CXGN::File::Search->new({ bcs_schema => $schema, interval => '1 week' })->search();
+ok((grep { $_->{file_id} == $second_file_id } @$files), 'interval filter keeps a file archived this week');
+ok(!(grep { $_->{file_id} == $fixture_file_id } @$files), 'interval filter excludes a file archived in 2017');
+
+($files, $files_total) = CXGN::File::Search->new({ bcs_schema => $schema, interval => 'all time' })->search();
+ok((grep { $_->{file_id} == $fixture_file_id } @$files), 'all time interval does not restrict');
+
+eval { CXGN::File::Search->new({ bcs_schema => $schema, interval => '1 week; drop table x' })->search() };
+like($@, qr/not a valid time interval/, 'an unknown interval is rejected');
+
 ($files, $files_total) = CXGN::File::Search->new({
     bcs_schema    => $schema,
     basename_list => [ $fixture_file_basename ],
@@ -527,6 +562,15 @@ ok(!$cobj->get_collection($rename_id), 'collection gone after delete');
 
 # AJAX file search
 #
+# the file search needs a login, but is not limited to the user's own files
+my $anonymous_mech = Test::WWW::Mechanize->new;
+$anonymous_mech->post_ok('http://localhost:3010/ajax/search/files', [ draw => 1, length => 100, start => 0 ], 'file search without logging in');
+
+$response = decode_json $anonymous_mech->content;
+
+like($response->{error}, qr/must be logged in/, 'file search refuses anonymous users');
+ok(!$response->{data}, 'file search returns no files to anonymous users');
+
 $mech->post_ok('http://localhost:3010/ajax/search/files', [ draw => 1, length => 100, start => 0 ], 'file search via ajax');
 
 $response = decode_json $mech->content;
@@ -552,6 +596,40 @@ $response = decode_json $mech->content;
 
 is($response->{recordsTotal}, 1, 'file_name and file_type together find only the fixture file');
 like($response->{data}[0][0], qr/\Q$fixture_file_basename\E/, 'file_name and file_type together return the fixture file');
+is($response->{data}[0][4], '2017-04-21', 'the uploaded column is the archive date');
+is($response->{data}[0][5], '', 'the tags column is empty for an untagged file');
+
+$mech->post_ok('http://localhost:3010/ajax/search/files', [ draw => 4, length => 100, start => 0, file_tag => 'processed', file_interval => '1 week' ], 'file search with file_tag and file_interval');
+
+$response = decode_json $mech->content;
+
+$row = (grep { $_->[0] =~ /collection_test_file/ } @{ $response->{data} })[0];
+ok($row, 'file_tag and file_interval find the tagged test file');
+is($row->[5], 'processed, reviewed', 'tags are the last column');
+ok(!(grep { $_->[0] =~ /cass_phenotypes/ } @{ $response->{data} }), 'file_tag and file_interval exclude the fixture file');
+
+$mech->post_ok('http://localhost:3010/ajax/search/files', [ draw => 5, length => 100, start => 0, file_interval => 'forever' ], 'file search with an unknown interval');
+
+$response = decode_json $mech->content;
+
+like($response->{error}, qr/not a valid time interval/, 'an unknown interval is an error');
+
+# storing images into a collection: the collection is checked before any job is submitted,
+# since the store script runs without a user and this is its only permission check
+#
+$mech->post_ok('http://localhost:3010/ajax/image/store_images', [ archived_file_ids => $fixture_file_id, image_type => 'images', upload_collection_id => $file_collection_id ], 'store images into a file collection');
+
+$response = decode_json $mech->content;
+
+like($response->{error}, qr/is a file collection/, 'images cannot be stored into a file collection');
+ok(!$response->{job_id}, 'no upload job is submitted for a file collection');
+
+$mech->post_ok('http://localhost:3010/ajax/image/store_images', [ archived_file_ids => $fixture_file_id, image_type => 'images', upload_collection_id => 999999999 ], 'store images into a missing collection');
+
+$response = decode_json $mech->content;
+
+like($response->{error}, qr/was not found/, 'images cannot be stored into a missing collection');
+ok(!$response->{job_id}, 'no upload job is submitted for a missing collection');
 
 # AJAX collection search
 #

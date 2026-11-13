@@ -90,7 +90,7 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use DateTime;
 use CXGN::UploadFile;
 use File::Basename qw | basename dirname|;
-use IO::Compress::Gzip qw(gzip $GzipError);
+use CXGN::File;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
@@ -182,14 +182,19 @@ if ($opt_c eq 'VCF' && !$opt_w) {
         archive_filename => basename($file),
         timestamp => $timestamp,
         user_id => $sp_person_id,
-        user_role => 'curator'
+        user_role => 'curator',
+        metadata_schema => $metadata_schema,
+        file_type => 'genotyping_data'
     });
-    my $archived_original = $original_uploader->archive();
+    my ($vcf_archive_id, $archived_original) = $original_uploader->archive();
     if (!$archived_original) {
         die "Could not archive original VCF file!\n";
     }
-    gzip($archived_original => "$archived_original.gz") or die "Could not gzip archived original VCF file: $GzipError\n";
-    unlink $archived_original;
+    CXGN::File->new({
+        file_id => $vcf_archive_id,
+        metadata_schema => $metadata_schema,
+        archive_path => $opt_r
+    })->gzip_file();
     print STDERR "Original VCF saved in archive.\n";
 
     open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
@@ -229,9 +234,11 @@ my $uploader = CXGN::UploadFile->new({
    archive_filename => basename($file),
    timestamp => $timestamp,
    user_id => $sp_person_id,
-   user_role => 'curator'
+   user_role => 'curator',
+   metadata_schema => $metadata_schema,
+    file_type => 'genotyping_data'
 });
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 if (!$archived_filename_with_path) {
     die "Could not archive file!\n";
@@ -337,7 +344,7 @@ my $store_args = {
     organism_id=>$organism_id,
     igd_numbers_included=>$include_igd_numbers,
     user_id=>$sp_person_id,
-    archived_filename=>$archived_filename_with_path,
+    archived_file_id=>$archived_file_id,
     archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
     temp_file_sql_copy=>$opt_B,
     genotyping_data_type=> $genotype_data_type,

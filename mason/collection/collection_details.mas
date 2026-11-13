@@ -91,7 +91,7 @@ my $items_title  = $is_file_type ? 'Files in this collection' : 'Images in this 
     <thead>
       <tr>
         <th></th>
-        <th>File Name</th><th>Type</th><th>Comment</th><th>Uploader</th><th>Added</th>
+        <th>File Name</th><th>Type</th><th>Comment</th><th>Uploader</th><th>Uploaded</th><th>Tags</th>
       </tr>
     </thead>
   </table>
@@ -193,7 +193,8 @@ my $items_title  = $is_file_type ? 'Files in this collection' : 'Images in this 
               <th>Type</th>
               <th>Comment</th>
               <th>Uploader</th>
-              <th>Added</th>
+              <th>Uploaded</th>
+              <th>Tags</th>
             </tr>
           </thead>
         </table>
@@ -312,7 +313,18 @@ jQuery(document).ready(function () {
             'ajax': {
                 'url':  '/ajax/search/files',
                 'type': 'POST',
-                'data': files_ajax_data
+                'data': files_ajax_data,
+                // the file search needs a login; show its error in the table rather
+                // than letting DataTables raise its generic ajax error alert
+                'dataSrc': function (json) {
+                    if (json.error) {
+                        json.data = [];
+                        setTimeout(function () {
+                            jQuery('#collection_files_table .dataTables_empty').text(json.error);
+                        });
+                    }
+                    return json.data;
+                }
             },
             'processing': true,
             'serverSide': true,
@@ -325,7 +337,8 @@ jQuery(document).ready(function () {
                 { 'data': 2 },
                 { 'data': 3 },
                 { 'data': 4 },
-                { 'data': 5 }
+                { 'data': 5 },
+                { 'data': 6 }
             ]
         });
     }
@@ -566,7 +579,8 @@ jQuery(document).ready(function () {
                     { 'data': 2 },
                     { 'data': 3 },
                     { 'data': 4 },
-                    { 'data': 5 }
+                    { 'data': 5 },
+                    { 'data': 6 }
                 ]
             });
         }
