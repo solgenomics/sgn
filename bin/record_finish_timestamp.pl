@@ -6,7 +6,7 @@ record_finish_timestamp.pl
 
 =head1 SYNOPSIS
 
-record_finish_timestamp.pl -H [dbhost] -D [dbname] -P [dbpass] -U [dbuser] -j [jobid]
+record_finish_timestamp.pl -H [dbhost] -D [dbname] -P [dbpass] -U [dbuser] -j [jobid] [-e exit_code]
 
 =head1 COMMAND-LINE OPTIONS
 ARGUMENTS
@@ -15,6 +15,7 @@ ARGUMENTS
  -U database username Ex: "postgres"
  -P database userpass Ex: "postgres"
  -j sp_job_id
+ -e exit code of the job's command (optional)
 
 =head2 DESCRIPTION
 
@@ -24,6 +25,11 @@ This script is to be used in the recording of finish timestamps for background j
 the backend object calls generate_finish_timstamp_cmd() which uses this script to write the finish timestamp 
 to the database. 
 
+When given the exit code of the job's command, it also catches jobs that ended without recording
+an end state of their own: if the command failed (including being killed), or the job is one that
+reports its own result, such as an upload, the job is marked failed with a message saying so. See
+CXGN::Job::record_exit().
+
 =head1 AUTHOR
 
 Ryan Preble <rsp98@cornell.edu>
@@ -32,6 +38,7 @@ Ryan Preble <rsp98@cornell.edu>
 
 use strict;
 use Getopt::Long;
+use Pod::Usage;
 use Bio::Chado::Schema;
 use DateTime;
 use CXGN::People::Schema;
@@ -39,13 +46,14 @@ use CXGN::DB::InsertDBH;
 use CXGN::Job;
 use Try::Tiny;
 
-my ( $help, $dbhost, $dbname, $dbuser, $dbpass, $jobid);
+my ( $help, $dbhost, $dbname, $dbuser, $dbpass, $jobid, $exit_code);
 GetOptions(
     'dbhost|H=s'           => \$dbhost,
     'dbname|D=s'           => \$dbname,
     'dbuser|U=s'           => \$dbuser,
     'dbpass|P=s'           => \$dbpass,
     'jobid|j=s'            => \$jobid,
+    'exit_code|e=s'        => \$exit_code,
     'help'                 => \$help,
 );
 pod2usage(1) if $help;
@@ -84,6 +92,10 @@ my $finish_timestamp_coderef = sub {
 
     $job->finish_timestamp($timestamp);
     $job->store();
+
+    if (defined($exit_code) && $job->record_exit($exit_code)) {
+        print STDERR "Job $jobid ended without recording a result (exit code $exit_code); marked it failed.\n";
+    }
 };
 
 try {

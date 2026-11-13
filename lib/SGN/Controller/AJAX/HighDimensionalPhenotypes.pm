@@ -343,6 +343,15 @@ sub _upload_transcriptomics {
             upload_transcriptomics_spreadsheet_protocol_unit => $protocol_unit,
             upload_transcriptomics_spreadsheet_protocol_genome => $protocol_genome_version,
             upload_transcriptomics_spreadsheet_protocol_annotation => $protocol_genome_annotation_version,
+            upload_transcriptomics_spreadsheet_protocol_instrument_model => $protocol_instrument_model,
+            upload_transcriptomics_spreadsheet_protocol_layout => $protocol_layout,
+            upload_transcriptomics_spreadsheet_protocol_library_method => $protocol_library_method,
+            upload_transcriptomics_spreadsheet_protocol_library_comments => $protocol_library_comments,
+            upload_transcriptomics_spreadsheet_protocol_mapping_software => $protocol_mapping_software,
+            upload_transcriptomics_spreadsheet_protocol_sequencing_center => $protocol_sequencing_center,
+            upload_transcriptomics_spreadsheet_protocol_sequencing_platform => $protocol_sequencing_platform,
+            upload_transcriptomics_spreadsheet_protocol_read_length => $protocol_read_length,
+            upload_transcriptomics_spreadsheet_protocol_nucleic_acid_extraction_method => $protocol_nucleic_acid_extraction_method,
             upload_transcriptomics_spreadsheet_data_level => $data_level
         };
     } else {

@@ -187,11 +187,22 @@ has 'finish_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_f
 
 Current status of the job. May be stored in DB or may be gathered from the job backend (and then stored)
 
+One of:
+
+ submitted - queued or running
+ finished  - completed successfully
+ failed    - completed unsuccessfully
+ timed_out - ran too long and was stopped
+ canceled  - stopped by a user
+ consumed  - finished, and its results have since been used by another process (for example, a
+             validation job whose data was committed as a final upload). Only a finished job can
+             be consumed; see consume(). Like finished, it is a successful end state.
+
 =cut 
 
 has 'status' => ( 
     isa => 'Maybe[Str]',
-    isa => enum([qw( submitted finished failed timed_out canceled )]), 
+    isa => enum([qw( submitted finished failed timed_out canceled consumed )]), 
     is => 'rw'
 );
 
@@ -373,15 +384,20 @@ sub check_status {
 
     my $backend_id = $self->backend_id();
 
-    if ($self->status() eq "canceled" || $self->status() eq "failed" || $self->status() eq "timed_out" || $self->status() eq "finished") { #just return a finish state if already recorded
+    if ($self->status() eq "canceled" || $self->status() eq "failed" || $self->status() eq "timed_out" || $self->status() eq "finished" || $self->status() eq "consumed") { #just return a finish state if already recorded
         return $self->status();
     }
 
     my $finish_timestamp = $self->finish_timestamp();
     if ($finish_timestamp) {
-        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out") { #if there's a timestamp and the job doesn't already have and end state, then mark it as done
-            $self->status("finished");
-            $self->store();
+        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out" && $self->status() ne "consumed") { #if there's a timestamp and the job doesn't already have and end state, then mark it as done
+            # A job whose script reports its own result has not succeeded just because it
+            # ended. Normally record_exit() has already caught this; this covers jobs whose
+            # command did not pass on an exit code.
+            if (!$self->fail_if_unreported()) {
+                $self->status("finished");
+                $self->store();
+            }
         } 
     } else { # no finish timestamp in db. Is this job running? Or did it die?
         if (defined($backend_id)) {
@@ -459,6 +475,34 @@ sub cancel {
     } catch {
         die "Error canceling job: $_\n";
     } ;
+}
+
+=head2 consume()
+
+Marks a finished job as consumed, recording that its results have been used by another process,
+such as a validation job whose data was committed as a final upload. Dies unless the job is
+finished; jobs that are still in progress, failed, timed out or were canceled cannot be consumed.
+Consuming an already consumed job does nothing, since its results can be used more than once.
+The job is consumed whether or not whatever used its results goes on to succeed.
+
+=cut
+
+sub consume {
+    my $self = shift;
+
+    if (!$self->has_sp_job_id()) {
+        die "Only stored jobs can be consumed.\n";
+    }
+
+    my $status = $self->check_status() // '';
+
+    return if $status eq "consumed";
+
+    if ($status ne "finished") {
+        die "Job ".$self->sp_job_id()." cannot be consumed because it is not finished (its status is \"$status\").\n";
+    }
+
+    $self->update_status("consumed");
 }
 
 =head2 submit()
@@ -620,10 +664,13 @@ sub generate_finish_timestamp_cmd {
 
     my $sp_job_id = $self->sp_job_id();
 
+    # The job's exit code is saved before the timestamp is recorded and given back as the exit
+    # code of the whole command, so that the backend (and record_finish_timestamp.pl) see whether
+    # the job's own command failed, rather than whether recording the timestamp did.
     return ";
-
-perl $basepath/bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id ;
-
+sp_job_exit_code=\$?;
+perl $basepath/bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id -e \$sp_job_exit_code ;
+exit \$sp_job_exit_code
 ";
 }
 
@@ -693,6 +740,79 @@ sub _tag_final_upload_file {
     $file->add_tag("processed");
 }
 
+=head2 reports_own_result()
+
+True for jobs whose command records its own end state and messages on the job, which is every
+upload job (validations and final uploads). For these, a job that ends without having recorded
+a result has failed, whatever its exit code.
+
+=cut
+
+sub reports_own_result {
+    my $self = shift;
+    my $additional_args = $self->additional_args() || {};
+    return ($self->has_type() && ($self->job_type() // '') eq 'upload'
+        && ($additional_args->{final_upload} || $additional_args->{is_validation})) ? 1 : 0;
+}
+
+=head2 record_exit($exit_code)
+
+Called by bin/record_finish_timestamp.pl once a job's command has ended, with the command's exit
+code. A job that is still "submitted" at that point ended without recording an end state; it is
+marked failed, with a message saying so, if its command failed or if it was supposed to report its
+own result. Other jobs that exit cleanly are left for check_status() to mark finished.
+
+=cut
+
+sub record_exit {
+    my $self = shift;
+    my $exit_code = shift;
+    return $self->fail_if_unreported($exit_code);
+}
+
+=head2 fail_if_unreported($exit_code, $reason)
+
+If the job has not recorded an end state, and either its command failed ($exit_code is non-zero,
+or $reason says how the job was stopped) or it reports its own result, marks it failed and adds an
+error message explaining that it ended without reporting a result, so that its report is never
+empty. Returns true if it marked the job failed.
+
+=cut
+
+sub fail_if_unreported {
+    my $self = shift;
+    my $exit_code = shift;
+    my $reason = shift;
+
+    my $status = $self->status() // '';
+    return 0 if $status ne '' && $status ne 'submitted';
+
+    if (!$reason) {
+        if (defined($exit_code) && $exit_code =~ /^\d+$/ && $exit_code != 0) {
+            if ($exit_code > 128) {
+                my $signal = $exit_code - 128;
+                $reason = "was stopped by signal $signal";
+                $reason .= " (usually because it ran out of memory)" if $signal == 9;
+            } else {
+                $reason = "exited with code $exit_code";
+            }
+        } elsif ($self->reports_own_result()) {
+            $reason = "ended";
+        } else {
+            return 0;
+        }
+    }
+
+    my $message = "Job ".($self->sp_job_id() // '')." $reason without reporting a result. A site administrator can find out why in the job's error log.";
+
+    $self->additional_args({}) if !$self->additional_args();
+    my $existing = $self->additional_args->{error_messages};
+    $self->additional_args->{error_messages} = $existing ? "$existing<br>$message" : $message;
+
+    $self->update_status('failed');
+    return 1;
+}
+
 =head2 run_object()
 
 The CXGN::Tools::Run object of a submitted job, rebuilt from its stored
@@ -751,6 +871,17 @@ sub update_status_from_backend {
     }
     else {
         $job_status = $self->_age_in_days() > 1 ? 'failed' : 'submitted';
+    }
+
+    # The job has ended without its script recording a result (the script records an end state
+    # itself, so it would not be checked here otherwise). Say why, rather than leaving an empty
+    # report, and do not call a job that had to report its own result a success.
+    if ($job_status eq 'failed') {
+        $self->fail_if_unreported(undef, "was stopped by the job queue (".($backend_state // "unknown state").")");
+        return wantarray ? ($self->status(), $backend_state) : $self->status();
+    }
+    if ($job_status eq 'finished' && $self->fail_if_unreported()) {
+        return wantarray ? ($self->status(), $backend_state) : $self->status();
     }
 
     $self->update_status($job_status);
@@ -1052,7 +1183,7 @@ sub delete_jobs_older_than {
 
 =head2 delete_finished_jobs(bcs_schema, people_schema, user_id, is_curator)
 
-Deletes finished and canceled jobs for the given user. All finished and canceled jobs if curator.
+Deletes finished, consumed and canceled jobs for the given user. All such jobs if curator.
 
 =cut
 
@@ -1070,7 +1201,7 @@ sub delete_finished_jobs {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { status => { in => ['finished', 'canceled'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { status => { in => ['finished', 'consumed', 'canceled'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -1088,7 +1219,7 @@ sub delete_finished_jobs {
     } else {
         try {
             my @job_ids;
-            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'consumed', 'canceled'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -1108,7 +1239,7 @@ sub delete_finished_jobs {
 
 =head2 delete_finished_upload_jobs(bcs_schema, people_schema, user_id)
 
-Deletes file upload jobs that have finished or canceled for the given user. Does not include validation jobs, which are still "in progress" even if the job itself has a finished status
+Deletes file upload jobs that have finished (including consumed) or canceled for the given user. Does not include validation jobs, which are still "in progress" even if the job itself has a finished status
 
 =cut
 
@@ -1124,7 +1255,7 @@ sub delete_finished_upload_jobs {
 
     eval {
         my @job_ids;
-        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'consumed', 'canceled'] } });
         while(my $row = $rs->next()) {
             push @job_ids, $row->sp_job_id();
         }

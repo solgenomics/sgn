@@ -147,6 +147,25 @@ my $type_label = $collection_type eq 'file' ? 'File' : 'Image';
                                     <input class="form-control" type="text" id="file_search_uploader" placeholder="e.g. JaneDoe" />
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Tags: </label>
+                                <div class="col-sm-8">
+                                    <input class="form-control" type="text" id="file_search_tag" placeholder="e.g. processed" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Uploaded: </label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="file_search_interval">
+                                        <option value="all time" selected>Any time</option>
+                                        <option value="1 week">In the last week</option>
+                                        <option value="1 month">In the last month</option>
+                                        <option value="3 months">In the last three months</option>
+                                        <option value="6 months">In the last six months</option>
+                                        <option value="1 year">In the last year</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-sm-4">
@@ -174,7 +193,8 @@ my $type_label = $collection_type eq 'file' ? 'File' : 'Image';
                         <th>Type</th>
                         <th>Comment</th>
                         <th>Uploader</th>
-                        <th>Added</th>
+                        <th>Uploaded</th>
+                        <th>Tags</th>
                       </tr>
                     </thead>
                 </table>
@@ -262,7 +282,7 @@ jQuery(document).ready(function () {
         _load_file_search_results();
     });
 
-    jQuery('#file_search_term').keypress(function (e) {
+    jQuery('#file_search_term, #file_search_type, #file_search_uploader, #file_search_tag').keypress(function (e) {
         var code = e.keyCode || e.which;
         if (code === 13) {
             e.preventDefault();
@@ -386,7 +406,7 @@ function _load_collection_search_results() {
 }
 
 // Server-side checkbox column (html_select_box) like the image search;
-// rows are [checkbox, name, type, comment, uploader, added].
+// rows are [checkbox, name, type, comment, uploader, uploaded, tags].
 function _load_file_search_results() {
     files_table = jQuery('#files_search_results').DataTable({
         'destroy'   : true,
@@ -403,7 +423,20 @@ function _load_file_search_results() {
               d.file_name = jQuery('#file_search_term').val();
               d.file_type = jQuery('#file_search_type').val();
               d.file_uploader = jQuery('#file_search_uploader').val();
+              d.file_tag = jQuery('#file_search_tag').val();
+              d.file_interval = jQuery('#file_search_interval').val();
               d.html_select_box = 'file_select';
+            },
+            // the file search needs a login; show its error in the table rather
+            // than letting DataTables raise its generic ajax error alert
+            'dataSrc': function (json) {
+                if (json.error) {
+                    json.data = [];
+                    setTimeout(function () {
+                        jQuery('#files_search_results .dataTables_empty').text(json.error);
+                    });
+                }
+                return json.data;
             }
         },
         'columns': [
@@ -412,7 +445,8 @@ function _load_file_search_results() {
             { 'data': 2 },
             { 'data': 3 },
             { 'data': 4 },
-            { 'data': 5 }
+            { 'data': 5 },
+            { 'data': 6 }
         ]
     });
 }

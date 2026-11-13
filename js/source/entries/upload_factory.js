@@ -16,9 +16,11 @@
 *    process_file() and display_upload_formats(). Next, the function 
 *    populate_{filetype}_validate_submit_data() is called to populate the upload submission modal. 
 *    Function submit_upload_job() will then submit the job to the server. If the upload proceeds in 
-*    two steps (validation and then final upload), commit_upload_job() is called next. All the AJAX 
-*    calls live in submit_upload_job and commit_upload_job(), not including the AJAX calls used to 
-*    populate and refresh the upload tables. 
+*    two steps (validation and then final upload), commit_upload_job() is called next. It first marks
+*    the validation job "consumed" (/ajax/job/consume), and then send_upload_commit() sends the final
+*    upload. A consumed validation job can be committed again ("Commit Again" in the validations
+*    table). All the AJAX calls live in submit_upload_job, commit_upload_job() and
+*    send_upload_commit(), not including the AJAX calls used to populate and refresh the upload tables. 
 *
 *    To implement a new file type, first add it to the list of allowed uploads in 
 *    lib/SGN/Controller/BreedersToolbox.pm. Then, add it to the upload_type_dict variable and start
@@ -317,6 +319,8 @@ function load_in_progress_validations_table(user_id) {
                             view_report_btn = `<button id='job_report_${row.job_id}' class='btn btn-sm btn-primary view-report-btn'>View Report</button>`; //this could be fail status
                             if (row.status == "finished") { //only show commit button on a success
                                 commit_validation_btn = `<button id='validation_commit_${row.job_id}' class='btn btn-sm btn-success validation-commit-btn'>Commit to Database</button>`;
+                            } else if (row.status == "consumed") { //already committed once; it can still be committed again
+                                commit_validation_btn = `<button id='validation_commit_${row.job_id}' class='btn btn-sm btn-success validation-commit-btn'>Commit Again</button>`;
                             }
                         }
                         if (row.status == 'submitted') {
@@ -476,7 +480,7 @@ function load_completed_uploads_table(user_id) {
                         tr.append(jQuery("<td>").html(`<div>${row.status}</div>`));
                         let view_report_btn = '';
                         let dismiss_btn = `<button id='dismiss_job_${row.job_id}' class='btn btn-sm btn-danger job-dismiss-btn'>Dismiss</button>`;
-                        if (row.status == 'finished' || row.status == 'failed') {
+                        if (row.status == 'finished' || row.status == 'consumed' || row.status == 'failed') {
                             view_report_btn = `<button id='job_report_${row.job_id}' class='btn btn-sm btn-primary view-report-btn'>View Report</button>`;
                         }
                         tr.append(jQuery("<td>").html(`${view_report_btn} ${dismiss_btn}`));
@@ -740,6 +744,7 @@ export function process_file(file_data, upload_type, config) {
             });
             init_file_autocomplete('#upload_images_select_pheno', { extensions : SPREADSHEET_FILE_EXTENSIONS, exclude_file_id : file_data.file_id });
             jQuery('#upload_images_type').on('change', display_images_additional_upload_choices);
+            jQuery('#upload_factory_images_collection_mode').on('change', display_images_collection_choices);
             jQuery('#image_upload_next_btn').on('click', {file_data : file_data}, populate_image_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
@@ -1564,6 +1569,40 @@ function display_images_upload_choices() {
                 '<input type="text" class="form-control" id="upload_images_select_pheno" name="upload_images_select_pheno" placeholder="Start typing a spreadsheet file name...">'+
            ' </div>'+
         '</div>' +
+        // Images stored with associated phenotypes go through the phenotype upload, which does not
+        // report the stored image IDs, so only the other two types can be added to a collection.
+        '<div id="upload_factory_images_collection_div" hidden>'+
+            '<div class="form-group">'+
+                '<label class="col-sm-6 control-label">Add to collection: </label>'+
+                '<div class="col-sm-6" >'+
+                    '<select class="form-control" id="upload_factory_images_collection_mode">'+
+                        '<option value="none">Do not add to a collection</option>'+
+                        '<option value="existing">Add to an existing collection</option>'+
+                        '<option value="new">Create a new collection</option>'+
+                    '</select>'+
+                '</div>'+
+            '</div>'+
+            '<div class="form-group" id="upload_factory_images_collection_existing_div" hidden>'+
+                '<label class="col-sm-6 control-label">Collection: </label>'+
+                '<div class="col-sm-6" >'+
+                    '<select class="form-control" id="upload_factory_images_collection_id"></select>'+
+                '</div>'+
+            '</div>'+
+            '<div id="upload_factory_images_collection_new_div" hidden>'+
+                '<div class="form-group">'+
+                    '<label class="col-sm-6 control-label">Collection name: </label>'+
+                    '<div class="col-sm-6" >'+
+                        '<input class="form-control" type="text" id="upload_factory_images_collection_name" placeholder="e.g. Field Photos 2026">'+
+                    '</div>'+
+                '</div>'+
+                '<div class="form-group">'+
+                    '<label class="col-sm-6 control-label">Collection description: </label>'+
+                    '<div class="col-sm-6" >'+
+                        '<input class="form-control" type="text" id="upload_factory_images_collection_description">'+
+                    '</div>'+
+                '</div>'+
+            '</div>'+
+        '</div>'+
         '<br>' + 
         '<button id="image_upload_next_btn" class="btn btn-primary">Next</button>'
     );
@@ -1592,13 +1631,103 @@ function display_images_additional_upload_choices() {
     if (!image_upload_type) {
         jQuery('#upload_images_select_more_div').hide();
         jQuery('#upload_images_select_pheno_spreadsheet_div').hide();
+        jQuery('#upload_factory_images_collection_div').hide();
     } else if (image_upload_type == "images_phenotypes") {
         jQuery('#upload_images_select_pheno_spreadsheet_div').show();
         jQuery('#upload_images_select_more_div').hide();
+        jQuery('#upload_factory_images_collection_div').hide();
     } else {
         jQuery('#upload_images_select_pheno_spreadsheet_div').hide();
         jQuery('#upload_images_select_more_div').show();
+        jQuery('#upload_factory_images_collection_div').show();
     }
+}
+
+function display_images_collection_choices() {
+    let mode = jQuery('#upload_factory_images_collection_mode').val();
+    jQuery('#upload_factory_images_collection_existing_div').toggle(mode == 'existing');
+    jQuery('#upload_factory_images_collection_new_div').toggle(mode == 'new');
+    if (mode == 'existing') {
+        load_upload_factory_image_collections();
+    }
+}
+
+// Fill the existing collection dropdown with the image collections the user can add to.
+function load_upload_factory_image_collections() {
+    let select = jQuery('#upload_factory_images_collection_id');
+    select.html('<option value="">Loading collections...</option>');
+
+    jQuery.ajax({
+        url: '/ajax/collection/list',
+        data: { collection_type: 'image' },
+        success: function(response) {
+            select.empty();
+            if (response.error) {
+                select.append(jQuery('<option>').val('').text(response.error));
+                return;
+            }
+            let collections = (response.collections || []).filter(c => c.user_can_modify);
+            if (!collections.length) {
+                select.append(jQuery('<option>').val('').text('No image collections available'));
+                return;
+            }
+            select.append(jQuery('<option>').val('').text('Select a collection'));
+            collections.forEach(c => {
+                select.append(jQuery('<option>').val(c.collection_id).text(c.name));
+            });
+        },
+        error: function() {
+            select.html('<option value="">Could not load collections</option>');
+        }
+    });
+}
+
+// The collection chosen for an image upload, as { collection_id, collection_name } for an existing
+// collection or { collection_name, collection_description } for a new one. Returns null when the
+// images should not be added to a collection, and false (after alerting) when the choice is
+// incomplete. A new collection is only created once the images are stored.
+function read_upload_images_collection(image_upload_type) {
+    if (image_upload_type != 'images' && image_upload_type != 'images_barcodes') {
+        return null;
+    }
+    let mode = jQuery('#upload_factory_images_collection_mode').val();
+    if (mode == 'existing') {
+        let collection_id = jQuery('#upload_factory_images_collection_id').val();
+        if (!collection_id) {
+            alert("Select a collection to add the images to.");
+            return false;
+        }
+        return {
+            collection_id : collection_id,
+            collection_name : jQuery('#upload_factory_images_collection_id option:selected').text()
+        };
+    }
+    if (mode == 'new') {
+        let collection_name = jQuery('#upload_factory_images_collection_name').val().trim();
+        if (!collection_name) {
+            alert("Enter a name for the new collection.");
+            return false;
+        }
+        return {
+            collection_name : collection_name,
+            collection_description : jQuery('#upload_factory_images_collection_description').val()
+        };
+    }
+    return null;
+}
+
+// Request parameters that carry an image upload's collection choice to the image endpoints.
+function upload_collection_params(upload_collection) {
+    if (!upload_collection) {
+        return {};
+    }
+    if (upload_collection.collection_id) {
+        return { 'upload_collection_id' : upload_collection.collection_id };
+    }
+    return {
+        'upload_collection_name' : upload_collection.collection_name,
+        'upload_collection_description' : upload_collection.collection_description || ''
+    };
 }
 
 function display_soil_data_upload_choices() {
@@ -2199,11 +2328,18 @@ function populate_image_validate_submit_data(event) {
     if (!image_upload_type) {
         alert("Select an image upload type.");
         return;
-    } else {
-        populate_validate_submit_data(image_upload_type, file_data, {
-            additional_files : selected_files
-        });
     }
+
+    let upload_collection = read_upload_images_collection(image_upload_type);
+    if (upload_collection === false) {
+        return;
+    }
+
+    let additional_args = { additional_files : selected_files };
+    if (upload_collection) {
+        additional_args.upload_collection = upload_collection;
+    }
+    populate_validate_submit_data(image_upload_type, file_data, additional_args);
 }
 
 function populate_soil_data_validate_submit_data(event) {
@@ -3008,7 +3144,8 @@ export function submit_upload_job() {
                 traditional : true,
                 data : {
                     'archived_file_ids' : exif_file_ids,
-                    'ignore_warnings' : ignore_warnings
+                    'ignore_warnings' : ignore_warnings,
+                    ...upload_collection_params(submit_params.additional_args ? submit_params.additional_args.upload_collection : null)
                 },
                 success : function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in
@@ -3042,7 +3179,8 @@ export function submit_upload_job() {
                 traditional : true,
                 data : {
                     'archived_file_ids' : barcode_file_ids,
-                    'ignore_warnings' : ignore_warnings
+                    'ignore_warnings' : ignore_warnings,
+                    ...upload_collection_params(submit_params.additional_args ? submit_params.additional_args.upload_collection : null)
                 },
                 success : function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in
@@ -3141,7 +3279,31 @@ export function submit_upload_job() {
     }, 1500);
 }
 
+/**
+ * Commits the data of a finished validation job as a final upload. The validation job is marked
+ * consumed first, and the commit goes ahead whether or not that works: a job is consumed regardless
+ * of whether its final upload succeeds, and the user can always commit it again. Consuming before
+ * committing (rather than at the same time) also keeps the two from overwriting each other when the
+ * commit writes to the validation job, as an image upload creating a new collection does.
+ */
 export function commit_upload_job(job_id) {
+    jQuery('#working_modal').modal("show");
+    jQuery.ajax({
+        url: '/ajax/job/consume/'+job_id,
+        success: function(response) {
+            if (response.error) {
+                console.log("Could not mark validation job "+job_id+" as consumed: "+response.error);
+            }
+        },
+        error: function() {
+            console.log("An error occurred marking validation job "+job_id+" as consumed.");
+        }
+    }).always(function() {
+        send_upload_commit(job_id);
+    });
+}
+
+function send_upload_commit(job_id) {
     let job = job_dict[job_id];
     let upload_type = job.args.additional_args.file_type;
 
@@ -3218,7 +3380,11 @@ export function commit_upload_job(job_id) {
                 data : {
                     'archived_file_ids' : job.args.additional_args.file_ids,
                     'image_type' : upload_type,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings,
+                    // the collection chosen when the images were validated, kept on the validation job.
+                    // A new collection is recorded back onto that job once it is created.
+                    'validation_job_id' : job_id,
+                    ...upload_collection_params(job.args.additional_args.upload_collection)
                 },
                 success: function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in

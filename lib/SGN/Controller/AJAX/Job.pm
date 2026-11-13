@@ -128,7 +128,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             $actions_html .= "<button id=\"cancel_job_$job_id\" onclick=\"jsMod['job'].cancel_job($job_id)\" class=\"btn btn-small btn-danger\">Cancel</button>";
             $results_page = "In progress";
         }
-        elsif ($status eq "finished") {
+        elsif ($status eq "finished" || $status eq "consumed") { # a consumed job finished successfully too
             $results_page = $job->results_page();
             if ($results_page) {
                 $results_page =~ s/http[s]*:\/\///;
@@ -228,6 +228,67 @@ sub cancel :Path('/ajax/job/cancel') Args(1) {
 
     $job->cancel();
     $c->stash->{rest} = {success => 1};
+}
+
+=head2 consume
+
+Public path: /ajax/job/consume/<sp_job_id>
+
+Marks a finished job as consumed, recording that its data has been used by another process, such
+as a validation job whose data was committed as a final upload in the upload factory. Only finished
+(or already consumed) jobs can be consumed. Requires a login; only the job's owner or a curator may
+consume it. A job stays consumed whether or not whatever used its data succeeds.
+
+=cut
+
+sub consume :Path('/ajax/job/consume') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_job_id = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You must be logged in to consume a job.\n"};
+        return;
+    }
+
+    my $logged_user = $c->user->get_object()->get_sp_person_id();
+    my $role = $c->user->get_object()->get_user_type();
+
+    if (!defined($sp_job_id) || $sp_job_id !~ /^\d+$/) {
+        $c->stash->{rest} = {error => "Invalid job ID.\n"};
+        return;
+    }
+
+    my $job;
+    try {
+        $job = CXGN::Job->new({
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_job_id => $sp_job_id
+        });
+    } catch {
+        $c->stash->{rest} = {error => "The job with ID $sp_job_id was not found.\n"};
+    };
+    return if !$job;
+
+    if ((!defined($job->sp_person_id()) || $job->sp_person_id() != $logged_user) && $role ne "curator") {
+        $c->stash->{rest} = {error => "You do not have permission to consume this job.\n"};
+        return;
+    }
+
+    my $consume_error;
+    try {
+        $job->consume();
+    } catch {
+        $consume_error = $_;
+    };
+
+    if ($consume_error) {
+        $c->stash->{rest} = {error => $consume_error};
+        return;
+    }
+
+    $c->stash->{rest} = {success => 1, status => $job->status()};
 }
 
 sub delete_dead_jobs :Path('/ajax/job/delete_dead_jobs') Args(1) {

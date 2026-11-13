@@ -6,7 +6,7 @@ store_images.pl
 
 =head1 SYNOPSIS
 
-store_images.pl -H [dbhost] -D [dbname] -U [dbuser] -P [dbpass] -w [basepath] -ap [archive_path] -id [image_dir] -i [file_ids] -un [username] -t [image_type] -j [sp_job_id]
+store_images.pl -H [dbhost] -D [dbname] -U [dbuser] -P [dbpass] -w [basepath] -ap [archive_path] -id [image_dir] -i [file_ids] -un [username] -t [image_type] -j [sp_job_id] [-c collection_id]
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -22,6 +22,7 @@ ARGUMENTS
  -un username of the uploader (required)
  -t image type, either "images" or "images_barcodes" (required)
  -j sp_job_id of the job that submitted this script (required)
+ -c ID of an image collection to add the stored images to (optional)
 
 =head2 DESCRIPTION
 
@@ -39,6 +40,11 @@ both what was stored and what failed.
 
 After an image has been stored, its copy in the file archive is deleted, since the image itself now
 lives in the image directory.
+
+If a collection is given, every image the batch stored is added to it once the batch is done,
+including images that were already in the database. The upload endpoint checks that the uploader
+may add to the collection before submitting this script. Images that could not be added are
+reported as a warning, since they were still stored.
 
 =head1 AUTHOR
 
@@ -60,6 +66,7 @@ use JSON;
 use Try::Tiny;
 
 use Bio::Chado::Schema;
+use CXGN::Collection;
 use CXGN::DB::InsertDBH;
 use CXGN::File;
 use CXGN::Image;
@@ -70,7 +77,7 @@ use CXGN::People::Person;
 use CXGN::People::Schema;
 use SGN::Model::Cvterm;
 
-my ( $help, $dbhost, $dbname, $dbuser, $dbpass, $basepath, $archive_path, $image_dir, $file_id_list, $username, $image_type, $sp_job_id );
+my ( $help, $dbhost, $dbname, $dbuser, $dbpass, $basepath, $archive_path, $image_dir, $file_id_list, $username, $image_type, $sp_job_id, $collection_id );
 GetOptions(
     'dbhost|H=s'       => \$dbhost,
     'dbname|D=s'       => \$dbname,
@@ -83,6 +90,7 @@ GetOptions(
     'user|un=s'        => \$username,
     'image_type|t=s'   => \$image_type,
     'jobid|j=s'        => \$sp_job_id,
+    'collection|c=i'   => \$collection_id,
     'help'             => \$help,
 );
 pod2usage(1) if $help;
@@ -120,6 +128,9 @@ my @success_messages;
 my @warning_messages;
 my @error_messages;
 
+# Every image this batch stored, or found already stored, to add to the collection.
+my @stored_image_ids;
+
 # Any uncaught failure below would otherwise leave the job looking successful, because the finish
 # timestamp is recorded whether or not this script exits cleanly.
 try {
@@ -147,6 +158,48 @@ sub store_all_images {
     foreach my $file_id (@file_ids) {
         store_one_image($file_id, $sp_person_id);
     }
+
+    add_images_to_collection() if $collection_id;
+}
+
+=head2 add_images_to_collection()
+
+Adds every stored image to the collection given with -c. Done once for the whole batch, after the
+images are stored, so a problem with the collection never stops an image from being stored.
+
+=cut
+
+sub add_images_to_collection {
+    if (scalar(@stored_image_ids) == 0) {
+        return;
+    }
+
+    my $image_count = scalar(@stored_image_ids);
+    my $images_text = $image_count == 1 ? "the image" : "$image_count images";
+    my $collection_label = "collection $collection_id";
+
+    try {
+        my $collection = CXGN::Collection->new({ bcs_schema => $chado_schema });
+        my $collection_row = $collection->get_collection($collection_id);
+        if (!$collection_row) {
+            die "the collection was not found.\n";
+        }
+        $collection_label = "collection ".$collection_row->{name};
+
+        my $result = $collection->add_images($collection_id, \@stored_image_ids);
+        my $added = scalar(@{$result->{added_ids}});
+        my $already = scalar(@{$result->{duplicate_ids}});
+
+        my $message = "Added $added image(s) to $collection_label.";
+        if ($already > 0) {
+            $message .= " $already image(s) were already in it.";
+        }
+        push @success_messages, $message;
+    } catch {
+        my $error = $_;
+        chomp $error;
+        push @warning_messages, "Stored $images_text, but could not add them to $collection_label: $error";
+    };
 }
 
 =head2 store_one_image($file_id, $sp_person_id)
@@ -185,6 +238,7 @@ sub store_one_image {
             : read_exif_info($file_path);
 
         my ($image_id, $is_duplicate) = store_image_file($file_path, $filename, $image_info, $sp_person_id);
+        push @stored_image_ids, $image_id;
 
         if ($is_duplicate) {
             push @warning_messages, "$filename is already in the database as image ID $image_id. The image was not stored a second time, and the existing image was associated with ".$image_info->{stock_name}." instead.";

@@ -32,6 +32,7 @@ use JSON;
 use List::MoreUtils qw /any /;
 use Try::Tiny;
 use SGN::Model::Cvterm;
+use CXGN::Collection;
 use CXGN::File;
 use CXGN::Job;
 use Data::Dumper;
@@ -383,6 +384,16 @@ sub scan_barcode_POST {
 
     $validation_job->update_status("submitted");
 
+    # The collection the images will be added to once they are stored, if one was chosen. It is
+    # checked now, so a collection the user cannot add to fails validation rather than the upload.
+    # The choice is kept on the job so that storing the images can pick it up again.
+    my ($upload_collection, $collection_error) = $self->_read_upload_collection($c);
+    if ($collection_error) {
+        push @error_status, $collection_error;
+    } elsif ($upload_collection) {
+        $validation_job->additional_args->{upload_collection} = $upload_collection;
+    }
+
     foreach my $image (@images_to_scan) {
         my $filename = $image->{filename};
         my $file_path = $image->{file_path};
@@ -558,6 +569,16 @@ sub verify_exif_POST {
     });
 
     $validation_job->update_status("submitted");
+
+    # The collection the images will be added to once they are stored, if one was chosen. It is
+    # checked now, so a collection the user cannot add to fails validation rather than the upload.
+    # The choice is kept on the job so that storing the images can pick it up again.
+    my ($upload_collection, $collection_error) = $self->_read_upload_collection($c);
+    if ($collection_error) {
+        push @error_status, $collection_error;
+    } elsif ($upload_collection) {
+        $validation_job->additional_args->{upload_collection} = $upload_collection;
+    }
 
     my $exif_files = 0;
     my $non_exif_files = 0;
@@ -790,6 +811,34 @@ sub store_images_POST {
         return;
     }
 
+    # The collection to add the stored images to, if one was chosen. It is checked again here since
+    # the store script runs without a user, and a new collection is only created now, once the
+    # images are actually being stored, so an abandoned validation does not leave an empty one.
+    my ($upload_collection, $collection_error) = $self->_read_upload_collection($c);
+    if ($collection_error) {
+        $c->stash->{rest} = { error => $collection_error };
+        return;
+    }
+    if ($upload_collection && !$upload_collection->{collection_id}) {
+        my $create_error;
+        try {
+            $upload_collection->{collection_id} = $self->_collection_object($c)->create_collection({
+                name => $upload_collection->{collection_name},
+                description => $upload_collection->{collection_description},
+                collection_type => 'image',
+                sp_person_id => $user_id
+            });
+        } catch {
+            $create_error = $_;
+            chomp $create_error;
+        };
+        if ($create_error) {
+            $c->stash->{rest} = { error => "Could not create the collection ".$upload_collection->{collection_name}.": $create_error" };
+            return;
+        }
+        $self->_save_created_collection($c, $c->req->param('validation_job_id'), $image_type, $upload_collection);
+    }
+
     my $dbhost = $c->config->{dbhost};
     my $dbname = $c->config->{dbname};
     my $dbuser = $c->config->{dbuser};
@@ -802,6 +851,9 @@ sub store_images_POST {
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job.
     my $cmd = "perl \"$basepath/bin/store_images.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -id \"$image_dir\" -i \"$file_ids\" -un \"$username\" -t \"$image_type\" -j __SP_JOB_ID__";
+    if ($upload_collection) {
+        $cmd .= " -c \"".$upload_collection->{collection_id}."\"";
+    }
 
     my $job_name = scalar(@archived_file_ids) == 1 ? "1 image upload" : scalar(@archived_file_ids)." images upload";
 
@@ -824,7 +876,8 @@ sub store_images_POST {
             ignore_warnings => $ignore_warnings,
             user_name => "$user_first_name $user_last_name",
             file_id => $archived_file_ids[0],
-            file_ids => \@archived_file_ids
+            file_ids => \@archived_file_ids,
+            upload_collection => $upload_collection
         }
     });
 
@@ -841,6 +894,95 @@ sub store_images_POST {
     }
 
     $c->stash->{rest} = { success => 1, job_id => $upload_job->sp_job_id() };
+}
+
+# A validation job can be committed again, for example after a failed store. Once the new collection
+# it asked for exists, the job is pointed at it, so committing again adds to that collection instead
+# of trying to create a second one with the same name. Only the user's own validation job of the same
+# image type is updated, and a failure here never stops the upload.
+sub _save_created_collection {
+    my ($self, $c, $validation_job_id, $image_type, $upload_collection) = @_;
+    return unless defined($validation_job_id) && $validation_job_id =~ /^\d+$/;
+
+    try {
+        my $user_id = $c->user()->get_object()->get_sp_person_id();
+        my $validation_job = CXGN::Job->new({
+            sp_job_id => $validation_job_id,
+            schema => $c->dbic_schema('Bio::Chado::Schema', undef, $user_id),
+            people_schema => $c->dbic_schema("CXGN::People::Schema")
+        });
+        my $args = $validation_job->additional_args() || {};
+        if (defined($validation_job->sp_person_id()) && $validation_job->sp_person_id() == $user_id && $args->{is_validation} && ($args->{file_type} // '') eq $image_type) {
+            $args->{upload_collection} = {
+                collection_id => $upload_collection->{collection_id},
+                collection_name => $upload_collection->{collection_name}
+            };
+            $validation_job->additional_args($args);
+            $validation_job->store();
+        }
+    } catch {
+        print STDERR "Could not record collection ".$upload_collection->{collection_id}." on validation job $validation_job_id: $_\n";
+    };
+}
+
+sub _collection_object {
+    my ($self, $c) = @_;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    return CXGN::Collection->new({ bcs_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id) });
+}
+
+=head2 _read_upload_collection($c)
+
+Reads the collection an image upload should add its images to, from these request parameters:
+
+ upload_collection_id          - an existing collection
+ upload_collection_name        - the name of a new collection, used when no id is given
+ upload_collection_description - the description of that new collection (optional)
+
+Returns ($collection, $error). $collection is undef when no collection was chosen, otherwise a
+hashref of collection_id (absent for a new collection), collection_name and collection_description.
+An existing collection must be an image collection (or have no type) that the user created, unless
+the user is a curator. This matches who /ajax/collection/add_items lets add items.
+
+=cut
+
+sub _read_upload_collection {
+    my ($self, $c) = @_;
+
+    my $collection_id = $c->req->param('upload_collection_id');
+    my $collection_name = $c->req->param('upload_collection_name');
+    my $collection_description = $c->req->param('upload_collection_description');
+
+    if (defined($collection_id) && length($collection_id)) {
+        if ($collection_id !~ /^\d+$/) {
+            return (undef, "\"$collection_id\" is not a valid collection ID.");
+        }
+
+        my $collection = $self->_collection_object($c)->get_collection($collection_id);
+        if (!$collection) {
+            return (undef, "The collection with ID $collection_id was not found.");
+        }
+
+        my $collection_type = $collection->{collection_type};
+        if (defined($collection_type) && $collection_type eq 'file') {
+            return (undef, "Images cannot be added to ".$collection->{name}.", because it is a file collection.");
+        }
+
+        my $user_id = $c->user()->get_object()->get_sp_person_id();
+        my $is_owner = defined($collection->{sp_person_id}) && $collection->{sp_person_id} == $user_id;
+        if (!$is_owner && !$c->user()->check_roles('curator')) {
+            return (undef, "Only the creator of the collection ".$collection->{name}." or a curator can add images to it.");
+        }
+
+        return ({ collection_id => $collection_id, collection_name => $collection->{name} }, undef);
+    }
+
+    $collection_name =~ s/^\s+|\s+$//g if defined($collection_name);
+    if (defined($collection_name) && length($collection_name)) {
+        return ({ collection_name => $collection_name, collection_description => $collection_description }, undef);
+    }
+
+    return (undef, undef);
 }
 
  sub image_metadata_store {

@@ -28,7 +28,7 @@ export function dismiss_job(job_id) {
 }
 
 export function dismiss_finished_jobs(user_id) {
-    if (confirm("Dismiss all finished and canceled jobs?")){
+    if (confirm("Dismiss all finished, consumed and canceled jobs?")){
 
         jQuery.ajax({
             url: '/ajax/job/delete_finished/'+user_id,

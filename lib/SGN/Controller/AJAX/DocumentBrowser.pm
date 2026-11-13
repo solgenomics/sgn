@@ -136,16 +136,7 @@ sub user_archived_files_POST : Args(0) {
     my $user_id = $c->req->param("user_id") || undef;
     my $interval = $c->req->param("interval") || "3 months";
 
-    my %valid_intervals = (
-        "1 week" => 1,
-        "1 month" => 1,
-        "3 months" => 1,
-        "6 months" => 1,
-        "1 year" => 1,
-        "all time" => 1
-    );
-
-    if (!exists($valid_intervals{$interval})) {
+    if (!exists($CXGN::File::VALID_ARCHIVE_INTERVALS{$interval})) {
         $c->stash->{rest} = {error => "\"$interval\" is not a valid time interval.\n"} ;
         return;
     }

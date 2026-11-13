@@ -22,7 +22,7 @@ $sp_person_id
     <div style='display:flex;justify-content:center;'>
         <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Dismiss failed and timed out jobs</button>
         <span style="display: inline-block; width: 100px;"></span>
-        <button id="clear_finished_jobs_button" class='btn btn-sm btn-primary'>Dismiss finished and canceled jobs</button> 
+        <button id="clear_finished_jobs_button" class='btn btn-sm btn-primary'>Dismiss finished, consumed and canceled jobs</button> 
         <span style="display: inline-block; width: 100px;"></span>
         <button id="clear_old_jobs_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
         &nbsp;

@@ -43,6 +43,18 @@ use CXGN::Metadata::Schema;
 use strict;
 use warnings;
 
+=head1 PACKAGE VARIABLES
+
+=head2 %VALID_ARCHIVE_INTERVALS
+
+The time intervals archived files can be restricted to, matched against md_files.create_timestamp.
+"all time" means no restriction. Shared by the archived files table and the file search, so both
+accept the same values.
+
+=cut
+
+our %VALID_ARCHIVE_INTERVALS = map { $_ => 1 } ("1 week", "1 month", "3 months", "6 months", "1 year", "all time");
+
 =head1 ACCESSORS
 
 =head2 metadata_schema()
