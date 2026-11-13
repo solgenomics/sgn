@@ -94,6 +94,7 @@ $blupf90_available => 0
           <div class="sf-card">
             <h3>Trials and designs</h3>
             <p class="sf-help">Designs are detected from the trial metadata and the field layout. You can change them in the <b>Model</b> step.</p>
+            <div id="sf_repeated_note"></div>
             <div class="table-responsive" id="sf_trials_table"></div>
           </div>
 
@@ -231,7 +232,7 @@ $blupf90_available => 0
               <span class="sf-option-text">Mixed models fitted in R. Fast on small and medium datasets; required for custom formulas with random slopes.</span></label>
             <label class="sf-option sf-option-sm" id="sf_engine_f90"><input type="radio" name="sf_engine" value="blupf90" />
               <span class="sf-option-title">BLUPF90+</span>
-              <span class="sf-option-text">The same mixed models solved by BLUPF90+ (Fortran, sparse AI-REML; Misztal et al.). Much faster on large multi-environment datasets and pedigrees. Its parameter and data files can be downloaded with the results. SpATS spatial models stay in R.</span></label>
+              <span class="sf-option-text">The whole analysis runs without R: Breedbase (Perl) writes the models for BLUPF90+ (Fortran, sparse AI-REML; Misztal et al.) and fits the models of all trials and traits in parallel. Much faster on large multi-environment datasets and pedigrees; needed for pedigree (A matrix) models. Row &times; column trials get row / column effects and linear trends instead of SpATS (R only); custom formulas take random intercepts only. Parameter and data files are downloadable with the results.</span></label>
           </div>
           <div id="sf_engine_note"></div>
         </div>
@@ -345,12 +346,6 @@ $blupf90_available => 0
             </div>
             <div id="sf_single_formula_check"></div>
           </div>
-
-          <div class="sf-cov-block">
-            <label class="sf-label">Covariates</label>
-            <div id="sf_single_covariates" class="sf-cov-list"></div>
-            <small class="sf-muted">Fixed linear effect of another trait measured on the same plots (e.g. stand count). In a written formula a selected covariate is available by the name shown in brackets. A trait is never used as a covariate of itself.</small>
-          </div>
         </div>
 
         <div class="sf-card" id="sf_treatments_card" style="display:none">
@@ -358,6 +353,38 @@ $blupf90_available => 0
           <p class="sf-help">Treatments recorded on the trials (management factors such as fertilizer, and treatment variables). They are not traits:
             they can enter the models as factors. Management factors of one type are merged into one factor, plots without it are level <i>none</i>.</p>
           <div id="sf_treatments"></div>
+        </div>
+
+        <div class="sf-card" id="sf_repeated_card" style="display:none">
+          <h3>Repeated measurements</h3>
+          <p class="sf-help">Traits measured more than once on the same plot (repeat type <i>multiple</i> or <i>time series</i> in Breedbase, or several values stored for one plot), for example plant height or NDVI through the season, or disease scores taken on several dates.
+            Breedbase gives the analysis the <b>mean</b> of each plot. Choose another value per plot (the area under the curve is the AUDPC of disease scores), or model <b>all measurements</b>.</p>
+          <div id="sf_repeated"></div>
+          <div id="sf_repeated_model" style="display:none">
+            <h4>Repeated-measures model <small class="sf-muted">traits set to <i>all measurements</i></small></h4>
+            <div class="row">
+              <div class="col-sm-6">
+                <label class="sf-label">Time effect</label>
+                <select class="form-control input-sm" id="sf_repeated_time">
+                  <option value="date">Measurement date within trial (fixed factor)</option>
+                  <option value="linear">Linear trend in days within trial</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="sf-label">&nbsp;</label>
+                <label class="sf-check"><input type="checkbox" id="sf_repeated_gxtime" /> Genotype &times; date (random) <small class="sf-muted">do the genotypes change rank over the dates? Needs the date factor.</small></label>
+              </div>
+            </div>
+            <small class="sf-muted">Each measurement is one record. A random plot effect <code>(1|plot)</code> links the measurements of a plot, so a plot measured five times does not count as five replicates; the genotype value is the mean over the dates.
+              Two stages: stage 1 of these traits uses the design model (SpATS does not model repeated records). Outlier rules, environmental zones and covariates use the plot mean of these traits; excluding a value in step 2 excludes all measurements of that plot.</small>
+          </div>
+        </div>
+
+        <div class="sf-card" id="sf_cov_card">
+          <h3>Covariates</h3>
+          <p class="sf-help">Fixed linear effect of another trait measured on the same plots (e.g. stand count, or NDVI). <b>Two stages:</b> in the stage 1 model of every trial where the covariate varies (SpATS or design model), so the trial means are adjusted before stage 2.
+            <b>Single stage:</b> in the model (in a written formula a selected covariate is available by the name shown in brackets). A trait measured several times per plot enters with the value per plot chosen under <i>Repeated measurements</i>. A trait is never used as a covariate of itself.</p>
+          <div id="sf_single_covariates" class="sf-cov-list"></div>
         </div>
 
         <div class="sf-card" id="sf_genetic_card">
@@ -369,8 +396,21 @@ $blupf90_available => 0
                 <option value="iid">Unrelated accessions (identity)</option>
                 <option value="parents">Mother and father effects (GCA-like) + accession</option>
                 <option value="pedigree">Pedigree relationship (A matrix) &rarr; breeding values</option>
+                <option value="genomic">Genomic relationship (G matrix, GBLUP) &rarr; GEBVs</option>
+                <option value="single_step">Single-step (H matrix: pedigree + genomic, ssGBLUP) &rarr; GEBVs</option>
               </select>
               <div id="sf_pedigree_info" class="sf-help"></div>
+              <div id="sf_geno_block" class="sf-geno-block" style="display:none">
+                <label class="sf-label">Genotyping protocol <span class="text-danger">*</span></label>
+                <select class="form-control input-sm" id="sf_geno_protocol"></select>
+                <div class="row sf-geno-qc">
+                  <div class="col-xs-6"><label class="sf-label-sm">Minimum allele frequency</label>
+                    <input type="number" class="form-control input-sm" id="sf_geno_minfreq" min="0" max="0.5" step="0.01" value="0.05" /></div>
+                  <div class="col-xs-6"><label class="sf-label-sm">Minimum call rate</label>
+                    <input type="number" class="form-control input-sm" id="sf_geno_callrate" min="0" max="1" step="0.05" value="0.90" /></div>
+                </div>
+                <div id="sf_geno_info" class="sf-help"></div>
+              </div>
             </div>
             <div class="col-sm-6">
               <label class="sf-label">Checks vs test entries <code>check</code></label>
@@ -382,7 +422,7 @@ $blupf90_available => 0
               <div id="sf_check_info" class="sf-help"></div>
             </div>
           </div>
-          <small class="sf-muted">Used by stage 2 and by the single-stage model, with the genotype as random effect. Mother / father: random effects of the parents recorded in Breedbase; the genetic value of an accession is the sum of its parents' and its own effect. Pedigree: the accession effect follows the additive relationship of all known ancestors (fitted with BLUPF90+ <code>add_animal</code>, whichever engine is chosen), giving breeding values (EBVs) for the accessions and for their ancestors. Checks: a fixed check / test effect, so test entries are not shrunk toward the mean of the checks.</small>
+          <small class="sf-muted">Used by stage 2 and by the single-stage model, with the genotype as random effect. Mother / father: random effects of the parents recorded in Breedbase; the genetic value of an accession is the sum of its parents' and its own effect. Pedigree: the accession effect follows the additive relationship of all known ancestors, with the inbreeding of every individual (inbred lines), giving breeding values (EBVs) for the accessions and for their ancestors. Genomic (G): relationships from the markers of a genotyping protocol (VanRaden G built by BLUPF90+ after quality control: minor allele frequency, call rate, monomorphic markers), giving genomic breeding values (GEBVs); accessions without genotypes are treated as unrelated. Single-step (H): pedigree and genomic relationships together, so accessions without genotypes borrow information through their genotyped relatives. Pedigree, G and H models are fitted with BLUPF90+ (the whole analysis then runs on the BLUPF90+ engine). Checks: a fixed check / test effect, so test entries are not shrunk toward the mean of the checks.</small>
         </div>
 
         <div class="sf-card sf-formula-card">
@@ -691,6 +731,7 @@ jQuery(document).ready(function() {
 .sf-suggest-list .st-diff { color: #b45309; white-space: nowrap; }
 .sf-suggested { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 8px; font-size: 10px; font-weight: 600; background: var(--sf-accent-soft); color: var(--sf-accent); text-transform: uppercase; letter-spacing: .03em; vertical-align: middle; }
 .sf-option.disabled { opacity: .55; cursor: not-allowed; }
+.sf-option.dis { opacity: .6; }
 .sf-app { --sf-accent: #2b7a4b; --sf-accent-soft: #e8f4ec; --sf-border: #dfe3e8; --sf-muted: #6b7280; --sf-bg: #f7f9fa; margin-bottom: 40px; }
 .sf-app h3 { font-size: 18px; margin: 0 0 6px 0; font-weight: 600; }
 .sf-app h4 { font-size: 15px; font-weight: 600; margin-top: 16px; }
@@ -824,6 +865,12 @@ table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-cov-list label.on { background: #e8f3ec; border-color: #2b7a4b; color: #1f5c38; }
 .sf-cov-list label.dis { opacity: .45; cursor: not-allowed; }
 .sf-cov-list input { display: none; }
+.sf-rep-table td { vertical-align: middle !important; }
+.sf-geno-block { margin-top: 10px; padding: 8px 10px; border: 1px solid #d6e4f0; border-radius: 6px; background: #f7fbff; }
+.sf-geno-block .sf-geno-qc { margin-top: 6px; }
+.sf-label-sm { font-size: 11px; font-weight: normal; color: #6b7280; margin-bottom: 2px; }
+.sf-rep-table select { min-width: 220px; }
+.sf-rep-badge { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 8px; background: #eef2ff; color: #3730a3; font-size: 11px; font-weight: normal; }
 .sf-mono { font-family: Menlo, Consolas, monospace; font-size: 13px; }
 .sf-formula-tools { margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .sf-formula-tools .sf-var { cursor: pointer; }

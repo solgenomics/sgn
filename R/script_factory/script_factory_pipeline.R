@@ -17,6 +17,11 @@
 #           term (environment, replicate, block, row/column, field trend,
 #           G x trial / location / year, covariates) or given as a custom
 #           lme4 formula.
+#      Covariates (other traits of the same plots) enter the stage 1 models
+#      and the single-stage model. Traits measured more than once per plot
+#      (repeated measurements) are summarised per plot (mean, first, last,
+#      maximum, minimum, sum, area under the curve, slope over time) or all
+#      their measurements are modelled (date effect + plot effect).
 #   4. Selection index (weighted Z-score or Mulamba & Mock rank sum) with
 #      selection differentials and expected genetic gains.
 #   5. Environmental zoning (Lin 1982 GxE F-test grouping or genetic
@@ -29,7 +34,12 @@
 # of the script as RECIPE_JSON and the usage becomes:
 #   Rscript my_script.R <phenotype_file> <output_json>
 #
-# Author: Breedbase Analysis Pipeline
+# Optional named arguments (anywhere on the command line):
+#   --pedigree=<file>  accession, mother, father (pedigree models)
+#   --repeated=<file>  unit, trait, value, date: every measurement of the traits
+#                      measured more than once per plot (repeated measurements)
+#
+# Author: Chris Simoes ccs263@cornell.edu
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -37,7 +47,7 @@ suppressPackageStartupMessages({
   library(lme4)
 })
 
-SF_VERSION <- "1.6"
+SF_VERSION <- "1.7"
 
 # -----------------------------------------------------------------------------
 # Arguments
@@ -48,6 +58,12 @@ args <- commandArgs(trailingOnly = TRUE)
 pedigree_file <- NA
 named <- grepl("^--pedigree=", args)
 if (any(named)) pedigree_file <- sub("^--pedigree=", "", args[named][1])
+args <- args[!named]
+# optional named argument: --repeated=<file> (tab-delimited unit, trait, value,
+# date; one line per measurement of the traits measured more than once per plot)
+repeated_file <- NA
+named <- grepl("^--repeated=", args)
+if (any(named)) repeated_file <- sub("^--repeated=", "", args[named][1])
 args <- args[!named]
 
 if (exists("RECIPE_JSON")) {
@@ -73,11 +89,14 @@ if (exists("RECIPE_JSON")) {
 warnings_log <- character()
 add_warning <- function(...) {
   msg <- paste0(...)
+  if (exists("pretty_model")) msg <- pretty_model(msg)
   warnings_log <<- c(warnings_log, msg)
   message("WARNING: ", msg)
 }
 
 log_step <- function(...) message("[script_factory] ", paste0(...))
+
+n_levels <- function(x) length(unique(x[!is.na(x) & x != ""]))
 
 # safe accessor with default
 opt <- function(x, name, default) {
@@ -88,6 +107,8 @@ opt <- function(x, name, default) {
 }
 
 short_trait <- function(x) sub("\\|.*$", "", x)
+# name of the model variable of a covariate (trait)
+cov_name <- function(full) paste0("cov_", gsub("[^A-Za-z0-9]+", "_", short_trait(full)))
 
 # -----------------------------------------------------------------------------
 # Read data
@@ -245,7 +266,125 @@ if (!is.na(pedigree_file) && file.exists(pedigree_file)) {
 dat$mother <- if (!is.null(pedigree)) pedigree$mother[match(dat$accession, pedigree$accession)] else NA_character_
 dat$father <- if (!is.null(pedigree)) pedigree$father[match(dat$accession, pedigree$accession)] else NA_character_
 
+# Repeated measurements ---------------------------------------------------------
+# Traits measured more than once on a plot (trait_repeat_type 'multiple' or
+# 'time_series' in Breedbase) arrive in the phenotype file as the plot average.
+# Every measurement is in the --repeated file; recipe$repeated$traits chooses,
+# per trait, the value used for each plot:
+#   mean, first, last, max, min, sum  of the plot's measurements
+#   auc    area under the curve over the measurement dates (trapezoids, in
+#          value x days; AUDPC for disease scores)
+#   slope  change per day (least squares line over the dates)
+#   all    every measurement enters the models (repeated-measures model):
+#          a measurement date effect within trial (or a linear trend in days,
+#          recipe$repeated$time = "linear"), a random plot effect for the
+#          measurements of one plot and optionally genotype x date
+#          (recipe$repeated$gxtime). Outlier rules, zones and covariates use
+#          the plot mean of these traits.
+REP_SUMMARIES <- c("mean", "first", "last", "max", "min", "sum", "auc", "slope", "all")
+REP_LABEL <- c(mean = "mean", first = "first measurement", last = "last measurement", max = "maximum", min = "minimum",
+               sum = "sum", auc = "area under the curve", slope = "slope per day", all = "all measurements (repeated-measures model)")
+rep_cfg <- opt(recipe, "repeated", list())
+rep_time <- opt(rep_cfg, "time", "date")          # date | linear
+if (!rep_time %in% c("date", "linear")) rep_time <- "date"
+rep_gxtime <- isTRUE(opt(rep_cfg, "gxtime", FALSE))
+rep_long <- NULL
+if (!is.na(repeated_file) && file.exists(repeated_file)) {
+  rl <- tryCatch(read.delim(repeated_file, header = TRUE, sep = "\t", quote = "", comment.char = "", stringsAsFactors = FALSE,
+                            colClasses = c("character", "character", "numeric", "character"), na.strings = c("", "NA")),
+                 error = function(e) NULL)
+  if (!is.null(rl) && nrow(rl)) {
+    names(rl)[1:4] <- c("unit", "trait", "value", "date")
+    rl <- rl[!is.na(rl$value) & !is.na(rl$unit), ]
+    ts <- as.POSIXct(substr(rl$date, 1, 19), tz = "UTC", format = "%Y-%m-%d %H:%M:%S")
+    ts[is.na(ts)] <- as.POSIXct(substr(rl$date[is.na(ts)], 1, 10), tz = "UTC", format = "%Y-%m-%d")
+    rl$day <- as.numeric(ts) / 86400
+    rl$mdate <- ifelse(is.na(ts), "(no date)", format(ts, "%Y-%m-%d"))
+    rl <- rl[order(rl$trait, rl$unit, is.na(rl$day), rl$day), ]
+    rep_long <- rl
+    log_step("Repeated measurements: ", nrow(rl), " values of ", paste(short_trait(unique(rl$trait)), collapse = ", "))
+  }
+}
+# full trait name of a recipe trait name (full or short)
+match_trait <- function(x) {
+  if (x %in% names(pheno)) return(x)
+  m <- available_traits[short_trait(available_traits) == short_trait(x)]
+  if (length(m)) m[1] else NA_character_
+}
+pheno_unit <- as.character(col_or(pheno, c("observationUnitName", "plotName"), NA))
+rep_summary_fun <- function(v, day, how) {
+  ok <- !is.na(day)
+  switch(how,
+    mean = mean(v), first = v[1], last = v[length(v)], max = max(v), min = min(v), sum = sum(v),
+    auc = { if (sum(ok) < 2 || length(unique(day[ok])) < 2) NA_real_ else { x <- day[ok]; y <- v[ok]; o <- order(x); x <- x[o]; y <- y[o]; sum(diff(x) * (head(y, -1) + tail(y, -1)) / 2) } },
+    slope = { if (sum(ok) < 2 || length(unique(day[ok])) < 2) NA_real_ else unname(coef(lm(v[ok] ~ day[ok]))[2]) },
+    NA_real_)
+}
+rep_mode <- list()      # full trait -> "all" (traits modelled measurement by measurement)
+repeated_info <- list() # reported with the results
+rep_traits_cfg <- opt(rep_cfg, "traits", list())
+for (key in names(rep_traits_cfg)) {
+  how <- as.character(unlist(rep_traits_cfg[[key]]))[1]
+  if (is.na(how) || !how %in% REP_SUMMARIES) { add_warning("Repeated measurements of '", short_trait(key), "': unknown summary '", how, "'; the plot mean was used."); next }
+  full <- match_trait(key)
+  if (is.na(full)) next     # not in this dataset: reported with the traits / covariates
+  rl <- if (is.null(rep_long)) NULL else rep_long[rep_long$trait == full, ]
+  if (is.null(rl) || !nrow(rl)) {
+    if (how != "mean") add_warning(short_trait(full), " has a single measurement per plot in this dataset, so the '", REP_LABEL[[how]], "' setting for repeated measurements was not needed.")
+    next
+  }
+  n_per <- table(rl$unit)
+  info <- list(trait = short_trait(full), summary = how, label = REP_LABEL[[how]], n_plots = length(n_per),
+               n_repeated_plots = sum(n_per > 1), n_measurements = nrow(rl), n_dates = n_levels(rl$mdate[rl$mdate != "(no date)"]),
+               n_missing_summary = 0L)
+  if (how == "all") {
+    rep_mode[[full]] <- "all"
+  } else if (how != "mean") {
+    vals <- vapply(split(seq_len(nrow(rl)), rl$unit), function(i) rep_summary_fun(rl$value[i], rl$day[i], how), numeric(1))
+    new <- unname(vals[pheno_unit])
+    had <- !is.na(suppressWarnings(as.numeric(pheno[[full]])))
+    info$n_missing_summary <- sum(had & is.na(new))
+    if (info$n_missing_summary > 0)
+      add_warning(short_trait(full), ": ", info$n_missing_summary, " plot(s) have fewer than two dated measurements, so no ", REP_LABEL[[how]],
+                  " could be computed; they were left out for this trait.")
+    pheno[[full]] <- new
+  }
+  log_step("Repeated measurements of ", short_trait(full), ": ", REP_LABEL[[how]], " (", info$n_measurements, " measurements on ", info$n_plots, " plots)")
+  repeated_info[[length(repeated_info) + 1]] <- info
+}
+# traits with repeated values and no setting: Breedbase plot means (reported)
+if (!is.null(rep_long)) {
+  done <- vapply(repeated_info, function(x) x$trait, "")
+  for (full in unique(rep_long$trait)) {
+    if (short_trait(full) %in% done || !(full %in% traits)) next
+    rl <- rep_long[rep_long$trait == full, ]
+    n_per <- table(rl$unit)
+    repeated_info[[length(repeated_info) + 1]] <- list(trait = short_trait(full), summary = "mean", label = REP_LABEL[["mean"]], n_plots = length(n_per),
+                                                       n_repeated_plots = sum(n_per > 1), n_measurements = nrow(rl),
+                                                       n_dates = n_levels(rl$mdate[rl$mdate != "(no date)"]), n_missing_summary = 0L)
+  }
+}
+
 for (t in traits) dat[[t]] <- suppressWarnings(as.numeric(pheno[[t]]))
+
+# Covariates --------------------------------------------------------------------
+# Any numeric column of the phenotype file (usually another trait measured on
+# the same plots, with its repeated-measurement summary). Fixed linear effects
+# of the stage 1 models (two stages) and of the single-stage model. A trait is
+# never its own covariate. Older recipes keep them in single$covariates.
+cov_list <- unlist(opt(recipe, "covariates", opt(opt(recipe, "single", list()), "covariates", list())))
+cov_vars <- character()
+cov_label <- character()     # cov_x -> trait display name
+for (cv in unique(cov_list)) {
+  full <- match_trait(cv)
+  if (is.na(full)) { add_warning("Covariate '", short_trait(cv), "' is not in this dataset and was skipped."); next }
+  vn <- cov_name(full)
+  dat[[vn]] <- suppressWarnings(as.numeric(pheno[[full]]))
+  if (!any(!is.na(dat[[vn]]))) { add_warning("Covariate '", short_trait(cv), "' has no numeric values and was skipped."); next }
+  cov_vars <- c(cov_vars, vn)
+  cov_label[[vn]] <- short_trait(full)
+}
+if (length(cov_vars)) log_step("Covariates: ", paste(cov_label, collapse = ", "))
 for (k in names(treatment_factors)) dat[[k]] <- treatment_factors[[k]]$values
 if (length(treatment_factors)) log_step("Treatments: ", paste(vapply(treatment_factors, function(f) paste0(f$name, " (", length(unique(f$values)), " levels)"), ""), collapse = ", "),
                                         "; in the models: ", if (length(c(trt_use, trt_gxt))) paste(unique(c(trt_use, trt_gxt)), collapse = ", ") else "none")
@@ -256,7 +395,6 @@ log_step("Traits: ", paste(short_trait(traits), collapse = ", "))
 # -----------------------------------------------------------------------------
 # Design detection per trial
 # -----------------------------------------------------------------------------
-n_levels <- function(x) length(unique(x[!is.na(x) & x != ""]))
 
 detect_trial_design <- function(d, sp = NULL) {
   txt <- tolower(paste(unique(d$design_raw[!is.na(d$design_raw)]), collapse = " "))
@@ -460,11 +598,15 @@ if (out_method == "iqr") {
       fit <- tryCatch(lm(fml, data = d), error = function(e) NULL)
       if (is.null(fit) || df.residual(fit) < 2) next
       r <- residuals(fit)
-      madv <- mad(r, constant = 1.4826)
-      if (!is.finite(madv) || madv <= 0) next
-      z <- r / madv
+      # entries with a single plot have a residual of zero by construction (up
+      # to rounding): they neither enter the MAD nor can be tested
+      inf <- as.numeric(table(d$accession)[as.character(d$accession)]) > 1
+      if (sum(inf) < 3) next
+      madv <- mad(r[inf], constant = 1.4826)
+      if (!is.finite(madv) || madv <= 1e-8 * max(sd(d$y), 1e-300)) next
+      z <- r[inf] / madv
       p <- 2 * pnorm(-abs(z))
-      bad <- ii[p.adjust(p, "holm") < madr_alpha]
+      bad <- ii[inf][p.adjust(p, "holm") < madr_alpha]
       flag_outlier(bad, t, sprintf("BH-MADR (alpha = %.2g)", madr_alpha))
       dat[[t]][bad] <- NA
     }
@@ -623,289 +765,16 @@ fit_quietly <- function(expr) {
 }
 
 # -----------------------------------------------------------------------------
-# BLUPF90 engine
+# Model engine
 # -----------------------------------------------------------------------------
-# The mixed models can be fitted with blupf90+ (BLUPF90 family, Misztal et al.;
-# Fortran, sparse AI-REML) instead of lme4. Phenotype-only models. R only
-# writes the data and parameter files in the native BLUPF90 format and reads
-# the solutions back:
-#   - every factor is coded as consecutive integers here (no renumf90 needed),
-#     so the solutions map straight back to names;
-#   - fixed factors are 'cross' effects, numeric covariates 'cov' effects
-#     (nested in a factor for terms such as trial:rowN);
-#   - genotype BLUEs: when the other fixed effects need few columns they are
-#     coded as centred covariates instead, which makes each genotype solution
-#     an estimable BLUE (mean over the other fixed effects) with an exact
-#     standard error, the quantity accession_blues() computes for lme4 fits.
-# The program is looked up in $BLUPF90_DIR, then in the PATH. The parameter and
-# data files of every fit are kept in <output_prefix>_blupf90/ so the analysis
-# can be inspected or re-run outside Breedbase.
-
-f90_program <- function() {
-  dir <- Sys.getenv("BLUPF90_DIR")
-  if (nzchar(dir) && file.exists(file.path(dir, "blupf90+"))) return(file.path(dir, "blupf90+"))
-  p <- Sys.which("blupf90+")
-  if (nzchar(p)) unname(p) else ""
-}
-
-engine <- opt(recipe, "engine", "lme4")   # lme4 | blupf90
-if (!engine %in% c("lme4", "blupf90")) engine <- "lme4"
-if (engine == "blupf90" && !nzchar(f90_program())) {
-  add_warning("BLUPF90+ is not installed on the analysis server; the models were fitted with lme4 instead.")
+# This script fits every model in R (lme4, SpATS). The BLUPF90+ engine of the
+# Analysis Pipeline is not part of it: Breedbase runs recipes with
+# "engine": "blupf90" (and pedigree models) without R, in the Perl library
+# CXGN::BLUPF90 (bin/script_factory_blupf90.pl).
+engine <- opt(recipe, "engine", "lme4")
+if (!identical(engine, "lme4")) {
+  add_warning("The BLUPF90+ engine runs in Breedbase (CXGN::BLUPF90), not in this R script; the models were fitted with lme4 instead.")
   engine <- "lme4"
-}
-use_f90 <- engine == "blupf90"
-f90_keep_dir <- paste0(output_prefix, "_blupf90")
-f90_n_fits <- 0
-F90_DENSE_MAX <- 60   # max. fixed covariate columns for exact BLUE standard errors
-
-# split the right-hand side of a lme4 formula into fixed terms and random
-# grouping terms; random terms other than (1|a), (1|a:b) or (1|a/b) are
-# returned in 'unsupported'
-split_lme4_terms <- function(rhs) {
-  rhs <- gsub("\\s+", "", rhs)
-  random <- character(); unsupported <- character()
-  for (m in regmatches(rhs, gregexpr("\\([^()]*\\|[^()]*\\)", rhs))[[1]]) {
-    inner <- substr(m, 2, nchar(m) - 1)
-    lhs <- sub("\\|.*$", "", inner); grp <- sub("^[^|]*\\|", "", inner)
-    if (lhs != "1" || grepl("[^A-Za-z0-9_.:/]", grp)) { unsupported <- c(unsupported, m); next }
-    parts <- strsplit(grp, "/", fixed = TRUE)[[1]]
-    for (k in seq_along(parts)) random <- c(random, paste(parts[1:k], collapse = ":"))
-  }
-  fixed_txt <- gsub("-", "+-", gsub("\\([^()]*\\|[^()]*\\)", "", rhs), fixed = TRUE)
-  fixed <- strsplit(fixed_txt, "+", fixed = TRUE)[[1]]
-  fixed <- fixed[nzchar(fixed) & !fixed %in% c("0", "1", "-1")]
-  if (any(grepl("^-", fixed))) unsupported <- c(unsupported, fixed[grepl("^-", fixed)])
-  fixed <- fixed[!grepl("^-", fixed)]
-  list(fixed = unique(fixed), random = unique(random), unsupported = unsupported)
-}
-
-# integer codes 1..n of the combination of factor columns (0 = missing)
-f90_codes <- function(d, vars) {
-  key <- do.call(paste, c(lapply(vars, function(v) as.character(d[[v]])), sep = "\r"))
-  na <- Reduce(`|`, lapply(vars, function(v) is.na(d[[v]])))
-  f <- factor(ifelse(na, NA, key))
-  list(code = ifelse(is.na(f), 0L, as.integer(f)), n = nlevels(f), labels = gsub("\r", ":", levels(f), fixed = TRUE))
-}
-
-# Pedigree of a set of accessions: the accessions first (codes 1..n), then all
-# their known ancestors; mother / father as codes (0 = unknown).
-ped_codes <- function(acc_levels) {
-  P <- pedigree
-  keep <- character(); todo <- acc_levels
-  while (length(todo)) {
-    keep <- union(keep, todo)
-    i <- match(todo, P$accession)
-    par <- c(P$mother[i], P$father[i])
-    todo <- setdiff(par[!is.na(par)], keep)
-  }
-  ids <- c(acc_levels, setdiff(keep, acc_levels))
-  i <- match(ids, P$accession)
-  s <- match(P$mother[i], ids); d <- match(P$father[i], ids)
-  s[is.na(s)] <- 0L; d[is.na(d)] <- 0L
-  data.frame(id = ids, code = seq_along(ids), s = s, d = d, stringsAsFactors = FALSE)
-}
-
-# Fit y ~ genotype + fixed_terms + random_terms with blupf90+.
-#   d                data with columns y, accession, unit and the model variables
-#   fixed_terms      fixed terms other than the genotype (formula syntax: a, a:b, a*b, a:x)
-#   random_terms     random grouping factors, e.g. "rep_eff" or "accession:trial"
-#   genotype_random  genotype as random (BLUPs) or fixed (BLUEs)
-#   w                optional weights (residual variance divided by w)
-#   fixed_mean_by    factor over which the fixed part is averaged into the
-#                    population mean of the BLUPs (as for lme4: mean over trials)
-#   label            name of the folder the BLUPF90 files are kept in
-# Returns genotype values (value, se), variance components named as lme4
-# names them, residuals and notes.
-f90_fit <- function(d, fixed_terms = character(), random_terms = character(), genotype_random = TRUE,
-                    w = NULL, fixed_mean_by = NULL, label = "model", ped = NULL) {
-  n <- nrow(d)
-  if (n < 3) stop("not enough observations")
-  acc <- factor(d$accession)
-  if (!is.null(ped) && !genotype_random) stop("a pedigree needs the genotype as random effect")
-  notes <- character()
-
-  labs <- if (length(fixed_terms)) attr(terms(as.formula(paste("~", paste(fixed_terms, collapse = " + ")))), "term.labels") else character()
-  labs <- setdiff(labs, "accession")
-  is_num <- function(v) is.numeric(d[[v]])
-
-  # dense coding (exact BLUE standard errors) when the genotype is fixed and
-  # the other fixed effects need few columns
-  X <- matrix(numeric(0), n, 0)
-  dense <- FALSE
-  if (!genotype_random && length(labs)) {
-    fml_x <- as.formula(paste("~", paste(labs, collapse = " + ")))
-    mm <- model.matrix(fml_x, data = model.frame(fml_x, d, na.action = na.pass))
-    mm <- mm[, colnames(mm) != "(Intercept)", drop = FALSE]
-    if (ncol(mm) <= F90_DENSE_MAX) {
-      dense <- TRUE
-      Xc <- sweep(mm, 2, colMeans(mm))
-      R <- mm - apply(mm, 2, function(v) ave(v, acc))     # part not explained by the genotype
-      keep <- colSums(R^2) > 1e-8 * pmax(1, colSums(mm^2))
-      idx <- if (any(keep)) { q <- qr(R[, keep, drop = FALSE], tol = 1e-7); which(keep)[sort(q$pivot[seq_len(q$rank)])] } else integer()
-      X <- Xc[, idx, drop = FALSE]
-    }
-  }
-
-  cols <- list(y = d$y)
-  if (!is.null(w)) cols$w <- w
-  eff <- character()
-  fx <- list()          # native fixed effects: how to rebuild the fixed part
-  add_col <- function(name, v) { cols[[name]] <<- v; length(cols) }
-
-  if (!genotype_random) eff <- c(eff, paste(add_col("acc", as.integer(acc)), nlevels(acc), "cross"))
-  if (dense) {
-    for (j in seq_len(ncol(X))) eff <- c(eff, paste(add_col(paste0("x", j), X[, j]), 1, "cov"))
-  } else {
-    for (lab in labs) {
-      vars <- strsplit(lab, ":", fixed = TRUE)[[1]]
-      nums <- vars[vapply(vars, is_num, logical(1))]
-      facs <- setdiff(vars, nums)
-      if (length(nums) > 1) { notes <- c(notes, paste0(lab, " (product of covariates, not supported by BLUPF90+)")); next }
-      if (length(nums) == 1) {
-        x <- d[[nums]]; x <- x - mean(x, na.rm = TRUE); x[is.na(x)] <- 0
-        if (length(facs)) {
-          cd <- f90_codes(d, facs)
-          fpos <- add_col(paste0("f_", lab), cd$code)
-          xpos <- add_col(paste0("x_", lab), x)
-          eff <- c(eff, paste(xpos, cd$n, "cov", fpos))
-          fx[[length(fx) + 1]] <- list(effect = length(eff), code = cd$code, x = x)
-        } else {
-          eff <- c(eff, paste(add_col(paste0("x_", lab), x), 1, "cov"))
-          fx[[length(fx) + 1]] <- list(effect = length(eff), code = rep(1L, n), x = x)
-        }
-      } else {
-        cd <- f90_codes(d, facs)
-        if (cd$n < 2) next
-        eff <- c(eff, paste(add_col(paste0("f_", lab), cd$code), cd$n, "cross"))
-        fx[[length(fx) + 1]] <- list(effect = length(eff), code = cd$code, x = rep(1, n), name = lab, labels = cd$labels)
-      }
-    }
-  }
-  # overall mean when nothing else absorbs it
-  if (genotype_random && !any(vapply(fx, function(f) all(f$x == 1), logical(1)))) {
-    eff <- c(eff, paste(add_col("mu", rep(1L, n)), 1, "cross"))
-    fx[[length(fx) + 1]] <- list(effect = length(eff), code = rep(1L, n), x = rep(1, n))
-  }
-
-  first_random <- length(eff) + 1
-  rcodes <- list()
-  if (genotype_random) {
-    rcodes$accession <- if (is.null(ped)) list(code = as.integer(acc), n = nlevels(acc), labels = levels(acc))
-                        else list(code = match(as.character(acc), ped$id), n = nrow(ped), labels = ped$id)
-  }
-  for (rt in random_terms) {
-    cd <- f90_codes(d, strsplit(rt, ":", fixed = TRUE)[[1]])
-    if (cd$n >= 2) rcodes[[rt]] <- cd
-  }
-  for (rt in names(rcodes)) eff <- c(eff, paste(add_col(paste0("r_", rt), rcodes[[rt]]$code), rcodes[[rt]]$n, "cross"))
-  n_random <- length(rcodes)
-  if (n_random == 0) stop("the model has no random effect")
-
-  f90_n_fits <<- f90_n_fits + 1
-  wd <- file.path(f90_keep_dir, sprintf("%03d_%s", f90_n_fits, gsub("[^A-Za-z0-9_.-]+", "_", label)))
-  dir.create(wd, recursive = TRUE, showWarnings = FALSE)
-  data_mat <- as.data.frame(cols)
-  write.table(format(data_mat, digits = 15, scientific = FALSE, trim = TRUE), file.path(wd, "data.txt"),
-              quote = FALSE, row.names = FALSE, col.names = FALSE)
-  writeLines(names(cols), file.path(wd, "data_columns.txt"))
-  v0 <- max(var(d$y), 1e-6) / (n_random + 1)
-  par <- c("# BLUPF90+ parameter file written by the Breedbase Analysis Pipeline",
-           paste0("# model: y ~ ", if (genotype_random) "(1|accession)" else "accession",
-                  if (length(labs)) paste0(" + ", paste(labs, collapse = " + ")),
-                  if (length(random_terms)) paste0(" + ", paste0("(1|", names(rcodes)[names(rcodes) != "accession"], ")", collapse = " + ")),
-                  if (dense) "   [fixed effects other than accession as centred covariates]"),
-           "# columns of data.txt: see data_columns.txt",
-           "DATAFILE", "data.txt", "NUMBER_OF_TRAITS", "1", "NUMBER_OF_EFFECTS", length(eff),
-           "OBSERVATION(S)", "1", "WEIGHT(S)", if (is.null(w)) "" else "2",
-           "EFFECTS: POSITIONS_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT[EFFECT NESTED]", eff,
-           "RANDOM_RESIDUAL VALUES", format(v0, digits = 10))
-  for (k in seq_len(n_random)) {
-    animal <- !is.null(ped) && names(rcodes)[k] == "accession"
-    par <- c(par, "RANDOM_GROUP", first_random + k - 1, "RANDOM_TYPE", if (animal) "add_animal" else "diagonal",
-             "FILE", if (animal) "pedigree.txt" else "", "(CO)VARIANCES", format(v0, digits = 10))
-  }
-  par <- c(par, "OPTION method VCE", "OPTION use_yams", "OPTION sol se", "OPTION missing -999999999", "OPTION residual",
-           "OPTION conv_crit 1e-9", "OPTION maxrounds 200")
-  writeLines(par[!grepl("^#", par)], file.path(wd, "f90.par"))
-  if (!is.null(ped)) {
-    # animal, mother, father, 3 - number of known parents (BLUPF90 add_animal)
-    write.table(data.frame(ped$code, ped$s, ped$d, 3L - (ped$s > 0) - (ped$d > 0)), file.path(wd, "pedigree.txt"),
-                quote = FALSE, row.names = FALSE, col.names = FALSE)
-  }
-  writeLines(par[grepl("^#", par)], file.path(wd, "README.txt"))
-  for (f in fx) if (!is.null(f$labels)) {
-    write.table(data.frame(code = seq_along(f$labels), level = f$labels),
-                file.path(wd, paste0("levels_", gsub(":", "_x_", f$name), ".txt")), sep = "\t", quote = FALSE, row.names = FALSE)
-  }
-  if (!genotype_random) write.table(data.frame(code = seq_len(nlevels(acc)), level = levels(acc)), file.path(wd, "levels_accession.txt"), sep = "\t", quote = FALSE, row.names = FALSE)
-  for (k in names(rcodes)) {
-    # level codes of each random effect, to read the solutions file by name
-    write.table(data.frame(code = seq_len(rcodes[[k]]$n), level = rcodes[[k]]$labels),
-                file.path(wd, paste0("levels_", gsub(":", "_x_", k), ".txt")), sep = "\t", quote = FALSE, row.names = FALSE)
-  }
-
-  # blupf90+ keeps large arrays on the stack (segfaults with the 8 MB default)
-  cmd <- paste("ulimit -s unlimited 2>/dev/null || ulimit -s $(ulimit -H -s) 2>/dev/null;",
-               "export OMP_STACKSIZE=64M; cd", shQuote(wd), "&& echo f90.par |", shQuote(f90_program()), "> blupf90.out 2>&1")
-  t0 <- proc.time()[["elapsed"]]
-  system(cmd)
-  elapsed <- proc.time()[["elapsed"]] - t0
-  out <- tryCatch(readLines(file.path(wd, "blupf90.out")), error = function(e) character())
-  sol_file <- file.path(wd, "solutions")
-  if (!file.exists(sol_file)) {
-    stop("blupf90+ failed: ", paste(utils::tail(trimws(out[nzchar(trimws(out))]), 2), collapse = " | "))
-  }
-  sol <- read.table(sol_file, skip = 1, col.names = c("trait", "effect", "level", "solution", "se"))
-  fe <- utils::tail(grep("Final Estimates", out), 1)
-  if (!length(fe)) stop("blupf90+ did not converge: ", paste(utils::tail(trimws(out), 2), collapse = " | "))
-  blk <- out[fe:length(out)]
-  vc <- c()
-  for (i in grep("variance\\(s\\) for effect", blk)) {
-    e <- as.integer(sub(".*effect\\s+([0-9]+).*", "\\1", blk[i]))
-    vc[names(rcodes)[e - first_random + 1]] <- as.numeric(trimws(blk[i + 1]))
-  }
-  vc["Residual"] <- as.numeric(trimws(blk[grep("Residual variance", blk)[1] + 1]))
-  if (any(!is.finite(vc))) stop("blupf90+ returned invalid variance components")
-  rounds <- length(grep("In round", out))
-  if (rounds >= 200) notes <- c(notes, "AI-REML stopped at 200 rounds before full convergence")
-
-  yr <- tryCatch(read.table(file.path(wd, "yhat_residual")), error = function(e) NULL)
-  resid <- if (!is.null(yr) && nrow(yr) == n) yr[[ncol(yr)]] else rep(NA_real_, n)
-  unlink(file.path(wd, c("fspak90.ord", "AI_inv.mat", "yhat_residual")))
-
-  # fixed part of every observation (estimable whatever generalized inverse
-  # blupf90+ used for redundant equations)
-  fixed_part <- rep(0, n)
-  for (f in fx) {
-    s <- sol[sol$effect == f$effect, ]
-    b <- s$solution[match(f$code, s$level)]
-    b[is.na(b)] <- 0
-    fixed_part <- fixed_part + b * f$x
-  }
-  # solutions of every random effect, by level name
-  random <- list()
-  for (k in seq_along(rcodes)) {
-    u <- sol[sol$effect == first_random + k - 1, ]
-    random[[names(rcodes)[k]]] <- data.frame(level = rcodes[[k]]$labels[u$level], solution = u$solution, se = u$se, stringsAsFactors = FALSE)
-  }
-  e1 <- sol[sol$effect == 1, ]
-  mu <- if (!is.null(fixed_mean_by)) mean(tapply(fixed_part, fixed_mean_by, mean)) else mean(fixed_part)
-  if (genotype_random) {
-    u <- random$accession
-    gv <- data.frame(accession = levels(acc), stringsAsFactors = FALSE)
-    i <- match(gv$accession, u$level)
-    gv$value <- mu + u$solution[i]; gv$se <- u$se[i]
-  } else {
-    # dense coding: the solution is the BLUE; native coding: genotype solution
-    # plus the mean fixed part (estimable for connected data), no exact SE
-    gv <- data.frame(accession = levels(acc)[e1$level], value = e1$solution + mean(fixed_part),
-                     se = if (dense || !length(fx)) e1$se else NA_real_, stringsAsFactors = FALSE)
-    if (!dense && length(fx)) notes <- c(notes, paste0("standard errors of the BLUEs are not reported: the fixed effects other than accession need more than ", F90_DENSE_MAX, " columns"))
-  }
-  log_step("  blupf90+ ", label, ": ", n, " records, ", rounds, " AI-REML rounds, ", sprintf("%.1f s", elapsed))
-  list(values = gv, vc = vc, resid = resid, notes = notes, seconds = elapsed, rounds = rounds, dir = wd,
-       random = random, mu = mu, engine = "BLUPF90+")
 }
 
 # -----------------------------------------------------------------------------
@@ -914,9 +783,10 @@ f90_fit <- function(d, fixed_terms = character(), random_terms = character(), ge
 gen_cfg <- opt(recipe, "genetic", list())
 gen_model <- opt(gen_cfg, "model", "iid")      # iid | parents | pedigree
 check_opt <- opt(gen_cfg, "check", "auto")     # auto | fixed | none
-if (!gen_model %in% c("iid", "parents", "pedigree")) gen_model <- "iid"
-if (gen_model == "pedigree" && !nzchar(f90_program())) {
-  add_warning("The pedigree (A matrix) model is fitted with BLUPF90+, which is not installed on this server; accessions were treated as unrelated.")
+if (!gen_model %in% c("iid", "parents", "pedigree", "genomic", "single_step")) gen_model <- "iid"
+if (gen_model %in% c("pedigree", "genomic", "single_step")) {
+  add_warning("The ", c(pedigree = "pedigree (A matrix)", genomic = "genomic (G matrix)", single_step = "single-step (H matrix)")[[gen_model]],
+              " model runs on the BLUPF90+ engine of Breedbase, not in this R script; accessions were treated as unrelated.")
   gen_model <- "iid"
 }
 if (gen_model != "iid") {
@@ -934,26 +804,9 @@ acc_is_check <- tapply(dat$check == "check", dat$accession, any)
 # (pedigree model) and notes.
 fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model") {
   rhs <- sub("^\\s*y\\s*~", "", fml_txt)
-  sp <- split_lme4_terms(rhs)
   has_random <- grepl("\\|", rhs)
-  ped_on <- genotype_random && gen_model == "pedigree" && "accession" %in% sp$random
   notes <- character()
   fit <- NULL
-  # Pedigree (A matrix) models are fitted with BLUPF90+ whatever the engine of
-  # the recipe; without BLUPF90+ the accessions are treated as unrelated (lme4).
-  if (ped_on && !nzchar(f90_program())) {
-    notes <- c(notes, "the pedigree model needs BLUPF90+, which is not installed; accessions were treated as unrelated")
-  } else if ((use_f90 || ped_on) && has_random) {
-    if (length(sp$unsupported)) {
-      notes <- c(notes, paste0("BLUPF90+ cannot fit ", paste(sp$unsupported, collapse = ", "), "; lme4 was used",
-                               if (ped_on) " and accessions were treated as unrelated"))
-    } else {
-      fit <- tryCatch(f90_fit(d, setdiff(sp$fixed, "accession"), setdiff(sp$random, "accession"), genotype_random,
-                              w = w, fixed_mean_by = d$trial, label = label, ped = if (ped_on) ped_codes(levels(factor(d$accession)))),
-                      error = function(e) { notes <<- c(notes, paste0("BLUPF90+ failed (", conditionMessage(e), "); lme4 was used",
-                                                                      if (ped_on) " and accessions were treated as unrelated")); NULL })
-    }
-  }
   if (is.null(fit)) {
     # lme4 / lm; unknown parents become one '(unknown)' level
     for (v in intersect(c("mother", "father"), all.vars(as.formula(fml_txt)))) d[[v]] <- ifelse(is.na(d[[v]]), "(unknown)", d[[v]])
@@ -984,8 +837,7 @@ fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model") {
   }
   fit$notes <- c(notes, fit$notes)
   fit$ancestors <- NULL
-  # whether the pedigree was really used (R/lme4 fallbacks treat accessions as unrelated)
-  fit$pedigree <- isTRUE(ped_on) && !identical(fit$engine, "R")
+  fit$pedigree <- FALSE
   if (genotype_random) {
     gv <- fit$values
     # mother / father (GCA-like) effects are part of the genetic value
@@ -1001,12 +853,6 @@ fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model") {
       }
     }
     fit$values <- gv
-    # breeding values of ancestors without phenotypes (pedigree model)
-    if (ped_on && !is.null(fit$random$accession)) {
-      a <- fit$random$accession
-      a <- a[!a$level %in% gv$accession, ]
-      if (nrow(a)) fit$ancestors <- data.frame(accession = a$level, value = fit$mu + a$solution, se = a$se, stringsAsFactors = FALSE)
-    }
   }
   fit
 }
@@ -1038,7 +884,6 @@ model_text <- function(design, terms, genotype_random) {
 # -----------------------------------------------------------------------------
 # Helpers for the single-stage model, residuals and variance components
 # -----------------------------------------------------------------------------
-cov_name <- function(full) paste0("cov_", gsub("[^A-Za-z0-9]+", "_", short_trait(full)))
 
 # factors used by the single-stage models (builder and custom formula)
 add_model_factors <- function(d) {
@@ -1101,10 +946,71 @@ variance_components <- list()
 s1_cfg <- opt(recipe, "stage1", list())
 s1_model <- opt(s1_cfg, "model", "auto")   # auto | spats | design
 
+# Repeated measurements: one row per measurement of the plots of d (plots
+# whose value is missing or excluded keep none). Adds
+#   mdate   measurement date (YYYY-MM-DD, "(no date)" when not recorded)
+#   mday    days since the trial's first measurement
+#   tr_date date within trial (factor): the first date of every trial is one
+#           common reference level, so the term holds only the change over
+#           the dates of each trial and can sit next to a trial effect
+#   plot_u  the plot (factor)
+expand_repeated <- function(d, trait) {
+  d <- d[!is.na(d$y), , drop = FALSE]
+  rl <- rep_long[rep_long$trait == trait & rep_long$unit %in% d$unit, ]
+  only <- setdiff(d$unit, rl$unit)       # plots without a measurement list: their single value
+  e <- d[c(match(rl$unit, d$unit), match(only, d$unit)), , drop = FALSE]
+  e$y <- c(rl$value, d$y[match(only, d$unit)])
+  e$mdate <- c(rl$mdate, rep("(no date)", length(only)))
+  e$day <- c(rl$day, rep(NA_real_, length(only)))
+  first <- ave(e$day, e$trial, FUN = function(x) if (all(is.na(x))) rep(NA_real_, length(x)) else rep(min(x, na.rm = TRUE), length(x)))
+  e$mday <- e$day - first
+  first_date <- ave(e$mdate, e$trial, FUN = function(x) rep(sort(unique(x))[1], length(x)))
+  e$tr_date <- factor(ifelse(e$mdate == first_date, "(first date)", paste(e$trial, e$mdate)))
+  e$date_f <- factor(e$mdate)
+  e$plot_u <- factor(e$unit)
+  rownames(e) <- NULL
+  e
+}
+# time effect of a repeated-measures model on data e: "date" (date factor),
+# "linear" (days) or "none" (one date per trial or no dates)
+rep_time_effect <- function(e) {
+  n_tr <- n_levels(e$trial)
+  if (rep_time == "linear" && all(!is.na(e$mday)) && n_levels(e$mday) > n_tr) return("linear")
+  if (n_levels(e$tr_date) > 1) return("date")
+  "none"
+}
+# model variables as shown in the results
+pretty_model <- function(x) {
+  x <- gsub("\\btr_date\\b", "date", x); x <- gsub("\\bdate_f\\b", "date", x)
+  x <- gsub("\\bplot_u\\b", "plot", x); gsub("\\bmday\\b", "days", x)
+}
+rep_warned <- character()
+rep_warn_once <- function(key, ...) { if (!(key %in% rep_warned)) { rep_warned <<- c(rep_warned, key); add_warning(...) } }
+# harmonic mean of the number of plots per accession and of measurements per plot
+plots_per_acc <- function(d) { u <- unique(data.frame(a = as.character(d$accession), p = as.character(d$unit))); 1 / mean(1 / as.numeric(table(u$a))) }
+meas_per_plot <- function(d) 1 / mean(1 / as.numeric(table(as.character(d$unit))))
+
+# covariates of one trial: present on most plots and not constant (a
+# covariate constant within the trial is held by the intercept)
+trial_covariates <- function(d, trait) {
+  Filter(function(cv) cv != cov_name(trait) && sum(!is.na(d[[cv]])) > 0.5 * nrow(d) && n_levels(d[[cv]]) > 1, cov_vars)
+}
+
 fit_stage1 <- function(d, info, trait) {
   d <- d[!is.na(d$y), ]
+  # covariates: plots without a value of a covariate the trial uses are left out
+  cv_fx <- trial_covariates(d, trait)
+  if (length(cv_fx)) {
+    cc <- complete.cases(d[, cv_fx, drop = FALSE])
+    if (any(!cc)) add_warning("Stage 1, ", info$trial, " / ", short_trait(trait), ": ", sum(!cc), " plot(s) without a covariate value were left out.")
+    d <- d[cc, ]
+  }
+  for (cv in setdiff(cov_vars, c(cv_fx, cov_name(trait))))
+    rep_warn_once(paste("cov", info$trial, cv), "Stage 1, ", info$trial, ": covariate ", cov_label[[cv]], " is missing or constant in this trial and was not used there.")
+  cv_lab <- if (length(cv_fx)) paste0(" + ", paste(cv_fx, collapse = " + ")) else ""
+  rep_all <- identical(rep_mode[[trait]], "all")
   res <- list(trial = info$trial, trait = short_trait(trait), design = info$design_label,
-              n = nrow(d), n_accessions = n_levels(d$accession), mean = mean(d$y),
+              n = nrow(d), n_measurements = nrow(d), n_accessions = n_levels(d$accession), mean = mean(d$y),
               cv = NA_real_, h2 = NA_real_, var_g = NA_real_, var_e = NA_real_, model = "", message = "OK")
   if (nrow(d) < 3 || n_levels(d$accession) < 2) {
     res$message <- "Not enough data"
@@ -1135,7 +1041,7 @@ fit_stage1 <- function(d, info, trait) {
   # Too few replicated plots, or replicated plots with identical values: no
   # model can estimate an error variance (augmented trials with a few checks
   # scored on a 1-9 scale, for example). Use the accession means.
-  df_res <- nrow(d) - n_levels(d$accession) - max(0, n_levels(d$rep_eff) - 1) - trt_df
+  df_res <- nrow(d) - n_levels(d$accession) - max(0, n_levels(d$rep_eff) - 1) - trt_df - length(cv_fx)
   within <- tapply(d$y, d$accession, function(v) if (length(v) > 1) sum((v - mean(v))^2) else 0)
   if (df_res < 2 || sum(within) <= 1e-10 * max(1, sum((d$y - mean(d$y))^2))) {
     why <- if (df_res < 2) sprintf("only %d residual degree(s) of freedom", max(0, df_res)) else "the replicated plots have identical values"
@@ -1145,6 +1051,20 @@ fit_stage1 <- function(d, info, trait) {
 
 
   use_spats <- (s1_model == "spats" || (s1_model == "auto" && info$has_rowcol)) && info$has_rowcol
+
+  # repeated measurements of this trait modelled one by one: date effect (or
+  # linear trend in days), random plot effect, optional genotype x date
+  rep_fx <- character(); rep_rnd <- character()
+  if (rep_all) {
+    d <- expand_repeated(d, trait)
+    res$n_measurements <- nrow(d)
+    time_eff <- rep_time_effect(d)
+    if (time_eff == "date") rep_fx <- "date_f" else if (time_eff == "linear") rep_fx <- "mday"
+    if (any(table(as.character(d$unit)) > 1)) rep_rnd <- "(1|plot_u)"
+    if (rep_gxtime && time_eff == "date") rep_rnd <- c(rep_rnd, "(1|accession:date_f)")
+    if (use_spats) rep_warn_once(paste("spats", trait), short_trait(trait), ": SpATS does not model repeated measurements of a plot; the design model with a date and a plot effect was used in stage 1.")
+    use_spats <- FALSE
+  }
 
   if (use_spats && requireNamespace("SpATS", quietly = TRUE)) {
     nr <- n_levels(d$row); nc <- n_levels(d$col)
@@ -1157,8 +1077,8 @@ fit_stage1 <- function(d, info, trait) {
     # with the spatial surface, so fall back to replicate as random effect.
     fx <- function(v) if (length(v)) as.formula(paste("~", paste(v, collapse = " + "))) else NULL
     specs <- list(
-      list(fixed = fx(c(if (has_rep) "rep_eff", trt_fx)), random = rc_random, label = paste0(if (has_rep) " + rep" else "", trt_lab), rlabel = ""),
-      list(fixed = fx(trt_fx), random = c(if (has_rep) "rep_eff", rc_random), label = trt_lab, rlabel = if (has_rep) " + (1|rep)" else "")
+      list(fixed = fx(c(if (has_rep) "rep_eff", trt_fx, cv_fx)), random = rc_random, label = paste0(if (has_rep) " + rep" else "", trt_lab, cv_lab), rlabel = ""),
+      list(fixed = fx(c(trt_fx, cv_fx)), random = c(if (has_rep) "rep_eff", rc_random), label = paste0(trt_lab, cv_lab), rlabel = if (has_rep) " + (1|rep)" else "")
     )
     if (!has_rep) specs <- specs[1]
     spats_fit <- function(spec, g_random) {
@@ -1195,39 +1115,31 @@ fit_stage1 <- function(d, info, trait) {
 
   # Design based model -------------------------------------------------------
   design <- info$design
-  terms <- design_terms(design, d)
-
-  # BLUPF90+: same model, genotype fixed (BLUEs, residual variance) and random
-  # (genotypic variance, heritability). Designs without random terms are plain
-  # least squares and stay in R.
-  if (use_f90 && length(terms)) {
-    rterms <- sub("^\\(1\\|(.*)\\)$", "\\1", terms)
-    lab <- paste0("stage1_", info$trial, "_", short_trait(trait))
-    fF <- tryCatch(f90_fit(d, trt_fx, rterms, FALSE, label = paste0(lab, "_blue")), error = function(e) e)
-    if (!inherits(fF, "error")) {
-      res$model <- paste0("BLUPF90+: ", model_text(design, c(trt_fx, terms), FALSE))
-      res$var_e <- unname(fF$vc["Residual"])
-      fR <- tryCatch(f90_fit(d, trt_fx, rterms, TRUE, label = paste0(lab, "_blup")), error = function(e) e)
-      if (!inherits(fR, "error")) {
-        res$var_g <- unname(fR$vc["accession"])
-        r_bar <- 1 / mean(1 / as.numeric(table(d$accession)))
-        res$h2 <- unname(res$var_g / (res$var_g + fR$vc["Residual"] / r_bar))
-      }
-      res$cv <- 100 * sqrt(res$var_e) / abs(res$mean)
-      return(list(summary = res, means = fF$values, resid = data.frame(unit = d$unit, resid = fF$resid)))
-    }
-    add_warning("BLUPF90+ could not fit ", info$trial, " / ", short_trait(trait), " (", conditionMessage(fF), "); lme4 was used for this trial.")
+  terms <- c(design_terms(design, d), rep_rnd)
+  fx_all <- c(trt_fx, cv_fx, rep_fx)
+  # h2 on an accession-mean basis: plots per accession, measurements per plot
+  h2_of <- function(vg, vc) {
+    r <- plots_per_acc(d); m <- meas_per_plot(d)
+    vp <- if ("plot_u" %in% names(vc)) vc[["plot_u"]] else 0
+    vgt <- if ("accession:date_f" %in% names(vc)) vc[["accession:date_f"]] / n_levels(d$date_f) else 0
+    unname(vg / (vg + vgt + (vp + vc[["Residual"]] / m) / r))
+  }
+  # one residual per plot (mean over its measurements)
+  plot_resid <- function(r) {
+    if (!rep_all) return(data.frame(unit = d$unit, resid = as.numeric(r)))
+    a <- tapply(as.numeric(r), as.character(d$unit), mean)
+    data.frame(unit = names(a), resid = as.numeric(a))
   }
 
-  fml_fixed <- as.formula(model_text(design, c(trt_fx, terms), FALSE))
+  fml_fixed <- as.formula(model_text(design, c(fx_all, terms), FALSE))
   fit <- if (length(terms)) fit_quietly(lmer(fml_fixed, data = d, REML = TRUE)) else fit_quietly(lm(fml_fixed, data = d))
   if (inherits(fit, "error")) {
-    # fall back to the simplest model
-    terms <- character()
-    fml_fixed <- y ~ accession
-    fit <- fit_quietly(lm(y ~ accession, data = d))
+    # fall back to the simplest model (the plot effect stays for repeated measurements)
+    terms <- intersect(rep_rnd, "(1|plot_u)")
+    fml_fixed <- as.formula(model_text(design, terms, FALSE))
+    fit <- if (length(terms)) fit_quietly(lmer(fml_fixed, data = d, REML = TRUE)) else fit_quietly(lm(y ~ accession, data = d))
     if (inherits(fit, "error")) { res$message <- conditionMessage(fit); return(list(summary = res, means = NULL)) }
-    res$message <- "Design model failed; fitted y ~ accession."
+    res$message <- paste0("Design model failed; fitted ", paste(deparse(fml_fixed, width.cutoff = 500), collapse = ""), ".")
   }
   if (!inherits(fit, "merMod") && df.residual(fit) < 1) {
     res$message <- "No residual degrees of freedom"
@@ -1239,17 +1151,15 @@ fit_stage1 <- function(d, info, trait) {
   if (length(lost)) add_warning("Stage 1, ", info$trial, " / ", short_trait(trait), ": ", paste(lost, collapse = "; "), ".")
   res$var_e <- if (inherits(fit, "merMod")) sigma(fit)^2 else summary(fit)$sigma^2
 
-  fml_random <- as.formula(model_text(design, c(trt_fx, terms), TRUE))
+  fml_random <- as.formula(model_text(design, c(fx_all, terms), TRUE))
   fr <- fit_quietly(lmer(fml_random, data = d, REML = TRUE))
   if (!inherits(fr, "error")) {
     vc <- var_comp(fr)
     res$var_g <- unname(vc["accession"])
-    r_bar <- 1 / mean(1 / as.numeric(table(d$accession)))
-    res$h2 <- res$var_g / (res$var_g + vc["Residual"] / r_bar)
-    res$h2 <- unname(res$h2)
+    res$h2 <- h2_of(res$var_g, vc)
   }
   res$cv <- 100 * sqrt(res$var_e) / abs(res$mean)
-  list(summary = res, means = means, resid = data.frame(unit = d$unit, resid = as.numeric(residuals(fit))))
+  list(summary = res, means = means, resid = plot_resid(residuals(fit)))
 }
 
 # -----------------------------------------------------------------------------
@@ -1290,7 +1200,7 @@ if (run_stage1) {
         m <- aggregate(y ~ accession, data = d, FUN = mean)
         list(summary = NULL, means = data.frame(accession = m$accession, value = m$y, se = NA_real_))
       }
-      if (!is.null(r$summary)) stage1_summary[[length(stage1_summary) + 1]] <- as.data.frame(r$summary, stringsAsFactors = FALSE)
+      if (!is.null(r$summary)) { r$summary$model <- pretty_model(r$summary$model); stage1_summary[[length(stage1_summary) + 1]] <- as.data.frame(r$summary, stringsAsFactors = FALSE) }
       if (!is.null(r$resid)) add_residuals(r$resid$unit, t, r$resid$resid)
       if (!is.null(r$means) && nrow(r$means)) {
         r$means$trial <- tr
@@ -1367,8 +1277,7 @@ if (strategy == "two_stage") {
       variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = comp, variance = unname(vc), stringsAsFactors = FALSE)
       res$engine_used <- f2$engine
       res$pedigree_used <- isTRUE(f2$pedigree)
-      res$model <- paste0(c(BLUPF90 = "BLUPF90+: ", R = "")[[sub("\\+$", "", f2$engine)]],
-                          sub("^y ~", "BLUE ~", fml_txt), if (isTRUE(f2$pedigree)) ", accession ~ N(0, A s2a)",
+      res$model <- paste0(sub("^y ~", "BLUE ~", fml_txt), if (isTRUE(f2$pedigree)) ", accession ~ N(0, A s2a)",
                           if (weighting == "inverse_se2") ", weights = 1/SE^2" else "")
       if (!is.null(f2$ancestors)) { f2$ancestors$trait <- t; ancestor_values[[length(ancestor_values) + 1]] <- f2$ancestors }
     }
@@ -1388,17 +1297,6 @@ if (strategy == "two_stage") {
   ss_rowcol <- opt(ss_cfg, "rowcol", "auto")       # auto | random | none
   ss_trend <- opt(ss_cfg, "trend", "none")         # none | linear
   ss_gxe <- unlist(opt(ss_cfg, "gxe", if (identical(opt(ss_cfg, "include_gxe", TRUE), FALSE)) list() else list("trial")))
-  ss_cov <- unlist(opt(ss_cfg, "covariates", list()))
-
-  # covariates: any numeric column of the phenotype file (usually another trait)
-  cov_vars <- character()
-  for (cv in ss_cov) {
-    full <- if (cv %in% names(pheno)) cv else available_traits[short_trait(available_traits) == short_trait(cv)][1]
-    if (is.na(full) || is.null(full)) { add_warning("Covariate '", short_trait(cv), "' is not in this dataset and was skipped."); next }
-    vn <- cov_name(full)
-    dat[[vn]] <- suppressWarnings(as.numeric(pheno[[full]]))
-    cov_vars <- c(cov_vars, vn)
-  }
 
   if (ss_mode == "custom") {
     custom <- parse_custom_formula(opt(ss_cfg, "formula", ""), c(cov_vars, names(treatment_factors)))
@@ -1410,10 +1308,28 @@ if (strategy == "two_stage") {
     d$y <- d[[t]]
     if (nrow(d) < 3) next
     log_step("Single stage: ", short_trait(t))
+    # repeated measurements modelled one by one: one row per measurement
+    rep_all <- identical(rep_mode[[t]], "all")
+    if (rep_all) d <- expand_repeated(d, t)
     d <- add_model_factors(d)
     n_tr <- n_levels(d$trial)
     dropped <- character()
     used_vars <- c("y", "accession")
+    # terms of the repeated-measures model: date within trial (or linear trend
+    # in days), plot effect, genotype x date
+    rep_terms <- function() {
+      out <- character(); time_eff <- rep_time_effect(d)
+      if (time_eff == "date") out <- c(out, "tr_date")
+      if (time_eff == "linear") out <- c(out, if (n_tr > 1) "trial:mday" else "mday")
+      if (time_eff == "none") dropped <<- c(dropped, "measurement date (one date per trial or no dates recorded)")
+      if (any(table(as.character(d$unit)) > 1)) out <- c(out, "(1|plot_u)")
+      if (rep_gxtime) {
+        if (time_eff == "date") out <- c(out, "(1|accession:trial:date_f)")
+        else dropped <<- c(dropped, "accession x date (needs several measurement dates and the date effect)")
+      }
+      used_vars <<- unique(c(used_vars, "plot_u", if (time_eff == "date") c("tr_date", "date_f"), if (time_eff == "linear") c("trial", "mday")))
+      out
+    }
 
     if (ss_mode == "custom") {
       if (cov_name(t) %in% custom$vars) { add_warning(short_trait(t), " is a covariate of the custom formula; it cannot be analysed with its own value as covariate and was skipped."); next }
@@ -1433,6 +1349,13 @@ if (strategy == "two_stage") {
         next
       }
       used_vars <- unique(c(used_vars, setdiff(custom$vars, c("mother", "father"))))   # unknown parents are allowed
+      if (rep_all) {
+        rt <- rep_terms()
+        if (length(rt)) {
+          fml_txt <- paste(fml_txt, "+", paste(rt, collapse = " + "))
+          rep_warn_once(paste("custom", t), short_trait(t), ": all its repeated measurements are modelled; ", paste(pretty_model(rt), collapse = " + "), " was added to the custom formula.")
+        }
+      }
     } else {
       designs <- vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$design, character(1))
       all_rc <- all(vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$has_rowcol, logical(1)))
@@ -1443,6 +1366,7 @@ if (strategy == "two_stage") {
       }
       # environment (trial) main effect
       if (ss_env != "none") add_term(if (ss_env == "random") "(1|trial)" else "trial", n_tr > 1, "trial (only one trial)", "trial")
+      if (rep_all) terms <- c(terms, rep_terms())
       # why a design factor is not in the model: the factor_support() reasons
       why_off <- function(f) paste(unique(vapply(unique(as.character(d$trial)), function(x) trial_info[[x]]$support[[f]]$why, "")) , collapse = ", ")
       # replicates within trials
@@ -1490,7 +1414,7 @@ if (strategy == "two_stage") {
         ok <- sum(!is.na(d[[cv]])) > 0.5 * nrow(d) && n_levels(d[[cv]]) > 1
         # constant within every trial: held by a fixed trial effect
         held <- ok && ss_env == "fixed" && n_tr > 1 && !any(tapply(d[[cv]], d$trial, function(x) n_levels(x) > 1))
-        add_term(cv, ok && !held, paste0("covariate ", sub("^cov_", "", cv), if (held) " (constant within each trial: held by the trial effect)" else " (missing or constant)"), cv)
+        add_term(cv, ok && !held, paste0("covariate ", cov_label[[cv]], if (held) " (constant within each trial: held by the trial effect)" else " (missing or constant)"), cv)
       }
       # checks vs test entries (separates the check mean from the population
       # the BLUPs shrink to); only with the genotype random
@@ -1518,7 +1442,8 @@ if (strategy == "two_stage") {
     res <- list(trait = short_trait(t), n_trials = n_tr, n_accessions = n_levels(d$accession), mean = mean(d$y),
                 var_g = NA_real_, var_ge = NA_real_, var_e = NA_real_, h2 = NA_real_, model = "",
                 dropped_terms = paste(dropped, collapse = "; "), message = "OK", engine_used = NA_character_, pedigree_used = FALSE)
-    r_bar <- 1 / mean(1 / as.numeric(table(d$accession)))
+    r_bar <- plots_per_acc(d)
+    m_bar <- meas_per_plot(d)
     f1 <- tryCatch(fit_model(d, fml_txt, genotype_random, label = paste0("single_", short_trait(t))), error = function(e) e)
     if (inherits(f1, "error")) {
       res$message <- conditionMessage(f1)
@@ -1530,8 +1455,8 @@ if (strategy == "two_stage") {
     vc <- f1$vc
     res$engine_used <- f1$engine
     res$pedigree_used <- isTRUE(f1$pedigree)
-    res$model <- paste0(c(BLUPF90 = "BLUPF90+: ", R = "")[[sub("\\+$", "", f1$engine)]], fml_txt,
-                        if (isTRUE(f1$pedigree)) ", accession ~ N(0, A s2a)")
+    res$model <- pretty_model(paste0(fml_txt,
+                        if (isTRUE(f1$pedigree)) ", accession ~ N(0, A s2a)"))
     res$var_e <- unname(vc["Residual"])
     gv <- f1$values
     rs <- f1$resid
@@ -1540,7 +1465,7 @@ if (strategy == "two_stage") {
     for (k in names(vc)) {
       lab <- k
       for (v in names(treatment_factors)) lab <- sub(v, treatment_factors[[v]]$name, lab, fixed = TRUE)
-      variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = lab, variance = unname(vc[k]), stringsAsFactors = FALSE)
+      variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = pretty_model(lab), variance = unname(vc[k]), stringsAsFactors = FALSE)
     }
     # genotype x environment components, each divided by the (harmonic) mean
     # number of levels of its environment factor per accession
@@ -1557,9 +1482,14 @@ if (strategy == "two_stage") {
     }
     if (genotype_random) {
       res$var_g <- unname(sum(vc[intersect(c("accession", "mother", "father"), names(vc))]))
-      res$h2 <- unname(res$var_g / (res$var_g + gxe_part + res$var_e / r_bar))
+      # plot effect of repeated measurements: once per plot; residual: per measurement
+      vp <- if ("plot_u" %in% names(vc)) vc[["plot_u"]] else 0
+      res$h2 <- unname(res$var_g / (res$var_g + gxe_part + (vp + res$var_e / m_bar) / r_bar))
     }
-    add_residuals(d$unit, t, rs)
+    if (rep_all && length(rs) == nrow(d)) {
+      a <- tapply(as.numeric(rs), as.character(d$unit), mean)
+      add_residuals(names(a), t, as.numeric(a))
+    } else add_residuals(d$unit, t, rs)
     gv$trait <- t
     genotype_values[[length(genotype_values) + 1]] <- gv
     stage2_summary[[length(stage2_summary) + 1]] <- as.data.frame(res, stringsAsFactors = FALSE)
@@ -1891,17 +1821,6 @@ files <- list(
   index = if (!is.null(index_result)) write_csv({ x <- index_result$table; names(x) <- short_trait(names(x)); x }, "selection_index") else NULL,
   zones = if (length(zone_results)) write_csv(do.call(rbind, lapply(zone_results, function(z) cbind(target = z$target, z$membership))), "zones") else NULL
 )
-# BLUPF90+ parameter and data files of every model, to inspect or re-run them
-if (use_f90 && dir.exists(f90_keep_dir)) {
-  tgz <- paste0(output_prefix, "_blupf90.tar.gz")
-  ok <- tryCatch({
-    old_wd <- setwd(dirname(f90_keep_dir)); on.exit(setwd(old_wd), add = TRUE)
-    utils::tar(basename(tgz), files = basename(f90_keep_dir), compression = "gzip", tar = "internal")
-    setwd(old_wd)
-    TRUE
-  }, error = function(e) { add_warning("The BLUPF90+ files could not be packed: ", conditionMessage(e)); FALSE })
-  if (ok) { files$blupf90 <- basename(tgz); unlink(f90_keep_dir, recursive = TRUE) }
-}
 
 if (!is.null(index_result)) names(index_result$table) <- short_trait(names(index_result$table))
 
@@ -1944,6 +1863,8 @@ result <- list(
          used = f$var %in% trt_use, gxt = f$var %in% trt_gxt,
          by_trial = data.frame(trial = names(by_trial), levels = unname(by_trial), stringsAsFactors = FALSE))
   })),
+  repeated = list(time = rep_time, gxtime = rep_gxtime, traits = repeated_info),
+  covariates = unname(as.list(cov_label)),
   outliers = outliers,
   outlier_summary = outlier_summary,
   stage1 = stage1_summary,

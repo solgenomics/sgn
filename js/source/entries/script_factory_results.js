@@ -390,6 +390,7 @@ function renderHeader() {
     if (META.dataset_name) chips.push('Dataset: ' + (META.dataset_id ? '<a style="color:#fff;text-decoration:underline" href="/dataset/' + encodeURIComponent(META.dataset_id) + '">' + esc(META.dataset_name) + '</a>' : esc(META.dataset_name)));
     chips.push(R.strategy === 'two_stage' ? 'Two-stage analysis' : 'Single-stage analysis' + (((rc.single || {}).mode) === 'custom' ? ' (custom formula)' : ''));
     chips.push(esc(D.label) + 's (genotype ' + esc(R.genotype_effect) + ')');
+    chips.push(R.engine === 'blupf90' ? 'Engine: BLUPF90+ (no R)' : 'Engine: R (lme4' + (R.strategy === 'two_stage' ? ' / SpATS' : '') + ')');
     if (META.created) chips.push('Run ' + esc(String(META.created).replace('T', ' ').slice(0, 16)));
     $('#sfd_subtitle').html(chips.map(c => '<span class="chip">' + c + '</span>').join(''));
 
@@ -1328,6 +1329,32 @@ function renderModel() {
     if (arr(R.variance_components).length) {
         h += '<h4>Variance components</h4>' + table(R.variance_components, [{ k: 'trait', l: 'Trait' }, { k: 'component', l: 'Component', f: v => esc(prettyComp(v)) }, { k: 'variance', l: 'Variance' }], { id: 'sfd_dt_vc' });
     }
+    // repeated measurements (traits measured several times per plot) and covariates (version >= 1.7)
+    const rp = R.repeated || {};
+    if (arr(rp.traits).length) {
+        h += '<h4>Repeated measurements</h4>' + table(rp.traits, [
+            { k: 'trait', l: 'Trait' }, { k: 'label', l: 'Value used per plot', f: v => esc(v) }, { k: 'n_plots', l: 'Plots', f: v => v },
+            { k: 'n_repeated_plots', l: 'Plots with several values', f: v => v }, { k: 'n_measurements', l: 'Measurements', f: v => v }, { k: 'n_dates', l: 'Dates', f: v => v }
+        ]);
+        if (arr(rp.traits).some(x => x.summary === 'all')) {
+            h += '<p class="sfd-help">All measurements: one record per measurement, ' + (rp.time === 'linear' ? 'a linear trend in days' : 'a date effect') + ' within trial, a random plot effect' +
+                (rp.gxtime ? ' and a random genotype &times; date effect' : '') + '; the genotype value is the mean over the dates.</p>';
+        }
+    }
+    // genomic relationships (G / H models)
+    const gi = R.genomic;
+    if (gi) {
+        const q = gi.qc || {};
+        const n = v => (v === null || v === undefined) ? '&ndash;' : Number(v).toLocaleString('en-US');
+        h += '<h4>Genomic relationships (' + (gi.matrix === 'H' ? 'single-step H matrix' : 'G matrix, GBLUP') + ')</h4>' +
+            '<p>Genotyping protocol <b>' + esc(gi.protocol_name || '') + '</b>: ' + n(gi.n_genotyped) + ' of ' + n(gi.n_accessions) + ' accessions genotyped, ' + n(gi.n_markers) + ' markers' +
+            (q.n_snps_used !== undefined ? '; <b>' + n(q.n_snps_used) + '</b> markers used after quality control (removed: ' + n(q.removed_maf) + ' with allele frequency &lt; ' + gi.minfreq +
+                ', ' + n(q.removed_callrate) + ' with call rate &lt; ' + gi.callrate + ', ' + n(q.removed_monomorphic) + ' monomorphic' + (q.mendelian_conflicts ? ', ' + n(q.mendelian_conflicts) + ' parent-progeny conflicts' : '') + ')' : '') +
+            (q.removed_animals ? '; ' + n(q.removed_animals) + ' accession(s) removed for low call rate' : '') + '.</p>' +
+            '<p class="sfd-help">G (VanRaden) is built, tuned to the pedigree relationships of the genotyped accessions and blended (0.95 G + 0.05 A22) by BLUPF90+. ' +
+            (gi.matrix === 'H' ? 'Single-step: accessions without genotypes are related to the others through the pedigree.' : 'Accessions without genotypes are treated as unrelated.') + ' Values are genomic breeding values (GEBVs).</p>';
+    }
+    if (arr(R.covariates).length) h += '<p><b>Covariates:</b> ' + arr(R.covariates).map(esc).join(', ') + (R.strategy === 'two_stage' ? ' (fixed effects of the stage 1 models)' : ' (fixed effects)') + '</p>';
     h += '<h4>Trials</h4>' + table(R.trials, [{ k: 'trial', l: 'Trial' }, { k: 'location', l: 'Location' }, { k: 'year', l: 'Year' }, { k: 'design', l: 'Design' },
         { k: 'spatial_layout', l: 'Row/col', f: v => v ? 'yes' : '' }, { k: 'n_plots', l: 'Plots', f: v => v }, { k: 'n_accessions', l: 'Accessions', f: v => v },
         { k: 'factors_not_used', l: 'Not used as model factor', f: v => esc(v || '') }]);

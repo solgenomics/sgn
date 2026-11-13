@@ -32,7 +32,7 @@ const GROUPS = [
         key: 'attention', attention: true,
         title: 'Needs your attention',
         help: 'These change what was analysed: a model that could not be fitted, data that were skipped or a software fallback.',
-        match: m => /could not be fitted \(|the model failed|model could not be fitted|not installed|treated as unrelated|was skipped|were skipped|index skipped|could not be packed|requires an enabled|needs at least|from the formula|before full convergence|cannot fit .*lme4 was used|all accessions were used instead|zones rest on only/i.test(m) && !/^SpATS could not be fitted for/.test(m)
+        match: m => /could not be fitted \(|the model failed|model could not be fitted|not installed|treated as unrelated|was skipped|were skipped|index skipped|could not be packed|requires an enabled|needs at least|from the formula|before full convergence|cannot fit .*lme4 was used|all accessions were used instead|zones rest on only|model could not be used \(|genotypes of the genotyping protocol could not be retrieved|no marker passed/i.test(m) && !/accessions have no genotypes in /.test(m) && !/^SpATS could not be fitted for/.test(m)
     },
     {
         key: 'design', title: 'Design factors not used in the model',
@@ -43,10 +43,15 @@ const GROUPS = [
     {
         key: 'fallback', title: 'Model replaced by a simpler one',
         help: 'The spatial (SpATS) model could not separate the field trend from the genotypes in these trials, usually because of the layout. The trial was analysed with its design model instead, so it is still in the results.',
-        match: m => /^SpATS could not be fitted for |^BLUPF90\+ could not fit .*lme4 was used/.test(m),
+        match: m => /^SpATS could not be fitted for |^BLUPF90\+ could not fit .*lme4 was used|: SpATS does not model repeated measurements|^SpATS \(an R package\) is not part of the BLUPF90\+ engine|could not be fitted by BLUPF90\+ .*a simpler model was used/.test(m),
         split: m => {
             let r = /^SpATS could not be fitted for (.+?) \(.*\); the (.+?) model was used instead\.?$/.exec(m);
             if (r) return { where: r[1], detail: r[2] + ' model used' };
+            if (/^SpATS \(an R package\)/.test(m)) return { where: 'trials with rows and columns', detail: 'BLUPF90+ engine: row / column effects and linear trends instead of SpATS' };
+            r = /^Stage 1, (.+?): the (.+?) model could not be fitted by BLUPF90\+/.exec(m);
+            if (r) return { where: r[1], detail: r[2] + ' model failed; simpler model used' };
+            r = /^(.+?): SpATS does not model repeated measurements/.exec(m);
+            if (r) return { where: r[1], detail: 'repeated measurements: design model with date and plot effects in stage 1' };
             r = /^BLUPF90\+ could not fit (.+?) \(.*\); lme4 was used/.exec(m);
             return r && { where: r[1], detail: 'lme4 used instead of BLUPF90+' };
         }
@@ -60,13 +65,13 @@ const GROUPS = [
     {
         key: 'variance', title: 'Model terms simplified',
         help: 'Terms that the data could not estimate (zero variance, confounded or constant) have no effect on the results and were dropped or reported here.',
-        match: m => /zero variance|confounded|left out of the model|left out \(|varies within trial|not supported by the data|cannot be separated|Stage [12], /i.test(m),
+        match: m => /zero variance|confounded|left out of the model|left out \(|varies within trial|not supported by the data|cannot be separated|Stage [12], /i.test(m) && !/without a covariate value/.test(m),
         split: m => { const r = /^(Stage [12], .+?|[^:]+): (.+?)\.?$/.exec(m); return r && { where: r[1], detail: r[2] }; }
     },
     {
         key: 'data', title: 'Data left out',
         help: 'Records that could not be used by a step (missing values, non-plot observations, treatments listed as traits).',
-        match: m => /left out of the|were ignored|is a treatment, not a trait|without values/i.test(m)
+        match: m => /left out of the|were ignored|is a treatment, not a trait|without values|left out for this trait|without a covariate value|accessions have no genotypes in /i.test(m)
     },
     { key: 'other', title: 'Other notes', help: '', match: () => true }
 ];

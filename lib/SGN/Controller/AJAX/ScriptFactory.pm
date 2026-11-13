@@ -58,6 +58,8 @@ __PACKAGE__->config(
 
 my $TMP_SUBDIR = 'script_factory_files';
 my $PIPELINE = 'R/script_factory/script_factory_pipeline.R';
+# BLUPF90+ engine: the same pipeline without R (CXGN::BLUPF90::Pipeline)
+my $F90_PIPELINE = 'bin/script_factory_blupf90.pl';
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -169,6 +171,23 @@ sub blupf90_dir {
 # male_parent stock relationships, followed recursively). Writes a
 # tab-delimited file (Accession, Female_Parent, Male_Parent; the format of the
 # Breedbase pedigree download) and returns summary counts.
+# Engine of a run: 'blupf90' (CXGN::BLUPF90::Pipeline, no R) when the recipe
+# asks for BLUPF90+ or for a pedigree (A matrix) model, which only BLUPF90+
+# fits, and blupf90+ is installed; 'lme4' (the R pipeline) otherwise. A
+# pedigree model switches the whole run to BLUPF90+ (recipe engine_reason).
+sub _run_engine {
+    my ($recipe, $f90_dir) = @_;
+    return 'lme4' if !$f90_dir;
+    return 'blupf90' if ($recipe->{engine} // '') eq 'blupf90';
+    my $genetic = ref($recipe->{genetic}) eq 'HASH' ? $recipe->{genetic} : {};
+    if (($genetic->{model} // '') =~ /^(pedigree|genomic|single_step)$/) {
+        $recipe->{engine} = 'blupf90';
+        $recipe->{engine_reason} = $genetic->{model};
+        return 'blupf90';
+    }
+    return 'lme4';
+}
+
 sub _write_pedigree {
     my ($schema, $accessions, $file) = @_;
     my $female = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship');
@@ -458,6 +477,12 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     }
     my $marked = try { _marked_outliers($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info) }
                  catch { print STDERR "Analysis Pipeline: marked outliers of dataset $dataset_id not read: $_\n"; [] };
+    # genotyping protocols with genotypes of the dataset's accessions (G and H models)
+    my $genotyping = try { _genotyping_protocols($schema, [ map { $_->[0] } @{ $ds->retrieve_accessions() || [] } ]) }
+                     catch { print STDERR "Analysis Pipeline: genotyping protocols of dataset $dataset_id not read: $_\n"; [] };
+    # traits measured more than once per plot (all measurements to <token>.repeated.txt)
+    my $repeated = try { _repeated_measurements($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info, "$tempfile.repeated.txt") }
+                   catch { print STDERR "Analysis Pipeline: repeated measurements of dataset $dataset_id not read: $_\n"; [] };
 
     $c->stash->{rest} = {
         token => $token,
@@ -466,6 +491,8 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         dataset_is_owner => (($ds->sp_person_id() // -1) == _user_id($c)) ? 1 : 0,
         dataset_n_outliers => scalar(@{ $ds->outliers() || [] }),
         marked_outliers => $marked,
+        repeated => $repeated,
+        genotyping_protocols => $genotyping,
         phenotype_file => $pheno_file,    # archived as training data when the analysis is stored
         traits => \@traits,
         trials => \@trials,
@@ -713,6 +740,147 @@ sub _marked_outliers {
     return [ map { $marked{$_} } sort keys %marked ];
 }
 
+# Repeated measurements: traits measured more than once on the same plot
+# (trait_repeat_type 'multiple' or 'time_series', or simply several values
+# stored for one plot). The dataset file holds one value per plot (Breedbase
+# averages them), so every measurement of these traits is written to
+# $file (unit, trait, value, date; one line per measurement) for the
+# pipeline, which can summarise them differently or model all of them.
+# Returns [{trait, short, repeat_type, n_units, n_repeated_units, max_n,
+# n_dates, first_date, last_date}], one entry per trait with a repeat type
+# other than 'single' or with repeated values in the dataset.
+sub _repeated_measurements {
+    my ($schema, $ds, $trait_names, $unit_info, $file) = @_;
+    my $trials = [ map { ref($_) ? $_->[0] : $_ } @{ $ds->retrieve_trials() || [] } ];
+    return [] if !@$trials || !@$trait_names || !%$unit_info;
+
+    my %trait_of;
+    foreach my $t (@$trait_names) {
+        my $row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $t);
+        $trait_of{$row->cvterm_id()} = $t if $row;
+    }
+    return [] if !%trait_of;
+    my $dbh = $schema->storage->dbh();
+
+    my %repeat_type;
+    my $types = $dbh->selectall_arrayref(
+        "SELECT cvtermprop.cvterm_id, cvtermprop.value FROM cvtermprop
+           JOIN cvterm proptype ON proptype.cvterm_id = cvtermprop.type_id
+          WHERE proptype.name = 'trait_repeat_type' AND cvtermprop.cvterm_id = ANY(?)", undef, [ keys %trait_of ]);
+    $repeat_type{ $trait_of{$_->[0]} } = lc($_->[1] // '') for @$types;
+
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $sth = $dbh->prepare(
+        "SELECT stock.uniquename, phenotype.cvalue_id, phenotype.value,
+                to_char(phenotype.collect_date, 'YYYY-MM-DD HH24:MI:SS')
+           FROM phenotype
+           JOIN nd_experiment_phenotype nep ON nep.phenotype_id = phenotype.phenotype_id
+           JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id AND nes.type_id = ?
+           JOIN nd_experiment_project nepr ON nepr.nd_experiment_id = nep.nd_experiment_id
+           JOIN stock ON stock.stock_id = nes.stock_id
+          WHERE nepr.project_id = ANY(?) AND phenotype.cvalue_id = ANY(?)
+          ORDER BY phenotype.collect_date NULLS LAST, phenotype.phenotype_id");
+    $sth->execute($experiment_type_id, $trials, [ keys %trait_of ]);
+
+    my %values;    # trait -> unit -> [[value, date], ...]
+    while (my ($unit, $cvterm_id, $value, $date) = $sth->fetchrow_array()) {
+        next if !$unit_info->{$unit} || !_is_number($value);    # plots of the dataset, numeric values
+        push @{ $values{ $trait_of{$cvterm_id} }->{$unit} }, [ $value + 0, $date // '' ];
+    }
+
+    my (@summary, @lines);
+    foreach my $t (sort values %trait_of) {
+        my $units = $values{$t} || {};
+        my @rep_units = grep { @{ $units->{$_} } > 1 } keys %$units;
+        my $type = $repeat_type{$t} // 'single';
+        next if !@rep_units && ($type eq 'single' || $type eq '');
+        my %dates;
+        my $max_n = 0;
+        foreach my $u (keys %$units) {
+            my $n = scalar @{ $units->{$u} };
+            $max_n = $n if $n > $max_n;
+            foreach my $m (@{ $units->{$u} }) {
+                $dates{ substr($m->[1], 0, 10) } = 1 if $m->[1] ne '';
+                push @lines, join("\t", $u, $t, $m->[0], $m->[1]) if @rep_units;
+            }
+        }
+        my @d = sort keys %dates;
+        push @summary, {
+            trait => $t, short => _short_trait($t), repeat_type => $type,
+            n_units => scalar(keys %$units) + 0, n_repeated_units => scalar(@rep_units) + 0, max_n => $max_n + 0,
+            n_dates => scalar(@d) + 0, first_date => $d[0], last_date => $d[-1],
+        };
+    }
+    if (@lines) {
+        open(my $F, '>', $file) or die "Cannot write the repeated measurements file\n";
+        print $F join("\n", "unit\ttrait\tvalue\tdate", @lines), "\n";
+        close($F);
+    }
+    return \@summary;
+}
+
+# Genotyping protocols with genotypes of the given accessions (directly or
+# through their tissue samples): [{protocol_id, name, n_genotyped, n_markers}],
+# most genotyped accessions first.
+sub _genotyping_protocols {
+    my ($schema, $accession_ids) = @_;
+    return [] if !@$accession_ids;
+    my $dbh = $schema->storage->dbh();
+    my $sql = "WITH acc AS (SELECT unnest(?::int[]) AS id),
+          st AS (SELECT id AS stock_id, id AS acc FROM acc
+                 UNION SELECT sr.subject_id, sr.object_id FROM stock_relationship sr JOIN acc ON acc.id = sr.object_id
+                  WHERE sr.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample_of'))
+        SELECT nep.nd_protocol_id, p.name, count(DISTINCT st.acc)
+          FROM st
+          JOIN nd_experiment_stock nes ON nes.stock_id = st.stock_id
+          JOIN nd_experiment e ON e.nd_experiment_id = nes.nd_experiment_id
+               AND e.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'genotyping_experiment')
+          JOIN nd_experiment_protocol nep ON nep.nd_experiment_id = e.nd_experiment_id
+          JOIN nd_protocol p ON p.nd_protocol_id = nep.nd_protocol_id
+         GROUP BY 1, 2";
+    my $rows = $dbh->selectall_arrayref($sql, undef, $accession_ids);
+    my @out;
+    foreach my $r (@$rows) {
+        my ($markers) = $dbh->selectrow_array(
+            "SELECT sum((c.value->>'marker_count')::int) FROM nd_protocolprop pp
+               JOIN cvterm t ON t.cvterm_id = pp.type_id AND t.name = 'vcf_map_details',
+                    jsonb_each(pp.value->'chromosomes') c
+              WHERE pp.nd_protocol_id = ?", undef, $r->[0]);
+        push @out, { protocol_id => $r->[0] + 0, name => $r->[1], n_genotyped => $r->[2] + 0, n_markers => defined($markers) ? $markers + 0 : undef };
+    }
+    return [ sort { $b->{n_genotyped} <=> $a->{n_genotyped} || $a->{name} cmp $b->{name} } @out ];
+}
+
+# The genomic (G) and single-step (H) models need the marker dosages of a
+# genotyping protocol: the job retrieves them first (bin/script_factory_genotypes.pl;
+# can take minutes the first time, then cached). The database connection goes
+# to that step in a file readable by the web server user only, deleted as soon
+# as it is read: the password is never on a command line nor in the job record.
+# Returns the command of that step, or an error message (string ref).
+sub _genotypes_step {
+    my ($c, $recipe, $run_base, $dataset_id) = @_;
+    my $g = ref($recipe->{genetic}) eq 'HASH' ? $recipe->{genetic} : {};
+    my $protocol_id = $g->{protocol_id};
+    return \'Choose the genotyping protocol of the genomic model (step 3).' if !defined($protocol_id) || $protocol_id !~ /^\d+$/;
+    return \'The genomic model needs a dataset.' if !defined($dataset_id) || $dataset_id !~ /^\d+$/;
+    my ($schema, $people_schema) = _schemas($c);
+    my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
+    my @ids = map { $_->[0] } @{ $ds->retrieve_accessions() || [] };
+    return \'The dataset has no accessions.' if !@ids;
+    write_file("$run_base.accessions.txt", join("\n", @ids) . "\n");
+    my $conf = { dbhost => $c->config->{dbhost}, dbname => $c->config->{dbname}, dbuser => $c->config->{dbuser}, dbpass => $c->config->{dbpass},
+                 cache_root => $c->config->{cache_file_path}, shared_tempdir => $c->config->{cluster_shared_tempdir}, backend => $c->config->{backend},
+                 cluster_host => $c->config->{cluster_host}, queue => $c->config->{'web_cluster_queue'}, basepath => $c->config->{basepath} };
+    my $old = umask(077);
+    write_file("$run_base.dbconf.json", encode_json($conf));
+    umask($old);
+    chmod(0600, "$run_base.dbconf.json");
+    my $basepath = $c->config->{basepath};
+    return join(" ", "perl", "-I" . _shell_quote("$basepath/lib"), map { _shell_quote($_) } (
+        "$basepath/bin/script_factory_genotypes.pl", "--conf=$run_base.dbconf.json", "--protocol=$protocol_id",
+        "--accessions=$run_base.accessions.txt", "--out=$run_base.genotypes.txt"));
+}
+
 sub mark_outliers : Path('/ajax/script_factory/outliers/mark') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -864,7 +1032,6 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     close($fh);
     my $run_id = basename($run_base);
 
-    write_file("$run_base.recipe.json", encode_json($recipe));
     write_file("$run_base.exclusions.json", encode_json($exclusions || []));
 
     my ($schema, $people_schema, $sp_person_id) = _schemas($c);
@@ -890,22 +1057,44 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     }
 
     my $pedigree_file = "$dir/$token.pedigree.txt";
+    my $repeated_file = "$dir/$token.repeated.txt";
     my $f90_dir = blupf90_dir($c);
-    my $cmd = join(" ",
-        ($f90_dir ? ("BLUPF90_DIR=" . _shell_quote($f90_dir)) : ()),
-        "Rscript",
-        map { _shell_quote($_) } (
-            $c->config->{basepath} . "/$PIPELINE",
-            "$dir/$token.phenotype.txt",
-            "$run_base.recipe.json",
-            "$run_base.results.json",
-            "$run_base.exclusions.json",
-            $run_base,
-            (-s $pedigree_file ? ("--pedigree=$pedigree_file") : ()),
-        )
-    ) . " > " . _shell_quote("$run_base.log") . " 2>&1";
+    my $engine = _run_engine($recipe, $f90_dir);
+    $meta{engine} = $engine;
+    my @args = (
+        "$dir/$token.phenotype.txt",
+        "$run_base.recipe.json",
+        "$run_base.results.json",
+        "$run_base.exclusions.json",
+        $run_base,
+        (-s $pedigree_file ? ("--pedigree=$pedigree_file") : ()),
+        (-s $repeated_file ? ("--repeated=$repeated_file") : ()),
+    );
+    my $basepath = $c->config->{basepath};
+    my $gmodel = ref($recipe->{genetic}) eq 'HASH' ? ($recipe->{genetic}->{model} // '') : '';
+    my $geno_cmd;
+    if ($gmodel eq 'genomic' || $gmodel eq 'single_step') {
+        if ($engine ne 'blupf90') {
+            $c->stash->{rest} = { error => 'The genomic (G) and single-step (H) models are fitted with BLUPF90+, which is not installed on this server.' };
+            return;
+        }
+        my $step = _genotypes_step($c, $recipe, $run_base, $meta{dataset_id});
+        if (ref($step)) {
+            $c->stash->{rest} = { error => $$step };
+            return;
+        }
+        $geno_cmd = $step;
+        push @args, "--genotypes=$run_base.genotypes.txt";
+    }
+    my $cmd = ($engine eq 'blupf90')
+        # BLUPF90+ engine: Perl and blupf90+ only, R is not started
+        ? join(" ", "BLUPF90_DIR=" . _shell_quote($f90_dir), "perl", "-I" . _shell_quote("$basepath/lib"), map { _shell_quote($_) } ("$basepath/$F90_PIPELINE", @args))
+        : join(" ", "Rscript", map { _shell_quote($_) } ("$basepath/$PIPELINE", @args));
+    $cmd .= " > " . _shell_quote("$run_base.log") . " 2>&1";
+    # genotypes first (its messages start the log)
+    $cmd = "$geno_cmd > " . _shell_quote("$run_base.log") . " 2>&1; " . ($cmd =~ s/ > (\S+) 2>&1$/ >> $1 2>&1/r) if $geno_cmd;
+    write_file("$run_base.recipe.json", encode_json($recipe));
     if ($meta{notify_email}) {
-        my $basepath = $c->config->{basepath};
         $cmd .= "; perl -I" . _shell_quote("$basepath/lib") . " " . _shell_quote("$basepath/bin/script_factory_notify.pl")
             . " " . _shell_quote($run_base) . " >> " . _shell_quote("$run_base.log") . " 2>&1";
     }
@@ -1027,6 +1216,8 @@ my %STAT_TERMS = (
     'BLUPF90+|blup'        => 'Adjusted means from BLUPs using BLUPF90+|SGNSTAT:0000055',
     'BLUPF90+|blue'        => 'Adjusted means from BLUEs using BLUPF90+|SGNSTAT:0000056',
     'BLUPF90+|pedigree'    => 'Adjusted means from pedigree-based BLUPs using BLUPF90+|SGNSTAT:0000057',
+    'BLUPF90+|genomic'     => 'GEBVs from genomic BLUPs (G matrix, GBLUP) using BLUPF90+|SGNSTAT:0000058',
+    'BLUPF90+|single_step' => 'GEBVs from single-step genomic BLUPs (H matrix, ssGBLUP) using BLUPF90+|SGNSTAT:0000059',
     'SpATS|blue'           => 'Adjusted Means from Spatial Correction using SpATS R|SGNSTAT:0000054',
 );
 
@@ -1065,7 +1256,8 @@ sub _statistical_terms {
         # engine and pedigree use recorded by the pipeline (SF_VERSION >= 1.3); older runs: from the model text
         my $engine = $row->{engine_used} // ($model =~ /^BLUPF90\+: / ? 'BLUPF90+' : $model =~ /^sommer: / ? 'sommer' : $model ne '' ? 'R' : $run_engine);
         my $pedigree = defined($row->{pedigree_used}) ? $row->{pedigree_used} : ($model =~ /A s2a/ && $engine ne 'R');
-        my $kind = !$random ? 'blue' : ($pedigree && $pedigree ne 'false') ? 'pedigree' : 'blup';
+        my $rel = $row->{relationship} // '';
+        my $kind = !$random ? 'blue' : $rel eq 'G' ? 'genomic' : $rel eq 'H' ? 'single_step' : ($pedigree && $pedigree ne 'false') ? 'pedigree' : 'blup';
         $terms{$trait} = $STAT_TERMS{"$engine|$kind"} // $STAT_TERMS{"R|$kind"} // $STAT_TERMS{'R|blup'};
     }
     return \%terms;
@@ -1307,10 +1499,12 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
         my $msg = join("\n", @err[ ($#err > 5 ? $#err - 5 : 0) .. $#err ]) || "The analysis job ended with status '$status' without producing results.";
         # say where it stopped (last progress line of the pipeline) before the R details
         $msg = "The analysis stopped at: $progress\n\nDetails:\n$msg" if $progress;
+        unlink("$run_base.dbconf.json") if -e "$run_base.dbconf.json";
         $c->stash->{rest} = { status => 'failed', error => $msg };
         return;
     }
 
+    unlink("$run_base.dbconf.json") if -e "$run_base.dbconf.json";
     my $results = _load_results($c, $run_id);
     # the plot level data and the per environment means are only used by the
     # results dashboard; keep the polling response small
@@ -1364,13 +1558,17 @@ sub _standalone_script {
 #      For the mother/father or pedigree (A matrix) models, also download the
 #      pedigree of the accessions (Accession, Female_Parent, Male_Parent) and add
 #      --pedigree=<pedigree_file.txt>
+#      Traits measured several times per plot: the phenotype file holds their
+#      plot averages. To summarise them otherwise (first, last, area under the
+#      curve...) or to model every measurement, also add
+#      --repeated=<file> (tab-delimited unit, trait, value, date; one line per
+#      measurement).
 #   3. The results (JSON) and CSV tables are written next to <results.json>.
 #
-# Required R packages: jsonlite, lme4 (SpATS for spatial models). Pedigree
-# (A matrix) models are fitted with BLUPF90+.
-# With "engine": "blupf90" the mixed models are fitted by BLUPF90+ (blupf90+ in
-# the PATH, or in the folder given by the BLUPF90_DIR environment variable);
-# its parameter and data files are kept in <results>_blupf90.tar.gz.
+# Required R packages: jsonlite, lme4 (SpATS for spatial models). This script
+# fits every model in R. The BLUPF90+ engine and the pedigree (A matrix)
+# models run in Breedbase without R (CXGN::BLUPF90, bin/script_factory_blupf90.pl):
+# with "engine": "blupf90" this script uses lme4 instead.
 # You can edit the recipe below to change the analysis.
 # =============================================================================
 
@@ -1379,6 +1577,40 @@ RECIPE_JSON <- r"---($pretty)---"
 HEADER
 
     return ("$file_name.R", $script . $pipeline);
+}
+
+# Re-run script of a BLUPF90+ run: the recipe and the command of the
+# BLUPF90+ engine of Breedbase (no R).
+sub _blupf90_script {
+    my ($c, $recipe, $name) = @_;
+    $recipe = { %$recipe };
+    delete $recipe->{stop_after};
+    my $pretty = JSON->new->canonical(1)->pretty(1)->encode($recipe);
+    my $date = DateTime->now()->ymd();
+    return <<"SCRIPT";
+#!/bin/bash
+# =============================================================================
+# $name
+# Breedbase Analysis Pipeline, BLUPF90+ engine (no R); written on $date
+#
+# Re-run in a Breedbase installation (sgn checkout, blupf90+ installed):
+#   bash this_script.sh <phenotype_file.txt> <results.json> [--pedigree=<file>] [--repeated=<file>]
+# The phenotype file is the tab-delimited plot level download of the dataset
+# (archived with this analysis as its training data). blupf90+ is found in
+# BLUPF90_DIR or in the PATH. The parameter and data files of every model are
+# written to <results>_blupf90.tar.gz and can be run with blupf90+ alone.
+# =============================================================================
+SGN=\${SGN:-/home/production/cxgn/sgn}
+RECIPE=\$(mktemp)
+cat > "\$RECIPE" <<'RECIPE_JSON'
+$pretty
+RECIPE_JSON
+PHENO=\$1; OUT=\$2; shift 2
+perl -I"\$SGN/lib" "\$SGN/bin/script_factory_blupf90.pl" "\$PHENO" "\$RECIPE" "\$OUT" "" "\${OUT%.json}" "\$@"
+STATUS=\$?
+rm -f "\$RECIPE"
+exit \$STATUS
+SCRIPT
 }
 
 # ---------------------------------------------------------------------------
@@ -1467,6 +1699,7 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         strategy => $results->{strategy},
         engine => $f90 ? 'BLUPF90+' : 'R',
         genetic_model => $results->{genetic_model} // 'iid',
+        ($results->{genomic} ? (genomic_relationships => $results->{genomic}) : ()),
         genotype_effect => $results->{genotype_effect},
         outlier_method => ($recipe->{outliers} || {})->{method} // 'none',
         values_removed => scalar(@{ $results->{outliers} || [] }),
@@ -1490,9 +1723,18 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         }
         return $dest;
     };
-    my (undef, $script) = _standalone_script($c, { %$recipe, name => $name }, $name);
-    write_file("$files_dir/${label}_script.R", $script);
-    my $model_file = "$files_dir/${label}_script.R";
+    # the model file: a script that re-runs the analysis (R pipeline, or the
+    # BLUPF90+ engine of Breedbase for BLUPF90+ runs)
+    my $model_file;
+    if ($f90) {
+        $model_file = "$files_dir/${label}_run_blupf90.sh";
+        write_file($model_file, _blupf90_script($c, { %$recipe, name => $name }, $name));
+    }
+    else {
+        my (undef, $script) = _standalone_script($c, { %$recipe, name => $name }, $name);
+        $model_file = "$files_dir/${label}_script.R";
+        write_file($model_file, $script);
+    }
     my $token = $meta->{token} && _valid_token($meta->{token}) ? $meta->{token} : '';
     my $training_file = $place->($token ? "$dir/$token.phenotype.txt" : undef, "${label}_input_phenotypes.txt")
         // $place->("$dir/$run_id.results.json", "${label}_results.json");
@@ -1503,6 +1745,7 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
             (['genotype_values'], ['stage1_means'], ['outliers'], ['selection_index'], ['zones'], ['ancestor_breeding_values'])),
         [ $place->("$dir/${run_id}_blupf90.tar.gz", "${label}_blupf90_files.tar.gz"), 'script_factory_blupf90_files' ],
         [ ($token && ($results->{genetic_model} // 'iid') ne 'iid') ? $place->("$dir/$token.pedigree.txt", "${label}_pedigree.txt") : undef, 'script_factory_pedigree' ],
+        [ $token ? $place->("$dir/$token.repeated.txt", "${label}_repeated_measurements.txt") : undef, 'script_factory_repeated_measurements' ],
     );
 
     my $user = $c->user()->get_object();

@@ -15,7 +15,7 @@
 import { openStoreDialog, storedNotice } from '../modules/script_factory_store.js';
 import { analysisLogHtml, analysisLogSummaryHtml } from '../modules/script_factory_log.js';
 
-const VERSION = '1.6';
+const VERSION = '1.7';
 const SVGNS = 'http://www.w3.org/2000/svg';
 const ZONE_COLORS = ['#2b7a4b', '#2563eb', '#d97706', '#9333ea', '#dc2626', '#0891b2', '#65a30d', '#db2777', '#4b5563', '#b45309'];
 const DESIGNS = {
@@ -47,7 +47,8 @@ const state = {
     zoneList: null,         // {id, name} Breedbase accession list that defines the zones
     zoneLists: null,        // {own, pub} accession lists, read once
     designOverrides: {},    // trial -> design
-    singleCov: {},          // full trait -> true, covariates of the single-stage model
+    singleCov: {},          // full trait -> true, covariates (stage 1 models and single-stage model)
+    repeated: {},           // full trait -> value per plot of a trait measured several times per plot (mean | first | last | max | min | sum | auc | slope | all)
     trt: null,              // {use: {name: true}, gxt: {name: true}} treatments in the models; null = defaults of the dataset
     pendingRecipe: null,    // recipe loaded before a dataset
     script: { id: null, name: null, description: '', is_public: 0, is_owner: 1 },
@@ -191,10 +192,12 @@ function buildRecipe() {
         },
         strategy: radio('sf_strategy'),
         engine: radio('sf_engine') || 'lme4',
-        genetic: { model: $('#sf_gen_model').val() || 'iid', check: $('#sf_check').val() || 'auto' },
+        genetic: geneticRecipe(),
         stage1: { model: radio('sf_stage1_model'), design_overrides: overrides },
         stage2: { genotype: $('#sf_stage2_genotype').val(), weighting: $('#sf_stage2_weighting').val() },
         single: singleRecipe(),
+        covariates: Object.keys(state.singleCov),
+        repeated: repeatedRecipe(),
         treatments: treatmentRecipe(),
         index: index,
         zones: {
@@ -209,6 +212,13 @@ function buildRecipe() {
             targets: targets
         }
     };
+}
+
+// engine the run will use: BLUPF90+ (no R) when chosen, or for a pedigree
+// model (only BLUPF90+ fits it); same rule as _run_engine() on the server
+function effectiveEngine() {
+    if (!cfg.blupf90_available) return 'lme4';
+    return radio('sf_engine') === 'blupf90' || ['pedigree', 'genomic', 'single_step'].indexOf($('#sf_gen_model').val()) >= 0 ? 'blupf90' : 'lme4';
 }
 
 // match a recipe trait to a dataset trait: full name first, then short name
@@ -233,6 +243,9 @@ function applyRecipe(r) {
     setRadio('sf_engine', r.engine === 'blupf90' && cfg.blupf90_available ? 'blupf90' : 'lme4');
     const g = r.genetic || {};
     $('#sf_gen_model').val(g.model || 'iid');
+    state.genoProtocol = g.protocol_id ? { id: String(g.protocol_id), name: g.protocol_name || '' } : null;
+    $('#sf_geno_minfreq').val(g.minfreq !== undefined ? g.minfreq : 0.05);
+    $('#sf_geno_callrate').val(g.callrate !== undefined ? g.callrate : 0.90);
     $('#sf_check').val(g.check || 'auto');
     const s1 = r.stage1 || {};
     setRadio('sf_stage1_model', s1.model || 'auto');
@@ -241,6 +254,13 @@ function applyRecipe(r) {
     if (s2.genotype) $('#sf_stage2_genotype').val(s2.genotype);
     if (s2.weighting) $('#sf_stage2_weighting').val(s2.weighting);
     applySingle(r.single || {});
+    // covariates: shared by both strategies since version 1.7 (single.covariates before)
+    if (r.covariates) {
+        state.singleCov = {};
+        arr(r.covariates).forEach(t => { const m = matchTrait(t) || t; state.singleCov[m] = true; });
+        renderSingleCovariates();
+    }
+    applyRepeated(r.repeated || {});
     const tr = r.treatments;
     state.trt = tr ? { use: toSet(tr.use), gxt: toSet(tr.gxt) } : null;
     renderTreatments();
@@ -536,14 +556,145 @@ function renderDatasetOverview() {
     });
     h += '</tbody></table>';
     $('#sf_trials_table').html(h);
+    const rpt = (r.repeated || []).filter(x => x.n_repeated_units > 0);
+    $("#sf_repeated_note").html(rpt.length ? alertBox('info', '<span class="glyphicon glyphicon-repeat"></span> <b>Repeated measurements:</b> ' +
+        rpt.map(x => "<b>" + esc(x.short) + '</b> (up to ' + x.max_n + ' values on ' + x.n_repeated_units + ' of ' + x.n_units + ' plots' + (x.n_dates > 1 ? ', ' + x.n_dates + ' dates' : ', same date') + ')').join(', ') +
+        '. The table below shows their plot means; choose how each is used (mean, last, area under the curve, every measurement...) under <i>Repeated measurements</i> in step 3, where Breedbase suggests a choice.') : '');
     renderTraits();
     renderTreatments();
     // covariates of a script loaded before the dataset: match them by name
     const cov = {};
     Object.keys(state.singleCov).forEach(t => { const m = matchTrait(t); if (m) cov[m] = true; });
     state.singleCov = cov;
+    const rp = {};
+    Object.keys(state.repeated).forEach(t => { const m = matchTrait(t); if (m) rp[m] = state.repeated[t]; });
+    state.repeated = rp;
+    renderRepeated();
     renderSingleCovariates();
     $('#sf_dataset_overview').show();
+}
+
+// ---------------------------------------------------------------------------
+// repeated measurements: traits measured more than once per plot. The dataset
+// file has the plot mean; the pipeline reads every measurement and uses the
+// value per plot chosen here, or models all measurements.
+// ---------------------------------------------------------------------------
+const REP_OPTIONS = [
+    ['mean', 'Mean of the plot (Breedbase default)'], ['first', 'First measurement'], ['last', 'Last measurement'],
+    ['max', 'Maximum'], ['min', 'Minimum'], ['sum', 'Sum'],
+    ['auc', 'Area under the curve (AUDPC)', true], ['slope', 'Slope: change per day', true],
+    ['all', 'All measurements: repeated-measures model']
+];
+const REP_SHORT = { mean: 'mean', first: 'first', last: 'last', max: 'max', min: 'min', sum: 'sum', auc: 'AUC', slope: 'slope', all: 'all measurements' };
+
+function datasetRepeated() { return (state.dataset && state.dataset.repeated) || []; }
+
+// traits with several values on some plot (the others only carry a repeat type)
+function repeatedInfo(trait) { return datasetRepeated().find(x => x.trait === trait && x.n_repeated_units > 0) || null; }
+
+function repeatedChoice(trait) { return (repeatedInfo(trait) && state.repeated[trait]) || 'mean'; }
+
+function repeatedRecipe() {
+    const traits = {};
+    Object.keys(state.repeated).forEach(t => {
+        const v = state.repeated[t];
+        if (v && v !== 'mean' && (!state.dataset || repeatedInfo(t))) traits[t] = v;
+    });
+    return { traits: traits, time: $('#sf_repeated_time').val() || 'date', gxtime: $('#sf_repeated_gxtime').is(':checked') };
+}
+
+function applyRepeated(rp) {
+    state.repeated = {};
+    const tr = rp.traits || {};
+    Object.keys(tr).forEach(t => { state.repeated[matchTrait(t) || t] = tr[t]; });
+    $('#sf_repeated_time').val(rp.time === 'linear' ? 'linear' : 'date');
+    $('#sf_repeated_gxtime').prop('checked', !!rp.gxtime);
+    renderRepeated();
+}
+
+// traits modelled measurement by measurement among the selected ones
+function repeatedAllTraits() { return state.traits.filter(t => repeatedChoice(t) === 'all'); }
+
+function renderRepeated() {
+    const ds = state.dataset;
+    $('#sf_repeated_card').toggle(!!ds);
+    if (!ds) return;
+    const list = datasetRepeated();
+    const withValues = list.filter(x => x.n_repeated_units > 0);
+    if (!withValues.length) {
+        $('#sf_repeated').html('<p class="sf-muted"><span class="glyphicon glyphicon-info-sign"></span> No trait of this dataset has more than one measurement on a plot, so every plot has a single value.' +
+            (list.length ? ' ' + list.map(x => esc(x.short)).join(', ') + ' ' + (list.length > 1 ? 'are' : 'is') + ' set to accept repeated measurements (' + esc(list.map(x => x.repeat_type).filter((v, i, a) => a.indexOf(v) === i).join(', ')) + ') but ' + (list.length > 1 ? 'have' : 'has') + ' one value per plot here.' : '') + '</p>');
+        $('#sf_repeated_model').hide();
+        return;
+    }
+    const range = x => x.n_dates ? x.n_dates + ' date' + (x.n_dates > 1 ? 's' : '') + (x.first_date && x.last_date && x.first_date !== x.last_date ? ' <small class="sf-muted">' + esc(x.first_date) + ' to ' + esc(x.last_date) + '</small>' : x.first_date ? ' <small class="sf-muted">' + esc(x.first_date) + '</small>' : '') : '<span class="sf-muted">no dates recorded</span>';
+    let h = '<div class="table-responsive"><table class="table table-condensed sf-rep-table"><thead><tr><th>Trait</th><th>Repeat type</th><th>Plots with several values</th><th>Max. per plot</th><th>Dates</th><th>Value used per plot</th><th>Used</th></tr></thead><tbody>';
+    withValues.forEach(x => {
+        const cur = repeatedChoice(x.trait);
+        const dated = x.n_dates > 1;
+        const opts = REP_OPTIONS.map(o => {
+            const dis = o[2] && !dated;
+            return '<option value="' + o[0] + '"' + (cur === o[0] ? ' selected' : '') + (dis ? ' disabled title="needs measurements on at least two dates"' : '') + '>' + esc(o[1]) + (dis ? ' (needs 2+ dates)' : '') + '</option>';
+        }).join('');
+        const used = [state.traits.indexOf(x.trait) >= 0 ? '<span class="label label-primary">analysed</span>' : '', state.singleCov[x.trait] ? '<span class="label label-info">covariate' + (cur === 'all' ? ' (plot mean)' : '') + '</span>' : ''].filter(Boolean).join(' ') || '<span class="sf-muted">not selected</span>';
+        h += '<tr><td title="' + esc(x.trait) + '"><b>' + esc(x.short) + '</b></td><td>' + esc(x.repeat_type === 'single' ? 'single (but several values stored)' : x.repeat_type.replace('_', ' ')) + '</td>' +
+            '<td>' + x.n_repeated_units + ' of ' + x.n_units + '</td><td>' + x.max_n + '</td><td>' + range(x) + '</td>' +
+            '<td><select class="form-control input-sm sf-rep-summary" data-trait="' + esc(x.trait) + '">' + opts + '</select></td><td>' + used + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    const typeOnly = list.filter(x => !x.n_repeated_units);
+    if (typeOnly.length) h += '<small class="sf-muted">Set to accept repeated measurements but with one value per plot in this dataset: ' + typeOnly.map(x => esc(x.short)).join(', ') + '.</small>';
+    $('#sf_repeated').html(h);
+    const sug = repeatedSuggestion();
+    $('#sf_repeated .sf-rep-summary').each(function() {
+        const s0 = sug[$(this).data('trait')];
+        if (!s0) return;
+        $(this).find('option[value=' + s0.how + ']').text(function(i, tx) { return tx + '  \u2605 suggested'; });
+        $(this).closest('tr').attr('title', shortTrait($(this).data('trait')) + ' ' + s0.why);
+    });
+    const anyAll = withValues.some(x => repeatedChoice(x.trait) === 'all');
+    $('#sf_repeated_model').toggle(anyAll);
+    const gxOk = $('#sf_repeated_time').val() !== 'linear';
+    $('#sf_repeated_gxtime').prop('disabled', !gxOk);
+    if (!gxOk) $('#sf_repeated_gxtime').prop('checked', false);
+}
+
+// Suggested value per plot of each trait measured several times per plot:
+//  - disease / damage scores on several dates: area under the curve (AUDPC)
+//  - other traits on 3+ dates (growth, NDVI...): every measurement in a
+//    repeated-measures model, when most plots were measured several times
+//  - several values on the same date (sub-samples, several evaluators) or
+//    no dates: the mean
+const DISEASE_HINT = /sev|disease|incid|infect|lesion|rust|blight|spot|mildew|rot|damage|audpc|score|_e_1to9/i;
+function repeatedSuggestion() {
+    const out = {};
+    datasetRepeated().filter(x => x.n_repeated_units > 0).forEach(x => {
+        const share = x.n_units ? x.n_repeated_units / x.n_units : 0;
+        let how = 'mean', why;
+        if (x.n_dates < 2) why = 'has several values per plot on the same date (sub-samples or several evaluators): their mean is the most precise plot value';
+        else if (DISEASE_HINT.test(x.short)) { how = 'auc'; why = 'is a score taken on ' + x.n_dates + ' dates: the area under the curve (AUDPC) summarises the whole epidemic in one value per plot'; }
+        else if (x.n_dates >= 3 && share >= 0.5) { how = 'all'; why = 'was measured on ' + x.n_dates + ' dates on most plots (' + x.n_repeated_units + ' of ' + x.n_units + '): a repeated-measures model uses every measurement, with a date effect and a plot effect'; }
+        else why = 'has repeated values on ' + x.n_repeated_units + ' of ' + x.n_units + ' plots only: the plot mean keeps all plots comparable';
+        out[x.trait] = { how: how, why: why };
+    });
+    return out;
+}
+function repeatedKey(o) { return Object.keys(o).sort().map(t => t + '=' + o[t].how).join('|'); }
+
+function onRepeatedChanged() {
+    renderRepeated();
+    renderSingleCovariates();
+    renderPipeline();
+    renderModelPreview();
+    renderQuickRun();
+}
+
+// terms the repeated-measures model adds (preview)
+function repeatedTerms(single) {
+    const rp = repeatedRecipe();
+    const t = [rp.time === 'linear' ? (single ? 'trial:days' : 'days') : 'date', '(1|plot)'];
+    if (rp.gxtime && rp.time !== 'linear') t.push(single ? '(1|accession:trial:date)' : '(1|accession:date)');
+    return t;
 }
 
 // ---------------------------------------------------------------------------
@@ -619,7 +770,8 @@ function renderTraits() {
     state.dataset.traits.forEach(t => {
         const on = state.traits.indexOf(t.name) >= 0;
         h += '<label class="sf-trait' + (on ? ' on' : '') + '" title="' + esc(t.name) + '"><input type="checkbox" class="sf-trait-cb" value="' + esc(t.name) + '"' + (on ? ' checked' : '') + ' />' +
-            '<span><b>' + esc(t.short) + '</b><small>n = ' + t.n + ' &middot; mean ' + fmt(t.mean) + ' &middot; ' + fmt(t.min) + ' to ' + fmt(t.max) + '</small></span></label>';
+            '<span><b>' + esc(t.short) + '</b>' + (repeatedInfo(t.name) ? '<span class="sf-rep-badge" title="Measured more than once on some plots: plot means here; see Repeated measurements in step 3">repeated &times;' + repeatedInfo(t.name).max_n + '</span>' : '') +
+            '<small>n = ' + t.n + ' &middot; mean ' + fmt(t.mean) + ' &middot; ' + fmt(t.min) + ' to ' + fmt(t.max) + '</small></span></label>';
     });
     $('#sf_traits').html(h || '<p class="sf-muted">No numeric traits.</p>');
 }
@@ -631,6 +783,7 @@ function onTraitsChanged() {
     state.traits = state.dataset.traits.map(t => t.name).filter(n => sel.indexOf(n) >= 0);
     state.traits.forEach(t => { if (!state.indexCfg[t]) state.indexCfg[t] = { weight: 0, direction: 'increase' }; });
     $('.sf-trait').each(function() { $(this).toggleClass('on', $(this).find('input').is(':checked')); });
+    renderRepeated();
     renderPipeline();
     renderQuickRun();
 }
@@ -1030,6 +1183,11 @@ function trialModel(t) {
     const s1 = radio('sf_stage1_model');
     const override = state.designOverrides[t.trial];
     const design = override && override !== 'auto' ? override : detectDesign(t);
+    if (t.has_rowcol && (s1 === 'spats' || s1 === 'auto') && effectiveEngine() === 'blupf90') {
+        const r0 = sup(t, 'rep').ok;
+        const rc = (r0 ? ['(1|rep)'] : []).concat(sup(t, 'row').ok ? ['(1|rep:row)'] : [], sup(t, 'col').ok ? ['(1|rep:col)'] : []);
+        return { design: design, text: 'BLUPF90+: y ~ accession + rowN + colN' + (rc.length ? ' + ' + rc.join(' + ') : ''), spats: true, note: 'SpATS is R only: row and column effects + linear trends', off: factorsOff(t) };
+    }
     if (t.has_rowcol && (s1 === 'spats' || s1 === 'auto')) {
         return { design: design, text: 'SpATS: y ~ accession' + (sup(t, 'rep').ok ? ' + rep' : '') + ' + PSANOVA(col, row)' + (sup(t, 'row').ok ? ' + (1|row)' : '') + (sup(t, 'col').ok ? ' + (1|col)' : ''), spats: true, off: factorsOff(t) };
     }
@@ -1044,6 +1202,11 @@ function trialModel(t) {
 }
 
 function renderDesignTable() {
+    const f90 = effectiveEngine() === 'blupf90';
+    const sp = $('input[name=sf_stage1_model][value=spats]').closest('label');
+    sp.toggleClass('dis', f90).find('.sf-option-text').html(f90
+        ? 'Not available with BLUPF90+ (SpATS is an R package): trials with rows and columns get random row and column effects within replicate and linear row / column trends.'
+        : '2D P-spline surface (Rodr&iacute;guez-&Aacute;lvarez et al., 2018) plus row and column effects.');
     if (!state.dataset) return;
     let h = '<table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Stage 1 model</th></tr></thead><tbody>';
     state.dataset.trials.forEach(t => {
@@ -1070,8 +1233,12 @@ function renderModelPreview() {
     if (two) {
         const random = $('#sf_stage2_genotype').val() === 'random';
         const w = $('#sf_stage2_weighting').val() === 'inverse_se2';
+        const covs = Object.keys(state.singleCov).map(covName);
+        const repAll = repeatedAllTraits();
         txt = '# Stage 1 (per trial, per trait)\n' +
             (state.dataset ? state.dataset.trials.map(t => '  ' + t.trial + ':  ' + trialModel(t).text).join('\n') : '') +
+            (covs.length ? '\n  covariates in every stage 1 model (where they vary): + ' + covs.join(' + ') : '') +
+            (repAll.length ? '\n  ' + repAll.map(shortTrait).join(', ') + ' (all measurements, design model): + ' + repeatedTerms(false).join(' + ') : '') +
             '\n\n# Stage 2 (across trials)\n  BLUE_ij ~ trial_j + ' + (random ? '(1|accession_i)' : 'accession_i') + stage2Extra(random) + ' + e_ij' + (w ? ',  weights = 1 / SE_ij^2' : '') +
             '\n  -> ' + valueText(random);
     } else {
@@ -1079,28 +1246,87 @@ function renderModelPreview() {
         if (radio('sf_single_mode') === 'custom') {
             const chk = checkFormula($('#sf_single_formula').val());
             txt = chk.ok ? 'y ~ ' + chk.rhs + '\n  -> ' + valueText(chk.random) : '# ' + chk.msg;
+            if (chk.ok && repeatedAllTraits().length) txt += '\n# ' + repeatedAllTraits().map(shortTrait).join(', ') + ' (all measurements): + ' + repeatedTerms(true).join(' + ') + ' added to the formula';
         } else {
             const b = singleBuilderFormula();
             txt = 'y ~ ' + b.terms.join(' + ') + '\n  -> ' + valueText(b.random);
+            if (repeatedAllTraits().length) txt += '\n# ' + repeatedAllTraits().map(shortTrait).join(', ') + ' (all measurements): + ' + repeatedTerms(true).join(' + ');
             if (b.dropped.length) txt += '\n# left out, not supported by this dataset: ' + b.dropped.join('; ');
             if (!state.dataset) txt += '\n# load a dataset to see which terms apply';
         }
     }
     const g = geneticRecipe();
-    if (g.model === 'pedigree') txt += '\n# accession ~ N(0, A s2a): A = additive relationship from the pedigree (accessions and ancestors)';
-    txt += '\n# engine: ' + (radio('sf_engine') === 'blupf90' ? 'BLUPF90+ (blupf90+, AI-REML)' + (two ? '; SpATS stage 1 models stay in R' : '') : 'R (lme4' + (two ? ' / SpATS' : '') + ')' + (g.model === 'pedigree' ? '; pedigree models: BLUPF90+' : ''));
+    if (g.model === 'pedigree') txt += '\n# accession ~ N(0, A s2a): A = additive relationship from the pedigree (accessions and ancestors, with inbreeding)';
+    if (g.model === 'genomic') txt += '\n# accession ~ N(0, G s2g): G = genomic relationship (VanRaden) from ' + (g.protocol_name || 'the genotyping protocol') + ' (MAF > ' + g.minfreq + ', call rate > ' + g.callrate + ')';
+    if (g.model === 'single_step') txt += '\n# accession ~ N(0, H s2g): H = pedigree A + genomic G from ' + (g.protocol_name || 'the genotyping protocol') + ' (single-step)';
+    const eng = effectiveEngine();
+    txt += '\n# engine: ' + (eng === 'blupf90' ? 'BLUPF90+ without R (Breedbase CXGN::BLUPF90, blupf90+ AI-REML; independent models in parallel)' +
+        (radio('sf_engine') !== 'blupf90' ? ' - chosen because the pedigree model needs it' : '') + (two ? '; no SpATS: row x column trials get row / column effects and linear trends' : '')
+        : 'R (lme4' + (two ? ' / SpATS' : '') + ')');
     $('#sf_model_preview').html('<div class="sf-formula">' + esc(txt) + '</div>');
     renderGeneticInfo();
     renderSuggestion();
 }
 
+const GENOMIC_MODELS = ['genomic', 'single_step'];
+
 function geneticRecipe() {
-    return { model: $('#sf_gen_model').val() || 'iid', check: $('#sf_check').val() || 'auto' };
+    const g = { model: $('#sf_gen_model').val() || 'iid', check: $('#sf_check').val() || 'auto' };
+    if (GENOMIC_MODELS.indexOf(g.model) >= 0) {
+        const p = genoProtocol();
+        g.protocol_id = p ? Number(p.protocol_id) : null;
+        g.protocol_name = p ? p.name : '';
+        g.minfreq = Number($('#sf_geno_minfreq').val()) || 0.05;
+        g.callrate = Number($('#sf_geno_callrate').val()) || 0.90;
+    }
+    return g;
+}
+
+function datasetProtocols() { return (state.dataset && state.dataset.genotyping_protocols) || []; }
+
+// chosen protocol (a script loaded before the dataset keeps its choice by id or name)
+function genoProtocol() {
+    const list = datasetProtocols();
+    const v = $('#sf_geno_protocol').val();
+    let p = list.find(x => String(x.protocol_id) === String(v));
+    if (!p && state.genoProtocol) p = list.find(x => String(x.protocol_id) === state.genoProtocol.id || x.name === state.genoProtocol.name);
+    return p || null;
+}
+
+function renderGenoBlock() {
+    const model = $('#sf_gen_model').val();
+    const on = GENOMIC_MODELS.indexOf(model) >= 0;
+    $('#sf_geno_block').toggle(on);
+    if (!on) return;
+    const ds = state.dataset;
+    const list = datasetProtocols();
+    const cur = genoProtocol();
+    if (!ds) { $('#sf_geno_protocol').html('<option value="">load a dataset first</option>'); $('#sf_geno_info').html(''); return; }
+    if (!list.length) {
+        $('#sf_geno_protocol').html('<option value="">no genotyping protocol has genotypes of these accessions</option>');
+        $('#sf_geno_info').html('<span class="warn">None of the ' + ds.n_accessions + ' accessions of this dataset is genotyped in Breedbase, so G and H models are not possible.</span>');
+        return;
+    }
+    $('#sf_geno_protocol').html('<option value="">-- choose a genotyping protocol --</option>' + list.map(p =>
+        '<option value="' + esc(p.protocol_id) + '"' + (cur && cur.protocol_id === p.protocol_id ? ' selected' : '') + '>' + esc(p.name) + ' (' + p.n_genotyped + ' of ' + ds.n_accessions +
+        ' accessions' + (p.n_markers ? ', ' + Number(p.n_markers).toLocaleString('en-US') + ' markers' : '') + ')</option>').join(''));
+    if (!cur) { $('#sf_geno_info').html('<span class="warn">Choose the genotyping protocol whose markers build the ' + (model === 'genomic' ? 'G' : 'H') + ' matrix.</span>'); return; }
+    state.genoProtocol = { id: String(cur.protocol_id), name: cur.name };
+    const miss = ds.n_accessions - cur.n_genotyped;
+    const p = ds.pedigree || {};
+    $('#sf_geno_info').html('<b>' + cur.n_genotyped + '</b> of ' + ds.n_accessions + ' accessions genotyped' + (cur.n_markers ? ' with ' + Number(cur.n_markers).toLocaleString('en-US') + ' markers' : '') + '. ' +
+        (miss ? (model === 'genomic'
+            ? '<span class="warn">' + miss + ' accession(s) without genotypes are treated as unrelated in G' + (p.n_with_parents ? '; the single-step H model links them to the genotyped ones through the pedigree' : '') + '.</span> '
+            : miss + ' accession(s) without genotypes are related to the others through the pedigree' + (p.n_with_parents ? '' : ' <span class="warn">(no parents are recorded: H is G here)</span>') + '. ')
+            : '') +
+        'The genotypes are read when the analysis runs (the first time can take a few minutes for a large protocol).');
 }
 
 function valueText(random) {
     if (!random) return 'BLUEs (genotype fixed)';
-    return geneticRecipe().model === 'pedigree' ? 'EBVs: breeding values (genotype random, pedigree)' : 'BLUPs (genotype random)';
+    const m = geneticRecipe().model;
+    return m === 'pedigree' ? 'EBVs: breeding values (genotype random, pedigree)' : m === 'genomic' ? 'GEBVs: genomic breeding values (genotype random, G matrix)'
+        : m === 'single_step' ? 'GEBVs: genomic breeding values (genotype random, single-step H matrix)' : 'BLUPs (genotype random)';
 }
 
 // genetic terms of stage 2, as shown in the preview
@@ -1125,10 +1351,11 @@ function renderGeneticInfo() {
         '<span class="warn">No parents are recorded in Breedbase for these accessions</span>; the mother / father and pedigree models would fall back to unrelated accessions.';
     const random = radio('sf_strategy') === 'two_stage' ? $('#sf_stage2_genotype').val() === 'random' : $('#sf_single_genotype').val() !== 'fixed';
     if (g.model !== 'iid' && !random) h += '<br/><span class="warn">These models need the genotype as random effect.</span>';
-    if (g.model === 'pedigree') h += '<br/>' + (cfg.blupf90_available
-        ? 'The pedigree model is fitted with BLUPF90+, whichever engine is chosen.'
-        : '<span class="warn">The pedigree model needs BLUPF90+, which is not installed on this server; the accessions would be treated as unrelated.</span>');
+    if (['pedigree', 'genomic', 'single_step'].indexOf(g.model) >= 0) h += '<br/>' + (cfg.blupf90_available
+        ? 'This model is fitted with BLUPF90+: with it the whole analysis runs on the BLUPF90+ engine (without R, so no SpATS).'
+        : '<span class="warn">This model needs BLUPF90+, which is not installed on this server.</span>');
     $('#sf_pedigree_info').html(h);
+    renderGenoBlock();
     const D = singleData();
     $('#sf_check_info').html(D.n_check_plots ? D.n_check_plots + ' plot(s) of entries marked as check.' : '<span class="sf-muted">No entry is marked as check in this dataset.</span>');
 }
@@ -1173,23 +1400,38 @@ function suggestion() {
             nRC ? 'Spatial correction for the ' + nRC + ' trial(s) with rows and columns, design model for the others.' : 'No trial has row and column numbers; each trial gets the model of its design (see the table).');
     }
     const avail = !!cfg.blupf90_available;
-    S.engine = avail && ds.n_plots >= 10000 ? 'blupf90' : 'lme4';
+    const pp = ds.pedigree || {};
+    const pedSuggested = ds.n_accessions && ((pp.n_with_parents || 0) / ds.n_accessions >= 0.5 || (datasetProtocols()[0] && datasetProtocols()[0].n_genotyped / ds.n_accessions >= 0.5));
+    S.engine = avail && (ds.n_plots >= 10000 || pedSuggested) ? 'blupf90' : 'lme4';
     item('engine', 'Engine', S.engine, S.engine === 'blupf90' ? 'BLUPF90+' : 'R',
-        Number(ds.n_plots).toLocaleString('en-US') + ' plots: ' + (S.engine === 'blupf90' ? 'BLUPF90+ is much faster on datasets of this size.' :
+        Number(ds.n_plots).toLocaleString('en-US') + ' plots: ' + (S.engine === 'blupf90' ? (pedSuggested && ds.n_plots < 10000 ? 'the pedigree model is fitted by BLUPF90+ (it runs without R, many models at once).' : 'BLUPF90+ runs without R and fits the models of many trials at once: much faster on datasets of this size.') :
             'R is fast at this size' + (avail ? ' (BLUPF90+ pays off from about 10,000 plots or with large pedigrees).' : '; BLUPF90+ is not installed on this server.')));
     S.genotype = 'random';
     item('genotype', 'Genotype effect', 'random', 'Random (BLUPs)', 'Shrunken predictions are the best basis for selection. Choose fixed (BLUEs) to feed GWAS or genomic prediction.');
     const p = ds.pedigree || {};
     const frac = ds.n_accessions ? (p.n_with_parents || 0) / ds.n_accessions : 0;
     S.genetic = frac >= 0.5 ? 'pedigree' : 'iid';
-    item('genetic', 'Genetic model', S.genetic, S.genetic === 'pedigree' ? 'Pedigree (A matrix)' : 'Unrelated accessions',
-        !p.n_with_parents ? 'No parents are recorded in Breedbase for these accessions.' :
+    // genomic: the protocol with most genotyped accessions, when it covers half of them
+    const bestP = avail ? datasetProtocols()[0] : null;
+    const gfrac = bestP && ds.n_accessions ? bestP.n_genotyped / ds.n_accessions : 0;
+    if (gfrac >= 0.5) { S.genetic = frac >= 0.5 && gfrac < 0.95 ? 'single_step' : 'genomic'; S.protocol = bestP; }
+    const gtxt = { pedigree: 'Pedigree (A matrix)', genomic: 'Genomic (G matrix)', single_step: 'Single-step (H matrix)', iid: 'Unrelated accessions' }[S.genetic];
+    item('genetic', 'Genetic model', S.genetic, gtxt + (S.protocol ? ', ' + S.protocol.name : ''),
+        S.protocol ? bestP.n_genotyped + ' of ' + ds.n_accessions + ' accessions are genotyped in ' + bestP.name + (S.genetic === 'single_step'
+            ? ' and ' + p.n_with_parents + ' have known parents: the single-step H matrix uses both, so accessions without genotypes still borrow information from their genotyped relatives.'
+            : ': genomic relationships capture Mendelian sampling and relationships the pedigree misses, giving genomic breeding values (GEBVs).')
+        : !p.n_with_parents ? 'No parents are recorded in Breedbase for these accessions' + (datasetProtocols().length ? ' and too few are genotyped for a genomic model.' : ' and none is genotyped.') :
         p.n_with_parents + ' of ' + ds.n_accessions + ' accessions have known parents' + (S.genetic === 'pedigree' ? ': relatives share information and breeding values are estimated (ancestors included).' : ', too few for a pedigree model.'));
     const nChk = trials.reduce((a, x) => a + (x.t.n_check_plots || 0), 0);
     S.check = 'auto';
     item('check', 'Checks', 'auto', nChk ? 'Fixed check effect' : 'Not needed', nChk ? nChk + ' plots of checks: checks get their own fixed mean, so test entries are not shrunk toward it.' : 'No entry is marked as check.');
-    S.covariates = (strategy === 'single_stage') ? ds.traits.filter(t => COV_HINT.test(t.short)).map(t => t.name) : [];
+    S.covariates = ds.traits.filter(t => COV_HINT.test(t.short)).map(t => t.name);
     if (S.covariates.length) item('covariates', 'Covariates', S.covariates.join('|'), S.covariates.map(shortTrait).join(', '), 'Plant stand and similar counts explain part of the plot-to-plot variation of yield-type traits.');
+    S.repeated = repeatedSuggestion();
+    if (Object.keys(S.repeated).length) {
+        item('repeated', 'Repeated measurements', repeatedKey(S.repeated), Object.keys(S.repeated).map(t => shortTrait(t) + ': ' + REP_SHORT[S.repeated[t].how]).join(', '),
+            Object.keys(S.repeated).map(t => shortTrait(t) + ' ' + S.repeated[t].why).join('. ') + '.');
+    }
     S.gxe = nT > 1 ? ['trial'] : [];
     const trts = datasetTreatments();
     S.trt = { use: trts.filter(f => f.varies_within_trials).map(f => f.name), gxt: trts.filter(gxtPossible).map(f => f.name) };
@@ -1213,6 +1455,7 @@ function currentChoice(key) {
         case 'genetic': return $('#sf_gen_model').val();
         case 'check': return $('#sf_check').val();
         case 'covariates': return Object.keys(state.singleCov).sort().join('|');
+        case 'repeated': { const o = {}; datasetRepeated().filter(x => x.n_repeated_units > 0).forEach(x => { o[x.trait] = { how: repeatedChoice(x.trait) }; }); return repeatedKey(o); }
         case 'treatments': { const t = treatmentRecipe(); return [t.use.slice().sort().join('|'), t.gxt.slice().sort().join('|')].join(';'); }
     }
     return null;
@@ -1260,6 +1503,8 @@ function applySuggestion() {
     $('#sf_stage2_genotype').val(S.genotype);
     $('#sf_single_genotype').val(S.genotype);
     $('#sf_gen_model').val(S.genetic);
+    if (S.protocol) state.genoProtocol = { id: String(S.protocol.protocol_id), name: S.protocol.name };
+    renderGenoBlock();
     $('#sf_check').val(S.check);
     state.designOverrides = {};
     state.trt = { use: toSet(S.trt.use), gxt: toSet(S.trt.gxt) };
@@ -1269,9 +1514,11 @@ function applySuggestion() {
         ['#sf_single_rep', '#sf_single_block', '#sf_single_rowcol'].forEach(id => $(id).val('auto'));
         $('#sf_single_env').val('fixed');
         $('.sf-single-gxe').each(function() { $(this).prop('checked', S.gxe.indexOf($(this).val()) >= 0); });
-        S.covariates.forEach(t => { state.singleCov[t] = true; });
-        renderSingleCovariates();
     }
+    S.covariates.forEach(t => { state.singleCov[t] = true; });
+    Object.keys(S.repeated).forEach(t => { state.repeated[t] = S.repeated[t].how; });
+    renderRepeated();
+    renderSingleCovariates();
     refreshAll();
     renderDesignTable();
     renderModelPreview();
@@ -1428,6 +1675,10 @@ function checkFormula(txt) {
     const fixedPart = rhs.replace(/\([^()]*\|[^()]*\)/g, '');
     const fixed = fixedPart.split('+').map(x => x.trim()).indexOf('accession') >= 0;
     if (random === fixed) return { ok: false, msg: 'include the genotype exactly once: "accession" (fixed) or "(1|accession)" (random)' };
+    if (effectiveEngine() === 'blupf90') {
+        const slope = (rhs.match(/\(([^()]*)\|[^()]*\)/g) || []).filter(x => !/^\(\s*1\s*\|/.test(x));
+        if (slope.length) return { ok: false, msg: 'BLUPF90+ fits random intercepts (1|a) and (1|a:b) only, not ' + slope.join(', ') + ': use the R engine for random slopes' };
+    }
     return { ok: true, rhs: rhs.replace(/\s+/g, ' '), random: random };
 }
 
@@ -1470,7 +1721,8 @@ function renderSingleCovariates() {
     $('#sf_single_covariates').html(state.dataset.traits.map(t => {
         const on = !!state.singleCov[t.name];
         return '<label class="' + (on ? 'on' : '') + '" title="' + esc(t.name) + '"><input type="checkbox" value="' + esc(t.name) + '"' + (on ? ' checked' : '') + ' />' +
-            (on ? '<span class="glyphicon glyphicon-ok"></span> ' : '') + esc(t.short) + (on ? ' <code>' + esc(covName(t.name)) + '</code>' : '') +
+            (on ? '<span class="glyphicon glyphicon-ok"></span> ' : '') + esc(t.short) +
+            (repeatedInfo(t.name) ? ' <small>(' + esc(repeatedChoice(t.name) === 'all' ? 'plot mean' : REP_SHORT[repeatedChoice(t.name)]) + ')</small>' : '') + (on ? ' <code>' + esc(covName(t.name)) + '</code>' : '') +
             (COV_HINT.test(t.short) ? '<span class="sf-suggested">suggested</span>' : '') + '</label>';
     }).join(''));
 }
@@ -1587,7 +1839,10 @@ function refreshZoneAccessions() {
 // ---------------------------------------------------------------------------
 
 function geneticChip(r) {
-    return '<br/>' + (r.engine === 'blupf90' ? 'BLUPF90+' : 'R') + (r.genetic.model === 'pedigree' ? ', pedigree (A)' : r.genetic.model === 'parents' ? ', mother + father' : '');
+    const m = r.genetic.model;
+    return '<br/>' + (r.engine === 'blupf90' || (['pedigree', 'genomic', 'single_step'].indexOf(m) >= 0 && cfg.blupf90_available) ? 'BLUPF90+' : 'R') +
+        (m === 'pedigree' ? ', pedigree (A)' : m === 'genomic' ? ', genomic (G' + (r.genetic.protocol_name ? ': ' + esc(r.genetic.protocol_name) : '') + ')'
+            : m === 'single_step' ? ', single-step (H' + (r.genetic.protocol_name ? ': ' + esc(r.genetic.protocol_name) : '') + ')' : m === 'parents' ? ', mother + father' : '');
 }
 
 function renderPipeline() {
@@ -1601,7 +1856,8 @@ function renderPipeline() {
     items.push({ t: 'Quality control', d: (o.method === 'iqr' ? 'IQR k = ' + o.k + ' by ' + o.group_by.replace('_', ' &times; ') : o.method === 'madr' ? 'BH-MADR, &alpha; = ' + o.alpha : 'no automatic rule') +
         (nEx ? '<br/>' + nEx + ' individual exclusion(s)' : '') + (nMk ? '<br/>' + nMk + ' value(s) marked as outliers in Breedbase' : ''), off: o.method === 'none' && !nEx && !nMk });
     if (r.strategy === 'two_stage') {
-        items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] + trtChip(r.treatments.use, 'adjusted for ') });
+        items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] + trtChip(r.treatments.use, 'adjusted for ') +
+            (r.covariates.length ? '<br/>covariate' + (r.covariates.length > 1 ? 's ' : ' ') + r.covariates.map(t => esc(shortTrait(t))).join(', ') : '') + repeatedChip(r) });
         items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r) });
     } else {
         let d;
@@ -1611,10 +1867,10 @@ function renderPipeline() {
         } else {
             d = (r.single.genotype === 'random' ? 'BLUPs' : 'BLUEs') + ', trial ' + (r.single.env === 'none' ? 'not modelled' : r.single.env) +
                 (r.single.gxe.length ? '<br/>G&times;' + r.single.gxe.join(', G&times;') : '<br/>no G&times;E') +
-                (r.single.trend === 'linear' ? ', linear trend' : '') + (r.single.covariates.length ? ', ' + r.single.covariates.length + ' covariate(s)' : '');
+                (r.single.trend === 'linear' ? ', linear trend' : '') + (r.covariates.length ? ', ' + r.covariates.length + ' covariate(s)' : '');
         }
         if (r.single.mode !== 'custom') d += trtChip(r.treatments.use, 'adjusted for ') + trtChip(r.treatments.gxt, 'G&times;');
-        items.push({ t: 'Single stage', d: d + geneticChip(r) });
+        items.push({ t: 'Single stage', d: d + repeatedChip(r) + geneticChip(r) });
     }
     const nIdx = Object.keys(r.index.traits).length;
     items.push({ t: 'Selection index', d: r.index.enabled ? (r.index.method === 'rank_sum' ? 'rank sum' : 'weighted Z-score') + ', ' + nIdx + ' trait(s), top ' + r.index.selection_pct + '%' : 'off', off: !r.index.enabled });
@@ -1622,6 +1878,12 @@ function renderPipeline() {
 
     $('#sf_pipeline').html('<ul class="sf-flow">' + items.map(i => '<li class="' + (i.off ? 'off' : '') + '"><b>' + i.t + '</b>' + i.d + '</li>').join('') + '</ul>');
     updateRunButton();   // any change to the pipeline may make the last results stale
+}
+
+function repeatedChip(r) {
+    const tr = r.repeated.traits;
+    const k = Object.keys(tr).filter(t => r.traits.indexOf(t) >= 0);
+    return k.length ? '<br/>' + k.map(t => esc(shortTrait(t)) + ': ' + esc(REP_SHORT[tr[t]] || tr[t])).join(', ') : '';
 }
 
 function trtChip(names, prefix) { return names.length ? '<br/>' + prefix + names.map(esc).join(', ' + prefix) : ''; }
@@ -1637,6 +1899,12 @@ function validateRecipe(r) {
     if (r.strategy === 'single_stage' && r.single.mode === 'custom') {
         const chk = checkFormula(r.single.formula);
         if (!chk.ok) problems.push('Single-stage formula: ' + chk.msg + ' (step 3).');
+    }
+    if (GENOMIC_MODELS.indexOf(r.genetic.model) >= 0) {
+        if (!cfg.blupf90_available) problems.push('The genomic (G) and single-step (H) models need BLUPF90+, which is not installed on this server (step 3).');
+        else if (!r.genetic.protocol_id) problems.push('Choose the genotyping protocol of the ' + (r.genetic.model === 'genomic' ? 'genomic (G)' : 'single-step (H)') + ' model (step 3).');
+        const rnd = r.strategy === 'two_stage' ? r.stage2.genotype === 'random' : r.single.genotype !== 'fixed';
+        if (!rnd) problems.push('Genomic models need the genotype as random effect (step 3).');
     }
     if (r.zones.enabled && !r.zones.targets.length) problems.push('Choose what to group environments on (step 5).');
     if (r.zones.enabled && r.zones.targets.indexOf('index') >= 0 && !r.index.enabled) problems.push('Zoning on the index requires the selection index (step 4).');
@@ -1655,7 +1923,7 @@ function renderRunReview() {
         cell('Traits', r.traits.map(t => esc(shortTrait(t))).join(', ')) +
         cell('Outliers', r.outliers.method === 'none' ? 'none' : r.outliers.method.toUpperCase()) +
         cell('Model', (r.strategy === 'two_stage' ? 'Two stages' : 'Single stage' + (r.single.mode === 'custom' ? ' (custom formula)' : '')) +
-            ' &middot; ' + (r.engine === 'blupf90' ? 'BLUPF90+' : 'R') + (r.genetic.model === 'pedigree' ? ' &middot; pedigree' : r.genetic.model === 'parents' ? ' &middot; mother + father' : '')) +
+            ' &middot; ' + (effectiveEngine() === 'blupf90' ? 'BLUPF90+' : 'R') + ({ pedigree: ' &middot; pedigree (A)', genomic: ' &middot; genomic (G)', single_step: ' &middot; single-step (H)', parents: ' &middot; mother + father' }[r.genetic.model] || '')) +
         cell('Index', r.index.enabled ? 'on' : 'off') +
         cell('Zones', r.zones.enabled ? 'on' : 'off') + '</div>';
     if (problems.length) h += alertBox('warning', problems.map(esc).join('<br/>'));
@@ -2271,7 +2539,12 @@ export function init(options) {
     });
 
     // step 3
-    $('input[name=sf_strategy], input[name=sf_stage1_model], #sf_stage2_genotype, #sf_stage2_weighting, input[name=sf_engine], #sf_gen_model, #sf_check').on('change', () => { renderDesignTable(); renderModelPreview(); });
+    $('input[name=sf_strategy], input[name=sf_stage1_model], #sf_stage2_genotype, #sf_stage2_weighting, input[name=sf_engine], #sf_gen_model, #sf_check').on('change', () => { renderDesignTable(); renderModelPreview(); renderPipeline(); });
+    $('#sf_geno_protocol, #sf_geno_minfreq, #sf_geno_callrate').on('change', () => {
+        const p = datasetProtocols().find(x => String(x.protocol_id) === String($('#sf_geno_protocol').val()));
+        state.genoProtocol = p ? { id: String(p.protocol_id), name: p.name } : null;
+        renderModelPreview(); renderPipeline(); renderQuickRun();
+    });
     $('#sf_apply_suggestion').on('click', e => { e.preventDefault(); applySuggestion(); });
     if (cfg.user_email) {
         $('#sf_notify_to').text('at ' + cfg.user_email);
@@ -2308,8 +2581,15 @@ export function init(options) {
         const t = $(this).val();
         if ($(this).is(':checked')) state.singleCov[t] = true; else delete state.singleCov[t];
         renderSingleCovariates();
+        renderRepeated();
+        renderPipeline();
         renderModelPreview();
     });
+    $('#sf_repeated').on('change', '.sf-rep-summary', function() {
+        state.repeated[$(this).data('trait')] = $(this).val();
+        onRepeatedChanged();
+    });
+    $('#sf_repeated_time, #sf_repeated_gxtime').on('change', onRepeatedChanged);
     $('#sf_design_table').on('change', '.sf-design-override', function() {
         state.designOverrides[$(this).data('trial')] = $(this).val();
         renderDesignTable(); renderModelPreview();

@@ -303,3 +303,15 @@ id: SGNSTAT:0000057
 name: Adjusted means from pedigree-based BLUPs using BLUPF90+
 definition: Genotype values computed as the overall mean plus the genotype BLUPs of a linear mixed model with a pedigree relationship matrix, fitted with BLUPF90+
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000058
+name: GEBVs from genomic BLUPs (G matrix, GBLUP) using BLUPF90+
+definition: Genomic estimated breeding values computed as the overall mean plus the genotype BLUPs of a linear mixed model with the genomic relationship matrix G (VanRaden) built from the marker dosages of a genotyping protocol, fitted with BLUPF90+
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000059
+name: GEBVs from single-step genomic BLUPs (H matrix, ssGBLUP) using BLUPF90+
+definition: Genomic estimated breeding values computed as the overall mean plus the genotype BLUPs of a linear mixed model with the single-step relationship matrix H, which combines the pedigree and the genomic relationships of a genotyping protocol, fitted with BLUPF90+
+is_a: SGNSTAT:0000000
