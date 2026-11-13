@@ -1354,6 +1354,9 @@ sub get_trials {
     my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
+    my $vector_construct_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct_of', 'stock_relationship') -> cvterm_id();
+    my $material_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
     my $geolocation_q = "SELECT nd_geolocation_id, description FROM nd_geolocation;";
     my $geolocation_h = $dbh->prepare($geolocation_q);
@@ -1371,9 +1374,9 @@ sub get_trials {
     } elsif ($type eq 'tissue_sample') {
         push @where_clause, "stock_relationship_2.subject_id = $stock_id OR nd_experiment_stock.stock_id = $stock_id";
     } elsif ($type eq 'transformation') {
-	push @where_clause, "stock.stock_id = $stock_id";
+	push @where_clause, "stock_relationship_2.subject_id = $stock_id and stock_relationship.type_id = $material_of_type_id ";
     } elsif ($type eq 'vector_construct') {
-	push @where_clause, "stock.stock_id = $stock_id";
+	push @where_clause, "stock_relationship_2.subject_id = $stock_id and (stock_relationship_2.type_id = $vector_construct_of_type_id or stock_relationship_2.type_id=$male_parent_type_id)";
     }
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
