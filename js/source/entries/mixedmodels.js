@@ -319,6 +319,8 @@ export function init(main_div) {
         var engine = $('input[name="select_engine"]:checked').val();
         //alert("Engine is "+engine);
         var tempfile = $('#tempfile').text();
+        // the same interaction and variable slope terms as in the model string
+        var model_params = extract_model_parameters();
 
         var dependent_variables = [];
 
@@ -336,6 +338,8 @@ export function init(main_div) {
 		"dependent_variables": dependent_variables,
 		"fixed_factors" : fixed_factors,
 		"random_factors" : random_factors,
+		"fixed_factors_interaction" : model_params.fixed_factors_interaction,
+		"variable_slope_intersects" : model_params.variable_slope_intersects,
 		"engine" : engine
 	    },
             "success": function(r) {
@@ -550,7 +554,7 @@ function get_model_string() {
 	},
 	success: function(r) {
 	    if (r.error) {
-		alert(error);
+		alert(r.error);
 	    }
 	    else {
 		//alert("MODEL STRING: "+r.model);

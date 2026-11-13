@@ -171,13 +171,11 @@ sub generate_model {
 	}
     }
 
-    my $formatted_variable_slope_intersects = "";
     foreach my $variable_slope_groups (@$variable_slope_intersects) {
 	if (exists($variable_slope_groups->[0]) && exists($variable_slope_groups->[1])) {
 	    my $term = " (1+$variable_slope_groups->[0] \| $variable_slope_groups->[1]) ";
 	    print STDERR "TERM: $term\n";
-	    $formatted_variable_slope_intersects .= $term;
-	    push @addends, $formatted_variable_slope_intersects;
+	    push @addends, $term;
 	}
     }
 
@@ -307,7 +305,8 @@ sub generate_model_sommer {
 	    $formula .=" ~ " .$mmer_random_factors ;
 	}
 	if ($mmer_fixed_factors_interaction) {
-	    $formula.=" ".$mmer_fixed_factors_interaction;
+	    # fixed factors with interaction belong to the fixed model, as in lme4
+	    $mmer_fixed_factors .= $mmer_fixed_factors_interaction;
 	}
 	if ($mmer_variable_slope_intersects) {
 	    $formula.=" ".$mmer_variable_slope_intersects;
@@ -412,7 +411,8 @@ sub generate_model_spl2D {
 	    $formula .= $mmer_random_factors ;
 	}
 	if ($mmer_fixed_factors_interaction) {
-	    $formula.=" ".$mmer_fixed_factors_interaction;
+	    # fixed factors with interaction belong to the fixed model, as in lme4
+	    $mmer_fixed_factors .= $mmer_fixed_factors_interaction;
 	}
 	if ($mmer_variable_slope_intersects) {
 	    $formula.=" ".$mmer_variable_slope_intersects;

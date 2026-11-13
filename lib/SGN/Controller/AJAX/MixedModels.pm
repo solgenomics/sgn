@@ -206,6 +206,17 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
+
+    # interaction and variable slope terms are nested lists; read them
+    # as in model_string(), so that the run fits the model shown there
+    #
+    my $body_data = $c->req->body_data() || {};
+    if ($body_data->{fixed_factors_interaction}) {
+	$mm->fixed_factors_interaction($body_data->{fixed_factors_interaction});
+    }
+    if ($body_data->{variable_slope_intersects}) {
+	$mm->variable_slope_intersects($body_data->{variable_slope_intersects});
+    }
     my $dep_vars = join(", ", @{$dependent_variables});
     my $job_record_config = {
 
