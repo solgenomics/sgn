@@ -438,7 +438,8 @@ with the tempfiles stem and the extensions .adjustedBLUPs and .BLUPs, if it was 
 fixed factor, the extension are .adjustedBLUEs and .BLUEs. The files have the
 accession identifiers in the first column, with the remaining columns being the
 adjusted BLUEs, BLUEs, adjusted BLUPs or BLUPs for all the initially selected
-traits.
+traits. Result files of a previous run on the same tempfile are removed before
+the run starts.
 
 The files from the dataset will contain trait names that are incompatible with R. These names are converted using the clean_file subroutine. The conversion takes place and is saved in a file with a .clean extension. Then, the .clean file is moved to the previous file name, such that there is not difference in file naming.
 
@@ -471,6 +472,13 @@ sub run_model {
 
     eval { 
 	
+	# remove the result files of a previous run on the same tempfile,
+	# so that a run that fails does not show the results of an older run
+	#
+	foreach my $f (map { $self->tempfile().".$_" } qw | adjustedBLUPs BLUPs BLUEs adjustedBLUEs anova varcomp |) {
+	    if (-e $f && !unlink($f)) { die "Can't remove old result file $f: $!\n"; }
+	}
+
 	if ($self->engine() eq "lme4") {
 	    ($model, $error) = $self->generate_model();
 	    $executable = " R/mixed_models.R ";

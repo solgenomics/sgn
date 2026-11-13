@@ -326,6 +326,14 @@ export function init(main_div) {
             dependent_variables.push(jQuery(this).val());
         });
         console.log(dependent_variables);
+
+        // clear the results of a previous run, so that a failed run does not show or save them
+        $('#mixed_models_adjusted_blups_results_div').html('');
+        $('#mixed_models_blups_results_div').html('');
+        $('#mixed_models_adjusted_blues_results_div').html('');
+        $('#mixed_models_blues_results_div').html('');
+        accession_names = adjusted_blups_data = blups_data = adjusted_blues_data = blues_data = traits = model_properties = input_file = undefined;
+
         $('#working_modal').modal("show");
         $.ajax({
             "url": '/ajax/mixedmodels/run',
