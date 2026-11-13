@@ -183,9 +183,12 @@ $run_id => ''
                 </div>
               </div>
             </div>
+            <div class="sfd-sel-top">
             <div class="sfd-slider">
               <label for="sfd_sel_pct">Select the top <b id="sfd_sel_pct_label">10</b>% &rarr; <b id="sfd_sel_n">0</b> accession(s)</label>
               <input type="range" id="sfd_sel_pct" min="1" max="50" step="1" value="10" />
+            </div>
+            <div class="sfd-acc-box" id="sfd_sel_acc"></div>
             </div>
             <h4>Expected response to selection</h4>
             <div id="sfd_gains"></div>
@@ -349,6 +352,15 @@ jQuery(document).ready(function() {
 .sfd-small-multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
 .sfd-small-multiples > div { border: 1px solid var(--b); border-radius: 8px; padding: 8px; }
 .sfd-small-multiples h5 { margin: 0 0 4px; font-weight: 600; font-size: 13px; }
+.sfd-sel-top { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+.sfd-sel-top .sfd-slider { flex: 1; min-width: 260px; }
+.sfd-acc-box { background: #fff; border: 1px solid var(--b); border-radius: 10px; padding: 6px 14px; min-width: 150px; cursor: help; }
+.sfd-acc-box .v { font-size: 20px; font-weight: 600; line-height: 1.2; }
+.sfd-acc-box .v small { font-size: 12px; margin-left: 2px; }
+.sfd-acc-box .l { font-size: 12px; color: #6b7280; }
+.sfd-acc-box.sfd-acc-high .v { color: #2b7a4b; }
+.sfd-acc-box.sfd-acc-moderate .v { color: #b7791f; }
+.sfd-acc-box.sfd-acc-low .v { color: #9b2c2c; }
 .sfd-slider { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--bg); border-radius: 8px; padding: 8px 12px; }
 .sfd-slider label { margin: 0; font-weight: normal; }
 .sfd-slider input { flex: 1; min-width: 160px; }

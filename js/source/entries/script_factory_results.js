@@ -312,6 +312,18 @@ function prepare() {
     D.s2 = {};
     arr(R.stage2).forEach(r => { D.s2[r.trait] = r; });
 
+    // selection accuracy per trait (as the pipeline computes it): mean over the
+    // accessions of sqrt(1 - PEV / var_g) from the standard errors of the BLUPs;
+    // sqrt(H2) when no standard error is available; none with BLUEs
+    D.acc = {};
+    const se = {};
+    arr(R.genotype_values_long).forEach(r => { const v = num(r.se); if (v !== null) (se[r.trait] = se[r.trait] || []).push(v); });
+    D.traits.forEach(t => {
+        const vg = num((D.s2[t] || {}).var_g), h2 = num((D.s2[t] || {}).h2);
+        if (D.random && vg !== null && vg > 0 && se[t] && se[t].length) D.acc[t] = mean(se[t].map(x => Math.sqrt(Math.max(0, 1 - x * x / vg))));
+        else D.acc[t] = h2 !== null ? Math.sqrt(Math.max(0, h2)) : null;
+    });
+
     // direction of each trait (from the index settings of the script)
     D.dir = {};
     const it = ((R.recipe || {}).index || {}).traits || {};
@@ -856,19 +868,57 @@ function renderSelection() {
         const h2 = num((D.s2[t] || {}).h2);
         const gain = S0 === null ? null : D.random ? S0 : (h2 !== null ? h2 * S0 : null);
         const good = S0 === null ? null : (traitDir(t) === 'decrease' ? S0 <= 0 : S0 >= 0);
-        return { trait: t, used: S.rankBy === 'index' ? !!inIndex[t] : S.rankBy === t, pm: pm, sm: sm, S: S0, Spct: S0 !== null && pm ? 100 * S0 / Math.abs(pm) : null, h2: h2, gain: gain, good: good };
+        return { trait: t, used: S.rankBy === 'index' ? !!inIndex[t] : S.rankBy === t, pm: pm, sm: sm, S: S0, Spct: S0 !== null && pm ? 100 * S0 / Math.abs(pm) : null, h2: h2, gain: gain, good: good, acc: D.acc[t] };
     });
+    renderAccuracyBox(inIndex);
     $('#sfd_gains').html(table(gains, [
         { k: 'trait', l: 'Trait', f: (v, r) => esc(v) + (r.used ? ' <span class="label label-success">ranked on</span>' : '') + (traitDir(v) === 'decrease' ? ' <span class="sfd-help">&darr;</span>' : '') },
         { k: 'pm', l: 'Population mean' }, { k: 'sm', l: 'Selected mean' }, { k: 'S', l: 'Selection differential' },
         { k: 'Spct', l: 'S %', f: (v, r) => v === null ? '&ndash;' : '<b style="color:' + (r.good ? '#2b7a4b' : '#dc2626') + '">' + (v >= 0 ? '+' : '') + fmt(v, 1) + '%</b>' },
         { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) },
-        { k: 'gain', l: 'Expected gain', f: (v, r) => v === null ? '&ndash;' : '<b style="color:' + (r.good ? '#2b7a4b' : '#dc2626') + '">' + (v >= 0 ? '+' : '') + fmt(v) + '</b>' }
+        { k: 'gain', l: 'Expected gain', f: (v, r) => v === null ? '&ndash;' : '<b style="color:' + (r.good ? '#2b7a4b' : '#dc2626') + '">' + (v >= 0 ? '+' : '') + fmt(v) + '</b>' },
+        { k: 'acc', l: 'Accuracy', f: v => accuracyBadge(v) }
     ]) + '<p class="sfd-help">' + (D.random ? 'Values are BLUPs (already shrunk by heritability): the expected gain equals the selection differential.' : 'Expected gain = H&sup2; &times; selection differential on BLUEs.') +
-        ' Red figures move the trait in the unwanted direction.</p>');
+        ' Red figures move the trait in the unwanted direction. Accuracy: how closely the genotype values follow the true genetic values (0 to 1), &radic;(1 &minus; PEV / &sigma;&sup2;<sub>G</sub>) from their standard errors.</p>');
     renderRankChart();
     renderRankTable();
     renderScatter();
+}
+
+function accuracyBadge(v) {
+    if (v === null || v === undefined || isNaN(Number(v))) return '&ndash;';
+    const a = Number(v);
+    return '<b style="color:' + (a >= 0.8 ? '#2b7a4b' : a >= 0.6 ? '#b7791f' : '#9b2c2c') + '">' + a.toFixed(2) + '</b>';
+}
+
+// accuracy of what the ranking uses: the index (its traits' accuracies,
+// weighted by the index weights, as the pipeline reports it) or one trait
+function renderAccuracyBox(inIndex) {
+    let a = null, what, per = '';
+    if (S.rankBy === 'index') {
+        what = 'the selection index';
+        const ts = D.traits.filter(t => inIndex[t] && D.acc[t] !== null && D.acc[t] !== undefined);
+        if (R.index && R.index.accuracy !== null && R.index.accuracy !== undefined) a = num(R.index.accuracy);
+        else if (ts.length) {
+            const w = ts.map(t => Math.abs(Number(inIndex[t].weight) || 0));
+            const ws = w.reduce((x, y) => x + y, 0);
+            a = ws > 0 ? ts.reduce((x, t, i) => x + w[i] * D.acc[t], 0) / ws : mean(ts.map(t => D.acc[t]));
+        }
+        per = ts.map(t => t + ': ' + D.acc[t].toFixed(2)).join(', ');
+    } else {
+        what = S.rankBy;
+        a = D.acc[S.rankBy] === undefined ? null : D.acc[S.rankBy];
+    }
+    const b = $('#sfd_sel_acc');
+    if (a === null) {
+        b.attr('class', 'sfd-acc-box').attr('title', 'The accuracy comes from the genetic variance, which is only estimated when the genotype is a random effect (BLUPs).')
+            .html('<div class="v" style="color:#9ca3af">n/a</div><div class="l">Selection accuracy</div>');
+        return;
+    }
+    const word = a >= 0.8 ? 'high' : a >= 0.6 ? 'moderate' : 'low';
+    b.attr('class', 'sfd-acc-box sfd-acc-' + word)
+        .attr('title', 'Selection accuracy of ' + what + (per ? ' (' + per + ')' : '') + ': how closely the ranking follows the true genetic values; 1 would be perfect.')
+        .html('<div class="v">' + a.toFixed(2) + ' <small>' + word + '</small></div><div class="l">Selection accuracy</div>');
 }
 
 function scoreLabel() { return S.rankBy === 'index' ? 'Index' : S.rankBy + ' (' + D.label + ')'; }
