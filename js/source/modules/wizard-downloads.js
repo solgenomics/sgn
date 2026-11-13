@@ -249,6 +249,19 @@ export function WizardDownloads(main_id,wizard){
 
     main.selectAll(".wizard-download-high-dim-phenotypes-info")
       .attr("value",`${trials.length||"Too few"} trials`);
+    // Download SRA BioSample export (NCBI Plant.1.0 template).
+    // Uses selected tissue samples, or all tissue samples of the selected trials.
+    main.selectAll(".wizard-download-sra")
+      .attr("disabled", trials.length > 0 || tissue_samples.length > 0 ? null : true)
+      .on("click", () => {
+        event.preventDefault();
+        var url = document.location.origin + '/breeders/trials/sra/download';
+        openWindowWithPost(url, {
+          trial_list:         JSON.stringify(trials.map(d => d.id)),
+          tissue_sample_list: JSON.stringify(tissue_samples.map(d => d.id)),
+          protocol_list:      JSON.stringify(hdp_protocols.map(d => d.id)),
+        });
+      });
     main.selectAll(".wizard-download-high-dim-phenotypes-protocol-info")
       .attr("value", hdp_protocols.length === 1 ? `${hdp_protocols.length} protocols` : hdp_protocols.length > 1 ? "Please select only 1 protocol" : "No protocol selected");
     main.selectAll(".wizard-download-high-dim-phenotypes")

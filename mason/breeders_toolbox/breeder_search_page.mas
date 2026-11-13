@@ -637,8 +637,12 @@ $dataset_id => undef
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-high-dim-phenotypes btn btn-sm btn-primary">
+              <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+              Download Phenotypes
+            </button>
+            <button class="wizard-download-sra btn btn-sm btn-primary" title="Download an NCBI SRA BioSample (Plant.1.0) sheet for the selected tissue samples, or all tissue samples in the selected trials">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Download Phenotypes
+                Download SRA
             </button>
           </div>
         </div>

@@ -33,6 +33,7 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Phenotypes::MetaDataMatrix;
+use CXGN::Phenotypes::SRAExport;
 use CXGN::Genotype::Search;
 use CXGN::Login;
 use CXGN::Genotype::DownloadFactory;
@@ -914,7 +915,59 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 
 # accession properties download -- end
 
+# sra download -- begin
 
+sub download_sra_biosample_action : Path('/breeders/trials/sra/download') Args(0) {
+    my $self = shift;
+    my $c    = shift;
+
+    my $user = $c->user();
+    if (!$user) {
+        $c->res->redirect(
+            uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } )
+        );
+        return;
+    }
+    my $sp_person_id = $user->get_object()->get_sp_person_id();
+
+    my $tissue_sample_list_json = $c->req->param('tissue_sample_list');
+    my $trial_list_json         = $c->req->param('trial_list');
+    my @tissue_sample_ids = ($tissue_sample_list_json && $tissue_sample_list_json ne 'null')
+        ? @{ _parse_list_from_json($tissue_sample_list_json) } : ();
+    my @trial_ids = ($trial_list_json && $trial_list_json ne 'null')
+        ? @{ _parse_list_from_json($trial_list_json) } : ();
+
+    # Explicitly selected tissue samples, otherwise all tissue samples of the selected trials
+    my $export = CXGN::Phenotypes::SRAExport->new({
+        bcs_schema        => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id),
+        people_schema     => $c->dbic_schema('CXGN::People::Schema', undef, $sp_person_id),
+        metadata_schema   => $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id),
+        phenome_schema    => $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id),
+        tissue_sample_ids => \@tissue_sample_ids,
+        trial_ids         => \@trial_ids,
+    });
+
+    if (!@{ $export->get_tissue_sample_ids() }) {
+        $c->res->status(400);
+        $c->res->content_type('text/plain');
+        $c->res->body("SRA export: no tissue samples found. Select one or more trials that contain tissue samples, or select tissue samples directly in the search wizard.");
+        return;
+    }
+
+    $c->tempfiles_subdir('download');
+    my $rel_file = $c->tempfile(TEMPLATE => 'download/sra_biosample_XXXX') . '.xlsx';
+    my $tempfile = $c->config->{basepath} . '/' . $rel_file;
+    $export->write_xlsx($tempfile);
+
+    my $time_stamp    = strftime "%Y-%m-%dT%H%M%S", localtime();
+    my $download_name = "sra_biosample_export_$time_stamp.xlsx";
+
+    $c->res->content_type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->header('Content-Disposition', qq[attachment; filename="$download_name"]);
+    $c->res->body(read_file($tempfile, binmode => ':raw'));
+}
+
+# sra download -- end
 
 # pedigree download -- begin
 
