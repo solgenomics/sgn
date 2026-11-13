@@ -83,6 +83,10 @@ has 'is_a_control' => (
     default => 0,
 );
 
+has 'FEC_batch' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
 
 sub get_active_transformations_in_project {
     my $self = shift;
@@ -588,6 +592,7 @@ sub update_transformation_metadata {
     my $transformation_stock_id = $self->transformation_stock_id();
     my $new_transformation_name = $self->transformation_name();
     my $new_transformation_notes = $self->transformation_notes();
+    my $new_FEC_batch = $self->FEC_batch();
 
     eval {
         if ($new_transformation_name) {
@@ -608,6 +613,16 @@ sub update_transformation_metadata {
                 stock_id=>$transformation_stock_id,
                 rank=>0,
                 value=>$new_transformation_notes
+            }),
+        };
+
+        my $FEC_batch_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'FEC_batch', 'stock_property')->cvterm_id();
+        if ($new_FEC_batch) {
+            my $FEC_batch_update = $schema->resultset('Stock::Stockprop')->update_or_create({
+                type_id=>$FEC_batch_cvterm_id,
+                stock_id=>$transformation_stock_id,
+                rank=>0,
+                value=>$new_FEC_batch
             }),
         };
     };

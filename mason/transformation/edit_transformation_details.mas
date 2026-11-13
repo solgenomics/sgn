@@ -3,6 +3,7 @@
 $transformation_name
 $transformation_id
 $transformation_notes
+$FEC_batch
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "CXGN.Trial"] &>
@@ -22,6 +23,14 @@ $transformation_notes
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_transformation_name" type="text" value="<%$transformation_name%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_FEC_batch">FEC_batch: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_FEC_batch" type="text" value="<%$FEC_batch%>"/>
                                 </div>
                             </div>
                         </div>
@@ -96,6 +105,10 @@ jQuery(document).ready(function(){
         highlight_changed_details(jQuery('#edit_transformation_name'));
     });
 
+    jQuery('#edit_FEC_batch').change(function(){
+        highlight_changed_details(jQuery('#edit_FEC_batch'));
+    });
+
     jQuery('#edit_transformation_notes').change(function(){
         highlight_changed_details(jQuery('#edit_transformation_notes'));
     });
@@ -103,6 +116,7 @@ jQuery(document).ready(function(){
     jQuery('#save_transformation_details').click(function(){
         let new_transformation_name;
         let new_transformation_notes;
+        let new_FEC_batch;
         let success_message;
 
         let changed_elements = document.getElementsByName("changed");
@@ -117,6 +131,10 @@ jQuery(document).ready(function(){
                 new_transformation_notes = changed_elements[i].value;
                 type = 'Notes';
                 success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_transformation_notes+"</b></li>";
+            } else if (id == 'edit_FEC_batch') {
+                new_FEC_batch = changed_elements[i].value;
+                type = 'FEC Batch';
+                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_FEC_batch+"</b></li>";
             }
         }
 
@@ -128,6 +146,7 @@ jQuery(document).ready(function(){
                 'transformation_stock_id': "<%$transformation_id%>",
                 'new_transformation_name': new_transformation_name,
                 'new_transformation_notes': new_transformation_notes,
+                'new_FEC_batch': new_FEC_batch,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
