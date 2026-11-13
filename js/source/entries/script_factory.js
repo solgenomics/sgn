@@ -2411,6 +2411,8 @@ function renderReview() {
     $('#sf_model_review_body').html(h);
 }
 
+function num0(v) { return v === null || v === undefined || v === '' || isNaN(Number(v)) ? null : Number(v); }
+
 function renderReviewRuns(rv) {
     const changes = suggestedChanges(rv);
     if (!rv.suggested && !rv.alt) return '';
@@ -2428,10 +2430,15 @@ function renderReviewRuns(rv) {
     const rows = compareRuns(rv.main.results, rv.alt.results, dec);
     const f = v => v === null || v === undefined ? '&ndash;' : fmt(v);
     const agree = r => r === null ? '&ndash;' : '<span class="' + (r >= 0.95 ? 'sf-agree-hi' : r >= 0.8 ? 'sf-agree-mid' : 'sf-agree-lo') + '">' + r.toFixed(2) + '</span>';
-    h += '<div class="table-responsive"><table class="table table-condensed sf-review-compare"><thead><tr><th rowspan="2">Trait</th><th colspan="3">Your model</th><th colspan="3">Suggested model</th><th rowspan="2" title="Correlation of the genotype values of the two models">Agreement</th><th rowspan="2" title="Accessions in the best 10% with both models">Same top 10%</th></tr>' +
-        '<tr><th>H&sup2;</th><th>&sigma;&sup2;<sub>G</sub></th><th>&sigma;&sup2;<sub>e</sub></th><th>H&sup2;</th><th>&sigma;&sup2;<sub>G</sub></th><th>&sigma;&sup2;<sub>e</sub></th></tr></thead><tbody>' +
-        rows.map(x => '<tr><td><b>' + esc(x.trait) + '</b></td><td>' + f(x.a.h2) + '</td><td>' + f(x.a.var_g) + '</td><td>' + f(x.a.var_e) + '</td><td>' + f(x.b.h2) + '</td><td>' + f(x.b.var_g) + '</td><td>' + f(x.b.var_e) + '</td>' +
-            '<td>' + agree(x.r) + '</td><td>' + (x.top ? x.top.same + ' of ' + x.top.n : '&ndash;') + '</td></tr>').join('') + '</tbody></table></div>';
+    const ixAcc = res => (res && res.index && num0(res.index.accuracy) !== null) ? num0(res.index.accuracy) : null;
+    const ia = ixAcc(rv.main.results), ib = ixAcc(rv.alt.results);
+    h += '<div class="table-responsive"><table class="table table-condensed sf-review-compare"><thead><tr><th rowspan="2">Trait</th><th colspan="4">Your model</th><th colspan="4">Suggested model</th><th rowspan="2" title="Correlation of the genotype values of the two models">Agreement</th><th rowspan="2" title="Accessions in the best 10% with both models">Same top 10%</th></tr>' +
+        '<tr><th>H&sup2;</th><th title="Selection accuracy">Accuracy</th><th>&sigma;&sup2;<sub>G</sub></th><th>&sigma;&sup2;<sub>e</sub></th><th>H&sup2;</th><th title="Selection accuracy">Accuracy</th><th>&sigma;&sup2;<sub>G</sub></th><th>&sigma;&sup2;<sub>e</sub></th></tr></thead><tbody>' +
+        rows.map(x => '<tr><td><b>' + esc(x.trait) + '</b></td><td>' + f(x.a.h2) + '</td><td>' + accuracyBadge(x.a.acc) + '</td><td>' + f(x.a.var_g) + '</td><td>' + f(x.a.var_e) + '</td>' +
+            '<td>' + f(x.b.h2) + '</td><td>' + accuracyBadge(x.b.acc) + '</td><td>' + f(x.b.var_g) + '</td><td>' + f(x.b.var_e) + '</td>' +
+            '<td>' + agree(x.r) + '</td><td>' + (x.top ? x.top.same + ' of ' + x.top.n : '&ndash;') + '</td></tr>').join('') +
+        (ia !== null || ib !== null ? '<tr class="sf-review-index-row"><td><b>Selection index</b></td><td></td><td>' + accuracyBadge(ia) + '</td><td></td><td></td><td></td><td>' + accuracyBadge(ib) + '</td><td></td><td></td><td></td><td></td></tr>' : '') +
+        '</tbody></table></div>';
     h += '<p class="sf-help">How to read it: when both models agree (agreement close to 1, the same top accessions), the simpler one is the safer choice, since it gives the same answer with less to estimate. ' +
         'When they disagree, the heritability alone does not decide it: a higher H&sup2; can come from fitting noise. Choose the model whose terms you can explain from how the trials were laid out.</p>';
     const btn = (w, label) => rv.chosen === w
@@ -2479,6 +2486,18 @@ function multiTraitHtml(mt) {
     return h + '<p class="sf-help">Genetic correlations from the multi-trait model (G<sub>0</sub>): how similarly the accessions rank on two dates. High correlations between consecutive dates are expected; a low one means the ranking changes during the season.</p>';
 }
 
+// software and packages the run used, with versions and references to cite
+function softwareHtml(sw) {
+    sw = arr(sw);
+    if (!sw.length) return '';
+    return '<div class="sf-card sf-software-card"><h4><span class="glyphicon glyphicon-wrench"></span> Software used in this analysis</h4>' +
+        '<div class="table-responsive"><table class="table table-condensed sf-software"><thead><tr><th>Software</th><th>Version</th><th>Used for</th><th>Reference</th></tr></thead><tbody>' +
+        sw.map(x => '<tr><td><b>' + esc(x.name) + '</b></td><td>' + (x.version ? esc(x.version) : '<span class="sf-muted">&ndash;</span>') + '</td><td>' + esc(x.used_for) + '</td>' +
+            '<td><small>' + (x.reference ? esc(x.reference) : '<span class="sf-muted">&ndash;</span>') + '</small></td></tr>').join('') +
+        '</tbody></table></div><p class="sf-help">Please cite the software you used when you publish these results, together with Breedbase.' +
+        (sw.some(x => x.name === 'BLUPF90+') ? ' BLUPF90+ is free for research and academic use; commercial use needs a licence.' : '') + '</p></div>';
+}
+
 function renderResults() {
     const res = state.results;
     const s = res.summary || {};
@@ -2509,6 +2528,7 @@ function renderResults() {
         { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' }, { k: 'var_ge', l: res.strategy === 'two_stage' ? '&sigma;&sup2;<sub>GE+e</sub>' : '&sigma;&sup2;<sub>GE</sub>' },
         { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status', f: v => v === 'OK' ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '<small>' + esc(v) + '</small>' }
     ]);
+    ov += softwareHtml(res.software);
     $('#sf_tab_overview').html(ov);
 
     // outliers
@@ -2578,7 +2598,7 @@ function accuracyBadge(v) {
     if (v === null || v === undefined || isNaN(Number(v))) return '&ndash;';
     const a = Number(v);
     const c = a >= 0.8 ? '#2b7a4b' : a >= 0.6 ? '#b7791f' : '#9b2c2c';
-    return '<b style="color:' + c + '">' + a.toFixed(2) + '</b>';
+    return '<b style="color:' + c + '">' + a.toFixed(3) + '</b>';
 }
 
 function accuracyStat(ix) {
@@ -2589,10 +2609,10 @@ function accuracyStat(ix) {
     }
     const a = Number(ix.accuracy);
     const word = a >= 0.8 ? 'high' : a >= 0.6 ? 'moderate' : 'low';
-    const per = arr(ix.gains).filter(g => g.in_index && g.accuracy !== null && g.accuracy !== undefined).map(g => g.trait + ': ' + Number(g.accuracy).toFixed(2)).join(', ');
+    const per = arr(ix.gains).filter(g => g.in_index && g.accuracy !== null && g.accuracy !== undefined).map(g => g.trait + ': ' + Number(g.accuracy).toFixed(3)).join(', ');
     return '<div class="sf-stat sf-stat-acc sf-acc-' + word + '" title="Selection accuracy of the index: mean accuracy of its traits, weighted by their index weights (' + esc(per) + '). ' +
         'It says how closely the ranking follows the true genetic values: 1 would be perfect.">' +
-        '<div class="v">' + a.toFixed(2) + ' <small>' + word + '</small></div><div class="l">Selection accuracy</div></div>';
+        '<div class="v">' + a.toFixed(3) + ' <small>' + word + '</small></div><div class="l">Selection accuracy</div></div>';
 }
 
 function renderIndexResults(ix, label) {

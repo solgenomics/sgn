@@ -64,6 +64,7 @@ $run_id => ''
         <li class="sfd-zones-only"><a href="#sfd_zones_section">Zones</a></li>
         <li><a href="#sfd_outliers_section">Outliers</a></li>
         <li><a href="#sfd_model_section">Model</a></li>
+        <li id="sfd_nav_software" style="display:none"><a href="#sfd_software_section">Software</a></li>
         <li><a href="#sfd_log_section">Analysis log</a></li>
       </ul>
       <div class="sfd-bar-controls">
@@ -267,6 +268,13 @@ $run_id => ''
         </section>
 
         <!-- analysis log -->
+        <section class="sfd-section" id="sfd_software_section" style="display:none">
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3><span class="glyphicon glyphicon-wrench"></span> Software used in this analysis</h3><span class="sfd-help">What each program did in this run</span></div>
+            <div id="sfd_software"></div>
+          </div>
+        </section>
+
         <section class="sfd-section" id="sfd_log_section">
           <div class="sfd-card">
             <div class="sfd-card-head"><h3>Analysis log</h3><span class="sfd-help">Notes from the run, grouped by kind</span></div>
@@ -354,6 +362,8 @@ jQuery(document).ready(function() {
 .sfd-small-multiples h5 { margin: 0 0 4px; font-weight: 600; font-size: 13px; }
 .sfd-sel-top { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
 .sfd-sel-top .sfd-slider { flex: 1; min-width: 260px; }
+.sfd-software td { vertical-align: top !important; }
+.sfd-software td:nth-child(2) { white-space: nowrap; }
 .sfd-acc-box { background: #fff; border: 1px solid var(--b); border-radius: 10px; padding: 6px 14px; min-width: 150px; cursor: help; }
 .sfd-acc-box .v { font-size: 20px; font-weight: 600; line-height: 1.2; }
 .sfd-acc-box .v small { font-size: 12px; margin-left: 2px; }

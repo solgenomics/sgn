@@ -411,6 +411,18 @@ function renderHeader() {
     $('#sfd_downloads').html(Object.keys(files).map(k => '<li><a href="' + esc(files[k]) + '" download>' + esc(dl[k] || k) + ' (.csv)</a></li>').join('') || '<li class="disabled"><a>No files</a></li>');
 }
 
+// software and packages the run used: version, what each did in this run,
+// reference to cite (runs made before this was recorded have none)
+function renderSoftware() {
+    const sw = arr(R.software);
+    $('#sfd_software_section, #sfd_nav_software').toggle(sw.length > 0);
+    if (!sw.length) return;
+    $('#sfd_software').html('<div class="table-responsive"><table class="table table-condensed sfd-software"><thead><tr><th>Software</th><th>Version</th><th>What it did in this analysis</th><th>Reference</th></tr></thead><tbody>' +
+        sw.map(x => '<tr><td><b>' + esc(x.name) + '</b></td><td>' + (x.version ? esc(x.version) : '&ndash;') + '</td><td>' + esc(x.used_for) + '</td><td><small>' + (x.reference ? esc(x.reference) : '&ndash;') + '</small></td></tr>').join('') +
+        '</tbody></table></div><p class="sfd-help">Please cite the software you used when you publish these results, together with Breedbase.' +
+        (sw.some(x => x.name === 'BLUPF90+') ? ' BLUPF90+ is free for research and academic use; commercial use needs a licence.' : '') + '</p>');
+}
+
 function renderOverview() {
     const s = R.summary || {};
     const nObs = arr(R.outlier_summary).reduce((a, r) => a + (Number(r.n_observations) || 0), 0);
@@ -888,7 +900,7 @@ function renderSelection() {
 function accuracyBadge(v) {
     if (v === null || v === undefined || isNaN(Number(v))) return '&ndash;';
     const a = Number(v);
-    return '<b style="color:' + (a >= 0.8 ? '#2b7a4b' : a >= 0.6 ? '#b7791f' : '#9b2c2c') + '">' + a.toFixed(2) + '</b>';
+    return '<b style="color:' + (a >= 0.8 ? '#2b7a4b' : a >= 0.6 ? '#b7791f' : '#9b2c2c') + '">' + a.toFixed(3) + '</b>';
 }
 
 // accuracy of what the ranking uses: the index (its traits' accuracies,
@@ -904,7 +916,7 @@ function renderAccuracyBox(inIndex) {
             const ws = w.reduce((x, y) => x + y, 0);
             a = ws > 0 ? ts.reduce((x, t, i) => x + w[i] * D.acc[t], 0) / ws : mean(ts.map(t => D.acc[t]));
         }
-        per = ts.map(t => t + ': ' + D.acc[t].toFixed(2)).join(', ');
+        per = ts.map(t => t + ': ' + D.acc[t].toFixed(3)).join(', ');
     } else {
         what = S.rankBy;
         a = D.acc[S.rankBy] === undefined ? null : D.acc[S.rankBy];
@@ -918,7 +930,7 @@ function renderAccuracyBox(inIndex) {
     const word = a >= 0.8 ? 'high' : a >= 0.6 ? 'moderate' : 'low';
     b.attr('class', 'sfd-acc-box sfd-acc-' + word)
         .attr('title', 'Selection accuracy of ' + what + (per ? ' (' + per + ')' : '') + ': how closely the ranking follows the true genetic values; 1 would be perfect.')
-        .html('<div class="v">' + a.toFixed(2) + ' <small>' + word + '</small></div><div class="l">Selection accuracy</div>');
+        .html('<div class="v">' + a.toFixed(3) + ' <small>' + word + '</small></div><div class="l">Selection accuracy</div>');
 }
 
 function scoreLabel() { return S.rankBy === 'index' ? 'Index' : S.rankBy + ' (' + D.label + ')'; }
@@ -1558,6 +1570,7 @@ function renderAll() {
     safely('accession x environment', renderGxeHeat);
     if (D.zones.length) safely('zones', renderZones);
     safely('outliers', renderOutliers);
+    safely('software', renderSoftware);
     safely('model', renderModel);
     safely('ranking', renderRankTable);
 }

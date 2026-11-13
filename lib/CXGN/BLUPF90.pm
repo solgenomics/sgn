@@ -564,11 +564,21 @@ sub _round_limit {
 #   random   { term => [{level, solution, se}] }
 #   mu       mean of the fixed part, notes, rounds, seconds, dir
 # Dies when blupf90+ failed.
+# version printed by blupf90+ ("BLUPF90+ ver. 2.76"), kept from the first fit read
+sub _note_version {
+    my ($self, $out) = @_;
+    return if $self->{program_version};
+    my ($v) = map { /BLUPF90\+?\s+ver\.\s*(\S+)/i ? $1 : () } @$out[0 .. ($#$out < 15 ? $#$out : 15)];
+    $self->{program_version} = $v if $v;
+}
+sub program_version { return $_[0]->{program_version}; }
+
 sub read {
     my ($self, $job) = @_;
     return $self->read_mt($job) if $job->{mt};
     my $wd = $job->{dir};
     my @out = -e "$wd/blupf90.out" ? _read_lines("$wd/blupf90.out") : ();
+    $self->_note_version(\@out);
     my @notes = @{$job->{notes}};
     my $tail = sub { join(' | ', grep { /\S/ } @out[ ($#out > 2 ? $#out - 1 : 0) .. $#out ]) };
     die "blupf90+ failed: " . $tail->() . "\n" if !-e "$wd/solutions";
@@ -797,6 +807,7 @@ sub read_mt {
     my $wd = $job->{dir};
     my $K = $job->{K};
     my @out = -e "$wd/blupf90.out" ? _read_lines("$wd/blupf90.out") : ();
+    $self->_note_version(\@out);
     my @notes = @{ $job->{notes} };
     my $tail = sub { join(' | ', grep { /\S/ } @out[ ($#out > 2 ? $#out - 1 : 0) .. $#out ]) };
     die "blupf90+ failed: " . $tail->() . "\n" if !-e "$wd/solutions";

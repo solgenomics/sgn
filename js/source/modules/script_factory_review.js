@@ -325,6 +325,20 @@ function pearson(x, y) {
     return sxx > 0 && syy > 0 ? sxy / Math.sqrt(sxx * syy) : null;
 }
 
+// selection accuracy of a trait in a run's results: the pipeline's value (index
+// gains), else computed as it does: mean sqrt(1 - SE^2 / var_g) over the
+// accessions (genotype random), sqrt(H2) without standard errors
+export function traitAccuracy(res, trait) {
+    const g = arr(res && res.index && res.index.gains).find(x => x.trait === trait);
+    if (g && num(g.accuracy) !== null) return num(g.accuracy);
+    const s2 = arr(res && res.stage2).find(x => x.trait === trait) || {};
+    const vg = num(s2.var_g), h2 = num(s2.h2);
+    const random = !res || res.genotype_effect !== 'fixed';
+    const se = arr(res && res.genotype_values_long).filter(x => x.trait === trait).map(x => num(x.se)).filter(x => x !== null);
+    if (random && vg !== null && vg > 0 && se.length) return se.reduce((a, x) => a + Math.sqrt(Math.max(0, 1 - x * x / vg)), 0) / se.length;
+    return h2 !== null && random ? Math.sqrt(Math.max(0, h2)) : null;
+}
+
 // a, b: results of the two runs; decrease(trait): true when lower values are
 // better (selection index direction). Returns one row per trait:
 // { trait, a: {h2, var_g, var_e, model}, b: {...}, r, top: {n, same} }
@@ -349,7 +363,7 @@ export function compareRuns(a, b, decrease) {
             const ta = best(0), tb = best(1);
             top = { n: k, same: ta.filter(x => tb.indexOf(x) >= 0).length };
         }
-        const pick = x => ({ h2: num(x.h2), var_g: num(x.var_g), var_e: num(x.var_e), model: x.model || '' });
-        return { trait: t, a: pick(A[t]), b: pick(B[t]), r: r, top: top };
+        const pick = (x, res) => ({ h2: num(x.h2), var_g: num(x.var_g), var_e: num(x.var_e), model: x.model || '', acc: traitAccuracy(res, t) });
+        return { trait: t, a: pick(A[t], a), b: pick(B[t], b), r: r, top: top };
     });
 }

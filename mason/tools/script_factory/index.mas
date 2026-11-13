@@ -879,6 +879,10 @@ table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-agree-hi { color: #2b7a4b; font-weight: 600; }
 .sf-agree-mid { color: #8a6d3b; font-weight: 600; }
 .sf-agree-lo { color: #a94442; font-weight: 600; }
+.sf-software-card { margin-top: 16px; }
+.sf-software td { vertical-align: top !important; }
+.sf-software td:nth-child(2) { white-space: nowrap; }
+.sf-review-index-row td { border-top: 2px solid var(--sf-border) !important; }
 .sf-review-choose-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .sf-review-chosen { color: #2b7a4b; font-weight: 600; }
 .sf-rep-reminder { margin-top: 4px; font-size: 12px; color: #8a6d3b; }

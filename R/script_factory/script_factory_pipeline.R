@@ -2077,6 +2077,48 @@ anc_out <- if (length(ancestor_values)) do.call(rbind, ancestor_values) else NUL
 if (!is.null(anc_out)) anc_out$trait <- short_trait(anc_out$trait)
 
 # CSV files for download
+# software of the run, with versions, what each program did in this run and
+# the reference to cite (results overview and dashboard)
+software_used <- function() {
+  pv <- function(p) tryCatch(as.character(utils::packageVersion(p)), error = function(e) "")
+  s1 <- if (is.null(stage1_summary)) data.frame(trial = character(), trait = character(), model = character()) else stage1_summary
+  is_sp <- grepl("^SpATS", s1$model)
+  is_lm <- nzchar(s1$model) & !is_sp & !grepl("^(glmmTMB|Single trial|Accession means|raw values)", s1$model)
+  nt <- function(i) n_levels(s1$trial[i]); nr <- function(i) n_levels(s1$trait[i])
+  s2 <- if (is.null(stage2_summary)) data.frame(trait = character(), model = character()) else stage2_summary
+  s2_lm <- s2$model != "" & !grepl("^(glmmTMB|Single trial)", s2$model)
+  g_txt <- if (genotype_random) "genotype random, BLUPs" else "genotype fixed, BLUEs"
+  plural <- function(n, w) paste(n, if (n == 1) w else paste0(w, "s"))
+  ok_traits <- if (is.null(genotype_values)) character() else unique(as.character(genotype_values$trait))
+  steps <- c("read the data, detected the trial designs and checked which design factors the data support",
+             switch(out_method, iqr = "applied the IQR outlier rule", madr = "applied the BH-MADR outlier rule (residuals of lm models)", NULL),
+             if (!is.null(index_result)) paste0("computed the selection index (", if (identical(index_result$method, "rank_sum")) "rank sum" else "Z-score", ")"),
+             if (length(zone_results)) "grouped the environments into zones (correlation clustering / Lin test)")
+  sw <- list(list(name = "R", version = paste(R.version$major, R.version$minor, sep = "."),
+                  used_for = paste0("Ran the Breedbase Analysis Pipeline: ", paste(steps, collapse = "; "), "."),
+                  reference = "R Core Team. R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria."))
+  if (any(is_sp))
+    sw[[length(sw) + 1]] <- list(name = "SpATS", version = pv("SpATS"),
+      used_for = paste0("Fitted the stage-1 spatial models of ", plural(nt(is_sp), "trial"), " x ", plural(nr(is_sp), "trait"), " (", plural(sum(is_sp), "model"),
+                        "): a 2D P-spline surface (PSANOVA) with row and column effects corrects the field trend; its accession BLUEs went to stage 2."),
+      reference = "Rodriguez-Alvarez MX, Boer MP, van Eeuwijk FA, Eilers PHC (2018). Correcting for spatial heterogeneity in plant breeding experiments with P-splines. Spatial Statistics 23: 52-71.")
+  lm_parts <- c(if (any(is_lm)) paste0("the stage-1 design models of ", plural(sum(is_lm), "trial x trait combination"), " (", plural(nt(is_lm), "trial"), ")"),
+                if (any(s2_lm) && strategy == "two_stage") paste0("the stage-2 models of ", plural(sum(s2_lm), "trait"), " across trials (", g_txt, if (weighting == "inverse_se2") ", weights 1/SE^2" else "", ")"),
+                if (any(s2_lm) && strategy != "two_stage") paste0("the single-stage models of ", plural(sum(s2_lm), "trait"), " (", g_txt, ")"))
+  if (length(lm_parts))
+    sw[[length(sw) + 1]] <- list(name = "lme4", version = pv("lme4"), used_for = paste0("Fitted ", paste(lm_parts, collapse = " and "), " by REML."),
+      reference = "Bates D, Maechler M, Bolker B, Walker S (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software 67(1): 1-48.")
+  if (length(multi_trait_out))
+    sw[[length(sw) + 1]] <- list(name = "glmmTMB", version = pv("glmmTMB"),
+      used_for = paste0("Fitted the multi-trait model", if (length(multi_trait_out) > 1) "s" else "", " of ",
+                        paste(vapply(names(multi_trait_out), function(t) { m <- multi_trait_out[[t]]; paste0(t, " (", plural(m$n_occasions, "date"),
+                          if (length(m$covariates)) paste0(" + dates of ", paste(m$covariates, collapse = ", ")) else "", ")") }, ""), collapse = "; "),
+                        ": genetic covariance between dates G0 (x) I and residual R0 (x) I, values = mean over the dates",
+                        if (any(vapply(multi_trait_out, function(m) isTRUE(m$adjusted), logical(1)))) ", adjusted genetically for the covariate" else "", "."),
+      reference = "Brooks ME, Kristensen K, van Benthem KJ, Magnusson A, Berg CW, Nielsen A, Skaug HJ, Maechler M, Bolker BM (2017). glmmTMB balances speed and flexibility among packages for zero-inflated generalized linear mixed modeling. The R Journal 9(2): 378-400.")
+  sw
+}
+
 write_csv <- function(x, suffix) {
   if (is.null(x) || !nrow(x)) return(NULL)
   f <- paste0(output_prefix, "_", suffix, ".csv")
@@ -2135,6 +2177,7 @@ result <- list(
   })),
   repeated = list(time = rep_time, gxtime = rep_gxtime, traits = repeated_info),
   multi_trait = if (length(multi_trait_out)) multi_trait_out else NULL,
+  software = software_used(),
   covariates = unname(as.list(cov_label)),
   outliers = outliers,
   outlier_summary = outlier_summary,

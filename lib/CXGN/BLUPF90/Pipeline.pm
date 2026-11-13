@@ -1510,6 +1510,40 @@ sub _multi_trait_setup {
     $self->{traits} = \@new_traits;
 }
 
+# software of the run, with versions, what each program did in this run and
+# the reference to cite (results overview and dashboard)
+sub _software {
+    my $self = shift;
+    my $plural = sub { my ($n, $w) = @_; return "$n " . ($n == 1 ? $w : "${w}s"); };
+    my @s1 = grep { ($_->{model} // '') =~ /^BLUPF90\+/ } @{ $self->{stage1_summary} || [] };
+    my $nt = sub { n_levels(map { $_->{trial} } @_) };
+    my $nr = sub { n_levels(map { $_->{trait} } @_) };
+    my @surf = grep { ($_->{model} // '') =~ /PSpline/ } @s1;
+    my @s2 = grep { ($_->{model} // '') =~ /^BLUPF90\+/ } @{ $self->{stage2_summary} || [] };
+    my @mt = grep { ($_->{model} // '') =~ /multi-trait/ } @s2;
+    my @uni = grep { ($_->{model} // '') !~ /multi-trait/ } @s2;
+    my $g = $self->{genotype_random} ? 'genotype random, BLUPs' : 'genotype fixed, BLUEs';
+    my $rel = { pedigree => 'the pedigree relationship matrix A (with inbreeding)', genomic => 'the genomic relationship matrix G (genomic module)',
+                single_step => 'the single-step relationship matrix H (pedigree + genomic)' }->{ $self->{gen_model} // '' };
+    my @parts;
+    push @parts, "the stage-1 models of " . $plural->($nt->(@s1), 'trial') . " x " . $plural->($nr->(@s1), 'trait') . " (" . $plural->(scalar(@s1), 'model') . ")" .
+                 (@surf ? ", " . $plural->($nt->(@surf), 'trial') . " with a SpATS-like 2D P-spline surface (covariance built by Breedbase)" : '') if @s1;
+    push @parts, ($self->{strategy} eq 'two_stage' ? "the stage-2 models of " : "the single-stage models of ") . $plural->(scalar(@uni), 'trait') . " ($g" . ($rel ? ", $rel" : '') . ")" if @uni;
+    push @parts, "the multi-trait model" . (@mt > 1 ? 's' : '') . " of " . join('; ', map { my $m = $self->{multi_trait}->{ $_->{trait} } || {};
+                 "$_->{trait} (" . $plural->($m->{n_occasions} // 0, 'date') . (@{ $m->{covariates} || [] } ? ' + dates of ' . join(', ', @{ $m->{covariates} }) : '') . ")" } @mt) .
+                 " (G0 (x) " . ({ pedigree => 'A', genomic => 'G', single_step => 'H' }->{ $self->{gen_model} // '' } // 'I') . ", R0 (x) I)" if @mt;
+    my $method = opt(opt($self->recipe, 'outliers', {}), 'method', 'none');
+    my @steps = ('read the data, detected the trial designs and checked which design factors the data support');
+    push @steps, { iqr => 'applied the IQR outlier rule', madr => 'applied the BH-MADR outlier rule (least-squares residuals)' }->{$method} // ();
+    push @steps, 'computed the selection index' if $self->{index};
+    push @steps, 'grouped the environments into zones' if @{ $self->{zone_results} || [] };
+    return [
+        @parts ? { name => 'BLUPF90+', version => $self->{f90}->program_version // '', used_for => 'Fitted ' . join(' and ', @parts) . ' by sparse AI-REML.',
+                   reference => 'Misztal I, Tsuruta S, Lourenco D, Masuda Y, Aguilar I, Legarra A, Vitezica Z (2018). Manual for BLUPF90 family of programs. University of Georgia, Athens, USA.' } : (),
+        { name => 'Perl', version => sprintf('%vd', $^V), used_for => 'Ran the Breedbase Analysis Pipeline (CXGN::BLUPF90 engine): ' . join('; ', @steps) . '.', reference => '' },
+    ];
+}
+
 # small dense helpers
 sub _mat_inv {
     my $A = [ map { [@$_] } @{ $_[0] } ];
@@ -2312,6 +2346,7 @@ sub _output {
         repeated => { time => $self->{rep_time}, gxtime => $self->{rep_gxtime} ? $TRUE : $FALSE, traits => $self->{repeated_info} },
         covariates => [ map { $self->{cov_label}->{$_} } @{$self->{cov_vars}} ],
         multi_trait => $self->{multi_trait},
+        software => $self->_software(),
         outliers => $self->{outliers},
         outlier_summary => $self->{outlier_summary},
         stage1 => @{$self->{stage1_summary}} ? $self->{stage1_summary} : undef,
