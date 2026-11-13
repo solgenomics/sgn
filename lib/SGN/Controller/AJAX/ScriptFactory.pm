@@ -177,14 +177,40 @@ sub blupf90_dir {
 # asks for BLUPF90+ or for a pedigree (A matrix) model, which only BLUPF90+
 # fits, and blupf90+ is installed; 'lme4' (the R pipeline) otherwise. A
 # pedigree model switches the whole run to BLUPF90+ (recipe engine_reason).
+# R package glmmTMB installed (fits multi-trait repeated measurements in the
+# R engine); checked with Rscript, remembered for 10 minutes per process
+my %GLMMTMB_CHECK = (at => 0, ok => 0);
+sub glmmtmb_available {
+    if (time() - $GLMMTMB_CHECK{at} > 600) {
+        my $ok = system('Rscript', '--vanilla', '-e', 'quit(status = if (requireNamespace("glmmTMB", quietly = TRUE)) 0 else 1)') == 0 ? 1 : 0;
+        %GLMMTMB_CHECK = (at => time(), ok => $ok);
+    }
+    return $GLMMTMB_CHECK{ok};
+}
+
+# contact shown to commercial users of BLUPF90+ (free for research only)
+sub blupf90_license_contact {
+    my $c = shift;
+    # sites set their own contact in sgn_local.conf (blupf90_license_contact)
+    return $c->config->{blupf90_license_contact} || 'the BLUPF90 team at the University of Georgia (Animal and Dairy Science)';
+}
+
 sub _run_engine {
-    my ($recipe, $f90_dir) = @_;
+    my ($recipe, $f90_dir, $tmb) = @_;
     return 'lme4' if !$f90_dir;
     return 'blupf90' if ($recipe->{engine} // '') eq 'blupf90';
     my $genetic = ref($recipe->{genetic}) eq 'HASH' ? $recipe->{genetic} : {};
     if (($genetic->{model} // '') =~ /^(pedigree|genomic|single_step)$/) {
         $recipe->{engine} = 'blupf90';
         $recipe->{engine_reason} = $genetic->{model};
+        return 'blupf90';
+    }
+    # repeated measurements as a multi-trait model (each date a trait): glmmTMB
+    # in the R engine, otherwise BLUPF90+
+    my $rt = ref($recipe->{repeated}) eq 'HASH' && ref($recipe->{repeated}->{traits}) eq 'HASH' ? $recipe->{repeated}->{traits} : {};
+    if (!$tmb && grep { ($_ // '') eq 'multi' } values %$rt) {
+        $recipe->{engine} = 'blupf90';
+        $recipe->{engine_reason} = 'multi_trait';
         return 'blupf90';
     }
     return 'lme4';
@@ -1163,7 +1189,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     my $pedigree_file = "$dir/$token.pedigree.txt";
     my $repeated_file = "$dir/$token.repeated.txt";
     my $f90_dir = blupf90_dir($c);
-    my $engine = _run_engine($recipe, $f90_dir);
+    my $engine = _run_engine($recipe, $f90_dir, glmmtmb_available());
     $meta{engine} = $engine;
     my @args = (
         "$dir/$token.phenotype.txt",

@@ -281,9 +281,10 @@ dat$father <- if (!is.null(pedigree)) pedigree$father[match(dat$accession, pedig
 #          measurements of one plot and optionally genotype x date
 #          (recipe$repeated$gxtime). Outlier rules, zones and covariates use
 #          the plot mean of these traits.
-REP_SUMMARIES <- c("mean", "first", "last", "max", "min", "sum", "auc", "slope", "all")
+REP_SUMMARIES <- c("mean", "first", "last", "max", "min", "sum", "auc", "slope", "all", "multi")
 REP_LABEL <- c(mean = "mean", first = "first measurement", last = "last measurement", max = "maximum", min = "minimum",
-               sum = "sum", auc = "area under the curve", slope = "slope per day", all = "all measurements (repeated-measures model)")
+               sum = "sum", auc = "area under the curve", slope = "slope per day", all = "all measurements (repeated-measures model)",
+               multi = "multi-trait (each date a trait)")
 rep_cfg <- opt(recipe, "repeated", list())
 rep_time <- opt(rep_cfg, "time", "date")          # date | linear
 if (!rep_time %in% c("date", "linear")) rep_time <- "date"
@@ -326,6 +327,11 @@ rep_traits_cfg <- opt(rep_cfg, "traits", list())
 for (key in names(rep_traits_cfg)) {
   how <- as.character(unlist(rep_traits_cfg[[key]]))[1]
   if (is.na(how) || !how %in% REP_SUMMARIES) { add_warning("Repeated measurements of '", short_trait(key), "': unknown summary '", how, "'; the plot mean was used."); next }
+  if (how == "multi" && !requireNamespace("glmmTMB", quietly = TRUE)) {
+    # the multi-trait model (each date a trait) needs glmmTMB in R, or the BLUPF90+ engine
+    add_warning(short_trait(key), ": the multi-trait model of repeated measurements needs the R package glmmTMB (not installed) or the BLUPF90+ engine; its measurements were modelled with the repeated-measures model (all measurements) instead.")
+    how <- "all"
+  }
   full <- match_trait(key)
   if (is.na(full)) next     # not in this dataset: reported with the traits / covariates
   rl <- if (is.null(rep_long)) NULL else rep_long[rep_long$trait == full, ]
@@ -337,8 +343,8 @@ for (key in names(rep_traits_cfg)) {
   info <- list(trait = short_trait(full), summary = how, label = REP_LABEL[[how]], n_plots = length(n_per),
                n_repeated_plots = sum(n_per > 1), n_measurements = nrow(rl), n_dates = n_levels(rl$mdate[rl$mdate != "(no date)"]),
                n_missing_summary = 0L)
-  if (how == "all") {
-    rep_mode[[full]] <- "all"
+  if (how == "all" || how == "multi") {
+    rep_mode[[full]] <- how
   } else if (how != "mean") {
     vals <- vapply(split(seq_len(nrow(rl)), rl$unit), function(i) rep_summary_fun(rl$value[i], rl$day[i], how), numeric(1))
     new <- unname(vals[pheno_unit])
@@ -375,6 +381,7 @@ for (t in traits) dat[[t]] <- suppressWarnings(as.numeric(pheno[[t]]))
 cov_list <- unlist(opt(recipe, "covariates", opt(opt(recipe, "single", list()), "covariates", list())))
 cov_vars <- character()
 cov_label <- character()     # cov_x -> trait display name
+cov_full <- character()      # cov_x -> full trait name
 for (cv in unique(cov_list)) {
   full <- match_trait(cv)
   if (is.na(full)) { add_warning("Covariate '", short_trait(cv), "' is not in this dataset and was skipped."); next }
@@ -383,6 +390,7 @@ for (cv in unique(cov_list)) {
   if (!any(!is.na(dat[[vn]]))) { add_warning("Covariate '", short_trait(cv), "' has no numeric values and was skipped."); next }
   cov_vars <- c(cov_vars, vn)
   cov_label[[vn]] <- short_trait(full)
+  cov_full[[vn]] <- full
 }
 if (length(cov_vars)) log_step("Covariates: ", paste(cov_label, collapse = ", "))
 for (k in names(treatment_factors)) dat[[k]] <- treatment_factors[[k]]$values
@@ -1011,9 +1019,44 @@ expand_repeated <- function(d, trait) {
   e$tr_date <- factor(ifelse(e$mdate == first_date, "(first date)", paste(e$trial, e$mdate)))
   e$date_f <- factor(e$mdate)
   e$plot_u <- factor(e$unit)
+  # a covariate measured on several dates follows the measurements: each one
+  # takes the covariate value of its plot on the nearest date (within
+  # COV_DAYS days); measurements without one are left out (reported)
+  tv <- character(); drop <- rep(FALSE, nrow(e))
+  for (vn in cov_vars) {
+    cf <- cov_full[[vn]]
+    cl <- if (is.null(rep_long)) NULL else rep_long[rep_long$trait == cf & !is.na(rep_long$day), ]
+    if (is.null(cl) || !nrow(cl) || is.null(e[[vn]])) next
+    by_u <- split(cl, cl$unit)
+    v <- e[[vn]]
+    for (i in which(!is.na(e$day))) {
+      m <- by_u[[as.character(e$unit[i])]]
+      dd <- if (is.null(m)) numeric() else abs(m$day - e$day[i])
+      ok <- which(dd <= COV_DAYS)
+      if (length(ok)) v[i] <- m$value[ok[which.min(dd[ok])]] else { v[i] <- NA; drop[i] <- TRUE }
+    }
+    e[[vn]] <- v
+    tv <- c(tv, cov_label[[vn]])
+  }
+  e <- e[!drop, , drop = FALSE]
   rownames(e) <- NULL
+  attr(e, "tv_cov") <- tv
+  attr(e, "cov_dropped") <- sum(drop)
   e
 }
+COV_DAYS <- 3
+# notes after expand_repeated(): covariates matched to the measurement dates
+report_expand <- function(e, where, trait) {
+  tv <- attr(e, "tv_cov")
+  if (!length(tv)) return(invisible())
+  key <- paste("tvcov", trait)
+  if (!key %in% names(warned_once)) {
+    warned_once[[key]] <<- TRUE
+    add_warning(short_trait(trait), ": covariate(s) ", paste(tv, collapse = ", "), " measured on several dates follow the measurements: each measurement uses the covariate value of its plot on the nearest date (within ", COV_DAYS, " days).")
+  }
+  if (attr(e, "cov_dropped") > 0) add_warning(where, ": ", attr(e, "cov_dropped"), " measurement(s) without a covariate value within ", COV_DAYS, " days were left out.")
+}
+warned_once <- list()
 # time effect of a repeated-measures model on data e: "date" (date factor),
 # "linear" (days) or "none" (one date per trial or no dates)
 rep_time_effect <- function(e) {
@@ -1036,7 +1079,7 @@ meas_per_plot <- function(d) 1 / mean(1 / as.numeric(table(as.character(d$unit))
 # covariates of one trial: present on most plots and not constant (a
 # covariate constant within the trial is held by the intercept)
 trial_covariates <- function(d, trait) {
-  Filter(function(cv) cv != cov_name(trait) && sum(!is.na(d[[cv]])) > 0.5 * nrow(d) && n_levels(d[[cv]]) > 1, cov_vars)
+  Filter(function(cv) cv != cov_name(trait) && !(cv %in% mt_skip_cov[[trait]]) && sum(!is.na(d[[cv]])) > 0.5 * nrow(d) && n_levels(d[[cv]]) > 1, cov_vars)
 }
 
 fit_stage1 <- function(d, info, trait) {
@@ -1100,6 +1143,7 @@ fit_stage1 <- function(d, info, trait) {
   rep_fx <- character(); rep_rnd <- character()
   if (rep_all) {
     d <- expand_repeated(d, trait)
+    report_expand(d, paste0("Stage 1, ", info$trial, " / ", short_trait(trait)), trait)
     res$n_measurements <- nrow(d)
     time_eff <- rep_time_effect(d)
     if (time_eff == "date") rep_fx <- "date_f" else if (time_eff == "linear") rep_fx <- "mday"
@@ -1214,6 +1258,80 @@ ss_cfg <- opt(recipe, "single", list())
 genotype_random <- identical(opt(if (strategy == "two_stage") s2_cfg else ss_cfg, "genotype", "random"), "random")
 weighting <- opt(s2_cfg, "weighting", "inverse_se2")
 
+# Multi-trait repeated measurements (recipe repeated$traits = "multi") -------
+# Every measurement occasion of the trait (1st, 2nd ... date of each trial)
+# becomes a trait: stage 1 fits each trial x occasion; stage 2 is one multi-
+# trait model fitted with glmmTMB (free, open source):
+#   y ~ 0 + trait:trial + us(0 + trait | accession) + us(0 + trait | record)
+# with the residual moved to the record term (dispformula = ~0), i.e.
+# Var(g) = G0 (x) I and Var(e) = R0 (x) I, as the BLUPF90+ engine fits them.
+# A covariate measured on several dates joins the model with its occasions
+# as more traits (not as a stage-1 covariate): values are adjusted genetically,
+# g_y - G_yc G_cc^-1 g_c. The value of an accession is the mean over the
+# occasions; its standard error comes from the conditional covariances of
+# the random effects. Pedigree / genomic multi-trait models need BLUPF90+.
+MT_MAX <- 6
+mt_groups <- list()        # trait -> list(trait, y, c, labels, covariates)
+mt_skip_cov <- list()      # occasion trait -> covariates it does not use in stage 1
+multi_trait_out <- list()
+occasions_of <- function(full) {
+  rl <- rep_long[rep_long$trait == full & rep_long$mdate != "(no date)", ]
+  tr <- dat$trial[match(rl$unit, dat$unit)]
+  ok <- !is.na(tr); rl <- rl[ok, ]; tr <- tr[ok]
+  occ <- integer(nrow(rl)); n <- 0L
+  for (t in unique(tr)) {
+    i <- which(tr == t); dts <- sort(unique(rl$mdate[i]))
+    occ[i] <- match(rl$mdate[i], dts); n <- max(n, length(dts))
+  }
+  list(rl = rl, occ = occ, n = n)
+}
+occasion_columns <- function(full, o, blank_from = NULL) {
+  parts <- strsplit(full, "|", fixed = TRUE)[[1]]
+  rest <- if (length(parts) > 1) paste0("|", paste(parts[-1], collapse = "|")) else ""
+  nm <- character()
+  for (k in seq_len(o$n)) {
+    i <- which(o$occ == k)
+    v <- tapply(o$rl$value[i], o$rl$unit[i], mean)
+    col <- unname(v[as.character(dat$unit)])
+    if (!is.null(blank_from)) col[is.na(dat[[blank_from]])] <- NA
+    name <- paste0(parts[1], "@o", k, rest)
+    dat[[name]] <<- as.numeric(col)
+    nm <- c(nm, name)
+  }
+  nm
+}
+mt_wanted <- names(rep_mode)[vapply(rep_mode, function(x) identical(x, "multi"), logical(1))]
+if (length(mt_wanted)) {
+  back <- function(t, why) {
+    rep_mode[[t]] <<- "all"
+    add_warning(short_trait(t), ": ", why, "; its measurements were modelled with the repeated-measures model (all measurements) instead.")
+  }
+  if (strategy != "two_stage" || !genotype_random) {
+    for (t in mt_wanted) back(t, "the multi-trait model needs two stages with the genotype as a random effect")
+  } else {
+    if (gen_model != "iid") add_warning("The multi-trait model fitted with glmmTMB treats accessions as unrelated (pedigree and genomic multi-trait models need the BLUPF90+ engine).")
+    rep_cov <- Filter(function(vn) !is.null(rep_long) && any(rep_long$trait == cov_full[[vn]]), cov_vars)
+    new_traits <- character()
+    for (t in traits) {
+      if (!t %in% mt_wanted) { new_traits <- c(new_traits, t); next }
+      o <- occasions_of(t)
+      if (o$n < 2) { back(t, "it has one measurement date per trial, so there is nothing to model as several traits"); new_traits <- c(new_traits, t); next }
+      cy <- Filter(function(x) x$occ$n >= 1, lapply(setdiff(rep_cov, cov_name(t)), function(vn) list(vn = vn, full = cov_full[[vn]], occ = occasions_of(cov_full[[vn]]))))
+      K <- o$n + sum(vapply(cy, function(x) x$occ$n, numeric(1)))
+      if (K > MT_MAX) { back(t, paste0(K, " traits (occasions + covariate occasions), more than the ", MT_MAX, " a multi-trait model estimates reliably")); new_traits <- c(new_traits, t); next }
+      y <- occasion_columns(t, o, blank_from = t)
+      cc <- unlist(lapply(cy, function(x) occasion_columns(x$full, x$occ)))
+      labels <- c(paste(short_trait(t), "occasion", seq_along(y)), unlist(lapply(cy, function(x) paste(short_trait(x$full), "occasion", seq_len(x$occ$n)))))
+      mt_groups[[t]] <- list(trait = t, y = y, c = cc, labels = labels, covariates = vapply(cy, function(x) short_trait(x$full), ""))
+      for (p in c(y, cc)) mt_skip_cov[[p]] <- vapply(cy, function(x) x$vn, "")
+      new_traits <- c(new_traits, y, cc)
+      log_step("Multi-trait: ", short_trait(t), " as ", length(y), " occasion traits", if (length(cc)) paste0(" + ", length(cc), " covariate occasion traits") else "")
+    }
+    traits <- new_traits
+  }
+}
+mt_pseudo <- unlist(lapply(mt_groups, function(g) c(g$y, g$c)))
+
 stage1_summary <- list()
 stage1_means <- list()
 stage2_summary <- list()
@@ -1257,9 +1375,98 @@ if (run_stage1) {
 stage1_summary <- if (length(stage1_summary)) do.call(rbind, stage1_summary) else NULL
 stage1_means <- if (length(stage1_means)) do.call(rbind, stage1_means) else NULL
 
+# stage 2 of a multi-trait group, fitted with glmmTMB
+stage2_multi_tmb <- function(g) {
+  names_all <- c(g$y, g$c)
+  m <- stage1_means[stage1_means$trait %in% names_all & !is.na(stage1_means$value), ]
+  short <- short_trait(g$trait)
+  keep <- names_all[names_all %in% unique(m$trait)]
+  ky <- intersect(keep, g$y)
+  res <- list(trait = short, n_trials = n_levels(m$trial), n_accessions = n_levels(m$accession),
+              mean = mean(m$value[m$trait %in% ky]), var_g = NA_real_, var_ge = NA_real_, h2 = NA_real_,
+              model = "", message = "OK", engine_used = "glmmTMB", pedigree_used = FALSE)
+  if (!length(ky) || length(keep) < 2) {
+    add_warning("Stage 2, ", short, ": too few occasions with stage-1 results for the multi-trait model.")
+    res$message <- "too few occasions"; return(list(summary = res, values = NULL))
+  }
+  K <- length(keep)
+  sdv <- vapply(keep, function(k) { s <- sd(m$value[m$trait == k]); if (is.finite(s) && s > 0) s else 1 }, numeric(1))
+  m$rec <- factor(paste(m$trial, m$accession))
+  m$trait <- factor(m$trait, levels = keep)
+  m$y <- m$value / sdv[as.character(m$trait)]
+  m$trial <- factor(m$trial); m$accession <- factor(m$accession)
+  fml <- if (n_levels(m$trial) > 1) y ~ 0 + trait:trial + us(0 + trait | accession) + us(0 + trait | rec) else y ~ 0 + trait + us(0 + trait | accession) + us(0 + trait | rec)
+  log_step("Stage 2: multi-trait model for ", short, " (", K, " traits) with glmmTMB")
+  fit <- tryCatch(glmmTMB::glmmTMB(fml, dispformula = ~0, data = m, REML = TRUE), error = function(e) e)
+  if (inherits(fit, "error")) {
+    add_warning("Stage 2, ", short, ": the multi-trait model could not be fitted (", conditionMessage(fit), ").")
+    res$message <- conditionMessage(fit); return(list(summary = res, values = NULL))
+  }
+  if (!isTRUE(fit$sdr$pdHess)) add_warning("Stage 2, ", short, " (multi-trait): glmmTMB reports a non positive-definite Hessian; the variance estimates of this fit are approximate.")
+  S <- outer(sdv, sdv)
+  G <- unclass(glmmTMB::VarCorr(fit)$cond$accession)[seq_len(K), seq_len(K)] * S
+  R <- unclass(glmmTMB::VarCorr(fit)$cond$rec)[seq_len(K), seq_len(K)] * S
+  attributes(G) <- list(dim = c(K, K)); attributes(R) <- list(dim = c(K, K))
+  re <- glmmTMB::ranef(fit)$cond$accession
+  # prediction error (co)variances of the accession effects across the traits:
+  # blocks of the inverse of the random-effect Hessian (the inverse of the
+  # mixed model coefficient matrix, as BLUPF90+ store_pev_pec). glmmTMB's
+  # condVar has no covariances between traits for us() terms.
+  pec <- tryCatch({
+    e <- fit$obj$env
+    H <- e$spHess(e$last.par.best, random = TRUE)
+    bi <- which(names(e$last.par.best)[e$random] == "b")
+    idx <- bi[seq_len(K * nrow(re))]          # the accession term comes first, level by level
+    E <- Matrix::sparseMatrix(i = idx, j = seq_along(idx), x = 1, dims = c(nrow(H), length(idx)))
+    as.matrix(Matrix::solve(H, E))[idx, , drop = FALSE]
+  }, error = function(e) NULL)
+  py <- which(keep %in% g$y); pc <- which(keep %in% g$c)
+  L <- numeric(K); L[py] <- 1 / length(py)
+  adjusted <- FALSE
+  if (length(pc)) {
+    B <- tryCatch(G[py, pc, drop = FALSE] %*% solve(G[pc, pc, drop = FALSE]), error = function(e) NULL)
+    if (is.null(B)) add_warning("Stage 2, ", short, ": the genetic covariance of the covariate occasions is singular, so the values were not adjusted for the covariate.")
+    else { L[pc] <- -colSums(B) / length(py); adjusted <- TRUE }
+  }
+  fe <- glmmTMB::fixef(fit)$cond
+  # mean of the fixed part of each occasion (its trial effects), on the original scale
+  mu <- mean(vapply(py, function(k) { nm <- names(fe); b <- fe[nm == paste0("trait", keep[k]) | startsWith(nm, paste0("trait", keep[k], ":"))]; mean(b) * sdv[k] }, numeric(1)))
+  U <- sweep(as.matrix(re), 2, sdv, "*")
+  vg <- as.numeric(t(L) %*% G %*% L)
+  se <- vapply(seq_len(nrow(U)), function(i) {
+    if (is.null(pec)) return(NA_real_)
+    C <- pec[(i - 1) * K + seq_len(K), (i - 1) * K + seq_len(K), drop = FALSE] * S
+    p <- as.numeric(t(L) %*% C %*% L)
+    if (is.finite(p) && p >= 0) sqrt(p) else NA_real_
+  }, numeric(1))
+  vals <- data.frame(accession = rownames(re), value = mu + as.numeric(U %*% L), se = se, stringsAsFactors = FALSE)
+  rel <- 1 - se^2 / vg
+  res$var_g <- vg
+  w <- numeric(K); w[py] <- 1 / length(py)
+  res$var_ge <- as.numeric(t(w) %*% R %*% w)
+  res$h2 <- if (any(is.finite(rel))) mean(pmax(0, rel[is.finite(rel)])) else NA_real_
+  res$model <- paste0("glmmTMB multi-trait: ", length(py), " occasions", if (length(pc)) paste0(" + ", length(pc), " covariate occasions (", paste(g$covariates, collapse = ", "), ")") else "",
+                      " ~ trial + (1|accession), G0 (x) I, R0 (x) I; value = mean of the occasions",
+                      if (adjusted) ", adjusted genetically for the covariate (g_y - G_yc G_cc^-1 g_c)" else "", "; H2 = mean reliability")
+  labels <- g$labels[match(keep, names_all)]
+  for (i in seq_len(K)) {
+    variance_components[[length(variance_components) + 1]] <<- data.frame(trait = short, component = paste0("genetic, ", labels[i]), variance = G[i, i], stringsAsFactors = FALSE)
+    variance_components[[length(variance_components) + 1]] <<- data.frame(trait = short, component = paste0("residual, ", labels[i]), variance = R[i, i], stringsAsFactors = FALSE)
+  }
+  multi_trait_out[[short]] <<- list(occasions = labels, n_occasions = length(py), covariates = g$covariates, G0 = G, R0 = R,
+                                    genetic_correlations = cov2cor(G), weights = L, adjusted = adjusted, engine = "glmmTMB")
+  vals$trait <- g$trait
+  list(summary = res, values = vals)
+}
+
 if (strategy == "two_stage") {
   # Stage 2 -------------------------------------------------------------------
-  for (t in traits) {
+  for (g in mt_groups) {
+    r <- stage2_multi_tmb(g)
+    stage2_summary[[length(stage2_summary) + 1]] <- as.data.frame(r$summary, stringsAsFactors = FALSE)
+    if (!is.null(r$values)) genotype_values[[length(genotype_values) + 1]] <- r$values
+  }
+  for (t in setdiff(traits, mt_pseudo)) {
     m <- stage1_means[stage1_means$trait == t & !is.na(stage1_means$value), ]
     if (is.null(m) || nrow(m) == 0) next
     n_tr <- n_levels(m$trial)
@@ -1353,7 +1560,7 @@ if (strategy == "two_stage") {
     log_step("Single stage: ", short_trait(t))
     # repeated measurements modelled one by one: one row per measurement
     rep_all <- identical(rep_mode[[t]], "all")
-    if (rep_all) d <- expand_repeated(d, t)
+    if (rep_all) { d <- expand_repeated(d, t); report_expand(d, short_trait(t), t) }
     d <- add_model_factors(d)
     n_tr <- n_levels(d$trial)
     dropped <- character()
@@ -1540,6 +1747,10 @@ if (strategy == "two_stage") {
 }
 stage2_summary <- if (length(stage2_summary)) do.call(rbind, stage2_summary) else NULL
 genotype_values <- if (length(genotype_values)) do.call(rbind, genotype_values) else NULL
+# the occasion traits of multi-trait groups give way to their trait again
+if (length(mt_groups)) {
+  traits <- unique(vapply(traits, function(x) { g <- Filter(function(g) x %in% c(g$y, g$c), mt_groups); if (length(g)) g[[1]]$trait else x }, ""))
+}
 if (is.null(genotype_values)) stop("No model could be fitted. Check the warnings and the trait data.")
 
 # wide table accession x trait
@@ -1923,6 +2134,7 @@ result <- list(
          by_trial = data.frame(trial = names(by_trial), levels = unname(by_trial), stringsAsFactors = FALSE))
   })),
   repeated = list(time = rep_time, gxtime = rep_gxtime, traits = repeated_info),
+  multi_trait = if (length(multi_trait_out)) multi_trait_out else NULL,
   covariates = unname(as.list(cov_label)),
   outliers = outliers,
   outlier_summary = outlier_summary,

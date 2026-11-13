@@ -84,9 +84,10 @@ my $FALSE = JSON::XS::false;
 my %FACTOR_LABEL = (rep => 'Replicate', block => 'Block', row => 'Row', col => 'Column');
 my @FACTORS = qw(rep block row col);
 my %DESIGN_LABEL = (row_column => 'Row-column', augmented => 'Augmented', alpha_lattice => 'Alpha-lattice', rcbd => 'RCBD', crd => 'CRD', unreplicated => 'Unreplicated');
-my @REP_SUMMARIES = qw(mean first last max min sum auc slope all);
+my @REP_SUMMARIES = qw(mean first last max min sum auc slope all multi);
+our $COV_DAYS = 3;  # largest distance (days) between a measurement and the covariate value it takes
 my %REP_LABEL = (mean => 'mean', first => 'first measurement', last => 'last measurement', max => 'maximum', min => 'minimum',
-                 sum => 'sum', auc => 'area under the curve', slope => 'slope per day', all => 'all measurements (repeated-measures model)');
+                 sum => 'sum', auc => 'area under the curve', slope => 'slope per day', all => 'all measurements (repeated-measures model)', multi => 'multi-trait (each date a trait)');
 my @FORMULA_VARS = qw(accession trial location year rep block row col rowN colN mother father check);
 
 # ---------------------------------------------------------------------------
@@ -180,7 +181,7 @@ sub _run {
     die "BLUPF90+ is not installed on the analysis server (blupf90+ not found); choose the R engine.\n" if !$self->{f90}->program();
     $self->step("BLUPF90+ engine (", $self->{f90}->program(), "), up to ", $self->{f90}->max_parallel, " models in parallel");
 
-    my %reason = (pedigree => 'pedigree (A matrix)', genomic => 'genomic (G matrix)', single_step => 'single-step (H matrix)');
+    my %reason = (pedigree => 'pedigree (A matrix)', genomic => 'genomic (G matrix)', single_step => 'single-step (H matrix)', multi_trait => 'multi-trait (repeated measurements)');
     my $why = $reason{ opt($recipe, 'engine_reason', '') // '' };
     $self->warn_msg("The $why model is fitted by BLUPF90+, so the whole analysis ran on the BLUPF90+ engine (without R: trials with rows and columns get a SpATS-like P-spline surface in stage 1).") if $why;
     $self->_read_data();
@@ -197,6 +198,7 @@ sub _run {
         return;
     }
     $self->_genetic_model();
+    $self->_multi_trait_setup();
     $self->{variance_components} = [];
     $self->{residuals} = {};
     $self->{ancestor_values} = [];
@@ -458,7 +460,7 @@ sub _repeated {
             next;
         }
         my $inf = $info->($full, $how);
-        if ($how eq 'all') { $self->{rep_mode}->{$full} = 'all'; }
+        if ($how eq 'all' || $how eq 'multi') { $self->{rep_mode}->{$full} = $how; }
         elsif ($how ne 'mean') {
             my %by; push @{$by{$_->{unit}}}, $_ for @{$long{$full}};
             my %val = map { $_ => $summ->($by{$_}, $how) } keys %by;
@@ -514,6 +516,7 @@ sub _covariates {
         if (!grep { defined } @{$self->{dat}->{$vn}}) { $self->warn_msg("Covariate '", short_trait($c), "' has no numeric values and was skipped."); next; }
         push @vars, $vn;
         $label{$vn} = short_trait($full);
+        $self->{cov_full}->{$vn} = $full;
     }
     $self->{cov_vars} = \@vars;
     $self->{cov_label} = \%label;
@@ -999,6 +1002,16 @@ sub _model_text {
 }
 
 # one row per measurement of the plots of d (plots without a value keep none)
+# notes after expand_repeated(): covariates matched to the measurement dates
+sub _report_expand {
+    my ($self, $where, $trait) = @_;
+    my $x = $self->{expand_info} or return;
+    return if !@{ $x->{covariates} };
+    $self->warn_once("tvcov $trait", short_trait($trait), ": covariate(s) ", join(', ', @{ $x->{covariates} }),
+                     " measured on several dates follow the measurements: each measurement uses the covariate value of its plot on the nearest date (within $COV_DAYS days).");
+    $self->warn_msg("$where: $x->{dropped} measurement(s) without a covariate value within $COV_DAYS days were left out.") if $x->{dropped};
+}
+
 sub expand_repeated {
     my ($self, $d, $trait) = @_;
     my @keep = grep { defined $d->{y}->[$_] } 0 .. nrow($d) - 1;
@@ -1027,6 +1040,33 @@ sub expand_repeated {
     $e->{tr_date} = [ map { $mdate[$_] eq $first_date{ $e->{trial}->[$_] } ? '(first date)' : "$e->{trial}->[$_] $mdate[$_]" } 0 .. $#idx ];
     $e->{date_f} = [ @mdate ];
     $e->{plot_u} = [ @{$e->{unit}} ];
+    # a covariate measured on several dates follows the measurements: each
+    # one takes the covariate value of its plot on the nearest date (within
+    # COV_DAYS days); measurements without one are left out (counted)
+    my (@drop, @tv);
+    foreach my $vn (@{ $self->{cov_vars} || [] }) {
+        my $cf = $self->{cov_full}->{$vn} or next;
+        my $cl = $self->{rep_long}->{$cf};
+        next if !$cl || !@$cl || !defined($e->{$vn});
+        my %by; push @{ $by{ $_->{unit} } }, $_ for grep { defined $_->{day} } @$cl;
+        my @v = @{ $e->{$vn} };
+        for my $i (0 .. $#idx) {
+            next if !defined $day[$i];    # undated measurement: plot value of the covariate
+            my ($best, $dist);
+            foreach my $m (@{ $by{ $e->{unit}->[$i] } || [] }) {
+                my $dd = abs($m->{day} - $day[$i]);
+                ($best, $dist) = ($m->{value}, $dd) if $dd <= $COV_DAYS && (!defined($dist) || $dd < $dist);
+            }
+            $v[$i] = $best;
+            $drop[$i] = 1 if !defined $best;
+        }
+        $e->{$vn} = \@v;
+        push @tv, $self->{cov_label}->{$vn};
+    }
+    my @k = grep { !$drop[$_] } 0 .. $#idx;
+    $e = subset($e, \@k) if @k < @idx;
+    # what the caller reports: time-varying covariates, measurements left out
+    $self->{expand_info} = { covariates => \@tv, dropped => @idx - @k };
     return $e;
 }
 
@@ -1057,13 +1097,13 @@ sub _stage1_plan {
     my ($self, $d, $info, $trait) = @_;
     my @keep = grep { defined $d->{y}->[$_] } 0 .. nrow($d) - 1;
     $d = subset($d, \@keep);
-    my @cv = grep { my $c = $_; $c ne cov_name($trait) && (grep { defined } @{$d->{$c}}) > 0.5 * nrow($d) && n_levels(@{$d->{$c}}) > 1 } @{$self->{cov_vars}};
+    my @cv = grep { my $c = $_; $c ne cov_name($trait) && !$self->{mt_skip_cov}->{$trait}->{$c} && (grep { defined } @{$d->{$c}}) > 0.5 * nrow($d) && n_levels(@{$d->{$c}}) > 1 } @{$self->{cov_vars}};
     if (@cv) {
         my @cc = grep { my $i = $_; !grep { !defined $d->{$_}->[$i] } @cv } 0 .. nrow($d) - 1;
         $self->warn_msg("Stage 1, $info->{trial} / ", short_trait($trait), ": ", nrow($d) - @cc, " plot(s) without a covariate value were left out.") if @cc < nrow($d);
         $d = subset($d, \@cc);
     }
-    foreach my $c (grep { my $x = $_; $x ne cov_name($trait) && !grep { $_ eq $x } @cv } @{$self->{cov_vars}}) {
+    foreach my $c (grep { my $x = $_; $x ne cov_name($trait) && !$self->{mt_skip_cov}->{$trait}->{$x} && !grep { $_ eq $x } @cv } @{$self->{cov_vars}}) {
         $self->warn_once("cov $info->{trial} $c", "Stage 1, $info->{trial}: covariate $self->{cov_label}->{$c} is missing or constant in this trial and was not used there.");
     }
     my $rep_all = ($self->{rep_mode}->{$trait} // '') eq 'all';
@@ -1103,6 +1143,7 @@ sub _stage1_plan {
     my (@rep_fx, @rep_rnd);
     if ($rep_all) {
         $d = $self->expand_repeated($d, $trait);
+        $self->_report_expand("Stage 1, $info->{trial} / " . short_trait($trait), $trait);
         $res{n_measurements} = nrow($d);
         my $time_eff = $self->rep_time_effect($d);
         @rep_fx = $time_eff eq 'date' ? ('date_f') : $time_eff eq 'linear' ? ('mday') : ();
@@ -1256,7 +1297,13 @@ sub _stage2 {
     my (@specs, @ctx);
     my @summary;
     my @gv;
-    foreach my $t (@{$self->{traits}}) {
+    my %occasion = map { $_ => 1 } map { (@{ $_->{y} }, @{ $_->{c} }) } @{ $self->{mt_groups} || [] };
+    foreach my $g (@{ $self->{mt_groups} || [] }) {
+        my $r = $self->_stage2_multi($g);
+        push @summary, $r->{summary} if $r->{summary};
+        push @gv, @{ $r->{values} || [] };
+    }
+    foreach my $t (grep { !$occasion{$_} } @{$self->{traits}}) {
         my @m = grep { $_->{trait} eq $t && defined $_->{value} } @{$self->{stage1_means}};
         next if !@m;
         my $n_tr = n_levels(map { $_->{trial} } @m);
@@ -1347,10 +1394,230 @@ sub _stage2 {
         push @gv, map { +{ %$_, trait => $t } } grep { defined $_->{value} } @{$f->{values}};
         push @summary, $res;
     }
+    # the occasion traits of multi-trait groups give way to their trait again
+    if ($self->{mt_groups}) {
+        my %first; my @t;
+        foreach my $x (@{$self->{traits}}) {
+            my $g = $self->{mt_group_of}->{$x};
+            if ($g) { push @t, $g->{trait} if !$first{ $g->{trait} }++; }
+            elsif (!$occasion{$x}) { push @t, $x; }
+        }
+        $self->{traits} = \@t;
+    }
     my %order; @order{ map { short_trait($_) } @{$self->{traits}} } = 0 .. $#{$self->{traits}};
-    $self->{stage2_summary} = [ sort { $order{$a->{trait}} <=> $order{$b->{trait}} } @summary ];
+    $self->{stage2_summary} = [ sort { ($order{$a->{trait}} // 99) <=> ($order{$b->{trait}} // 99) } @summary ];
     $self->{genotype_values} = \@gv;
 }
+
+# ---------------------------------------------------------------------------
+# multi-trait repeated measurements (recipe.repeated.traits: multi)
+# ---------------------------------------------------------------------------
+# Every measurement occasion of a trait (1st, 2nd ... date of each trial)
+# becomes a trait: stage 1 fits each trial x occasion, stage 2 one multi-
+# trait model across the occasions, Var(g) = G0 (x) I | A | G | H, Var(e) =
+# R0 (x) I. A covariate measured on several dates enters the same model with
+# its occasions as more traits (not as a stage-1 covariate): the genotype
+# values are then adjusted genetically, g_y - G_yc G_cc^-1 g_c, which keeps
+# the genetic part a fixed covariate would remove. The value of an accession
+# is the mean over the occasions; its standard error comes from the
+# prediction error covariances (exact for the linear function).
+our $MT_MAX = 6;    # traits of one multi-trait model (occasions + covariate occasions)
+
+sub _occasions {
+    my ($self, $full) = @_;
+    my %trial_of; $trial_of{ $self->{dat}->{unit}->[$_] } = $self->{dat}->{trial}->[$_] for 0 .. $self->{n} - 1;
+    my %dates;
+    foreach my $m (@{ $self->{rep_long}->{$full} || [] }) {
+        next if $m->{mdate} eq '(no date)';
+        my $t = $trial_of{ $m->{unit} } // next;
+        $dates{$t}->{ $m->{mdate} } = 1;
+    }
+    my (%occ, $n);    # trial -> date -> occasion
+    foreach my $t (keys %dates) {
+        my @d = sort keys %{ $dates{$t} };
+        $occ{$t}->{ $d[$_] } = $_ + 1 for 0 .. $#d;
+        $n = @d if !$n || @d > $n;
+    }
+    return { of => \%occ, n => $n // 0, trial_of => \%trial_of };
+}
+
+# plot columns of every occasion of a trait; plots whose value was removed
+# as an outlier (the trait column is empty) stay empty
+sub _occasion_columns {
+    my ($self, $full, $occ, $blank_from) = @_;
+    my $d = $self->{dat};
+    my (%sum, %cnt);
+    foreach my $m (@{ $self->{rep_long}->{$full} || [] }) {
+        my $t = $occ->{trial_of}->{ $m->{unit} } // next;
+        my $k = $occ->{of}->{$t}->{ $m->{mdate} } // next;
+        $sum{$k}->{ $m->{unit} } += $m->{value}; $cnt{$k}->{ $m->{unit} }++;
+    }
+    my ($short, $rest) = split /\|/, $full, 2;
+    my @names;
+    for my $k (1 .. $occ->{n}) {
+        my $nm = $short . '@o' . $k . (defined($rest) ? "|$rest" : '');
+        $d->{$nm} = [ map { my $u = $d->{unit}->[$_];
+                            ($cnt{$k}->{$u} && (!$blank_from || defined($d->{$blank_from}->[$_]))) ? $sum{$k}->{$u} / $cnt{$k}->{$u} : undef } 0 .. $self->{n} - 1 ];
+        push @names, $nm;
+    }
+    return \@names;
+}
+
+sub _multi_trait_setup {
+    my $self = shift;
+    my @multi = grep { ($self->{rep_mode}->{$_} // '') eq 'multi' } @{$self->{traits}};
+    return if !@multi;
+    my $back = sub { my ($t, $why) = @_; $self->{rep_mode}->{$t} = 'all'; $self->warn_msg(short_trait($t), ": $why; its measurements were modelled with the repeated-measures model (all measurements) instead."); };
+    if ($self->{strategy} ne 'two_stage' || !$self->{genotype_random}) {
+        $back->($_, 'the multi-trait model needs two stages with the genotype as a random effect') for @multi;
+        return;
+    }
+    $self->warn_msg("The multi-trait model uses no mother / father effects; accessions are treated as unrelated in it.") if $self->{gen_model} eq 'parents';
+    # covariates measured on several dates join the multi-trait model
+    my @rep_cov = grep { my $f = $self->{cov_full}->{$_}; $f && $self->{rep_long}->{$f} && @{ $self->{rep_long}->{$f} } } @{ $self->{cov_vars} || [] };
+    my (@groups, %group_of, @new_traits);
+    my %is_multi = map { $_ => 1 } @multi;
+    foreach my $t (@{$self->{traits}}) {
+        if (!$is_multi{$t}) { push @new_traits, $t; next; }
+        my $occ = $self->_occasions($t);
+        if ($occ->{n} < 2) { $back->($t, 'it has one measurement date per trial, so there is nothing to model as several traits'); push @new_traits, $t; next; }
+        my @cy;
+        foreach my $vn (@rep_cov) {
+            my $cf = $self->{cov_full}->{$vn};
+            next if $cf eq $t;
+            my $co = $self->_occasions($cf);
+            next if $co->{n} < 1;
+            push @cy, { vn => $vn, full => $cf, occ => $co };
+        }
+        my $K = $occ->{n} + sum(0, map { $_->{occ}->{n} } @cy);
+        if ($K > $MT_MAX) {
+            $back->($t, "$occ->{n} occasions" . (@cy ? ' plus ' . join(' + ', map { "$_->{occ}->{n} of covariate " . short_trait($_->{full}) } @cy) : '') . " make $K traits, more than the $MT_MAX a multi-trait model estimates reliably");
+            push @new_traits, $t;
+            next;
+        }
+        my $y = $self->_occasion_columns($t, $occ, $t);
+        my @c;
+        foreach my $cv (@cy) { push @c, @{ $self->_occasion_columns($cv->{full}, $cv->{occ}) }; }
+        my $g = { trait => $t, y => $y, c => \@c, n_y => scalar(@$y), covariates => [ map { short_trait($_->{full}) } @cy ],
+                  labels => [ (map { short_trait($t) . " occasion $_" } 1 .. @$y), (map { my $cv = $_; map { short_trait($cv->{full}) . " occasion $_" } 1 .. $cv->{occ}->{n} } @cy) ] };
+        foreach my $x (@$y, @c) { $self->{mt_skip_cov}->{$x}->{ $_->{vn} } = 1 for @cy; $group_of{$x} = $g; }
+        push @groups, $g;
+        push @new_traits, @$y, @c;
+        $self->step("Multi-trait: ", short_trait($t), " as ", scalar(@$y), " occasion traits", (@cy ? ' + ' . scalar(@c) . ' covariate occasion traits (' . join(', ', @{ $g->{covariates} }) . ')' : ''));
+    }
+    $self->{mt_groups} = \@groups;
+    $self->{mt_group_of} = \%group_of;
+    $self->{traits} = \@new_traits;
+}
+
+# small dense helpers
+sub _mat_inv {
+    my $A = [ map { [@$_] } @{ $_[0] } ];
+    my $n = @$A;
+    my $I = [ map { my $i = $_; [ map { $_ == $i ? 1 : 0 } 0 .. $n - 1 ] } 0 .. $n - 1 ];
+    for my $c (0 .. $n - 1) {
+        my ($p) = sort { abs($A->[$b][$c]) <=> abs($A->[$a][$c]) } $c .. $n - 1;
+        die "singular covariance matrix\n" if abs($A->[$p][$c]) < 1e-12;
+        @$A[$c, $p] = @$A[$p, $c]; @$I[$c, $p] = @$I[$p, $c];
+        my $f = $A->[$c][$c];
+        $_ /= $f for @{ $A->[$c] }; $_ /= $f for @{ $I->[$c] };
+        for my $r (0 .. $n - 1) {
+            next if $r == $c;
+            my $g = $A->[$r][$c];
+            next if !$g;
+            $A->[$r][$_] -= $g * $A->[$c][$_] for 0 .. $n - 1;
+            $I->[$r][$_] -= $g * $I->[$c][$_] for 0 .. $n - 1;
+        }
+    }
+    return $I;
+}
+sub _quad { my ($l, $M) = @_; my $s = 0; for my $i (0 .. $#$l) { for my $j (0 .. $#$l) { $s += $l->[$i] * $M->[$i][$j] * $l->[$j]; } } return $s; }
+
+sub _stage2_multi {
+    my ($self, $g) = @_;
+    my @names = (@{ $g->{y} }, @{ $g->{c} });
+    my %idx; $idx{ $names[$_] } = $_ for 0 .. $#names;
+    my (%rec, %s1);
+    foreach my $m (@{$self->{stage1_means}}) {
+        my $k = $idx{ $m->{trait} } // next;
+        next if !defined $m->{value};
+        $rec{"$m->{trial}\t$m->{accession}"}->[$k] = $m->{value};
+        push @{ $s1{$k} }, $m->{value};
+    }
+    my $short = short_trait($g->{trait});
+    my @keep = grep { $s1{$_} } 0 .. $#names;    # occasions with stage-1 means
+    my @ky = grep { $_ < $g->{n_y} } @keep;
+    my @recs = sort keys %rec;
+    my %res = (trait => $short, n_trials => n_levels(map { (split /\t/)[0] } @recs), n_accessions => n_levels(map { (split /\t/)[1] } @recs),
+               mean => mean(map { @{ $s1{$_} } } @ky), var_g => undef, var_ge => undef, h2 => undef, model => '', message => 'OK',
+               engine_used => 'BLUPF90+', pedigree_used => $FALSE);
+    if (@ky < 1 || @keep < 2) {
+        $self->warn_msg("Stage 2, $short: too few occasions with stage-1 results for the multi-trait model.");
+        return { summary => { %res, message => 'too few occasions' } };
+    }
+    my @acc = map { (split /\t/)[1] } @recs;
+    my @tr = map { (split /\t/)[0] } @recs;
+    my @y = map { my $k = $_; [ map { $rec{$_}->[$k] } @recs ] } @keep;
+    my $rel = $self->{gen_model} eq 'pedigree' ? 'A' : $self->{gen_model} eq 'genomic' ? 'G' : $self->{gen_model} eq 'single_step' ? 'H' : '';
+    my $spec = { label => "stage2_multi_$short", traits => [ map { $names[$_] } @keep ], y => \@y, accession => \@acc, trial => \@tr,
+                 ($rel ? (ped => ($rel eq 'A' ? $self->_ped_codes([ sort(uniq(@acc)) ]) : $self->{rel_codes})) : ()),
+                 ($rel && $rel ne 'A' ? (genomic => $self->{genomic_spec}) : ()) };
+    $self->step("Stage 2: multi-trait model for $short (", scalar(@keep), " traits) with BLUPF90+");
+    my $f = $self->{f90}->fit_mt($spec);
+    if ($f->{error}) {
+        $self->warn_msg("Stage 2, $short: the multi-trait model could not be fitted ($f->{error}).");
+        return { summary => { %res, message => $f->{error} } };
+    }
+    $self->fit_notes("Stage 2, $short (multi-trait)", $f->{notes});
+    my $K = @keep;
+    my @py = grep { $keep[$_] < $g->{n_y} } 0 .. $K - 1;    # positions in the fit
+    my @pc = grep { $keep[$_] >= $g->{n_y} } 0 .. $K - 1;
+    # value: mean of the occasions, adjusted genetically for the covariate traits
+    my @L = (0) x $K;
+    $L[$_] = 1 / @py for @py;
+    my $B;
+    if (@pc) {
+        my $G = $f->{G0};
+        my $Gcc_inv = eval { _mat_inv([ map { my $i = $_; [ map { $G->[$i][$_] } @pc ] } @pc ]) };
+        if ($Gcc_inv) {
+            # B = G_yc G_cc^-1; covariate part of the weights: -w' B
+            $B = [ map { my $i = $_; [ map { my $j = $_; sum(map { $G->[$py[$i]][$pc[$_]] * $Gcc_inv->[$_][$j] } 0 .. $#pc) } 0 .. $#pc ] } 0 .. $#py ];
+            for my $j (0 .. $#pc) { $L[ $pc[$j] ] = -sum(map { $B->[$_][$j] / @py } 0 .. $#py); }
+        }
+        else { $self->warn_msg("Stage 2, $short: the genetic covariance of the covariate occasions is singular, so the values were not adjusted for the covariate."); }
+    }
+    my $vg = _quad(\@L, $f->{G0});
+    my $mu = sum(map { $f->{mu}->[$_] / @py } @py);
+    my %in = map { $_ => 1 } @acc;
+    my (@values, @rel);
+    foreach my $a (sort keys %in) {
+        my $v = $f->{values}->{$a} or next;
+        my $val = $mu + sum(map { $L[$_] * $v->{solution}->[$_] } 0 .. $K - 1);
+        my $pev = $v->{pec} ? _quad(\@L, $v->{pec}) : undef;
+        push @values, { accession => $a, value => $val, se => defined($pev) && $pev >= 0 ? sqrt($pev) : undef, trait => $g->{trait} };
+        push @rel, 1 - $pev / $vg if defined($pev) && $vg > 0;
+    }
+    $res{var_g} = $vg;
+    # residual variance of the mean of the occasions
+    $res{var_ge} = _quad([ map { my $p = $_; (grep { $_ == $p } @py) ? 1 / @py : 0 } 0 .. $K - 1 ], $f->{R0});
+    $res{h2} = @rel ? mean(map { $_ < 0 ? 0 : $_ } @rel) : undef;
+    $res{pedigree_used} = $rel ? $TRUE : $FALSE;
+    $res{relationship} = $rel || 'I';
+    $res{model} = "BLUPF90+ multi-trait: " . scalar(@py) . " occasions" . (@pc ? ' + ' . scalar(@pc) . ' covariate occasions (' . join(', ', @{ $g->{covariates} }) . ')' : '') .
+                  " ~ trial + (1|accession), G0 (x) " . ($rel || 'I') . ", R0 (x) I; value = mean of the occasions" .
+                  ($B ? ', adjusted genetically for the covariate (g_y - G_yc G_cc^-1 g_c)' : '') . "; H2 = mean reliability";
+    my $sd = sub { my $x = shift; return $x > 0 ? sqrt($x) : 0 };
+    my @gcor = map { my $i = $_; [ map { my $den = $sd->($f->{G0}->[$i][$i]) * $sd->($f->{G0}->[$_][$_]); $den > 0 ? $f->{G0}->[$i][$_] / $den : undef } 0 .. $K - 1 ] } 0 .. $K - 1;
+    my @labels = map { $g->{labels}->[$_] } @keep;
+    foreach my $i (0 .. $K - 1) {
+        push @{$self->{variance_components}}, { trait => $short, component => "genetic, $labels[$i]", variance => $f->{G0}->[$i][$i] },
+                                              { trait => $short, component => "residual, $labels[$i]", variance => $f->{R0}->[$i][$i] };
+    }
+    $self->{multi_trait}->{$short} = { occasions => \@labels, n_occasions => scalar(@py), covariates => $g->{covariates},
+                                        G0 => $f->{G0}, R0 => $f->{R0}, genetic_correlations => \@gcor, weights => \@L, adjusted => $B ? $TRUE : $FALSE };
+    return { summary => \%res, values => \@values };
+}
+
 
 # ---------------------------------------------------------------------------
 # single stage
@@ -1423,7 +1690,7 @@ sub _single_stage {
         next if nrow($d) < 3;
         $self->step("Single stage: ", short_trait($t));
         my $rep_all = ($self->{rep_mode}->{$t} // '') eq 'all';
-        $d = $self->expand_repeated($d, $t) if $rep_all;
+        if ($rep_all) { $d = $self->expand_repeated($d, $t); $self->_report_expand(short_trait($t), $t); }
         $d = _model_factors($d);
         my $n_tr = n_levels(@{$d->{trial}});
         my @trials = uniq(@{$d->{trial}});
@@ -2044,6 +2311,7 @@ sub _output {
         treatments => \@trt,
         repeated => { time => $self->{rep_time}, gxtime => $self->{rep_gxtime} ? $TRUE : $FALSE, traits => $self->{repeated_info} },
         covariates => [ map { $self->{cov_label}->{$_} } @{$self->{cov_vars}} ],
+        multi_trait => $self->{multi_trait},
         outliers => $self->{outliers},
         outlier_summary => $self->{outlier_summary},
         stage1 => @{$self->{stage1_summary}} ? $self->{stage1_summary} : undef,

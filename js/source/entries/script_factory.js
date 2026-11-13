@@ -228,7 +228,8 @@ function buildRecipe() {
 // model (only BLUPF90+ fits it); same rule as _run_engine() on the server
 function effectiveEngine() {
     if (!cfg.blupf90_available) return 'lme4';
-    return radio('sf_engine') === 'blupf90' || ['pedigree', 'genomic', 'single_step'].indexOf($('#sf_gen_model').val()) >= 0 ? 'blupf90' : 'lme4';
+    const multi = !cfg.glmmtmb_available && Object.keys(state.repeated || {}).some(t => state.repeated[t] === 'multi' && (!state.dataset || repeatedInfo(t)));
+    return radio('sf_engine') === 'blupf90' || multi || ['pedigree', 'genomic', 'single_step'].indexOf($('#sf_gen_model').val()) >= 0 ? 'blupf90' : 'lme4';
 }
 
 // match a recipe trait to a dataset trait: full name first, then short name
@@ -647,9 +648,10 @@ const REP_OPTIONS = [
     ['mean', 'Mean of the plot (Breedbase default)'], ['first', 'First measurement'], ['last', 'Last measurement'],
     ['max', 'Maximum'], ['min', 'Minimum'], ['sum', 'Sum'],
     ['auc', 'Area under the curve (AUDPC)', true], ['slope', 'Slope: change per day', true],
-    ['all', 'All measurements: repeated-measures model']
+    ['all', 'All measurements: repeated-measures model'],
+    ['multi', 'Multi-trait: each date as a trait (BLUPF90+)', true]
 ];
-const REP_SHORT = { mean: 'mean', first: 'first', last: 'last', max: 'max', min: 'min', sum: 'sum', auc: 'AUC', slope: 'slope', all: 'all measurements' };
+const REP_SHORT = { mean: 'mean', first: 'first', last: 'last', max: 'max', min: 'min', sum: 'sum', auc: 'AUC', slope: 'slope', all: 'all measurements', multi: 'multi-trait' };
 
 function datasetRepeated() { return (state.dataset && state.dataset.repeated) || []; }
 
@@ -698,8 +700,10 @@ function renderRepeated() {
         const cur = repeatedChoice(x.trait);
         const dated = x.n_dates > 1;
         const opts = REP_OPTIONS.map(o => {
-            const dis = o[2] && !dated;
-            return '<option value="' + o[0] + '"' + (cur === o[0] ? ' selected' : '') + (dis ? ' disabled title="needs measurements on at least two dates"' : '') + '>' + esc(o[1]) + (dis ? ' (needs 2+ dates)' : '') + '</option>';
+            const noF90 = o[0] === 'multi' && !cfg.blupf90_available && !cfg.glmmtmb_available;
+            const dis = (o[2] && !dated) || noF90;
+            return '<option value="' + o[0] + '"' + (cur === o[0] ? ' selected' : '') + (dis ? ' disabled title="' + (noF90 ? 'needs the R package glmmTMB or BLUPF90+, neither is installed on this server' : 'needs measurements on at least two dates') + '"' : '') + '>' +
+                esc(o[0] === 'multi' ? 'Multi-trait: each date as a trait' : o[1]) + (noF90 ? ' (needs glmmTMB or BLUPF90+)' : dis ? ' (needs 2+ dates)' : '') + '</option>';
         }).join('');
         const used = [state.traits.indexOf(x.trait) >= 0 ? '<span class="label label-primary">analysed</span>' : '', state.singleCov[x.trait] ? '<span class="label label-info">covariate' + (cur === 'all' ? ' (plot mean)' : '') + '</span>' : ''].filter(Boolean).join(' ') || '<span class="sf-muted">not selected</span>';
         h += '<tr><td title="' + esc(x.trait) + '"><b>' + esc(x.short) + '</b></td><td>' + esc(x.repeat_type === 'single' ? 'single (but several values stored)' : x.repeat_type.replace('_', ' ')) + '</td>' +
@@ -717,6 +721,18 @@ function renderRepeated() {
         $(this).find('option[value=' + s0.how + ']').text(function(i, tx) { return tx + '  \u2605 suggested'; });
         $(this).closest('tr').attr('title', shortTrait($(this).data('trait')) + ' ' + s0.why);
     });
+    const multi = withValues.filter(x => repeatedChoice(x.trait) === 'multi');
+    if (multi.length) {
+        const repCov = Object.keys(state.singleCov).filter(t => repeatedInfo(t) && repeatedInfo(t).n_dates > 1);
+        const two = radio('sf_strategy') === 'two_stage';
+        $('#sf_repeated').append(alertBox(two ? 'info' : 'warning', '<b>Multi-trait:</b> each measurement date of ' + multi.map(x => esc(x.short)).join(', ') +
+            ' becomes a trait (1st, 2nd... date of each trial). Stage 1 fits every trial and date, stage 2 one multi-trait model with the genetic covariance between dates (G<sub>0</sub> &otimes; I, A or H) and the residual one (R<sub>0</sub> &otimes; I); ' +
+            'the value of an accession is the mean over the dates.' +
+            (repCov.length ? ' The covariate' + (repCov.length > 1 ? 's ' : ' ') + repCov.map(t => '<b>' + esc(shortTrait(t)) + '</b>').join(', ') + ', measured on several dates, join' + (repCov.length > 1 ? '' : 's') +
+                ' the model as more traits, and the values are adjusted for ' + (repCov.length > 1 ? 'them' : 'it') + ' genetically (this keeps the genetic part an ordinary covariate would remove).' : '') +
+            ' Up to 6 traits (dates + covariate dates). ' + (effectiveEngine() === 'blupf90' ? 'Fitted by BLUPF90+.' : 'Fitted by glmmTMB (R, free and open source); choose BLUPF90+ for pedigree or genomic relationships.') +
+            (two ? '' : ' <b>It needs the two-stage strategy:</b> with a single stage these measurements are modelled with all measurements.')));
+    }
     const anyAll = withValues.some(x => repeatedChoice(x.trait) === 'all');
     $('#sf_repeated_model').toggle(anyAll);
     const gxOk = $('#sf_repeated_time').val() !== 'linear';
@@ -1430,7 +1446,23 @@ function renderDesignTable() {
     $('#sf_design_table').html(h);
 }
 
+// BLUPF90+ is free for research only: say so whenever a run will use it
+function renderEngineNote() {
+    if (!cfg.blupf90_available) return;
+    const f90 = effectiveEngine() === 'blupf90';
+    const forced = f90 && radio('sf_engine') !== 'blupf90';
+    $('#sf_engine_note').html(f90 ? alertBox('warning', '<span class="glyphicon glyphicon-certificate"></span> <b>BLUPF90+ licence:</b> ' +
+        (forced ? 'this analysis runs on BLUPF90+ (needed by the chosen model). ' : '') +
+        'BLUPF90+ is free for research and academic use. <b>Companies and other commercial users need a licence</b>: please contact ' + linkify(cfg.blupf90_license_contact || 'the BLUPF90 team at the University of Georgia') + '.') : '');
+}
+
+// text with http(s) links made clickable (escaped)
+function linkify(t) {
+    return esc(t).replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
 function renderModelPreview() {
+    renderEngineNote();
     const two = radio('sf_strategy') === 'two_stage';
     let txt;
     if (two) {
@@ -2428,6 +2460,25 @@ function simpleTable(rows, cols, opts) {
     return h + '</tbody></table>';
 }
 
+// genetic correlations between the dates (and covariate dates) of the
+// multi-trait models of repeated measurements
+function multiTraitHtml(mt) {
+    if (!mt || !Object.keys(mt).length) return '';
+    let h = '<h4>Multi-trait models: genetic correlations between dates</h4>';
+    Object.keys(mt).forEach(t => {
+        const m = mt[t], L = arr(m.occasions), C = arr(m.genetic_correlations);
+        const cell = v => {
+            if (v === null || v === undefined) return '<td>&ndash;</td>';
+            const a = Math.min(1, Math.abs(v));
+            return '<td style="background:' + (v >= 0 ? 'rgba(43,122,75,' : 'rgba(220,38,38,') + (0.12 + 0.55 * a).toFixed(2) + ')">' + Number(v).toFixed(2) + '</td>';
+        };
+        h += '<p><b>' + esc(t) + '</b>: ' + m.n_occasions + ' dates' + (arr(m.covariates).length ? ' + covariate dates of ' + arr(m.covariates).map(esc).join(', ') + (m.adjusted ? ' (values adjusted genetically for the covariate)' : '') : '') + '</p>' +
+            '<div class="table-responsive"><table class="table table-condensed sf-mt-cor"><thead><tr><th></th>' + L.map(l => '<th>' + esc(l.replace(/ occasion /, ' #')) + '</th>').join('') + '</tr></thead><tbody>' +
+            C.map((row, i) => '<tr><th>' + esc(String(L[i] || '').replace(/ occasion /, ' #')) + '</th>' + arr(row).map(cell).join('') + '</tr>').join('') + '</tbody></table></div>';
+    });
+    return h + '<p class="sf-help">Genetic correlations from the multi-trait model (G<sub>0</sub>): how similarly the accessions rank on two dates. High correlations between consecutive dates are expected; a low one means the ranking changes during the season.</p>';
+}
+
 function renderResults() {
     const res = state.results;
     const s = res.summary || {};
@@ -2491,6 +2542,7 @@ function renderResults() {
         { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' }, { k: 'var_ge', l: '&sigma;&sup2;<sub>GE</sub>' }, { k: 'var_e', l: '&sigma;&sup2;<sub>e</sub>' },
         { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status', f: (v, r) => esc(v) + (r.dropped_terms ? '<br/><small class="sf-muted" title="Terms the data could not support">left out: ' + esc(r.dropped_terms) + '</small>' : '') }
     ]) + '<p class="sf-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
+    $('#sf_tab_model').append(multiTraitHtml(res.multi_trait));
 
     // genotype values
     const gv = arr(res.genotype_values);

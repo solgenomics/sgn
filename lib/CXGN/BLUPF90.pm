@@ -439,21 +439,7 @@ sub prepare {
     _write_lines("$wd/README.txt", "# BLUPF90+ parameter file written by the Breedbase Analysis Pipeline (BLUPF90+ engine)",
                  "# model: $model" . ($dense ? "   [fixed effects other than accession as centred covariates]" : ''),
                  "# columns of data.txt: see data_columns.txt", "# run: echo f90.par | blupf90+");
-    my $inb_info;
-    if ($ped) {
-        my ($F, $capped) = inbreeding($ped);
-        $inb_info = { mean => mean(@$F) // 0, max => max(@$F, 0), capped => $capped };
-        push @notes, "inbreeding above $F_MAX in $capped individual(s) of the pedigree was set to $F_MAX (fully inbred lines make the relationship matrix singular)" if $capped;
-        open(my $P, '>', "$wd/pedigree.txt") or die "Cannot write the pedigree\n";
-        for my $i (0 .. $#{$ped->{id}}) {
-            my ($s, $dd) = ($ped->{s}->[$i] || 0, $ped->{d}->[$i] || 0);
-            # BLUPF90 inbreeding code: 4000 / ((1+ms)(1-Fs) + (1+md)(1-Fd)), ms/md = 1 for an unknown parent
-            my $den = ($s ? 1 - $F->[$s - 1] : 2) + ($dd ? 1 - $F->[$dd - 1] : 2);
-            print $P join(' ', $i + 1, $s, $dd, sprintf('%.0f', 4000 / $den)), "\n";
-        }
-        close($P);
-        _write_lines("$wd/inbreeding.txt", "code\tid\tF", map { ($_ + 1) . "\t$ped->{id}->[$_]\t" . sprintf('%.6f', $F->[$_]) } 0 .. $#{$ped->{id}});
-    }
+    my $inb_info = $ped ? _write_pedigree($wd, $ped, \@notes) : undef;
     foreach my $f (grep { $_->{labels} } @fx) {
         (my $nm = $f->{name}) =~ s/:/_x_/g;
         _write_levels("$wd/levels_$nm.txt", $f->{labels});
@@ -512,6 +498,24 @@ sub run {
     $pm->wait_all_children;
 }
 
+# pedigree.txt (with the BLUPF90 inbreeding codes) and inbreeding.txt of a
+# fit folder; returns the inbreeding summary, adds a note when F was capped
+sub _write_pedigree {
+    my ($wd, $ped, $notes) = @_;
+    my ($F, $capped) = inbreeding($ped);
+    push @$notes, "inbreeding above $F_MAX in $capped individual(s) of the pedigree was set to $F_MAX (fully inbred lines make the relationship matrix singular)" if $capped;
+    open(my $P, '>', "$wd/pedigree.txt") or die "Cannot write the pedigree\n";
+    for my $i (0 .. $#{$ped->{id}}) {
+        my ($s, $dd) = ($ped->{s}->[$i] || 0, $ped->{d}->[$i] || 0);
+        # BLUPF90 inbreeding code: 4000 / ((1+ms)(1-Fs) + (1+md)(1-Fd)), ms/md = 1 for an unknown parent
+        my $den = ($s ? 1 - $F->[$s - 1] : 2) + ($dd ? 1 - $F->[$dd - 1] : 2);
+        print $P join(' ', $i + 1, $s, $dd, sprintf('%.0f', 4000 / $den)), "\n";
+    }
+    close($P);
+    _write_lines("$wd/inbreeding.txt", "code\tid\tF", map { ($_ + 1) . "\t$ped->{id}->[$_]\t" . sprintf('%.6f', $F->[$_]) } 0 .. $#{$ped->{id}});
+    return { mean => mean(@$F) // 0, max => max(@$F, 0), capped => $capped };
+}
+
 # shell command that runs blupf90+ in the current folder
 sub _command {
     my $prog = shift;
@@ -562,6 +566,7 @@ sub _round_limit {
 # Dies when blupf90+ failed.
 sub read {
     my ($self, $job) = @_;
+    return $self->read_mt($job) if $job->{mt};
     my $wd = $job->{dir};
     my @out = -e "$wd/blupf90.out" ? _read_lines("$wd/blupf90.out") : ();
     my @notes = @{$job->{notes}};
@@ -694,6 +699,168 @@ sub _read_lines {
     close($F);
     chomp(@l);
     return @l;
+}
+
+# ---------------------------------------------------------------------------
+# multi-trait models
+# ---------------------------------------------------------------------------
+# K traits measured on the same records (one record per accession x trial):
+#   y_k = trial_k + accession_k + e_k
+#   Var(accession) = G0 (x) I, A (pedigree), G or H (genomic)
+#   Var(e)         = R0 (x) I
+# blupf90+ handles the Kronecker products itself. spec:
+#   label, traits => [K names], y => [ [n values] x K ] (undef = missing),
+#   accession => [n], trial => [n], ped / genomic (as for prepare())
+# The prediction error (co)variances of every accession across the K traits
+# come from OPTION store_pev_pec (exact standard errors of linear functions).
+our $MT_START_CORR = 0.3;    # starting genetic / residual correlation (0 would stay 0)
+
+sub prepare_mt {
+    my ($self, $spec) = @_;
+    my $K = @{ $spec->{traits} };
+    my $n = @{ $spec->{accession} };
+    die "a multi-trait model needs at least two traits\n" if $K < 2;
+    die "not enough records\n" if $n < 3;
+    my $ped = $spec->{ped};
+    my $genomic = $spec->{genomic};
+    my @notes;
+    my $d = { trial => $spec->{trial}, accession => $spec->{accession} };
+    my $tr = _codes($d, ['trial'], $n);
+    my $acc;
+    if ($ped) {
+        my %pos; $pos{ $ped->{id}->[$_] } = $_ + 1 for 0 .. $#{ $ped->{id} };
+        $acc = { code => [ map { defined($_) ? $pos{$_} // 0 : 0 } @{ $spec->{accession} } ], n => scalar(@{ $ped->{id} }), labels => $ped->{id} };
+    }
+    else { $acc = _codes($d, ['accession'], $n); }
+    my @cols = map { my $k = $_; [ "y$k", [ map { _fmt($_) } @{ $spec->{y}->[$k - 1] } ] ] } 1 .. $K;
+    push @cols, [ 'trial', $tr->{n} > 1 ? $tr->{code} : [ (1) x $n ] ], [ 'accession', $acc->{code} ];
+    my ($tpos, $apos) = ($K + 1, $K + 2);
+
+    $self->n_fits($self->n_fits + 1);
+    (my $safe = $spec->{label} // 'mt') =~ s/[^A-Za-z0-9_.-]+/_/g;
+    my $wd = sprintf("%s/%03d_%s", File::Spec->rel2abs($self->keep_dir), $self->n_fits, $safe);
+    make_path($wd);
+    open(my $D, '>', "$wd/data.txt") or die "Cannot write $wd/data.txt\n";
+    for my $i (0 .. $n - 1) { print $D join(' ', map { $_->[1]->[$i] } @cols), "\n"; }
+    close($D);
+    _write_lines("$wd/data_columns.txt", map { $_->[0] } @cols);
+
+    # starting values: half of each trait's variance, correlation MT_START_CORR
+    my @v = map { my $y = [ grep { defined } @{ $spec->{y}->[$_] } ]; (var(@$y) || 1) / 2 } 0 .. $K - 1;
+    my $start = sub { map { my $i = $_; join(' ', map { sprintf('%.8g', $i == $_ ? $v[$i] : $MT_START_CORR * sqrt($v[$i] * $v[$_])) } 0 .. $K - 1) } 0 .. $K - 1 };
+    my $ntr = $tr->{n} > 1 ? $tr->{n} : 1;
+    my @par = ('DATAFILE', 'data.txt', 'NUMBER_OF_TRAITS', $K, 'NUMBER_OF_EFFECTS', 2,
+               'OBSERVATION(S)', join(' ', 1 .. $K), 'WEIGHT(S)', '',
+               'EFFECTS: POSITIONS_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT[EFFECT NESTED]',
+               join(' ', ($tpos) x $K) . " $ntr cross", join(' ', ($apos) x $K) . " $acc->{n} cross",
+               'RANDOM_RESIDUAL VALUES', $start->(),
+               'RANDOM_GROUP', 2, 'RANDOM_TYPE', ($ped ? 'add_an_upginb' : 'diagonal'), 'FILE', ($ped ? 'pedigree.txt' : ''),
+               '(CO)VARIANCES', $start->(),
+               'OPTION method VCE', 'OPTION sol se', 'OPTION missing -999999999', 'OPTION store_pev_pec 2',
+               'OPTION conv_crit 1e-9', "OPTION maxrounds $MAX_ROUNDS");
+    push @par, 'OPTION use_yams' if $ped;
+    if ($genomic) {
+        my $snp = File::Spec->abs2rel(File::Spec->rel2abs($genomic->{snp_file}), $wd);
+        push @par, "OPTION SNP_file $snp", sprintf('OPTION minfreq %.4g', $genomic->{minfreq} // 0.05), sprintf('OPTION callrate %.4g', $genomic->{callrate} // 0.90);
+    }
+    _write_lines("$wd/f90.par", @par);
+    my $model = "multi-trait (" . join(', ', @{ $spec->{traits} }) . ") ~ trial + (1|accession)";
+    _write_lines("$wd/README.txt", "# BLUPF90+ multi-trait parameter file written by the Breedbase Analysis Pipeline (BLUPF90+ engine)",
+                 "# model: $model, Var(accession) = G0 (x) relationship, Var(e) = R0 (x) I", "# traits (columns y1..y$K): " . join(', ', @{ $spec->{traits} }), "# run: echo f90.par | blupf90+");
+    my $inb = $ped ? _write_pedigree($wd, $ped, \@notes) : undef;
+    _write_levels("$wd/levels_trial.txt", $tr->{labels});
+    _write_levels("$wd/levels_accession.txt", $acc->{labels});
+    return { mt => 1, dir => $wd, label => $spec->{label} // 'mt', n => $n, K => $K, traits => $spec->{traits}, model => $model, notes => \@notes,
+             vce => 1, acc => $acc, trial => $tr, inbreeding => $inb, ped => $ped ? 1 : 0, genomic => $genomic ? 1 : 0 };
+}
+
+# K x K matrix printed by blupf90+ after a header line
+sub _matrix_after {
+    my ($out, $i, $K) = @_;
+    my @m;
+    for my $r (1 .. $K) {
+        (my $l = $out->[$i + $r] // '') =~ s/^\s+|\s+$//g;
+        my @v = map { $_ + 0 } split /\s+/, $l;
+        die "blupf90+ returned an incomplete covariance matrix\n" if @v != $K;
+        push @m, \@v;
+    }
+    return \@m;
+}
+
+# Results of a multi-trait fit:
+#   G0, R0       K x K genetic and residual covariance matrices
+#   mu           per trait: mean of the trial solutions
+#   values       { accession => { solution => [K], se => [K], pec => K x K } }
+#   notes, rounds, dir, model
+sub read_mt {
+    my ($self, $job) = @_;
+    my $wd = $job->{dir};
+    my $K = $job->{K};
+    my @out = -e "$wd/blupf90.out" ? _read_lines("$wd/blupf90.out") : ();
+    my @notes = @{ $job->{notes} };
+    my $tail = sub { join(' | ', grep { /\S/ } @out[ ($#out > 2 ? $#out - 1 : 0) .. $#out ]) };
+    die "blupf90+ failed: " . $tail->() . "\n" if !-e "$wd/solutions";
+    my ($fe) = grep { $out[$_] =~ /Final Estimates/ } reverse 0 .. $#out;
+    die "blupf90+ did not converge: " . $tail->() . "\n" if !defined($fe);
+    my ($G0, $R0);
+    for my $i ($fe .. $#out) {
+        $G0 = _matrix_after(\@out, $i, $K) if !$G0 && $out[$i] =~ /variance\(s\) for effect\s+2\b/;
+        $R0 = _matrix_after(\@out, $i, $K) if !$R0 && $out[$i] =~ /Residual variance/;
+    }
+    die "blupf90+ returned no covariance matrices\n" if !$G0 || !$R0;
+    my $rounds = scalar(grep { /In round/ } @out);
+    my $limit = $job->{em_refit} ? 2 * $MAX_ROUNDS : $MAX_ROUNDS;
+    if ($rounds >= $limit) {
+        my $note = $self->_round_limit($job, \@out);
+        return $self->read_mt($job) if !defined($note);
+        push @notes, $note;
+    }
+    elsif ($job->{em_refit}) {
+        push @notes, "AI-REML did not settle in $MAX_ROUNDS rounds; refitted with $EM_ROUNDS EM-REML rounds first, which converged";
+    }
+
+    my (%tsol, %asol);
+    open(my $S, '<', "$wd/solutions") or die "Cannot read the solutions\n";
+    <$S>;
+    while (my $l = <$S>) {
+        $l =~ s/^\s+//;
+        my ($t, $e, $lv, $s, $se) = split /\s+/, $l;
+        next if !defined($s);
+        if ($e == 1) { push @{ $tsol{$t} }, $s + 0; }
+        else { $asol{$lv}->[$t - 1] = [ $s + 0, defined($se) ? $se + 0 : undef ]; }
+    }
+    close($S);
+    my @mu = map { mean(@{ $tsol{$_} || [0] }) } 1 .. $K;
+    my %pec;
+    if (open(my $P, '<', "$wd/pev_pec_bf90")) {
+        while (my $l = <$P>) {
+            $l =~ s/^\s+|\s+$//g;
+            my ($lv, @v) = split /\s+/, $l;
+            next if @v != $K * ($K + 1) / 2;
+            my @m = map { [ (0) x $K ] } 1 .. $K;
+            my $p = 0;
+            for my $i (0 .. $K - 1) { for my $j ($i .. $K - 1) { $m[$i][$j] = $m[$j][$i] = $v[$p++] + 0; } }
+            $pec{$lv} = \@m;
+        }
+        close($P);
+    }
+    my %values;
+    my $labels = $job->{acc}->{labels};
+    foreach my $lv (keys %asol) {
+        my $name = $labels->[$lv - 1] // next;
+        $values{$name} = { solution => [ map { $_ ? $_->[0] : 0 } @{ $asol{$lv} } ], se => [ map { $_ ? $_->[1] : undef } @{ $asol{$lv} } ], pec => $pec{$lv} };
+    }
+    unlink(map { "$wd/$_" } qw(fspak90.ord AI_inv.mat binary_factor_ord));
+    my ($sec) = map { /^([\d.]+)/ ? $1 : () } (-e "$wd/elapsed.txt" ? _read_lines("$wd/elapsed.txt") : ());
+    $self->log->(sprintf("  blupf90+ %s: multi-trait, %d traits, %d records, %d AI-REML rounds, %.1f s", $job->{label}, $K, $job->{n}, $rounds, $sec // 0));
+    return { G0 => $G0, R0 => $R0, mu => \@mu, values => \%values, notes => \@notes, rounds => $rounds, dir => $wd, model => $job->{model} };
+}
+
+sub fit_mt {
+    my ($self, $spec) = @_;
+    my $job = eval { $self->prepare_mt($spec) } or return { error => _clean($@ || 'model could not be prepared') };
+    $self->run([$job]);
+    return eval { $self->read_mt($job) } // { error => _clean($@) };
 }
 
 # prepare + run + read one model
