@@ -490,7 +490,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     }
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 1000;
-    if (!defined($progeny_number) || $progeny_number !~ /^[0-9]+$/ || $progeny_number > $maximum_progeny_number){
+    if (!defined($progeny_number) || $progeny_number !~ /^[0-9]+$/ || $progeny_number < 1 || $progeny_number > $maximum_progeny_number){
       #redirect to error page?
       return;
     }

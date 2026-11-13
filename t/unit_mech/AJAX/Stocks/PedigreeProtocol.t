@@ -181,6 +181,11 @@ subtest 'legacy cross generator uses the common transaction boundary' => sub {
         is($child->organism_id,$mother->organism_id,'legacy child inherits recorded maternal organism');
         is(scalar(@{snapshot($child)}),2,'legacy child has both parent roles');
     }
+    my$zero='protocol_legacy_cross_zero';
+    $mech->post('http://localhost:3010/stock/cross/generate',[cross_name=>$zero,maternal=>$mother->uniquename,
+        paternal=>$father->uniquename,prefix=>'P',suffix=>'',progeny_number=>0,visible_to_role=>'']);
+    is($s->resultset('Stock::Stock')->search({uniquename=>{-in=>[$zero,'P'.$zero.'-1']}})->count,0,
+        'legacy generator rejects a progeny count of 0 before writing');
 };
 
 subtest 'a graft-name collision cannot append a different composition' => sub {
