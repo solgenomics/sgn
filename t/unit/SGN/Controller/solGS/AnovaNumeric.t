@@ -42,6 +42,9 @@ for my $case (
     {name => 'duplicate base acronym', trait => 'dry matter content', other => 'disease mean count', last => 1, abbr => 'DMC.2', values => ['0', '2', '3']},
     {name => 'literal acronym metacharacter', trait => 'A+B', last => 1, values => ['0', '2', '3']},
     {name => 'nonfinite measurement', values => ['1', 'Inf', '3'], error => qr/not all numeric/, row => 3},
+    {name => 'double quote in a text column', neighbor => 'planted "late', values => ['0', '2', '3']},
+    {name => 'quoted text column before the trait', neighbor => '"north, wet" corner', last => 1, values => ['0', '2', '3']},
+    {name => 'text after a quoted text column', neighbor => 'say "hi', last => 1, values => ['1', 'red', '3'], error => qr/not all numeric/, row => 3},
     {name => 'failed query cannot appear successful', fresh => 1, query_error => 1, values => ['1', '2'], error => qr/error querying/},
     {name => 'query without data', fresh => 1, no_data => 1, values => ['1', '2'], error => qr/no phenotype data/},
     {name => 'missing cached trait mapping', values => ['1', '2'], map_missing => 1, error => qr/^The selected trait is not present in the phenotype data\.$/},
@@ -60,7 +63,8 @@ for my $case (
         my $content = $header.$newline;
         for my $i (0 .. $#{$case->{values}}) {
             my $value = $case->{values}[$i];
-            my @row = $case->{last} ? ('G'.$i, 'neighbor text', $value) : ('G'.$i, $value, 'neighbor text');
+            my $neighbor = $case->{neighbor} // 'neighbor text';
+            my @row = $case->{last} ? ('G'.$i, $neighbor, $value) : ('G'.$i, $value, $neighbor);
             $content .= join("\t", @row).$newline;
         }
         my $file = "$directory/phenotype_data_".(++$case_number).($case->{spaced_path} ? ' with spaces' : '').'.txt';

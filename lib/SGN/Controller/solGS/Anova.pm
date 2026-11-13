@@ -27,7 +27,6 @@ use File::Path qw /make_path/;
 use JSON;
 use List::Util qw/first/;
 use POSIX qw/isfinite/;
-use Text::CSV;
 use Scalar::Util qw /weaken reftype looks_like_number/;
 use Storable qw/nstore retrieve/;
 use URI::FromHash 'uri';
@@ -247,8 +246,10 @@ sub is_valid_anova_trait_data {
         $c->stash->{anova_data_error} = 'Could not read phenotype data. You may have to delete trial data, check and re-uploadit and try anova analysis again.';
         return 0;
     };
-    my $parser = Text::CSV->new({sep_char => "\t", binary => 1});
-    my $headers = $parser->getline($input);
+    # The phenotype file is plain tab-separated text without quoting, the same
+    # way the R job reads it, so a double quote in a free-text column is data.
+    my $header_line = <$input>;
+    my $headers = defined($header_line) ? _split_tsv_line($header_line) : undef;
     my $column = $headers && defined($trait_abbr)
         ? first { $headers->[$_] eq $trait_abbr } 0 .. $#$headers : undef;
     if (!defined $column) {
@@ -258,8 +259,9 @@ sub is_valid_anova_trait_data {
     }
     my %missing = map { $_ => 1 } ('', 'NA', '-', '.', '..', 'NaN');
     my ($numeric_count, $row_number, $categorical) = (0, 1, 0);
-    while (my $row = $parser->getline($input)) {
+    while (my $line = <$input>) {
         $row_number++;
+        my $row = _split_tsv_line($line);
         my $value = $row->[$column];
         $value = '' unless defined $value;
         $value =~ s/^\s+|\s+$//g;
@@ -271,18 +273,18 @@ sub is_valid_anova_trait_data {
         }
         $numeric_count++;
     }
-    if (!$c->stash->{anova_data_error}) {
-        if (!$parser->eof) {
-            $c->stash->{anova_data_error} = 'Could not read all of the phenotype data. Please delete trial data, check and re-upload it and try anova analysis again.';
-        }
-        elsif (!$numeric_count) {
-            $c->stash->{anova_data_error} = 'The trait data has no numeric observations.';
-        }
+    if (!$c->stash->{anova_data_error} && !$numeric_count) {
+        $c->stash->{anova_data_error} = 'The trait data has no numeric observations.';
     }
     close $input;
     return $c->stash->{anova_data_error} ? 0 : 1;
 }
 
+sub _split_tsv_line {
+    my ($line) = @_;
+    $line =~ s/\r?\n\z//;
+    return [ split /\t/, $line, -1 ];
+}
 
 sub check_anova_output {
     my ( $self, $c ) = @_;
