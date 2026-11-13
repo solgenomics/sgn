@@ -624,6 +624,19 @@ sub update_transformation_metadata {
                 rank=>0,
                 value=>$new_FEC_batch
             }),
+
+            my $transformants = $self->transformants();
+            if (scalar @$transformants > 0) {
+                foreach my $transgenic_line (@$transformants) {
+                    my $transgenic_line_stock_id = $transgenic_line->[0];
+                    my $transgenic_line_update = $schema->resultset('Stock::Stockprop')->update_or_create({
+                        type_id=>$FEC_batch_cvterm_id,
+                        stock_id=>$transgenic_line_stock_id,
+                        rank=>0,
+                        value=>$new_FEC_batch
+                    }),
+                }
+            }
         };
     };
 
