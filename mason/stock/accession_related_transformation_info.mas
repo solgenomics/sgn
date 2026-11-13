@@ -111,6 +111,7 @@ jQuery(document).ready(function(){
             'order': false,
             'paging': false,
             'info': false,
+            'destroy': true,
         });
 
         const transformant_qPCR_data_table = jQuery('#transformant_qPCR_data').DataTable({
@@ -120,12 +121,14 @@ jQuery(document).ready(function(){
             'order': false,
             'paging': false,
             'info': false,
+            'destroy': true,
         });
 
         const related_transformants_table = jQuery('#related_transformants_table').DataTable({
             'ajax': '/ajax/transformation/related_transformants/'+stock_id,
             'autoWidth': false,
             'order': false,
+            'destroy': true,
             'columns': [
                 { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.related_transformant_id+"/view'>"+row.related_transformant_name+"</a>"; } },
             ],
@@ -153,6 +156,7 @@ jQuery(document).ready(function(){
             'ajax': '/ajax/transformation/control_transformants/'+stock_id,
             'autoWidth': false,
             'order': false,
+            'destroy': true,
             'columns': [
                 { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
                 { title: "Transformation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/transformation/"+row.control_transformation_id+"/view'>"+row.control_transformation_name+"</a>"; } },
