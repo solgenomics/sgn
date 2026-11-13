@@ -627,7 +627,12 @@ sub clean_file {
     my $self = shift;
     my $file = shift;
 
-    open(my $PF, "<", $file) || die "Can't open pheno file ".$file."_phenotype.txt";
+    # a rerun on the same tempfile reads the original file again, which
+    # has the trait names of the dataset (the cleaned file has R names)
+    #
+    my $source = -e $file.".before_clean" ? $file.".before_clean" : $file;
+
+    open(my $PF, "<", $source) || die "Can't open pheno file ".$source;
     open(my $CLEAN, ">", $file.".clean") || die "Can't open ".$file.".clean for writing";
 
     open(my $TRAITS, ">", $file.".traits") || die "Can't open ".$file.".traits for writing";
@@ -659,8 +664,10 @@ sub clean_file {
     }
 
     close($PF);
-    print STDERR "moving $file to $file.before_clean...\n";
-    move($file, $file.".before_clean");
+    if ($source eq $file) {
+	print STDERR "moving $file to $file.before_clean...\n";
+	move($file, $file.".before_clean");
+    }
 
     print STDERR "moving $file.clean to $file...\n";
     move($file.".clean", $file);

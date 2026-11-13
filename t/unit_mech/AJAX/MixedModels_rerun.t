@@ -1,7 +1,8 @@
 
 # Tests that a rerun of the Mixed Models tool on the same page (same
-# tempfile) shows only its own results, and that a failed rerun shows an
-# error instead of the results of the previous run.
+# tempfile) shows only its own results, with the trait names of the
+# dataset, and that a failed rerun shows an error instead of the results
+# of the previous run.
 
 use strict;
 use warnings;
@@ -52,6 +53,7 @@ my $run1 = run_model( [ 'replicate' ], [ 'germplasmName' ]);
 is($run1->{error}, undef, 'run 1 has no error');
 is($run1->{method}, 'random', 'run 1 computed BLUPs');
 ok($run1->{adjusted_blups_data} && %{$run1->{adjusted_blups_data}}, 'run 1 returned adjusted BLUPs');
+is_deeply($run1->{traits}, [ $trait ], 'run 1 results have the trait name of the dataset');
 
 # run 2: germplasm as fixed factor must not show the BLUPs of run 1
 #
@@ -61,6 +63,7 @@ ok(!$run2->{blups_data}, 'run 2 does not return the BLUPs of run 1');
 if (!$run2->{error}) {
     is($run2->{method}, 'fixed', 'run 2 computed BLUEs');
     ok($run2->{adjusted_blues_data}, 'run 2 returned adjusted BLUEs');
+    is_deeply($run2->{traits}, [ $trait ], 'run 2 results have the trait name of the dataset, not the R name');
 }
 else {
     diag("run 2 returned an error: $run2->{error}");
