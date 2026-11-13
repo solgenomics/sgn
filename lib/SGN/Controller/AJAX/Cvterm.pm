@@ -464,7 +464,7 @@ sub add_synonym_POST {
 
     my $dbh = $c->dbc->dbh;
 
-    my $check_sth = $dbh->prepare("SELECT cvtermsynonym_id FROM cvtermsynonym WHERE synonym ilike ?");
+    my $check_sth = $dbh->prepare("SELECT cvtermsynonym_id FROM cvtermsynonym WHERE lower(synonym) = lower(?)");
     $check_sth->execute($synonym);
     my ($existing_id) = $check_sth->fetchrow_array();
     if ($existing_id) {

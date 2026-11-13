@@ -42,7 +42,7 @@ sub image_search_POST : Args(0) {
     my @stock_name_list;
     if (exists($params->{image_stock_uniquename}) && $params->{image_stock_uniquename}) {
         if (ref($params->{image_stock_uniquename}) eq 'ARRAY') {
-            push @stock_name_list, $params->{image_stock_uniquename};
+            push @stock_name_list, @{$params->{image_stock_uniquename}};
         } else {
             @stock_name_list = split /,/, $params->{image_stock_uniquename};
         }
@@ -52,7 +52,7 @@ sub image_search_POST : Args(0) {
     my @related_stock_list;
     if (exists($params->{image_related_stock}) && $params->{image_related_stock}) {
         if (ref($params->{image_related_stock}) eq 'ARRAY') {
-            push @related_stock_list, $params->{image_related_stock};
+            push @related_stock_list, @{$params->{image_related_stock}};
         } else {
             @related_stock_list = split /,/, $params->{image_related_stock};
         }
@@ -79,6 +79,15 @@ sub image_search_POST : Args(0) {
         }
     }
 
+    my @collection_id_list;
+    if (exists($params->{collection_id_list}) && $params->{collection_id_list}) {
+        if (ref($params->{collection_id_list}) eq 'ARRAY') {
+            @collection_id_list = @{ $params->{collection_id_list} };
+        } else {
+            @collection_id_list = split /,/, $params->{collection_id_list};
+        }
+    }
+
     my $limit = $params->{length};
     my $offset = $params->{start};
 
@@ -95,6 +104,7 @@ sub image_search_POST : Args(0) {
         stock_name_list=>\@stock_name_list,
         related_stock_list => \@related_stock_list,
         project_name_list=>\@project_name_list,
+        collection_id_list =>\@collection_id_list,
         tag_list=>\@tags,
         limit=>$limit,
         offset=>$offset
@@ -135,22 +145,9 @@ sub image_search_POST : Args(0) {
         my $image_page = "/image/view/$image_id";
         my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$small_image" width="40" border="0" alt="$image_description" /></a>|;
 
-        my $plot_name = $_->{stock_uniquename};
         my $accession_name;
-        if ($plot_name) {
-            my $plot_stock = $schema->resultset('Stock::Stock')->find({uniquename => $plot_name});
-            if ($plot_stock) {
-                my $accession_stock = $plot_stock->search_related('stock_relationship_subjects', {
-                    'type.name' => 'plot_of',
-                }, {
-                    join => 'type',
-                })-> single;
-                if ($accession_stock) {
-                    my $accession_id = $accession_stock->object->stock_id;
-                    my $accession_uniquename = $accession_stock->object->uniquename;
-                    $accession_name = "<a href='/stock/$accession_id/view'>$accession_uniquename</a>";
-                }
-            }
+        if ($_->{accession_id}) {
+            $accession_name = "<a href='/stock/".$_->{accession_id}."/view'>".$_->{accession_uniquename}."</a>";
         }
 
         my @line;

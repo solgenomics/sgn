@@ -5,15 +5,6 @@ $trial_stock_type => undef
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'] &>
 
-<script src="https://unpkg.com/d3-regression@1.3.10/dist/d3-regression.min.js"></script>
-<script>
-
-const regression = d3.regressionLinear()
-  .x(d => d.x)
-  .y(d => d.y)
-  .domain([0, 100]);
-
-</script>
 <style>
 .small-graph svg {
     display: flex;
@@ -129,13 +120,13 @@ jQuery(document).ready(function() {
         }
         jQuery('#working_modal').modal('show');
 
-        if (!selectedTraitId) { 
+        if (!selectedTraitId) {
             selectedTraitId = jQuery('#selectRawDataTrait option:selected').val();
         }
 
         //console.log("check updated trait ID:", selectedTraitId);
         var repetitive_start_date = jQuery('#repetitive_measurement_start_date').val();
-        
+
         //add an extra day to make all the range inclusive !!!
         var repetitive_endDate = new Date(end_date);
         repetitive_endDate.setDate(repetitive_endDate.getDate() + 1);
@@ -221,7 +212,7 @@ jQuery(document).ready(function() {
             }
         });
     }).fail(function(xhr, status, error) {
-        alert('An error occured in the repetitive measurement!' + xhr.responseText);
+        alert('An error occurred in the repetitive measurement!' + xhr.responseText);
         //console.error("the status:", xhr.status);
         //console.error("the error:", error);
     })
@@ -244,13 +235,13 @@ jQuery(document).ready(function() {
 
     function parseDateIgnoreTimeZone(timestampStr){
         var datePart = timestampStr.slice(0,10); // includes only the first 10 characters YYYY-MM-DD !!!
-        var parts = datePart.split("-"); 
+        var parts = datePart.split("-");
         var year = +parts[0];
         var month = +parts[1] - 1;
         var day = +parts[2];
         return new Date(year, month, day, 12); //return a UTC date for that day !!!
     }
-    
+
     function repetitive_build_menu(result) {
         var $traitSelect = jQuery('#select_trait_for_repetitive_data_and_plot');
         $traitSelect.empty();
@@ -275,10 +266,10 @@ jQuery(document).ready(function() {
         return jQuery.ajax({
             'url': "/brapi/v2/search/observations/",
 		    'data': {
-                studyDbIds: [ trial_id ], 
+                studyDbIds: [ trial_id ],
                 observationVariableDbIds: [ trait_id ],
-                observationTimeStampRangeStart: start_date, 
-                observationTimeStampRangeEnd: end_date, 
+                observationTimeStampRangeStart: start_date,
+                observationTimeStampRangeEnd: end_date,
                 observationLevel: [ observation_level ],
             },
 		    'method': "POST"
@@ -305,7 +296,7 @@ jQuery(document).ready(function() {
             var unique_key = item.observationUnitName + '|' + item.germplasmName;
             if (observation_level == 'accession') {
                 unique_key = item.germplasmName;
-            } 
+            }
 
             //console.log(`unique_id_accession: ${observation_units_map[item.germplasmName]}`)
             if (!observation_units_map[unique_key]) {
@@ -340,7 +331,7 @@ jQuery(document).ready(function() {
         for (var unique_id in observation_units_map) {
             //console.log(`unique_id: ${unique_id}`)
             var group = observation_units_map[unique_id];
-            //sort the repetitive values arrray by collect_date!!
+            //sort the repetitive values array by collect_date!!
             group.values.sort((a, b) => a.date - b.date);
             var values = group.values.map(d => d.value); //store only the value for each object !!
             var valueToShow = get_values_to_show(values, repetitive_measurement_level);
@@ -369,7 +360,7 @@ jQuery(document).ready(function() {
                { title: 'Repetitive Values' },
 			   { title: 'Repetitive Line Graph'}
 		   ];
-        } 
+        }
 
         // clear any existing DataTable and table contents and rebuild
         var $table = jQuery('#repetitive_measurement_data_table');
@@ -379,7 +370,7 @@ jQuery(document).ready(function() {
             } catch (e) {
                 console.log(`Error clearing data table...${e}`)
             }
-                
+
             $table.empty();
         }
 
@@ -413,18 +404,18 @@ jQuery(document).ready(function() {
 		var small_graph_dim = {
 			"width": 60,
 			"height": 20,
-			"margin": { "top": 5, "right": 5, "bottom": 5, "left":5}  
+			"margin": { "top": 5, "right": 5, "bottom": 5, "left":5}
 		};
 
 		//we are hiding the axis, legends and all other details for the samll_graph !!!
 		var options = {
-			showXAxis: false, 
-			showYAxis: false, 
-			showDots: false, 
+			showXAxis: false,
+			showYAxis: false,
+			showDots: false,
 			showTitle: false,
 		};
 
-		//draw a line graph based on the repetitive_values for each obs_unit_name 
+		//draw a line graph based on the repetitive_values for each obs_unit_name
 		lineGraphRepetitiveValues.drawLineGraph(data, container.get(0), small_graph_dim, '', '', options);
 
 		//add a click event to small_graph to view the graph in the larger appearance
@@ -434,7 +425,7 @@ jQuery(document).ready(function() {
 			var graph_data = group.values;
             var label_observation_unit_name = group.observationUnitName;
             var trait_name = jQuery('#select_trait_for_repetitive_data_and_plot').find(":selected").text();
-            
+
 			open_large_graph(graph_data, trait_name, label_observation_unit_name);
 		});
 	}
@@ -446,17 +437,17 @@ jQuery(document).ready(function() {
 		jQuery('#large_graph_container').html('');
 		jQuery('#large_graph').modal('show');
 
-		//add options to show in the larger graph 
+		//add options to show in the larger graph
 		var options = {
-			showXAxis:true, 
-			showYAxis:true, 
+			showXAxis:true,
+			showYAxis:true,
 			showTitle:true,
 			showDots: true,
             drawOls: true,
 		};
-		
+
 		//draw the line by connecting all the values for the larger graph
-		lineGraphRepetitiveValues.drawLineGraph(data, "#large_graph_container", null, trait_name, label_observation_unit_name, options); 
+		lineGraphRepetitiveValues.drawLineGraph(data, "#large_graph_container", null, trait_name, label_observation_unit_name, options);
 	}
 
     function get_values_to_show (values, repetitive_measurement_level) {
