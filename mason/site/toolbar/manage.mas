@@ -24,6 +24,8 @@
     <li><a href="/tools/trialallocation">Trial Allocation</a></li>
     <li><a href="/fieldbook">Field Book App</a></li>
     <li><a href="/breeders/phenotyping/">Phenotyping</a></li>
+    <li><a href="/breeders/images/">Images</a></li>
+    <li><a href="/collections/files">Files</a></li>
     <li><a href="/barcode">Barcodes</a></li>
     <li><a href="/tools/label_designer">Label Designer</a></li>
 
@@ -39,7 +41,7 @@
 <!--    <li><a href="/breeders/odk">ODK Data Collection</a></li>  -->
     <li><a href="/breeders/file_share_dump">File Share</a></li>
 
-    <li role="seperator" class="divider"></li>
+    <li role="separator" class="divider"></li>
     <li><a href="/breeders/nirs">NIRS</a></li>
     <li><a href="/breeders/transcriptomics">Transcriptomics</a></li>
   </ul>
