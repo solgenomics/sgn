@@ -61,7 +61,7 @@ eval {
 ok($@, 'Check for refusal to generate finish timestamp due to no job ID');
 
 my $SYSTEM_MODE = $ENV{SYSTEM};
-# The following tests wont work on github, but you can run them locally
+# The following tests won't work on github, but you can run them locally
 SKIP: {
     skip "Skip if run under git", 4 unless $SYSTEM_MODE ne "GITACTION";
     my $job_id = $job->submit();
