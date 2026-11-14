@@ -91,6 +91,12 @@ sub modal_visible {
     my ($id) = @_;
     return $t->driver->execute_script("var e=document.getElementById('$id'); return !!e && !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);");
 }
+# The working modal fades out after each request; a click before it is gone lands on the modal.
+sub click_when_free {
+    my ($element, $description) = @_;
+    wait_until(sub {!modal_visible('working_modal')}, "working modal gone before: $description");
+    $element->click;
+}
 sub open_upload_dialog {
     my ($description) = @_;
     wait_until(sub {$t->driver->execute_script('return document.readyState === "complete";')}, 'completed page load');
@@ -140,7 +146,7 @@ eval {
         my $original_input = $t->find_element_ok('pedigrees_uploaded_file','id','original pedigree input');
         $t->driver->upload_file($original_path);
         $original_input->send_keys($original_path);
-        $t->find_element_ok('upload_pedigrees_dialog_submit','id','validate original invalid pedigrees')->click;
+        click_when_free($t->find_element_ok('upload_pedigrees_dialog_submit','id','validate original invalid pedigrees'), 'validate');
         wait_until(sub {modal_visible('upload_pedigrees_error_display') || modal_visible('upload_pedigrees_validate_display')}, 'original verification result');
         ok(modal_visible('upload_pedigrees_error_display'), 'invalid original input opens the fatal validation modal');
         my $original_error = $t->driver->execute_script("return document.querySelector('#upload_pedigrees_error_display tbody').textContent;");
@@ -150,20 +156,20 @@ eval {
         ok(!$store_visible, 'Store remains hidden after fatal validation');
         is_deeply(original_pedigree_snapshot(), $original_pedigree, 'rejected original upload preserves saved parent relationships');
         is(original_file_hash(), $original_hash, 'rejected upload preserves the original file bytes');
-        $t->find_element_ok('//div[@id="upload_pedigrees_error_display"]//div[@class="modal-footer"]/button[@data-dismiss="modal"]',
-            'xpath', 'close the observed validation error modal')->click;
+        click_when_free($t->find_element_ok('//div[@id="upload_pedigrees_error_display"]//div[@class="modal-footer"]/button[@data-dismiss="modal"]',
+            'xpath', 'close the observed validation error modal'), 'close');
         wait_until(sub {$t->driver->execute_script("var x=document.getElementById('upload_pedigrees_error_display'); return window.getComputedStyle(x).display==='none' && !document.querySelector('.modal-backdrop');")}, 'error modal and backdrop dismissal');
         open_upload_dialog('upload dialog after rejection');
         my $input = $t->find_element_ok('pedigrees_uploaded_file','id','owned pedigree input');
         $input->clear;
         $t->driver->upload_file($path);
         $input->send_keys($path);
-        $t->find_element_ok('upload_pedigrees_dialog_submit','id','validate owned acyclic pedigrees')->click;
+        click_when_free($t->find_element_ok('upload_pedigrees_dialog_submit','id','validate owned acyclic pedigrees'), 'validate');
         wait_until(sub {modal_visible('upload_pedigrees_validate_display') || modal_visible('upload_pedigrees_error_display')},'verification result');
         my $validation_error = $t->driver->execute_script("return document.querySelector('#upload_pedigrees_error_display tbody').textContent;");
         ok(modal_visible('upload_pedigrees_validate_display'),'valid input opens the Store dialog') or diag($validation_error);
         die "Owned valid pedigree input was rejected: $validation_error\n" unless modal_visible('upload_pedigrees_validate_display');
-        $t->find_element_ok('upload_pedigrees_store','id','store validated pedigree batch')->click;
+        click_when_free($t->find_element_ok('upload_pedigrees_store','id','store validated pedigree batch'), 'store');
         wait_until(sub {modal_visible('pedigrees_upload_success_dialog_message')},'successful pedigree store');
         ok(1,'successful store is confirmed by the visible completion dialog');
         for my $row (@rows) {
@@ -182,7 +188,7 @@ eval {
         }
         is_deeply(original_pedigree_snapshot(), $original_pedigree, 'successful owned upload does not alter original pedigrees');
         is(original_file_hash(), $original_hash, 'successful owned upload does not overwrite the original file');
-        $t->find_element_ok('pedigrees_upload_success_dismiss','id','dismiss confirmed success')->click;
+        click_when_free($t->find_element_ok('pedigrees_upload_success_dismiss','id','dismiss confirmed success'), 'dismiss');
         wait_until(sub {!modal_visible('pedigrees_upload_success_dialog_message')},'success dialog dismissal');
     });
     1;
@@ -193,7 +199,8 @@ cleanup_owned();
 is_deeply(original_pedigree_snapshot(), $original_pedigree, 'cleanup preserves original pedigree rows');
 is(original_file_hash(), $original_hash, 'cleanup preserves original input file');
 undef $f;
-die $error if $error;
+# the reason goes to the test output: CI does not show STDERR
+ok(!$error, 'the browser steps finish') or note($error);
 done_testing;
 END {
     eval {$t->driver->quit} if $t;
