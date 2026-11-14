@@ -2396,7 +2396,7 @@ function runSuggested() {
     rv.alt = { job: { pending: true }, recipe: rv.suggested, results: null, error: null };
     renderReview();
     post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(rv.suggested), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full',
-        dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: 0 })
+        dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: 0, label: 'suggested model' })
         .then(job => { rv.alt.job = job; renderReview(); return pollJob(job, null); })
         .then(res => { res.run_id = rv.alt.job.run_id; rv.alt.results = res; })
         .catch(e => { rv.alt.error = e.message; })

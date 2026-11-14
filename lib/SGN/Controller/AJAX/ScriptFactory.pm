@@ -207,6 +207,24 @@ sub blupf90_license_contact {
 # Engine of a run: 'blupf90' (CXGN::BLUPF90::Pipeline, no R) when the recipe
 # asks for BLUPF90+ and blupf90+ is installed; 'lme4' (the R pipeline)
 # otherwise.
+# Name of a run's job (the jobs list of the user's profile): the saved script's
+# name, else the dataset and the traits, so runs are told apart before they
+# are stored (storing renames the job to the analysis name, _rename_job).
+# label: e.g. 'suggested model' for the model review's second run.
+sub _job_name {
+    my ($recipe, $mode, $dataset_name, $label) = @_;
+    my $base = $mode eq 'preview' ? 'Analysis Pipeline outlier preview' : 'Analysis Pipeline';
+    my $what = $recipe->{name};
+    if (!defined($what) || $what eq '') {
+        my @t = map { my $x = $_; $x =~ s/\|.*$//; $x } @{ ref($recipe->{traits}) eq 'ARRAY' ? $recipe->{traits} : [] };
+        my $traits = @t > 3 ? join(', ', @t[0 .. 2]) . ' +' . (@t - 3) : join(', ', @t);
+        $what = join(' ', grep { $_ ne '' } ($dataset_name // ''), ($traits ne '' ? "($traits)" : ''));
+    }
+    $label = '' if !defined($label) || $label !~ /^[\w .()-]{1,40}$/;
+    my $name = $base . ($what ne '' ? ": $what" : ' run') . ($label ne '' ? " - $label" : '');
+    return length($name) > 200 ? substr($name, 0, 197) . '...' : $name;
+}
+
 sub _run_engine {
     my ($recipe, $f90_dir) = @_;
     # the engine chosen in the page: BLUPF90+, or R (lme4, SpATS, glmmTMB,
@@ -1236,7 +1254,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
             schema => $schema,
             people_schema => $people_schema,
             sp_person_id => $sp_person_id,
-            name => ($mode eq 'preview' ? 'Analysis Pipeline outlier preview' : 'Analysis Pipeline run') . ($recipe->{name} ? ": $recipe->{name}" : ''),
+            name => _job_name($recipe, $mode, $meta{dataset_name}, scalar($c->req->param('label'))),
             job_type => 'script_factory_analysis',
             cmd => $cmd,
             results_page => ($mode eq 'preview' ? '/tools/script_factory' : "/tools/script_factory/results/$run_id"),
