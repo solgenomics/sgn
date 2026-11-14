@@ -284,7 +284,7 @@ function retrieve_and_display_set(categories, data, this_section, selected, data
 		    var selectall_id = "c"+this_section+"_select_all";
 		    jQuery('#'+selectall_id).before(error_html);
 		} else {
-                    // report unspecified error occured
+                    // report unspecified error occurred
 		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
 		    var selectall_id = "c"+this_section+"_select_all";
 		    jQuery('#'+selectall_id).before(error_html);
@@ -539,7 +539,7 @@ function pasteList() {
         listType: data.type_name
       });
     }
-    jQuery('#paste_list_list_select').prop('title', data.type_name);  // so get_selected_categories method doesn't have to retrieve list data everytime
+    jQuery('#paste_list_list_select').prop('title', data.type_name);  // so get_selected_categories method doesn't have to retrieve list data every time
     enable_ui();
   }
 }
@@ -663,6 +663,15 @@ function add_data_refresh() {
 // matview_select is either:
 // "fullview" for refreshing materialized phenoview, genoview, traits, and stockprop
 // "stockprop" for refreshing materialized stockprop
+// Pages that refresh after saving terms have no status line for the wizard, so they show a refusal in an alert.
+function report_refresh_status(html, alert_text) {
+    if (jQuery('#update_wizard_error').length) {
+        jQuery('#update_wizard_error').replaceWith(html);
+    } else if (alert_text) {
+        alert(alert_text);
+    }
+}
+
 function refresh_matviews(matview_select) {
     jQuery.ajax( {
 	url: '/ajax/breeder/refresh?matviews='+matview_select,
@@ -674,7 +683,7 @@ function refresh_matviews(matview_select) {
 	success: function(response) {
 		if (response.error) {
 		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">'+response.error+'</font></div>';
-		    jQuery('#update_wizard_error').replaceWith(error_html);
+		    report_refresh_status(error_html, response.error);
 		} else {
 		    var success_html = '<div class="well well-sm" id="update_wizard_error"><font color="green">'+response.message+'</font></div>';
 		    jQuery('#update_wizard_error').replaceWith(success_html);
@@ -685,11 +694,11 @@ function refresh_matviews(matview_select) {
 		if (status == "timeout") {
                     // report timeout
 		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
-		    jQuery('#update_wizard_error').replaceWith(error_html);
+		    report_refresh_status(error_html, 'The search views were not refreshed: the request took longer than 60 seconds.');
 		} else {
-                    // report unspecified error occured
+                    // report unspecified error occurred
 		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
-		    jQuery('#update_wizard_error').replaceWith(error_html);
+		    report_refresh_status(error_html, 'The search views were not refreshed because of an error. If this problem persists, please contact the developers.');
 		}
             }
     });
@@ -721,7 +730,7 @@ function matviews_update_options() {
 		    var error_html = '<div class="well well-sm" id="wizard_status"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
 		    jQuery('#wizard_status').replaceWith(error_html);
 		} else {
-                    // report unspecified error occured
+                    // report unspecified error occurred
 		    var error_html = '<div class="well well-sm" id="wizard_status"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
 		    jQuery('#wizard_status').replaceWith(error_html);
 		}

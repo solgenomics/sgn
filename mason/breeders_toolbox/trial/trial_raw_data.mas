@@ -214,6 +214,8 @@ jQuery(window).ready( function() {
 			}
 		})
 		.catch(err => {
+			jQuery('#refresh_phenoview_btn').prop("disabled", false);
+			jQuery('#working_modal').modal("hide");
 			alert(err.message);
 		});
 	});
