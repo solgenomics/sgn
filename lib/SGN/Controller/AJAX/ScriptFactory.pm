@@ -2423,19 +2423,21 @@ sub decision_evidence : Path('/ajax/script_factory/decision_evidence') Args(0) {
     my $self = shift;
     my $c = shift;
     return if !_require_login($c);
-    my $analysis_id = $c->req->param('analysis_id') // '';
+    $c->stash->{rest} = evidence_data($c, $c->req->param('analysis_id') // '');
+}
+
+# the evidence of a stored analysis, as decision_evidence returns it, or
+# {error}; the user must be able to open the analysis. Also used by the
+# variety votes of a meeting (SGN::Controller::AJAX::DecisionVote), which keep
+# a copy of it.
+sub evidence_data {
+    my ($c, $analysis_id) = @_;
     my $r = analysis_run_id($c, $analysis_id);
-    if ($r->{error}) {
-        $c->stash->{rest} = { error => $r->{error} };
-        return;
-    }
+    return { error => $r->{error} } if $r->{error};
     # the results file as written by the pipeline (_load_results drops the
     # standard errors of genotype_values_long and publishes files: not needed here)
     my $res = try { decode_json(read_file(_work_dir($c) . "/$r->{run_id}.results.json")) } catch { undef };
-    if (!$res) {
-        $c->stash->{rest} = { error => 'The results of this analysis cannot be read.' };
-        return;
-    }
+    return { error => 'The results of this analysis cannot be read.' } if !$res;
     my $as_list = sub { my $x = shift; return !defined($x) ? [] : ref($x) eq 'ARRAY' ? $x : [$x] };
     my @traits = @{ $as_list->(($res->{summary} || {})->{traits}) };
     my %idx_dir = map { (s/\|.*$//r) => ($res->{recipe}->{index}->{traits}->{$_}->{direction} // 'increase') } keys %{ (($res->{recipe} || {})->{index} || {})->{traits} || {} };
@@ -2481,7 +2483,7 @@ sub decision_evidence : Path('/ajax/script_factory/decision_evidence') Args(0) {
         $rows{ $_->[0] }->{stock_id} = $_->[1] + 0 for grep { $rows{ $_->[0] } } @$ids;
     }
     my $info = _stored_analysis($c, $analysis_id);
-    $c->stash->{rest} = {
+    return {
         analysis_id => $analysis_id + 0,
         name => $info->{name},
         description => $info->{description},

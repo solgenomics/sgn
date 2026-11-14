@@ -1,0 +1,127 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/decision_meeting/vote_section.mas - variety votes of the selected decision meeting
+
+=head1 DESCRIPTION
+
+Votes of invited people (Breedbase users, or farmers and field workers
+without an account): a personal ballot link e-mailed to each one (there is no
+public link), start and end dates, progress (totals only) and anonymous
+results after the end (with the trait values and selection index of the
+candidates, from an analysis linked to the meeting).
+Code: js/source/entries/decision_vote.js, endpoints /ajax/decision_vote/*,
+public pages /decision_vote/*.
+
+=head1 AUTHOR
+
+Chris Simoes <ccs263@cornell.edu>
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, entries => ['decision_vote'] &>
+
+<style>
+.dvm-card { border: 1px solid #d9dee5; border-radius: 6px; padding: 8px 10px; margin: 0 8px 8px 0; display: inline-block; vertical-align: top; min-width: 280px; max-width: 440px; background: #fff; cursor: pointer; }
+.dvm-card.on { border-color: #2b7a4b; box-shadow: 0 0 0 2px #e8f3ec; }
+.dvm-card-title { font-weight: 600; }
+.dvm-meta { font-size: 11px; color: #6b7280; }
+.dvm-panel { border: 1px solid #d9dee5; border-radius: 6px; padding: 8px 10px; margin: 0 0 12px 0; background: #fafbfc; }
+.dvm-list { max-height: 280px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; }
+.dvm-list label { display: block; font-weight: normal; margin: 0; padding: 3px 8px; border-bottom: 1px solid #f1f3f5; cursor: pointer; }
+.dvm-list input { margin-right: 6px; }
+.dvm-list .dvm-vote { background: #eef7f1; }
+.dvm-list .dvm-out { color: #9ca3af; }
+.dvm-link { font-family: monospace; font-size: 12px; word-break: break-all; background: #fff; border: 1px solid #e5e7eb; padding: 4px 6px; border-radius: 4px; }
+.dvm-muted { color: #6b7280; }
+.dvm-users .dvm-chip { display: inline-block; background: #eef7f1; border: 1px solid #cfe5d7; border-radius: 12px; padding: 1px 4px 1px 9px; margin: 0 4px 4px 0; font-size: 12px; }
+.dvm-users .dvm-chip button { border: 0; background: none; color: #6b7280; padding: 0 4px; }
+.dvm-users .dvm-found { border: 1px solid #e5e7eb; border-radius: 4px; max-height: 200px; overflow-y: auto; background: #fff; }
+.dvm-users .dvm-found a { display: block; padding: 4px 8px; border-bottom: 1px solid #f1f3f5; color: #111827; text-decoration: none; cursor: pointer; }
+.dvm-users .dvm-found a:hover { background: #f5f8fb; }
+.dvm-users .dvm-found a.off { color: #9ca3af; cursor: default; }
+.dvm-step { font-weight: 700; color: #1f5c38; margin: 14px 0 6px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; }
+.dvm-bar { height: 8px; background: #2b7a4b; border-radius: 3px; }
+#dvm_voters td, #dvm_results td { white-space: nowrap; }
+</style>
+
+<div class="well">
+  <&| /page/info_section.mas,
+       title => 'Variety vote',
+       is_subsection => 1, collapsible => 1, collapsed => 0,
+       subtitle => 'Farmers and field workers (no Breedbase account needed) vote on the candidate varieties of the selected meeting'
+  &>
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div id="dvm_status" class="dvm-muted">Select a meeting in the Meeting Tracker to see its variety votes.</div>
+        <div id="dvm_body" style="display:none">
+          <div id="dvm_votes"></div>
+          <div style="margin: 4px 0 10px 0">
+            <button class="btn btn-success btn-sm" id="dvm_new_toggle"><span class="glyphicon glyphicon-plus"></span> New vote</button>
+          </div>
+
+          <div id="dvm_new" class="dvm-panel" style="display:none">
+            <h4 style="margin-top:0" id="dvm_form_title">New variety vote</h4>
+
+            <h5 class="dvm-step">1. The vote</h5>
+            <div class="row">
+              <div class="col-sm-6 form-group"><label>Name *</label><input class="form-control input-sm" id="dvm_name" maxlength="255" placeholder="e.g. Farmer vote 2026 - advanced yield trial" /></div>
+              <div class="col-sm-3 form-group"><label>Voting starts *</label><input type="date" class="form-control input-sm" id="dvm_start" /></div>
+              <div class="col-sm-3 form-group"><label>Voting ends *</label><input type="date" class="form-control input-sm" id="dvm_end" /></div>
+            </div>
+            <div class="row">
+              <div class="col-sm-12 form-group"><label>Message for the voters <span class="dvm-muted">(optional)</span></label><textarea class="form-control input-sm" id="dvm_desc" rows="2" maxlength="4000"></textarea></div>
+            </div>
+
+            <div id="dvm_candidates_part">
+              <h5 class="dvm-step">2. Varieties</h5>
+              <div class="form-group">
+                <label>Take the varieties from</label>
+                <select class="form-control input-sm" id="dvm_source" style="max-width:520px"></select>
+              </div>
+              <p class="dvm-muted" style="margin-bottom:6px">For each variety choose:
+                <b>Candidate</b> (people vote on it) &middot; <b>Only notes</b> (people can comment, no vote) &middot; <b>Not in the vote</b>.</p>
+              <div class="form-inline" style="margin-bottom:6px">
+                <label class="checkbox-inline"><input type="checkbox" id="dvm_only_meeting" /> Only accessions of this meeting</label>
+                <button class="btn btn-default btn-xs" id="dvm_check_selected" style="margin-left:8px">Index selected = candidates, others = only notes</button>
+                <button class="btn btn-default btn-xs" id="dvm_check_all">All: only notes</button>
+                <button class="btn btn-default btn-xs" id="dvm_check_none">All: not in the vote</button>
+                <span id="dvm_n_checked" style="margin-left:8px"></span>
+              </div>
+              <div id="dvm_candidates" class="dvm-list"></div>
+
+              <h5 class="dvm-step">3. People to invite</h5>
+              <div class="row">
+                <div class="col-sm-6 form-group">
+                  <label>Breedbase users</label>
+                  <div class="dvm-users" data-key="new"></div>
+                  <span class="help-block">They receive their voting link directly by e-mail.</span>
+                </div>
+                <div class="col-sm-6 form-group">
+                  <label>People without a Breedbase account <span class="dvm-muted">(one per line: <code>Name, e-mail</code>)</span></label>
+                  <textarea class="form-control input-sm" id="dvm_people" rows="4" placeholder="Maria Silva, maria.silva@gmail.com&#10;Joao Souza, joao@farm.com.br"></textarea>
+                  <span class="help-block" id="dvm_people_count">They receive their voting link by e-mail.</span>
+                </div>
+              </div>
+              <div class="dvm-total" data-key="new" style="margin:0 0 6px 0"></div>
+            </div>
+            <div id="dvm_form_msg"></div>
+            <p class="dvm-muted" id="dvm_save_hint" style="margin-bottom:6px">Both buttons open the vote.</p>
+            <button class="btn btn-success btn-sm" id="dvm_save" data-send="1"><span class="glyphicon glyphicon-send"></span> Send invitations now</button>
+            <button class="btn btn-primary btn-sm" id="dvm_save_later" data-send="0"><span class="glyphicon glyphicon-floppy-disk"></span> Save to send later</button>
+            <button class="btn btn-default btn-sm" id="dvm_cancel">Close</button>
+          </div>
+
+          <div id="dvm_detail" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </&>
+</div>
+
+<script>
+  jQuery(function() { window.jsMod['decision_vote'].init(); });
+</script>

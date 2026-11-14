@@ -1,0 +1,59 @@
+<%doc>
+
+=head1 NAME
+
+/decision_vote/vote.mas - public page of a variety vote of a decision meeting
+
+=head1 DESCRIPTION
+
+No login: the token of the personal link e-mailed to an invited person
+identifies the voter (there is no public link). Ballot (a place for each
+candidate, optional notes), progress of the vote (totals only) and, after the
+end date, the anonymous results with the trait values and selection index of
+the candidates.
+Code: js/source/entries/decision_vote_public.js, data: /ajax/decision_vote/public/*.
+
+=head1 AUTHOR
+
+Chris Simoes <ccs263@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$token => ''
+$kind => 'ballot'
+</%args>
+
+<& /util/import_javascript.mas, entries => ['decision_vote_public'] &>
+
+<& /page/page_title.mas, title => 'Variety vote' &>
+
+<style>
+#dv_app { max-width: 900px; font-size: 15px; }
+#dv_app .dv-box { border: 1px solid #d9dee5; border-radius: 6px; padding: 12px 14px; margin: 0 0 14px 0; background: #fff; }
+#dv_app .dv-muted { color: #6b7280; }
+#dv_app .dv-progress-num { display: inline-block; min-width: 90px; text-align: center; margin: 0 10px 6px 0; padding: 6px 10px; border-radius: 6px; background: #f5f7fa; }
+#dv_app .dv-progress-num b { display: block; font-size: 22px; }
+#dv_app .dv-item { display: flex; align-items: flex-start; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; margin-bottom: 8px; background: #fafbfc; }
+#dv_app .dv-main { flex: 1; min-width: 0; }
+#dv_app .dv-name { font-weight: 600; font-size: 16px; word-break: break-word; }
+#dv_app .dv-item.dv-dup { border-color: #f0ad4e; background: #fcf8e3; }
+#dv_app textarea.dv-comment { font-size: 14px; }
+#dv_app .dv-field { margin-top: 6px; }
+#dv_app .dv-field label { margin-bottom: 2px; }
+#dv_app .dv-bar { height: 10px; background: #2b7a4b; border-radius: 3px; }
+#dv_app .dv-bar-wrap { background: #eef2f0; border-radius: 3px; min-width: 80px; }
+#dv_app .dv-link { font-family: monospace; word-break: break-all; background: #f5f7fa; padding: 8px; border-radius: 4px; }
+#dv_app .dv-first td { background: #e8f3ec !important; }
+#dv_app .dv-quote { border-left: 3px solid #d9dee5; padding-left: 8px; margin: 4px 0; color: #374151; }
+</style>
+
+<div id="dv_app" data-token="<% $token |h %>" data-kind="<% $kind |h %>">
+  <div class="dv-muted"><span class="glyphicon glyphicon-refresh"></span> Loading...</div>
+</div>
+
+<script>
+  jQuery(function() { window.jsMod['decision_vote_public'].init(); });
+</script>

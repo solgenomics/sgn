@@ -22,6 +22,8 @@ my $buttons_html = "<button class='btn btn-success' style='margin:3px' id='creat
 
 <& /breeders_toolbox/decision_meeting/analysis_evidence_section.mas &>
 
+<& /breeders_toolbox/decision_meeting/vote_section.mas &>
+
 </div>
 
 
