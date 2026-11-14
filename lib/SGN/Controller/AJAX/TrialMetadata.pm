@@ -11,6 +11,8 @@ use Math::Round::Var;
 use File::Temp 'tempfile';
 use Text::CSV;
 use CXGN::Trial::FieldMap;
+use CXGN::Trial::AccessionChange;
+use HTML::Entities qw(encode_entities);
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Cross;
@@ -383,7 +385,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $stock_type_id;
     my $rel_type_id;
     my $total_complete_number;
-    # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INLCUDE DATELESS $include_dateless_items, DIPLAY = $display\n";
+    # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INCLUDE DATELESS $include_dateless_items, DISPLAY = $display\n";
     if ($display eq 'plots') {
         if ($group_by_accession) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -2364,16 +2366,30 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     $c->stash->{rest} = { success => 1 };
 }
 
+# Changes the accessions of plots from a file: plot_name, accession_name, and
+# optionally new_plot_name and seedlot_name (the seed transactions follow the
+# packets anyway). Other
+# columns are ignored, so a downloaded layout or planting order file (Download
+# Plot Order, whose border and gap rows are skipped) can be corrected and
+# uploaded; uploading it again changes nothing.
+# Args: 'check' (curators get a warning for trials with phenotypes) or 'override'.
+# params: keep_plot_names, preview (1 to get the plan only),
+#   override (1, the same as the Arg 'override')
 sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot_accessions_using_file') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $override = shift;
+    my $override = _true_param($c->req->param('override')) ? 'override' : shift;
     my $trial_id = $c->stash->{trial_id};
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+        $c->stash->{rest} = {error=>'You must be logged in to change plot accessions!'};
+        return;
+    }
+
+    if ($self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to change the accessions of this trial." };
         return;
     }
 
@@ -2415,197 +2431,66 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error => "Could not get parsing errors"};
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
-            #print STDERR Dumper $parse_errors;
+            # the messages carry names from the file
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= encode_entities($error_string)."<br>";
             }
         }
         $c->stash->{rest} = {error => $return_error};
         return;
     }
 
-    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-    my $rep_number_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
-
-    my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    my $fieldmap = CXGN::Trial::FieldMap->new({
         bcs_schema => $schema,
         trial_id => $trial_id
     });
-
-    my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
-    if ($c->user()->check_roles("curator") and $return_error) {
-        if ($override eq "check") {
-            $c->stash->{rest} = { warning => "curator warning" };
+    my $return_error = $fieldmap->update_fieldmap_precheck();
+    if ($return_error) {
+        if (!$c->user()->check_roles("curator")) {
+            $c->stash->{rest} = { error => $return_error };
             return;
         }
-    } elsif ($return_error){
-        $c->stash->{rest} = { error => $return_error };
-        return;
-    }
-
-    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-            schema => $schema,
-            trial_id => $trial_id,
-            data_level => 'plots',
-            selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1,"block_number"=>1,"rep_number"=>1,"range_number"=>1,"row_number"=>1,"col_number"=>1,"trial_name"=>1},
-        });
-    my @layout = @{$trial_layout_download->get_layout_output()->{output}};
-    my $layout_header = shift @layout;
-    my %col_idx;
-    for my $i (0..$#$layout_header) { $col_idx{$layout_header->[$i]} = $i; }
-
-    # Look up naming template for this trial
-    my ($template_name_attributes, $bp_name);
-    my $plot_name_template_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_autogenerated_name_metadata', 'project_property');
-    if ($plot_name_template_cvterm) {
-        my $tmpl_rs = $schema->resultset("Project::Projectprop")->find({
-            project_id => $trial_id,
-            type_id    => $plot_name_template_cvterm->cvterm_id,
-        });
-        if ($tmpl_rs) {
-            my $tmpl = decode_json($tmpl_rs->value);
-            my ($fmt) = keys %$tmpl;
-            $template_name_attributes = $tmpl->{$fmt}->{name_attributes};
-            my $program_object = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
-            my $bp_data = $program_object->get_breeding_programs_by_trial($trial_id);
-            $bp_name = $bp_data->[0]->[1] // '';
+        if ($override ne "override") {
+            $c->stash->{rest} = { warning => $return_error };
+            return;
         }
     }
 
-    my $rep_hash = {};
-    my %valid_plot_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+    my $accession_change = CXGN::Trial::AccessionChange->new({
+        schema => $schema,
+        trial_id => $trial_id,
+    });
+    # the service finds the plots and the accessions by name, and plans in the order of the plot numbers
+    my @changes = map { {
+        plot_name => $_,
+        new_stock_name => $parsed_data->{$_}->{new_accession_name},
+        new_plot_name => $parsed_data->{$_}->{new_plot_name},
+        seedlot_name => $parsed_data->{$_}->{seedlot_name},
+    } } keys %$parsed_data;
 
-    my $upload_change_plot_accessions_txn = sub {
-        my %plot_info_by_id;
-
-        foreach my $plot_row (@layout) {
-            my $plot_name    = $plot_row->[$col_idx{plot_name}];
-            my $plot_id_v    = $plot_row->[$col_idx{plot_id}];
-            my $accession_name = $plot_row->[$col_idx{accession_name}];
-            my $accession_id = $plot_row->[$col_idx{accession_id}];
-            my $plot_number  = $plot_row->[$col_idx{plot_number}];
-            my $block_number = $plot_row->[$col_idx{block_number}];
-            my $range_number = $plot_row->[$col_idx{range_number}];
-            my $row_number   = $plot_row->[$col_idx{row_number}];
-            my $col_number   = $plot_row->[$col_idx{col_number}];
-            my $trial_name_v = $plot_row->[$col_idx{trial_name}];
-
-            $parsed_data->{$plot_name}->{'old_accession_name'} = $accession_name;
-            $parsed_data->{$plot_name}->{'old_accession_id'} = $accession_id;
-            $parsed_data->{$plot_name}->{'plot_id'} = $plot_id_v;
-            $parsed_data->{$plot_name}->{'plot_number'} = $plot_number;
-
-            $rep_hash->{$accession_id}->{'start'}->{$plot_id_v} = { plot_number => $plot_number };
-
-            $plot_info_by_id{$plot_id_v} = {
-                plot_name      => $plot_name,
-                accession_name => $accession_name,
-                plot_number    => $plot_number  // '',
-                block_number   => $block_number // '',
-                range_number   => $range_number // '',
-                row_number     => $row_number   // '',
-                col_number     => $col_number   // '',
-                trial_name     => $trial_name_v || '',
-            };
-        }
-
-        my %new_plot_names_by_id;
-        foreach my $val (values %$parsed_data) {
-            next unless $val->{plot_id} && $val->{new_plot_name};
-            $new_plot_names_by_id{$val->{plot_id}} = $val->{new_plot_name};
-        }
-
-        # swap accessions
-        my %swapped_plots;
-        while (my ($key, $val) = each(%$parsed_data)){
-            my $plot_id_v        = $val->{plot_id};
-            my $new_accession_id = $val->{new_accession_id} ? $val->{new_accession_id} : undef;
-            my $old_accession_id = $val->{old_accession_id};
-            my $plot_number      = $val->{plot_number};
-
-            if ($new_accession_id) {
-                $rep_hash->{$new_accession_id}->{add}->{$plot_id_v}    = { plot_number => $plot_number };
-                $rep_hash->{$old_accession_id}->{remove}->{$plot_id_v} = { plot_number => $plot_number };
-                my $replace_accession_error = $replace_accession_fieldmap->replace_plot_accession_fieldMap($plot_id_v, $old_accession_id, $new_accession_id, $plot_of_type_id);
-                if ($replace_accession_error) {
-                    die "$replace_accession_error\n";
-                }
-                $swapped_plots{$plot_id_v} = $val->{new_accession_name};
-            }
-        }
-
-        $replace_accession_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
-
-        # apply new plot names to all rep-affected plots
-        my %affected_ids;
-        foreach my $acc_id (keys %$rep_hash) {
-            next unless $rep_hash->{$acc_id}->{add} || $rep_hash->{$acc_id}->{remove};
-            $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{start} // {}};
-            $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{add}   // {}};
-        }
-
-        foreach my $affected_id (keys %affected_ids) {
-            next unless $plot_info_by_id{$affected_id};
-            my $current_plot_name = $plot_info_by_id{$affected_id}->{plot_name};
-            my $effective_new_name;
-
-            if ($new_plot_names_by_id{$affected_id}) {
-                $effective_new_name = $new_plot_names_by_id{$affected_id};
-            } elsif ($template_name_attributes) {
-                my $rep_row = $schema->resultset("Stock::Stockprop")->find({ type_id => $rep_number_id, stock_id => $affected_id });
-                my $new_rep_number = $rep_row ? $rep_row->value : '';
-                my $acc_name = exists $swapped_plots{$affected_id} ? $swapped_plots{$affected_id} : $plot_info_by_id{$affected_id}->{accession_name};
-                my %source = (
-                    breedingProgram => $bp_name,
-                    trialName       => $plot_info_by_id{$affected_id}->{trial_name},
-                    accessionName   => $acc_name,
-                    plotNumber      => $plot_info_by_id{$affected_id}->{plot_number},
-                    blockNumber     => $plot_info_by_id{$affected_id}->{block_number},
-                    repNumber       => $new_rep_number,
-                    rangeNumber     => $plot_info_by_id{$affected_id}->{range_number},
-                    rowNumber       => $plot_info_by_id{$affected_id}->{row_number},
-                    colNumber       => $plot_info_by_id{$affected_id}->{col_number},
-                );
-                my @parts = map { ref $_ eq 'HASH' ? ($_->{text} || '') : ($valid_plot_attrs{$_} ? ($source{$_} // '') : '') } @$template_name_attributes;
-                $effective_new_name = join('_', @parts);
-            } else {
-                my $old_acc_name = $plot_info_by_id{$affected_id}->{accession_name};
-                my $new_acc_name = exists $swapped_plots{$affected_id} ? $swapped_plots{$affected_id} : $old_acc_name;
-                if ($new_acc_name ne $old_acc_name) {
-                    (my $candidate = $current_plot_name) =~ s/\Q$old_acc_name\E/$new_acc_name/;
-                    $effective_new_name = $candidate if $candidate ne $current_plot_name;
-                }
-            }
-
-            if ($effective_new_name && $effective_new_name ne $current_plot_name) {
-                my $err = $replace_accession_fieldmap->replace_plot_name_fieldMap($affected_id, $current_plot_name, $effective_new_name);
-                if ($err) {
-                    die "$err\n";
-                }
-            }
-        }
-
-        $replace_accession_fieldmap->_regenerate_trial_layout_cache();
+    my $options = {
+        rename_plots => _true_param($c->req->param('keep_plot_names')) ? 'none' : 'auto',
+        # the file says what was planted: the seed transactions follow the packets (shown in the preview)
+        seedlots => 'follow',
     };
-    eval {
-        $schema->txn_do($upload_change_plot_accessions_txn);
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to change plot accessions. ($@).\n";
-        $c->detach();
+    my $preview = _true_param($c->req->param('preview'));
+    my $done = $self->_change_trial_stocks($c, $accession_change, \@changes, $options, $preview, 1);
+    if ($done && $parser->has_parse_warnings()) {
+        # rows the parser skipped (other trials in a planting order file)
+        push @{ ($preview ? $c->stash->{rest}->{preview} : $c->stash->{rest})->{warnings} }, @{ $parser->get_parse_warnings()->{warning_messages} || [] };
     }
-
-   my $dbh = $c->dbc->dbh();
-   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname} } );
-   my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
+    if ($done && $preview) {
+        # so that a file that is not the whole trial is noticed
+        $c->stash->{rest}->{preview}->{rows_read} = scalar(@changes);
+    } elsif ($done) {
+        # the file stays with the trial (Uploaded Additional Files), as a record of the correction
+        my $result = $c->stash->{trial}->add_additional_uploaded_file($c->user->get_object->get_sp_person_id(), $archived_filename_with_path, $md5->hexdigest());
+        print STDERR "Could not keep $archived_filename_with_path with trial $trial_id: $result->{error}\n" if $result->{error};
+    }
 }
 
 sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_file') Args(0) {
@@ -2982,7 +2867,7 @@ sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(
     my $treatment_id = $c->req->param('treatment_id');
 
     if (!$treatment_id) {
-        $c->stash->{rest} = {errpr => "You need to supply a valid treatment id."};
+        $c->stash->{rest} = {error => "You need to supply a valid treatment id."};
         return;
     }
 
@@ -3223,46 +3108,125 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
+# Changes the stock of plots (or wells) with CXGN::Trial::AccessionChange and
+# puts the outcome in the REST response: with $preview the plan, otherwise
+# success and a summary of what changed, or why nothing was changed. The
+# materialized views are refreshed after a change. With $html_errors the errors are HTML-escaped
+# and joined with <br>. A user who is not a curator cannot change plots with phenotypes or
+# with samples in other trials (see the option curator of CXGN::Trial::AccessionChange).
+sub _change_trial_stocks {
+    my $self = shift;
+    my $c = shift;
+    my $accession_change = shift;
+    my $changes = shift;
+    my $options = shift || {};
+    my $preview = shift;
+    my $html_errors = shift;
+    $options->{curator} = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
+
+    my $format_errors = sub {
+        my @errors = map { my $e = $_; $e =~ s/\s+at \/\S+ line \d+\.?//g; $e =~ s/^\{UNKNOWN\}:\s*//; $e =~ s/\s+$//; $e } grep { /\S/ } @_;
+        return $html_errors ? join("<br>", map { encode_entities($_) } @errors) : join("\n", @errors);
+    };
+
+    if ($preview) {
+        my $plan = $accession_change->plan($changes, $options);
+        if (@{$plan->{errors}}) {
+            $c->stash->{rest} = { error => $format_errors->(@{$plan->{errors}}) };
+            return;
+        }
+        $c->stash->{rest} = { preview => $accession_change->summary($plan) };
+        return 1;
+    }
+
+    my $plan;
+    my $error;
+    # the plan the user saw in the preview, if any
+    $options->{plan_digest} = $c->req->param('plan_digest');
+    try {
+        $plan = $accession_change->apply($changes, $options);
+    } catch {
+        $error = $_;
+    };
+    if ($error) {
+        print STDERR "Changing the stock of plots in trial ".$accession_change->trial_id." failed: $error\n";
+        $c->stash->{rest} = { error => ($html_errors ? "Nothing was changed:<br>" : "Nothing was changed: ").$format_errors->(split /\n/, $error) };
+        return;
+    }
+
+    my $bs = CXGN::BreederSearch->new({ dbh => $c->dbc->dbh(), dbname => $c->config->{dbname} });
+    # the genotypes of the wells of a plate, also of wells taken from these plots, are filed under
+    # their accession in materialized_genoview
+    my $matviews = ($accession_change->experiment_type eq 'genotyping_layout' || @{ $plan->{external_samples} || [] }) ? 'fullview' : 'phenotypes';
+    $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews, 'concurrent', $c->config->{basepath});
+    # analyses cached by solGS used the old accessions (or the deleted phenotypes)
+    try {
+        $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, { trials => [ $accession_change->trial_id ] });
+    } catch {
+        print STDERR "Could not clear the cached analyses of trial ".$accession_change->trial_id.": $_\n";
+    };
+
+    $c->stash->{rest} = { success => 1, %{ $accession_change->summary($plan) } };
+    return 1;
+}
+
+# Replaces a stock in every plot of the trial (Field Layout Tools -> Edit Field Layout -> Replace Accession).
+# params: old_stock_id, new_stock (uniquename), rename_plots (1 to update the plot names
+#   that contain the old stock name or follow the template; they are kept by default),
+#   preview (1 to get the plan without changing anything). The type the new stock must have
+#   comes from the trial (see CXGN::Trial::AccessionChange), not from the request.
 sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
-  my $self = shift;
-  my $c = shift;
-  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
-  my $old_stock_id = $c->req->param('old_stock_id');
-  my $new_stock = $c->req->param('new_stock');
-  my $trial_stock_type = $c->req->param('trial_stock_type');
-  my $trial_id = $c->stash->{trial_id};
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    my $old_stock_id = $c->req->param('old_stock_id');
+    my $new_stock = $c->req->param('new_stock');
+    my $rename_plots = _true_param($c->req->param('rename_plots'));
+    my $preview = $c->req->param('preview');
+    my $trial_id = $c->stash->{trial_id};
 
-  if ($self->privileges_denied($c)) {
-    $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
-    return;
-  }
+    if ($self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+        return;
+    }
 
-  if (!$new_stock){
-    $c->stash->{rest} = { error => "Provide new stock name." };
-    return;
-  }
+    if (!defined($new_stock) || $new_stock !~ /\S/) {
+        $c->stash->{rest} = { error => "Provide new stock name." };
+        return;
+    }
 
-  my $replace_stock_fieldmap = CXGN::Trial::FieldMap->new({
-    bcs_schema => $schema,
-    trial_id => $trial_id,
-    trial_stock_type => $trial_stock_type,
+    my $fieldmap = CXGN::Trial::FieldMap->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+    });
+    my $return_error = $fieldmap->update_fieldmap_precheck();
+    if ($return_error) {
+        $c->stash->{rest} = { error => $return_error };
+        return;
+    }
 
-  });
+    my $accession_change = CXGN::Trial::AccessionChange->new({
+        schema => $schema,
+        trial_id => $trial_id,
+    });
+    my ($new_stock_row, $stock_error) = $accession_change->find_stock($new_stock);
+    if (!$new_stock_row) {
+        $c->stash->{rest} = { error => $stock_error };
+        return;
+    }
+    my $changes = (defined($old_stock_id) && $old_stock_id =~ /^\d+$/) ? $accession_change->changes_for_stock($old_stock_id, $new_stock_row->{stock_id}) : [];
+    if (!@$changes) {
+        $c->stash->{rest} = { error => "No plot of this trial has the stock to replace." };
+        return;
+    }
 
-  my $return_error = $replace_stock_fieldmap->update_fieldmap_precheck();
-     if ($return_error) {
-       $c->stash->{rest} = { error => $return_error };
-       return;
-     }
+    $self->_change_trial_stocks($c, $accession_change, $changes, { rename_plots => $rename_plots ? 'auto' : 'none' }, $preview);
+}
 
-  my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap($new_stock, $old_stock_id);
-  if ($replace_return_error) {
-    $c->stash->{rest} = { error => $replace_return_error };
-    return;
-  }
-
-  $c->stash->{rest} = { success => 1};
+sub _true_param {
+    my $value = shift;
+    return (defined($value) && $value =~ /^\s*(1|true|yes|on)\s*$/i) ? 1 : 0;
 }
 
 sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
@@ -3281,17 +3245,19 @@ sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
     $c->stash->{rest} = { success => 1};
 }
 
+# Changes the accession of one plot (field map, phenotype heatmap, trial coordinates).
+# params: old_plot_id, new_accession (uniquename), new_plot_name (optional), preview (1 to get the plan
+#   and its warnings without changing anything), override (1 after a curator confirmed the warning that
+#   the trial has phenotypes; without it, or with 'check', the curator gets that warning)
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
-    my $old_accession = $c->req->param('old_accession');
     my $new_accession = $c->req->param('new_accession');
     my $plot_id = $c->req->param('old_plot_id');
-    my $old_plot_name = $c->req->param('old_plot_name');
     my $new_plot_name = $c->req->param('new_plot_name');
-    my $override = $c->req->param('override');
+    my $override = $c->req->param('override') // '';
     my $trial_id = $c->stash->{trial_id};
 
     if (!$c->user){
@@ -3301,183 +3267,37 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
 
     if ($self->privileges_denied($c)) {
         $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
-    return;
+        return;
     }
 
-    if (!$new_accession) {
+    if (!defined($new_accession) || $new_accession !~ /\S/) {
         $c->stash->{rest} = { error => "Provide new accession name." };
-    return;
+        return;
     }
 
-    my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    my $fieldmap = CXGN::Trial::FieldMap->new({
         trial_id => $trial_id,
         bcs_schema => $schema,
     });
-
-    my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-
-    if ($c->user()->check_roles("curator") and $return_error) {
-        if ($override eq "check") {
-            $c->stash->{rest} = { warning => "curator warning" };
+    my $return_error = $fieldmap->update_fieldmap_precheck();
+    if ($return_error) {
+        if (!$c->user()->check_roles("curator")) {
+            $c->stash->{rest} = { error => $return_error };
             return;
         }
-    } elsif ($return_error) {
-        $c->stash->{rest} = { error => $return_error};
-        return;
+        # a curator is asked first ("check" or no override); then sends override
+        if ($override eq "" || $override eq "check") {
+            $c->stash->{rest} = { warning => $return_error };
+            return;
+        }
     }
 
-    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    my $accession_change = CXGN::Trial::AccessionChange->new({
         schema => $schema,
         trial_id => $trial_id,
-        data_level => 'plots',
-        selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1,"block_number"=>1,"rep_number"=>1,"range_number"=>1,"row_number"=>1,"col_number"=>1,"trial_name"=>1},
     });
-    my @layout_rows = @{$trial_layout_download->get_layout_output()->{output}};
-    my $layout_header = shift @layout_rows;
-    my %col_idx;
-    for my $i (0..$#$layout_header) { $col_idx{$layout_header->[$i]} = $i; }
-
-    my $rep_hash = {};
-    my $plot_hash = {};
-    my %plot_info;
-
-    foreach my $plot_row (@layout_rows) {
-        my $pname        = $plot_row->[$col_idx{plot_name}];
-        my $pid          = $plot_row->[$col_idx{plot_id}];
-        my $acc_name     = $plot_row->[$col_idx{accession_name}];
-        my $acc_id       = $plot_row->[$col_idx{accession_id}];
-        my $plot_number  = $plot_row->[$col_idx{plot_number}];
-        my $block_number = $plot_row->[$col_idx{block_number}];
-        my $range_number = $plot_row->[$col_idx{range_number}];
-        my $row_number   = $plot_row->[$col_idx{row_number}];
-        my $col_number   = $plot_row->[$col_idx{col_number}];
-        my $trial_name_v = $plot_row->[$col_idx{trial_name}];
-
-        $rep_hash->{$acc_id}->{'start'}->{$pid} = { plot_number => $plot_number };
-        $plot_hash->{$pid} = { plot_number => $plot_number };
-        $plot_info{$pid} = {
-            plot_name      => $pname,
-            accession_name => $acc_name,
-            plot_number    => $plot_number  // '',
-            block_number   => $block_number // '',
-            range_number   => $range_number // '',
-            row_number     => $row_number   // '',
-            col_number     => $col_number   // '',
-            trial_name     => $trial_name_v || '',
-        };
-    }
-
-    # Look up naming template for this trial
-    my ($template_name_attributes, $bp_name);
-    my $plot_name_template_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_autogenerated_name_metadata', 'project_property');
-    if ($plot_name_template_cvterm) {
-        my $tmpl_rs = $schema->resultset("Project::Projectprop")->find({
-            project_id => $trial_id,
-            type_id    => $plot_name_template_cvterm->cvterm_id,
-        });
-        if ($tmpl_rs) {
-            my $tmpl = decode_json($tmpl_rs->value);
-            my ($fmt) = keys %$tmpl;
-            $template_name_attributes = $tmpl->{$fmt}->{name_attributes};
-            my $program_object = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
-            my $bp_data = $program_object->get_breeding_programs_by_trial($trial_id);
-            $bp_name = $bp_data->[0]->[1] || '';
-        }
-    }
-
-    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    my $accession_rs = $schema->resultset("Stock::Stock")->search({
-        uniquename => $new_accession
-    });
-    if (!$accession_rs || $accession_rs->count() < 1) {
-        $c->stash->{rest} = { error => "Could not find accession $new_accession - does it exist?" };
-        return;
-    }
-    $accession_rs = $accession_rs->next();
-    my $new_accession_id = $accession_rs->stock_id;
-    my $old_accession_rs = $schema->resultset("Stock::Stock")->search({
-        uniquename => $old_accession
-    });
-    if (!$old_accession_rs || $old_accession_rs->count() < 1) {
-        $c->stash->{rest} = { error => "Could not find accession $old_accession - does it exist?" };
-        return;
-    }
-    $old_accession_rs = $old_accession_rs->next();
-    my $old_accession_id = $old_accession_rs->stock_id;
-
-    $rep_hash->{$old_accession_id}->{'remove'}->{$plot_id} = $plot_hash->{$plot_id};
-    $rep_hash->{$new_accession_id}->{'add'}->{$plot_id} = $plot_hash->{$plot_id};
-
-    # Swap accession
-    print "Calling Replace Function...............\n";
-    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $new_accession_id, $plot_of_type_id);
-    if ($replace_return_error) {
-        $c->stash->{rest} = { error => $replace_return_error };
-        return;
-    }
-
-    my $rep_number_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
-    $replace_plot_accession_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
-
-    # new plot names for all rep-affected plots
-    my %valid_plot_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
-
-    my %affected_ids;
-    foreach my $acc_id (keys %$rep_hash) {
-        next unless $rep_hash->{$acc_id}->{add} || $rep_hash->{$acc_id}->{remove};
-        $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{start} // {}};
-        $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{add}   // {}};
-    }
-
-    foreach my $affected_id (keys %affected_ids) {
-        next unless $plot_info{$affected_id};
-        my $current_plot_name = $plot_info{$affected_id}->{plot_name};
-        my $effective_new_name;
-
-        if ($affected_id == $plot_id && $new_plot_name) {
-            $effective_new_name = $new_plot_name;
-        } elsif ($template_name_attributes) {
-            my $rep_row = $schema->resultset("Stock::Stockprop")->find({ type_id => $rep_number_id, stock_id => $affected_id });
-            my $new_rep_number = $rep_row ? $rep_row->value : '';
-            my $acc_name = ($affected_id == $plot_id) ? $new_accession : $plot_info{$affected_id}->{accession_name};
-            my %source = (
-                breedingProgram => $bp_name,
-                trialName       => $plot_info{$affected_id}->{trial_name},
-                accessionName   => $acc_name,
-                plotNumber      => $plot_info{$affected_id}->{plot_number},
-                blockNumber     => $plot_info{$affected_id}->{block_number},
-                repNumber       => $new_rep_number,
-                rangeNumber     => $plot_info{$affected_id}->{range_number},
-                rowNumber       => $plot_info{$affected_id}->{row_number},
-                colNumber       => $plot_info{$affected_id}->{col_number},
-            );
-            my @parts = map { ref $_ eq 'HASH' ? ($_->{text} || '') : ($valid_plot_attrs{$_} ? ($source{$_} // '') : '') } @$template_name_attributes;
-            $effective_new_name = join('_', @parts);
-        } else {
-            my $old_acc_name = $plot_info{$affected_id}->{accession_name};
-            my $new_acc_name = ($affected_id == $plot_id) ? $new_accession : $old_acc_name;
-            if ($new_acc_name ne $old_acc_name) {
-                (my $candidate = $current_plot_name) =~ s/\Q$old_acc_name\E/$new_acc_name/;
-                $effective_new_name = $candidate if $candidate ne $current_plot_name;
-            }
-        }
-
-        if ($effective_new_name && $effective_new_name ne $current_plot_name) {
-            my $err = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($affected_id, $current_plot_name, $effective_new_name);
-            if ($err) {
-                $c->stash->{rest} = { error => $err };
-                return;
-            }
-        }
-    }
-
-    $replace_plot_accession_fieldmap->_regenerate_trial_layout_cache();
-    my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
-
-    print STDERR "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $plot_id\n";
-    $c->stash->{rest} = { success => 1};
+    # with preview, the plan and its warnings (for example about the design) without changing anything
+    $self->_change_trial_stocks($c, $accession_change, [ { plot_id => $plot_id, new_stock_name => $new_accession, new_plot_name => $new_plot_name } ], { rename_plots => 'auto' }, $c->req->param('preview'));
 }
 
 sub accession_exists : Chained('trial') PathPart('accession_exists') Args(0) {
@@ -3507,108 +3327,106 @@ sub check_curator_privileges : Chained('trial') PathPart('check_curator_privileg
 
 }
 
+# Changes the accession of a well in a genotyping plate.
+# params: old_plot_id (the well), new_accession (uniquename)
 sub replace_well_accession : Chained('trial') PathPart('replace_well_accessions') Args(0) {
-  my $self = shift;
-  my $c = shift;
-  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
-  my $old_accession = $c->req->param('old_accession');
-  my $new_accession = $c->req->param('new_accession');
-  my $old_plot_id = $c->req->param('old_plot_id');
-  my $old_plot_name = $c->req->param('old_plot_name');
-  my $trial_id = $c->stash->{trial_id};
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    my $new_accession = $c->req->param('new_accession');
+    my $well_id = $c->req->param('old_plot_id');
+    my $trial_id = $c->stash->{trial_id};
 
-  if ($self->privileges_denied($c)) {
-    $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
-    return;
-  }
+    if ($self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+        return;
+    }
 
-  if (!$new_accession){
-    $c->stash->{rest} = { error => "Provide new accession name." };
-    return;
-  }
-  my $cxgn_project_type = $c->stash->{trial}->get_cxgn_project_type();
+    if (!defined($new_accession) || $new_accession !~ /\S/) {
+        $c->stash->{rest} = { error => "Provide new accession name." };
+        return;
+    }
 
-  my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-    bcs_schema => $schema,
-    trial_id => $trial_id,
-    new_accession => $new_accession,
-    old_accession => $old_accession,
-    old_plot_id => $old_plot_id,
-    old_plot_name => $old_plot_name,
-    experiment_type => $cxgn_project_type->{experiment_type}
-  });
+    my $experiment_type = $c->stash->{trial}->get_cxgn_project_type()->{experiment_type} // '';
+    if ($experiment_type ne 'genotyping_layout') {
+        $c->stash->{rest} = { error => "This is not a genotyping plate." };
+        return;
+    }
 
-  my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-     if ($return_error) {
-       $c->stash->{rest} = { error => $return_error };
-       return;
-     }
+    my $fieldmap = CXGN::Trial::FieldMap->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+        experiment_type => $experiment_type,
+    });
+    my $return_error = $fieldmap->update_fieldmap_precheck();
+    if ($return_error) {
+        $c->stash->{rest} = { error => $return_error };
+        return;
+    }
 
-  print "Calling Replace Function...............\n";
-  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
-  if ($replace_return_error) {
-    $c->stash->{rest} = { error => $replace_return_error };
-    return;
-  }
-
-  print "OldAccession: $old_accession, NewAcc: $new_accession, OldWellId: $old_plot_id\n";
-  $c->stash->{rest} = { success => 1};
+    my $accession_change = CXGN::Trial::AccessionChange->new({
+        schema => $schema,
+        trial_id => $trial_id,
+        experiment_type => 'genotyping_layout',
+    });
+    $self->_change_trial_stocks($c, $accession_change, [ { plot_id => $well_id, new_stock_name => $new_accession } ], { rename_plots => 'none' });
 }
 
 sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
-  my $self = shift;
-  my $c = shift;
-  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
-  my $trial_id = $c->stash->{trial_id};
-  my $plot_1_info = $c->req->param('plot_1_info');
-  my $plot_2_info = $c->req->param('plot_2_info');
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    my $trial_id = $c->stash->{trial_id};
+    my ($plot_1_id) = split /,/, ($c->req->param('plot_1_info') // '');
+    my ($plot_2_id) = split /,/, ($c->req->param('plot_2_info') // '');
 
-  my ($plot_1_id, $accession_1) = split /,/, $plot_1_info;
-  my ($plot_2_id, $accession_2) = split /,/, $plot_2_info;
+    if ($self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
+        return;
+    }
 
-  if ($self->privileges_denied($c)) {
-    $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
-    return;
-  }
+    if (!$plot_1_id || !$plot_2_id || $plot_1_id !~ /^\d+$/ || $plot_2_id !~ /^\d+$/ || $plot_1_id == $plot_2_id) {
+        $c->stash->{rest} = { error => "Choose a different plot/stock in 'select plot 2' to perform this operation." };
+        return;
+    }
 
-  if ($plot_1_id == $plot_2_id){
-    $c->stash->{rest} = { error => "Choose a different plot/stock in 'select plot 2' to perform this operation." };
-    return;
-  }
+    my $fieldmap = CXGN::Trial::FieldMap->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+        first_plot_selected => $plot_1_id,
+        second_plot_selected => $plot_2_id,
+    });
 
-  my @controls;
-  my @ids;
+    my $return_error = $fieldmap->update_fieldmap_precheck();
+    if ($return_error) {
+        $c->stash->{rest} = { error => $return_error };
+        return;
+    }
 
-  my $fieldmap = CXGN::Trial::FieldMap->new({
-    bcs_schema => $schema,
-    trial_id => $trial_id,
-    first_plot_selected => $plot_1_id,
-    second_plot_selected => $plot_2_id,
-    first_accession_selected => $accession_1,
-    second_accession_selected => $accession_2,
-  });
+    my $return_check_error = $fieldmap->substitute_accession_precheck();
+    if ($return_check_error) {
+        $c->stash->{rest} = { error => $return_check_error };
+        return;
+    }
 
-  my $return_error = $fieldmap->update_fieldmap_precheck();
-  if ($return_error) {
-    $c->stash->{rest} = { error => $return_error };
-    return;
-  }
-
-  my $return_check_error = $fieldmap->substitute_accession_precheck();
-  if ($return_check_error) {
-    $c->stash->{rest} = { error => $return_check_error };
-    return;
-  }
-
-  my $update_return_error = $fieldmap->substitute_accession_fieldmap();
-  if ($update_return_error) {
-    $c->stash->{rest} = { error => $update_return_error };
-    return;
-  }
-
-  $c->stash->{rest} = { success => 1};
+    my $accession_change = CXGN::Trial::AccessionChange->new({
+        schema => $schema,
+        trial_id => $trial_id,
+    });
+    my $units = $accession_change->load_units();
+    foreach my $plot_id ($plot_1_id, $plot_2_id) {
+        if (!$units->{$plot_id} || !defined($units->{$plot_id}->{stock_id})) {
+            $c->stash->{rest} = { error => "Plot $plot_id is not a plot of this trial with one accession." };
+            return;
+        }
+    }
+    $self->_change_trial_stocks($c, $accession_change, [
+        # with the stocks read here: a plot that someone changes before the lock is taken is not swapped
+        { plot_id => $plot_1_id, new_stock_id => $units->{$plot_2_id}->{stock_id}, old_stock_id => $units->{$plot_1_id}->{stock_id} },
+        { plot_id => $plot_2_id, new_stock_id => $units->{$plot_1_id}->{stock_id}, old_stock_id => $units->{$plot_2_id}->{stock_id} },
+    ], { rename_plots => 'none' });
 }
 
 sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries') Args(0) {
@@ -5984,7 +5802,7 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
 # upload params:
 #   upload_entry_numbers_file: Excel file to validate and parse
 #   ignore_warnings: true to add processed data if warnings exist
-# return: validation errors and warnings or success = 1 if entry numbers sucessfully stored
+# return: validation errors and warnings or success = 1 if entry numbers successfully stored
 #   filename: original upload file name
 #   error: array of error messages
 #   warning: array of warning messages

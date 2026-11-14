@@ -6,6 +6,11 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trait;
 use CXGN::Trial::TrialLayoutSearch;
+use CXGN::Trial::FieldMap;
+use CXGN::Trial::AccessionChange;
+use CXGN::BreederSearch;
+use CXGN::BreedersToolbox::Projects;
+use CXGN::People::Person;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::BrAPI::v2::ExternalReferences;
@@ -369,6 +374,7 @@ sub observationunits_update {
     my $self = shift;
     my $data = shift;
     my $c = shift;
+    my $user_id = shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -388,6 +394,10 @@ sub observationunits_update {
     my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property');
     my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property');
     my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_additional_info', 'stock_property');
+
+    # the units whose germplasm, replicate or check mark a change of germplasm in this request
+    # set (see _change_plot); the values sent for them are the ones from before the change
+    my %set_by_change = ( germplasm => {}, replicate => {}, check => {} );
 
     foreach my $params (@$data) {
         my $observation_unit_db_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
@@ -466,7 +476,10 @@ sub observationunits_update {
         # }
 
 
-        if(defined $accession_id){
+        # a plant, subplot or tissue sample of a plot changed in this request already has the new
+        # germplasm; the germplasm sent for it is the old one of its plot
+        my $moved_from = $set_by_change{germplasm}->{$observation_unit_db_id};
+        if(defined $accession_id && !(defined($moved_from) && $accession_id eq $moved_from)){
             # Speed can be improved here by adding a simple query
             my $layout_accession_search = CXGN::Trial::TrialLayoutSearch->new(
             {
@@ -498,29 +511,13 @@ sub observationunits_update {
                 }
 
                 #update accession
-                my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
                 if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
-                    my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-                        bcs_schema => $schema,
-                        trial_id => $study_ids_arrayref,
-                        # new_accession => $accession_name,
-                        # old_accession => $old_accession,
-                        # old_plot_id => $observation_unit_db_id,
-                        # old_plot_name => $observationUnit_name,
-                        experiment_type => 'field_layout'
-                    });
-
-                    my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-                    if ($return_error) {
-                        print STDERR Dumper $return_error;
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+                    if ($stock_type ne $plot_cvterm_id) {
+                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('The germplasm can only be changed for plots.'), 400);
                     }
-
-                    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($observation_unit_db_id, $old_accession_id, $plot_of_type_id);
-                    if ($replace_return_error) {
-                        print STDERR Dumper $replace_return_error;
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
-                    }
+                    # a trial with phenotypes or seedlots keeps its germplasm here, also for a curator
+                    my $error_response = $self->_change_plot($c, $user_id, { plot_id => $observation_unit_db_id, new_stock_id => $accession_id }, 1, \%set_by_change);
+                    return $error_response if $error_response;
                 }
             }
         }
@@ -557,8 +554,10 @@ sub observationunits_update {
             if ($level_name eq 'plant'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plant_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); }
         }
         if ($block_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$block_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$block_number },{ key=>'stockprop_c1' }); }
-        if ($is_a_control){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$is_a_control_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$is_a_control },{ key=>'stockprop_c1' }); }
-        if ($rep_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$rep_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$rep_number },{ key=>'stockprop_c1' }); }
+        # a change of germplasm in this request set the check mark and numbered the replicates again,
+        # also of other units of the trial; the check mark and the replicate sent for them are the old ones
+        if ($is_a_control && !$set_by_change{check}->{$observation_unit_db_id}){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$is_a_control_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$is_a_control },{ key=>'stockprop_c1' }); }
+        if ($rep_number && !$set_by_change{replicate}->{$observation_unit_db_id}){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$rep_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$rep_number },{ key=>'stockprop_c1' }); }
         if ($range_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$range_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$range_number },{ key=>'stockprop_c1' }); }
         if ($row_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$row_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$row_number },{ key=>'stockprop_c1' }); }
         if ($col_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$col_number },{ key=>'stockprop_c1' }); }
@@ -582,6 +581,93 @@ sub observationunits_update {
 
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
     return $self->search($search_params, $c);
+}
+
+# Changes one plot through CXGN::Trial::AccessionChange, with the rules of the
+# trial page: a curator, or a submitter of the trial's breeding program; plots
+# with phenotypes or with samples in other trials only by a curator. Once the
+# trial has phenotypes or seedlots only a curator may, and nobody when
+# $refuse_after_data is set. Returns an error response, or undef when the change
+# was made or there was nothing to change. $set_by_change, when given, gets the
+# units whose replicate ({replicate}) or check mark ({check}) the change set: the
+# changed plot, the plots numbered again, and their plants, subplots and tissue
+# samples in the trial; and the old germplasm of the plants, subplots and tissue
+# samples that got the new one with their plot ({germplasm}).
+sub _change_plot {
+    my $self = shift;
+    my $c = shift;
+    my $user_id = shift;
+    my $change = shift;
+    my $refuse_after_data = shift;
+    my $set_by_change = shift;
+    my $schema = $self->bcs_schema;
+
+    my $trial_id = CXGN::Trial::AccessionChange->field_trial_of_plot($schema, $change->{plot_id});
+    if (!$trial_id) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, 'The plot is not part of a field trial.', 400);
+    }
+    my %roles = $user_id ? (map { $_ => 1 } CXGN::People::Person->new($schema->storage->dbh(), $user_id)->get_roles()) : ();
+    my $accession_change = CXGN::Trial::AccessionChange->new({ schema => $schema, trial_id => $trial_id });
+    my $options = { rename_plots => 'none', curator => $roles{curator} ? 1 : 0 };
+    my $plan = $accession_change->plan([ $change ], $options);
+    if (@{$plan->{errors}}) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, join(' ', @{$plan->{errors}}), 400);
+    }
+    if (!@{$plan->{changes}}) {
+        return;
+    }
+
+    if (!$user_id) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, 'You must be logged in to change a plot.', 401);
+    }
+    if (!$roles{curator}) {
+        my $programs = CXGN::BreedersToolbox::Projects->new({ schema => $schema })->get_breeding_programs_by_trial($trial_id);
+        my $program_name = $programs->[0] ? $programs->[0]->[1] : undef;
+        if (!$roles{submitter} || !defined($program_name) || !$roles{$program_name}) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, "You need to be either a curator, or a submitter associated with breeding program ".($program_name // '')." to change this trial.", 403);
+        }
+    }
+    my $precheck_error = CXGN::Trial::FieldMap->new({ bcs_schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' })->update_fieldmap_precheck();
+    if ($precheck_error && ($refuse_after_data || !$roles{curator})) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, $precheck_error, 403);
+    }
+
+    my $error;
+    try {
+        $plan = $accession_change->apply([ $change ], $options);
+    } catch {
+        $error = $_;
+    };
+    if ($error) {
+        print STDERR "Changing plot $change->{plot_id} failed: $error\n";
+        $error =~ s/\s+at \/\S+ line \d+\.?//g;
+        $error =~ s/\s+$//;
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, "Nothing was changed: $error", 400);
+    }
+    if ($set_by_change) {
+        my $with_children = sub {
+            return map { my $unit_id = $_; ($unit_id, map { $_->{stock_id} } @{ $plan->{_children}->{$unit_id}->{in_trial} || [] }) } @_;
+        };
+        my @changed = map { $_->{plot_id} } @{$plan->{changes}};
+        $set_by_change->{replicate}->{$_} = 1 for $with_children->(@changed, map { $_->{plot_id} } @{$plan->{replicates}});
+        $set_by_change->{check}->{$_} = 1 for $with_children->(@changed);
+        foreach my $change (@{$plan->{changes}}) {
+            my $children = $plan->{_children}->{ $change->{plot_id} } || {};
+            $set_by_change->{germplasm}->{ $_->{stock_id} } = $change->{old_stock_id}
+                for map { @{ $children->{$_} || [] } } qw(in_trial external);
+        }
+    }
+
+    # as on the trial page: the views and the analyses cached by solGS used the old state of the plot
+    my $bs = CXGN::BreederSearch->new({ dbh => $c->dbc->dbh(), dbname => $c->config->{dbname} });
+    my $matviews = @{ $plan->{external_samples} || [] } ? 'fullview' : 'phenotypes';
+    $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews, 'concurrent', $c->config->{basepath});
+    try {
+        $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, { trials => [ $trial_id ] });
+    } catch {
+        print STDERR "Could not clear the cached analyses of trial $trial_id: $_\n";
+    };
+    return;
 }
 
 sub _get_existing_germplasm {
