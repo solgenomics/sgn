@@ -36,6 +36,7 @@ use Bio::GeneticRelationships::Individual;
 use CXGN::UploadFile;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
+use CXGN::Pedigree::Upload;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddProgeniesExistingAccessions;
 use CXGN::Pedigree::AddCrossInfo;
@@ -146,7 +147,7 @@ sub upload_cross_file_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -786,7 +787,7 @@ sub add_individual_cross {
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 999; #higher numbers break cross name convention
     if ($progeny_number) {
-        if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
+        if ($progeny_number !~ /^[0-9]+$/ || $progeny_number > $maximum_progeny_number || $progeny_number < 1) {
             $c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
             return 0;
         }
@@ -829,6 +830,10 @@ sub add_individual_cross {
         return 0;
     }
 
+    if (!defined($cross_type) || !Moose::Util::TypeConstraints::find_type_constraint('CrossType')->check($cross_type)) {
+        $c->stash->{rest} = {error => 'Unsupported cross type.'};
+        return 0;
+    }
     #objects to store cross information
     my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type, cross_combination => $cross_combination,);
     my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
@@ -877,7 +882,7 @@ sub add_individual_cross {
         });
 
         #add the crosses
-        $cross_add->add_crosses();
+        die "The cross could not be created.\n" unless $cross_add->add_crosses();
     };
 
     if ($@) {
@@ -906,7 +911,7 @@ sub add_individual_cross {
                 progeny_names => \@progeny_names,
                 owner_name => $owner_name,
             });
-            $progeny_add->add_progeny();
+            die "The cross was saved, but its progenies could not be added.\n" unless $progeny_add->add_progeny();
         }
     };
 
@@ -1056,7 +1061,7 @@ sub upload_progenies_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1126,7 +1131,7 @@ sub upload_progenies_POST : Args(0) {
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
-#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+#        print STDERR "Natural diversity experiment ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
             file_id => $file_id,
@@ -1203,7 +1208,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1240,79 +1245,52 @@ sub validate_upload_existing_progenies_POST : Args(0) {
 
 
 sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_progenies') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $archived_filename_with_path = $c->req->param('archived_file_name');
-    my $user_id = $c->req->param('user_id');
-#    print STDERR "ARCHIVED FILE NAME =".Dumper($archived_filename_with_path)."\n";
-#    print STDERR "USER ID =".Dumper($user_id)."\n";
-    my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $dbh = $c->dbc->dbh;
-
-    my $upload_type = 'StoreExistingProgeniesExcel';
-    my @all_crosses;
-
-    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin($upload_type);
-    my $parsed_data = $parser->parse();
-    if ($parsed_data){
-        my %progeny_hash = %{$parsed_data};
-        @all_crosses = keys %progeny_hash;
-        foreach my $cross_name_key (keys %progeny_hash){
-            my $progenies_ref = $progeny_hash{$cross_name_key};
-            my @progenies = @{$progenies_ref};
-            my $adding_progenies = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
-                chado_schema => $chado_schema,
-                cross_name => $cross_name_key,
-                progeny_names => \@progenies,
-            });
-
-            my $return = $adding_progenies->add_progenies_existing_accessions($overwrite_pedigrees);
-            my $error;
-            if (!$return){
-                $error = "The progenies were not stored";
-            }
-
-            if ($return->{error}){
-                $error = $return->{error};
-            }
-
-            if ($error){
-                $c->stash->{rest} = { error => $error };
-                return;
-            }
+    my ($self, $c) = @_;
+    my $actor = CXGN::Pedigree::Upload->authorize($c);
+    return unless $actor;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $actor->{id});
+    my $error;
+    eval {
+        my $file = CXGN::Pedigree::Upload->cross_archive($c, $c->req->param('archived_file_name'), $actor->{id});
+        my $overwrite = CXGN::Pedigree::Parentage->overwrite_flag($c->req->param('overwrite_pedigrees'));
+        my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $file);
+        $parser->load_plugin('StoreExistingProgeniesExcel');
+        my $data = $parser->parse;
+        if (!$data) {
+            my $errors = $parser->has_parse_errors ? $parser->get_parse_errors->{error_messages} : [];
+            die join(' ', @{$errors || []})." Invalid progeny upload.\n";
         }
-    }
-
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
-    my $md5checksum = $md5->hexdigest();
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => 'cross_progenies',
-        md5checksum => $md5checksum,
-        metadata_id => $md_row->metadata_id(),
-    });
-
-    my $file_id = $file_row->file_id();
-#    print STDERR "FILE ID =".Dumper($file_id)."\n";
-    foreach my $cross_name (@all_crosses) {
-        my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
-        my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
-#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
-        my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
-            nd_experiment_id => $experiment_id,
-            file_id => $file_id,
+        my $upload_file = CXGN::UploadFile->new;
+        my $md5 = $upload_file->get_md5($file)->hexdigest;
+        $schema->txn_do(sub {
+            CXGN::Pedigree::Parentage->lock($schema);
+            my $result = CXGN::Pedigree::AddProgeniesExistingAccessions->add_batch($schema, $data, $overwrite);
+            die $result->{error} if $result->{error};
+            # These standard metadata models use unqualified table names and
+            # independently cached schema handles. Use the owning transaction's
+            # handle and qualified existing tables so rollback/retry cannot use
+            # a different search_path or a collected temporary schema.
+            my $dbh = $schema->storage->dbh;
+            my ($metadata_id) = $dbh->selectrow_array(
+                'INSERT INTO metadata.md_metadata (create_person_id) VALUES (?) RETURNING metadata_id',
+                undef, $actor->{id});
+            my ($file_id) = $dbh->selectrow_array(
+                'INSERT INTO metadata.md_files (basename, dirname, filetype, md5checksum, metadata_id) VALUES (?, ?, ?, ?, ?) RETURNING file_id',
+                undef, basename($file), dirname($file), 'cross_progenies', $md5, $metadata_id);
+            my $type = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id;
+            for my $cross (@{$result->{crosses}}) {
+                my $experiment = $schema->resultset('NaturalDiversity::NdExperimentStock')->search({
+                    'me.stock_id' => $cross->{id}, 'nd_experiment.type_id' => $type,
+                }, {join => 'nd_experiment'})->first;
+                die "Cross $cross->{name} has no crossing experiment.\n" unless $experiment;
+                $dbh->do('INSERT INTO phenome.nd_experiment_md_files (nd_experiment_id, file_id) VALUES (?, ?)',
+                    undef, $experiment->nd_experiment_id, $file_id);
+            }
         });
-    }
+    };
+    $error = $@;
 
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = $error ? {error => CXGN::Pedigree::Parentage->error_message($error)} : {success => 1};
 }
 
 sub upload_info : Path('/ajax/cross/upload_info') : ActionClass('REST'){ }
@@ -1398,7 +1376,7 @@ sub upload_info_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1483,7 +1461,7 @@ sub upload_info_POST : Args(0) {
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
-#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+#        print STDERR "Natural diversity experiment ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
             file_id => $file_id,
@@ -1576,7 +1554,7 @@ sub upload_family_names_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1660,7 +1638,7 @@ sub upload_family_names_POST : Args(0) {
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
-#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+#        print STDERR "Natural diversity experiment ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
             file_id => $file_id,

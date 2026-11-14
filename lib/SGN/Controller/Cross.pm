@@ -30,6 +30,8 @@ use CXGN::Pedigree::AddProgeny;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
+use CXGN::Pedigree::Upload;
 use File::Temp;
 use File::Basename qw | basename dirname|;
 use File::Spec;
@@ -180,7 +182,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	 $cross{'number_of_seeds'} = $row[10];
        }
        $cross{'visible_to_role'} = $visible_to_role;
-       _add_cross($c,\%cross);
+       return unless _add_cross($c,\%cross);
        $number_of_crosses_added++;
        $unique_parents{$cross{'maternal_parent'}} = 1;
        $unique_parents{$cross{'paternal_parent'}} = 1;
@@ -281,6 +283,10 @@ sub _add_cross {
   my $cross_ref = shift;
   my %cross = %{$cross_ref};
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my @created;
+  eval {
+    $schema->txn_do(sub {
+      CXGN::Pedigree::Parentage->lock($schema);
   my $cross_name = $cross{'cross_name'};
   my $cross_type =  $cross{'cross_type'};
   my $maternal_parent =  $cross{'maternal_parent'};
@@ -382,10 +388,12 @@ sub _add_cross {
 	  uniquename => $stock_name,
 	  type_id     => $accession_cvterm->cvterm_id,
 	} );
+      push @created, $accession_stock->stock_id;
       $accession_stock->find_or_create_related('stock_relationship_objects', {
 	  type_id => $female_parent->cvterm_id(),
 	  object_id => $accession_stock->stock_id(),
 	  subject_id => $female_parent_stock->stock_id(),
+          value => CXGN::Pedigree::Parentage->normalize_type($cross_type),
 					       } );
       $accession_stock->find_or_create_related('stock_relationship_objects', {
 	  type_id => $male_parent->cvterm_id(),
@@ -412,13 +420,15 @@ sub _add_cross {
 
   }
 
+      CXGN::Pedigree::Parentage->assert_acyclic($schema, \@created);
+    });
+  };
   if ($@) {
-      $c->stash->{rest} = { error => "An error occurred: $@"};
+      $c->stash->{rest} = {error => CXGN::Pedigree::Parentage->error_message($@)};
+      return;
   }
-
-  $c->stash->{rest} = { error => '', };
-
-
+  $c->stash->{rest} = {error => ''};
+  return 1;
 }
 
 sub make_cross_form :Path("/stock/cross/new") :Args(0) {
@@ -471,9 +481,16 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     }
 
 
+    my $actor = CXGN::Pedigree::Upload->authorize($c);
+    if (!$actor) {
+        $c->res->status(403);
+        $c->res->content_type('text/plain; charset=UTF-8');
+        $c->res->body($c->stash->{rest}{error});
+        return;
+    }
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 1000;
-    if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number)){
+    if (!defined($progeny_number) || $progeny_number !~ /^[0-9]+$/ || $progeny_number < 1 || $progeny_number > $maximum_progeny_number){
       #redirect to error page?
       return;
     }
@@ -501,28 +518,25 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       return;
     }
 
-    my $organism = $schema->resultset("Organism::Organism")->find_or_create(
-    {
-	genus   => 'Manihot',
-	species => 'Manihot esculenta',
-    } );
-    my $organism_id = $organism->organism_id();
-
-    my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-
+    my @created;
+    eval {
+      $schema->txn_do(sub {
+        CXGN::Pedigree::Parentage->lock($schema);
+        die "Cross name already exists.\n" if $schema->resultset('Stock::Stock')->find({uniquename => $cross_name});
+        my $v = CXGN::Pedigree::Parentage->vocabulary($schema);
+        my $matches = CXGN::Pedigree::Parentage->resolve_names($schema, [$maternal, $paternal], $v);
+        my $mother = CXGN::Pedigree::Parentage->choose($matches, $maternal, [qw(accession cross population vector_construct)], $v);
+        my $father = CXGN::Pedigree::Parentage->choose($matches, $paternal, [qw(accession cross population vector_construct)], $v);
+        my $organism_id = $mother->{organism_id};
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'population',
     });
 
 
-    my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
-	{ name       => $maternal,
-	} );
-
-    my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
-            { name       => $paternal,
-            } );
+    my $female_parent_stock = $schema->resultset('Stock::Stock')->find($mother->{stock_id});
+    my $male_parent_stock = $schema->resultset('Stock::Stock')->find($father->{stock_id});
 
     my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
             { organism_id => $organism_id,
@@ -530,23 +544,27 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 	      uniquename => $cross_name,
 	      type_id => $population_cvterm->cvterm_id,
             } );
-      my $female_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship');
+      my $female_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent',  'stock_relationship');
 
       my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
 
-      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_name', 'stock_relationship');
 
-      my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
+      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema,  'cross_relationship','stock_relationship');
+
+
+    my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
 
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
-	my $stock_name = $prefix.$cross_name."-".$increment.$suffix;
+	$increment = sprintf "%03d", $increment;
+	my $stock_name = $prefix.$cross_name."-".int($increment).$suffix;
       my $accession_stock = $schema->resultset("Stock::Stock")->create(
             { organism_id => $organism_id,
               name       => $stock_name,
               uniquename => $stock_name,
               type_id     => $accession_cvterm->cvterm_id,
             } );
+      push @created, $accession_stock->stock_id;
       $accession_stock->find_or_create_related('stock_relationship_objects', {
 		type_id => $female_parent->cvterm_id(),
 		object_id => $accession_stock->stock_id(),
@@ -572,7 +590,13 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       $increment++;
 
     }
+        CXGN::Pedigree::Parentage->assert_acyclic($schema, \@created);
+      });
+    };
     if ($@) {
+        $c->res->status(400);
+        $c->res->content_type('text/plain; charset=UTF-8');
+        $c->res->body(CXGN::Pedigree::Parentage->error_message($@));
     }
 }
 

@@ -22,6 +22,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 use Data::Dumper;
 
 has 'schema' => (
@@ -72,11 +73,30 @@ has 'additional_transformant_info' => (
 );
 
 
+=head2 add_transformant()
+
+Create the requested accessions, transformation and parent relationships,
+properties, and ownership rows atomically on the supplied Chado transaction
+handle. The public C<phenome_schema> constructor attribute remains supported;
+ownership uses the existing qualified C<phenome.stock_owner> table and its
+normal column defaults on the owning handle.
+
+Return C<{ success =E<gt> 1 }> when these writes succeed, or
+C<{ error =E<gt> $exception }> when they fail and roll back. The error can be a
+DBIx::Class exception object; callers must stringify or sanitize it before
+encoding a public response. A successful C<eval> alone does not confirm success.
+
+The factory joins an existing caller transaction when present. Its success
+result does not commit that outer transaction; a batch caller must propagate
+any error result so the complete batch rolls back. Parentage graph writes use
+the shared transaction lock and require READ COMMITTED isolation.
+
+=cut
+
 sub add_transformant {
 
     my $self = shift;
     my $schema = $self->get_schema();
-    my $phenome_schema = $self->get_phenome_schema();
     my $transformation_stock_id = $self->get_transformation_stock_id();
     my @transformant_names = @{$self->get_transformant_names()};
     my $additional_transformant_info = $self->get_additional_transformant_info();
@@ -92,6 +112,7 @@ sub add_transformant {
     my $owner_id = $self->get_owner_id();;
 
     my $coderef = sub {
+        CXGN::Pedigree::Parentage->lock($schema);
 
         my $transformation_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation', 'stock_type');
         my $plant_material_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'plant_material_of', 'stock_relationship');
@@ -155,6 +176,14 @@ sub add_transformant {
                 $accession_stock->create_stockprops({$number_of_insertions_cvterm->name() => $number_of_insertions});
             }
         }
+        CXGN::Pedigree::Parentage->assert_acyclic($schema, \@added_stock_ids);
+        # New stock IDs have no previous owners. Keep the standard owner rows
+        # on this transaction's handle so callers can roll back a whole batch.
+        for my $stock_id (@added_stock_ids) {
+            $schema->storage->dbh->do(
+                'INSERT INTO phenome.stock_owner (stock_id, sp_person_id) VALUES (?, ?)',
+                undef, $stock_id, $owner_id);
+        }
     };
 
     try {
@@ -165,13 +194,6 @@ sub add_transformant {
 
     if ($transaction_error) {
         return { error => $transaction_error };
-    } else {
-        foreach my $stock_id (@added_stock_ids) {
-            $phenome_schema->resultset("StockOwner")->find_or_create({
-    			stock_id     => $stock_id,
-    			sp_person_id =>  $owner_id,
-    	    });
-        }
     }
 
     return { success => 1};
