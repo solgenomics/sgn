@@ -2867,22 +2867,61 @@ function loadScript(id, andRun) {
         .catch(e => alert(e.message));
 }
 
+// the suggested model of the model review, when there is one: the recipe that
+// ran (or would run) as the suggestion
+function suggestedForSave() {
+    const rv = state.review;
+    if (!rv) return null;
+    return (rv.alt && rv.alt.recipe) || rv.suggested || null;
+}
+
+// my model: the settings on the page, unless the page shows the suggested
+// model (then the recipe of my own run)
+function myRecipeForSave() {
+    const rv = state.review;
+    return rv && rv.chosen === 'alt' && rv.recipe ? JSON.parse(JSON.stringify(rv.recipe)) : buildRecipe();
+}
+
+function saveWhich() { return suggestedForSave() ? radio('sf_save_which') || 'mine' : 'mine'; }
+
+function updateSaveDialog() {
+    const which = saveWhich();
+    $('#sf_save_name_label').text(which === 'both' ? 'Name of my model' : which === 'suggested' ? 'Name of the suggested model' : 'Name');
+    $('#sf_save_name2_group').toggle(which === 'both');
+    if (which === 'both' && !$('#sf_save_name2').val().trim()) $('#sf_save_name2').val(($('#sf_save_name').val().trim() || 'My analysis') + ' (suggested)');
+    // updating an open script only makes sense for my own model
+    $('#sf_save_as_new').toggle(which !== 'suggested' && !!(state.script.id && state.script.is_owner));
+    $('#sf_save_update').text(which === 'both' ? 'Save both' : which === 'mine' && state.script.id && state.script.is_owner ? 'Save changes' : 'Save');
+}
+
+// save one recipe as a script (an existing one when recipeId is given)
+function saveRecipe(recipe, name, recipeId) {
+    const data = { name: name, description: $('#sf_save_description').val(), is_public: $('#sf_save_public').is(':checked') ? 1 : 0,
+        recipe: JSON.stringify(Object.assign({}, recipe, { name: name })) };
+    if (recipeId) data.recipe_id = recipeId;
+    return post('/ajax/script_factory/recipe/save', data).then(r => ({ id: r.recipe_id, name: name, description: data.description, is_public: data.is_public }));
+}
+
 function saveScript(asNew) {
+    const which = saveWhich();
     const name = $('#sf_save_name').val().trim();
+    const name2 = $('#sf_save_name2').val().trim();
     if (!name) { alert('Please give the script a name.'); return; }
-    state.script.name = name;
-    const data = {
-        name: name,
-        description: $('#sf_save_description').val(),
-        is_public: $('#sf_save_public').is(':checked') ? 1 : 0,
-        recipe: JSON.stringify(buildRecipe())
-    };
-    if (!asNew && state.script.id && state.script.is_owner) data.recipe_id = state.script.id;
-    post('/ajax/script_factory/recipe/save', data)
-        .then(r => {
-            state.script = { id: r.recipe_id, name: name, description: data.description, is_public: data.is_public, is_owner: 1 };
+    if (which === 'both' && !name2) { alert('Please give the suggested model a name too.'); return; }
+    if (which === 'both' && name2 === name) { alert('Please give the two scripts different names.'); return; }
+    const ownId = !asNew && state.script.id && state.script.is_owner ? state.script.id : null;
+    const jobs = [];
+    if (which !== 'suggested') jobs.push(saveRecipe(myRecipeForSave(), name, ownId).then(x => ({ kind: 'mine', x: x })));
+    if (which !== 'mine') jobs.push(saveRecipe(suggestedForSave(), which === 'both' ? name2 : name, null).then(x => ({ kind: 'suggested', x: x })));
+    Promise.all(jobs)
+        .then(done => {
+            // the open script follows the model shown on the page
+            const showing = state.review && state.review.chosen === 'alt' ? 'suggested' : 'mine';
+            const cur = done.find(d => d.kind === showing) || done[0];
+            state.script = Object.assign({ is_owner: 1 }, cur.x);
             setScriptName();
             $('#sf_save_modal').modal('hide');
+            if (done.length > 1) $('#sf_pipeline_banner').html(alertBox('success', '<span class="glyphicon glyphicon-ok"></span> Saved two scripts: <b>' + esc(done[0].x.name) + '</b> (my model) and <b>' + esc(done[1].x.name) + '</b> (suggested model).'));
         })
         .catch(e => alert(e.message));
 }
@@ -3203,12 +3242,16 @@ export function init(options) {
     $('#sf_import_json').on('change', function() { if (this.files && this.files[0]) importJSON(this.files[0]); this.value = ''; });
     $('#sf_open_save_script').on('click', () => {
         $('#sf_save_name').val(state.script.name || '');
+        $('#sf_save_name2').val('');
         $('#sf_save_description').val(state.script.description || '');
         $('#sf_save_public').prop('checked', !!state.script.is_public);
-        $('#sf_save_update').text(state.script.id && state.script.is_owner ? 'Save changes' : 'Save');
-        $('#sf_save_as_new').toggle(!!(state.script.id && state.script.is_owner));
+        // a run with a suggested model: save mine, the suggested one, or both
+        $('#sf_save_which').toggle(!!suggestedForSave());
+        setRadio('sf_save_which', state.review && state.review.chosen === 'alt' ? 'suggested' : 'mine');
+        updateSaveDialog();
         $('#sf_save_modal').modal('show');
     });
+    $('#sf_save_modal').on('change', 'input[name=sf_save_which]', updateSaveDialog);
     $('#sf_save_update').on('click', () => saveScript(false));
     $('#sf_save_as_new').on('click', () => saveScript(true));
 

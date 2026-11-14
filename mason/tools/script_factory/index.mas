@@ -688,9 +688,22 @@ $license_json =~ s/</\\u003c/g;
       </div>
       <div class="modal-body">
         <p class="sf-help">The script stores every choice you made (traits, outlier rule, models, index weights and zoning), but not the dataset or individual exclusions, so it can be applied to new data.</p>
+        <div class="form-group sf-save-which" id="sf_save_which" style="display:none">
+          <label>Which model?</label>
+          <div>
+            <label class="radio-inline"><input type="radio" name="sf_save_which" value="mine" checked /> My model</label>
+            <label class="radio-inline"><input type="radio" name="sf_save_which" value="suggested" /> Suggested model</label>
+            <label class="radio-inline"><input type="radio" name="sf_save_which" value="both" /> Both</label>
+          </div>
+          <small class="sf-muted">The suggested model is always saved as a new script, so it never replaces your own.</small>
+        </div>
         <div class="form-group">
-          <label for="sf_save_name">Name</label>
+          <label for="sf_save_name" id="sf_save_name_label">Name</label>
           <input class="form-control" id="sf_save_name" placeholder="e.g. Yield trials - two stage with SpATS" />
+        </div>
+        <div class="form-group" id="sf_save_name2_group" style="display:none">
+          <label for="sf_save_name2">Name of the suggested model</label>
+          <input class="form-control" id="sf_save_name2" />
         </div>
         <div class="form-group">
           <label for="sf_save_description">Description</label>
