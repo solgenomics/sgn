@@ -101,21 +101,23 @@ sub new {
             return CXGN::CrossingTrial->new($args);
         }
         elsif ($name eq "analysis_experiment") {
-            my $metadata_schema = CXGN::Metadata::Schema->connect(
+            # Use the schemas of the caller. Schemas created here share the
+            # chado connection, so their search path must keep public first:
+            # setting it to metadata or sgn_people alone hides the chado tables
+            # for the rest of the request (e.g. deleting an analysis failed).
+            my $search_path = 'SET search_path TO public, phenome, metadata, sgn_people, sgn';
+            $args->{metadata_schema} ||= CXGN::Metadata::Schema->connect(
                 sub { $schema->storage()->dbh() },
-                { on_connect_do => [ 'SET search_path TO metadata'], limit_dialect => 'LimitOffset' }
+                { on_connect_do => [ $search_path ], limit_dialect => 'LimitOffset' }
             );
-            my $phenome_schema = CXGN::Phenome::Schema->connect( 
-                sub {$schema->storage->dbh()}, 
-                { on_connect_do => ['SET search_path TO public,phenome;']}
+            $args->{phenome_schema} ||= CXGN::Phenome::Schema->connect(
+                sub { $schema->storage()->dbh() },
+                { on_connect_do => [ $search_path ] }
             );
-            my $people_schema = CXGN::People::Schema->connect( 
-                sub {$schema->storage->dbh()}, 
-                { on_connect_do => ['SET search_path TO sgn_people;']}
+            $args->{people_schema} ||= CXGN::People::Schema->connect(
+                sub { $schema->storage()->dbh() },
+                { on_connect_do => [ $search_path ] }
             );
-            $args->{metadata_schema} = $metadata_schema;
-            $args->{phenome_schema} = $phenome_schema;
-            $args->{people_schema} = $people_schema;
             return CXGN::Analysis->new($args);
         }
         elsif ($val eq "treatment") {

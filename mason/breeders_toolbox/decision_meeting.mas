@@ -20,6 +20,8 @@ my $buttons_html = "<button class='btn btn-success' style='margin:3px' id='creat
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Accession Tracker</h4>", info_section_subtitle => 'Accessions, stages, and decisions',icon_class => "glyphicon glyphicon-signal", info_section_id => "accession_meeting_section" &>
 
+<& /breeders_toolbox/decision_meeting/analysis_evidence_section.mas &>
+
 </div>
 
 

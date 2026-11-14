@@ -62,7 +62,9 @@ module.exports = {
     optimization: {
         minimize: true,
 	chunkIds: "deterministic",
-        minimizer: [new TerserPlugin({})],
+        // ascii_only: non-ASCII characters (×, …, ²) are written as \u escapes,
+        // so they show correctly whatever charset the browser reads the script with
+        minimizer: [new TerserPlugin({ terserOptions: { format: { ascii_only: true } } })],
 	runtimeChunk: {
             name: 'runtime'
         },

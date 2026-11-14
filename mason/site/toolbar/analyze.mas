@@ -20,6 +20,7 @@
     <li role="separator" class="divider"></li>
     <li><a href="/accession_usage">Accession Usage</a></li>
     <li><a href="/tools/mixedmodels">Mixed Models</a></li>
+    <li><a href="/tools/script_factory">Analysis Pipeline</a></li>
     <li><a href="/tools/trial/comparison/list">Compare Trials</a></li>
     <li><a href="/tools/graphicalfiltering">Graphical Filtering</a></li>
     <li><a href="/tools/boxplotter">BoxPlotter Tool</a></li>
