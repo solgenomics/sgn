@@ -167,7 +167,6 @@ sub search {
         }
     close($F);
 
-    open(STDOUT, ">", "/dev/null") || die "Can't redirect stdout\n";
     my $cmd = 'R -e "library(data.table);
     mat <- fread(\''.$temporary_data_file.'\', header=FALSE, sep=\'\t\');
     data_mat <- data.matrix(mat[,-1]);
@@ -177,9 +176,9 @@ sub search {
     colnames(rel_mat) <- mat\$V1;
     write.table(rel_mat, file=\''.$relationship_matrix_file.'\', row.names=TRUE, col.names=NA, sep=\'\t\');
     "';
-    my $cmd_status = system($cmd);
-    close(STDOUT);
-    
+    my $cmd_status = system($cmd." > /dev/null");
+
+
     my %rel_matrix_data;
     my $csv = Text::CSV->new({ sep_char => "\t" });
     open(my $rel_res, '<', $relationship_matrix_file) or die "Could not open file '$relationship_matrix_file' $!";
