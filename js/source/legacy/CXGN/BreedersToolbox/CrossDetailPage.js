@@ -236,7 +236,7 @@ jQuery(document).ready(function() {
             }
             if (response.success) {
                 save_property(cross_id, type, value);
-                property_table.ajax.relaod();
+                property_table.ajax.reload();
             }
         }).fail( function() {
             alert("The request for checking the parameters failed. Please try again.");
