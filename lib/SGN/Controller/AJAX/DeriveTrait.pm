@@ -66,6 +66,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     my $c = shift;
     my $trial_id = $c->req->param('trial_id');
     my $selected_trait = $c->req->param('trait');
+    my $overwrite = $c->req->param('overwrite') ? 1 : 0;
     my %parse_result;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
@@ -80,6 +81,8 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     my $selected_trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $selected_trait);
     if (!$selected_trait_cvterm) {
 	print STDERR "The trait $selected_trait is not in the database.\n";
+	$c->stash->{rest} = {error => "Select a trait to compute." };
+	return;
     }
 
     my $selected_trait_cvterm_id = $selected_trait_cvterm->cvterm_id();
@@ -112,18 +115,28 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     }
 
 
-    foreach my $trait_found (@{$triat_name}) {
-	if  ($selected_trait_cvterm_id && ($trait_found->[0] eq $selected_trait_cvterm_id)) {
-	    print "Trait found = $trait_found->[1] with id $trait_found->[0]\n";
-	    $c->stash->{rest} = {error => "$trait_found->[1] has been computed and uploaded for this trial." };
-	    return;
-	}
-
-	elsif ($selected_trait_cvterm_id eq '')  {
-	    $c->stash->{rest} = {error => "Select trait to compute." };
-	    return;
-	}
+    # Overwriting stored values is for curators, as it is when plot values are generated from plants.
+    if ($overwrite && $c->user()->get_object->get_user_type() ne 'curator') {
+	$c->stash->{rest} = {error => "Must be a curator to overwrite values." };
+	return;
     }
+
+    # StorePhenotypes matches a stored value by its timestamp for any repeat type other than single (multiple,
+    # time_series or anything else written there), and a computed value carries the current time, so computing
+    # such a trait when it already has values in this trial would add values instead of replacing them, with or
+    # without overwrite. StorePhenotypes takes whichever repeat-type property its query returns last, in no fixed
+    # order, so any one property other than single is enough to refuse.
+    my $repeat_types = $schema->storage->dbh->selectcol_arrayref(
+	"SELECT cvtermprop.value FROM cvtermprop JOIN cvterm AS proptype ON (cvtermprop.type_id = proptype.cvterm_id) WHERE proptype.name = 'trait_repeat_type' AND cvtermprop.cvterm_id = ?",
+	undef, $selected_trait_cvterm_id);
+    my ($repeat_type) = grep { defined($_) && $_ ne '' && $_ ne 'single' } @{$repeat_types};
+    if (defined($repeat_type) && any { $_->[0] eq $selected_trait_cvterm_id && $_->[3] } @{$triat_name}) {
+	$c->stash->{rest} = {error => "$selected_trait already has values in this trial, and it keeps every value (repeat type $repeat_type), so computing it would add values instead of replacing them." };
+	return;
+    }
+
+    # A single-value trait already computed for this trial can be computed again: with overwrite, the new
+    # values replace the stored ones; without it, only plots and plants that have no value yet get one.
 
     my $dbh = $c->dbc->dbh();
     my @plots;
@@ -315,7 +328,7 @@ project.project_id=? ) );");
         trait_list=>\@traits,
         values_hash=>\%data,
         has_timestamps=>1,
-        overwrite_values=>0,
+        overwrite_values=>$overwrite,
         metadata_hash=>\%phenotype_metadata,
 				composable_validation_check_name=>$c->config->{composable_validation_check_name}
     );
@@ -330,7 +343,7 @@ project.project_id=? ) );");
         return;
     }
 
-	$c->stash->{rest} = {success => 1};
+	$c->stash->{rest} = {success => 1, message => $store_success};
 }
 
 
