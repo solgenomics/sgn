@@ -138,4 +138,14 @@ for my $case (
     };
 }
 
+# The header of the phenotype file and the column map of ANOVA both come from
+# this formatter, so a trait must get the same, own column name every time.
+subtest 'a trait name inside another trait name keeps its own column' => sub {
+    my @traits = ('plant height at maturity|CO_334:0000002', 'plant height|CO_334:0000001');
+    my %seen;
+    $seen{ SGN::Controller::solGS::solGS->format_phenotype_dataset_headers(
+        join("\t", 'germplasmName', @traits), ['germplasmName']) }++ for 1 .. 40;
+    is_deeply([keys %seen], ["germplasmName\tPHAM\tPH"], 'each trait has its own acronym in 40 of 40 headers');
+};
+
 done_testing();
