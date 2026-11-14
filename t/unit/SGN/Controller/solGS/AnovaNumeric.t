@@ -88,11 +88,6 @@ for my $case (
             $c->stash->{trait_abbr} = SGN::Controller::solGS::Utils->abbreviate_term($trait);
         });
         $traits->mock(get_all_traits => sub { return });
-        $traits->mock(get_acronym_pairs => sub {
-            return [] if $case->{map_empty};
-            return [['unrelated', 'another trait']] if $case->{map_missing};
-            return [[$abbr, "$clean_trait\n"]];
-        });
         my $files = Test::MockObject->new;
         $files->mock(phenotype_file_name => sub { $c->stash->{phenotype_file_name} = $file; return $file; });
         $files->mock(all_traits_file => sub { return });
@@ -104,6 +99,11 @@ for my $case (
             die "Unexpected service $name";
         });
         my $query = Test::MockModule->new('SGN::Controller::solGS::Anova');
+        $query->mock(plot_trait_columns => sub {
+            return {} if $case->{map_empty};
+            return {'another trait' => 'unrelated'} if $case->{map_missing};
+            return {$clean_trait => $abbr};
+        });
         $query->mock(create_anova_phenodata_file => sub {
             write_file($file, {binmode => ':utf8'}, $content) unless $case->{no_data};
             return $file;

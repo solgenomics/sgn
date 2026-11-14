@@ -220,11 +220,7 @@ sub get_traits_abbrs {
     $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
     my $utils = $c->controller('solGS::Utils');
     my $trait_name = $utils->clean_traits($c->stash->{trait_name});
-    my $pairs = $c->controller('solGS::Trait')->get_acronym_pairs($c, $trial_id);
-    my $match = first {
-        defined($_->[1]) && $utils->clean_traits($_->[1]) eq $trait_name
-    } @$pairs;
-    my $trait_abbr = $match ? $match->[0] : undef;
+    my $trait_abbr = $self->plot_trait_columns($c, $trial_id)->{$trait_name};
     if (!defined $trait_abbr) {
         $c->stash->{anova_data_error} = 'The selected trait is not present in the phenotype data.';
     }
@@ -235,6 +231,25 @@ sub get_traits_abbrs {
     my $traits_abbrs = $json->encode($id_abbr);
 
     return $traits_abbrs;
+}
+
+# The column names of the traits in the phenotype file of a trial, by trait name
+# (clean_traits). The file has the traits of the plots only, each once and sorted,
+# named by format_phenotype_dataset_headers. The abbreviations of the trial page also
+# count the traits of plants: a plant trait that sorts first takes the plain
+# abbreviation there, and the plot trait a suffixed one that is not in the file.
+sub plot_trait_columns {
+    my ( $self, $c, $trial_id ) = @_;
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $self->schema($c), trial_id => $trial_id });
+    my %seen;
+    my @traits = grep { !$seen{$_}++ } sort map { $_->[1] } @{ $trial->get_traits_assayed('plot') };
+    my $metadata = $c->controller('solGS::Search')->model($c)->trial_metadata();
+    my @columns = split /\t/, $c->controller('solGS::solGS')
+        ->format_phenotype_dataset_headers(join("\t", @$metadata, @traits), $metadata);
+    my $utils = $c->controller('solGS::Utils');
+
+    return { map { $utils->clean_traits($traits[$_]) => $columns[ @$metadata + $_ ] } 0 .. $#traits };
 }
 
 sub is_valid_anova_trait_data {

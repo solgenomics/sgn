@@ -78,9 +78,32 @@ for my $index (0 .. $#values) {
     });
     push @observations, $phenotype;
 }
+# A trait measured on a plant of this trial only, with the abbreviation of the plot trait
+# (dry matter content percentage) and sorting before it. The phenotype file has the plot
+# traits only, so the plot trait keeps the plain abbreviation there.
+my $plot_trait = $schema->resultset('Cv::Cvterm')->find({cvterm_id => $trait_id});
+my $plant_dbxref = $schema->resultset('General::Dbxref')->create({
+    db_id => $plot_trait->dbxref->db_id, accession => '99'.$$ });
+my $plant_trait = $schema->resultset('Cv::Cvterm')->create({ cv_id => $plot_trait->cv_id,
+    name => "dry matter content partial", dbxref_id => $plant_dbxref->dbxref_id });
+my $plant = $schema->resultset('Stock::Stock')->create({ name => "${name}_1_plant_1",
+    uniquename => "${name}_1_plant_1", organism_id => $reference_accession->organism_id,
+    type_id => SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id });
+my $plant_experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+    type_id => $experiment_type, nd_geolocation_id => $location,
+    nd_experiment_stocks => [{stock_id => $plant->stock_id, type_id => $experiment_type}],
+    nd_experiment_projects => [{project_id => $trial_id}],
+});
+my $plant_phenotype = $schema->resultset('Phenotype::Phenotype')->create({
+    uniquename => "${name}_plant_observation", cvalue_id => $plant_trait->cvterm_id,
+    value => '4', collect_date => '2030-05-20 12:00:00',
+});
+$schema->resultset('NaturalDiversity::NdExperimentPhenotype')->create({
+    nd_experiment_id => $plant_experiment->nd_experiment_id, phenotype_id => $plant_phenotype->phenotype_id,
+});
 my $model = SGN::Model::solGS::solGS->new({schema => $schema, people_schema => $f->people_schema});
 my %controllers = map { my $class = 'SGN::Controller::solGS::'.$_;
-    ('solGS::'.$_ => $class->new) } qw(Anova Files Trait Utils Search CachedResult clearCache);
+    ('solGS::'.$_ => $class->new) } qw(Anova Files Trait Utils Search CachedResult clearCache solGS);
 my $async = Test::MockObject->new;
 my $protocol = Test::MockObject->new;
 $protocol->mock(stash_protocol_id => sub { return });
@@ -130,6 +153,7 @@ is($context->stash->{rest}{success}, 'Success.', 'real DB phenotype data passes 
 is($queries, 1, 'the first request queries the actual phenotype model');
 my $mapping = decode_json($context->stash->{rest}{traits_abbrs});
 is($mapping->{trait_id}, $trait_id, 'the actual selected trait identity is retained');
+is($mapping->{trait_abbr}, 'DMCP', 'a plant trait with the same abbreviation does not take the one of the plot trait');
 my ($headers, $cells) = cached_column($mapping->{trait_abbr});
 is($headers->[-1], 'notes', 'the actual formatter retains the final notes column');
 is($headers->[-2], $mapping->{trait_abbr}, 'the generated acronym names the final trait column');
@@ -159,6 +183,9 @@ is_deeply($f->dbh->selectall_arrayref($snapshot_sql, undef, $trait_id, $previous
     'original fixture observations for this trait are unchanged');
 is($reference_accession->discard_changes->is_obsolete, $original_obsolete,
     'the original fixture accession status is unchanged');
+$plant_phenotype->delete;
+$plant_trait->delete;
+$plant_dbxref->delete;
 $f->clean_up_db;
 undef $f;
 done_testing();
