@@ -2597,6 +2597,20 @@ sub save_recipe : Path('/ajax/script_factory/recipe/save') Args(0) {
              VALUES (?, ?, ?, ?, ?) RETURNING sp_script_factory_recipe_id", undef,
             $sp_person_id, $name, $desc, $public, $recipe_json);
     }
+    # a run of this script made before it was saved (run_id): its job takes the
+    # script's name in the user's jobs list, unless it is already stored
+    # (stored runs carry the analysis name)
+    my $run_id = $c->req->param('run_id');
+    if (defined($run_id) && _valid_token($run_id) && $run_id =~ /^sf_run_/) {
+        my $meta = _run_meta($c, $run_id);
+        if ($meta && ($meta->{sp_person_id} // -1) == _user_id($c) && !$meta->{stored}) {
+            my ($schema, $people_schema) = _schemas($c);
+            my $label = ($c->req->param('label') // '') =~ /^[\w .()-]{1,40}$/ ? $c->req->param('label') : '';
+            _rename_job($people_schema, $meta->{job_id}, _user_id($c), "Analysis Pipeline: $name" . ($label ne '' ? " - $label" : ''));
+            $meta->{script_name} = $name;
+            _write_run_meta($c, $run_id, $meta);
+        }
+    }
     $c->stash->{rest} = { success => 1, recipe_id => $id };
 }
 

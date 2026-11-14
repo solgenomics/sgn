@@ -2894,11 +2894,13 @@ function updateSaveDialog() {
     $('#sf_save_update').text(which === 'both' ? 'Save both' : which === 'mine' && state.script.id && state.script.is_owner ? 'Save changes' : 'Save');
 }
 
-// save one recipe as a script (an existing one when recipeId is given)
-function saveRecipe(recipe, name, recipeId) {
+// save one recipe as a script (an existing one when recipeId is given); runId:
+// the run made with it, whose job then takes the script's name
+function saveRecipe(recipe, name, recipeId, runId) {
     const data = { name: name, description: $('#sf_save_description').val(), is_public: $('#sf_save_public').is(':checked') ? 1 : 0,
         recipe: JSON.stringify(Object.assign({}, recipe, { name: name })) };
     if (recipeId) data.recipe_id = recipeId;
+    if (runId) data.run_id = runId;
     return post('/ajax/script_factory/recipe/save', data).then(r => ({ id: r.recipe_id, name: name, description: data.description, is_public: data.is_public }));
 }
 
@@ -2911,8 +2913,12 @@ function saveScript(asNew) {
     if (which === 'both' && name2 === name) { alert('Please give the two scripts different names.'); return; }
     const ownId = !asNew && state.script.id && state.script.is_owner ? state.script.id : null;
     const jobs = [];
-    if (which !== 'suggested') jobs.push(saveRecipe(myRecipeForSave(), name, ownId).then(x => ({ kind: 'mine', x: x })));
-    if (which !== 'mine') jobs.push(saveRecipe(suggestedForSave(), which === 'both' ? name2 : name, null).then(x => ({ kind: 'suggested', x: x })));
+    // the runs of these models (their jobs take the script names)
+    const rv = state.review;
+    const myRun = rv && rv.main && rv.main.results ? rv.main.results.run_id : (runState() === 'done' && state.results ? state.results.run_id : null);
+    const altRun = rv && rv.alt && rv.alt.results ? rv.alt.results.run_id : null;
+    if (which !== 'suggested') jobs.push(saveRecipe(myRecipeForSave(), name, ownId, myRun).then(x => ({ kind: 'mine', x: x })));
+    if (which !== 'mine') jobs.push(saveRecipe(suggestedForSave(), which === 'both' ? name2 : name, null, altRun).then(x => ({ kind: 'suggested', x: x })));
     Promise.all(jobs)
         .then(done => {
             // the open script follows the model shown on the page
