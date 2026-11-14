@@ -16,6 +16,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheet;
 #)
 
 use Moose;
+use CXGN::File::Spreadsheet qw(cell_value);
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
@@ -193,7 +194,7 @@ sub validate {
             my $value = '';
             my $timestamp = '';
             if ($worksheet->get_cell($row,$col)) {
-                $value_string = $worksheet->get_cell($row,$col)->value();
+                $value_string = cell_value($worksheet->get_cell($row,$col), $excel_obj);
                 #print STDERR $value_string."\n";
                 if ($timestamp_included) {
                     ($value, $timestamp) = split /,/, $value_string;
@@ -353,7 +354,7 @@ sub parse {
                                     my $value_string = '';
 
                                     if ($worksheet->get_cell($row, $col)){
-                                        $value_string = $worksheet->get_cell($row, $col)->value();
+                                        $value_string = cell_value($worksheet->get_cell($row, $col), $excel_obj);
                                     }
                                     my $timestamp = '';
                                     my $trait_value = '';
