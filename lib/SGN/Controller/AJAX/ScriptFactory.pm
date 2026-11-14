@@ -2185,8 +2185,11 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
 # A link is kept in the meeting's meeting_json project property, as
 # related_analyses: [{analysis_id, name, linked_by, linked_at}]. Saving the
 # meeting's decisions keeps it (it merges into the stored JSON). Analyses can
-# be added or removed after the decisions are saved (flagged after_save); every
-# change is kept in analyses_history [{action, analysis_id, name, by, on}].
+# be added after the decisions are saved (flagged after_save), but once they are
+# saved no analysis can be removed: the evidence of a decision is a permanent
+# record. An analysis linked to a meeting cannot be deleted (see
+# meetings_using_analysis). Every change is kept in analyses_history
+# [{action, analysis_id, name, by, on}].
 
 # who may link analyses to meetings: the roles that create meetings
 # (decision_role) or take part in them (meeting_role)
@@ -2346,6 +2349,7 @@ sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
                     push @list, { analysis_id => $id + 0, name => $info{$id}->{name}, linked_by => $who, linked_at => $today, ($m->{saved} ? (after_save => 1) : ()) };
                 } else {
                     next if !$have{$id};
+                    die "The decisions of this meeting are saved: the analyses it used as evidence are a permanent record and cannot be removed.\n" if $m->{saved};
                     @list = grep { $_->{analysis_id} != $id } @list;
                 }
                 push @history, { action => ($action eq 'link' ? 'added' : 'removed'), analysis_id => $id + 0, name => ($info{$id} ? $info{$id}->{name} : $have{$id}->{name}),
@@ -2359,6 +2363,15 @@ sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
         });
     } catch { $err = "$_"; $err =~ s/\s+$//; $err =~ s/ at \S+ line \d+\.?$//; $err =~ s/^\{UNKNOWN\}:\s*//; };
     $c->stash->{rest} = $err ? { error => $err } : { success => 1, action => $action, changed => $n };
+}
+
+# Decision meetings that use an analysis as evidence: [{meeting_id, name,
+# saved}]. Such an analysis cannot be deleted (TrialMetadata delete).
+sub meetings_using_analysis {
+    my ($schema, $analysis_id) = @_;
+    return [] if ($analysis_id // '') !~ /^\d+$/;
+    my $linked = sub { my $d = shift; return grep { ref($_) eq 'HASH' && ($_->{analysis_id} // '') eq $analysis_id } @{ ref($d->{related_analyses}) eq 'ARRAY' ? $d->{related_analyses} : [] }; };
+    return [ map { +{ meeting_id => $_->{meeting_id}, name => $_->{name}, saved => $_->{saved} } } grep { $linked->($_->{data}) } @{ _meetings($schema) } ];
 }
 
 # GET meeting_id: the analyses linked to a meeting, with what the page shows of them

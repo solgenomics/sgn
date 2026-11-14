@@ -41,6 +41,7 @@ Chris Simoes <ccs263@cornell.edu>
 .sfm-list label:hover { background: #f5f8fb; }
 .sfm-list input { margin-right: 6px; }
 .sfm-late { color: #92400e; font-size: 11px; }
+.sfm-locked { color: #6b7280; font-size: 11px; margin-left: 4px; }
 </style>
 
 <div class="well">

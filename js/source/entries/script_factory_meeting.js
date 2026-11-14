@@ -6,9 +6,10 @@
  * the evidence per accession (genotype value and rank per trait, selection
  * index, environmental zones), restricted by default to the accessions of
  * the meeting. Links are kept in the meeting (meeting_json related_analyses).
- * Several analyses can be added or removed at once, also after the decisions
- * are saved (flagged "added after the decisions were saved"); every change is
- * kept in the meeting's history (analyses_history).
+ * Several analyses can be added or removed at once. After the decisions are
+ * saved, analyses can still be added (flagged "added after the decisions were
+ * saved") but none can be removed: the evidence is a permanent record. Every
+ * change is kept in the meeting's history (analyses_history).
  *
  * Author: Chris Simoes <ccs263@cornell.edu>
  */
@@ -95,7 +96,7 @@ function renderLinked() {
     const r = S.data;
     const list = r.analyses || [];
     const closed = r.meeting.saved;
-    let h = '<p><b>' + esc(r.meeting.name) + '</b> ' + (closed ? '<span class="label label-default" title="The decisions are saved; analyses can still be added or removed, and the change is recorded">decisions saved</span>' : '<span class="label label-success">open</span>') + ' &middot; ';
+    let h = '<p><b>' + esc(r.meeting.name) + '</b> ' + (closed ? '<span class="label label-default" title="The decisions are saved: analyses can still be added, but the evidence of the decisions cannot be removed">decisions saved</span>' : '<span class="label label-success">open</span>') + ' &middot; ';
     h += list.length ? list.length + ' analysis(es) as evidence. Click one to see its results per accession.' : 'No analysis linked yet.' + (r.can_link ? ' Use <b>Add analyses</b>.' : '');
     h += '</p>';
     h += list.map(a => '<div class="sfm-card' + (S.current === a.analysis_id ? ' on' : '') + '" data-id="' + esc(a.analysis_id) + '">' +
@@ -104,16 +105,17 @@ function renderLinked() {
         (a.linked_by ? '<br/>added by ' + esc(a.linked_by) + (a.linked_at ? ' on ' + esc(a.linked_at) : '') : '') +
         (a.after_save ? '<br/><span class="sfm-late">added after the decisions were saved</span>' : '') + '</div>' +
         (a.hidden ? '' : '<a class="btn btn-default btn-xs" target="_blank" href="/tools/script_factory/analysis/' + esc(a.analysis_id) + '"><span class="glyphicon glyphicon-dashboard"></span> Results page</a> ') +
-        (r.can_link ? '<button class="btn btn-default btn-xs sfm-unlink" data-id="' + esc(a.analysis_id) + '"><span class="glyphicon glyphicon-remove"></span> Remove</button>' : '') +
+        (r.can_link && !closed ? '<button class="btn btn-default btn-xs sfm-unlink" data-id="' + esc(a.analysis_id) + '"><span class="glyphicon glyphicon-remove"></span> Remove</button>' : '') +
+        (closed ? '<span class="sfm-locked" title="The decisions are saved: this evidence is a permanent record and the analysis cannot be removed or deleted"><span class="glyphicon glyphicon-lock"></span> permanent record</span>' : '') +
         '</div>').join('');
     $('#sfm_linked').html(h);
 
     $('#sfm_actions').toggle(!!r.can_link || !!(r.history || []).length);
     $('#sfm_add_toggle').toggle(!!r.can_link);
-    $('#sfm_remove_toggle').toggle(!!r.can_link && list.length > 0);
+    $('#sfm_remove_toggle').toggle(!!r.can_link && list.length > 0 && !closed);
     $('#sfm_history_toggle').toggle(!!(r.history || []).length);
     if (!r.can_link) $('#sfm_add_row, #sfm_remove_row').hide();
-    if (!list.length) $('#sfm_remove_row').hide();
+    if (!list.length || closed) $('#sfm_remove_row').hide();
     renderAddList();
     renderRemoveList();
     renderHistory();
