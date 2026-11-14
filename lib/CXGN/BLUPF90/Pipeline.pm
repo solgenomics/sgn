@@ -181,9 +181,6 @@ sub _run {
     die "BLUPF90+ is not installed on the analysis server (blupf90+ not found); choose the R engine.\n" if !$self->{f90}->program();
     $self->step("BLUPF90+ engine (", $self->{f90}->program(), "), up to ", $self->{f90}->max_parallel, " models in parallel");
 
-    my %reason = (pedigree => 'pedigree (A matrix)', genomic => 'genomic (G matrix)', single_step => 'single-step (H matrix)', multi_trait => 'multi-trait (repeated measurements)');
-    my $why = $reason{ opt($recipe, 'engine_reason', '') // '' };
-    $self->warn_msg("The $why model is fitted by BLUPF90+, so the whole analysis ran on the BLUPF90+ engine (without R: trials with rows and columns get a SpATS-like P-spline surface in stage 1).") if $why;
     $self->_read_data();
     $self->_treatments();
     $self->_select_traits();
@@ -1523,8 +1520,16 @@ sub _software {
     my @mt = grep { ($_->{model} // '') =~ /multi-trait/ } @s2;
     my @uni = grep { ($_->{model} // '') !~ /multi-trait/ } @s2;
     my $g = $self->{genotype_random} ? 'genotype random, BLUPs' : 'genotype fixed, BLUEs';
-    my $rel = { pedigree => 'the pedigree relationship matrix A (with inbreeding)', genomic => 'the genomic relationship matrix G (genomic module)',
-                single_step => 'the single-step relationship matrix H (pedigree + genomic)' }->{ $self->{gen_model} // '' };
+    my $gi = $self->{genomic_info} || {};
+    my $qc = $gi->{qc} || {};
+    my $markers = defined($qc->{n_snps_used}) ? "$qc->{n_snps_used} of " . ($qc->{n_snps} // $gi->{n_markers} // '?') . ' markers after its quality control' : ($gi->{n_markers} // '?') . ' markers';
+    # individuals of the pedigree: those listed and parents listed only as parents
+    my $P = $self->{pedigree} || {};
+    my $n_ped = scalar(uniq(keys %$P, grep { defined } map { @{ $P->{$_} || [] } } keys %$P));
+    my $rel = { pedigree => "the pedigree relationship matrix A (with inbreeding)",
+                genomic => "the genomic relationship matrix G built by its genomic module from $gi->{n_genotyped} of $gi->{n_accessions} accessions ($markers)" .
+                           (($gi->{n_accessions} // 0) > ($gi->{n_genotyped} // 0) ? '; accessions without genotypes are unrelated' : ''),
+                single_step => "the single-step relationship matrix H (pedigree" . ($n_ped ? " of $n_ped individuals" : '') . " + genomic: $gi->{n_genotyped} genotyped accessions, $markers)" }->{ $self->{gen_model} // '' };
     my @parts;
     push @parts, "the stage-1 models of " . $plural->($nt->(@s1), 'trial') . " x " . $plural->($nr->(@s1), 'trait') . " (" . $plural->(scalar(@s1), 'model') . ")" .
                  (@surf ? ", " . $plural->($nt->(@surf), 'trial') . " with a SpATS-like 2D P-spline surface (covariance built by Breedbase)" : '') if @s1;
@@ -1532,15 +1537,9 @@ sub _software {
     push @parts, "the multi-trait model" . (@mt > 1 ? 's' : '') . " of " . join('; ', map { my $m = $self->{multi_trait}->{ $_->{trait} } || {};
                  "$_->{trait} (" . $plural->($m->{n_occasions} // 0, 'date') . (@{ $m->{covariates} || [] } ? ' + dates of ' . join(', ', @{ $m->{covariates} }) : '') . ")" } @mt) .
                  " (G0 (x) " . ({ pedigree => 'A', genomic => 'G', single_step => 'H' }->{ $self->{gen_model} // '' } // 'I') . ", R0 (x) I)" if @mt;
-    my $method = opt(opt($self->recipe, 'outliers', {}), 'method', 'none');
-    my @steps = ('read the data, detected the trial designs and checked which design factors the data support');
-    push @steps, { iqr => 'applied the IQR outlier rule', madr => 'applied the BH-MADR outlier rule (least-squares residuals)' }->{$method} // ();
-    push @steps, 'computed the selection index' if $self->{index};
-    push @steps, 'grouped the environments into zones' if @{ $self->{zone_results} || [] };
     return [
         @parts ? { name => 'BLUPF90+', version => $self->{f90}->program_version // '', used_for => 'Fitted ' . join(' and ', @parts) . ' by sparse AI-REML.',
                    reference => 'Misztal I, Tsuruta S, Lourenco D, Masuda Y, Aguilar I, Legarra A, Vitezica Z (2018). Manual for BLUPF90 family of programs. University of Georgia, Athens, USA.' } : (),
-        { name => 'Perl', version => sprintf('%vd', $^V), used_for => 'Ran the Breedbase Analysis Pipeline (CXGN::BLUPF90 engine): ' . join('; ', @steps) . '.', reference => '' },
     ];
 }
 

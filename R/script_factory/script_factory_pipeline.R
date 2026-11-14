@@ -65,6 +65,12 @@ repeated_file <- NA
 named <- grepl("^--repeated=", args)
 if (any(named)) repeated_file <- sub("^--repeated=", "", args[named][1])
 args <- args[!named]
+# optional named argument: --genotypes=<file> (marker dosage matrix of the
+# genotyping protocol; genomic and single-step relationships)
+genotypes_file <- NA
+named <- grepl("^--genotypes=", args)
+if (any(named)) genotypes_file <- sub("^--genotypes=", "", args[named][1])
+args <- args[!named]
 
 if (exists("RECIPE_JSON")) {
   if (length(args) < 2) {
@@ -328,8 +334,8 @@ for (key in names(rep_traits_cfg)) {
   how <- as.character(unlist(rep_traits_cfg[[key]]))[1]
   if (is.na(how) || !how %in% REP_SUMMARIES) { add_warning("Repeated measurements of '", short_trait(key), "': unknown summary '", how, "'; the plot mean was used."); next }
   if (how == "multi" && !requireNamespace("glmmTMB", quietly = TRUE)) {
-    # the multi-trait model (each date a trait) needs glmmTMB in R, or the BLUPF90+ engine
-    add_warning(short_trait(key), ": the multi-trait model of repeated measurements needs the R package glmmTMB (not installed) or the BLUPF90+ engine; its measurements were modelled with the repeated-measures model (all measurements) instead.")
+    # the multi-trait model (each date a trait) needs glmmTMB in R
+    add_warning(short_trait(key), ": the multi-trait model of repeated measurements needs the R package glmmTMB, which is not installed; its measurements were modelled with the repeated-measures model (all measurements) instead.")
     how <- "all"
   }
   full <- match_trait(key)
@@ -790,19 +796,47 @@ accession_blues <- function(fit, d) {
   keep <- !is.na(beta)
   beta <- beta[keep]; X <- X[, keep, drop = FALSE]
   if (!is.null(V)) V <- V[names(beta), names(beta), drop = FALSE]
-  # average the non-accession columns over the data (equal weights over levels)
   cn <- colnames(X)
   acc_cols <- paste0("accession", acc_levels)
-  other <- setdiff(cn, c("(Intercept)", acc_cols))
-  base <- setNames(rep(0, length(cn)), cn)
-  base["(Intercept)"] <- 1
-  if (length(other)) base[other] <- colMeans(X[, other, drop = FALSE])
-  L <- t(sapply(acc_levels, function(a) {
-    l <- base
-    col <- paste0("accession", a)
-    if (col %in% cn) l[col] <- 1
-    l
-  }))
+  # columns of interactions with the accession (accession:trial, ...)
+  inter <- !(cn %in% acc_cols) & grepl("(^|:)accession", cn)
+  if (!any(inter)) {
+    # average the non-accession columns over the data
+    other <- setdiff(cn, c("(Intercept)", acc_cols))
+    base <- setNames(rep(0, length(cn)), cn)
+    base["(Intercept)"] <- 1
+    if (length(other)) base[other] <- colMeans(X[, other, drop = FALSE])
+    L <- t(sapply(acc_levels, function(a) {
+      l <- base
+      col <- paste0("accession", a)
+      if (col %in% cn) l[col] <- 1
+      l
+    }))
+  } else {
+    # with interactions, each accession is predicted over the observed
+    # combinations of the other model variables (weighted by their frequency in
+    # the data), so its interaction columns hold its own effects only
+    # (emmeans-like); averaging those columns over all rows would mix in the
+    # interaction effects of the other accessions
+    tt <- delete.response(if (inherits(fit, "merMod")) terms(fit, fixed.only = TRUE) else terms(fit))
+    vars <- setdiff(all.vars(tt), "accession")
+    mf <- d[, vars, drop = FALSE]
+    key <- if (length(vars)) do.call(paste, c(lapply(mf, as.character), sep = "\r")) else rep("1", nrow(d))
+    first <- !duplicated(key)
+    combos <- mf[first, , drop = FALSE]
+    w <- as.numeric(table(factor(key, levels = key[first]))) / length(key)
+    xlev <- lapply(d[, c("accession", vars), drop = FALSE], function(x) if (is.numeric(x)) NULL else levels(factor(x)))
+    xlev <- xlev[!vapply(xlev, is.null, logical(1))]
+    ctr <- attr(if (inherits(fit, "merMod")) getME(fit, "X") else model.matrix(fit), "contrasts")
+    L <- t(vapply(acc_levels, function(a) {
+      newdata <- combos; newdata$accession <- factor(a, levels = acc_levels)
+      M <- model.matrix(tt, model.frame(tt, newdata, xlev = xlev), contrasts.arg = ctr)
+      out <- setNames(numeric(length(cn)), cn)
+      hit <- intersect(cn, colnames(M))
+      out[hit] <- colSums(M[, hit, drop = FALSE] * w)
+      out
+    }, numeric(length(cn))))
+  }
   est <- as.vector(L %*% beta)
   se <- if (is.null(V)) rep(NA_real_, length(est)) else sqrt(pmax(0, rowSums((L %*% V) * L)))
   data.frame(accession = acc_levels, value = est, se = se, stringsAsFactors = FALSE)
@@ -832,20 +866,145 @@ if (!identical(engine, "lme4")) {
 # Genetic model and model fitting shared by stage 2 and the single stage
 # -----------------------------------------------------------------------------
 gen_cfg <- opt(recipe, "genetic", list())
-gen_model <- opt(gen_cfg, "model", "iid")      # iid | parents | pedigree
+gen_model <- opt(gen_cfg, "model", "iid")      # iid | parents | pedigree | genomic | single_step
 check_opt <- opt(gen_cfg, "check", "auto")     # auto | fixed | none
 if (!gen_model %in% c("iid", "parents", "pedigree", "genomic", "single_step")) gen_model <- "iid"
-if (gen_model %in% c("pedigree", "genomic", "single_step")) {
-  add_warning("The ", c(pedigree = "pedigree (A matrix)", genomic = "genomic (G matrix)", single_step = "single-step (H matrix)")[[gen_model]],
-              " model runs on the BLUPF90+ engine of Breedbase, not in this R script; accessions were treated as unrelated.")
-  gen_model <- "iid"
-}
-if (gen_model != "iid") {
+REL_LABEL <- c(pedigree = "pedigree (A matrix)", genomic = "genomic (G matrix)", single_step = "single-step (H matrix)")
+if (gen_model %in% c("parents", "pedigree")) {
   n_known <- if (is.null(pedigree)) 0 else sum(unique(dat$accession) %in% pedigree$accession[!is.na(pedigree$mother) | !is.na(pedigree$father)])
   if (n_known == 0) {
     add_warning("No accession of this dataset has known parents, so the ", if (gen_model == "pedigree") "pedigree (A matrix)" else "mother / father", " model could not be used; accessions were treated as unrelated.")
     gen_model <- "iid"
   } else log_step("Genetic model: ", gen_model, " (", n_known, " accessions with known parents)")
+}
+
+# Relationship matrices in R (AGHmatrix): A from the pedigree (with
+# inbreeding), G from the marker dosages (VanRaden, after the MAF and call
+# rate filters; blended 0.95 G + 0.05 A22 so it can be inverted, as BLUPF90+
+# does), H from A and G (single step; Martini et al. 2018 with tau = omega = 1).
+# The models then use the relationship through the Cholesky factor of the
+# matrix (lme4, as pedigreemm does).
+rel_K <- NULL         # relationship matrix over all individuals (data + ancestors)
+rel_kind <- ""        # A | G | H
+rel_info <- list()
+ped_order <- function(pg) {
+  # parents before their offspring; parents missing from the pedigree become founders
+  ids <- unique(c(pg$accession, pg$mother[!is.na(pg$mother)], pg$father[!is.na(pg$father)]))
+  mo <- setNames(pg$mother[match(ids, pg$accession)], ids); fa <- setNames(pg$father[match(ids, pg$accession)], ids)
+  depth <- setNames(rep(NA_integer_, length(ids)), ids)
+  get_depth <- function(i, seen = character()) {
+    if (!is.na(depth[[i]])) return(depth[[i]])
+    if (i %in% seen) return(0L)      # loop in the pedigree: cut it
+    p <- c(mo[[i]], fa[[i]]); p <- p[!is.na(p)]
+    d <- if (length(p)) 1L + max(vapply(p, get_depth, integer(1), seen = c(seen, i))) else 0L
+    depth[[i]] <<- d; d
+  }
+  for (i in ids) get_depth(i)
+  ids <- ids[order(depth[ids])]
+  data.frame(id = ids, mother = ifelse(is.na(mo[ids]), "0", mo[ids]), father = ifelse(is.na(fa[ids]), "0", fa[ids]), stringsAsFactors = FALSE)
+}
+build_A <- function() {
+  ped <- ped_order(pedigree)
+  A <- AGHmatrix::Amatrix(ped, ploidy = 2)
+  rel_info$n_pedigree <<- nrow(ped)
+  rel_info$inbreeding_mean <<- mean(diag(A) - 1)
+  A
+}
+read_dosages <- function(f) {
+  g <- read.delim(f, header = TRUE, sep = "\t", quote = "", comment.char = "", check.names = FALSE, stringsAsFactors = FALSE)
+  M <- as.matrix(g[, -1, drop = FALSE]); storage.mode(M) <- "numeric"
+  rownames(M) <- as.character(g[[1]])
+  M <- M[rownames(M) %in% unique(dat$accession) | (!is.null(pedigree) & rownames(M) %in% pedigree$accession), , drop = FALSE]
+  M
+}
+build_G <- function(Afull = NULL) {
+  M <- read_dosages(genotypes_file)
+  if (nrow(M) < 2) stop("fewer than two accessions of the dataset have genotypes")
+  minfreq <- as.numeric(opt(gen_cfg, "minfreq", 0.05)); callrate <- as.numeric(opt(gen_cfg, "callrate", 0.90))
+  cr <- colMeans(!is.na(M)); p <- colMeans(M, na.rm = TRUE) / 2; maf <- pmin(p, 1 - p)
+  keep <- cr >= callrate & is.finite(maf) & maf >= minfreq
+  rel_info$n_snps <<- ncol(M); rel_info$n_snps_used <<- sum(keep); rel_info$n_genotyped <<- nrow(M)
+  if (sum(keep) < 2) stop("no marker passed the minor allele frequency and call rate filters")
+  M <- M[, keep, drop = FALSE]; M[is.na(M)] <- -9
+  G <- AGHmatrix::Gmatrix(SNPmatrix = M, method = "VanRaden", missingValue = -9, maf = 0, ploidy = 2)
+  ids <- rownames(M)
+  dimnames(G) <- list(ids, ids)
+  A22 <- diag(length(ids)); dimnames(A22) <- list(ids, ids)
+  if (!is.null(Afull)) {
+    inA <- ids[ids %in% rownames(Afull)]; A22[inA, inA] <- Afull[inA, inA]
+    # single step: G on the scale of the pedigree (as BLUPF90+ tunedG 2):
+    # G* = a + b G with the mean diagonal and mean off-diagonal of A22
+    up <- upper.tri(G)
+    b <- (mean(diag(A22)) - mean(A22[up])) / (mean(diag(G)) - mean(G[up]))
+    G <- (mean(A22[up]) - b * mean(G[up])) + b * G
+  }
+  0.95 * G + 0.05 * A22
+}
+if (gen_model %in% c("pedigree", "genomic", "single_step")) {
+  rel <- tryCatch({
+    if (!requireNamespace("AGHmatrix", quietly = TRUE)) stop("the R package AGHmatrix is not installed (or choose the BLUPF90+ engine)")
+    if (gen_model %in% c("genomic", "single_step") && (is.na(genotypes_file) || !file.exists(genotypes_file) || !file.info(genotypes_file)$size))
+      stop("the genotypes of the genotyping protocol could not be retrieved")
+    if (gen_model == "single_step" && (is.null(pedigree) || !any(!is.na(pedigree$mother) | !is.na(pedigree$father)))) {
+      add_warning("No accession has known parents, so the single-step (H) model is the genomic (G) model here.")
+      gen_model <- "genomic"
+    }
+    if (gen_model == "pedigree") list(K = build_A(), kind = "A")
+    else if (gen_model == "genomic") {
+      G <- build_G()
+      miss <- setdiff(unique(dat$accession), rownames(G))
+      rel_info$n_without <- length(miss)
+      if (length(miss)) {
+        add_warning(length(miss), " accession(s) have no genotypes in the genotyping protocol; in the genomic (G) model they are treated as unrelated.")
+        K <- as.matrix(Matrix::bdiag(G, diag(length(miss)))); dimnames(K) <- list(c(rownames(G), miss), c(rownames(G), miss))
+      } else K <- G
+      list(K = K, kind = "G")
+    } else {
+      A <- build_A()
+      G <- build_G(A)
+      add_ped <- setdiff(rownames(G), rownames(A))
+      if (length(add_ped)) {   # genotyped but not in the pedigree: founders
+        nm <- c(rownames(A), add_ped)
+        A <- as.matrix(Matrix::bdiag(A, diag(length(add_ped)))); dimnames(A) <- list(nm, nm)
+      }
+      H <- AGHmatrix::Hmatrix(A = A, G = G, method = "Martini", tau = 1, omega = 1, ploidy = 2)
+      if (is.null(rownames(H))) dimnames(H) <- dimnames(A)
+      list(K = H, kind = "H")
+    }
+  }, error = function(e) e)
+  if (inherits(rel, "error")) {
+    add_warning("The ", REL_LABEL[[gen_model]], " model could not be built in R (", conditionMessage(rel), "); accessions were treated as unrelated.")
+    gen_model <- "iid"
+  } else {
+    rel_K <- rel$K; rel_kind <- rel$kind
+    log_step("Relationship matrix ", rel_kind, " (AGHmatrix): ", nrow(rel_K), " individuals")
+  }
+}
+
+# Cholesky factor of the relationship of the given levels (a small ridge keeps
+# it positive definite)
+rel_chol <- function(lv) {
+  K <- rel_K[lv, lv, drop = FALSE]
+  t(chol(K + diag(1e-6 * mean(diag(K)), nrow(K))))
+}
+
+# lme4 fit with the accession effect following the relationship: u = L v,
+# v ~ N(0, s2 I), so Z is replaced by Z L (pedigreemm's approach). Returns the
+# merMod, the factor and the levels.
+lmer_rel <- function(fml, d) {
+  lf <- lFormula(fml, data = d, weights = .w, REML = TRUE)
+  k <- which(names(lf$reTrms$cnms) == "accession")
+  if (length(k) != 1) stop("the accession term was not found")
+  lv <- levels(lf$reTrms$flist[[k]])
+  Lk <- rel_chol(lv)
+  idx <- (lf$reTrms$Gp[k] + 1):lf$reTrms$Gp[k + 1]
+  Zt <- lf$reTrms$Zt
+  Zt[idx, ] <- Matrix::crossprod(Matrix::Matrix(Lk, sparse = TRUE), Zt[idx, , drop = FALSE])
+  lf$reTrms$Zt <- Zt
+  devfun <- do.call(mkLmerDevfun, lf)
+  opt <- optimizeLmer(devfun)
+  m <- mkMerMod(environment(devfun), opt, lf$reTrms, fr = lf$fr)
+  list(m = m, Lk = Lk, lv = lv, idx = idx, k = k)
 }
 acc_is_check <- tapply(dat$check == "check", dat$accession, any)
 
@@ -863,7 +1022,10 @@ fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model") {
     for (v in intersect(c("mother", "father"), all.vars(as.formula(fml_txt)))) d[[v]] <- ifelse(is.na(d[[v]]), "(unknown)", d[[v]])
     fml <- as.formula(fml_txt)
     d$.w <- if (is.null(w)) rep(1, nrow(d)) else w
-    m <- if (has_random) fit_quietly(lmer(fml, data = d, weights = .w, REML = TRUE)) else fit_quietly(lm(fml, data = d, weights = .w))
+    use_rel <- genotype_random && !is.null(rel_K) && grepl("\\(1\\s*\\|\\s*accession\\s*\\)", rhs) && all(unique(as.character(d$accession)) %in% rownames(rel_K))
+    rf <- NULL
+    m <- if (use_rel) { rf <- fit_quietly(lmer_rel(fml, d)); if (inherits(rf, "error")) rf else rf$m }
+         else if (has_random) fit_quietly(lmer(fml, data = d, weights = .w, REML = TRUE)) else fit_quietly(lm(fml, data = d, weights = .w))
     if (inherits(m, "error")) stop(conditionMessage(m))
     vc <- if (inherits(m, "merMod")) var_comp(m) else c(Residual = summary(m)$sigma^2)
     random <- list()
@@ -875,7 +1037,40 @@ fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model") {
                                   se = if (!is.null(pv)) sqrt(pv[1, 1, ]) else NA_real_, stringsAsFactors = FALSE)
       }
     }
-    if (genotype_random) {
+    ancestors_df <- NULL
+    if (genotype_random && use_rel) {
+      # u = L v: values and prediction error (co)variances from the full
+      # coefficient matrix (fixed and random effects, as BLUPF90+): with a
+      # relationship the accession effects share ancestors with the trial
+      # means, so the uncertainty of the fixed effects must be included.
+      # C = [X'WX, X'WZL; L'Z'WX, L'Z'WZL + I] (Lambda form), PEV(v) = s2 theta^2 [C^-1]_vv
+      fp <- predict(m, re.form = NA)
+      mu <- mean(tapply(fp, d$trial, mean))
+      v <- ranef(m)[["accession"]][rf$lv, 1]
+      u <- as.numeric(rf$Lk %*% v)
+      th <- getME(m, "theta")[[grep("^accession\\.", names(getME(m, "theta")))[1]]]
+      X <- getME(m, "X"); wv <- weights(m)
+      ZL <- Matrix::t(getME(m, "Lambdat") %*% getME(m, "Zt"))
+      XtW <- t(X * wv)
+      Cf <- rbind(cbind(XtW %*% X, as.matrix(XtW %*% ZL)),
+                  cbind(as.matrix(Matrix::crossprod(ZL, X * wv)), as.matrix(Matrix::crossprod(ZL, ZL * wv)) + diag(ncol(ZL))))
+      Ci <- solve(Cf)
+      bi <- ncol(X) + rf$idx
+      # b (spherical) -> v = theta b: PEV(v) = s2 theta^2 [C^-1]_bb
+      Cvv <- Ci[bi, bi, drop = FALSE]
+      PEVu <- sigma(m)^2 * th^2 * rf$Lk %*% Cvv %*% t(rf$Lk)
+      gv <- data.frame(accession = rf$lv, value = mu + u, se = sqrt(pmax(0, diag(PEVu))), stringsAsFactors = FALSE)
+      random$accession <- data.frame(level = rf$lv, solution = u, se = gv$se, stringsAsFactors = FALSE)
+      # ancestors (A, H): u_a = K_ad K_dd^-1 u, PEV = s2g (K_aa - K_ad K_dd^-1 K_da) + B PEV(u) B'
+      ids_a <- setdiff(rownames(rel_K), rf$lv)
+      if (rel_kind %in% c("A", "H") && length(ids_a)) {
+        Kdd <- rel_K[rf$lv, rf$lv] + diag(1e-6 * mean(diag(rel_K)), length(rf$lv))
+        B <- rel_K[ids_a, rf$lv, drop = FALSE] %*% solve(Kdd)
+        s2g <- vc[["accession"]]
+        pev_a <- s2g * pmax(0, diag(rel_K)[ids_a] - rowSums(B * rel_K[ids_a, rf$lv, drop = FALSE])) + rowSums((B %*% PEVu) * B)
+        ancestors_df <- data.frame(accession = ids_a, value = mu + as.numeric(B %*% u), se = sqrt(pmax(0, pev_a)), stringsAsFactors = FALSE)
+      }
+    } else if (genotype_random) {
       fp <- predict(m, re.form = NA)
       mu <- mean(tapply(fp, d$trial, mean))
       u <- random$accession
@@ -887,8 +1082,9 @@ fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model") {
     fit <- list(values = gv, vc = vc, resid = as.numeric(residuals(m)), notes = inestimable_terms(m), random = random, mu = mu, engine = "R")
   }
   fit$notes <- c(notes, fit$notes)
-  fit$ancestors <- NULL
-  fit$pedigree <- FALSE
+  fit$ancestors <- if (exists("ancestors_df", inherits = FALSE)) ancestors_df else NULL
+  fit$pedigree <- isTRUE(use_rel)
+  fit$relationship <- if (isTRUE(use_rel)) rel_kind else "I"
   if (genotype_random) {
     gv <- fit$values
     # mother / father (GCA-like) effects are part of the genetic value
@@ -1250,6 +1446,57 @@ fit_stage1 <- function(d, info, trait) {
 }
 
 # -----------------------------------------------------------------------------
+# software of the run, with versions, what each program did in this run and
+# the reference to cite (results overview and dashboard)
+software_used <- function() {
+  pv <- function(p) tryCatch(as.character(utils::packageVersion(p)), error = function(e) "")
+  s1 <- if (is.null(stage1_summary)) data.frame(trial = character(), trait = character(), model = character()) else stage1_summary
+  is_sp <- grepl("^SpATS", s1$model)
+  is_lm <- nzchar(s1$model) & !is_sp & !grepl("^(glmmTMB|Single trial|Accession means|raw values)", s1$model)
+  nt <- function(i) n_levels(s1$trial[i]); nr <- function(i) n_levels(s1$trait[i])
+  s2 <- if (!is.data.frame(stage2_summary)) data.frame(trait = character(), model = character(), stringsAsFactors = FALSE) else stage2_summary
+  s2_lm <- s2$model != "" & !grepl("^(glmmTMB|Single trial)", s2$model)
+  g_txt <- if (genotype_random) "genotype random, BLUPs" else "genotype fixed, BLUEs"
+  plural <- function(n, w) paste(n, if (n == 1) w else paste0(w, "s"))
+  sw <- list()
+  if (any(is_sp))
+    sw[[length(sw) + 1]] <- list(name = "SpATS", version = pv("SpATS"),
+      used_for = paste0("Fitted the stage-1 spatial models of ", plural(nt(is_sp), "trial"), " x ", plural(nr(is_sp), "trait"), " (", plural(sum(is_sp), "model"),
+                        "): a 2D P-spline surface (PSANOVA) with row and column effects corrects the field trend; its accession BLUEs went to stage 2."),
+      reference = "Rodriguez-Alvarez MX, Boer MP, van Eeuwijk FA, Eilers PHC (2018). Correcting for spatial heterogeneity in plant breeding experiments with P-splines. Spatial Statistics 23: 52-71.")
+  lm_parts <- c(if (any(is_lm)) paste0("the stage-1 design models of ", plural(sum(is_lm), "trial x trait combination"), " (", plural(nt(is_lm), "trial"), ")"),
+                if (any(s2_lm) && strategy == "two_stage") paste0("the stage-2 models of ", plural(sum(s2_lm), "trait"), " across trials (", g_txt, if (weighting == "inverse_se2") ", weights 1/SE^2" else "", ")"),
+                if (any(s2_lm) && strategy != "two_stage") paste0("the single-stage models of ", plural(sum(s2_lm), "trait"), " (", g_txt, ")"))
+  rel_txt <- c(A = "the pedigree relationship A", G = "the genomic relationship G", H = "the single-step relationship H")[rel_kind]
+  rel_used <- nzchar(rel_kind) && any(grepl("N\\(0, [AGH] s2g\\)", s2$model))
+  if (length(lm_parts))
+    sw[[length(sw) + 1]] <- list(name = "lme4", version = pv("lme4"),
+      used_for = paste0("Fitted ", paste(lm_parts, collapse = " and "), " by REML",
+                        if (rel_used) paste0("; the accession effect follows ", rel_txt[[1]], " (through the Cholesky factor of the matrix, as pedigreemm)") else "", "."),
+      reference = "Bates D, Maechler M, Bolker B, Walker S (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software 67(1): 1-48.")
+  if (rel_used) {
+    what <- switch(rel_kind,
+      A = paste0("Built the pedigree relationship matrix A of ", rel_info$n_pedigree, " individuals (accessions and their ancestors), with inbreeding."),
+      G = paste0("Built the genomic relationship matrix G (VanRaden) of ", rel_info$n_genotyped, " genotyped accessions from ", rel_info$n_snps_used, " of ", rel_info$n_snps,
+                 " markers (after the minor allele frequency and call rate filters), blended 0.95 G + 0.05 I so it can be inverted",
+                 if (isTRUE(rel_info$n_without > 0)) paste0("; ", rel_info$n_without, " accessions without genotypes were treated as unrelated") else "", "."),
+      H = paste0("Built the single-step relationship matrix H (Martini et al. 2018) from the pedigree of ", rel_info$n_pedigree, " individuals and the genotypes of ",
+                 rel_info$n_genotyped, " accessions (", rel_info$n_snps_used, " of ", rel_info$n_snps, " markers after filters); G was first put on the scale of the pedigree ",
+                 "(same mean diagonal and off-diagonal as A22) and blended 0.95 G + 0.05 A22, so accessions without genotypes are linked through the pedigree."))
+    sw[[length(sw) + 1]] <- list(name = "AGHmatrix", version = pv("AGHmatrix"), used_for = what,
+      reference = "Amadeu RR, Cellon C, Olmstead JW, Garcia AAF, Resende MFR, Munoz PR (2016). AGHmatrix: R package to construct relationship matrices for autotetraploid and diploid species: a blueberry example. The Plant Genome 9(3).")
+  }
+  if (length(multi_trait_out))
+    sw[[length(sw) + 1]] <- list(name = "glmmTMB", version = pv("glmmTMB"),
+      used_for = paste0("Fitted the multi-trait model", if (length(multi_trait_out) > 1) "s" else "", " of ",
+                        paste(vapply(names(multi_trait_out), function(t) { m <- multi_trait_out[[t]]; paste0(t, " (", plural(m$n_occasions, "date"),
+                          if (length(m$covariates)) paste0(" + dates of ", paste(m$covariates, collapse = ", ")) else "", ")") }, ""), collapse = "; "),
+                        ": genetic covariance between dates G0 (x) I and residual R0 (x) I, values = mean over the dates",
+                        if (any(vapply(multi_trait_out, function(m) isTRUE(m$adjusted), logical(1)))) ", adjusted genetically for the covariate" else "", "."),
+      reference = "Brooks ME, Kristensen K, van Benthem KJ, Magnusson A, Berg CW, Nielsen A, Skaug HJ, Maechler M, Bolker BM (2017). glmmTMB balances speed and flexibility among packages for zero-inflated generalized linear mixed modeling. The R Journal 9(2): 378-400.")
+  sw
+}
+
 # Step 3 - models
 # -----------------------------------------------------------------------------
 strategy <- opt(recipe, "strategy", "two_stage")
@@ -1309,7 +1556,7 @@ if (length(mt_wanted)) {
   if (strategy != "two_stage" || !genotype_random) {
     for (t in mt_wanted) back(t, "the multi-trait model needs two stages with the genotype as a random effect")
   } else {
-    if (gen_model != "iid") add_warning("The multi-trait model fitted with glmmTMB treats accessions as unrelated (pedigree and genomic multi-trait models need the BLUPF90+ engine).")
+    if (gen_model != "iid") add_warning("The multi-trait model of repeated measurements treats accessions as unrelated in R (glmmTMB cannot use the relationship matrix between dates); the other traits use the ", if (gen_model %in% names(REL_LABEL)) REL_LABEL[[gen_model]] else "mother / father effects", ".")
     rep_cov <- Filter(function(vn) !is.null(rep_long) && any(rep_long$trait == cov_full[[vn]]), cov_vars)
     new_traits <- character()
     for (t in traits) {
@@ -1374,6 +1621,7 @@ if (run_stage1) {
 }
 stage1_summary <- if (length(stage1_summary)) do.call(rbind, stage1_summary) else NULL
 stage1_means <- if (length(stage1_means)) do.call(rbind, stage1_means) else NULL
+
 
 # stage 2 of a multi-trait group, fitted with glmmTMB
 stage2_multi_tmb <- function(g) {
@@ -1527,7 +1775,8 @@ if (strategy == "two_stage") {
       variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = comp, variance = unname(vc), stringsAsFactors = FALSE)
       res$engine_used <- f2$engine
       res$pedigree_used <- isTRUE(f2$pedigree)
-      res$model <- paste0(sub("^y ~", "BLUE ~", fml_txt), if (isTRUE(f2$pedigree)) ", accession ~ N(0, A s2a)",
+      res$relationship <- f2$relationship
+      res$model <- paste0(sub("^y ~", "BLUE ~", fml_txt), if (isTRUE(f2$pedigree)) paste0(", accession ~ N(0, ", f2$relationship, " s2g)"),
                           if (weighting == "inverse_se2") ", weights = 1/SE^2" else "")
       if (!is.null(f2$ancestors)) { f2$ancestors$trait <- t; ancestor_values[[length(ancestor_values) + 1]] <- f2$ancestors }
     }
@@ -1680,7 +1929,7 @@ if (strategy == "two_stage") {
       g_term <- if (genotype_random) "(1|accession)" else "accession"
       fml_txt <- paste("y ~", paste(c(g_term, terms), collapse = " + "))
     }
-    if (gen_model == "pedigree" && !genotype_random) dropped <- c(dropped, "pedigree relationship (needs the genotype as random effect)")
+    if (gen_model %in% c("pedigree", "genomic", "single_step") && !genotype_random) dropped <- c(dropped, paste0(REL_LABEL[[gen_model]], " relationship (needs the genotype as random effect)"))
 
     # keep only the plots that have every variable of the model
     cc <- complete.cases(d[, intersect(used_vars, names(d)), drop = FALSE])
@@ -1705,8 +1954,9 @@ if (strategy == "two_stage") {
     vc <- f1$vc
     res$engine_used <- f1$engine
     res$pedigree_used <- isTRUE(f1$pedigree)
+    res$relationship <- f1$relationship
     res$model <- pretty_model(paste0(fml_txt,
-                        if (isTRUE(f1$pedigree)) ", accession ~ N(0, A s2a)"))
+                        if (isTRUE(f1$pedigree)) paste0(", accession ~ N(0, ", f1$relationship, " s2g)")))
     res$var_e <- unname(vc["Residual"])
     gv <- f1$values
     rs <- f1$resid
@@ -2077,48 +2327,6 @@ anc_out <- if (length(ancestor_values)) do.call(rbind, ancestor_values) else NUL
 if (!is.null(anc_out)) anc_out$trait <- short_trait(anc_out$trait)
 
 # CSV files for download
-# software of the run, with versions, what each program did in this run and
-# the reference to cite (results overview and dashboard)
-software_used <- function() {
-  pv <- function(p) tryCatch(as.character(utils::packageVersion(p)), error = function(e) "")
-  s1 <- if (is.null(stage1_summary)) data.frame(trial = character(), trait = character(), model = character()) else stage1_summary
-  is_sp <- grepl("^SpATS", s1$model)
-  is_lm <- nzchar(s1$model) & !is_sp & !grepl("^(glmmTMB|Single trial|Accession means|raw values)", s1$model)
-  nt <- function(i) n_levels(s1$trial[i]); nr <- function(i) n_levels(s1$trait[i])
-  s2 <- if (is.null(stage2_summary)) data.frame(trait = character(), model = character()) else stage2_summary
-  s2_lm <- s2$model != "" & !grepl("^(glmmTMB|Single trial)", s2$model)
-  g_txt <- if (genotype_random) "genotype random, BLUPs" else "genotype fixed, BLUEs"
-  plural <- function(n, w) paste(n, if (n == 1) w else paste0(w, "s"))
-  ok_traits <- if (is.null(genotype_values)) character() else unique(as.character(genotype_values$trait))
-  steps <- c("read the data, detected the trial designs and checked which design factors the data support",
-             switch(out_method, iqr = "applied the IQR outlier rule", madr = "applied the BH-MADR outlier rule (residuals of lm models)", NULL),
-             if (!is.null(index_result)) paste0("computed the selection index (", if (identical(index_result$method, "rank_sum")) "rank sum" else "Z-score", ")"),
-             if (length(zone_results)) "grouped the environments into zones (correlation clustering / Lin test)")
-  sw <- list(list(name = "R", version = paste(R.version$major, R.version$minor, sep = "."),
-                  used_for = paste0("Ran the Breedbase Analysis Pipeline: ", paste(steps, collapse = "; "), "."),
-                  reference = "R Core Team. R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria."))
-  if (any(is_sp))
-    sw[[length(sw) + 1]] <- list(name = "SpATS", version = pv("SpATS"),
-      used_for = paste0("Fitted the stage-1 spatial models of ", plural(nt(is_sp), "trial"), " x ", plural(nr(is_sp), "trait"), " (", plural(sum(is_sp), "model"),
-                        "): a 2D P-spline surface (PSANOVA) with row and column effects corrects the field trend; its accession BLUEs went to stage 2."),
-      reference = "Rodriguez-Alvarez MX, Boer MP, van Eeuwijk FA, Eilers PHC (2018). Correcting for spatial heterogeneity in plant breeding experiments with P-splines. Spatial Statistics 23: 52-71.")
-  lm_parts <- c(if (any(is_lm)) paste0("the stage-1 design models of ", plural(sum(is_lm), "trial x trait combination"), " (", plural(nt(is_lm), "trial"), ")"),
-                if (any(s2_lm) && strategy == "two_stage") paste0("the stage-2 models of ", plural(sum(s2_lm), "trait"), " across trials (", g_txt, if (weighting == "inverse_se2") ", weights 1/SE^2" else "", ")"),
-                if (any(s2_lm) && strategy != "two_stage") paste0("the single-stage models of ", plural(sum(s2_lm), "trait"), " (", g_txt, ")"))
-  if (length(lm_parts))
-    sw[[length(sw) + 1]] <- list(name = "lme4", version = pv("lme4"), used_for = paste0("Fitted ", paste(lm_parts, collapse = " and "), " by REML."),
-      reference = "Bates D, Maechler M, Bolker B, Walker S (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software 67(1): 1-48.")
-  if (length(multi_trait_out))
-    sw[[length(sw) + 1]] <- list(name = "glmmTMB", version = pv("glmmTMB"),
-      used_for = paste0("Fitted the multi-trait model", if (length(multi_trait_out) > 1) "s" else "", " of ",
-                        paste(vapply(names(multi_trait_out), function(t) { m <- multi_trait_out[[t]]; paste0(t, " (", plural(m$n_occasions, "date"),
-                          if (length(m$covariates)) paste0(" + dates of ", paste(m$covariates, collapse = ", ")) else "", ")") }, ""), collapse = "; "),
-                        ": genetic covariance between dates G0 (x) I and residual R0 (x) I, values = mean over the dates",
-                        if (any(vapply(multi_trait_out, function(m) isTRUE(m$adjusted), logical(1)))) ", adjusted genetically for the covariate" else "", "."),
-      reference = "Brooks ME, Kristensen K, van Benthem KJ, Magnusson A, Berg CW, Nielsen A, Skaug HJ, Maechler M, Bolker BM (2017). glmmTMB balances speed and flexibility among packages for zero-inflated generalized linear mixed modeling. The R Journal 9(2): 378-400.")
-  sw
-}
-
 write_csv <- function(x, suffix) {
   if (is.null(x) || !nrow(x)) return(NULL)
   f <- paste0(output_prefix, "_", suffix, ".csv")

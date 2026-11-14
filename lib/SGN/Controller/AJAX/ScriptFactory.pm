@@ -158,11 +158,19 @@ sub _short_trait {
 }
 
 # Directory holding blupf90+: the 'blupf90_bin_dir' configuration key, else
-# the PATH. Returns undef when BLUPF90+ is not installed.
+# Breedbase's bin folder (where docker can mount the program), else the PATH.
+# Returns undef when the site does not allow BLUPF90+ (allow_blupf90 0, the
+# default) or blupf90+ is not installed.
 sub blupf90_dir {
     my $c = shift;
+    # the site must allow BLUPF90+ (free for research only; sgn.conf allow_blupf90)
+    return if !$c->config->{allow_blupf90};
     my $conf = $c->config->{blupf90_bin_dir};
     return $conf if $conf && -x "$conf/blupf90+";
+    # the program mounted into Breedbase's own bin folder (docker: a file bind
+    # mount to <basepath>/bin/blupf90+; it is git-ignored)
+    my $own = File::Spec->catdir($c->config->{basepath} // '', 'bin');
+    return $own if -x "$own/blupf90+";
     foreach my $d (File::Spec->path()) {
         return $d if -x "$d/blupf90+";
     }
@@ -173,20 +181,21 @@ sub blupf90_dir {
 # male_parent stock relationships, followed recursively). Writes a
 # tab-delimited file (Accession, Female_Parent, Male_Parent; the format of the
 # Breedbase pedigree download) and returns summary counts.
-# Engine of a run: 'blupf90' (CXGN::BLUPF90::Pipeline, no R) when the recipe
-# asks for BLUPF90+ or for a pedigree (A matrix) model, which only BLUPF90+
-# fits, and blupf90+ is installed; 'lme4' (the R pipeline) otherwise. A
-# pedigree model switches the whole run to BLUPF90+ (recipe engine_reason).
-# R package glmmTMB installed (fits multi-trait repeated measurements in the
-# R engine); checked with Rscript, remembered for 10 minutes per process
-my %GLMMTMB_CHECK = (at => 0, ok => 0);
-sub glmmtmb_available {
-    if (time() - $GLMMTMB_CHECK{at} > 600) {
-        my $ok = system('Rscript', '--vanilla', '-e', 'quit(status = if (requireNamespace("glmmTMB", quietly = TRUE)) 0 else 1)') == 0 ? 1 : 0;
-        %GLMMTMB_CHECK = (at => time(), ok => $ok);
+# R packages installed for the R engine: glmmTMB (multi-trait repeated
+# measurements) and AGHmatrix (pedigree / genomic / single-step relationship
+# matrices); checked with Rscript, remembered for 10 minutes per process
+my %R_PKG_CHECK;
+sub r_package_available {
+    my $pkg = shift;
+    my $c = $R_PKG_CHECK{$pkg} ||= { at => 0, ok => 0 };
+    if (time() - $c->{at} > 600) {
+        my $ok = system('Rscript', '--vanilla', '-e', "quit(status = if (requireNamespace('$pkg', quietly = TRUE)) 0 else 1)") == 0 ? 1 : 0;
+        %$c = (at => time(), ok => $ok);
     }
-    return $GLMMTMB_CHECK{ok};
+    return $c->{ok};
 }
+sub glmmtmb_available { return r_package_available('glmmTMB'); }
+sub aghmatrix_available { return r_package_available('AGHmatrix'); }
 
 # contact shown to commercial users of BLUPF90+ (free for research only)
 sub blupf90_license_contact {
@@ -195,25 +204,15 @@ sub blupf90_license_contact {
     return $c->config->{blupf90_license_contact} || 'the BLUPF90 team at the University of Georgia (Animal and Dairy Science)';
 }
 
+# Engine of a run: 'blupf90' (CXGN::BLUPF90::Pipeline, no R) when the recipe
+# asks for BLUPF90+ and blupf90+ is installed; 'lme4' (the R pipeline)
+# otherwise.
 sub _run_engine {
-    my ($recipe, $f90_dir, $tmb) = @_;
-    return 'lme4' if !$f90_dir;
-    return 'blupf90' if ($recipe->{engine} // '') eq 'blupf90';
-    my $genetic = ref($recipe->{genetic}) eq 'HASH' ? $recipe->{genetic} : {};
-    if (($genetic->{model} // '') =~ /^(pedigree|genomic|single_step)$/) {
-        $recipe->{engine} = 'blupf90';
-        $recipe->{engine_reason} = $genetic->{model};
-        return 'blupf90';
-    }
-    # repeated measurements as a multi-trait model (each date a trait): glmmTMB
-    # in the R engine, otherwise BLUPF90+
-    my $rt = ref($recipe->{repeated}) eq 'HASH' && ref($recipe->{repeated}->{traits}) eq 'HASH' ? $recipe->{repeated}->{traits} : {};
-    if (!$tmb && grep { ($_ // '') eq 'multi' } values %$rt) {
-        $recipe->{engine} = 'blupf90';
-        $recipe->{engine_reason} = 'multi_trait';
-        return 'blupf90';
-    }
-    return 'lme4';
+    my ($recipe, $f90_dir) = @_;
+    # the engine chosen in the page: BLUPF90+, or R (lme4, SpATS, glmmTMB,
+    # AGHmatrix for relationship matrices). The R engine never hands models to
+    # BLUPF90+: when BLUPF90+ cannot be used, R does the whole analysis.
+    return ($recipe->{engine} // '') eq 'blupf90' && $f90_dir ? 'blupf90' : 'lme4';
 }
 
 sub _write_pedigree {
@@ -1189,7 +1188,9 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     my $pedigree_file = "$dir/$token.pedigree.txt";
     my $repeated_file = "$dir/$token.repeated.txt";
     my $f90_dir = blupf90_dir($c);
-    my $engine = _run_engine($recipe, $f90_dir, glmmtmb_available());
+    my $engine = _run_engine($recipe, $f90_dir);
+    $recipe->{engine} = $engine;
+    delete $recipe->{engine_reason};
     $meta{engine} = $engine;
     my @args = (
         "$dir/$token.phenotype.txt",
@@ -1204,8 +1205,8 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     my $gmodel = ref($recipe->{genetic}) eq 'HASH' ? ($recipe->{genetic}->{model} // '') : '';
     my $geno_cmd;
     if ($gmodel eq 'genomic' || $gmodel eq 'single_step') {
-        if ($engine ne 'blupf90') {
-            $c->stash->{rest} = { error => 'The genomic (G) and single-step (H) models are fitted with BLUPF90+, which is not installed on this server.' };
+        if ($engine ne 'blupf90' && !aghmatrix_available()) {
+            $c->stash->{rest} = { error => 'The genomic (G) and single-step (H) models need BLUPF90+ or, with the R engine, the R package AGHmatrix; neither is available on this server.' };
             return;
         }
         my $step = _genotypes_step($c, $recipe, $run_base, $meta{dataset_id});
@@ -1786,6 +1787,13 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
     my $is_public = ($c->req->param('is_public') // 'yes') eq 'no' ? 'no' : 'yes';
     s/^\s+|\s+$//g for ($name, $description);
     return $c->stash->{rest} = { error => 'Please give the analysis a name.' } if $name eq '';
+    # stores of the same name run one at a time (a session lock on the name,
+    # released when this request ends): the name check below and the cleanup
+    # of a failed store can then never touch another request's analysis
+    my $lock_dbh = $schema->storage->dbh();
+    my ($lock_key) = $lock_dbh->selectrow_array("SELECT hashtext(?)", undef, "script_factory_store\t$name");
+    $lock_dbh->do("SELECT pg_advisory_lock(?)", undef, $lock_key);
+    my $unlock = SGN::Controller::AJAX::ScriptFactory::OnLeave->new(sub { eval { $lock_dbh->do("SELECT pg_advisory_unlock(?)", undef, $lock_key) } });
     return $c->stash->{rest} = { error => 'Please give a description.' } if $description eq '';
     return $c->stash->{rest} = { error => 'Please give the year.' } if $year !~ /^\d{4}$/;
     return $c->stash->{rest} = { error => 'Please choose a breeding program.' } if $program_id !~ /^\d+$/;
@@ -1876,6 +1884,8 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         [ $place->("$dir/${run_id}_blupf90.tar.gz", "${label}_blupf90_files.tar.gz"), 'script_factory_blupf90_files' ],
         [ ($token && ($results->{genetic_model} // 'iid') ne 'iid') ? $place->("$dir/$token.pedigree.txt", "${label}_pedigree.txt") : undef, 'script_factory_pedigree' ],
         [ $token ? $place->("$dir/$token.repeated.txt", "${label}_repeated_measurements.txt") : undef, 'script_factory_repeated_measurements' ],
+        # values excluded in step 2 (by hand or as marked in Breedbase): a re-run uses the same data
+        [ $place->("$dir/$run_id.exclusions.json", "${label}_exclusions.json"), 'script_factory_exclusions' ],
     );
 
     my $user = $c->user()->get_object();
@@ -2102,6 +2112,14 @@ sub analysis_run_id {
 
 # Recipe and dataset of a stored analysis or of a run, to open the pipeline in
 # the Analysis Pipeline.
+# values excluded in step 2 of a run: [{unit, trait, source}] ([] when none)
+sub _read_exclusions {
+    my $file = shift;
+    return [] if !$file || !-s $file;
+    my $x = try { decode_json(read_file($file)) } catch { [] };
+    return [ grep { ref($_) eq 'HASH' && defined($_->{unit}) } (ref($x) eq 'ARRAY' ? @$x : ()) ];
+}
+
 sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2123,6 +2141,7 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
             recipe => $info->{recipe},
             dataset_id => $info->{dataset_id},
             is_owner => $info->{is_owner},
+            exclusions => _read_exclusions($info->{files}->{script_factory_exclusions}),
             results_url => '/tools/script_factory/analysis/' . $info->{analysis_id},
         };
         return;
@@ -2150,6 +2169,7 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
         recipe => $recipe,
         dataset_id => $meta->{dataset_id},
         is_owner => 1,
+        exclusions => _read_exclusions("$dir/$run_id.exclusions.json"),
         analysis_id => $meta->{stored} ? $meta->{stored}->{analysis_id} : undef,
         results_url => "/tools/script_factory/results/$run_id",
     };
@@ -2560,5 +2580,11 @@ sub delete_recipe : Path('/ajax/script_factory/recipe/delete') Args(0) {
     my $n = ($id && $id =~ /^\d+$/) ? $dbh->do("DELETE FROM sgn_people.sp_script_factory_recipe WHERE sp_script_factory_recipe_id = ? AND sp_person_id = ?", undef, $id, _user_id($c)) : 0;
     $c->stash->{rest} = $n > 0 ? { success => 1 } : { error => 'Script not found or not yours.' };
 }
+
+# runs a code reference when the object goes out of scope (releases the
+# store lock on every return path)
+package SGN::Controller::AJAX::ScriptFactory::OnLeave;
+sub new { my ($class, $code) = @_; return bless { code => $code }, $class; }
+sub DESTROY { my $self = shift; $self->{code}->() if $self->{code}; return; }
 
 1;

@@ -224,12 +224,20 @@ function buildRecipe() {
     };
 }
 
-// engine the run will use: BLUPF90+ (no R) when chosen, or for a pedigree
-// model (only BLUPF90+ fits it); same rule as _run_engine() on the server
+// engine the run will use: the one chosen (BLUPF90+ only when installed). The
+// R engine does the whole analysis in R and never switches to BLUPF90+; same
+// rule as _run_engine() on the server
 function effectiveEngine() {
-    if (!cfg.blupf90_available) return 'lme4';
-    const multi = !cfg.glmmtmb_available && Object.keys(state.repeated || {}).some(t => state.repeated[t] === 'multi' && (!state.dataset || repeatedInfo(t)));
-    return radio('sf_engine') === 'blupf90' || multi || ['pedigree', 'genomic', 'single_step'].indexOf($('#sf_gen_model').val()) >= 0 ? 'blupf90' : 'lme4';
+    return cfg.blupf90_available && radio('sf_engine') === 'blupf90' ? 'blupf90' : 'lme4';
+}
+function stage1Engine() { return effectiveEngine(); }
+
+// R packages a recipe needs with the R engine that are not installed
+function missingRPackages(r) {
+    if (effectiveEngine() !== 'lme4') return [];
+    const miss = [];
+    if (['pedigree', 'genomic', 'single_step'].indexOf(r.genetic.model) >= 0 && !cfg.aghmatrix_available) miss.push('AGHmatrix (pedigree / genomic / single-step relationship matrices)');
+    return miss;
 }
 
 // match a recipe trait to a dataset trait: full name first, then short name
@@ -511,6 +519,7 @@ function loadDataset() {
             state.outlierFocus = null;
             state.outlierStatus = {};
             excludeMarked(true);
+            const nRestored = applyPendingExclusions();
             state.results = null;
             state.lastRun = null;
             state.runFailed = false;
@@ -533,6 +542,7 @@ function loadDataset() {
             const nMarked = arr(r.marked_outliers).length;
             $('#sf_dataset_message').html(r.traits.length ? (nMarked ? alertBox('info', '<span class="glyphicon glyphicon-flag"></span> <b>' + nMarked + '</b> value(s) of this dataset are marked as outliers in Breedbase. ' +
                 'They are excluded in step 2 (only those values, not the whole plots); you can bring them back there.') : '') : alertBox('warning', 'No numeric trait was found in this dataset.'));
+            if (nRestored) $('#sf_dataset_message').append(alertBox('info', '<span class="glyphicon glyphicon-scissors"></span> <b>' + nRestored + '</b> value(s) removed by hand in that analysis are excluded again (step 2), so a new run uses the same data.'));
             renderDatasetOverview();
             renderExclusions();
             renderPipeline();
@@ -543,6 +553,26 @@ function loadDataset() {
             $('#sf_load_dataset').prop('disabled', false);
             if (seq === state.loadSeq) { state.datasetLoading = false; updateStep1Next(); }
         });
+}
+
+// exclusions of a reopened run or stored analysis: the values it removed by
+// hand come back as exclusions, and of the values marked in Breedbase only
+// those it excluded stay excluded (a re-run uses the same data)
+function applyPendingExclusions() {
+    const pend = state.pendingExclusions;
+    state.pendingExclusions = null;
+    if (!pend) return 0;
+    const keep = {};
+    pend.forEach(e => { const t = matchTrait(e.trait) || e.trait; keep[e.unit + '|' + t] = { unit: e.unit, trait: t, source: e.source }; });
+    Object.keys(state.exclusions).forEach(k => { if (state.exclusions[k].marked && !keep[k]) delete state.exclusions[k]; });
+    let n = 0;
+    Object.keys(keep).forEach(k => {
+        if (state.exclusions[k]) return;
+        const e = keep[k];
+        state.exclusions[k] = e.source ? { unit: e.unit, trait: e.trait, marked: e.source } : { unit: e.unit, trait: e.trait };
+        if (!e.source) n++;
+    });
+    return n;
 }
 
 // "Next" of step 1 says what is missing until a dataset is loaded and a trait chosen
@@ -649,7 +679,7 @@ const REP_OPTIONS = [
     ['max', 'Maximum'], ['min', 'Minimum'], ['sum', 'Sum'],
     ['auc', 'Area under the curve (AUDPC)', true], ['slope', 'Slope: change per day', true],
     ['all', 'All measurements: repeated-measures model'],
-    ['multi', 'Multi-trait: each date as a trait (BLUPF90+)', true]
+    ['multi', 'Multi-trait: each date as a trait', true]
 ];
 const REP_SHORT = { mean: 'mean', first: 'first', last: 'last', max: 'max', min: 'min', sum: 'sum', auc: 'AUC', slope: 'slope', all: 'all measurements', multi: 'multi-trait' };
 
@@ -730,7 +760,10 @@ function renderRepeated() {
             'the value of an accession is the mean over the dates.' +
             (repCov.length ? ' The covariate' + (repCov.length > 1 ? 's ' : ' ') + repCov.map(t => '<b>' + esc(shortTrait(t)) + '</b>').join(', ') + ', measured on several dates, join' + (repCov.length > 1 ? '' : 's') +
                 ' the model as more traits, and the values are adjusted for ' + (repCov.length > 1 ? 'them' : 'it') + ' genetically (this keeps the genetic part an ordinary covariate would remove).' : '') +
-            ' Up to 6 traits (dates + covariate dates). ' + (effectiveEngine() === 'blupf90' ? 'Fitted by BLUPF90+.' : 'Fitted by glmmTMB (R, free and open source); choose BLUPF90+ for pedigree or genomic relationships.') +
+            ' Up to 6 traits (dates + covariate dates). ' + (effectiveEngine() === 'blupf90' ? 'Fitted by BLUPF90+.'
+                : cfg.glmmtmb_available ? 'Fitted by glmmTMB (R, free and open source)' + (['pedigree', 'genomic', 'single_step'].indexOf($('#sf_gen_model').val()) >= 0
+                    ? '; <b>in R the multi-trait model treats accessions as unrelated</b> (glmmTMB cannot use the relationship matrix between dates); the other traits use it.' : '.')
+                : '<b>The R package glmmTMB is not installed</b>, so with the R engine these measurements are modelled with all measurements instead.') +
             (two ? '' : ' <b>It needs the two-stage strategy:</b> with a single stage these measurements are modelled with all measurements.')));
     }
     const anyAll = withValues.some(x => repeatedChoice(x.trait) === 'all');
@@ -1402,7 +1435,7 @@ function trialModel(t) {
     const s1 = radio('sf_stage1_model');
     const override = state.designOverrides[t.trial];
     const design = override && override !== 'auto' ? override : detectDesign(t);
-    if (t.has_rowcol && (s1 === 'spats' || s1 === 'auto') && effectiveEngine() === 'blupf90') {
+    if (t.has_rowcol && (s1 === 'spats' || s1 === 'auto') && stage1Engine() === 'blupf90') {
         const r0 = sup(t, 'rep').ok;
         const rc = (r0 ? ['(1|rep)'] : []).concat(sup(t, 'row').ok ? ['(1|rep:row)'] : [], sup(t, 'col').ok ? ['(1|rep:col)'] : []);
         return { design: design, text: 'BLUPF90+: y ~ accession + rowN + colN + rowN:colN + PSpline(col, row)' + (rc.length ? ' + ' + rc.join(' + ') : ''), spats: true, note: 'SpATS-like P-spline surface (BLUPF90+)', off: factorsOff(t) };
@@ -1421,7 +1454,7 @@ function trialModel(t) {
 }
 
 function renderDesignTable() {
-    const f90 = effectiveEngine() === 'blupf90';
+    const f90 = stage1Engine() === 'blupf90';
     const sp = $('input[name=sf_stage1_model][value=spats]').closest('label');
     sp.toggleClass('dis', false).find('.sf-option-text').html(f90
         ? 'With BLUPF90+: a SpATS-like 2D P-spline surface (one smoothing variance instead of separate row and column smoothing) plus linear trends and row and column effects. Its results agree closely with SpATS.'
@@ -1450,9 +1483,7 @@ function renderDesignTable() {
 function renderEngineNote() {
     if (!cfg.blupf90_available) return;
     const f90 = effectiveEngine() === 'blupf90';
-    const forced = f90 && radio('sf_engine') !== 'blupf90';
     $('#sf_engine_note').html(f90 ? alertBox('warning', '<span class="glyphicon glyphicon-certificate"></span> <b>BLUPF90+ licence:</b> ' +
-        (forced ? 'this analysis runs on BLUPF90+ (needed by the chosen model). ' : '') +
         'BLUPF90+ is free for research and academic use. <b>Companies and other commercial users need a licence</b>: please contact ' + linkify(cfg.blupf90_license_contact || 'the BLUPF90 team at the University of Georgia') + '.') : '');
 }
 
@@ -1495,9 +1526,8 @@ function renderModelPreview() {
     if (g.model === 'genomic') txt += '\n# accession ~ N(0, G s2g): G = genomic relationship (VanRaden) from ' + (g.protocol_name || 'the genotyping protocol') + ' (MAF > ' + g.minfreq + ', call rate > ' + g.callrate + ')';
     if (g.model === 'single_step') txt += '\n# accession ~ N(0, H s2g): H = pedigree A + genomic G from ' + (g.protocol_name || 'the genotyping protocol') + ' (single-step)';
     const eng = effectiveEngine();
-    txt += '\n# engine: ' + (eng === 'blupf90' ? 'BLUPF90+ without R (Breedbase CXGN::BLUPF90, blupf90+ AI-REML; independent models in parallel)' +
-        (radio('sf_engine') !== 'blupf90' ? ' - chosen because the pedigree model needs it' : '') + (two ? '; no SpATS: row x column trials get row / column effects and linear trends' : '')
-        : 'R (lme4' + (two ? ' / SpATS' : '') + ')');
+    txt += '\n# engine: ' + (eng === 'blupf90' ? 'BLUPF90+ without R (Breedbase CXGN::BLUPF90, blupf90+ AI-REML; independent models in parallel)' + (two ? '; row x column trials get a SpATS-like P-spline surface' : '')
+        : 'R (lme4' + (two ? ' / SpATS' : '') + (['pedigree', 'genomic', 'single_step'].indexOf(g.model) >= 0 ? '; relationship matrix with AGHmatrix' : '') + ')');
     $('#sf_model_preview').html('<div class="sf-formula">' + esc(txt) + '</div>');
     renderGeneticInfo();
     renderSuggestion();
@@ -1586,9 +1616,10 @@ function renderGeneticInfo() {
         '<span class="warn">No parents are recorded in Breedbase for these accessions</span>; the mother / father and pedigree models would fall back to unrelated accessions.';
     const random = radio('sf_strategy') === 'two_stage' ? $('#sf_stage2_genotype').val() === 'random' : $('#sf_single_genotype').val() !== 'fixed';
     if (g.model !== 'iid' && !random) h += '<br/><span class="warn">These models need the genotype as random effect.</span>';
-    if (['pedigree', 'genomic', 'single_step'].indexOf(g.model) >= 0) h += '<br/>' + (cfg.blupf90_available
-        ? 'This model is fitted with BLUPF90+: with it the whole analysis runs on the BLUPF90+ engine (without R, so no SpATS).'
-        : '<span class="warn">This model needs BLUPF90+, which is not installed on this server.</span>');
+    if (['pedigree', 'genomic', 'single_step'].indexOf(g.model) >= 0) h += '<br/>' + (effectiveEngine() === 'blupf90'
+        ? 'Fitted with BLUPF90+ (the engine chosen).'
+        : cfg.aghmatrix_available ? 'With the R engine the relationship matrix is built with AGHmatrix and used in lme4.'
+        : '<span class="warn">With the R engine this model needs the R package AGHmatrix, which is not installed on this server' + (cfg.blupf90_available ? '; or choose the BLUPF90+ engine' : '') + '.</span>');
     $('#sf_pedigree_info').html(h);
     renderGenoBlock();
     const D = singleData();
@@ -2075,7 +2106,7 @@ function refreshZoneAccessions() {
 
 function geneticChip(r) {
     const m = r.genetic.model;
-    return '<br/>' + (r.engine === 'blupf90' || (['pedigree', 'genomic', 'single_step'].indexOf(m) >= 0 && cfg.blupf90_available) ? 'BLUPF90+' : 'R') +
+    return '<br/>' + (r.engine === 'blupf90' ? 'BLUPF90+' : 'R') +
         (m === 'pedigree' ? ', pedigree (A)' : m === 'genomic' ? ', genomic (G' + (r.genetic.protocol_name ? ': ' + esc(r.genetic.protocol_name) : '') + ')'
             : m === 'single_step' ? ', single-step (H' + (r.genetic.protocol_name ? ': ' + esc(r.genetic.protocol_name) : '') + ')' : m === 'parents' ? ', mother + father' : '');
 }
@@ -2137,11 +2168,11 @@ function validateRecipe(r) {
         if (!chk.ok) problems.push('Single-stage formula: ' + chk.msg + ' (step 3).');
     }
     if (GENOMIC_MODELS.indexOf(r.genetic.model) >= 0) {
-        if (!cfg.blupf90_available) problems.push('The genomic (G) and single-step (H) models need BLUPF90+, which is not installed on this server (step 3).');
-        else if (!r.genetic.protocol_id) problems.push('Choose the genotyping protocol of the ' + (r.genetic.model === 'genomic' ? 'genomic (G)' : 'single-step (H)') + ' model (step 3).');
+        if (!r.genetic.protocol_id) problems.push('Choose the genotyping protocol of the ' + (r.genetic.model === 'genomic' ? 'genomic (G)' : 'single-step (H)') + ' model (step 3).');
         const rnd = r.strategy === 'two_stage' ? r.stage2.genotype === 'random' : r.single.genotype !== 'fixed';
         if (!rnd) problems.push('Genomic models need the genotype as random effect (step 3).');
     }
+    missingRPackages(r).forEach(pk => problems.push('With the R engine this analysis needs the R package ' + pk + ', which is not installed on this server' + (cfg.blupf90_available ? ' (or choose the BLUPF90+ engine)' : '') + ' (step 3).'));
     if (r.zones.enabled && !r.zones.targets.length) problems.push('Choose what to group environments on (step 5).');
     if (r.zones.enabled && r.zones.targets.indexOf('index') >= 0 && !r.index.enabled) problems.push('Zoning on the index requires the selection index (step 4).');
     if (r.zones.enabled && state.dataset && state.dataset.trials.length < 2) problems.push('Environmental zoning needs at least two trials.');
@@ -2799,6 +2830,8 @@ function openLibrary() {
 function openPipeline(p) {
     state.script = { id: null, name: p.name ? 'Pipeline of ' + p.name : 'Pipeline of a previous run', description: p.description || '', is_public: 0, is_owner: 1 };
     state.scriptLoaded = true;
+    // the values that run excluded in step 2: put back when its dataset loads
+    state.pendingExclusions = arr(p.exclusions);
     applyRecipe(p.recipe);
     setScriptName();
     const links = [
@@ -3056,7 +3089,9 @@ export function init(options) {
     }
     if (!cfg.blupf90_available) {
         $('#sf_engine_f90').addClass('disabled').find('input').prop('disabled', true);
-        $('#sf_engine_note').html('<small class="sf-muted">BLUPF90+ is not installed on this server (ask the site administrator to install blupf90+ or set <code>blupf90_bin_dir</code>).</small>');
+        $('#sf_engine_note').html('<small class="sf-muted">' + (cfg.blupf90_allowed
+            ? 'BLUPF90+ is not installed on this server (ask the site administrator to install blupf90+ or set <code>blupf90_bin_dir</code>).'
+            : 'BLUPF90+ is not enabled on this site (<code>allow_blupf90</code> is 0): analyses run on the R engine. BLUPF90+ is free for research use only; commercial users need a licence.') + '</small>');
     }
     $('#sf_single_card').on('change', '.sf-single-opt, .sf-single-gxe, input[name=sf_single_mode]', renderModelPreview);
     $('#sf_single_card').on('click', '.sf-mode-toggle label', function(e) {

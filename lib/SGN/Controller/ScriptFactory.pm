@@ -39,7 +39,9 @@ sub script_factory_index :Path('/tools/script_factory') Args(0) {
     $c->stash->{analysis_id} = $c->req->param('analysis_id');
     $c->stash->{run_id} = $c->req->param('run_id');
     $c->stash->{blupf90_available} = SGN::Controller::AJAX::ScriptFactory::blupf90_dir($c) ? 1 : 0;
+    $c->stash->{blupf90_allowed} = $c->config->{allow_blupf90} ? 1 : 0;
     $c->stash->{glmmtmb_available} = SGN::Controller::AJAX::ScriptFactory::glmmtmb_available();
+    $c->stash->{aghmatrix_available} = SGN::Controller::AJAX::ScriptFactory::aghmatrix_available();
     $c->stash->{blupf90_license_contact} = SGN::Controller::AJAX::ScriptFactory::blupf90_license_contact($c);
     $c->stash->{template} = '/tools/script_factory/index.mas';
 }

@@ -18,7 +18,9 @@ $dataset_id => undef
 $analysis_id => undef
 $run_id => undef
 $blupf90_available => 0
+$blupf90_allowed => 0
 $glmmtmb_available => 0
+$aghmatrix_available => 0
 $blupf90_license_contact => ''
 </%args>
 
@@ -254,8 +256,8 @@ $license_json =~ s/</\\u003c/g;
           <h3>Model engine</h3>
           <div class="sf-options sf-options-2">
             <label class="sf-option sf-option-sm"><input type="radio" name="sf_engine" value="lme4" checked />
-              <span class="sf-option-title">R <small>(lme4, SpATS, glmmTMB)</small></span>
-              <span class="sf-option-text">Mixed models fitted in R. Fast on small and medium datasets; required for custom formulas with random slopes. Multi-trait models of repeated measurements are fitted with glmmTMB (free, open source) when it is installed.</span></label>
+              <span class="sf-option-title">R <small>(lme4, SpATS, glmmTMB, AGHmatrix)</small></span>
+              <span class="sf-option-text">The whole analysis in R, with free and open-source packages, when BLUPF90+ cannot be used: mixed models with lme4, spatial models with SpATS, multi-trait models of repeated measurements with glmmTMB, and pedigree (A), genomic (G) and single-step (H) relationship matrices with AGHmatrix. Required for custom formulas with random slopes.</span></label>
             <label class="sf-option sf-option-sm" id="sf_engine_f90"><input type="radio" name="sf_engine" value="blupf90" />
               <span class="sf-option-title">BLUPF90+</span>
               <span class="sf-option-text">The whole analysis runs without R: Breedbase (Perl) writes the models for BLUPF90+ (Fortran, sparse AI-REML; Misztal et al.) and fits the models of all trials and traits in parallel. Much faster on large multi-environment datasets and pedigrees; needed for pedigree (A matrix) models. Row &times; column trials get row / column effects and linear trends instead of SpATS (R only); custom formulas take random intercepts only. Parameter and data files are downloadable with the results.</span></label>
@@ -744,7 +746,9 @@ jQuery(document).ready(function() {
     analysis_id: "<% $analysis_id && $analysis_id =~ /^\d+$/ ? $analysis_id : '' %>",
     run_id: "<% $run_id && $run_id =~ /^sf_run_[A-Za-z0-9_]+$/ ? $run_id : '' %>",
     blupf90_available: <% $blupf90_available ? 1 : 0 %>,
+    blupf90_allowed: <% $blupf90_allowed ? 1 : 0 %>,
     glmmtmb_available: <% $glmmtmb_available ? 1 : 0 %>,
+    aghmatrix_available: <% $aghmatrix_available ? 1 : 0 %>,
     blupf90_license_contact: <% $license_json | n %>,
     user_email: "<% $user_email =~ /^[^\s"<>\\]+@[^\s"<>\\]+$/ ? $user_email : '' %>"
   });
