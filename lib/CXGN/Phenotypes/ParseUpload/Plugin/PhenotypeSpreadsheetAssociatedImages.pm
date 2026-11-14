@@ -16,6 +16,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetAssociatedIma
 #)
 
 use Moose;
+use CXGN::File::Spreadsheet qw(cell_value);
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
@@ -114,7 +115,7 @@ sub validate {
         }
         my $phenotype_value;
         if ($worksheet->get_cell($row,2)) {
-            $phenotype_value = $worksheet->get_cell($row,2)->value();
+            $phenotype_value = cell_value($worksheet->get_cell($row,2), $excel_obj);
         }
         else {
             $parse_result{'error'} = "No phenotype value on row $row!";
@@ -204,7 +205,7 @@ sub parse {
     for my $row ( 1 .. $row_max ) {
         my $observationunit_name = $worksheet->get_cell($row,0)->value();
         my $observationvariable_name = $worksheet->get_cell($row,1)->value();
-        my $phenotype_value = $worksheet->get_cell($row,2) ? $worksheet->get_cell($row,2)->value() : '';
+        my $phenotype_value = $worksheet->get_cell($row,2) ? cell_value($worksheet->get_cell($row,2), $excel_obj) : '';
         my $phenotype_timestamp = $worksheet->get_cell($row,3) ? $worksheet->get_cell($row,3)->value() : '';
         my $image_name = $worksheet->get_cell($row,4)->value();
         my $username = $worksheet->get_cell($row,5) ? $worksheet->get_cell($row,5)->value() : '';
@@ -242,7 +243,7 @@ sub parse {
     for my $row ( 1 .. $row_max ) {
         my $observationunit_name = $worksheet->get_cell($row,0)->value();
         my $observationvariable_name = $worksheet->get_cell($row,1)->value();
-        my $phenotype_value = $worksheet->get_cell($row,2) ? $worksheet->get_cell($row,2)->value() : '';
+        my $phenotype_value = $worksheet->get_cell($row,2) ? cell_value($worksheet->get_cell($row,2), $excel_obj) : '';
         my $phenotype_timestamp = $worksheet->get_cell($row,3) ? $worksheet->get_cell($row,3)->value() : '';
         my $image_name = $worksheet->get_cell($row,4)->value();
         my $username = $worksheet->get_cell($row,5) ? $worksheet->get_cell($row,5)->value() : '';

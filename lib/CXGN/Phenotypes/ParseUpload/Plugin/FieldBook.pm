@@ -17,8 +17,10 @@ package CXGN::Phenotypes::ParseUpload::Plugin::FieldBook;
 #)
 
 use Moose;
+use CXGN::File::Spreadsheet qw(cell_value);
 use File::Slurp;
 use Text::CSV;
+use Spreadsheet::ParseXLSX;
 use Data::Dumper;
 use JSON qw(decode_json);
 
@@ -58,12 +60,16 @@ sub validate {
         my ( $row_min, $row_max ) = $worksheet->row_range();
         my ( $col_min, $col_max ) = $worksheet->col_range();
 
+        my $value_col;
         for my $row ($row_min .. $row_max) {
             my @cells;
             for my $col ($col_min .. $col_max ) {
                 my $cell = $worksheet->get_cell($row, $col);
-                push @cells, $cell ? $cell->value() : '';
+                # Only the value column is read with the date helper; the timestamp and the other
+                # columns keep their displayed text, as before.
+                push @cells, !$cell ? '' : defined($value_col) && $col == $value_col ? cell_value($cell, $excel_obj) : $cell->value();
             }
+            ($value_col) = grep { ($cells[$_ - $col_min] // '') eq 'value' } $col_min .. $col_max if !defined($value_col);
             push @file_lines, join(",", map {
                 my $v = $_ // '';
                 $v =~ s/"/""/g;
@@ -190,12 +196,16 @@ sub parse {
         my ( $row_min, $row_max ) = $worksheet->row_range();
         my ( $col_min, $col_max ) = $worksheet->col_range();
 
+        my $value_col;
         for my $row ($row_min .. $row_max) {
             my @cells;
             for my $col ($col_min .. $col_max ) {
                 my $cell = $worksheet->get_cell($row, $col);
-                push @cells, $cell ? $cell->value() : '';
+                # Only the value column is read with the date helper; the timestamp and the other
+                # columns keep their displayed text, as before.
+                push @cells, !$cell ? '' : defined($value_col) && $col == $value_col ? cell_value($cell, $excel_obj) : $cell->value();
             }
+            ($value_col) = grep { ($cells[$_ - $col_min] // '') eq 'value' } $col_min .. $col_max if !defined($value_col);
             push @file_lines, join(",", map {
                 my $v = $_ // '';
                 $v =~ s/"/""/g;

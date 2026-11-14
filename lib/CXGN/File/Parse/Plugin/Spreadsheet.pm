@@ -4,7 +4,7 @@ use strict;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use Spreadsheet::ParseODS;
-use Spreadsheet::ParseExcel::Utility qw(ExcelFmt);
+use CXGN::File::Spreadsheet qw(cell_value);
 use List::MoreUtils qw|uniq|;
 
 sub type {
@@ -48,7 +48,6 @@ sub parse {
     return \%rtn;
   }
   my $worksheet = ( $workbook->worksheets() )[0];
-  my $is_1904 = $workbook->can('using_1904_date') ? $workbook->using_1904_date() : 0;
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
@@ -93,7 +92,7 @@ sub parse {
       my $h = $worksheet->get_cell(0, $col)->value();
       my $hv = $super->clean_header($h);
       my $c = $worksheet->get_cell($row, $col);
-      my $v = $c ? _cell_value($c, $is_1904) : undef;
+      my $v = $c ? cell_value($c, $workbook) : undef;
       $v = $super->clean_value($v, $hv);
 
       if ( defined($v) && $v ne '' ) {
@@ -129,22 +128,5 @@ sub parse {
 
   return \%rtn;
 }
-
-# A cell formatted as a date holds a day count, and value() returns it as the cell displays it,
-# which depends on the cell's number format (3/24/2026, 24-Mar-26, ...). Return such a cell as an
-# ISO 8601 date instead, with the time of day when the cell has one.
-sub _cell_value {
-  my $cell = shift;
-  my $is_1904 = shift;
-  my $type = $cell->type() // '';
-  my $serial = $cell->unformatted();
-  if ( $type ne 'Date' || !defined($serial) || $serial !~ m/^\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/ ) {
-    return $cell->value();
-  }
-  return ExcelFmt('hh:mm:ss', $serial, $is_1904) if $serial < 1;
-  return ExcelFmt('yyyy-mm-dd', $serial, $is_1904) if $serial == int($serial);
-  return ExcelFmt('yyyy-mm-dd hh:mm:ss', $serial, $is_1904);
-}
-
 
 1;
