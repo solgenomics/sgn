@@ -28,6 +28,15 @@ our @ANALYSIS_TYPES = (
 sub solgs_cache_clear : Path('/solgs/cache/clear') Args(0) {
     my ($self, $c) = @_;
 
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to clear the cache.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to clear the cache.' };
+        return;
+    }
+
     my $args = $c->req->params;
     
     my $cache_cleared = $self->clear_cached_analyses_result($c, $args);
@@ -203,6 +212,8 @@ sub analysis_tempfiles_dir {
 sub begin : Private {
     my ( $self, $c ) = @_;
 
+    # The cache directories are created on demand, so an anonymous request must not reach them.
+    return if !$c->user();
     $c->controller('solGS::Files')->get_solgs_dirs($c);
 
 }

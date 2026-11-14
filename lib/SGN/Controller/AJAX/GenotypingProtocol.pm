@@ -13,6 +13,7 @@ SGN::Controller::AJAX::Search::GenotypingProtocol - a REST controller class to p
 package SGN::Controller::AJAX::GenotypingProtocol;
 
 use Moose;
+use URI::FromHash 'uri';
 use Data::Dumper;
 use JSON;
 use CXGN::People::Login;
@@ -48,9 +49,9 @@ sub genotyping_protocol_delete_GET : Args(1) {
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]) {
+        if (!$user_info[0] || $user_info[3]) {
             $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-            return;
+            $c->detach();
         }
 
         $user_id = $user_info[0];
@@ -60,7 +61,7 @@ sub genotyping_protocol_delete_GET : Args(1) {
     } else {
         if (!$c->user()) {
             $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-            return;
+            $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();

@@ -51,6 +51,7 @@ sub confirm :Path('/image/confirm') {
     my ($self, $c) = @_;
 
     $c->forward('require_logged_in');
+    $c->detach() unless $c->stash->{person_id};
 
     my $upload = $c->req->upload('file')
         or $c->throw( public_message => 'No image file uploaded.', is_client_error => 1 );

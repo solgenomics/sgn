@@ -129,6 +129,12 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
 sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
+
+    if ($c->action->name eq 'seedlot_maintenance_event' && $c->req->method eq 'DELETE' && !$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to delete seedlot maintenance events.' };
+        $c->detach();
+    }
+
     my $seedlot_id = shift;
 
     $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
@@ -1673,6 +1679,16 @@ sub seedlot_maintenance_event_GET {
 sub seedlot_maintenance_event_DELETE {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to delete seedlot maintenance events.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to delete seedlot maintenance events.' };
+        return;
+    }
+
     my $event_id = shift;
     my $seedlot = $c->stash->{seedlot};
 

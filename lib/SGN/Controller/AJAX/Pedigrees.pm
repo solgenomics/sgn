@@ -138,6 +138,16 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to store pedigrees.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to store pedigrees.' };
+        return;
+    }
+
     my $pedigree_data = $c->req->param('pedigree_data');
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;

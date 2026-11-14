@@ -36,6 +36,12 @@ sub sync_cass_transgenics : Path('/ajax/cass_transgenics/sync') Args(0) ActionCl
 sub sync_cass_transgenics_POST { 
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to sync transgenics.' };
+        return;
+    }
+
     my $status = '';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 

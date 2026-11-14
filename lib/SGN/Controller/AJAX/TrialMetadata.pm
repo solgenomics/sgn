@@ -64,6 +64,14 @@ has 'schema' => (
 sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
+
+    my $requires_trial_privileges = $c->action->name eq 'remove_filler_plots'
+        || ($c->action->name eq 'trial_phenotypes_fully_uploaded' && $c->req->method eq 'POST');
+    if ($requires_trial_privileges && !$c->user()) {
+        $c->stash->{rest} = { error => 'Login required for modifying trial.' };
+        $c->detach();
+    }
+
     my $trial_id = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
@@ -87,6 +95,13 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     if (!$c->stash->{trial}) {
 	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
 	return;
+    }
+
+    if ($requires_trial_privileges) {
+        if (my $error = $self->privileges_denied($c)) {
+            $c->stash->{rest} = { error => $error };
+            $c->detach();
+        }
     }
 
     try {
@@ -202,6 +217,12 @@ sub trial_phenotypes_fully_uploaded_GET   {
 sub trial_phenotypes_fully_uploaded_POST  {
     my $self = shift;
     my $c = shift;
+
+    if (my $error = $self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
     my $value = $c->req->param("phenotypes_fully_uploaded");
     my $trial = $c->stash->{trial};
     eval {

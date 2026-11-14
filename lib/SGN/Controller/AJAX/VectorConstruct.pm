@@ -41,6 +41,12 @@ sub sync_cass_constructs : Path('/ajax/cass_vector_construct/sync') Args(0) Acti
 sub sync_cass_constructs_POST {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to sync vector constructs.' };
+        return;
+    }
+
     my $status = '';
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
@@ -317,6 +323,16 @@ sub verify_vectors_fuzzy_options : Path('/ajax/vector_list/fuzzy_options') : Act
 
 sub verify_vectors_fuzzy_options_POST : Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to apply vector list options.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to apply vector list options.' };
+        return;
+    }
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $vector_list_id = $c->req->param('vector_list_id');

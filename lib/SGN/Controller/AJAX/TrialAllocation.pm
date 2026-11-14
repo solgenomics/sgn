@@ -846,6 +846,15 @@ sub _layout_key_matches {
 sub save_layout :Path('/ajax/trialallocation/save_layout') Args(0) {
     my ($self, $c) = @_;
 
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to save trial layouts.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to save trial layouts.' };
+        return;
+    }
+
     my $json_string = $c->req->param('layout');
     my $layout = eval { decode_json($json_string) };
 
@@ -1520,6 +1529,15 @@ sub _layout_without_existing_trials {
 
 sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to save trial coordinates.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to save trial coordinates.' };
+        return;
+    }
 
     my $json_string = $c->req->param('trial');
     my $data = eval { decode_json($json_string) };
