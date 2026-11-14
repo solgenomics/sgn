@@ -115,8 +115,28 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     }
 
 
-    # A trait already computed for this trial is computed again: with overwrite, the new values
-    # replace the stored ones; without it, only plots and plants that have no value yet get one.
+    # Overwriting stored values is for curators, as it is when plot values are generated from plants.
+    if ($overwrite && $c->user()->get_object->get_user_type() ne 'curator') {
+	$c->stash->{rest} = {error => "Must be a curator to overwrite values." };
+	return;
+    }
+
+    # StorePhenotypes matches a stored value by its timestamp for any repeat type other than single (multiple,
+    # time_series or anything else written there), and a computed value carries the current time, so computing
+    # such a trait when it already has values in this trial would add values instead of replacing them, with or
+    # without overwrite. StorePhenotypes takes whichever repeat-type property its query returns last, in no fixed
+    # order, so any one property other than single is enough to refuse.
+    my $repeat_types = $schema->storage->dbh->selectcol_arrayref(
+	"SELECT cvtermprop.value FROM cvtermprop JOIN cvterm AS proptype ON (cvtermprop.type_id = proptype.cvterm_id) WHERE proptype.name = 'trait_repeat_type' AND cvtermprop.cvterm_id = ?",
+	undef, $selected_trait_cvterm_id);
+    my ($repeat_type) = grep { defined($_) && $_ ne '' && $_ ne 'single' } @{$repeat_types};
+    if (defined($repeat_type) && any { $_->[0] eq $selected_trait_cvterm_id && $_->[3] } @{$triat_name}) {
+	$c->stash->{rest} = {error => "$selected_trait already has values in this trial, and it keeps every value (repeat type $repeat_type), so computing it would add values instead of replacing them." };
+	return;
+    }
+
+    # A single-value trait already computed for this trial can be computed again: with overwrite, the new
+    # values replace the stored ones; without it, only plots and plants that have no value yet get one.
 
     my $dbh = $c->dbc->dbh();
     my @plots;

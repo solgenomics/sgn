@@ -40,7 +40,7 @@ $trial_id
   			<select id="derived_trait_select"></select>
     		</label>
     		<div class="checkbox">
-    			<label><input type="checkbox" id="derived_trait_overwrite" /> Overwrite values already stored for this trait in this trial</label>
+    			<label><input type="checkbox" id="derived_trait_overwrite" /> Overwrite values already stored for this trait in this trial (curators only; not for traits that keep every value)</label>
     		</div>
     			
   	</div>
