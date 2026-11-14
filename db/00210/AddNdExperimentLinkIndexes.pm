@@ -7,7 +7,7 @@ AddNdExperimentLinkIndexes.pm
 
 =head1 SYNOPSIS
 
-mx-run AddNdExperimentLinkIndexes.pm [options] -H hostname -D dbname -u username [-F]
+mx-run AddNdExperimentLinkIndexes [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -26,7 +26,8 @@ observationunits search uses, that rescans all of nd_experiment_stock once for e
 in the trial. On a database with about 67,000 nd_experiment_stock rows, a plant-level search of
 a trial with 1,025 plots took 67 seconds that way, and 0.6 seconds with these indexes.
 
-Indexes that already exist under these names are left unchanged.
+The statements run in one transaction, so a trial run (-t) builds the indexes and then rolls
+them back. Indexes that already exist under these names are left unchanged.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -60,12 +61,23 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
+    # The patch framework runs with AutoCommit on, so without this transaction a trial run would keep the indexes.
+    # Stop at a failed statement, so a failure is never recorded as applied.
+    local $self->dbh->{RaiseError} = 1;
+    $self->dbh->begin_work();
     $self->dbh->do(<<EOSQL);
 CREATE INDEX IF NOT EXISTS nd_experiment_stock_nd_experiment_id_idx ON public.nd_experiment_stock (nd_experiment_id);
 CREATE INDEX IF NOT EXISTS nd_experiment_stock_stock_id_idx ON public.nd_experiment_stock (stock_id);
 CREATE INDEX IF NOT EXISTS nd_experiment_project_project_id_idx ON public.nd_experiment_project (project_id);
 CREATE INDEX IF NOT EXISTS nd_experiment_project_nd_experiment_id_idx ON public.nd_experiment_project (nd_experiment_id);
 EOSQL
+    if ($self->trial) {
+        $self->dbh->rollback();
+        print "Trial mode: the indexes were built and rolled back.\n";
+    }
+    else {
+        $self->dbh->commit();
+    }
 
     print "You're done!\n";
 }
