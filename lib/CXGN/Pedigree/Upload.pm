@@ -77,16 +77,19 @@ sub pedigree_rows {
     return $rows;
 }
 
-=head2 cross_archive($context, $path)
+=head2 cross_archive($context, $path, $user_id)
 
-Accept a readable verified cross-upload file under the configured archive,
-resolving symlinks and traversal before opening it.
+Accept a readable verified cross-upload file of this user under the configured
+archive, resolving symlinks and traversal before opening it. The verification
+step archives the file with CXGN::UploadFile, which keeps the files of each
+user in archive_path/user_id/cross_upload.
 
 =cut
 
 sub cross_archive {
-    my ($class, $c, $path) = @_;
-    my $root = abs_path(File::Spec->catdir($c->config->{archive_path}, 'cross_upload'));
+    my ($class, $c, $path, $user_id) = @_;
+    die "Verified cross upload was not found in the archive.\n" unless defined($user_id) && $user_id =~ /^[0-9]+$/;
+    my $root = abs_path(File::Spec->catdir($c->config->{archive_path}, $user_id, 'cross_upload'));
     my $file = defined($path) && !ref($path) ? abs_path($path) : undef;
     die "Verified cross upload was not found in the archive.\n"
         unless $root && $file && index($file, $root.'/') == 0 && -f $file && -r $file && $file =~ /\.xlsx?$/i;

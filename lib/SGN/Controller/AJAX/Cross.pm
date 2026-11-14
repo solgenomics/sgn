@@ -1251,7 +1251,7 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $actor->{id});
     my $error;
     eval {
-        my $file = CXGN::Pedigree::Upload->cross_archive($c, $c->req->param('archived_file_name'));
+        my $file = CXGN::Pedigree::Upload->cross_archive($c, $c->req->param('archived_file_name'), $actor->{id});
         my $overwrite = CXGN::Pedigree::Parentage->overwrite_flag($c->req->param('overwrite_pedigrees'));
         my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $file);
         $parser->load_plugin('StoreExistingProgeniesExcel');

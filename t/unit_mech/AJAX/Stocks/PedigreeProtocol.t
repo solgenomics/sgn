@@ -6,6 +6,7 @@ use Test::More;
 use Test::WWW::Mechanize;
 use JSON;
 use File::Path qw(make_path);
+use File::Copy qw(copy);
 use File::Spec;
 use Spreadsheet::WriteExcel;
 use SGN::Test::Fixture;
@@ -99,7 +100,9 @@ subtest 'numeric zero remains a valid recorded parent name' => sub {
     like(model($b)->get_pedigree_string('Parents'),qr{^0/},'pedigree string displays zero rather than NA');
 };
 
-my$archive=File::Spec->catdir($f->config->{archive_path},'cross_upload');
+# the verification step archives the files of a user in archive_path/user_id/cross_upload
+my($janedoe_id)=$s->storage->dbh->selectrow_array("SELECT sp_person_id FROM sgn_people.sp_person WHERE username='janedoe'");
+my$archive=File::Spec->catdir($f->config->{archive_path},$janedoe_id,'cross_upload');
 make_path($archive);
 my$source=$s->resultset('Stock::Stock')->search({type_id=>$type{cross}})->first;
 my$alias='protocol_cross_alias';
@@ -123,6 +126,19 @@ subtest 'cross upload authorization and metadata share one transaction' => sub {
     $mech->get('http://localhost:3010/ajax/cross/store_upload_existing_progenies?archived_file_name='.$file);
     like(decode_json($mech->content)->{error},qr/POST/,'cross upload rejects GET');
     ok(post('/ajax/cross/store_upload_existing_progenies',[archived_file_name=>'/etc/passwd',overwrite_pedigrees=>'true'])->{error},'store cannot open a file outside the verified archive');
+    my$shared=File::Spec->catdir($f->config->{archive_path},'cross_upload');make_path($shared);
+    my$stray=File::Spec->catfile($shared,'protocol_cross_stray.xls');copy($file,$stray) or die "cannot copy to $stray: $!";push@files,$stray;
+    ok(post('/ajax/cross/store_upload_existing_progenies',[archived_file_name=>$stray,overwrite_pedigrees=>'true'])->{error},'nor a file outside the cross uploads of this user');
+    # as the dialog does: the verification step archives the uploaded file and returns its name for the store step
+    my$dialog_child=row('cross_upload_dialog');
+    my$dialog_file=workbook('protocol_cross_dialog',$dialog_child);
+    $mech->post('http://localhost:3010/ajax/cross/validate_upload_existing_progenies',Content_Type=>'form-data',
+        Content=>[progenies_exist_upload_file=>[$dialog_file,'protocol_cross_dialog.xls']]);
+    my$verified=eval{decode_json($mech->content)}||{};
+    ok($verified->{archived_file_name}&&!$verified->{error_string},'the verification step archives the uploaded file') or diag($mech->content);
+    push@files,$verified->{archived_file_name} if$verified->{archived_file_name};
+    is_deeply(post('/ajax/cross/store_upload_existing_progenies',[archived_file_name=>$verified->{archived_file_name},overwrite_pedigrees=>'false']),
+        {success=>1},'and the store step stores the progeny from that file');
     is_deeply(post('/ajax/cross/store_upload_existing_progenies',[archived_file_name=>$file,user_id=>40,overwrite_pedigrees=>'true']),{success=>1},'cross synonym stores both pedigree and file log');
     my$mdfile=$f->metadata_schema->resultset('MdFiles')->search({basename=>'protocol_cross_good.xls'},{order_by=>{-desc=>'file_id'}})->first;
     ok($mdfile,'file log exists');
