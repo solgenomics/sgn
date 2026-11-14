@@ -3,6 +3,7 @@ use warnings;
 
 # The heritability scripts fit the block number as a factor. A trait observed in
 # one block only must still get a result, and must not stop the other traits.
+# A plot without a block number is not a block of its own.
 
 use Test::More;
 use File::Temp qw(tempdir);
@@ -14,17 +15,20 @@ my ($rscript) = grep { -x $_ } map { File::Spec->catfile($_, 'Rscript') } File::
 plan skip_all => 'Rscript is not installed' unless $rscript;
 my $directory = tempdir('HeritabilityBlocksXXXXXX', TMPDIR => 1, CLEANUP => 1);
 
-# six accessions with three plots each: two in block 1, one in block 2;
-# trait b was observed in block 1 only
+# six accessions with four plots each: two in block 1, one in block 2 and one
+# without a block number; trait a was observed in blocks 1 and 2, trait b in
+# block 1 only, trait c in block 1 and in the plot without a block number
 my @rows;
-my @noise = (0.3, -0.2, 0.1, -0.4, 0.2, 0.0, -0.1, 0.4, -0.3, 0.1, 0.0, -0.2, 0.2, -0.1, 0.3, -0.3, 0.1, 0.2);
+my @noise = (0.3, -0.2, 0.1, -0.4, 0.2, 0.0, -0.1, 0.4, -0.3, 0.1, 0.0, -0.2,
+    0.2, -0.1, 0.3, -0.3, 0.1, 0.2, -0.2, 0.4, 0.0, -0.1, 0.3, -0.4);
 my $n = 0;
 for my $accession (1 .. 6) {
-    for my $plot ([1, 1], [1, 2], [2, 3]) {
+    for my $plot ([1, 1], [1, 2], [2, 3], ['NA', 4]) {
         my ($block, $replicate) = @$plot;
-        my $a = 10 + 2 * $accession + $block + $noise[$n];
-        my $b = $block == 1 ? 20 + 3 * $accession + $noise[17 - $n] : 'NA';
-        push @rows, [2025, 'test_location', "G$accession", $block, $replicate, $a, $b];
+        my $a = $block ne 'NA' ? 10 + 2 * $accession + $block + $noise[$n] : 'NA';
+        my $b = $block eq '1' ? 20 + 3 * $accession + $noise[23 - $n] : 'NA';
+        my $c = $block ne '2' ? 30 + $accession + $noise[($n + 7) % 24] : 'NA';
+        push @rows, [2025, 'test_location', "G$accession", $block, $replicate, $a, $b, $c];
         $n++;
     }
 }
@@ -34,7 +38,7 @@ subtest 'h2_blup_rscript.R' => sub {
     my %out = map { $_ => "$directory/blup_$_" } qw(h2.json h2.csv error.txt);
     write_file($pheno, join("\n",
         join("\t", qw(studyYear locationName germplasmName blockNumber replicate),
-            'trait a|CO_000:0000001', 'trait b|CO_000:0000002'),
+            'trait a|CO_000:0000001', 'trait b|CO_000:0000002', 'trait c|CO_000:0000003'),
         map { join("\t", @$_) } @rows)."\n");
     my ($stdout, $stderr);
     run([$rscript, 'R/heritability/h2_blup_rscript.R', $pheno, 'trait.a', @out{qw(h2.json h2.csv error.txt)}],
@@ -44,6 +48,8 @@ subtest 'h2_blup_rscript.R' => sub {
     my $csv = -e $out{'h2.csv'} ? read_file($out{'h2.csv'}) : '';
     like($csv, qr/"trait a"/, 'the trait observed in two blocks has a result') or diag($stderr);
     like($csv, qr/"trait b"/, 'the trait observed in one block has a result') or diag($stderr);
+    like($csv, qr/"trait c"/, 'the trait observed in one block and in plots without a block has a result')
+        or diag($stderr);
 };
 
 subtest 'h2_rscript.R' => sub {
@@ -58,7 +64,7 @@ subtest 'h2_rscript.R' => sub {
     my $inputs = "$directory/h2_input_files.txt";
     my $outputs = "$directory/h2_output_files.txt";
     write_file($pheno, join("\n",
-        join("\t", qw(studyYear locationName germplasmName blockNumber replicate trait_a trait_b)),
+        join("\t", qw(studyYear locationName germplasmName blockNumber replicate trait_a trait_b trait_c)),
         map { join("\t", @$_) } @rows)."\n");
     write_file($metadata, join("\n", qw(studyYear locationName germplasmName blockNumber replicate))."\n");
     write_file($inputs, "$pheno\n$metadata\n");
@@ -71,6 +77,8 @@ subtest 'h2_rscript.R' => sub {
     my %traits = map { (split /\t/)[0] => 1 } @lines[1 .. $#lines];
     ok($traits{trait_a}, 'the trait observed in two blocks has a result') or diag($stderr);
     ok($traits{trait_b}, 'the trait observed in one block has a result') or diag($stderr);
+    ok($traits{trait_c}, 'the trait observed in one block and in plots without a block has a result')
+        or diag($stderr);
 };
 
 done_testing();

@@ -74,9 +74,10 @@ tryCatch({ for(i in 6:ncol(pheno)){
     outcome = colnames(pheno)[i]    
     # the block effect is the block number; the replicate counts the plots of an accession.
     # One level per block in which this trait was observed, not a numeric trend; with a
-    # single block it stays a constant, which lmer drops from the fixed effects
+    # single block it stays a constant, which lmer drops from the fixed effects.
+    # A plot without a block number is not a block of its own
     traitData <- pheno[!is.na(pheno[[outcome]]), ]
-    if (length(unique(traitData$blockNumber)) > 1) {
+    if (length(unique(na.omit(traitData$blockNumber))) > 1) {
       traitData$blockNumber <- as.factor(traitData$blockNumber)
     } else {
       traitData$blockNumber <- 1

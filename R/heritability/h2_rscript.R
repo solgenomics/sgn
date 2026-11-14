@@ -119,8 +119,8 @@ for (i in rangeTraits) {
   
   # the block effect is the block number, one level per block in which this trait was observed;
   # the replicate counts the plots of an accession (a single block stays a constant, which lmer
-  # drops from the fixed effects)
-  if (length(unique(traitData$blockNumber)) > 1) {
+  # drops from the fixed effects). A plot without a block number is not a block of its own
+  if (length(unique(na.omit(traitData$blockNumber))) > 1) {
     traitData$blockNumber <- as.factor(traitData$blockNumber)
   } else {
     traitData$blockNumber <- 1

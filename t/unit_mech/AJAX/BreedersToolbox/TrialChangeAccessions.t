@@ -46,6 +46,11 @@ my %t = map { $_->[0] => SGN::Model::Cvterm->get_cvterm_row($schema, $_->[1], $_
     [ collection_of => 'collection_of', 'stock_relationship' ],
     [ seed_transaction => 'seed transaction', 'stock_relationship' ],
     [ design => 'design', 'project_property' ],
+    [ is_a_control => 'is a control', 'stock_property' ],
+    [ plant => 'plant', 'stock_type' ],
+    [ plant_of => 'plant_of', 'stock_relationship' ],
+    [ field_layout => 'field_layout', 'experiment_type' ],
+    [ plant_index_number => 'plant_index_number', 'stock_property' ],
 );
 my %acc = map { $_ => $schema->resultset('Stock::Stock')->find({ uniquename => "test_accession$_" })->stock_id } 1 .. 5;
 my %plot = map { $_ => $schema->resultset('Stock::Stock')->find({ uniquename => "test_trial2$_" })->stock_id } 1 .. 15;
@@ -551,6 +556,66 @@ subtest 'BrAPI PUT observationunits changes the germplasm of a plot' => sub {
     $resp = $submitter_ua->put("$base/brapi/v2/observationunits/$plot{10}", Content => $body);
     ok($resp->is_success, 'a submitter of the program may') or diag($resp->decoded_content);
     is(plot_state($plot{10})->{accession}, 'test_accession1', 'germplasm changed');
+    restore();
+};
+
+subtest 'BrAPI bulk PUT keeps the replicates and check marks that the change sets' => sub {
+    # a client sends back the units it read: one plot with a new germplasm, the other plots and a
+    # plant of the changed plot as they were. The change numbers the replicates of other plots again
+    # and gives the plant the new germplasm; the values sent for them are the old ones. The order of
+    # the units in the request is not fixed, so the old values may come after the change.
+    my $plant_name = "review_bulk_put_plant_$$";
+    my $plant = $schema->resultset('Stock::Stock')->create({ uniquename => $plant_name, name => $plant_name, organism_id => $organism_id, type_id => $t{plant} });
+    $schema->resultset('Stock::StockRelationship')->create({ subject_id => $plot{10}, object_id => $plant->stock_id, type_id => $t{plant_of} });
+    $schema->resultset('Stock::StockRelationship')->create({ subject_id => $plant->stock_id, object_id => $original->{10}->{accession_id}, type_id => $t{plant_of} });
+    set_prop($plant->stock_id, 'replicate', $original->{10}->{rep});
+    set_prop($plant->stock_id, 'plant_index_number', 1);
+    my $layout = $schema->resultset('NaturalDiversity::NdExperimentStock')->search({ 'me.stock_id' => $plot{10}, 'nd_experiment.type_id' => $t{field_layout} }, { join => 'nd_experiment' })->first;
+    $schema->resultset('NaturalDiversity::NdExperimentStock')->create({ nd_experiment_id => $layout->nd_experiment_id, stock_id => $plant->stock_id, type_id => $layout->type_id });
+    my $plan = CXGN::Trial::AccessionChange->new({ schema => $schema, trial_id => $trial_id })
+        ->plan([ { plot_id => $plot{10}, new_stock_id => $acc{1} } ], { rename_plots => 'none', curator => 1 });
+    my %new_rep = map { $_->{plot_id} => $_->{new} } @{$plan->{replicates}};
+    my @others = grep { $_ != $plot{10} } keys %new_rep;
+    ok(scalar(@others), 'the change numbers the replicates of other plots again') or return;
+    my %number_of = reverse %plot;
+    my $check_before = $schema->resultset('Stock::Stockprop')->find({ stock_id => $plot{10}, type_id => $t{is_a_control} });
+    $check_before = $check_before ? $check_before->value : undef;
+
+    my $level = { levelName => 'plot' };
+    my %body = ($plot{10} => { germplasmDbId => "$acc{1}", germplasmName => 'test_accession1', studyDbId => "$trial_id",
+        observationUnitPosition => { observationLevel => $level, entryType => 'CHECK',
+            observationLevelRelationships => [ { levelName => 'rep', levelCode => '99' } ] } });
+    foreach my $id (@others) {
+        my $old = $original->{ $number_of{$id} };
+        $body{$id} = { germplasmDbId => "$old->{accession_id}", studyDbId => "$trial_id",
+            observationUnitPosition => { observationLevel => $level,
+                observationLevelRelationships => [ { levelName => 'rep', levelCode => "$old->{rep}" } ] } };
+    }
+    my $ua = LWP::UserAgent->new;
+    $ua->default_header('Content-Type' => 'application/json');
+    $ua->default_header('Authorization' => 'Bearer '.$access_token);
+    $body{ $plant->stock_id } = { germplasmDbId => "$original->{10}->{accession_id}", studyDbId => "$trial_id",
+        observationUnitPosition => { observationLevel => { levelName => 'plant' },
+            observationLevelRelationships => [ { levelName => 'rep', levelCode => "$original->{10}->{rep}" } ] } };
+    my $resp = $ua->put("$base/brapi/v2/observationunits", Content => encode_json(\%body));
+    ok($resp->is_success, 'bulk PUT succeeds') or diag($resp->decoded_content);
+    is(plot_state($plot{10})->{accession}, 'test_accession1', 'germplasm changed');
+    my $design = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' })->get_design();
+    my %cached = map { $_->{plot_id} => $_ } values %$design;
+    foreach my $id ($plot{10}, @others) {
+        my $expected = $new_rep{$id} // $original->{ $number_of{$id} }->{rep};
+        is(plot_state($id)->{rep}, $expected, "test_trial2$number_of{$id} has the replicate of the change");
+        is($cached{$id}->{rep_number}, $expected, "and so has the cached layout");
+    }
+    my $check_after = $schema->resultset('Stock::Stockprop')->find({ stock_id => $plot{10}, type_id => $t{is_a_control} });
+    is($check_after ? $check_after->value : undef, $check_before,
+        'the check mark sent with the new germplasm does not replace the one of the change');
+    my $plant_accession = $schema->resultset('Stock::StockRelationship')->find({ subject_id => $plant->stock_id, type_id => $t{plant_of} });
+    is($plant_accession->object_id, $acc{1}, 'the plant has the new germplasm of its plot');
+    is($schema->resultset('Stock::Stockprop')->find({ stock_id => $plant->stock_id, type_id => $t{replicate} })->value,
+        $new_rep{ $plot{10} } // $original->{10}->{rep}, 'and its replicate');
+    set_prop($plot{10}, 'is_a_control', $check_before);
+    $plant->delete;
     restore();
 };
 
