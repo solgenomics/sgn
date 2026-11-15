@@ -33,7 +33,7 @@ $show_grafting_interface => ''
 
 </br>
 <button class="btn btn-default" name="add_accessions_link">Add Accessions Or Upload Accession Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename Accessions</button>
-% if (<%$show_grafting_interface%>) {
+% if ($show_grafting_interface) {
     <button class="btn btn-default" id="upload_grafts_link" >Upload Grafts</button>
 % }
 </br>
