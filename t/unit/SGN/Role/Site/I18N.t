@@ -4,6 +4,7 @@ use utf8;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
+use HTML::Entities ();
 use Test::More;
 BEGIN { eval { require Locale::TextDomain; 1 } or plan skip_all => 'libintl-perl is not installed (t/unit/SGN/Role/Site/I18N_off.t covers that case)' }
 use Locale::TextDomain ( 'sgn', undef );
@@ -69,6 +70,9 @@ subtest 'off by default' => sub {
     is( $cookie,               undef,         'no cookie' );
     is( $language,             undef,         'no language in the stash' );
     is( setlocale(LC_MESSAGES), $locale,      'process locale untouched' );
+    my $text = __("crossing experiment (\x{c2}\x{a0}");    # UTF-8 source text, as in a template
+    ok( utf8::is_utf8($text), 'English texts come back as characters' );
+    is( HTML::Entities::encode_entities($text), 'crossing experiment (&nbsp;', 'so a non-ASCII letter is escaped once' );
     is( $ENV{LANGUAGE},        'en_US.UTF-8', 'environment untouched' );
 };
 

@@ -27,15 +27,19 @@ sub i18n_languages {
 }
 
 after setup_finalize => sub {
-    my $app       = shift;
+    my $app = shift;
+    # Texts come back as Perl characters in every mode, English too: their source is UTF-8,
+    # and as bytes a non-ASCII letter would be escaped twice in the page ("\x{c2}\x{a0}" -> "&Acirc;&nbsp;").
+    if ( eval { require Locale::Messages; 1 } ) {
+        Locale::Messages->select_package('gettext_pp');    # the same catalog reader on every install
+        Locale::Messages::bind_textdomain_codeset( sgn => 'utf-8' );
+        Locale::Messages::bind_textdomain_filter( sgn => \&Locale::Messages::turn_utf_8_on );
+    }
     my @languages = $app->i18n_languages or return;
     eval { require Locale::Messages; require Locale::Util; 1 } or die "i18n_languages needs libintl-perl: $@";
     my $dir       = $app->config->{i18n_locale_dir} // $app->path_to( '..', 'sgn-translations', 'locale' );
-    Locale::Messages->select_package('gettext_pp');    # the same catalog reader on every install
     delete $ENV{LANGUAGE};                             # gettext ranks LANGUAGE above the locale
     Locale::Messages::bindtextdomain( sgn => "$dir" );
-    Locale::Messages::bind_textdomain_codeset( sgn => 'utf-8' );
-    Locale::Messages::bind_textdomain_filter( sgn => \&Locale::Messages::turn_utf_8_on );
     for my $language (@languages) {
         Locale::Util::set_locale( LC_MESSAGES, $language, undef, 'utf-8' ) or die "i18n_languages: no system locale for '$language'\n";
         Locale::Messages::dgettext( 'sgn', '' ) or die "i18n_languages: no gettext catalog $dir/$language/LC_MESSAGES/sgn.mo\n";
