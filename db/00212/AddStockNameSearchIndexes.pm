@@ -69,6 +69,10 @@ sub patch {
     my $synonym_id = $ids->[0];
     die "Invalid stock_synonym cvterm ID\n" if $synonym_id !~ /\A[0-9]+\z/;
 
+    # The patch framework runs with AutoCommit on, so without this transaction a trial run would keep the indexes.
+    # Stop at a failed statement, so a failure is never recorded as applied.
+    local $dbh->{RaiseError} = 1;
+    $dbh->begin_work();
     $dbh->do(<<EOSQL);
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS stock_name_trgm_idx ON public.stock USING gin (name gin_trgm_ops);
@@ -76,6 +80,13 @@ CREATE INDEX IF NOT EXISTS stock_uniquename_trgm_idx ON public.stock USING gin (
 CREATE INDEX IF NOT EXISTS stock_description_trgm_idx ON public.stock USING gin (description gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS stockprop_synonym_value_trgm_idx ON public.stockprop USING gin (value gin_trgm_ops) WHERE type_id = $synonym_id;
 EOSQL
+    if ($self->trial) {
+        $dbh->rollback();
+        print "Trial mode: the indexes were built and rolled back.\n";
+    }
+    else {
+        $dbh->commit();
+    }
 
     print "You're done!\n";
 }
