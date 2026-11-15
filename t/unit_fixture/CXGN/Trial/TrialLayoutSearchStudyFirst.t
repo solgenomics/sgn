@@ -4,6 +4,7 @@ use warnings;
 use lib 't/lib';
 
 use Test::More;
+use JSON;
 use SGN::Test::Fixture;
 use CXGN::Trial::TrialLayoutSearch;
 
@@ -31,8 +32,12 @@ sub compare_by_units {
         observation_unit_id_list => \@ids,
         %filters,
     );
-    my @study_sorted = sort { $a->{obsunit_stock_id} <=> $b->{obsunit_stock_id} } @$rows;
-    my @unit_sorted = sort { $a->{obsunit_stock_id} <=> $b->{obsunit_stock_id} } @$by_units;
+    # A unit can have several rows: order them by their whole content too.
+    my $json = JSON->new->canonical(1);
+    my $order = sub { $_[0]->{obsunit_stock_id} <=> $_[1]->{obsunit_stock_id}
+        || $json->encode($_[0]) cmp $json->encode($_[1]) };
+    my @study_sorted = sort { $order->($a, $b) } @$rows;
+    my @unit_sorted = sort { $order->($a, $b) } @$by_units;
     is_deeply(\@study_sorted, \@unit_sorted, "$label returns the same full rows and counts");
     is_deeply($observations, $unit_observations, "$label returns the same observations");
 }
