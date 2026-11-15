@@ -7,6 +7,7 @@ use I18N::LangTags::Detect;
 use Locale::Messages qw( bindtextdomain bind_textdomain_codeset bind_textdomain_filter dgettext );
 use Locale::Util qw( set_locale );
 use POSIX qw( setlocale LC_MESSAGES );
+use Try::Tiny;
 
 requires 'config', 'path_to';
 
@@ -48,7 +49,7 @@ before dispatch => sub {
     my $asked   = $c->req->param('lang');
     my $cookie  = $c->req->cookie('lang');
     my @wanted  = map { lc } grep { defined } $asked, ( $cookie ? $cookie->value : undef ),
-        implicate_supers( I18N::LangTags::Detect->http_accept_langs( $c->req->header('Accept-Language') // '' ) );
+        implicate_supers( I18N::LangTags::Detect->http_accept_langs( _accepted( $c->req->header('Accept-Language') ) ) );
     my ($language) = grep { my $tag = $_; grep { $_ eq $tag } @enabled, 'en' } @wanted;
     $language //= 'en';
     $c->res->cookies->{lang} = { value => $language, expires => '+1y' } if defined $asked && lc $asked eq $language;
@@ -56,9 +57,15 @@ before dispatch => sub {
     set_locale( LC_MESSAGES, $language, undef, 'utf-8' ) if $language ne 'en';
 };
 
-# The locale belongs to the process: every request starts and ends in English.
+# Accept-Language without the languages the browser refuses (q=0).
+sub _accepted { return join ',', grep { !/;\s*q\s*=\s*0(?:\.0*)?\s*$/i } split /,/, shift // '' }
+
+# The locale belongs to the process: every request starts and ends in English, also when it dies.
 sub _reset_language { setlocale( LC_MESSAGES, 'C' ) if shift->i18n_languages; return }
 before prepare => \&_reset_language;
-after finalize => \&_reset_language;
+around handle_request => sub {
+    my ( $orig, $class, @arguments ) = @_;
+    return try { $class->$orig(@arguments) } finally { $class->_reset_language };
+};
 
 1;

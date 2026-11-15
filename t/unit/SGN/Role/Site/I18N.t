@@ -29,17 +29,27 @@ sub Local::App::setup_finalize { return }
 sub Local::App::prepare        { return }
 sub Local::App::finalize       { return }
 sub Local::App::dispatch       { my $c = shift; return $c->stash->{page} = join ' | ', __('Search'), __p( 'verb', 'Search' ), __nx( '{count} trial', '{count} trials', 5, count => 5 ) }
+
+# One whole request, as Catalyst runs it: prepare, dispatch, finalize; an error is logged, not thrown.
+our %seen;
+sub Local::App::handle_request {
+    my ( $class, %args ) = @_;
+    eval {
+        $class->prepare;
+        my $c = $class->new( req => bless( { param => { lang => $args{lang} }, cookie => { lang => $args{cookie} }, header => { 'Accept-Language' => $args{accept} } }, 'Local::Request' ) );
+        $c->dispatch;
+        %seen = ( page => $c->stash->{page}, cookie => $c->res->cookies->{lang}{value}, language => $c->stash->{language}, locale => setlocale(LC_MESSAGES) );
+        die "finalize failed\n" if $args{die_in_finalize};
+        $c->finalize;
+    };
+    return;
+}
 apply_all_roles( Moose::Meta::Class->initialize('Local::App'), 'SGN::Role::Site::I18N' );
 
-# One whole request, as Catalyst runs it: prepare, dispatch, finalize.
 sub request {
-    my %args = @_;
-    Local::App->prepare;
-    my $c = Local::App->new( req => bless( { param => { lang => $args{lang} }, cookie => { lang => $args{cookie} }, header => { 'Accept-Language' => $args{accept} } }, 'Local::Request' ) );
-    $c->dispatch;
-    my $locale_in_request = setlocale(LC_MESSAGES);
-    $c->finalize;
-    return ( $c->stash->{page}, $c->res->cookies->{lang}{value}, $c->stash->{language}, $locale_in_request );
+    %seen = ();
+    Local::App->handle_request(@_);
+    return @seen{qw( page cookie language locale )};
 }
 
 my $english   = 'Search | Search | 5 trials';
@@ -88,6 +98,8 @@ subtest 'language from the browser' => sub {
     is( ( request( accept => 'de, uk;q=0.8, en;q=0.5' ) )[0],  $ukrainian, 'first enabled language' );
     is( ( request( accept => 'en-US, uk;q=0.5' ) )[0],         $english,   'English preferred' );
     is( ( request( accept => 'uk;q=0, en' ) )[0],              $english,   'refused language' );
+    is( ( request( accept => 'uk;q=0, de' ) )[0],              $english,   'refused language, nothing else enabled' );
+    is( ( request( accept => 'uk;q=0.0' ) )[0],                $english,   'refused language, written q=0.0' );
     is( ( request( accept => 'de' ) )[0],                      $english,   'not enabled' );
     is( ( request() )[0],                                      $english,   'no header' );
 };
@@ -108,6 +120,8 @@ subtest 'nothing leaks between requests' => sub {
     like( $locale_in_request, qr/^uk/, 'Ukrainian during the request' );
     is( setlocale(LC_MESSAGES), 'C', 'reset after the request' );
     is( ( request( accept => 'de' ) )[0], $english, 'next request is English' );
+    request( accept => 'uk', die_in_finalize => 1 );
+    is( setlocale(LC_MESSAGES), 'C', 'reset also when the request dies in finalize' );
     is( $ENV{LANGUAGE}, undef, 'LANGUAGE does not override the locale' );
 
     # A request that dies before finalize must not decide the language of the next one.
