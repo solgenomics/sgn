@@ -22,7 +22,7 @@ my ($unowned_id) = $dbh->selectrow_array(
     'SELECT stock_id FROM public.stock WHERE NOT EXISTS '
     . '(SELECT 1 FROM phenome.stock_owner WHERE stock_owner.stock_id = stock.stock_id) LIMIT 1'
 );
-BAIL_OUT('Fixture needs at least three owned stocks and one unowned stock')
+die "Fixture needs at least three owned stocks and one unowned stock\n"
     unless @$ids == 2 && $owner_count > 2 && defined $unowned_id;
 
 my $all = $lookup->get_owner_hash_lookup();
