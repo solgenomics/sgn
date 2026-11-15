@@ -62,10 +62,10 @@ sub patch {
 
     my $dbh = $self->dbh;
     my $ids = $dbh->selectcol_arrayref(
-        'SELECT cvterm_id FROM public.cvterm JOIN public.cv USING (cv_id) WHERE cvterm.name = ? AND cv.name = ?',
+        'SELECT cvterm_id FROM public.cvterm JOIN public.cv USING (cv_id) WHERE cvterm.name = ? AND cv.name = ? AND cvterm.is_obsolete = 0',
         undef, 'stock_synonym', 'stock_property',
     );
-    die "Expected exactly one stock_synonym cvterm in stock_property\n" if @$ids != 1;
+    die "Expected exactly one non-obsolete stock_synonym cvterm in stock_property\n" if @$ids != 1;
     my $synonym_id = $ids->[0];
     die "Invalid stock_synonym cvterm ID\n" if $synonym_id !~ /\A[0-9]+\z/;
 
@@ -80,6 +80,12 @@ CREATE INDEX IF NOT EXISTS stock_uniquename_trgm_idx ON public.stock USING gin (
 CREATE INDEX IF NOT EXISTS stock_description_trgm_idx ON public.stock USING gin (description gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS stockprop_synonym_value_trgm_idx ON public.stockprop USING gin (value gin_trgm_ops) WHERE type_id = $synonym_id;
 EOSQL
+    # IF NOT EXISTS also skips an index left invalid by an interrupted CONCURRENTLY build.
+    my $invalid = $dbh->selectcol_arrayref(q{SELECT ix.relname FROM pg_index idx
+        JOIN pg_class ix ON ix.oid = idx.indexrelid JOIN pg_namespace ns ON ns.oid = ix.relnamespace
+        WHERE ns.nspname = 'public' AND ix.relname = ANY(?) AND NOT idx.indisvalid},
+        undef, [qw(stock_name_trgm_idx stock_uniquename_trgm_idx stock_description_trgm_idx stockprop_synonym_value_trgm_idx)]);
+    die "Not valid: @$invalid. Drop them and run this patch again\n" if @$invalid;
     if ($self->trial) {
         $dbh->rollback();
         print "Trial mode: the indexes were built and rolled back.\n";
