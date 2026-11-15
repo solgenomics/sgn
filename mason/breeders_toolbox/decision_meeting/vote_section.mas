@@ -10,7 +10,8 @@ Votes of invited people (Breedbase users, or farmers and field workers
 without an account): a personal ballot link e-mailed to each one (there is no
 public link), start and end dates, progress (totals only) and anonymous
 results after the end (with the trait values and selection index of the
-candidates, from an analysis linked to the meeting).
+candidates, from an analysis of the meeting: a pipeline run or a stored analysis).
+Always open under the tabs of /breeders/meeting.
 Code: js/source/entries/decision_vote.js, endpoints /ajax/decision_vote/*,
 public pages /decision_vote/*.
 
@@ -25,11 +26,11 @@ Chris Simoes <ccs263@cornell.edu>
 <& /util/import_javascript.mas, entries => ['decision_vote'] &>
 
 <style>
-.dvm-card { border: 1px solid #d9dee5; border-radius: 6px; padding: 8px 10px; margin: 0 8px 8px 0; display: inline-block; vertical-align: top; min-width: 280px; max-width: 440px; background: #fff; cursor: pointer; }
+.dvm-card { border: 2px solid #dfe3e8; border-radius: 10px; padding: 8px 10px; margin: 0 8px 8px 0; display: inline-block; vertical-align: top; min-width: 280px; max-width: 440px; background: #fff; cursor: pointer; }
 .dvm-card.on { border-color: #2b7a4b; box-shadow: 0 0 0 2px #e8f3ec; }
 .dvm-card-title { font-weight: 600; }
 .dvm-meta { font-size: 11px; color: #6b7280; }
-.dvm-panel { border: 1px solid #d9dee5; border-radius: 6px; padding: 8px 10px; margin: 0 0 12px 0; background: #fafbfc; }
+.dvm-panel { border: 1px solid #dfe3e8; border-radius: 10px; padding: 8px 10px; margin: 0 0 12px 0; background: #fafbfc; }
 .dvm-list { max-height: 280px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; }
 .dvm-list label { display: block; font-weight: normal; margin: 0; padding: 3px 8px; border-bottom: 1px solid #f1f3f5; cursor: pointer; }
 .dvm-list input { margin-right: 6px; }
@@ -48,15 +49,9 @@ Chris Simoes <ccs263@cornell.edu>
 #dvm_voters td, #dvm_results td { white-space: nowrap; }
 </style>
 
-<div class="well">
-  <&| /page/info_section.mas,
-       title => 'Variety vote',
-       is_subsection => 1, collapsible => 1, collapsed => 0,
-       subtitle => 'Farmers and field workers (no Breedbase account needed) vote on the candidate varieties of the selected meeting'
-  &>
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <div id="dvm_status" class="dvm-muted">Select a meeting in the Meeting Tracker to see its variety votes.</div>
+<div class="dm-card">
+        <p class="dvm-muted" style="margin-top:0">Farmers and field workers (no Breedbase account needed) put the candidate varieties in order. Each invited person gets a personal link by e-mail; results are anonymous.</p>
+        <div id="dvm_status" class="dvm-muted">Choose a meeting to see its variety votes.</div>
         <div id="dvm_body" style="display:none">
           <div id="dvm_votes"></div>
           <div style="margin: 4px 0 10px 0">
@@ -85,8 +80,7 @@ Chris Simoes <ccs263@cornell.edu>
               <p class="dvm-muted" style="margin-bottom:6px">For each variety choose:
                 <b>Candidate</b> (people vote on it) &middot; <b>Only notes</b> (people can comment, no vote) &middot; <b>Not in the vote</b>.</p>
               <div class="form-inline" style="margin-bottom:6px">
-                <label class="checkbox-inline"><input type="checkbox" id="dvm_only_meeting" /> Only accessions of this meeting</label>
-                <button class="btn btn-default btn-xs" id="dvm_check_selected" style="margin-left:8px">Index selected = candidates, others = only notes</button>
+                <button class="btn btn-default btn-xs" id="dvm_check_selected">Index selected = candidates, others = only notes</button>
                 <button class="btn btn-default btn-xs" id="dvm_check_all">All: only notes</button>
                 <button class="btn btn-default btn-xs" id="dvm_check_none">All: not in the vote</button>
                 <span id="dvm_n_checked" style="margin-left:8px"></span>
@@ -117,9 +111,6 @@ Chris Simoes <ccs263@cornell.edu>
 
           <div id="dvm_detail" style="display:none"></div>
         </div>
-      </div>
-    </div>
-  </&>
 </div>
 
 <script>

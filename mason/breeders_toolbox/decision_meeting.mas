@@ -1,29 +1,387 @@
-<%args>
-</%args>
+<%doc>
 
-<& /util/import_javascript.mas,
-   classes => ['CXGN.BreederSearch','CXGN.Trial','jquery.iframe-post-form' ],
-   entries => ['decision_meeting'] &>
+=head1 NAME
 
-<& /page/page_title.mas, title=>"Decision Meeting" &>
+/breeders_toolbox/decision_meeting.mas - Decision Meeting page (/breeders/meeting)
 
-<div>
+=head1 DESCRIPTION
 
-<%perl>
-my $buttons_html = "<button class='btn btn-success' style='margin:3px' id='create_meeting_dialog'>Create Meeting</button>";
-</%perl>
+Meetings on the left; the chosen meeting on the right with three tabs:
+Evidence (the analyses the meeting decides on: Analysis Pipeline runs or
+stored analyses, whose accessions are the accessions of the meeting),
+Decisions (stage and decision per accession and breeding program) and
+Report; under the tabs, always open, the variety votes (vote_section.mas).
+Code: js/source/entries/decision_meeting.js, decision_vote.js;
+endpoints /ajax/decisionmeeting/*, /ajax/decision_evidence/*, /ajax/decision_vote/*.
+
+=head1 AUTHOR
+
+Chris Simoes <ccs263@cornell.edu>
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, classes => ['jquery'], entries => ['decision_meeting'] &>
 
 <& /breeders_toolbox/decision_meeting/add_meeting_dialog.mas &>
 
+<style>
+.dm-app { --dm-accent: #2b7a4b; --dm-accent-soft: #e8f4ec; --dm-border: #dfe3e8; --dm-muted: #6b7280; --dm-bg: #f7f9fa; margin-bottom: 40px; }
+.dm-app h3 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+.dm-app h4 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+.dm-muted { color: var(--dm-muted); }
+.dm-small { font-size: 12px; }
+.dm-ok { color: var(--dm-accent); }
+.dm-alert { margin: 8px 0; border-radius: 8px; }
+.dm-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; margin: 10px 0 18px; border-radius: 10px; background: linear-gradient(120deg, #1f5f3a 0%, #2b7a4b 55%, #4c9a6a 100%); color: #fff; }
+.dm-hero h2 { margin: 0 0 6px; font-weight: 600; color: #fff; }
+.dm-hero p { margin: 0; max-width: 760px; opacity: .92; }
+.dm-hero .btn { font-weight: 600; }
+.dm-card { background: #fff; border: 1px solid var(--dm-border); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.dm-side { position: sticky; top: 70px; }
+.dm-side .dm-card { padding: 12px; }
+.dm-segs { display: flex; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
+.dm-seg { border: 1px solid var(--dm-border); background: #fff; border-radius: 16px; padding: 3px 11px; font-size: 12.5px; color: #374151; cursor: pointer; }
+.dm-seg:hover { border-color: #9cc9ac; }
+.dm-seg.on { background: var(--dm-accent); border-color: var(--dm-accent); color: #fff; }
+.dm-seg .dm-count { opacity: .75; margin-left: 3px; }
+.dm-mlist { max-height: calc(100vh - 260px); overflow-y: auto; margin: 0 -4px; }
+.dm-mitem { display: block; padding: 9px 10px; margin: 2px 4px; border-radius: 8px; border: 1px solid transparent; color: #111827; text-decoration: none !important; }
+.dm-mitem:hover { background: var(--dm-bg); }
+.dm-mitem.on { background: var(--dm-accent-soft); border-color: #b9dcc6; }
+.dm-mitem-top { display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
+.dm-mitem-meta { display: block; font-size: 12px; color: var(--dm-muted); }
+.dm-pill { display: inline-block; border-radius: 10px; padding: 0 8px; font-size: 11px; font-weight: 600; white-space: nowrap; vertical-align: 2px; }
+.dm-pill-open { background: var(--dm-accent-soft); color: var(--dm-accent); }
+.dm-pill-saved { background: #eef0f3; color: #4b5563; }
+.dm-empty-small { padding: 12px; color: var(--dm-muted); font-size: 13px; }
+.dm-empty-card { text-align: center; padding: 34px 20px; border: 2px dashed var(--dm-border); border-radius: 12px; background: var(--dm-bg); }
+.dm-empty-card > .glyphicon { font-size: 30px; color: #9cc9ac; }
+.dm-empty-card h4 { margin-top: 10px; font-size: 17px; }
+.dm-empty-card p { color: #4b5563; max-width: 560px; margin: 0 auto 14px; }
+.dm-head-main { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.dm-head-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: #4b5563; font-size: 13px; }
+.dm-head-meta .glyphicon { color: var(--dm-muted); margin-right: 3px; }
+.dm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.dm-stat { background: #fff; border: 1px solid var(--dm-border); border-radius: 10px; padding: 10px 12px; }
+.dm-stat .v { font-size: 22px; font-weight: 600; color: var(--dm-accent); line-height: 1.1; }
+.dm-stat .v small { font-size: 13px; color: var(--dm-muted); font-weight: 600; }
+.dm-stat .l { font-size: 11px; color: var(--dm-muted); text-transform: uppercase; letter-spacing: .04em; }
+.dm-stat-adv .v { color: #15803d; } .dm-stat-hold .v { color: #b45309; } .dm-stat-drop .v { color: #b91c1c; }
+.dm-stats-sm .dm-stat .v { font-size: 18px; }
+.dm-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--dm-border); margin-bottom: 16px; flex-wrap: wrap; }
+.dm-tab { background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; padding: 8px 14px; font-weight: 600; color: var(--dm-muted); }
+.dm-tab:hover { color: #111827; }
+.dm-tab.on { color: var(--dm-accent); border-bottom-color: var(--dm-accent); }
+.dm-tab .badge { background: #e5e7eb; color: #374151; font-weight: 600; margin-left: 4px; }
+.dm-tab.on .badge { background: var(--dm-accent-soft); color: var(--dm-accent); }
+.dm-sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-bottom: 10px; }
+.dm-source { position: relative; border: 2px solid var(--dm-border); border-radius: 10px; padding: 10px 12px; background: #fff; cursor: pointer; text-align: left; transition: border-color .15s; }
+.dm-source:hover { border-color: #9cc9ac; }
+.dm-source.on { border-color: var(--dm-accent); background: #fbfdfc; box-shadow: 0 0 0 3px var(--dm-accent-soft); }
+.dm-source.err { border-color: #f5c2c7; }
+.dm-source-add { border-style: dashed; color: var(--dm-accent); font-weight: 600; text-align: center; min-height: 110px; }
+.dm-source-add .glyphicon { font-size: 20px; margin-bottom: 4px; }
+.dm-source-name { font-weight: 600; margin: 4px 0 2px; word-break: break-word; }
+.dm-source-meta { font-size: 12.5px; color: #374151; }
+.dm-source-traits { margin-top: 4px; }
+.dm-source-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11.5px; }
+.dm-kind { display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; margin-right: 4px; white-space: nowrap; }
+.dm-kind-run { background: #e0f2fe; color: #075985; }
+.dm-kind-pipe { background: var(--dm-accent-soft); color: var(--dm-accent); }
+.dm-kind-an { background: #f3e8ff; color: #6b21a8; }
+.dm-kind-late { background: #fef3c7; color: #92400e; }
+.dm-chip { display: inline-block; padding: 0 7px; margin: 1px 3px 1px 0; border-radius: 10px; background: #eef2ff; color: #3730a3; font-size: 11px; }
+.dm-toolbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 10px; }
+.dm-toolbar .form-control { display: inline-block; width: auto; }
+.dm-field { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.dm-table-wrap { overflow: auto; max-height: 70vh; border: 1px solid var(--dm-border); border-radius: 8px; }
+.dm-table { margin: 0; font-size: 13px; }
+.dm-table thead th { position: sticky; top: 0; background: var(--dm-bg); z-index: 1; white-space: nowrap; border-bottom: 1px solid var(--dm-border) !important; font-size: 12px; color: #374151; }
+.dm-table td { vertical-align: middle !important; }
+.dm-sortable { cursor: pointer; }
+.dm-sortable:hover { color: var(--dm-accent); }
+.dm-sort-on { font-size: 9px; color: var(--dm-accent); }
+.dm-rank { color: var(--dm-muted); font-size: 11px; }
+.dm-badge-sel { display: inline-block; background: var(--dm-accent); color: #fff; border-radius: 8px; padding: 0 6px; font-size: 10px; font-weight: 600; vertical-align: 1px; }
+.dm-sel-row td:first-child { box-shadow: inset 3px 0 0 var(--dm-accent); }
+.dm-parents { font-size: 11px; color: var(--dm-muted); }
+.dm-acc { min-width: 150px; }
+.dm-cb { width: 28px; }
+.dm-stage { display: inline-block; background: #f3f4f6; border-radius: 6px; padding: 0 6px; font-family: Menlo, Consolas, monospace; font-size: 11.5px; white-space: nowrap; }
+.dm-stage-new { background: #dcfce7; color: #14532d; }
+.dm-trait-col { white-space: nowrap; }
+.dm-decide { display: inline-flex; border: 1px solid var(--dm-border); border-radius: 8px; overflow: hidden; }
+.dm-dbtn { border: 0; border-right: 1px solid var(--dm-border); background: #fff; padding: 3px 8px; font-size: 12px; color: #4b5563; }
+.dm-dbtn:last-child { border-right: 0; }
+.dm-dbtn:hover:not(:disabled) { background: var(--dm-bg); }
+.dm-dbtn:disabled { opacity: .45; }
+.dm-dbtn-drop.on { background: #dc2626; color: #fff; }
+.dm-dbtn-hold.on { background: #d97706; color: #fff; }
+.dm-dbtn-advance.on { background: #16a34a; color: #fff; }
+.dm-dbtn-jump.on { background: #7c3aed; color: #fff; }
+.dm-row-drop td { background: #fef2f2; } .dm-row-hold td { background: #fffbeb; }
+.dm-row-advance td { background: #f0fdf4; } .dm-row-jump td { background: #f5f3ff; }
+.dm-dec-tag { display: inline-block; border-radius: 8px; padding: 1px 8px; font-size: 12px; font-weight: 600; color: #fff; }
+.dm-dec-drop { background: #dc2626; } .dm-dec-hold { background: #d97706; } .dm-dec-advance { background: #16a34a; } .dm-dec-jump { background: #7c3aed; }
+.dm-comment { min-width: 160px; }
+.dm-stage-sel { min-width: 110px; }
+.dm-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--dm-bg); border: 1px solid var(--dm-border); border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; font-size: 13px; }
+.dm-footbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; }
+.dm-dl dt { float: left; width: 90px; color: var(--dm-muted); font-weight: normal; }
+.dm-dl dd { margin-left: 100px; margin-bottom: 4px; }
+.dm-bars { font-size: 13px; }
+.dm-barrow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.dm-barrow span { width: 64px; } .dm-barrow b { width: 36px; text-align: right; }
+.dm-bar { flex: 1; height: 10px; background: #f1f5f9; border-radius: 5px; overflow: hidden; }
+.dm-bar-in { height: 100%; border-radius: 5px; }
+.dm-hist { list-style: none; padding: 0; margin: 0; font-size: 13px; max-height: 260px; overflow-y: auto; }
+.dm-hist li { padding: 4px 0; border-bottom: 1px solid #f1f3f5; }
+.dm-hist-added { color: var(--dm-accent); font-weight: 600; } .dm-hist-removed { color: #b91c1c; font-weight: 600; }
+.dm-pick { display: flex; align-items: center; gap: 10px; font-weight: normal; margin: 0; padding: 8px 10px; border-bottom: 1px solid #f1f3f5; cursor: pointer; }
+.dm-pick:hover { background: var(--dm-bg); }
+.dm-pick.off { opacity: .6; cursor: default; }
+.dm-pick-main { flex: 1; min-width: 0; }
+.dm-pick-main b, .dm-pick-main span { display: block; }
+.dm-pick-main span { font-size: 12px; }
+.dm-add-list { max-height: 50vh; overflow-y: auto; border: 1px solid var(--dm-border); border-radius: 8px; }
+.dm-add-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.dm-add-tab { flex: 1; border: 2px solid var(--dm-border); border-radius: 10px; background: #fff; padding: 8px 10px; text-align: left; }
+.dm-add-tab.on { border-color: var(--dm-accent); background: var(--dm-accent-soft); }
+.dm-add-tab b { display: block; }
+.dm-add-tab span { font-size: 12px; color: var(--dm-muted); }
+.dm-sugg { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 8px; font-size: 10px; font-weight: 600; background: var(--dm-accent); color: #fff; text-transform: uppercase; vertical-align: 1px; }
+.dm-loading { padding: 16px; color: var(--dm-muted); }
+.dm-spin { animation: dm-spin 1s linear infinite; }
+@keyframes dm-spin { to { transform: rotate(360deg); } }
+#dm_flash { position: sticky; top: 60px; z-index: 5; }
+.dm-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.dm-card-head h4 { margin: 0; }
+.dm-sub { font-size: 14px; font-weight: 600; margin: 16px 0 8px; }
+.dm-h2 { display: inline-block; min-width: 42px; padding: 1px 6px; border-radius: 10px; color: #fff; text-align: center; font-size: 12px; }
+.dm-sel-top { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+.dm-slider { flex: 1; min-width: 260px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--dm-bg); border-radius: 8px; padding: 8px 12px; }
+.dm-slider label { margin: 0; font-weight: normal; }
+.dm-slider input { flex: 1; min-width: 160px; }
+.dm-acc-box { background: #fff; border: 1px solid var(--dm-border); border-radius: 10px; padding: 6px 14px; min-width: 150px; cursor: help; }
+.dm-acc-box .v { font-size: 20px; font-weight: 600; line-height: 1.2; }
+.dm-acc-box .v small { font-size: 12px; margin-left: 2px; }
+.dm-acc-box .l { font-size: 12px; color: var(--dm-muted); }
+.dm-acc-high .v { color: #2b7a4b; } .dm-acc-moderate .v { color: #b7791f; } .dm-acc-low .v { color: #9b2c2c; }
+.dm-sel-top .btn { align-self: center; }
+.dm-hbars { max-height: 70vh; overflow-y: auto; }
+.dm-hbar { display: flex; align-items: center; gap: 6px; font-size: 12px; height: 19px; }
+.dm-hbar-l { width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+.dm-hbar.sel .dm-hbar-l { font-weight: 600; color: var(--dm-accent); }
+.dm-hbar-t { position: relative; flex: 1; height: 12px; }
+.dm-hbar-zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: #94a3b8; }
+.dm-hbar-b { position: absolute; top: 0; bottom: 0; border-radius: 2px; background: #a7d3b5; }
+.dm-hbar.sel .dm-hbar-b { background: var(--dm-accent); }
+.dm-hbar-v { width: 52px; color: var(--dm-muted); font-size: 11px; }
+.dm-section-title { font-size: 17px; font-weight: 600; margin: 26px 0 10px; padding-top: 14px; border-top: 2px solid var(--dm-border); color: #111827; }
+.dm-section-title .glyphicon { color: var(--dm-accent); margin-right: 4px; }
+</style>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Decision Meeting</h4>", info_section_subtitle => 'Create meeting setup', buttons_html => $buttons_html, icon_class => "glyphicon glyphicon-list-alt", info_section_id => "decision_meeting_section" &>
+<div id="dm-app" class="dm-app">
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Accession Tracker</h4>", info_section_subtitle => 'Accessions, stages, and decisions',icon_class => "glyphicon glyphicon-signal", info_section_id => "accession_meeting_section" &>
+  <div class="dm-hero">
+    <div>
+      <h2><span class="glyphicon glyphicon-check"></span> Decision Meeting</h2>
+      <p>Bring the analyses, look at the evidence of every accession, decide together what advances, holds or drops, and keep the record. Farmers and field workers can vote on the candidates too.</p>
+    </div>
+    <button class="btn btn-default btn-lg" id="create_meeting_dialog"><span class="glyphicon glyphicon-plus"></span> New meeting</button>
+  </div>
 
-<& /breeders_toolbox/decision_meeting/analysis_evidence_section.mas &>
+  <div class="row">
+    <div class="col-md-3">
+      <div class="dm-side">
+        <div class="dm-card">
+          <input type="search" class="form-control input-sm" id="dm_msearch" placeholder="Search meetings" />
+          <div class="dm-segs">
+            <button class="dm-seg on" data-filter="open">Open<span class="dm-count"></span></button>
+            <button class="dm-seg" data-filter="saved">Saved<span class="dm-count"></span></button>
+            <button class="dm-seg" data-filter="all">All<span class="dm-count"></span></button>
+          </div>
+          <div class="dm-mlist" id="dm_meetings"><div class="dm-loading"><span class="glyphicon glyphicon-refresh dm-spin"></span> Loading...</div></div>
+        </div>
+      </div>
+    </div>
 
-<& /breeders_toolbox/decision_meeting/vote_section.mas &>
+    <div class="col-md-9">
+      <div id="dm_flash"></div>
 
+      <div id="dm_empty" class="dm-empty-card" style="display:none">
+        <span class="glyphicon glyphicon-blackboard"></span>
+        <h4>Choose a meeting, or create a new one</h4>
+        <p>A meeting decides on the accessions of one or more analyses: runs of the Analysis Pipeline (suggested) or stored analyses. No list or dataset to prepare.</p>
+        <button class="btn btn-success" data-dm="open-create-meeting"><span class="glyphicon glyphicon-plus"></span> New meeting</button>
+      </div>
+
+      <div id="dm_workspace" style="display:none">
+        <div class="dm-card" id="dm_head"></div>
+        <div class="dm-stats" id="dm_stats"></div>
+
+        <div class="dm-tabs">
+          <button class="dm-tab on" data-tab="evidence"><span class="glyphicon glyphicon-stats"></span> Evidence <span class="badge" id="dm_tab_count_evidence"></span></button>
+          <button class="dm-tab" data-tab="decide"><span class="glyphicon glyphicon-check"></span> Decisions <span class="badge" id="dm_tab_count_decide"></span></button>
+          <button class="dm-tab" data-tab="report"><span class="glyphicon glyphicon-file"></span> Report</button>
+        </div>
+
+        <!-- Evidence -->
+        <div class="dm-pane" data-pane="evidence">
+          <div id="dm_sources"></div>
+          <div id="dm_evidence_view" style="display:none">
+            <div class="dm-segs" id="dm_ev_pick"></div>
+            <div class="dm-card">
+              <div class="dm-card-head"><h4><span class="glyphicon glyphicon-dashboard"></span> Traits at a glance <span class="dm-muted dm-ev-title"></span></h4><span class="dm-muted dm-small">Is each trait reliable enough to select on?</span></div>
+              <div id="dm_glance"></div>
+            </div>
+            <div class="dm-card">
+              <div class="dm-card-head">
+                <h4><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Selection</h4>
+                <span class="dm-field">
+                  <span class="dm-muted">Rank by</span>
+                  <select class="form-control input-sm" id="dm_sel_by" style="max-width:240px"></select>
+                  <span class="btn-group btn-group-sm" id="dm_sel_dir">
+                    <button class="btn btn-default" data-dir="increase" title="Higher values are better"><span class="glyphicon glyphicon-arrow-up"></span></button>
+                    <button class="btn btn-default" data-dir="decrease" title="Lower values are better"><span class="glyphicon glyphicon-arrow-down"></span></button>
+                  </span>
+                </span>
+              </div>
+              <div class="dm-sel-top">
+                <div class="dm-slider">
+                  <label for="dm_sel_pct">Select the top <b id="dm_sel_pct_label">10</b>% &rarr; <b id="dm_sel_n">0</b> accession(s)</label>
+                  <input type="range" id="dm_sel_pct" min="1" max="50" step="1" value="10" />
+                </div>
+                <div class="dm-acc-box" id="dm_sel_acc"></div>
+                <button class="btn btn-success" id="dm_sel_use" title="Check these accessions in the Decisions tab, to decide them at once"><span class="glyphicon glyphicon-check"></span> Check in Decisions</button>
+              </div>
+              <h5 class="dm-sub">Expected response to selection</h5>
+              <div id="dm_sel_gains"></div>
+              <div class="row">
+                <div class="col-lg-5">
+                  <h5 class="dm-sub">Top accessions</h5>
+                  <div id="dm_sel_chart" class="dm-hbars"></div>
+                </div>
+                <div class="col-lg-7">
+                  <div class="dm-card-head" style="margin-top:12px">
+                    <h5 class="dm-sub" style="margin:0">Ranking</h5>
+                    <span>
+                      <input type="search" class="form-control input-sm" id="dm_ev_search" placeholder="Find accession" style="width:160px;display:inline-block" />
+                      <label class="checkbox-inline dm-small"><input type="checkbox" id="dm_ev_selected" /> Only selected</label>
+                      <button class="btn btn-default btn-xs" id="dm_ev_csv"><span class="glyphicon glyphicon-download-alt"></span> CSV</button>
+                    </span>
+                  </div>
+                  <div id="dm_ev_table"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decisions -->
+        <div class="dm-pane" data-pane="decide" style="display:none">
+          <div class="dm-card">
+            <div class="dm-toolbar">
+              <div class="dm-segs" style="margin:0">
+                <button class="dm-seg on" data-dfilter="all">All<span class="dm-count"></span></button>
+                <button class="dm-seg" data-dfilter="selected">Selected by index<span class="dm-count"></span></button>
+                <button class="dm-seg" data-dfilter="undecided">To decide<span class="dm-count"></span></button>
+                <button class="dm-seg" data-dfilter="decided">Decided<span class="dm-count"></span></button>
+              </div>
+              <input type="search" class="form-control input-sm" id="dm_dec_search" placeholder="Find accession, stage, parent" style="width:210px" />
+              <select class="form-control input-sm" id="dm_dec_program" style="display:none"></select>
+              <span class="dm-field"><span class="dm-muted">Evidence from</span> <select class="form-control input-sm" id="dm_dec_source" style="max-width:260px"></select></span>
+            </div>
+            <div class="alert alert-info dm-alert" id="dm_readonly_note" style="display:none"></div>
+            <div class="dm-bulk" id="dm_bulk">
+              <span id="dm_bulk_n" class="dm-muted"></span>
+              <button class="btn btn-link btn-xs" id="dm_bulk_selected" title="Check the rows selected by the index of an analysis">check the index-selected</button>
+              <span class="dm-decide">
+                <button type="button" class="dm-dbtn dm-dbtn-drop" data-v="drop">Drop</button><button type="button" class="dm-dbtn dm-dbtn-hold" data-v="hold">Hold</button><button type="button" class="dm-dbtn dm-dbtn-advance" data-v="advance">Advance</button><button type="button" class="dm-dbtn dm-dbtn-jump" data-v="jump">Jump</button>
+              </span>
+              <button class="btn btn-link btn-xs" id="dm_bulk_clear">clear decision</button>
+            </div>
+            <div id="dm_dec_table"></div>
+            <div class="dm-small" id="dm_dec_foot" style="margin-top:6px"></div>
+            <div class="dm-footbar">
+              <span>
+                <button class="btn btn-default btn-sm" id="dm_template_btn"><span class="glyphicon glyphicon-download-alt"></span> Excel template</button>
+                <button class="btn btn-default btn-sm" id="dm_upload_btn"><span class="glyphicon glyphicon-upload"></span> Fill from Excel</button>
+                <input type="file" id="dm_upload_file" accept=".xls,.xlsx" style="display:none" />
+                <span id="dm_draft_state" class="dm-small" style="margin-left:8px"></span>
+              </span>
+              <button class="btn btn-success" id="dm_save_btn"><span class="glyphicon glyphicon-lock"></span> Review and save decisions</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Report -->
+        <div class="dm-pane" data-pane="report" style="display:none">
+          <div id="dm_report"></div>
+        </div>
+
+        <!-- Variety vote: always open, under the tabs -->
+        <div class="dm-section-title" id="dm_vote_section"><span class="glyphicon glyphicon-thumbs-up"></span> Variety vote</div>
+        <& /breeders_toolbox/decision_meeting/vote_section.mas &>
+      </div>
+    </div>
+  </div>
+
+  <!-- add analyses -->
+  <div class="modal fade" id="dm_add_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Add analyses to the meeting</h4>
+        </div>
+        <div class="modal-body">
+          <div class="dm-add-tabs">
+            <button class="dm-add-tab on" data-add="runs"><b><span class="glyphicon glyphicon-random"></span> Analysis Pipeline runs <span class="dm-sugg">suggested</span> <span class="badge" id="dm_add_n_runs"></span></b><span>Your runs, as on your personal page: values, ranks and selection index.</span></button>
+            <button class="dm-add-tab" data-add="analyses"><b><span class="glyphicon glyphicon-hdd"></span> Stored analyses <span class="badge" id="dm_add_n_an"></span></b><span>Analyses of Manage &rsaquo; Analyses (pipeline or other tools).</span></button>
+          </div>
+          <div class="dm-toolbar">
+            <input type="search" class="form-control input-sm" id="dm_add_search" placeholder="Search by name, dataset or date" style="width:280px" />
+            <label class="checkbox-inline dm-small"><input type="checkbox" id="dm_add_mine" /> Only mine</label>
+          </div>
+          <div class="dm-add-list" id="dm_add_list"></div>
+          <div id="dm_add_msg"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="dm_add_go" disabled><span class="glyphicon glyphicon-plus"></span> Add to the meeting</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- save decisions -->
+  <div class="modal fade" id="dm_save_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Save the decisions of the meeting</h4>
+        </div>
+        <div class="modal-body">
+          <div id="dm_save_summary"></div>
+          <label for="dm_save_notes" style="margin-top:10px">Meeting notes</label>
+          <textarea class="form-control" id="dm_save_notes" rows="3" placeholder="What was discussed, who agreed, next steps"></textarea>
+          <p class="dm-muted dm-small" style="margin-top:8px"><span class="glyphicon glyphicon-info-sign"></span> Saving is final: the new stages are written on the accessions and the meeting becomes a permanent record. Analyses can still be added later, not removed.</p>
+          <div id="dm_save_msg"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Keep editing</button>
+          <button type="button" class="btn btn-success" id="dm_save_confirm"><span class="glyphicon glyphicon-lock"></span> Save decisions for good</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-
+<script>
+  jQuery(function() { window.jsMod['decision_meeting'].init(); });
+</script>

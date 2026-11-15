@@ -55,6 +55,7 @@ use JSON;
 use Try::Tiny;
 use CXGN::JSONUtils qw(decode_stored_json);
 use SGN::Controller::AJAX::ScriptFactory;
+use SGN::Controller::AJAX::DecisionEvidence;
 use CXGN::RespectfulWords;
 use CXGN::Contact;
 
@@ -386,7 +387,7 @@ sub vote_detail : Path('/ajax/decision_vote/detail') Args(0) {
 }
 
 # POST meeting_id, name, description, start_date, end_date,
-# analysis_id (optional), accessions (JSON array of accession names, in order)
+# source (optional: analysis:<id> or run:<run id>, or analysis_id), accessions (JSON array of accession names, in order)
 sub create_vote : Path('/ajax/decision_vote/create') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -419,17 +420,23 @@ sub create_vote : Path('/ajax/decision_vote/create') Args(0) {
     return _fail($c, 'These are not accessions of the database: ' . join(', ', @unknown)) if @unknown;
 
     # evidence of the analysis, kept with the vote: only its candidates
+    # source: an evidence source of the meeting (analysis:<id> or run:<run id>);
+    # analysis_id is the older form of analysis:<id>
+    my $source = $c->req->param('source') // '';
     my ($analysis_id, $evidence) = ($c->req->param('analysis_id') // '', undef);
-    if ($analysis_id ne '') {
-        return _fail($c, 'Invalid analysis.') if $analysis_id !~ /^\d+$/;
-        my $e = SGN::Controller::AJAX::ScriptFactory::evidence_data($c, $analysis_id);
+    $source = "analysis:$analysis_id" if $source eq '' && $analysis_id ne '';
+    $analysis_id = $source =~ /^analysis:(\d+)$/ ? $1 : undef;
+    if ($source ne '') {
+        return _fail($c, 'Invalid analysis.') if $source !~ /^(?:analysis:\d+|run:sf_run_[A-Za-z0-9_]+)$/;
+        my $e = SGN::Controller::AJAX::DecisionEvidence::source_evidence($c, $meeting_id, $source);
         return _fail($c, 'Analysis evidence: ' . $e->{error}) if $e->{error};
         my %want = map { $_ => 1 } @names;
         $evidence = {
-            analysis_id => $analysis_id + 0,
+            source => $source,
+            analysis_id => $analysis_id ? $analysis_id + 0 : undef,
             analysis_name => $e->{name},
             value_label => $e->{value_label},
-            traits => [ map { +{ trait => $_->{trait}, direction => $_->{direction}, h2 => $_->{h2} } } @{ $e->{traits} || [] } ],
+            traits => [ map { +{ trait => $_->{trait}, label => $_->{label} // $_->{trait}, direction => $_->{direction}, h2 => $_->{h2} } } @{ $e->{traits} || [] } ],
             index => $e->{index} ? { method => $e->{index}->{method}, selection_pct => $e->{index}->{selection_pct}, n_ranked => $e->{index}->{n_ranked} } : undef,
             rows => {},
         };
@@ -442,8 +449,6 @@ sub create_vote : Path('/ajax/decision_vote/create') Args(0) {
                 index => $row->{index}, index_rank => $row->{index_rank}, selected => $row->{selected},
             };
         }
-    } else {
-        $analysis_id = undef;
     }
 
     my $id;

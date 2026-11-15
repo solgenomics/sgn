@@ -269,7 +269,7 @@ function resultsHtml(v, w) {
             ': ' + esc(ev.value_label || 'genetic value') + ' of each trait (rank among all the accessions of the analysis in brackets; 1 = best)' +
             (ev.index ? ' and the selection index' : '') + '.</p>';
         h += '<div class="table-responsive"><table class="table table-striped table-bordered table-condensed"><thead><tr><th>Place in the vote</th><th>Variety</th>' +
-            traits.map(t => '<th>' + esc(t.trait) + (t.direction === 'decrease' ? ' <span class="dv-muted" title="lower is better">&darr;</span>' : t.direction === 'increase' ? ' <span class="dv-muted" title="higher is better">&uarr;</span>' : '') + '</th>').join('') +
+            traits.map(t => '<th>' + esc(t.label || t.trait) + (t.direction === 'decrease' ? ' <span class="dv-muted" title="lower is better">&darr;</span>' : t.direction === 'increase' ? ' <span class="dv-muted" title="higher is better">&uarr;</span>' : '') + '</th>').join('') +
             (ev.index ? '<th>Selection index</th><th>Index rank</th>' : '') + '</tr></thead><tbody>';
         h += res.candidates.map(x => {
             const e = x.evidence || {};

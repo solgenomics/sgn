@@ -2335,7 +2335,7 @@ sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
     }
     my ($schema) = _schemas($c);
     # an analysis is added only if the user can open it; a removed one may no longer exist
-    my %info;
+    my (%info, %acc);
     if ($action eq 'link') {
         foreach my $id (@ids) {
             my $i = _stored_analysis($c, $id);
@@ -2344,6 +2344,13 @@ sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
                 return;
             }
             $info{$id} = $i;
+            # the accessions of the analysis, kept with the link (the meeting decides on them)
+            my $e = evidence_data($c, $id);
+            if (!$e->{error}) {
+                my @rows = grep { ref($_) eq 'HASH' } @{ $e->{rows} || [] };
+                $acc{$id} = { accessions => [ sort map { $_->{accession} } @rows ], selected => [ sort map { $_->{accession} } grep { $_->{selected} } @rows ],
+                              traits => [ map { $_->{trait} } @{ $e->{traits} || [] } ] };
+            }
         }
     }
     my $person = $c->user()->get_object();
@@ -2358,17 +2365,19 @@ sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
             my $prop = $schema->resultset('Project::Projectprop')->search({ projectprop_id => $m->{prop}->projectprop_id() }, { for => 'update' })->single();
             my $d = _decode_meeting($prop->value());
             $m->{saved} = _meeting_is_saved($d);
-            my @list = grep { ref($_) eq 'HASH' && ($_->{analysis_id} // '') =~ /^\d+$/ } @{ ref($d->{related_analyses}) eq 'ARRAY' ? $d->{related_analyses} : [] };
-            my %have = map { $_->{analysis_id} => $_ } @list;
+            # every source is kept (pipeline runs of the decision meeting page too)
+            my @list = grep { ref($_) eq 'HASH' } @{ ref($d->{related_analyses}) eq 'ARRAY' ? $d->{related_analyses} : [] };
+            my %have = map { $_->{analysis_id} => $_ } grep { ($_->{analysis_id} // '') =~ /^\d+$/ } @list;
             my @history = grep { ref($_) eq 'HASH' } @{ ref($d->{analyses_history}) eq 'ARRAY' ? $d->{analyses_history} : [] };
             foreach my $id (@ids) {
                 if ($action eq 'link') {
                     next if $have{$id};
-                    push @list, { analysis_id => $id + 0, name => $info{$id}->{name}, linked_by => $who, linked_at => $today, ($m->{saved} ? (after_save => 1) : ()) };
+                    push @list, { source => 'analysis', analysis_id => $id + 0, kind => 'pipeline', name => $info{$id}->{name}, %{ $acc{$id} || {} },
+                                  linked_by => $who, linked_at => $today, ($m->{saved} ? (after_save => 1) : ()) };
                 } else {
                     next if !$have{$id};
                     die "The decisions of this meeting are saved: the analyses it used as evidence are a permanent record and cannot be removed.\n" if $m->{saved};
-                    @list = grep { $_->{analysis_id} != $id } @list;
+                    @list = grep { ($_->{analysis_id} // '') ne $id } @list;
                 }
                 push @history, { action => ($action eq 'link' ? 'added' : 'removed'), analysis_id => $id + 0, name => ($info{$id} ? $info{$id}->{name} : $have{$id}->{name}),
                                  by => $who, on => $today, ($m->{saved} ? (after_save => 1) : ()) };
@@ -2434,16 +2443,53 @@ sub evidence_data {
     my ($c, $analysis_id) = @_;
     my $r = analysis_run_id($c, $analysis_id);
     return { error => $r->{error} } if $r->{error};
+    my $e = run_evidence($c, $r->{run_id});
+    return $e if $e->{error};
+    my $info = _stored_analysis($c, $analysis_id);
+    return {
+        %$e,
+        analysis_id => $analysis_id + 0,
+        name => $info->{name},
+        description => $info->{description},
+        dashboard => "/tools/script_factory/analysis/$analysis_id",
+    };
+}
+
+# The evidence of a pipeline run (stored or not), from its results file:
+# {traits, index, zone_targets, rows, ...} or {error}. The caller checks that
+# the user may see the run. Decision meetings keep a copy of it when a run that
+# is not stored is used as evidence (temporary files are cleaned regularly).
+sub run_evidence {
+    my ($c, $run_id) = @_;
+    return { error => 'Invalid analysis run.' } if !_valid_token($run_id) || $run_id !~ /^sf_run_/;
     # the results file as written by the pipeline (_load_results drops the
     # standard errors of genotype_values_long and publishes files: not needed here)
-    my $res = try { decode_json(read_file(_work_dir($c) . "/$r->{run_id}.results.json")) } catch { undef };
-    return { error => 'The results of this analysis cannot be read.' } if !$res;
+    my $res = try { decode_json(read_file(_work_dir($c) . "/$run_id.results.json")) } catch { undef };
+    return { error => 'The results of this run are no longer available (temporary files are cleaned regularly).' } if !$res;
     my $as_list = sub { my $x = shift; return !defined($x) ? [] : ref($x) eq 'ARRAY' ? $x : [$x] };
     my @traits = @{ $as_list->(($res->{summary} || {})->{traits}) };
     my %idx_dir = map { (s/\|.*$//r) => ($res->{recipe}->{index}->{traits}->{$_}->{direction} // 'increase') } keys %{ (($res->{recipe} || {})->{index} || {})->{traits} || {} };
     my %s2 = map { ($_->{trait} // '') => $_ } @{ $as_list->($res->{stage2}) };
     my %se;
     foreach my $g (@{ $as_list->($res->{genotype_values_long}) }) { $se{ $g->{accession} }->{ $g->{trait} } = $g->{se}; }
+    # what the results page shows of each trait ("Traits at a glance", "Selection"):
+    # index weights, values removed as outliers, selection accuracy (mean over the
+    # accessions of sqrt(1 - PEV / var_g) from the standard errors of the BLUPs;
+    # sqrt(H2) without standard errors; none for BLUEs without heritability)
+    my %idx_w = map { (s/\|.*$//r) => $res->{recipe}->{index}->{traits}->{$_}->{weight} } keys %{ (($res->{recipe} || {})->{index} || {})->{traits} || {} };
+    my %out = map { ($_->{trait} // '') => $_ } @{ $as_list->($res->{outlier_summary}) };
+    my $random = ($res->{genotype_effect} // '') ne 'fixed';
+    my $accuracy = sub {
+        my $t = shift;
+        my ($vg, $h2) = (($s2{$t} || {})->{var_g}, ($s2{$t} || {})->{h2});
+        my @ses = grep { defined && /^[-+.\deE]+$/ } map { $se{$_}->{$t} } keys %se;
+        if ($random && defined($vg) && $vg =~ /^[-+.\deE]+$/ && $vg > 0 && @ses) {
+            my $sum = 0;
+            $sum += sqrt(1 - $_ * $_ / $vg > 0 ? 1 - $_ * $_ / $vg : 0) for @ses;
+            return $sum / @ses;
+        }
+        return defined($h2) && $h2 =~ /^[-+.\deE]+$/ ? sqrt($h2 > 0 ? $h2 : 0) : undef;
+    };
     my %rows;
     foreach my $g (@{ $as_list->($res->{genotype_values}) }) {
         my $a = $g->{accession} // next;
@@ -2482,20 +2528,21 @@ sub evidence_data {
             undef, [ keys %rows ]);
         $rows{ $_->[0] }->{stock_id} = $_->[1] + 0 for grep { $rows{ $_->[0] } } @$ids;
     }
-    my $info = _stored_analysis($c, $analysis_id);
     return {
-        analysis_id => $analysis_id + 0,
-        name => $info->{name},
-        description => $info->{description},
-        dashboard => "/tools/script_factory/analysis/$analysis_id",
+        run_id => $run_id,
+        dashboard => "/tools/script_factory/results/$run_id",
         value_label => $res->{value_label} // 'BLUP',
         strategy => $res->{strategy},
         engine => $res->{engine},
         genetic_model => $res->{genetic_model},
         genomic => $res->{genomic},
-        traits => [ map { +{ trait => $_, h2 => ($s2{$_} || {})->{h2}, n_trials => ($s2{$_} || {})->{n_trials}, direction => $idx_dir{$_} // '' } } @traits ],
+        genotype_effect => $res->{genotype_effect},
+        traits => [ map { my $t = $_; my $m = $s2{$t} || {};
+            +{ trait => $t, direction => $idx_dir{$t} // '', in_index => exists $idx_dir{$t} ? 1 : 0, weight => $idx_w{$t},
+               (map { $_ => $m->{$_} } qw(h2 n_trials mean var_g var_ge var_e message)),
+               pct_removed => ($out{$t} || {})->{pct_removed}, accuracy => $accuracy->($t) } } @traits ],
         index => $ix ? { method => $ix->{method}, selection_pct => $ix->{selection_pct}, n_selected => $ix->{n_selected}, n_ranked => $ix->{n_ranked},
-                         traits => [ grep { exists $idx_dir{$_} } @traits ] } : undef,
+                         accuracy => $ix->{accuracy}, traits => [ grep { exists $idx_dir{$_} } @traits ] } : undef,
         zone_targets => [ map { $_->{target} } @{ $as_list->($res->{zones}) } ],
         zone_min_env => { map { ($_->{target} // '') => $_->{min_env} } @{ $as_list->($res->{zones}) } },
         n_trials => ($res->{summary} || {})->{n_trials},

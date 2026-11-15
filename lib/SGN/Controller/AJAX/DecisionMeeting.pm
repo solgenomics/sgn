@@ -284,17 +284,65 @@ sub decisions_GET {
     my $meeting_id       = $c->req->param('meeting_id');
     my $selected_program = $c->req->param('breeding_program') // '';
 
-    return $self->status_bad_request($c, message => 'Missing list_id')
-        unless $list_id;
+    my $meeting_accessions;
+    unless ($list_id) {
+        $meeting_accessions = $self->_meeting_evidence_accessions($c, $meeting_id);
+        return $self->status_bad_request($c, message => 'Missing list_id or meeting_id')
+            unless $meeting_accessions;
+    }
 
     my $entity = $self->_decision_rows_entity(
         $c,
         list_id          => $list_id,
         meeting_id       => $meeting_id,
         breeding_program => $selected_program,
+        ($meeting_accessions ? (accessions => $meeting_accessions) : ()),
     );
+    $self->_apply_meeting_decisions($c, $meeting_id, $entity) if $meeting_accessions;
 
     return $self->status_ok($c, entity => $entity);
+}
+
+# the accessions of the analyses linked to a meeting (its evidence), or undef
+sub _meeting_evidence_accessions {
+    my ($self, $c, $meeting_id) = @_;
+    return unless defined($meeting_id) && $meeting_id =~ /^\d+$/;
+    require SGN::Controller::AJAX::DecisionEvidence;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my ($m) = @{ SGN::Controller::AJAX::ScriptFactory::_meetings($schema, $meeting_id) };
+    return unless $m;
+    return SGN::Controller::AJAX::DecisionEvidence::meeting_accessions($c, $meeting_id, $m->{data});
+}
+
+# decisions kept with the meeting on the rows: the saved ones (saved meeting)
+# or the drafts (open meeting); rows get saved => 1 when the meeting is saved
+sub _apply_meeting_decisions {
+    my ($self, $c, $meeting_id, $entity) = @_;
+    require SGN::Controller::AJAX::ScriptFactory;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my ($m) = @{ SGN::Controller::AJAX::ScriptFactory::_meetings($schema, $meeting_id) };
+    return unless $m && ref($entity) eq 'HASH' && ref($entity->{rows}) eq 'ARRAY';
+    my $d = $m->{data};
+    my %by_key;
+    if ($m->{saved}) {
+        foreach my $r (grep { ref($_) eq 'HASH' } @{ ref($d->{accessions}) eq 'ARRAY' ? $d->{accessions} : [] }) {
+            $by_key{ join("\t", $r->{accession} // '', $r->{breeding_program} // '') } = $r;
+        }
+    }
+    elsif (ref($d->{draft_decisions}) eq 'HASH') {
+        %by_key = %{ $d->{draft_decisions} };
+    }
+    foreach my $row (@{$entity->{rows}}) {
+        my $k = join("\t", $row->{accession} // '', $row->{breeding_program} // '');
+        if (my $v = $by_key{$k}) {
+            $row->{decision}     = $v->{decision} // '';
+            $row->{new_stage}    = $v->{new_stage} // '';
+            $row->{save_comment} = $v->{save_comment} // '';
+            $row->{stage}        = $v->{previous_stage} if $m->{saved} && defined $v->{previous_stage};
+        }
+        $row->{saved} = $m->{saved} ? 1 : 0;
+    }
+    $entity->{saved} = $m->{saved} ? 1 : 0;
 }
 
 sub _decision_rows_entity {
@@ -313,17 +361,24 @@ sub _decision_rows_entity {
     my $notes_prop_name = 'notes';
     my $year_prop_name  = 'acquisition date';
 
-    my $list = CXGN::List->new({ dbh => $dbh, list_id => $list_id });
-    my $current_owner_id = eval {
-        $c->user->get_object->get_sp_person_id;
-    };
-    return { rows => [] }
-        unless defined($current_owner_id)
-            && defined($list->owner)
-            && $list->owner == $current_owner_id;
+    my @accessions;
+    if (ref($args{accessions}) eq 'ARRAY') {
+        # the accessions of the meeting's evidence (analyses linked to it)
+        @accessions = grep { defined $_ && $_ ne '' } @{$args{accessions}};
+    }
+    else {
+        my $list = CXGN::List->new({ dbh => $dbh, list_id => $list_id });
+        my $current_owner_id = eval {
+            $c->user->get_object->get_sp_person_id;
+        };
+        return { rows => [] }
+            unless defined($current_owner_id)
+                && defined($list->owner)
+                && $list->owner == $current_owner_id;
 
-    my $els  = $list->elements || [];
-    my @accessions = grep { defined $_ && $_ ne '' } @$els;
+        my $els  = $list->elements || [];
+        @accessions = grep { defined $_ && $_ ne '' } @$els;
+    }
 
     return { rows => [] } unless @accessions;
 
@@ -1828,6 +1883,7 @@ sub _merge_decisions_into_meeting {
             if exists $decision_data->{$key};
     }
 
+    delete $merged{draft_decisions};
     $merged{saved}        = JSON::true;
     $merged{saved_at}     = defined($saved_at) ? $saved_at : scalar localtime();
     $merged{saved_status} = 'successfully';
@@ -1851,8 +1907,13 @@ sub _validated_decisions_for_save {
         unless ref($payload) eq 'HASH';
 
     my $list_id = $payload->{list_id};
-    return (undef, ['Missing list_id in payload'])
-        unless defined($list_id) && !ref($list_id) && $list_id =~ /^\d+$/;
+    my $meeting_accessions;
+    if (!(defined($list_id) && !ref($list_id) && $list_id =~ /^\d+$/)) {
+        $list_id = undef;
+        $meeting_accessions = $self->_meeting_evidence_accessions($c, $payload->{meeting_id});
+        return (undef, ['This meeting has no analysis: add the analyses with the accessions to decide on.'])
+            unless $meeting_accessions && @$meeting_accessions;
+    }
 
     my $submitted_rows = $payload->{accessions};
     return (undef, ['The accessions field must be an array'])
@@ -1872,6 +1933,7 @@ sub _validated_decisions_for_save {
             $c,
             list_id    => $list_id,
             meeting_id => $payload->{meeting_id},
+            ($meeting_accessions ? (accessions => $meeting_accessions) : ()),
         );
     };
     return (undef, ['Could not load the current accession decisions'])
@@ -1910,7 +1972,7 @@ sub _validated_decisions_for_save {
 
         my $target = $current_lookup{$key};
         unless ($target) {
-            push @errors, "Accession '$accession' and breeding program '$program' are not in the selected list and meeting.";
+            push @errors, "Accession '$accession' and breeding program '$program' are not in the accessions of this meeting.";
             next;
         }
 
@@ -1948,7 +2010,7 @@ sub _validated_decisions_for_save {
     if ($unmatched_rows && @$unmatched_rows) {
         push @errors, map {
             "Accession '" . ($_->{accession} || '') . "' and breeding program '"
-                . ($_->{breeding_program} || '') . "' are not in the selected list and meeting."
+                . ($_->{breeding_program} || '') . "' are not in the accessions of this meeting."
         } @$unmatched_rows;
     }
     return (undef, \@errors) if @errors;
@@ -2173,10 +2235,11 @@ sub decision_upload_template : Path('decision_upload_template') : Args(0) {
     my $list_id    = $c->req->param('list_id');
     my $meeting_id = $c->req->param('meeting_id');
 
-    unless ($list_id) {
+    my $meeting_accessions = $list_id ? undef : $self->_meeting_evidence_accessions($c, $meeting_id);
+    unless ($list_id || $meeting_accessions) {
         $c->res->status(400);
         $c->res->content_type('application/json');
-        $c->res->body(encode_json({ error => 'Missing list_id' }));
+        $c->res->body(encode_json({ error => 'Missing list_id or meeting_id' }));
         return;
     }
 
@@ -2184,7 +2247,9 @@ sub decision_upload_template : Path('decision_upload_template') : Args(0) {
         $c,
         list_id    => $list_id,
         meeting_id => $meeting_id,
+        ($meeting_accessions ? (accessions => $meeting_accessions) : ()),
     );
+    $self->_apply_meeting_decisions($c, $meeting_id, $entity) if $meeting_accessions;
 
     my @headers = $self->_decision_upload_headers();
     my @rows = @{$entity->{rows} || []};
@@ -2242,10 +2307,11 @@ sub upload_decision_template_POST {
     my $list_id    = $c->req->param('list_id');
     my $meeting_id = $c->req->param('meeting_id');
 
-    return $self->status_bad_request($c, message => 'Missing list_id')
-        unless $list_id;
     return $self->status_bad_request($c, message => 'Missing meeting_id')
         unless $meeting_id;
+    my $meeting_accessions = $list_id ? undef : $self->_meeting_evidence_accessions($c, $meeting_id);
+    return $self->status_bad_request($c, message => 'This meeting has no analysis with accessions.')
+        unless $list_id || $meeting_accessions;
 
     my $upload = $c->req->upload('decision_upload_file');
     return $self->status_bad_request($c, message => 'Missing uploaded Excel file')
@@ -2264,6 +2330,7 @@ sub upload_decision_template_POST {
         $c,
         list_id    => $list_id,
         meeting_id => $meeting_id,
+        ($meeting_accessions ? (accessions => $meeting_accessions) : ()),
     );
 
     my @current_rows = @{$entity->{rows} || []};
@@ -2610,13 +2677,17 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
         s/"/&quot;/g;
     }
 
-    # analyses linked to the meeting as evidence (Analysis Pipeline)
+    # analyses linked to the meeting as evidence (pipeline runs and stored analyses)
     my $analyses_html = '';
     if (ref($data->{related_analyses}) eq 'ARRAY' && @{$data->{related_analyses}}) {
         my $esc = sub { my $x = shift // ''; $x =~ s/&/&amp;/g; $x =~ s/</&lt;/g; $x =~ s/>/&gt;/g; $x =~ s/"/&quot;/g; return $x; };
         $analyses_html = "<h2>Analyses used as evidence</h2>\n<ul>\n" . join('', map {
             my $id = ($_->{analysis_id} // '') =~ /^(\d+)$/ ? $1 : '';
-            "<li><a href=\"/tools/script_factory/analysis/$id\">" . $esc->($_->{name} // "analysis $id") . "</a>"
+            my $run = ($_->{run_id} // '') =~ /^(sf_run_[A-Za-z0-9_]+)$/ ? $1 : '';
+            my $href = $run ? "/tools/script_factory/results/$run"
+                     : ($_->{kind} // 'pipeline') eq 'analysis' ? "/analyses/$id" : "/tools/script_factory/analysis/$id";
+            "<li><a href=\"$href\">" . $esc->($_->{name} // ($run ? "pipeline run $run" : "analysis $id")) . "</a>"
+                . ($run ? ' (Analysis Pipeline run; a copy of its results is kept with the meeting)' : '')
                 . ($_->{linked_by} ? ' (added by ' . $esc->($_->{linked_by}) . ($_->{linked_at} ? ', ' . $esc->($_->{linked_at}) : '') . ')' : '')
                 . ($_->{after_save} ? ' <em>(added after the decisions were saved)</em>' : '') . "</li>\n"
         } grep { ref($_) eq 'HASH' } @{$data->{related_analyses}}) . "</ul>\n";

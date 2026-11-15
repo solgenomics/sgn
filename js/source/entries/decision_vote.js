@@ -58,7 +58,7 @@ function onMeetingChange() {
     $('#dvm_new, #dvm_detail').hide();
     if (!id) {
         $('#dvm_body').hide();
-        $('#dvm_status').show().html('Select a meeting in the Meeting Tracker to see its variety votes.');
+        $('#dvm_status').show().html('Choose a meeting to see its variety votes.');
         return;
     }
     loadVotes();
@@ -174,7 +174,7 @@ function renderDetail() {
             (ev ? ' Trait values: ' + esc(ev.value_label || '') + ' of the analysis ' + esc(ev.analysis_name || '') + ' (rank among its accessions in brackets).' : '') + '</p>';
         h += mostVotedChart(res.candidates, { title: 'Most voted' + (v.state !== 'closed' ? ' so far' : '') });
         h += '<div class="table-responsive"><table id="dvm_results" class="table table-condensed table-bordered"><thead><tr><th>Place</th><th>Accession</th><th>Points</th><th>1st places</th><th>Average place</th>' +
-            traits.map(t => '<th>' + esc(t.trait) + '</th>').join('') + (ev && ev.index ? '<th>Index</th><th>Index rank</th>' : '') + '</tr></thead><tbody>' +
+            traits.map(t => '<th>' + esc(t.label || t.trait) + '</th>').join('') + (ev && ev.index ? '<th>Index</th><th>Index rank</th>' : '') + '</tr></thead><tbody>' +
             res.candidates.map(x => {
                 const e = rows[x.accession] || {};
                 return '<tr' + (x.place === 1 ? ' class="success"' : '') + '><td><b>' + x.place + '</b></td><td>' + (x.stock_id ? '<a target="_blank" href="/stock/' + x.stock_id + '/view">' + esc(x.accession) + '</a>' : esc(x.accession)) + '</td>' +
@@ -439,21 +439,21 @@ function openForm(vote) {
 function loadSources() {
     const fill = () => {
         const r = S.analyses;
-        const an = (r.analyses || []).filter(a => !a.hidden);
-        $('#dvm_source').html(an.map(a => '<option value="' + a.analysis_id + '">Analysis: ' + esc(a.name || ('analysis ' + a.analysis_id)) + '</option>').join('') +
-            '<option value="">The accessions of this meeting (no analysis)</option>');
+        const an = (r.sources || []).filter(a => !a.error);
+        $('#dvm_source').html(an.map(a => '<option value="' + esc(a.key) + '">' + esc(a.name) + (a.n_selected ? ' (' + a.n_selected + ' selected by the index)' : '') + '</option>').join('') +
+            '<option value="">All accessions of this meeting (no values)</option>');
         loadCandidates();
     };
     if (S.analyses) { fill(); return; }
     $('#dvm_candidates').html('<div style="padding:6px" class="dvm-muted">Loading...</div>');
-    call('GET', '/ajax/script_factory/meetings/analyses', { meeting_id: S.meeting.meeting_id })
+    call('GET', '/ajax/decision_evidence/sources', { meeting_id: S.meeting.meeting_id })
         .then(r => { S.analyses = r; fill(); })
-        .catch(e => { S.analyses = { analyses: [], meeting: { accessions: [] } }; $('#dvm_form_msg').html(alertHtml('warning', esc(e.message))); fill(); });
+        .catch(e => { S.analyses = { sources: [], accessions: [] }; $('#dvm_form_msg').html(alertHtml('warning', esc(e.message))); fill(); });
 }
 
 function meetingAccessions() {
     const set = {};
-    ((S.analyses && S.analyses.meeting && S.analyses.meeting.accessions) || []).forEach(a => { set[a] = true; });
+    ((S.analyses && S.analyses.accessions) || []).forEach(a => { set[a.accession] = true; });
     return set;
 }
 
@@ -476,7 +476,7 @@ function loadCandidates() {
     }
     $('#dvm_check_selected').show();
     $('#dvm_candidates').html('<div style="padding:6px" class="dvm-muted"><span class="glyphicon glyphicon-refresh"></span> Reading the results of the analysis...</div>');
-    call('GET', '/ajax/script_factory/decision_evidence', { analysis_id: id })
+    call('GET', '/ajax/decision_evidence/evidence', { meeting_id: S.meeting.meeting_id, key: id })
         .then(e => {
             if ($('#dvm_source').val() !== id) return;
             S.candidates = (e.rows || []).map(r => ({ accession: r.accession, selected: !!r.selected, index_rank: r.index_rank, index: r.index, in_meeting: !!inMeeting[r.accession] }))
@@ -501,7 +501,7 @@ function renderCandidates() {
         return '<label class="dvm-row dvm-' + (r || 'out') + '"><select class="input-sm dvm-role" data-acc="' + esc(x.accession) + '" style="margin-right:8px">' +
             opt('vote', r, 'Candidate') + opt('note', r, 'Only notes') + opt('', r, 'Not in the vote') + '</select>' + esc(x.accession) +
             (x.index_rank ? ' <span class="dvm-muted">index rank ' + x.index_rank + (x.selected ? ', selected' : '') + '</span>' : '') +
-            (x.in_meeting && $('#dvm_source').val() ? ' <span class="label label-default">meeting</span>' : '') + '</label>';
+            '</label>';
     }).join('')
         : '<div style="padding:6px" class="dvm-muted">No accession.' + ($('#dvm_only_meeting').is(':checked') ? ' Uncheck "Only accessions of this meeting".' : '') + '</div>');
     countChecked();
@@ -529,7 +529,7 @@ function save(sendNow) {
         const names = chosen('vote');
         const uniq = names.filter((x, i) => names.indexOf(x) === i);
         data.meeting_id = S.meeting.meeting_id;
-        data.analysis_id = $('#dvm_source').val() || '';
+        data.source = $('#dvm_source').val() || '';
         data.accessions = JSON.stringify(uniq);
         data.note_accessions = JSON.stringify(chosen('note').filter(x => uniq.indexOf(x) < 0));
     }
@@ -567,7 +567,9 @@ function save(sendNow) {
 export function init() {
     $ = window.jQuery;
     if (!$('#dvm_body').length) return;
-    $(document).on('change', '.dm-meeting-check', () => setTimeout(onMeetingChange, 0));
+    // the meeting chosen on the page (decision_meeting.js); its evidence may have changed
+    $(document).on('dm:meeting', () => { S.analyses = null; setTimeout(onMeetingChange, 0); });
+    setTimeout(onMeetingChange, 0);
     $('#dvm_new_toggle').on('click', () => { if ($('#dvm_new').is(':visible') && !S.editing) $('#dvm_new').hide(); else openForm(null); });
     $('#dvm_cancel').on('click', () => $('#dvm_new').hide());
     $('#dvm_save, #dvm_save_later').on('click', function() { save(String($(this).data('send')) === '1'); });
