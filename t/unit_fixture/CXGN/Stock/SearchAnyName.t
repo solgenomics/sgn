@@ -216,6 +216,39 @@ eval {
     my ($other, $other_count) = search_names('contains', { stock_type_name => 'tissue_sample' });
     is_deeply($other, [ $groups{contains}{other}->uniquename() ], 'name and stock type filters intersect');
     is($other_count, 1, 'other stock type count');
+
+    # A term without three letters or digits in a row cannot use the trigram
+    # indexes, so it keeps the OR search. The results are the same.
+    my $short = 'Q~9';
+    my %short_stock;
+    for my $kind (qw(name unique description synonym none)) {
+        $short_stock{$kind} = $schema->resultset('Stock::Stock')->create({
+            organism_id => $organism_id,
+            name => $kind eq 'name' ? $short : $id_prefix . 'short' . $kind,
+            uniquename => $kind eq 'unique' ? lc($short) : $id_prefix . 'shortid' . $kind,
+            description => $kind eq 'description' ? $short : undef,
+            type_id => $accession_id,
+            is_obsolete => 0,
+        });
+    }
+    $schema->resultset('Stock::Stockprop')->create({
+        stock_id => $short_stock{synonym}->stock_id(), type_id => $synonym_id, value => $short, rank => 0,
+    });
+    $schema->resultset('Stock::Stockprop')->create({
+        stock_id => $short_stock{name}->stock_id(), type_id => $date_id, value => '1803-03-03', rank => 0,
+    });
+    my @short_expected = map { $_->uniquename() }
+        sort { $a->stock_id() cmp $b->stock_id() } @short_stock{qw(name unique description synonym)};
+    for my $mode (qw(exactly contains)) {
+        my ($names, $count) = search_names($mode, { match_name => $short });
+        is_deeply($names, \@short_expected, "short term, $mode: name, uniquename, description and synonym match");
+        is($count, 4, "short term, $mode: count");
+    }
+    my ($short_dated, $short_dated_count) = search_names('exactly', {
+        match_name => $short, acquisition_date => '1803-03-03',
+    });
+    is_deeply($short_dated, [ $short_stock{name}->uniquename() ], 'short term and acquisition date intersect');
+    is($short_dated_count, 1, 'short term and acquisition date count');
     1;
 } or $error = $@ || 'Unknown test failure';
 $schema->txn_rollback();

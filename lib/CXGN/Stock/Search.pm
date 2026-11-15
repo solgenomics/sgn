@@ -330,13 +330,26 @@ sub search {
 
     my $stock_synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 
-    if ($any_name) {
+    # The trigram indexes need three letters or digits in a row. A shorter term
+    # keeps the single OR search, which is faster without an index.
+    my $short_name = $any_name && $any_name !~ /[[:alnum:]]{3}/;
+    if ($any_name && !$short_name) {
         my $pattern = $start.$any_name.$end;
         my $name_ids_sql = join ' UNION ',
             (map { "SELECT stock_id FROM stock WHERE $_ ILIKE ?" }
                 qw(name uniquename description)),
             "SELECT stock_id FROM stockprop WHERE type_id = $stock_synonym_cvterm_id AND value ILIKE ?";
         $or_conditions = [ { 'me.stock_id' => { -in => \[ $name_ids_sql, ($pattern) x 4 ] } } ];
+    } elsif ($any_name) {
+	$or_conditions = [
+	    { 'me.name'          => {'ilike' => $start.$any_name.$end} },
+	    { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
+	    { 'me.description'   => {'ilike' => $start.$any_name.$end} },
+	    { -and => [
+		   'stockprops.value'  => {'ilike' => $start.$any_name.$end},
+		   'stockprops.type_id' => $stock_synonym_cvterm_id,
+		  ],},
+	    ];
     } else {
         $or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
     }
@@ -613,8 +626,8 @@ sub search {
     my $rs = $schema->resultset("Stock::Stock")->search(
         $search_query,
         {
-            # Preserve stockprops_2 for acquisition-date conditions.
-            join => ['type', 'organism', ($acq_date_join ? 'stockprops' : ()), $stock_join, $acq_date_join],
+            # A short name searches stockprops; acquisition dates use stockprops_2.
+            join => ['type', 'organism', (($short_name || $acq_date_join) ? 'stockprops' : ()), $stock_join, $acq_date_join],
             '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
             '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
             order_by  => 'me.name',
