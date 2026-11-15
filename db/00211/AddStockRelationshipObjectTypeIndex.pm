@@ -70,6 +70,11 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 CREATE INDEX IF NOT EXISTS stock_relationship_object_id_type_id_idx ON public.stock_relationship (object_id, type_id);
 EOSQL
+    # IF NOT EXISTS also skips an index left invalid by an interrupted CONCURRENTLY build.
+    my ($valid) = $self->dbh->selectrow_array(q{SELECT idx.indisvalid FROM pg_index idx
+        JOIN pg_class ix ON ix.oid = idx.indexrelid JOIN pg_namespace ns ON ns.oid = ix.relnamespace
+        WHERE ns.nspname = 'public' AND ix.relname = 'stock_relationship_object_id_type_id_idx'});
+    die "Index stock_relationship_object_id_type_id_idx is not valid: drop it and run this patch again\n" if !$valid;
     if ($self->trial) {
         $self->dbh->rollback();
         print "Trial mode: the index was built and rolled back.\n";
