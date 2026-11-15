@@ -3,6 +3,7 @@ package CXGN::BrAPI::v2::Events;
 use Moose;
 use Data::Dumper;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::BrAPI::Pagination;
@@ -120,7 +121,7 @@ sub search {
     my $h_mgmt = $schema->storage->dbh()->prepare($q_mgmt);
     $h_mgmt->execute();
     while (my ($trial_id, $json_value) = $h_mgmt->fetchrow_array()) {
-        my $factors = eval { decode_json($json_value) } || [];
+        my $factors = eval { decode_stored_json($json_value) } || [];
         for my $factor (@$factors) {
             push @mgmt_factor_rows, { trial_id => $trial_id, factor => $factor };
         }

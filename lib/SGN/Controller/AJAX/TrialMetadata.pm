@@ -3978,7 +3978,8 @@ sub get_management_regime : Chained('trial') PathPart('get_management_regime') A
     my $trial_id = $c->stash->{trial_id};
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $t = CXGN::Project->new( { bcs_schema => $schema, trial_id => $trial_id });
-    $c->stash->{rest} = {data => encode_json($t->get_management_regime()), success => 1};
+    # characters, not encode_json() octets: the JSON view encodes the whole response as UTF-8
+    $c->stash->{rest} = {data => JSON->new->allow_nonref->encode($t->get_management_regime()), success => 1};
 }
 
 sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) {
