@@ -4,8 +4,6 @@ use namespace::autoclean;
 
 use I18N::LangTags qw( implicate_supers );
 use I18N::LangTags::Detect;
-use Locale::Messages qw( bindtextdomain bind_textdomain_codeset bind_textdomain_filter dgettext );
-use Locale::Util qw( set_locale );
 use POSIX qw( setlocale LC_MESSAGES );
 use Try::Tiny;
 
@@ -18,6 +16,7 @@ SGN::Role::Site::I18N - choose the interface language for each request
 =head1 DESCRIPTION
 
 Off unless C<i18n_languages> (for example C<uk,es>) is set in the configuration.
+libintl-perl (C<Locale::Messages>) is loaded only then, so a site without it still starts.
 The gettext catalogs are C<< <i18n_locale_dir>/<language>/LC_MESSAGES/sgn.mo >>.
 The language is C<?lang=>, then the C<lang> cookie, then Accept-Language.
 
@@ -30,15 +29,16 @@ sub i18n_languages {
 after setup_finalize => sub {
     my $app       = shift;
     my @languages = $app->i18n_languages or return;
+    eval { require Locale::Messages; require Locale::Util; 1 } or die "i18n_languages needs libintl-perl: $@";
     my $dir       = $app->config->{i18n_locale_dir} // $app->path_to( '..', 'sgn-translations', 'locale' );
     Locale::Messages->select_package('gettext_pp');    # the same catalog reader on every install
     delete $ENV{LANGUAGE};                             # gettext ranks LANGUAGE above the locale
-    bindtextdomain( sgn => "$dir" );
-    bind_textdomain_codeset( sgn => 'utf-8' );
-    bind_textdomain_filter( sgn => \&Locale::Messages::turn_utf_8_on );
+    Locale::Messages::bindtextdomain( sgn => "$dir" );
+    Locale::Messages::bind_textdomain_codeset( sgn => 'utf-8' );
+    Locale::Messages::bind_textdomain_filter( sgn => \&Locale::Messages::turn_utf_8_on );
     for my $language (@languages) {
-        set_locale( LC_MESSAGES, $language, undef, 'utf-8' ) or die "i18n_languages: no system locale for '$language'\n";
-        dgettext( 'sgn', '' ) or die "i18n_languages: no gettext catalog $dir/$language/LC_MESSAGES/sgn.mo\n";
+        Locale::Util::set_locale( LC_MESSAGES, $language, undef, 'utf-8' ) or die "i18n_languages: no system locale for '$language'\n";
+        Locale::Messages::dgettext( 'sgn', '' ) or die "i18n_languages: no gettext catalog $dir/$language/LC_MESSAGES/sgn.mo\n";
     }
     setlocale( LC_MESSAGES, 'C' );
 };
@@ -54,7 +54,7 @@ before dispatch => sub {
     $language //= 'en';
     $c->res->cookies->{lang} = { value => $language, expires => '+1y' } if defined $asked && lc $asked eq $language;
     $c->stash->{language} = $language;
-    set_locale( LC_MESSAGES, $language, undef, 'utf-8' ) if $language ne 'en';
+    Locale::Util::set_locale( LC_MESSAGES, $language, undef, 'utf-8' ) if $language ne 'en';
 };
 
 # Accept-Language without the languages the browser refuses (q=0).

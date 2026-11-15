@@ -4,11 +4,12 @@ use utf8;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
+use Test::More;
+BEGIN { eval { require Locale::TextDomain; 1 } or plan skip_all => 'libintl-perl is not installed (t/unit/SGN/Role/Site/I18N_off.t covers that case)' }
 use Locale::TextDomain ( 'sgn', undef );
 use Moose::Meta::Class;
 use Moose::Util qw( apply_all_roles );
 use POSIX qw( setlocale LC_MESSAGES );
-use Test::More;
 
 # A request and a response with only what the role reads and writes.
 sub Local::Cookie::value     { return $_[0]{value} }
