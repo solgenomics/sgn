@@ -63,9 +63,20 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
+    # The patch framework runs with AutoCommit on, so without this transaction a trial run would keep the index.
+    # Stop at a failed statement, so a failure is never recorded as applied.
+    local $self->dbh->{RaiseError} = 1;
+    $self->dbh->begin_work();
     $self->dbh->do(<<EOSQL);
 CREATE INDEX IF NOT EXISTS stock_relationship_object_id_type_id_idx ON public.stock_relationship (object_id, type_id);
 EOSQL
+    if ($self->trial) {
+        $self->dbh->rollback();
+        print "Trial mode: the index was built and rolled back.\n";
+    }
+    else {
+        $self->dbh->commit();
+    }
 
     print "You're done!\n";
 }
