@@ -34,6 +34,7 @@ let cfg = {};
 const state = {
     step: 1,
     advanced: {},           // advanced settings changed from their defaults (dialog of the model engine card)
+    interactions: [],       // interactions built by the user: [{ factors: [ids], effect: 'fixed' | 'random' }] (recipe.interactions)
     dataset: null,          // response of /prepare
     traits: [],             // selected full trait names
     plotRaw: null,          // response of /plot_data (plot means and every repeated measurement)
@@ -181,6 +182,7 @@ function buildRecipe() {
     const r = buildBaseRecipe();
     const adv = advRecipe();
     if (adv) r.advanced = adv;
+    if (state.interactions.length) r.interactions = JSON.parse(JSON.stringify(state.interactions));
     return r;
 }
 
@@ -287,6 +289,7 @@ function applyRecipe(r) {
     if (s2.weighting) $('#sf_stage2_weighting').val(s2.weighting);
     applySingle(r.single || {});
     state.advanced = cleanAdvanced(r.advanced);
+    state.interactions = ixClean(r.interactions);
     // covariates: shared by both strategies since version 1.7 (single.covariates before)
     if (r.covariates) {
         state.singleCov = {};
@@ -1588,18 +1591,16 @@ function advBlocked(key, value) {
     if (key === 'gxe') {
         if (!random) return 'needs the genotype as random effect';
         if (custom) return 'not with a written formula';
-        if (eng === 'blupf90' && value === 'cs_het') return 'R engine only';
-        if (eng === 'blupf90' && two) return 'BLUPF90+: single stage only (stage 2 needs the stage-1 errors held fixed, which blupf90+ does not do reliably; R engine)';
-        if (rel) return 'with unrelated accessions only (genetic model: identity)';
+        if (rel && eng === 'lme4') return 'R engine: with unrelated accessions only (genetic model: identity)' + (cfg.blupf90_available ? '; the BLUPF90+ engine fits it' : '');
     }
     if (key === 'residual') {
-        if (two) return 'single stage only (in stage 2 the residual is the stage-1 error)';
+        if (two && eng === 'lme4' && rel && random) return 'R engine: with unrelated accessions only (genetic model: identity)' + (cfg.blupf90_available ? '; the BLUPF90+ engine fits it' : '');
     }
     if (key === 'time_genotype') {
         if (two) return 'single stage only';
         if (custom) return 'not with a written formula';
         if (!random) return 'needs the genotype as random effect';
-        if (rel) return 'with unrelated accessions only (genetic model: identity)';
+        if (rel && eng === 'lme4') return 'R engine: with unrelated accessions only (genetic model: identity)' + (cfg.blupf90_available ? '; the BLUPF90+ engine fits it' : '');
     }
     return '';
 }
@@ -1632,6 +1633,174 @@ function advDescribe(a) {
 
 function advPreview() { return advDescribe(advRecipe()); }
 
+// advanced settings chosen in the dialog that a run leaves out (the engine,
+// strategy or model cannot fit them), with the recipe change that lets
+// Breedbase fit them: the model review suggests it after the run, together
+// with what the analysis itself could not use (results.advanced_unused)
+function advDropped() {
+    const a = state.advanced || {};
+    const used = advRecipe() || {};
+    const out = [];
+    ['gxe', 'residual', 'time_within', 'time_genotype', 'method'].forEach(k => {
+        if (a[k] === undefined || used[k] !== undefined) return;
+        const v = String(a[k]);
+        const why = advBlocked(k, v) || 'not fitted by the ' + (effectiveEngine() === 'blupf90' ? 'BLUPF90+' : 'R') + ' engine';
+        let t = null;
+        if (/BLUPF90\+ engine fits it|glmmTMB/.test(why)) t = { engine: 'blupf90' };
+        else if (/not fitted by the BLUPF90\+ engine/.test(why)) t = { engine: 'lme4' };
+        else if (/single stage only/.test(why)) t = { strategy: 'single_stage' };
+        else if (/genotype as random/.test(why)) t = radio('sf_strategy') === 'two_stage' ? { stage2_genotype: 'random' } : { single_genotype: 'random' };
+        else if (/written formula/.test(why)) t = { single_mode: 'builder' };
+        out.push({ setting: k, value: v, why: why, try: t });
+    });
+    state.interactions.forEach(ix => {
+        const why = ixBlocked(ix);
+        if (!why) return;
+        const t = /single stage only/.test(why) ? { strategy: 'single_stage' } : /written formula/.test(why) ? { single_mode: 'builder' } : null;
+        out.push({ setting: 'interaction', value: ixLabel(ix), why: why, try: t });
+    });
+    return out;
+}
+
+// ---------------------------------------------------------------------------
+// Interactions built by the user (recipe.interactions): two or more factors,
+// fixed or random; Breedbase suggests the ones the dataset can support. The
+// pipelines check each one on the data (and leave out, with the reason, those
+// it cannot support).
+// ---------------------------------------------------------------------------
+const IX_BASE = [
+    { id: 'accession', label: 'Accession' }, { id: 'trial', label: 'Trial' },
+    { id: 'location', label: 'Location' }, { id: 'year', label: 'Year' }
+];
+function ixFactors() {
+    return IX_BASE.concat(
+        datasetTreatments().map(f => ({ id: 'trt:' + f.name, label: f.name, kind: 'treatment', variable: f.variable, whole: !f.varies_within_trials })),
+        Object.keys(state.singleCov).map(t => ({ id: 'cov:' + t, label: shortTrait(t), kind: 'covariate', variable: covName(t), cov: true })));
+}
+function ixFactor(id) {
+    const f = ixFactors().find(x => x.id === id);
+    if (f) return f;
+    const m = /^(trt|cov):(.*)$/.exec(id);
+    return m ? { id: id, label: m[1] === 'cov' ? shortTrait(m[2]) : m[2], kind: m[1] === 'cov' ? 'covariate' : 'treatment', cov: m[1] === 'cov', missing: true } : { id: id, label: id };
+}
+// valid, distinct interactions (the order of the factors does not matter)
+function ixClean(list) {
+    const out = [];
+    const seen = {};
+    arr(list).forEach(x => {
+        if (!x || typeof x !== 'object') return;
+        const f = arr(x.factors).map(String).filter((v, i, a) => v && a.indexOf(v) === i);
+        if (f.length < 2) return;
+        const k = f.slice().sort().join('|');
+        if (seen[k]) return;
+        seen[k] = 1;
+        out.push({ factors: f, effect: x.effect === 'random' ? 'random' : 'fixed' });
+    });
+    return out;
+}
+function ixEffect(ix) {
+    const fs = ix.factors.map(ixFactor);
+    return fs.some(f => f.cov) ? 'fixed' : ix.factors.indexOf('accession') >= 0 ? 'random' : ix.effect;
+}
+function ixLabel(ix) { return ix.factors.map(id => ixFactor(id).label).join(' x ') + ' (' + ixEffect(ix) + ')'; }
+// the model term (variables of the written formula)
+function ixTerm(ix) {
+    const fs = ix.factors.map(ixFactor);
+    const vars = fs.filter(f => !f.cov).map(f => f.variable || f.id);
+    const cov = fs.filter(f => f.cov).map(f => f.variable || f.id);
+    return ixEffect(ix) === 'random' ? '(1|' + vars.join(':') + ')' : vars.concat(cov).join(':');
+}
+// why the model on the page cannot use an interaction ('' when it can)
+function ixBlocked(ix) {
+    const fs = ix.factors.map(ixFactor);
+    const covs = fs.filter(f => f.cov);
+    const g = ix.factors.indexOf('accession') >= 0;
+    const missing = fs.filter(f => f.missing);
+    if (missing.length && state.dataset) return missing.map(f => f.label).join(', ') + ' not in this dataset' + (missing.some(f => f.cov) ? ' or not selected under Covariates' : '');
+    if (covs.length > 1) return 'one covariate per interaction';
+    if (covs.length && g) return 'a covariate slope per accession is not supported';
+    const two = radio('sf_strategy') === 'two_stage';
+    if (!two && radio('sf_single_mode') === 'custom') return 'not with a written formula (write it in the formula: ' + ixTerm(ix) + ')';
+    if (two) {
+        const others = fs.filter(f => f.id !== 'accession');
+        const wholeTrial = others.length > 0 && others.every(f => f.id === 'location' || f.id === 'year' || (f.kind === 'treatment' && f.whole));
+        if (!(g && !covs.length && wholeTrial)) return 'single stage only (stage 2 fits genotype x location / year / whole-trial treatment)';
+    }
+    return '';
+}
+// interactions worth a look for the loaded dataset
+function ixSuggestions() {
+    const D = state.dataset;
+    if (!D) return [];
+    const tr = arr(D.trials);
+    const out = [];
+    const ly = {}, locYears = {};
+    tr.forEach(t => {
+        ly[(t.location || '') + '\t' + (t.year || '')] = 1;
+        (locYears[t.location || ''] = locYears[t.location || ''] || {})[t.year || ''] = 1;
+    });
+    const nLoc = Object.keys(locYears).length;
+    const nYear = Object.keys(tr.reduce((o, t) => { o[t.year || ''] = 1; return o; }, {})).length;
+    const crossed = nLoc > 1 && nYear > 1 && Object.keys(locYears).some(l => Object.keys(locYears[l]).length > 1);
+    // clearly fewer location-years than trials (else it is nearly genotype x trial)
+    if (crossed && 1.25 * Object.keys(ly).length < tr.length) {
+        out.push({ factors: ['accession', 'location', 'year'], effect: 'random',
+                   why: 'several trials share a location-year: genotypes may rank differently in particular location-years, beyond genotype x trial' });
+        if (singleRecipe().env !== 'fixed')
+            out.push({ factors: ['location', 'year'], effect: 'fixed', why: 'locations tested in several years: the location effect may change from year to year' });
+    }
+    const within = datasetTreatments().filter(f => f.varies_within_trials && f.levels.length > 1);
+    within.forEach(f => {
+        out.push({ factors: ['accession', 'trt:' + f.name], effect: 'random', why: f.name + ' is applied within trials: do the genotypes respond differently to it?' });
+        if (tr.length > 1) out.push({ factors: ['trt:' + f.name, 'trial'], effect: 'fixed', why: 'the effect of ' + f.name + ' may differ between trials' });
+    });
+    for (let i = 0; i < within.length; i++) {
+        for (let j = i + 1; j < within.length; j++) {
+            out.push({ factors: ['trt:' + within[i].name, 'trt:' + within[j].name], effect: 'fixed', why: within[i].name + ' and ' + within[j].name + ' may not act independently' });
+        }
+    }
+    if (tr.length > 1) {
+        Object.keys(state.singleCov).forEach(t => {
+            out.push({ factors: ['cov:' + t, 'trial'], effect: 'fixed', why: 'one slope per trial: ' + shortTrait(t) + ' may adjust the trait differently in each trial' });
+        });
+    }
+    return out;
+}
+
+// dialog: the interactions being edited (applied with the other settings)
+let advIx = [];
+let advIxSug = [];
+function ixKey(ix) { return ix.factors.slice().sort().join('|'); }
+function ixRender() {
+    $('#sf_ix_list').html(advIx.length
+        ? '<ul class="sf-ix-list">' + advIx.map((ix, i) => {
+            const why = ixBlocked(ix);
+            return '<li><b>' + esc(ixLabel(ix)) + '</b> <code>' + esc(ixTerm(ix)) + '</code>' + (why ? ' <span class="sf-warn-text">[' + esc(why) + ']</span>' : '') +
+                ' <a href="#" class="sf-ix-del" data-i="' + i + '"><span class="glyphicon glyphicon-remove"></span> remove</a></li>';
+        }).join('') + '</ul>'
+        : '<p class="sf-muted">No interaction added: the model has the interactions chosen in the model builder only.</p>');
+    $('#sf_ix_factors').html(ixFactors().map(f => '<label class="sf-check sf-check-inline"><input type="checkbox" class="sf-ix-f" value="' + esc(f.id) + '" /> ' + esc(f.label) +
+        (f.kind ? ' <small class="sf-muted">' + f.kind + '</small>' : '') + '</label>').join(' '));
+    const have = {};
+    advIx.forEach(ix => { have[ixKey(ix)] = 1; });
+    advIxSug = ixSuggestions().filter(x => !have[ixKey(x)]);
+    $('#sf_ix_suggest').html(!state.dataset ? '<p class="sf-muted">Load a dataset to get suggested interactions.</p>'
+        : advIxSug.length ? '<p><span class="glyphicon glyphicon-star"></span> <b>Suggested for this dataset</b></p><ul class="sf-ix-list">' + advIxSug.map((x, i) => {
+            const why = ixBlocked(x);
+            return '<li>' + esc(ixLabel(x)) + ': ' + esc(x.why) + (why ? ' <small class="sf-muted">[' + esc(why) + ']</small>' : '') +
+                ' <a href="#" class="sf-ix-sug" data-i="' + i + '"><span class="glyphicon glyphicon-plus"></span> add</a></li>';
+        }).join('') + '</ul>'
+        : '<p class="sf-muted">No other interaction to suggest for this dataset.</p>');
+    $('#sf_ix_msg').text('');
+}
+function ixAdd(ix) {
+    const c = ixClean([ix]);
+    if (!c.length) { $('#sf_ix_msg').text('Tick two or more factors.'); return; }
+    if (advIx.some(x => ixKey(x) === ixKey(c[0]))) { $('#sf_ix_msg').text('This interaction is already in the list.'); return; }
+    advIx.push(c[0]);
+    ixRender();
+}
+
 function renderAdvSummary() {
     const used = advRecipe();
     const all = Object.keys(state.advanced || {}).length;
@@ -1639,6 +1808,12 @@ function renderAdvSummary() {
     $('#sf_adv_badge').toggle(n > 0).text(n ? n + ' changed' : '');
     let txt = n ? '<b>Using:</b> ' + esc(advDescribe(used)) + '.' : 'Variance structures (G&times;E, residuals, repeated measurements) and model fitting. Defaults are used unless you change them.';
     if (all > n) txt += ' <span class="sf-warn-text">' + (all - n) + ' setting(s) not used with this engine / strategy (open the dialog to see why).</span>';
+    const ix = state.interactions;
+    if (ix.length) {
+        const off = ix.filter(x => ixBlocked(x));
+        txt += ' <b>Interactions:</b> ' + esc(ix.map(ixLabel).join('; ')) + '.' + (off.length ? ' <span class="sf-warn-text">' + off.length + ' not used with this strategy / model (open the dialog to see why).</span>' : '');
+        $('#sf_adv_badge').show().text((n ? n + ' changed, ' : '') + ix.length + ' interaction' + (ix.length > 1 ? 's' : ''));
+    }
     $('#sf_adv_summary').html(txt);
 }
 
@@ -1668,13 +1843,16 @@ function advRefreshDialog() {
     const two = radio('sf_strategy') === 'two_stage';
     $('#sf_adv_gxe_help').html(
         (gxe === 'cs' ? 'The basic model: <code>(1|accession) + (1|accession:trial)</code>. ' :
-            'The accession effect becomes one effect per trial, <code>' + (gxe === 'cs_het' ? 'cs' : gxe) + '(0 + trial | accession)</code>' + (eng === 'blupf90' ? ' (BLUPF90+: random regression on the trial indicators)' : ' (glmmTMB)') +
+            'The accession effect becomes one effect per trial, <code>' + (gxe === 'cs_het' ? 'cs' : gxe) + '(0 + trial | accession)</code>' + (eng === 'blupf90' ? ' (BLUPF90+: random regression on the trial indicators' + (gxe === 'cs_het' ? '; the common correlation is fitted by EM-REML around blupf90+, with the matrix held fixed in each run, so it takes several runs' : '') + ')' : ' (glmmTMB)') +
             '; the value of an accession is its mean over the trials (also predicted for trials where it was not tested, through the genetic covariances); H&sup2; is the mean reliability. ' +
-            (two ? 'In stage 2 the stage-1 standard errors are used as known residual variances. ' : 'It replaces the genotype &times; trial term of the builder. ') +
+            (two ? 'In stage 2 the stage-1 standard errors are used as known residual variances' + (eng === 'blupf90' ? ' (BLUPF90+: weights 1/SE&sup2; with the residual held at 1, <code>OPTION constant_var</code>). ' : '. ') : 'It replaces the genotype &times; trial term of the builder. ') +
             (gxe === 'us' ? 'An unstructured matrix of K trials has K(K+1)/2 parameters: with many trials prefer diagonal or heterogeneous compound symmetry. ' : '') +
             'The results show the genetic variance of every trial and the genetic correlations between trials.'));
-    $('#sf_adv_residual_help').html($('#sf_adv_residual').val() === 'trial' ? 'Trials differ in precision: each gets its own residual variance (' +
-        (eng === 'blupf90' ? 'BLUPF90+: log-linear residual model on the trial dummies, <code>hetres_pos / hetres_pol</code>, AI-REML started from the fit with one residual' : 'glmmTMB <code>dispformula = ~ 0 + trial</code>') + ').' : '');
+    $('#sf_adv_residual_help').html($('#sf_adv_residual').val() !== 'trial' ? '' : two
+        ? 'Stage 2: the residual of a stage-1 mean is its genotype &times; trial deviation plus its stage-1 error. Each trial gets its own genotype &times; trial variance, <code>diag(0 + trial | accession:trial)</code>, and the stage-1 errors are known residual variances (SE&sup2;) (' +
+          (eng === 'blupf90' ? 'BLUPF90+: weights 1/SE&sup2; with the residual held at 1, <code>OPTION constant_var</code>' : 'glmmTMB <code>dispformula = ~ 0 + offset(log(SE))</code>') + '). Not added with a structured genotype &times; environment covariance, which already gives every trial its own genetic variance.'
+        : 'Trials differ in precision: each gets its own residual variance (' +
+          (eng === 'blupf90' ? 'BLUPF90+: log-linear residual model on the trial dummies, <code>hetres_pos / hetres_pol</code>, AI-REML started from the fit with one residual' : 'glmmTMB <code>dispformula = ~ 0 + trial</code>') + ').');
     const tw = $('#sf_adv_time_within').val(), tg = $('#sf_adv_time_genotype').val();
     $('#sf_adv_time_help').html('Traits measured several times per plot and set to <i>all measurements</i> under <b>Repeated measurements</b> (other traits are not affected). ' +
         (tw === 'ar1' ? 'AR(1): <code>ar1(0 + occasion | plot)</code> replaces the plot effect; the occasion is the k-th measurement date of the trial' +
@@ -2090,6 +2268,11 @@ function singleBuilderFormula() {
             else terms.push(f.variable);
         }
         if (tr.gxt.indexOf(f.name) >= 0) add('(1|accession:' + f.variable + ')', nLv > 1, 'accession x ' + f.name + ' (one level)');
+    });
+    state.interactions.forEach(ix => {
+        const why = ixBlocked(ix);
+        if (why) dropped.push('interaction ' + ixLabel(ix) + ' (' + why + ')');
+        else if (terms.indexOf(ixTerm(ix)) < 0) terms.push(ixTerm(ix));
     });
     const g = geneticRecipe();
     if (r.genotype !== 'fixed') {
@@ -2550,7 +2733,7 @@ function traitCovariateCorr(recipe) {
 }
 
 function startReview(recipe) {
-    const rv = state.review = { recipe: recipe, findings: [], after: [], suggested: null, main: null, alt: null, chosen: 'main', loading: true };
+    const rv = state.review = { recipe: recipe, findings: [], after: [], suggested: null, main: null, alt: null, chosen: 'main', loading: true, dropped: advDropped() };
     renderReview();
     traitCovariateCorr(recipe).then(corr => {
         if (state.review !== rv) return;
@@ -2572,7 +2755,7 @@ function reviewMainDone(res, recipe) {
     const rv = state.review;
     if (!rv || rv.recipe !== recipe) return;
     rv.main = { results: res, recipe: recipe, key: state.lastRun.key };
-    rv.after = reviewResults(res, recipe, arr(state.dataset && state.dataset.trials).some(t => t.has_rowcol));
+    rv.after = reviewResults(res, recipe, arr(state.dataset && state.dataset.trials).some(t => t.has_rowcol), { blupf90: !!cfg.blupf90_available, glmmtmb: !!cfg.glmmtmb_available, dropped: rv.dropped });
     updateSuggested(rv);
     renderReview();
 }
@@ -3319,12 +3502,19 @@ export function init(options) {
         renderModelPreview(); renderPipeline(); renderQuickRun();
     });
     $('#sf_apply_suggestion').on('click', e => { e.preventDefault(); applySuggestion(); });
-    $('#sf_adv_btn').on('click', e => { e.preventDefault(); advFillDialog(state.advanced || {}); $('#sf_adv_modal').modal('show'); });
+    $('#sf_adv_btn').on('click', e => { e.preventDefault(); advFillDialog(state.advanced || {}); advIx = ixClean(state.interactions); ixRender(); $('#sf_adv_modal').modal('show'); });
+    $('#sf_adv_modal').on('click', '.sf-ix-del', function(e) { e.preventDefault(); advIx.splice(Number($(this).data('i')), 1); ixRender(); });
+    $('#sf_adv_modal').on('click', '.sf-ix-sug', function(e) { e.preventDefault(); const x = advIxSug[Number($(this).data('i'))]; if (x) ixAdd(x); });
+    $('#sf_ix_add').on('click', e => {
+        e.preventDefault();
+        ixAdd({ factors: $('.sf-ix-f:checked').map(function() { return $(this).val(); }).get(), effect: $('#sf_ix_effect').val() });
+    });
     $('#sf_adv_modal').on('change', '.sf-adv-opt', advRefreshDialog);
-    $('#sf_adv_reset').on('click', e => { e.preventDefault(); advFillDialog({}); });
+    $('#sf_adv_reset').on('click', e => { e.preventDefault(); advFillDialog({}); advIx = []; ixRender(); });
     $('#sf_adv_apply').on('click', e => {
         e.preventDefault();
         state.advanced = advReadDialog();
+        state.interactions = ixClean(advIx);
         $('#sf_adv_modal').modal('hide');
         renderModelPreview(); renderPipeline(); renderQuickRun();
     });

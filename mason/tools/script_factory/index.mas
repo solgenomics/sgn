@@ -773,6 +773,23 @@ $license_json =~ s/</\\u003c/g;
         </div>
         <div class="sf-help" id="sf_adv_time_help"></div>
 
+        <h4>Interactions <small>between factors of the model</small></h4>
+        <div id="sf_ix_list"></div>
+        <div class="sf-ix-build">
+          <label class="sf-label">Build an interaction: tick two or more factors</label>
+          <div id="sf_ix_factors"></div>
+          <div class="form-inline">
+            <select class="form-control input-sm" id="sf_ix_effect">
+              <option value="fixed">Fixed effect</option>
+              <option value="random">Random effect</option>
+            </select>
+            <button class="btn btn-default btn-sm" id="sf_ix_add"><span class="glyphicon glyphicon-plus"></span> Add interaction</button>
+            <span class="sf-warn-text" id="sf_ix_msg"></span>
+          </div>
+        </div>
+        <div id="sf_ix_suggest"></div>
+        <div class="sf-help">Interactions with the accession are random (genotype &times; factor); with a covariate they are fixed slopes, one per level of the other factors. The analysis checks each one on the data and leaves out, with the reason, those the data cannot support. In two stages, stage 2 fits the genotype &times; location / year / whole-trial treatment interactions; the others need the single-stage model.</div>
+
         <h4>Model fitting</h4>
         <div class="row" id="sf_adv_fit_r">
           <div class="col-sm-4">

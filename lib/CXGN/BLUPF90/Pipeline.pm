@@ -147,6 +147,91 @@ sub _trial_surface {
 sub step { my ($self, @m) = @_; print STDERR "[script_factory] ", join('', map { $_ // '' } @m), "\n"; }
 sub warn_once { my ($self, $key, @m) = @_; return if $self->{warned}->{$key}++; $self->warn_msg(@m); }
 
+# An advanced setting that was not used, with the change of the recipe that
+# would let Breedbase fit it when there is one (results: advanced_unused; the
+# model review of the page offers it as a suggestion after the run)
+sub adv_unused {
+    my ($self, $setting, $value, $why, %try) = @_;
+    return if $self->{adv_unused_seen}->{ join("\t", $setting, $value, $why) }++;
+    push @{ $self->{adv_unused} }, { setting => $setting, value => $value, why => $why, (%try ? (try => \%try) : ()) };
+}
+# the recipe change that removes a reason for not using a setting
+sub _adv_try {
+    my ($self, $why) = @_;
+    return (single_mode => 'builder') if $why =~ /written formula/;
+    return ($self->{strategy} eq 'two_stage' ? (stage2_genotype => 'random') : (single_genotype => 'random')) if $why =~ /genotype as random/;
+    return;
+}
+
+# ---------------------------------------------------------------------------
+# interactions built by the user (recipe.interactions: [{ factors, effect }]).
+# Factors: accession, trial, location, year, trt:<treatment>, cov:<trait> (a
+# selected covariate: a slope per level of the other factors, fixed). With
+# the accession an interaction is random; else fixed or random as chosen.
+# ---------------------------------------------------------------------------
+sub _interaction_specs {
+    my $self = shift;
+    return $self->{ix_specs} if $self->{ix_specs};
+    my @out;
+    foreach my $ix (list(opt($self->recipe, 'interactions', []))) {
+        next if ref($ix) ne 'HASH';
+        my (@vars, @names, $cov, $bad);
+        foreach my $id (map { "$_" } list($ix->{factors})) {
+            if ($id =~ /^(accession|trial|location|year)$/) { push @vars, $id; push @names, $id; }
+            elsif ($id =~ /^trt:(.+)$/) {
+                my $n = $1;
+                my ($v) = grep { $_ eq $n || $self->{tf}->{$_}->{name} eq $n } sort keys %{ $self->{tf} || {} };
+                if ($v) { push @vars, $v; push @names, $self->{tf}->{$v}->{name}; } else { $bad //= "treatment $n is not in this dataset"; push @names, $n; }
+            }
+            elsif ($id =~ /^cov:(.+)$/) {
+                my $cv = cov_name($1);
+                push @names, short_trait($1);
+                if (!grep { $_ eq $cv } @{ $self->{cov_vars} || [] }) { $bad //= 'the covariate ' . short_trait($1) . ' is not selected under Covariates'; }
+                elsif ($cov) { $bad //= 'one covariate per interaction'; }
+                else { $cov = $cv; }
+            }
+            else { $bad //= "unknown factor $id"; push @names, $id; }
+        }
+        my $g = (grep { $_ eq 'accession' } @vars) ? 1 : 0;
+        $bad //= 'it needs two factors or more' if @vars + ($cov ? 1 : 0) < 2;
+        $bad //= 'a covariate slope per accession is not supported' if $cov && $g;
+        my $effect = $cov ? 'fixed' : $g ? 'random' : (($ix->{effect} // '') eq 'random' ? 'random' : 'fixed');
+        push @out, { vars => \@vars, cov => $cov, genotype => $g, effect => $effect, bad => $bad, label => join(' x ', @names) . " ($effect)",
+                     term => $effect eq 'random' ? '(1|' . join(':', @vars) . ')' : join(':', @vars, ($cov ? $cov : ())) };
+    }
+    return $self->{ix_specs} = \@out;
+}
+
+# why an interaction cannot be fitted on the plots of $d ('' when it can);
+# $env: how the trial enters the model, $gxt: accession x trial in the model
+sub _interaction_why {
+    my ($self, $d, $ix, $env, $gxt) = @_;
+    my @v = @{ $ix->{vars} };
+    my $n = nrow($d);
+    foreach my $x (@v) {
+        return "no $x in the data" if !$d->{$x};
+        return 'one level of ' . ($self->{tf}->{$x} ? $self->{tf}->{$x}->{name} : $x) . ' in the data' if n_levels(@{ $d->{$x} }) < 2;
+    }
+    my @combo = map { my $i = $_; join("\t", map { $d->{$_}->[$i] // '' } @v) } 0 .. $n - 1;
+    if ($ix->{cov}) {
+        # a slope per level: the covariate must vary within some level
+        my %g; $g{ $combo[$_] }->{ $d->{ $ix->{cov} }->[$_] // '' } = 1 for 0 .. $n - 1;
+        return 'the covariate does not vary within the levels' if !grep { keys(%$_) > 1 } values %g;
+        return '';
+    }
+    foreach my $x (@v) { return "the same grouping as $x alone" if _same_grouping(\@combo, $d->{$x}); }
+    return 'as many levels as plots (the same as the residual)' if $ix->{effect} eq 'random' && n_levels(@combo) >= $n;
+    if ($ix->{genotype}) {
+        my @at = map { "$d->{accession}->[$_]\t$d->{trial}->[$_]" } 0 .. $n - 1;
+        return 'the same as accession x trial' if $gxt && _same_grouping(\@combo, \@at);
+    }
+    elsif ($env eq 'fixed' && n_levels(@{ $d->{trial} }) > 1) {
+        my %t; $t{ $d->{trial}->[$_] }->{ $combo[$_] } = 1 for 0 .. $n - 1;
+        return 'constant within each trial: held by the trial effect' if !grep { keys(%$_) > 1 } values %t;
+    }
+    return '';
+}
+
 # frames: { column => [values] } (all columns the same length)
 sub nrow { my $d = shift; return scalar(@{ $d->{unit} || $d->{y} || [] }); }
 sub subset {
@@ -831,27 +916,20 @@ sub _advanced {
     }
     $f90->em_rounds($f90->max_rounds) if $method eq 'em';
     my @r_only;
-    push @r_only, $GXE_LABEL{cs_het} if $gxe eq 'cs_het';
     my $resid = $pick->('residual', qw(homogeneous trial));
     my $tw = $pick->('time_within', qw(cs ar1 exp us));
     my $tg = $pick->('time_genotype', qw(default slope us));
-    if ($resid ne 'homogeneous' && $self->{strategy} eq 'two_stage') {
-        $self->warn_msg("One residual variance per trial applies to the single-stage model (in stage 2 the residual is the stage-1 error); one residual variance was fitted.");
-        $resid = 'homogeneous';
-    }
     if ($tg ne 'default' && $self->{strategy} eq 'two_stage') {
         $self->warn_msg("The genotype in time (random regression / unstructured occasions) applies to the single-stage model; stage 1 estimates accession means and stage 2 their genetic values.");
+        $self->adv_unused('time_genotype', $tg, 'it applies to the single-stage model', strategy => 'single_stage');
         $tg = 'default';
     }
     $self->{adv_resid} = $resid; $self->{adv_time_within} = $tw; $self->{adv_time_geno} = $tg;
     push @r_only, 'maximum likelihood (ML)' if $pick->('method', qw(REML ML)) ne 'REML';
     push @r_only, 'the R optimizer settings' if $pick->('optimizer', qw(default bobyqa Nelder_Mead nlminbwrap)) ne 'default' || defined($a->{max_iter}) && $a->{max_iter} ne '';
     $self->warn_msg("Advanced settings fitted by the R engine only were not used with BLUPF90+: ", join('; ', @r_only), ".") if @r_only;
-    $gxe = 'cs' if $gxe eq 'cs_het';
-    if ($gxe ne 'cs' && $self->{strategy} eq 'two_stage') {
-        $self->warn_msg("Stage 2: the $GXE_LABEL{$gxe} needs the stage-1 errors as known residual variances, which BLUPF90+ cannot hold fixed reliably; it is fitted by the R engine (or in the single-stage model with BLUPF90+). Compound symmetry was fitted.");
-        $gxe = 'cs';
-    }
+    $self->adv_unused('method', 'ML', 'fitted by the R engine only', engine => 'lme4') if $pick->('method', qw(REML ML)) ne 'REML';
+    $self->adv_unused('optimizer', 'R optimizer settings', 'fitted by the R engine only', engine => 'lme4') if grep { /optimizer/ } @r_only;
     $self->{adv_gxe} = $gxe;
     my @set = (($gxe ne 'cs' ? "genotype x trial $gxe" : ()), ($resid ne 'homogeneous' ? 'one residual variance per trial' : ()),
                ($tw ne 'cs' ? "time within plot $tw" : ()), ($tg ne 'default' ? "genotype in time $tg" : ()), ($f90->max_rounds != $CXGN::BLUPF90::MAX_ROUNDS ? 'max. rounds ' . $f90->max_rounds : ()),
@@ -1113,10 +1191,10 @@ sub _time_within_variants {
     my ($self, $spec, $rhos) = @_;
     my $kind = $self->{adv_time_within} // 'cs';
     my $d = $spec->{data};
-    return undef if $kind eq 'cs' || !$d->{mdate} || !grep { $_ eq 'plot_u' } @{ $spec->{random} || [] };
+    return if $kind eq 'cs' || !$d->{mdate} || !grep { $_ eq 'plot_u' } @{ $spec->{random} || [] };
     my $occ = _occasions_of($d);
     my $K = max(@$occ);
-    return undef if $K < 2;
+    return if $K < 2;
     if ($kind eq 'us' && $K > $OCC_MAX) {
         $self->warn_once('tw_us_k', "More than $OCC_MAX measurement occasions per plot: AR(1) was used instead of an unstructured covariance within plots.");
         $kind = 'ar1';
@@ -1184,6 +1262,8 @@ sub _design_terms {
 sub _rel_text {
     my $f = shift;
     my $r = $f->{relationship} || '';
+    # structured genotype effect (per trial / in time) on the relationship matrix
+    return ", accession effects ~ N(0, G0 (x) $r)" . ($r eq 'G' ? ' (GBLUP)' : $r eq 'H' ? ' (single-step)' : '') if $r && $f->{structure};
     return $r eq 'A' ? ', accession ~ N(0, A s2a)' : $r eq 'G' ? ', accession ~ N(0, G s2g) (GBLUP)' : $r eq 'H' ? ', accession ~ N(0, H s2g) (single-step)' : '';
 }
 
@@ -1509,8 +1589,38 @@ sub _stage2 {
             next;
         }
         my @se = map { $_->{se} } @m;
-        my @w = ($weighting eq 'inverse_se2' && !grep { !defined($_) || $_ <= 0 } @se) ? map { 1 / $_**2 } @se : (1) x @m;
+        my $se_ok = !grep { !defined($_) || $_ <= 0 } @se;
+        my @w = ($weighting eq 'inverse_se2' && $se_ok) ? map { 1 / $_**2 } @se : (1) x @m;
         my $mw = mean(@w);
+        # advanced (as the R engine): a structured genotype x trial covariance,
+        # or one genotype x trial variance per trial ('one residual variance
+        # per trial' of stage 2: G x E + error), both with the stage-1 errors
+        # as known residual variances (weights 1/SE^2, residual held at 1)
+        my ($st_kind, $ge_on) = ('', 0);
+        my $adv_g = $self->{adv_gxe} // 'cs';
+        my $adv_r = ($self->{adv_resid} // 'homogeneous') eq 'trial';
+        if ($adv_g ne 'cs') {
+            my $why = !$grandom ? 'it needs the genotype as random effect' : $n_tr < 2 ? 'there is a single trial'
+                    : !$se_ok ? 'stage 1 gave no standard error for some trials' : '';
+            if ($why eq '') {
+                $st_kind = $adv_g;
+                $self->warn_once('gxe_w', "Stage 2: with the $GXE_LABEL{$adv_g} the stage-1 standard errors are the known residual variances of the stage-2 model (the 'unweighted' choice does not apply).") if $weighting ne 'inverse_se2';
+                $self->warn_once("gxe_k $t", "Stage 2, ", short_trait($t), ": an unstructured covariance of $n_tr trials has ", $n_tr * ($n_tr + 1) / 2, " parameters; with many trials a diagonal or compound symmetry model is more stable.") if $n_tr > 15 && $adv_g eq 'us';
+            }
+            else { $self->warn_once("gxe_off $why", "Stage 2: the $GXE_LABEL{$adv_g} was not used ($why); compound symmetry was fitted."); $self->adv_unused('gxe', $adv_g, $why, $self->_adv_try($why)); }
+        }
+        if ($adv_r && $st_kind) {
+            $self->warn_once('res_st', "Stage 2: with the $GXE_LABEL{$st_kind} every trial already has its own genetic variance and the residual is the known stage-1 error, so no residual variance per trial was added.");
+        }
+        elsif ($adv_r) {
+            my $why = $n_tr < 2 ? 'there is a single trial' : !$se_ok ? 'stage 1 gave no standard error for some trials' : '';
+            if ($why eq '') {
+                $ge_on = 1;
+                $self->warn_once('res_w', "Stage 2: with one residual variance per trial the stage-1 standard errors are the known error variances (the 'unweighted' choice does not apply).") if $weighting ne 'inverse_se2';
+            }
+            else { $self->warn_once("res_off $why", "Stage 2: one residual variance per trial was not used ($why); one residual variance was fitted."); $self->adv_unused('residual', 'trial', $why); }
+        }
+        my $known = ($st_kind || $ge_on) ? 1 : 0;
         my %md = (accession => [ map { $_->{accession} } @m ], trial => [ map { $_->{trial} } @m ], y => [ map { $_->{value} } @m ],
                   check => [ map { $chk->{ $_->{accession} } ? 'check' : 'test' } @m ]);
         my (%mo, %fa); for (0 .. $self->{n} - 1) { $mo{ $d->{accession}->[$_] } //= $d->{mother}->[$_]; $fa{ $d->{accession}->[$_] } //= $d->{father}->[$_]; }
@@ -1531,16 +1641,52 @@ sub _stage2 {
             if ($nl > 1 && $nl < $n_tr) { push @terms, "(1|accession:$v)"; }
             else { $self->warn_msg("Stage 2, ", short_trait($t), ": genotype x $nm left out (", ($nl < 2 ? "all trials have the same $nm" : "each $nm level has a single trial, so it cannot be separated from genotype x trial"), ")."); }
         }
+        # interactions built by the user: in stage 2 the genotype x factors of
+        # whole trials (location, year, a treatment applied to whole trials);
+        # the others need the plots (single-stage model)
+        foreach my $ix (@{ $self->_interaction_specs }) {
+            my $why = $ix->{bad} // '';
+            my @tv = grep { $_ ne 'accession' } @{ $ix->{vars} };
+            if ($why eq '' && !($ix->{genotype} && !$ix->{cov} && @tv)) { $why = 'it needs the plots: single-stage model'; }
+            if ($why eq '') {
+                foreach my $v (@tv) {
+                    my %lv; $lv{ $d->{trial}->[$_] }->{ $d->{$v}->[$_] // '' } = 1 for 0 .. $self->{n} - 1;
+                    if (grep { keys(%$_) > 1 } values %lv) { $why = 'it needs the plots: single-stage model (' . ($self->{tf}->{$v} ? $self->{tf}->{$v}->{name} : $v) . ' varies within trials)'; last; }
+                    my %val = map { $_ => (keys %{ $lv{$_} })[0] } keys %lv;
+                    $md{$v} //= [ map { $val{$_} } @{ $md{trial} } ];
+                }
+            }
+            if ($why eq '') {
+                my @combo = map { my $i = $_; join("\t", map { $md{$_}->[$i] // '' } @{ $ix->{vars} }) } 0 .. $#{ $md{y} };
+                my @at = map { "$md{accession}->[$_]\t$md{trial}->[$_]" } 0 .. $#{ $md{y} };
+                $why = 'one level of ' . join(' / ', @tv) . ' in the data' if grep { n_levels(@{ $md{$_} }) < 2 } @tv;
+                $why ||= 'the same as accession x trial, which is the residual of stage 2' if _same_grouping(\@combo, \@at);
+            }
+            if ($why eq '') { push @terms, $ix->{term} if !grep { $_ eq $ix->{term} } @terms; next; }
+            $self->warn_once("ix2 $ix->{label} $why", "Stage 2: interaction $ix->{label} not used ($why).");
+            $self->adv_unused('interaction', $ix->{label}, $why, ($why =~ /single-stage model/ ? (strategy => 'single_stage') : ()));
+        }
         my $fml = "y ~ " . join(' + ', @terms);
-        my $spec = eval { $self->model_spec(\%md, $fml, $grandom, [ map { $_ / $mw } @w ], "stage2_" . short_trait($t)) };
+        my $spec = eval { $self->model_spec(\%md, $fml, $grandom, ($known ? [ map { 1 / $_**2 } @se ] : [ map { $_ / $mw } @w ]), "stage2_" . short_trait($t)) };
         if (!$spec) {
             (my $e = $@) =~ s/\s+$//;
             $self->warn_msg("Stage 2, ", short_trait($t), ": the model could not be fitted ($e).");
             push @summary, { %res, message => $e };
             next;
         }
+        if ($known) {
+            $spec->{known_resid} = 1;
+            if ($st_kind) {
+                $spec->{gxe} = { kind => $st_kind, by => 'trial' };
+                $fml = join(' + ', "y ~ " . ($st_kind eq 'cs_het' ? 'cs' : $st_kind) . "(0 + trial | accession)", grep { $_ ne '(1|accession)' } split(/\s*\+\s*/, ($fml =~ s/^\s*y\s*~\s*//r)));
+            }
+            else {
+                $spec->{ge_by} = 'trial';
+                $fml .= ' + diag(0 + trial | accession:trial)';
+            }
+        }
         push @specs, $spec;
-        push @ctx, { t => $t, res => \%res, md => \%md, fml => $fml, n_tr => $n_tr, weighting => $weighting };
+        push @ctx, { t => $t, res => \%res, md => \%md, fml => $fml, n_tr => $n_tr, weighting => $weighting, st_kind => $st_kind, ge_on => $ge_on };
     }
     $self->step("Stage 2: fitting ", scalar(@specs), " model(s) with BLUPF90+") if @specs;
     my $fits = $self->fit_many(\@specs);
@@ -1560,27 +1706,41 @@ sub _stage2 {
             my %ta; $ta{ $md->{accession}->[$_] }->{ $md->{trial}->[$_] } = 1 for 0 .. $#{$md->{y}};
             my $e_bar = harmonic_mean(map { scalar(keys %$_) } values %ta);
             my $gxt_part = 0;
-            my @gxt = grep { defined $vc->{$_} } map { "accession:$_" } @{$self->{trt_gxt}};
+            # genotype x treatment and genotype x factor interactions, each divided
+            # by the mean number of its levels per accession
+            my @gxt = grep { defined $vc->{$_} } uniq((map { "accession:$_" } @{$self->{trt_gxt}}), (map { $_->{term} =~ /^\(1\|(.*)\)$/ ? $1 : () } grep { $_->{genotype} } @{ $self->_interaction_specs }));
             foreach my $kk (@gxt) {
-                (my $v = $kk) =~ s/^accession://;
-                my %al; $al{ $md->{accession}->[$_] }->{ $md->{$v}->[$_] } = 1 for 0 .. $#{$md->{y}};
+                my @v = grep { $_ ne 'accession' && $md->{$_} } split /:/, $kk;
+                my %al;
+                for my $i (0 .. $#{$md->{y}}) { $al{ $md->{accession}->[$i] }->{ join("\t", map { $md->{$_}->[$i] // '' } @v) } = 1; }
                 $gxt_part += $vc->{$kk} * mean(map { 1 / scalar(keys %$_) } values %al);
             }
-            $res->{var_ge} = $vc->{Residual} + sum(0, map { $vc->{$_} } @gxt);
-            my $den = $res->{var_g} + $gxt_part + $vc->{Residual} / $e_bar;
+            # G x E + error: with one variance per trial, their means
+            my $ge_err = $vc->{Residual} + ($c->{ge_on} ? $vc->{'accession:trial'} // 0 : 0);
+            $res->{var_ge} = $ge_err + sum(0, map { $vc->{$_} } @gxt);
+            my $den = $res->{var_g} + $gxt_part + $ge_err / $e_bar;
             $res->{h2} = $den > 0 ? $res->{var_g} / $den : undef;
         }
-        else { $res->{var_ge} = $vc->{Residual}; }
+        else { $res->{var_ge} = $vc->{Residual} + ($c->{ge_on} ? $vc->{'accession:trial'} // 0 : 0); }
+        $self->_report_structure($t, $f, $res, 'trial') if $f->{structure};
+        if (my $gb = $f->{ge_by}) {
+            push @{$self->{variance_components}}, { trait => short_trait($t), component => "accession:trial, trial $_", variance => $gb->{$_} } for sort keys %$gb;
+        }
         foreach my $kk (sort keys %$vc) {
-            my $comp = $kk eq 'Residual' ? 'accession:trial + error' : $kk;
-            $comp =~ s/\Q$_\E/$self->{tf}->{$_}->{name}/ for @{$self->{trt_gxt}};
+            next if $f->{structure} && $kk eq 'accession';
+            next if $f->{ge_by} && $kk eq 'accession:trial';
+            my $comp = $kk ne 'Residual' ? $kk : $specs[$k]->{known_resid} ? 'stage-1 error (known, mean SE^2)' : 'accession:trial + error';
+            $comp =~ s/\Q$_\E/$self->{tf}->{$_}->{name}/ for sort { length($b) <=> length($a) } keys %{ $self->{tf} || {} };
             push @{$self->{variance_components}}, { trait => short_trait($t), component => $comp, variance => $vc->{$kk} };
         }
         $res->{engine_used} = 'BLUPF90+';
         $res->{pedigree_used} = $f->{pedigree} ? $TRUE : $FALSE;
         $res->{relationship} = $f->{relationship} || 'I';
         (my $m = $c->{fml}) =~ s/^y ~/BLUE ~/;
-        $res->{model} = "BLUPF90+: $m" . _rel_text($f) . ($c->{weighting} eq 'inverse_se2' ? ', weights = 1/SE^2' : '');
+        $res->{model} = "BLUPF90+: $m" . _rel_text($f)
+            . ($specs[$k]->{known_resid} ? ', residual = stage-1 SE^2 (known)' . ($c->{ge_on} ? '; one genotype x trial variance per trial' : '')
+                                         . ($f->{structure} ? "; $GXE_LABEL{$c->{st_kind}}; value = mean over the trials; H2 = mean reliability" : '')
+               : $c->{weighting} eq 'inverse_se2' ? ', weights = 1/SE^2' : '');
         push @{$self->{ancestor_values}}, map { +{ %$_, trait => $t } } @{ $f->{ancestors} || [] };
         push @gv, map { +{ %$_, trait => $t } } grep { defined $_->{value} } @{$f->{values}};
         push @summary, $res;
@@ -1720,10 +1880,12 @@ sub _software {
     # individuals of the pedigree: those listed and parents listed only as parents
     my $P = $self->{pedigree} || {};
     my $n_ped = scalar(uniq(keys %$P, grep { defined } map { @{ $P->{$_} || [] } } keys %$P));
+    # every text below is built, whatever the model: no genotype summary without genotypes
+    my %gn = map { $_ => $gi->{$_} // '?' } qw(n_genotyped n_accessions);
     my $rel = { pedigree => "the pedigree relationship matrix A (with inbreeding)",
-                genomic => "the genomic relationship matrix G built by its genomic module from $gi->{n_genotyped} of $gi->{n_accessions} accessions ($markers)" .
+                genomic => "the genomic relationship matrix G built by its genomic module from $gn{n_genotyped} of $gn{n_accessions} accessions ($markers)" .
                            (($gi->{n_accessions} // 0) > ($gi->{n_genotyped} // 0) ? '; accessions without genotypes are unrelated' : ''),
-                single_step => "the single-step relationship matrix H (pedigree" . ($n_ped ? " of $n_ped individuals" : '') . " + genomic: $gi->{n_genotyped} genotyped accessions, $markers)" }->{ $self->{gen_model} // '' };
+                single_step => "the single-step relationship matrix H (pedigree" . ($n_ped ? " of $n_ped individuals" : '') . " + genomic: $gn{n_genotyped} genotyped accessions, $markers)" }->{ $self->{gen_model} // '' };
     my @parts;
     push @parts, "the stage-1 models of " . $plural->($nt->(@s1), 'trial') . " x " . $plural->($nr->(@s1), 'trait') . " (" . $plural->(scalar(@s1), 'model') . ")" .
                  (@surf ? ", " . $plural->($nt->(@surf), 'trial') . " with a SpATS-like 2D P-spline surface (covariance built by Breedbase)" : '') if @s1;
@@ -2018,6 +2180,28 @@ sub _single_stage {
                 my $both = n_levels(@{$d->{check}}) > 1;
                 $add->('check', $both, 'check vs test entries (no checks in the data)', 'check') if $self->{check_opt} eq 'fixed' || $both;
             }
+            # interactions built by the user
+            foreach my $ix (@{ $self->_interaction_specs }) {
+                next if grep { $_ eq $ix->{term} } @terms;
+                if ($ix->{bad}) { push @dropped, "interaction $ix->{label} ($ix->{bad})"; $self->adv_unused('interaction', $ix->{label}, $ix->{bad}); next; }
+                my $why = $self->_interaction_why($d, $ix, $env, (grep { $_ eq 'trial' } @gxe) ? 1 : 0);
+                $add->($ix->{term}, $why eq '', "interaction $ix->{label} ($why)", @{ $ix->{vars} }, ($ix->{cov} ? $ix->{cov} : ()));
+            }
+            # genotype interactions with nearly the same levels, one nested in
+            # the other: the data hardly separate their variances
+            my @gt = grep { /^\(1\|accession:/ } @terms;
+            for my $i (0 .. $#gt) {
+                for my $j ($i + 1 .. $#gt) {
+                    my ($va, $vb) = map { [ split /:/, ($_ =~ /^\(1\|(.*)\)$/)[0] ] } $gt[$i], $gt[$j];
+                    my ($ka, $kb) = map { my $v = $_; [ map { my $r = $_; join("\t", map { $d->{$_}->[$r] // '' } @$v) } 0 .. nrow($d) - 1 ] } $va, $vb;
+                    my ($na, $nb) = (n_levels(@$ka), n_levels(@$kb));
+                    my ($small, $big) = $na <= $nb ? ($ka, $kb) : ($kb, $ka);
+                    my %m; $m{ $big->[$_] }->{ $small->[$_] } = 1 for 0 .. $#$big;
+                    next if grep { keys(%$_) > 1 } values %m;    # not nested
+                    my ($lo, $hi) = sort { $a <=> $b } ($na, $nb);
+                    $self->warn_once("ix_near $t $gt[$i] $gt[$j]", short_trait($t), ": $gt[$i] and $gt[$j] have nearly the same levels ($lo and $hi), so the data hardly tell their variances apart; their split is uncertain (their sum is not). Consider keeping one of them.") if $hi <= 1.25 * $lo;
+                }
+            }
             if ($self->{gen_model} eq 'parents') {
                 if ($grandom) { push @terms, '(1|mother)', '(1|father)'; }
                 else { push @dropped, 'mother / father effects (need the genotype as random effect)'; }
@@ -2050,7 +2234,6 @@ sub _single_stage {
             my $K = max(@$occ);
             my @days = @{ $d->{mday} || [] };
             my $why = $custom ? 'the model is a written formula' : !$grandom ? 'it needs the genotype as random effect'
-                    : $spec->{_ped_on} ? 'BLUPF90+ fits it with unrelated accessions only, not with the pedigree / genomic relationship'
                     : $K < 2 ? 'a single measurement occasion'
                     : ($kind eq 'us' && $K > $OCC_MAX) ? "more than $OCC_MAX measurement occasions"
                     : ($kind eq 'slope' && (!@days || grep { !defined } @days)) ? 'the measurement days are missing' : '';
@@ -2067,7 +2250,7 @@ sub _single_stage {
                 $tg_on = 1;
                 $self->warn_once("tg_gxe $t", short_trait($t), ": the genotype is modelled in time, so genotype x trial keeps compound symmetry for this trait.") if ($self->{adv_gxe} // 'cs') ne 'cs';
             }
-            else { $self->warn_once("tg_off $t $why", short_trait($t), ": the genotype in time was not used ($why)."); }
+            else { $self->warn_once("tg_off $t $why", short_trait($t), ": the genotype in time was not used ($why)."); $self->adv_unused('time_genotype', $self->{adv_time_geno}, $why, $self->_adv_try($why)); }
         }
         # advanced: one residual variance per trial
         if (($self->{adv_resid} // 'homogeneous') eq 'trial') {
@@ -2078,16 +2261,15 @@ sub _single_stage {
         # and accession:trial)
         if (!$tg_on && ($self->{adv_gxe} // 'cs') ne 'cs') {
             my $why = $custom ? 'the model is a written formula' : !$grandom ? 'it needs the genotype as random effect'
-                    : n_levels(@{$d->{trial}}) < 2 ? 'there is a single trial'
-                    : $spec->{_ped_on} ? 'BLUPF90+ fits it with unrelated accessions only, not with the pedigree / genomic relationship' : '';
+                    : n_levels(@{$d->{trial}}) < 2 ? 'there is a single trial' : '';
             if ($why eq '') {
                 $spec->{random} = [ grep { $_ ne 'accession:trial' } @{$spec->{random}} ];
                 $spec->{gxe} = { kind => $self->{adv_gxe}, by => 'trial' };
-                $fml = join(' + ', "y ~ $self->{adv_gxe}(0 + trial | accession)", grep { $_ ne '(1|accession)' && $_ ne '(1|accession:trial)' } split(/\s*\+\s*/, ($fml =~ s/^\s*y\s*~\s*//r)));
+                $fml = join(' + ', "y ~ " . ($self->{adv_gxe} eq 'cs_het' ? 'cs' : $self->{adv_gxe}) . "(0 + trial | accession)", grep { $_ ne '(1|accession)' && $_ ne '(1|accession:trial)' } split(/\s*\+\s*/, ($fml =~ s/^\s*y\s*~\s*//r)));
                 my $K = n_levels(@{$d->{trial}});
                 $self->warn_once("gxe_k $t", short_trait($t), ": an unstructured covariance of $K trials has ", $K * ($K + 1) / 2, " parameters; with many trials a diagonal or compound symmetry model is more stable.") if $K > 15 && $self->{adv_gxe} eq 'us';
             }
-            else { $self->warn_once("gxe_off $why", "The $GXE_LABEL{$self->{adv_gxe}} was not used ($why); compound symmetry was fitted."); }
+            else { $self->warn_once("gxe_off $why", "The $GXE_LABEL{$self->{adv_gxe}} was not used ($why); compound symmetry was fitted."); $self->adv_unused('gxe', $self->{adv_gxe}, $why, $self->_adv_try($why)); }
         }
         push @specs, $spec;
         push @ctx, { t => $t, d => $d, res => \%res, fml => $fml, rep_all => $rep_all };
@@ -2633,6 +2815,7 @@ sub _output {
         covariates => [ map { $self->{cov_label}->{$_} } @{$self->{cov_vars}} ],
         multi_trait => $self->{multi_trait},
         ($self->{variance_structures} ? (variance_structures => $self->{variance_structures}) : ()),
+        ($self->{adv_unused} ? (advanced_unused => $self->{adv_unused}) : ()),
         ($self->{advanced_used} ? (advanced => { %{ $self->{advanced_used} }, ($self->{tw_rho} ? (time_correlation => { map { my @r = sort { $a <=> $b } @{ $self->{tw_rho}->{$_} }; ($_ => { n_fits => scalar(@r), median => $r[ int($#r / 2) ], min => $r[0], max => $r[-1] }) } keys %{ $self->{tw_rho} } }) : ()) }) : ()),
         software => $self->_software(),
         outliers => $self->{outliers},

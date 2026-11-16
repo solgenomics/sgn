@@ -165,8 +165,11 @@ sub blupf90_dir {
     my $c = shift;
     # the site must allow BLUPF90+ (free for research only; sgn.conf allow_blupf90)
     return if !$c->config->{allow_blupf90};
+    # the key may be given more than once (a list): the first folder that holds it
     my $conf = $c->config->{blupf90_bin_dir};
-    return $conf if $conf && -x "$conf/blupf90+";
+    foreach my $dir (grep { defined && $_ ne '' } (ref($conf) eq 'ARRAY' ? @$conf : ($conf))) {
+        return $dir if -x "$dir/blupf90+";
+    }
     # the program mounted into Breedbase's own bin folder (docker: a file bind
     # mount to <basepath>/bin/blupf90+; it is git-ignored)
     my $own = File::Spec->catdir($c->config->{basepath} // '', 'bin');

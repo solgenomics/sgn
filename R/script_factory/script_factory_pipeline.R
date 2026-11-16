@@ -400,6 +400,60 @@ for (cv in unique(cov_list)) {
 }
 if (length(cov_vars)) log_step("Covariates: ", paste(cov_label, collapse = ", "))
 for (k in names(treatment_factors)) dat[[k]] <- treatment_factors[[k]]$values
+
+# Interactions built by the user (recipe$interactions: list of
+# {factors, effect}). Factors: accession, trial, location, year,
+# trt:<treatment>, cov:<trait> (a selected covariate: a slope per level of the
+# other factors, fixed). With the accession an interaction is random; else
+# fixed or random as chosen. Resolved here; fitted (or left out with the
+# reason) by the single-stage model and, for the genotype x factors of whole
+# trials, by stage 2.
+ix_specs <- function() {
+  out <- list()
+  for (ix in opt(recipe, "interactions", list())) {
+    if (!is.list(ix)) next
+    vars <- character(); nm <- character(); cov <- NA_character_; bad <- NA_character_
+    for (id in as.character(unlist(ix$factors))) {
+      if (id %in% c("accession", "trial", "location", "year")) { vars <- c(vars, id); nm <- c(nm, id) }
+      else if (startsWith(id, "trt:")) {
+        n <- substring(id, 5)
+        v <- Filter(function(k) k == n || treatment_factors[[k]]$name == n, names(treatment_factors))
+        if (length(v)) { vars <- c(vars, v[1]); nm <- c(nm, treatment_factors[[v[1]]]$name) }
+        else { if (is.na(bad)) bad <- paste0("treatment ", n, " is not in this dataset"); nm <- c(nm, n) }
+      } else if (startsWith(id, "cov:")) {
+        tr <- substring(id, 5); cv <- cov_name(tr); nm <- c(nm, short_trait(tr))
+        if (!cv %in% cov_vars) { if (is.na(bad)) bad <- paste0("the covariate ", short_trait(tr), " is not selected under Covariates") }
+        else if (!is.na(cov)) { if (is.na(bad)) bad <- "one covariate per interaction" }
+        else cov <- cv
+      } else { if (is.na(bad)) bad <- paste0("unknown factor ", id); nm <- c(nm, id) }
+    }
+    g <- "accession" %in% vars
+    if (is.na(bad) && (length(vars) + (!is.na(cov))) < 2) bad <- "it needs two factors or more"
+    if (is.na(bad) && !is.na(cov) && g) bad <- "a covariate slope per accession is not supported"
+    effect <- if (!is.na(cov)) "fixed" else if (g) "random" else if (identical(as.character(unlist(ix$effect)), "random")) "random" else "fixed"
+    out[[length(out) + 1]] <- list(vars = vars, cov = cov, genotype = g, effect = effect, bad = bad,
+                                   label = paste0(paste(nm, collapse = " x "), " (", effect, ")"),
+                                   term = if (effect == "random") paste0("(1|", paste(vars, collapse = ":"), ")") else paste(c(vars, if (!is.na(cov)) cov), collapse = ":"))
+  }
+  out
+}
+# why an interaction cannot be fitted on the plots of d ("" when it can)
+ix_why <- function(d, ix, env, gxt) {
+  for (x in ix$vars) {
+    if (is.null(d[[x]])) return(paste0("no ", x, " in the data"))
+    if (n_levels(d[[x]]) < 2) return(paste0("one level of ", if (!is.null(treatment_factors[[x]])) treatment_factors[[x]]$name else x, " in the data"))
+  }
+  combo <- do.call(paste, c(lapply(ix$vars, function(x) as.character(d[[x]])), sep = "\t"))
+  if (!is.na(ix$cov)) {
+    vary <- tapply(d[[ix$cov]], combo, function(x) n_levels(x) > 1)
+    return(if (any(vary, na.rm = TRUE)) "" else "the covariate does not vary within the levels")
+  }
+  for (x in ix$vars) if (same_grouping(combo, as.character(d[[x]]))) return(paste0("the same grouping as ", x, " alone"))
+  if (ix$effect == "random" && n_levels(combo) >= nrow(d)) return("as many levels as plots (the same as the residual)")
+  if (ix$genotype) { if (gxt && same_grouping(combo, paste(d$accession, d$trial))) return("the same as accession x trial") }
+  else if (env == "fixed" && n_levels(d$trial) > 1 && !any(tapply(combo, d$trial, function(x) n_levels(x) > 1))) return("constant within each trial: held by the trial effect")
+  ""
+}
 if (length(treatment_factors)) log_step("Treatments: ", paste(vapply(treatment_factors, function(f) paste0(f$name, " (", length(unique(f$values)), " levels)"), ""), collapse = ", "),
                                         "; in the models: ", if (length(c(trt_use, trt_gxt))) paste(unique(c(trt_use, trt_gxt)), collapse = ", ") else "none")
 traits <- traits[vapply(traits, function(t) sum(!is.na(dat[[t]])) > 0, logical(1))]
@@ -889,7 +943,10 @@ if (!identical(engine, "lme4")) {
 #                  (stage-1 errors as known residual variances) and the
 #                  single-stage builder. Fitted with glmmTMB.
 #   residual       homogeneous (default) | trial: one residual variance per
-#                  trial (single stage; glmmTMB dispformula)
+#                  trial (single stage: glmmTMB dispformula; stage 2: one
+#                  genotype x trial variance per trial, diag(0 + trial |
+#                  accession:trial), with the stage-1 errors as known
+#                  residual variances, i.e. G x E + error per trial)
 #   time_within    repeated measurements modelled one by one ("all"): cs
 #                  (default: random plot effect) | ar1 (AR(1) between the
 #                  successive measurement occasions of a plot) | exp
@@ -918,8 +975,28 @@ GXE_LABEL <- c(cs = "compound symmetry", cs_het = "heterogeneous compound symmet
 TIME_WITHIN_LABEL <- c(cs = "plot effect", ar1 = "AR(1) between successive measurements of a plot", exp = "exponential correlation in days within a plot", us = "unstructured covariance of the measurement occasions within a plot")
 TIME_GENO_LABEL <- c(default = "accession effect", slope = "random regression (own intercept and slope in time per accession)", us = "unstructured genetic covariance among the measurement occasions")
 OCC_MAX <- 8       # occasions of an unstructured time covariance
+# advanced settings that were not used, with the recipe change that lets
+# Breedbase fit them when there is one (results: advanced_unused; the model
+# review of the page offers it as a suggestion after the run)
+adv_unused <- list()
+adv_unused_add <- function(setting, value, why, try = NULL) {
+  key <- paste(setting, value, why)
+  if (!is.null(adv_unused[[key]])) return(invisible(NULL))
+  adv_unused[[key]] <<- c(list(setting = setting, value = value, why = why), if (length(try)) list(try = try))
+  invisible(NULL)
+}
+adv_try <- function(why) {
+  if (grepl("written formula", why)) list(single_mode = "builder")
+  else if (grepl("genotype as random", why)) { if (identical(opt(recipe, "strategy", "two_stage"), "two_stage")) list(stage2_genotype = "random") else list(single_genotype = "random") }
+  else if (grepl("unrelated accessions only|glmmTMB", why)) list(engine = "blupf90")
+  else NULL
+}
 if ((adv_gxe != "cs" || adv_resid != "homogeneous" || adv_time_within != "cs" || adv_time_geno != "default") && !requireNamespace("glmmTMB", quietly = TRUE)) {
   add_warning("The advanced variance structures need the R package glmmTMB, which is not installed; the default structures were used.")
+  for (k in c("gxe", "residual", "time_within", "time_genotype")) {
+    v <- c(gxe = adv_gxe, residual = adv_resid, time_within = adv_time_within, time_genotype = adv_time_geno)[[k]]
+    if (!v %in% c("cs", "homogeneous", "default")) adv_unused_add(k, v, "the R package glmmTMB is not installed", list(engine = "blupf90"))
+  }
   adv_gxe <- "cs"; adv_resid <- "homogeneous"; adv_time_within <- "cs"; adv_time_geno <- "default"
 }
 if (adv_gxe != "cs" || adv_resid != "homogeneous" || adv_time_within != "cs" || adv_time_geno != "default" || !adv_reml || adv_optimizer != "default" || !is.na(adv_maxiter))
@@ -2065,6 +2142,27 @@ if (strategy == "two_stage") {
         if (n_lv > 1 && n_lv < n_tr) terms <- c(terms, paste0("(1|accession:", v, ")"))
         else add_warning("Stage 2, ", short_trait(t), ": genotype x ", nm, " left out (", if (n_lv < 2) paste0("all trials have the same ", nm) else paste0("each ", nm, " level has a single trial, so it cannot be separated from genotype x trial"), ").")
       }
+      # interactions built by the user: in stage 2 the genotype x factors of
+      # whole trials (location, year, a treatment applied to whole trials);
+      # the others need the plots (single-stage model)
+      for (ix in ix_specs()) {
+        why <- if (is.na(ix$bad)) "" else ix$bad
+        tv <- setdiff(ix$vars, "accession")
+        if (why == "" && !(ix$genotype && is.na(ix$cov) && length(tv))) why <- "it needs the plots: single-stage model"
+        if (why == "") for (v in tv) {
+          lv <- tapply(as.character(dat[[v]]), dat$trial, function(x) unique(x))
+          if (any(lengths(lv) > 1)) { why <- paste0("it needs the plots: single-stage model (", if (!is.null(treatment_factors[[v]])) treatment_factors[[v]]$name else v, " varies within trials)"); break }
+          if (is.null(m[[v]])) m[[v]] <- unname(unlist(lv)[as.character(m$trial)])
+        }
+        if (why == "") {
+          combo <- do.call(paste, c(lapply(ix$vars, function(x) as.character(m[[x]])), sep = "\t"))
+          if (any(vapply(tv, function(v) n_levels(m[[v]]) < 2, TRUE))) why <- paste0("one level of ", paste(tv, collapse = " / "), " in the data")
+          else if (same_grouping(combo, paste(m$accession, m$trial))) why <- "the same as accession x trial, which is the residual of stage 2"
+        }
+        if (why == "") { if (!ix$term %in% terms) terms <- c(terms, ix$term); next }
+        rep_warn_once(paste("ix2", ix$label, why), "Stage 2: interaction ", ix$label, " not used (", why, ").")
+        adv_unused_add("interaction", ix$label, why, if (grepl("single-stage model", why)) list(strategy = "single_stage") else NULL)
+      }
       fml_txt <- paste("y ~", paste(terms, collapse = " + "))
       # advanced: structured genotype x trial covariance (glmmTMB), the
       # stage-1 errors as known residual variances
@@ -2072,7 +2170,7 @@ if (strategy == "two_stage") {
       if (adv_gxe != "cs") {
         why <- if (!genotype_random) "it needs the genotype as random effect"
                else if (n_tr < 2) "there is a single trial"
-               else if (gen_model %in% c("pedigree", "genomic", "single_step")) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model")
+               else if (gen_model %in% c("pedigree", "genomic", "single_step")) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model; the BLUPF90+ engine fits it")
                else if (!all(is.finite(m$se) & m$se > 0)) "stage 1 gave no standard error for some trials"
                else ""
         if (why == "") {
@@ -2082,11 +2180,33 @@ if (strategy == "two_stage") {
                        disp = "~ 0 + offset(log(.se))")
           if (weighting != "inverse_se2") rep_warn_once("gxe_w", "Stage 2: with the ", GXE_LABEL[[adv_gxe]], " the stage-1 standard errors are the known residual variances of the stage-2 model (the 'unweighted' choice does not apply).")
           if (nlevels(m$trial) > 15 && adv_gxe == "us") rep_warn_once(paste("gxe_k", t), "Stage 2, ", short_trait(t), ": an unstructured covariance of ", nlevels(m$trial), " trials has ", nlevels(m$trial) * (nlevels(m$trial) + 1) / 2, " parameters; with many trials a diagonal or compound symmetry model is more stable.")
-        } else rep_warn_once(paste("gxe_off", why), "Stage 2: the ", GXE_LABEL[[adv_gxe]], " was not used (", why, "); compound symmetry was fitted.")
+        } else { rep_warn_once(paste("gxe_off", why), "Stage 2: the ", GXE_LABEL[[adv_gxe]], " was not used (", why, "); compound symmetry was fitted."); adv_unused_add("gxe", adv_gxe, why, adv_try(why)) }
       }
-      f2 <- tryCatch(fit_model(m, fml_txt, genotype_random, w = m$w, label = paste0("stage2_", short_trait(t)), tmb = tmb2), error = function(e) e)
+      # advanced: one residual variance per trial = one genotype x trial
+      # variance per trial on top of the known stage-1 errors
+      ge_on <- FALSE
+      if (adv_resid == "trial") {
+        if (!is.null(tmb2)) rep_warn_once("res_st", "Stage 2: with the ", GXE_LABEL[[adv_gxe]], " every trial already has its own genetic variance and the residual is the known stage-1 error, so no residual variance per trial was added.")
+        else {
+          why <- if (n_tr < 2) "there is a single trial"
+                 else if (genotype_random && gen_model %in% c("pedigree", "genomic", "single_step")) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model (the BLUPF90+ engine fits it)")
+                 else if (!all(is.finite(m$se) & m$se > 0)) "stage 1 gave no standard error for some trials"
+                 else ""
+          if (why == "") {
+            ge_on <- TRUE
+            m$.se <- m$se
+            m$acc_trial <- paste(m$accession, m$trial, sep = ":")
+            tmb2 <- list(disp = "~ 0 + offset(log(.se))")
+            if (weighting != "inverse_se2") rep_warn_once("res_w", "Stage 2: with one residual variance per trial the stage-1 standard errors are the known error variances (the 'unweighted' choice does not apply).")
+          } else { rep_warn_once(paste("res_off", why), "Stage 2: one residual variance per trial was not used (", why, "); one residual variance was fitted."); adv_unused_add("residual", "trial", why, adv_try(why)) }
+        }
+      }
+      fml_fit <- if (ge_on) paste(fml_txt, "+ diag(0 + trial | acc_trial)") else fml_txt
+      f2 <- tryCatch(fit_model(m, fml_fit, genotype_random, w = m$w, label = paste0("stage2_", short_trait(t)), tmb = tmb2), error = function(e) e)
       if (!is.null(tmb2) && inherits(f2, "error")) {
-        add_warning("Stage 2, ", short_trait(t), ": the ", GXE_LABEL[[adv_gxe]], " model could not be fitted (", conditionMessage(f2), "); compound symmetry was fitted instead.")
+        add_warning("Stage 2, ", short_trait(t), ": the ", if (ge_on) "model with one residual variance per trial" else GXE_LABEL[[adv_gxe]], " could not be fitted (", conditionMessage(f2), "); ",
+                    if (ge_on) "one residual variance" else "compound symmetry", " was fitted instead.")
+        ge_on <- FALSE
         tmb2 <- NULL
         f2 <- tryCatch(fit_model(m, fml_txt, genotype_random, w = m$w, label = paste0("stage2_", short_trait(t))), error = function(e) e)
       }
@@ -2094,29 +2214,42 @@ if (strategy == "two_stage") {
       if (length(f2$notes)) add_warning("Stage 2, ", short_trait(t), ": ", paste(f2$notes, collapse = "; "), ".")
       gv <- f2$values
       vc <- f2$vc
+      # one genotype x trial variance per trial (diag over the trials)
+      ge_by <- NULL
+      if (ge_on) {
+        Mg <- Filter(function(x) x$group == "acc_trial", f2$other_mats)
+        if (length(Mg)) ge_by <- setNames(diag(Mg[[1]]$M), sub("^trial", "", rownames(Mg[[1]]$M)))
+        vc <- vc[names(vc) != "acc_trial"]
+        if (!is.null(ge_by)) vc["accession:trial"] <- mean(ge_by)
+      }
       g_names <- intersect(c("accession", "mother", "father"), names(vc))
       if (genotype_random) {
         res$var_g <- unname(sum(vc[g_names]))
         e_bar <- 1 / mean(1 / as.numeric(table(m$accession)))
         # genotype x treatment components, divided by the (harmonic) mean
         # number of treatment levels per accession
-        gxt_names <- intersect(paste0("accession:", trt_gxt), names(vc))
+        ix_g <- unlist(lapply(Filter(function(ix) ix$genotype, ix_specs()), function(ix) sub("^\\(1\\|(.*)\\)$", "\\1", ix$term)))
+        gxt_names <- intersect(unique(c(paste0("accession:", trt_gxt), ix_g)), names(vc))
         gxt_part <- sum(vapply(gxt_names, function(k) {
-          v <- sub("^accession:", "", k)
-          u <- unique(data.frame(a = m$accession, l = m[[v]]))
+          v <- setdiff(strsplit(k, ":", fixed = TRUE)[[1]], "accession")
+          u <- unique(data.frame(a = m$accession, l = do.call(paste, c(lapply(v, function(x) as.character(m[[x]])), sep = "\t"))))
           vc[[k]] * mean(1 / as.numeric(table(u$a)))
         }, numeric(1)))
-        res$var_ge <- unname(vc["Residual"] + sum(vc[gxt_names]))
-        res$h2 <- unname(res$var_g / (res$var_g + gxt_part + vc["Residual"] / e_bar))
-      } else res$var_ge <- unname(vc["Residual"])
-      comp <- names(vc); comp[comp == "Residual"] <- "accession:trial + error"
-      for (v in trt_gxt) comp <- sub(v, treatment_factors[[v]]$name, comp, fixed = TRUE)
-      if (is.null(f2$structure)) variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = comp, variance = unname(vc), stringsAsFactors = FALSE)
+        # G x E + error: with one variance per trial, their means
+        ge_err <- unname(vc["Residual"] + if (!is.null(ge_by)) vc[["accession:trial"]] else 0)
+        res$var_ge <- unname(ge_err + sum(vc[gxt_names]))
+        res$h2 <- unname(res$var_g / (res$var_g + gxt_part + ge_err / e_bar))
+      } else res$var_ge <- unname(vc["Residual"] + if (!is.null(ge_by)) vc[["accession:trial"]] else 0)
+      vc_rep <- if (!is.null(ge_by)) c(vc[names(vc) != "accession:trial"], setNames(ge_by, paste0("accession:trial, trial ", names(ge_by)))) else vc
+      comp <- names(vc_rep); comp[comp == "Residual"] <- if (!is.null(tmb2)) "stage-1 error (known, mean SE^2)" else "accession:trial + error"
+      for (v in names(treatment_factors)) comp <- gsub(v, treatment_factors[[v]]$name, comp, fixed = TRUE)
+      if (is.null(f2$structure)) variance_components[[length(variance_components) + 1]] <- data.frame(trait = short_trait(t), component = comp, variance = unname(vc_rep), stringsAsFactors = FALSE)
       res$engine_used <- f2$engine
       res$pedigree_used <- isTRUE(f2$pedigree)
       res$relationship <- f2$relationship
       res$model <- paste0(sub("^y ~", "BLUE ~", fml_txt), if (isTRUE(f2$pedigree)) paste0(", accession ~ N(0, ", f2$relationship, " s2g)"),
-                          if (weighting == "inverse_se2") ", weights = 1/SE^2" else "")
+                          if (!is.null(ge_by)) paste0(" + diag(0 + trial | accession:trial), residual = stage-1 SE^2 (known); one genotype x trial variance per trial")
+                          else if (weighting == "inverse_se2") ", weights = 1/SE^2" else "")
       if (!is.null(f2$ancestors)) { f2$ancestors$trait <- t; ancestor_values[[length(ancestor_values) + 1]] <- f2$ancestors }
       if (!is.null(f2$structure)) {
         res <- report_structure(t, f2, res, "trial", "stage-1 error (known, mean)")
@@ -2265,6 +2398,25 @@ if (strategy == "two_stage") {
         has_both <- n_levels(d$check) > 1
         if (check_opt == "fixed" || has_both) add_term("check", has_both, "check vs test entries (no checks in the data)", "check")
       }
+      # interactions built by the user
+      for (ix in ix_specs()) {
+        if (ix$term %in% terms) next
+        if (!is.na(ix$bad)) { dropped <- c(dropped, paste0("interaction ", ix$label, " (", ix$bad, ")")); adv_unused_add("interaction", ix$label, ix$bad); next }
+        why <- ix_why(d, ix, ss_env, "trial" %in% ss_gxe)
+        add_term(ix$term, why == "", paste0("interaction ", ix$label, " (", why, ")"), c(ix$vars, if (!is.na(ix$cov)) ix$cov))
+      }
+      # genotype interactions with nearly the same levels, one nested in the
+      # other: the data hardly separate their variances
+      gt <- grep("^\\(1\\|accession:", terms, value = TRUE)
+      if (length(gt) > 1) for (i in seq_len(length(gt) - 1)) for (j in (i + 1):length(gt)) {
+        key <- function(x) do.call(paste, c(lapply(strsplit(sub("^\\(1\\|(.*)\\)$", "\\1", x), ":", fixed = TRUE)[[1]], function(v) as.character(d[[v]])), sep = "\t"))
+        ka <- key(gt[i]); kb <- key(gt[j]); na <- n_levels(ka); nb <- n_levels(kb)
+        big <- if (na <= nb) kb else ka; small <- if (na <= nb) ka else kb
+        if (any(tapply(small, big, function(x) n_levels(x) > 1))) next
+        if (max(na, nb) <= 1.25 * min(na, nb))
+          rep_warn_once(paste("ix_near", t, gt[i], gt[j]), short_trait(t), ": ", gt[i], " and ", gt[j], " have nearly the same levels (", min(na, nb), " and ", max(na, nb),
+                        "), so the data hardly tell their variances apart; their split is uncertain (their sum is not). Consider keeping one of them.")
+      }
       # mother / father (GCA-like) effects
       if (gen_model == "parents") {
         if (genotype_random) { terms <- c(terms, "(1|mother)", "(1|father)") }
@@ -2306,7 +2458,7 @@ if (strategy == "two_stage") {
         K_occ <- nlevels(d$occ_f)
         why <- if (ss_mode != "builder") "the model is a written formula"
                else if (!genotype_random) "it needs the genotype as random effect"
-               else if (rel_on) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model")
+               else if (rel_on) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model; the BLUPF90+ engine fits it")
                else if (K_occ < 2) "a single measurement occasion"
                else if (adv_time_geno == "us" && K_occ > OCC_MAX) paste0("more than ", OCC_MAX, " measurement occasions")
                else if (adv_time_geno == "slope" && (any(is.na(d$tday)) || n_levels(d$tday) < 2)) "the measurement days are missing"
@@ -2316,19 +2468,19 @@ if (strategy == "two_stage") {
             list(term = "us(1 + tday | accession)", drop = "(1|accession)", L = c(1, mean(d$tday)), kind = "slope", labels = c("intercept", "slope"))
           else list(term = "us(0 + occ_f | accession)", drop = "(1|accession)", L = rep(1 / K_occ, K_occ), kind = "occasion", labels = levels(d$occ_f))
           if (adv_gxe != "cs") rep_warn_once(paste("tg_gxe", t), st, ": the genotype is modelled in time (", TIME_GENO_LABEL[[adv_time_geno]], "), so genotype x trial keeps compound symmetry for this trait.")
-        } else rep_warn_once(paste("tg_off", t, why), st, ": the ", TIME_GENO_LABEL[[adv_time_geno]], " was not used (", why, ").")
+        } else { rep_warn_once(paste("tg_off", t, why), st, ": the ", TIME_GENO_LABEL[[adv_time_geno]], " was not used (", why, ")."); adv_unused_add("time_genotype", adv_time_geno, why, adv_try(why)) }
       }
       if (is.null(acc1) && adv_gxe != "cs" && !(rep_all && adv_time_geno != "default")) {
         why <- if (ss_mode != "builder") "the model is a written formula"
                else if (!genotype_random) "it needs the genotype as random effect"
                else if (n_tr < 2) "there is a single trial"
-               else if (rel_on) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model")
+               else if (rel_on) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model; the BLUPF90+ engine fits it")
                else ""
         if (why == "") {
           acc1 <- list(term = paste0(c(cs_het = "cs", diag = "diag", us = "us")[[adv_gxe]], "(0 + trial | accession)"), drop = c("(1|accession)", "(1|accession:trial)"),
                        L = rep(1 / n_tr, n_tr), kind = adv_gxe, labels = levels(factor(d$trial)))
           if (n_tr > 15 && adv_gxe == "us") rep_warn_once(paste("gxe_k", t), st, ": an unstructured covariance of ", n_tr, " trials has ", n_tr * (n_tr + 1) / 2, " parameters; with many trials a diagonal or compound symmetry model is more stable.")
-        } else rep_warn_once(paste("gxe_off", why), "The ", GXE_LABEL[[adv_gxe]], " was not used (", why, "); compound symmetry was fitted.")
+        } else { rep_warn_once(paste("gxe_off", why), "The ", GXE_LABEL[[adv_gxe]], " was not used (", why, "); compound symmetry was fitted."); adv_unused_add("gxe", adv_gxe, why, adv_try(why)) }
       }
       if (adv_resid == "trial") {
         if (n_tr < 2) rep_warn_once("res_one", "Heterogeneous residual variances need several trials; one residual variance was fitted.")
@@ -2793,6 +2945,7 @@ result <- list(
   repeated = list(time = rep_time, gxtime = rep_gxtime, traits = repeated_info),
   multi_trait = if (length(multi_trait_out)) multi_trait_out else NULL,
   variance_structures = if (length(gxe_out)) gxe_out else NULL,
+  advanced_unused = if (length(adv_unused)) unname(adv_unused) else NULL,
   advanced = if (adv_gxe != "cs" || adv_resid != "homogeneous" || adv_time_within != "cs" || adv_time_geno != "default" || !adv_reml || adv_optimizer != "default" || !is.na(adv_maxiter))
     list(gxe = adv_gxe, residual = adv_resid, time_within = adv_time_within, time_genotype = adv_time_geno, method = if (adv_reml) "REML" else "ML",
          optimizer = adv_optimizer, max_iter = if (is.na(adv_maxiter)) NULL else adv_maxiter) else NULL,
