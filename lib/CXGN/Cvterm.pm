@@ -452,6 +452,43 @@ sub add_parent_terms {
     });
 }
 
+=head2 delete_parent_term
+
+ Usage: $cvterm->delete_parent_term($cvterm_relationship_id);
+ Desc:  removes one is_a or VARIABLE_OF link from this term to a parent term.
+        Dies if the link is not a parent link of this term, or if it is the
+        last one (the term would no longer be part of the ontology tree).
+
+=cut
+
+sub delete_parent_term {
+    my $self            = shift;
+    my $relationship_id = shift;
+
+    my $schema = $self->schema();
+
+    $schema->txn_do(sub {
+        # lock the term, so that two requests cannot each remove one of the last two parents
+        $schema->resultset("Cv::Cvterm")->search({ cvterm_id => $self->cvterm_id() }, { for => 'update' })->first();
+
+        my $parent_links = $schema->resultset("Cv::CvtermRelationship")->search(
+            {
+                'me.subject_id' => $self->cvterm_id(),
+                'type.name'     => { -in => [ 'is_a', 'VARIABLE_OF' ] },
+                'cv.name'       => 'relationship',
+            },
+            { join => { type => 'cv' } }
+        );
+
+        my $link = $parent_links->find({ 'me.cvterm_relationship_id' => $relationship_id });
+        die "This relationship is not a parent of this term.\n" unless $link;
+        die "Cannot remove the last parent of a term.\n" if $parent_links->count() < 2;
+
+        $link->delete();
+    });
+    return;
+}
+
 __PACKAGE__->meta->make_immutable;
 
 ##########

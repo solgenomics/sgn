@@ -23,6 +23,7 @@ use Try::Tiny;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html commify_number /;
 use CXGN::Chado::Cvterm;
 use CXGN::Cvterm;
+use CXGN::Onto;
 use Data::Dumper;
 use JSON;
 
@@ -533,7 +534,8 @@ sub cvterm_relationships_GET {
     }
 
     my $sth = $c->dbc->dbh->prepare(
-        "SELECT type.name AS relationship_name,
+        "SELECT cvterm_relationship_id,
+                type.name AS relationship_name,
                 object.cvterm_id AS object_cvterm_id,
                 object.name AS object_name
          FROM cvterm_relationship
@@ -545,8 +547,9 @@ sub cvterm_relationships_GET {
     my @relationships;
     eval {
         $sth->execute($cvterm_id);
-        while (my ($rel_name, $obj_id, $obj_name) = $sth->fetchrow_array()) {
+        while (my ($rel_id, $rel_name, $obj_id, $obj_name) = $sth->fetchrow_array()) {
             push @relationships, {
+                cvterm_relationship_id => $rel_id,
                 relationship_name => $rel_name,
                 object_cvterm_id  => $obj_id,
                 object_name       => $obj_name,
@@ -638,6 +641,53 @@ sub add_parent_terms_POST {
     }
 
     $c->stash->{rest} = { message => scalar(@parent_ids) . " parent term(s) added successfully." };
+}
+
+sub delete_parent_term : Path('/ajax/cvterm/delete_parent_term') : ActionClass('REST') { }
+
+sub delete_parent_term_POST {
+    my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to delete parent terms." };
+        return;
+    }
+    if (!$c->user()->check_roles('curator')) {
+        $c->stash->{rest} = { error => "You must have curator privileges to delete parent terms." };
+        return;
+    }
+
+    my $cvterm_id       = $c->req->param('cvterm_id');
+    my $relationship_id = $c->req->param('cvterm_relationship_id');
+    if (!$cvterm_id || !$relationship_id) {
+        $c->stash->{rest} = { error => "cvterm_id and cvterm_relationship_id are required." };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    eval {
+        my $cvterm = CXGN::Cvterm->new({ schema => $schema, cvterm_id => $cvterm_id });
+        die "Term not found.\n" unless $cvterm->cvterm();
+
+        # allow_trait_edits is a list of editable ontologies, or 1 for the first trait ontology
+        my @editable = split(/,/, $c->config->{allow_trait_edits} // '');
+        if (@editable == 1 && $editable[0] eq '1') {
+            my @root_nodes = CXGN::Onto->new({ schema => $schema })->get_root_nodes('trait_ontology');
+            @editable = @root_nodes ? ($root_nodes[0]->[1] =~ s/:.*//r) : ();
+        }
+        if (!any { $_ eq $cvterm->db->name() } @editable) {
+            die "This ontology is not editable on this server.\n";
+        }
+
+        $cvterm->delete_parent_term($relationship_id);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "Error deleting parent term: $@" };
+        return;
+    }
+
+    $c->stash->{rest} = { message => "Parent term removed." };
 }
 
 ####

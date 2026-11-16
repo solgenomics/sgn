@@ -382,6 +382,28 @@ my $edit_privs = $curator ;
       });
     });
 
+    jQuery('#relationships_div').on('click', '.delete_parent_term_btn', function() {
+      if (!confirm("Remove this parent term?")) { return; }
+      jQuery.ajax({
+        url: '/ajax/cvterm/delete_parent_term',
+        method: 'POST',
+        data: {
+          cvterm_id: <% $cvterm_id %>,
+          cvterm_relationship_id: jQuery(this).data('relationship-id')
+        },
+        success: function(response) {
+          if (response.error) {
+            alert(response.error);
+          } else {
+            window.location.reload();
+          }
+        },
+        error: function() {
+          alert("An error occurred deleting the parent term.");
+        }
+      });
+    });
+
     jQuery.ajax({
       url: '/ajax/cvterm/cvterm_relationships',
       method: 'GET',
@@ -398,7 +420,13 @@ my $edit_privs = $curator ;
         }
         var html = '';
         jQuery.each(rels, function(i, r) {
-          html += r.relationship_name + ' <a href="/cvterm/' + r.object_cvterm_id + '/view">' + r.object_name + '</a><br />';
+          html += r.relationship_name + ' <a href="/cvterm/' + r.object_cvterm_id + '/view">' + r.object_name + '</a>';
+% if ( $allow_edits && $edit_privs ) {
+          if (r.relationship_name == 'is_a' || r.relationship_name == 'VARIABLE_OF') {
+            html += ' <button type="button" class="btn btn-danger btn-xs delete_parent_term_btn" data-relationship-id="' + r.cvterm_relationship_id + '" title="Remove this parent term"><span class="glyphicon glyphicon-trash"></span></button>';
+          }
+% }
+          html += '<br />';
         });
         jQuery('#relationships_div').html(html);
       },
