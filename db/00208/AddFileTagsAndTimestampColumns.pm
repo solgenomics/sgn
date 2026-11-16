@@ -17,7 +17,8 @@ see the perldoc of parent class for more details.
 This patch adds the create_timestamp and tags columns to metadata.md_files. These
 columns allow old files to be suppressed from searches while retaining their
 data as well as storing other modifiers on a file, like whether it has 
-been successfully used to parse data. 
+been successfully used to parse data. It also renames the trial_additional_file_upload
+filetype to trial_additional_file.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -95,6 +96,12 @@ UPDATE metadata.md_files AS f
   FROM timestamped_files AS t
  WHERE t.file_id = f.file_id
    AND t.file_timestamp IS NOT NULL;
+
+-- trial additional files used to be archived with the filetype trial_additional_file_upload.
+-- They are now stored as trial_additional_file.
+UPDATE metadata.md_files
+   SET filetype = 'trial_additional_file'
+ WHERE filetype = 'trial_additional_file_upload';
 
 EOSQL
 
