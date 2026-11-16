@@ -396,7 +396,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('search_trait', 'id', 'search for gs trait')->click();
     sleep(5);
-    $d->find_element_ok('dry matter', 'partial_link_text', 'trait earch results')->click();
+    $d->find_element_ok('dry matter', 'partial_link_text', 'trait search results')->click();
     sleep(10);
 
 
