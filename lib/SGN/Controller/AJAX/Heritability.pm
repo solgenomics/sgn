@@ -168,7 +168,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     };
     my $cmd_str = join(" ",(
         "Rscript ",
-        $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
+        "__BASEPATH__/R/heritability/h2_blup_rscript.R",
         $pheno_filepath,
         $trait_id,
         $h2File,

@@ -384,7 +384,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     print STDERR "NOW SUBMITTING R JOB...\n";
     my $cmd_str = join(" ", (
         "Rscript ",
-            $c->config->{basepath} . "/R/GCPC.R",
+            "__BASEPATH__/R/GCPC.R",
             $pheno_filepath.".clean",
             $geno_filepath,
             "'".$si_traits."'",

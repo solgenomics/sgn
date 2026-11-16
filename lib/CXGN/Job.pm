@@ -20,7 +20,8 @@ my $job = CXGN::Job->new({
     dbpass => $dbpass,
     basepath => $basepath,
     sp_person_id => $c->user->get_object()->get_sp_person_id(),
-    cmd => $cmd,
+    cmd => "perl __BASEPATH__/bin/script.pl -H __DBHOST__ -D __DBNAME__ -U __DBUSER__ -P __DBPASS__ -ap __ARCHIVE_PATH__ -j __SP_JOB_ID__",
+    cmd_placeholders => { ARCHIVE_PATH => $archive_path },
     cxgn_tools_run_config => {
         'temp_base' => $temp_base, 
         'submit_host' => 'localhost',
@@ -54,6 +55,13 @@ my $current_status = $job->check_status();
 
 my $results_page = $job->results_page();
 
+Commands refer to database settings and server paths through placeholders, never by value, since
+the command is stored with the job. __DBHOST__, __DBNAME__, __DBUSER__, __DBPASS__ and __BASEPATH__
+are filled in from the job's own dbhost, dbname, dbuser, dbpass and basepath. Any other placeholder,
+such as __ARCHIVE_PATH__ above, is given in cmd_placeholders (or to submit()), keyed by its name
+without the underscores. __SP_JOB_ID__ is filled in with the job's id. The values are only put into
+the copy of the command that is run.
+
 To create a job object representing an already submitted job, supply a job ID as sp_job_id. 
 If constructing a new job to submit(), do not supply an sp_job_id. To specify 
 instance variables as arguments, either supply them in the args hash with the appropriate
@@ -84,6 +92,64 @@ use Try::Tiny;
 
 use strict;
 use warnings;
+
+=head1 PACKAGE VARIABLES
+
+=head2 @CLIENT_ARG_KEYS
+
+The stored job args that may be sent to a client. Everything else stays on the server: the
+cxgn_tools_run_config holds server paths, and the cmd is no use to a client (and, on jobs stored
+before commands used placeholders, holds the site's database credentials). See client_args().
+
+=cut
+
+our @CLIENT_ARG_KEYS = qw( name job_type submit_page results_page additional_args );
+
+=head2 $SERVER_ONLY_KEY_PATTERN
+
+Keys, at any depth of a job's additional_args, that describe the site rather than the job, or
+that hold data only the background script reads, and that are therefore removed before job data
+is sent to a client. This is a backstop: site configuration should be given to background
+scripts through command placeholders rather than in additional_args.
+
+=cut
+
+our $SERVER_ONLY_KEY_PATTERN = qr/
+    ^(?:
+        db(?:host|name|user|pass|port)       # database connection settings
+      | .*pass(?:word|wd)?                  # any password
+      | .*secret.* | .*token | api_?key      # other credentials
+      | basepath | rootpath | .*_path       # server paths
+      | .*_dir | temp_base | tempfiles?(?:_\w+)?
+      | .*_host                              # submit_host and the like
+      | cmd | cxgn_tools_run_config          # stored job internals
+      | upload_params                        # read by the genotype upload script only
+    )$
+/xi;
+
+=head2 %STANDARD_PLACEHOLDERS
+
+The command placeholders every job fills in from its own attributes: placeholder name => attribute.
+
+=cut
+
+our %STANDARD_PLACEHOLDERS = (
+    DBHOST => 'dbhost',
+    DBNAME => 'dbname',
+    DBUSER => 'dbuser',
+    DBPASS => 'dbpass',
+    BASEPATH => 'basepath',
+);
+
+=head2 @CLIENT_SECRET_CONFIG_KEYS
+
+The site configuration values that client_secrets() collects, so that the client filters can take
+them out of anything a job recorded, wherever they appear.
+
+=cut
+
+our @CLIENT_SECRET_CONFIG_KEYS = qw( dbpass dbuser dbhost dbname archive_path basepath rootpath
+    cluster_shared_tempdir tempfiles_base static_datasets_path );
 
 =head1 ACCESSORS
 
@@ -282,6 +348,16 @@ script report its own messages and finish status back into the job that started 
 =cut
 
 has 'cmd' => (isa => 'Maybe[Str]', is => 'rw');
+
+=head2 cmd_placeholders()
+
+Values for the placeholders in cmd beyond the standard ones (see %STANDARD_PLACEHOLDERS), keyed by
+placeholder name without the underscores, e.g. { ARCHIVE_PATH => $archive_path } for
+__ARCHIVE_PATH__. Never stored.
+
+=cut
+
+has 'cmd_placeholders' => (isa => 'HashRef', is => 'rw', default => sub { {} });
 
 =head2 name()
 
@@ -513,6 +589,10 @@ Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a
 
 sub submit {
     my $self = shift;
+    my $placeholders = shift;
+    if ($placeholders) {
+        $self->cmd_placeholders({ %{$self->cmd_placeholders()}, %$placeholders });
+    }
     if (!$self->has_dbhost() || !$self->has_dbname() || !$self->has_dbuser() || !$self->has_dbpass() || !$self->has_basepath()) {
         die "Cannot submit background jobs without db connection parameters and site basepath!\n";
     }
@@ -531,6 +611,10 @@ sub submit {
     }
 
     my $cmd = $self->cmd();
+
+    # Fail on a placeholder without a value before anything is stored or run.
+    $self->fill_placeholders($cmd);
+
     my $cxgn_tools_run_config;
     
     if (!$self->has_cxgn_tools_run_config()) {
@@ -543,13 +627,16 @@ sub submit {
 
     # A background script that reports its own success/error messages needs to know which job
     # it belongs to, but the id doesn't exist until the row above is created. Commands can use
-    # __SP_JOB_ID__ as a placeholder and have it filled in here.
+    # __SP_JOB_ID__ as a placeholder and have it filled in here. The id is no secret, so it is
+    # filled into the stored command as well.
     if ($cmd =~ m/__SP_JOB_ID__/) {
         $cmd =~ s/__SP_JOB_ID__/$sp_job_id/g;
         $self->cmd($cmd);
     }
 
+    # The other placeholders are only filled into the command that is run, never into the stored one.
     my $finish_timestamp_cmd = $self->generate_finish_timestamp_cmd();
+    my $run_cmd = $self->fill_placeholders("(".$cmd.$finish_timestamp_cmd.")");
 
     my $job;
     my $backend_id;
@@ -560,7 +647,7 @@ sub submit {
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
         print STDERR "Submitting job: \n$cmd\n";
         $job->is_cluster(1);
-        $job->run_cluster("(".$cmd.$finish_timestamp_cmd.")");
+        $job->run_cluster($run_cmd);
 
         $self->cxgn_tools_run_config->{err} = $job->err_file();
         $self->cxgn_tools_run_config->{out} = $job->out_file();
@@ -569,7 +656,9 @@ sub submit {
         $status = 'submitted';
     } catch {
         $self->update_status('failed');
-        die "An error occurred trying to submit a background job.\n$_\n";
+        # CXGN::Tools::Run puts the failed command, with its placeholders filled in, in its error,
+        # and callers pass this error on to the user, so the values are taken out again first.
+        die "An error occurred trying to submit a background job.\n".$self->redact_text($_)."\n";
     } ;
 
     $self->backend_id($backend_id);
@@ -585,6 +674,9 @@ sub submit {
 
 Stores job data in a new db row.
 
+The command is stored with its placeholders, not their values. As a safety net, any placeholder
+value that was written into the command directly is put back as its placeholder before storing.
+
 =cut
 
 sub store {
@@ -599,7 +691,7 @@ sub store {
             $row->args(JSON::Any->encode({
                 cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                 name => $self->name(),
-                cmd => $self->cmd(),
+                cmd => $self->mask_placeholder_values($self->cmd()),
                 results_page => $self->results_page(),
                 submit_page => $self->submit_page(),
                 additional_args => $self->additional_args(),
@@ -620,7 +712,7 @@ sub store {
                 args => JSON::Any->encode({
                     cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                     name => $self->name(),
-                    cmd => $self->cmd(),
+                    cmd => $self->mask_placeholder_values($self->cmd()),
                     results_page => $self->results_page(),
                     submit_page => $self->submit_page(),
                     additional_args => $self->additional_args(),
@@ -643,7 +735,8 @@ sub store {
 
 =head2 generate_finish_timestamp_cmd();
 
-Generates a command that gives the finish timestamp. Use to append to a cmd before submitting a job. 
+Generates a command that gives the finish timestamp. Use to append to a cmd before submitting a job.
+Like any command, it refers to the database settings through placeholders; see fill_placeholders().
 
 =cut
 
@@ -652,12 +745,6 @@ sub generate_finish_timestamp_cmd {
     if (!$self->has_dbhost() || !$self->has_dbname() || !$self->has_dbuser() || !$self->has_dbpass() || !$self->has_basepath()) {
         die "Cannot create the finish timestamp script without db connection parameters and site basepath!\n";
     }
-    my $dbhost = $self->dbhost();
-    my $dbname = $self->dbname();
-    my $dbuser = $self->dbuser();
-    my $dbpass = $self->dbpass();
-    my $basepath = $self->basepath();
-
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
     } 
@@ -669,7 +756,7 @@ sub generate_finish_timestamp_cmd {
     # the job's own command failed, rather than whether recording the timestamp did.
     return ";
 sp_job_exit_code=\$?;
-perl $basepath/bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id -e \$sp_job_exit_code ;
+perl __BASEPATH__/bin/record_finish_timestamp.pl -H __DBHOST__ -D __DBNAME__ -U __DBUSER__ -P __DBPASS__ -j $sp_job_id -e \$sp_job_exit_code ;
 exit \$sp_job_exit_code
 ";
 }
@@ -995,6 +1082,183 @@ sub alive {
     return ($state eq 'queued' || $state eq 'running') ? 1 : 0;
 }
 
+=head2 placeholder_values()
+
+Returns a hashref of every command placeholder this job has a value for, by name without the
+underscores: the standard ones (see %STANDARD_PLACEHOLDERS) from the job's attributes, and those in
+cmd_placeholders().
+
+=cut
+
+sub placeholder_values {
+    my $self = shift;
+    my %values;
+    foreach my $name (keys %STANDARD_PLACEHOLDERS) {
+        my $attribute = $STANDARD_PLACEHOLDERS{$name};
+        $values{$name} = $self->$attribute() if defined($self->$attribute());
+    }
+    my $extra = $self->cmd_placeholders() || {};
+    foreach my $name (keys %$extra) {
+        $values{$name} = $extra->{$name} if defined($extra->{$name});
+    }
+    return \%values;
+}
+
+=head2 fill_placeholders($text)
+
+Returns $text with every __NAME__ placeholder this job has a value for replaced by that value.
+Dies if $text uses a standard placeholder, or one named in cmd_placeholders(), that has no value,
+so that a command never runs with a placeholder left in it. Other text between double underscores
+is left alone, since commands also carry names that users chose.
+
+Use this to run a job's command yourself; submit() calls it for you. Never store what it returns.
+
+=cut
+
+sub fill_placeholders {
+    my $self = shift;
+    my $text = shift;
+    return $text if !defined($text);
+
+    my $values = $self->placeholder_values();
+    foreach my $name (keys %$values) {
+        my $value = $values->{$name};
+        $text =~ s/__\Q$name\E__/$value/g;
+    }
+
+    my %known = map { $_ => 1 } (keys %STANDARD_PLACEHOLDERS, keys %{$self->cmd_placeholders() || {}});
+    my @missing = grep { $known{$_} } ($text =~ m/__([A-Z][A-Z0-9_]*?)__/g);
+    if (@missing) {
+        my %seen;
+        die "No value was given for the command placeholder(s) ".join(", ", map { "__${_}__" } grep { !$seen{$_}++ } @missing).".\n";
+    }
+    return $text;
+}
+
+=head2 mask_placeholder_values($text)
+
+The reverse of fill_placeholders(): returns $text with every value this job has for a placeholder
+put back as its __NAME__ placeholder, longest value first (so that a path is masked before a shorter
+path it contains). Values shorter than 4 characters are left alone, as they could match anywhere.
+
+=cut
+
+sub mask_placeholder_values {
+    my $self = shift;
+    my $text = shift;
+    return $text if !defined($text) || ref($text);
+
+    my $values = $self->placeholder_values();
+    foreach my $name (sort { length($values->{$b}) <=> length($values->{$a}) } keys %$values) {
+        my $value = $values->{$name};
+        next if length($value) < 4;
+        $text =~ s/\Q$value\E/__${name}__/g;
+    }
+    return $text;
+}
+
+=head2 redact_text($text, \@secrets)
+
+Returns $text with database credentials and site configuration taken out:
+
+=over
+
+=item * the value of any -P option, which is how background scripts are given the database password;
+
+=item * when called on a job object, every value it has for a placeholder (see mask_placeholder_values());
+
+=item * every value in \@secrets (see client_secrets()), longest first.
+
+=back
+
+Can also be called as a class method.
+
+=cut
+
+sub redact_text {
+    my $self = shift;
+    my $text = shift;
+    my $secrets = shift || [];
+    return $text if !defined($text) || ref($text);
+
+    $text =~ s/(\s-P\s+)("[^"]*"|'[^']*'|\S+)/$1***/g;
+    $text = $self->mask_placeholder_values($text) if ref($self);
+    foreach my $secret (sort { length($b) <=> length($a) } grep { defined($_) && length($_) >= 4 } @$secrets) {
+        $text =~ s/\Q$secret\E/***/g;
+    }
+    return $text;
+}
+
+=head2 client_secrets($config)
+
+Class method. Returns an arrayref of the site configuration values (from a Catalyst config, or any
+hashref with the same keys) that must never reach a client; see @CLIENT_SECRET_CONFIG_KEYS. Pass it
+to client_args() and scrub_client_data(), which take these values out of anything a job recorded.
+
+=cut
+
+sub client_secrets {
+    my $class = shift;
+    my $config = shift || {};
+    return [ grep { defined($_) && !ref($_) && length($_) >= 4 } map { $config->{$_} } @CLIENT_SECRET_CONFIG_KEYS ];
+}
+
+=head2 client_args($job_args, \@secrets)
+
+Class method. Returns a copy of a job's stored args (as decoded from sp_job.args) that is safe
+to send to a client: only the keys in @CLIENT_ARG_KEYS are kept, and additional_args goes
+through scrub_client_data(). Use this, or scrub_client_data(), wherever job data leaves the server.
+
+=cut
+
+sub client_args {
+    my $class = shift;
+    my $job_args = shift;
+    my $secrets = shift;
+    return {} if ref($job_args) ne 'HASH';
+
+    my %client_args;
+    foreach my $key (@CLIENT_ARG_KEYS) {
+        next if !exists($job_args->{$key});
+        $client_args{$key} = $key eq 'additional_args'
+            ? $class->scrub_client_data($job_args->{$key}, $secrets)
+            : $job_args->{$key};
+    }
+    return \%client_args;
+}
+
+=head2 scrub_client_data($data, \@secrets)
+
+Class method. Returns a deep copy of $data (usually a job's additional_args, or part of it) with
+every hash key matching $SERVER_ONLY_KEY_PATTERN removed, at any depth, and every string passed
+through redact_text() with \@secrets (see client_secrets()). Messages need the secrets: a script
+can repeat a value it was given, and a placeholder value can end up inside text a user chose. The
+original is not changed, so server code can keep using it.
+
+=cut
+
+sub scrub_client_data {
+    my $class = shift;
+    my $data = shift;
+    my $secrets = shift;
+
+    if (ref($data) eq 'HASH') {
+        my %copy;
+        foreach my $key (keys %$data) {
+            next if $key =~ $SERVER_ONLY_KEY_PATTERN;
+            $copy{$key} = $class->scrub_client_data($data->{$key}, $secrets);
+        }
+        return \%copy;
+    }
+    if (ref($data) eq 'ARRAY') {
+        return [ map { $class->scrub_client_data($_, $secrets) } @$data ];
+    }
+    if (!ref($data)) {
+        return CXGN::Job->redact_text($data, $secrets);
+    }
+    return $data; # JSON booleans and the like
+}
+
 =head1 CLASS METHODS
 
 =head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id, user_role)
@@ -1315,7 +1579,7 @@ sub delete_dead_upload_jobs {
     }
 }
 
-=head2 get_user_in_progress_uploads(bcs_schema, people_schema, user_id, user_role)
+=head2 get_user_in_progress_uploads(bcs_schema, people_schema, user_id, user_role, secrets)
 
 Gets all in-progress upload jobs attributed to that user. Gets all upload jobs if curator. 
 Note that "in progress" does not mean the same thing as a background job status. If validation and 
@@ -1333,6 +1597,7 @@ sub get_user_in_progress_uploads {
     my $people_schema = shift;
     my $sp_person_id = shift;
     my $user_role = shift;
+    my $secrets = shift; # see client_secrets()
 
     if (!$sp_person_id) {
         die "Need to supply a user id.";
@@ -1370,7 +1635,7 @@ sub get_user_in_progress_uploads {
                     status => $status,
                     create_timestamp => $job->create_timestamp(),
                     finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
-                    args => $job_args
+                    args => CXGN::Job->client_args($job_args, $secrets)
                 };
             } else {
                 push @user_uploads, {
@@ -1378,7 +1643,7 @@ sub get_user_in_progress_uploads {
                     status => $status,
                     create_timestamp => $job->create_timestamp(),
                     finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
-                    args => $job_args
+                    args => CXGN::Job->client_args($job_args, $secrets)
                 };
             }
         }  
@@ -1387,7 +1652,7 @@ sub get_user_in_progress_uploads {
     return \@user_uploads;
 }
 
-=head2 get_user_completed_uploads(bcs_schema, people_schema, user_id, user_role)
+=head2 get_user_completed_uploads(bcs_schema, people_schema, user_id, user_role, secrets)
 
 Get all completed upload jobs for this user. Gets all jobs if curator. 
 Completed upload jobs are jobs that have a finished status and have a "final_upload"
@@ -1401,6 +1666,7 @@ sub get_user_completed_uploads {
     my $people_schema = shift;
     my $sp_person_id = shift;
     my $user_role = shift;
+    my $secrets = shift; # see client_secrets()
 
     if (!$sp_person_id) {
         die "Need to supply a user id.";
@@ -1438,7 +1704,7 @@ sub get_user_completed_uploads {
                     status => $status,
                     create_timestamp => $job->create_timestamp(),
                     finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
-                    args => $job_args
+                    args => CXGN::Job->client_args($job_args, $secrets)
                 };
             } else {
                 push @user_uploads, {
@@ -1446,7 +1712,7 @@ sub get_user_completed_uploads {
                     status => $status,
                     create_timestamp => $job->create_timestamp(),
                     finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
-                    args => $job_args
+                    args => CXGN::Job->client_args($job_args, $secrets)
                 };
             }
         }  
@@ -1455,7 +1721,7 @@ sub get_user_completed_uploads {
     return \@user_uploads;
 }
 
-=head2 get_user_in_progress_validations(bcs_schema, people_schema, user_id, user_role)
+=head2 get_user_in_progress_validations(bcs_schema, people_schema, user_id, user_role, secrets)
 
 Get all running validation jobs for this user. Gets all validation jobs for curators. 
 Validation jobs are determined by the "is_validation" attribute in the additional arguments hash. 
@@ -1468,6 +1734,7 @@ sub get_user_in_progress_validations {
     my $people_schema = shift;
     my $sp_person_id = shift;
     my $user_role = shift;
+    my $secrets = shift; # see client_secrets()
 
     if (!$sp_person_id) {
         die "Need to supply a user id.";
@@ -1505,7 +1772,7 @@ sub get_user_in_progress_validations {
                     status => $status,
                     create_timestamp => $job->create_timestamp(),
                     finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
-                    args => $job_args
+                    args => CXGN::Job->client_args($job_args, $secrets)
                 };
             } else {
                 push @user_validations, {
@@ -1513,7 +1780,7 @@ sub get_user_in_progress_validations {
                     status => $status,
                     create_timestamp => $job->create_timestamp(),
                     finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
-                    args => $job_args
+                    args => CXGN::Job->client_args($job_args, $secrets)
                 };
             }
         }  

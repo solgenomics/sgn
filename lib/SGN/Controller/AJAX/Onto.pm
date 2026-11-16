@@ -76,7 +76,7 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
 
     my $outdir = "$temp_basedir/obo_downloads";
 
-    my $cmd = "perl ./bin/download_obo.pl -i $db_name -H $dbhost -D $dbname -U $dbuser -P $dbpass -o $outdir";
+    my $cmd = "perl ./bin/download_obo.pl -i $db_name -H __DBHOST__ -D __DBNAME__ -U __DBUSER__ -P __DBPASS__ -o $outdir";
 
     print STDERR "Dumping OBO file at $outdir/$db_name.breedbase.obo\n";
 
@@ -233,9 +233,7 @@ sub make_cvtermpath : Path('/ajax/onto/make_cvtermpath') Args(1) {
         return;
     }
 
-    my $script = File::Spec->catfile($basepath, 'bin', 'sgn_gmod_make_cvtermpath.pl');
-
-    my $cmd = "perl $script -H $dbhost -D $dbname -d Pg -u $dbuser -p '$dbpass' -c '$cv_name'";
+    my $cmd = "perl __BASEPATH__/bin/sgn_gmod_make_cvtermpath.pl -H __DBHOST__ -D __DBNAME__ -d Pg -u __DBUSER__ -p '__DBPASS__' -c '$cv_name'";
 
     my $sp_job_id;
 

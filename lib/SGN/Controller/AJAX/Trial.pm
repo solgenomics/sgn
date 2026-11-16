@@ -1489,7 +1489,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     # Build the backend script command to parse, validate, and upload the trials
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job.
-    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -i \"$archived_file_id\" -t \"$temp_basedir\" -un \"$username\" -j __SP_JOB_ID__";
+    my $cmd = "perl \"__BASEPATH__/bin/upload_multiple_trial_design.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -i \"$archived_file_id\" -t \"$temp_basedir\" -un \"$username\" -j __SP_JOB_ID__";
     $cmd .= " -e \"$email_address\"" if $email_option_enabled && $email_address;
     $cmd .= " -iw" if $ignore_warnings;
 
@@ -1505,6 +1505,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         basepath => $basepath,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         cmd => $cmd,
+        cmd_placeholders => { ARCHIVE_PATH => $archive_path },
         name => "$clean_file_name multiple trial designs upload",
         results_page => '/breeders/trials',
         job_type => 'upload',

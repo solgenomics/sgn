@@ -254,6 +254,7 @@ sub get_trait_from_cvterm_id {
     my $schema = shift;
     my $cvterm_id = shift;
     my $format = shift; #can be 'concise' for just the name or 'extended' for name|DB:0000001
+    my $q;
     if ($format eq 'concise'){
         $q = "SELECT name FROM cvterm WHERE cvterm_id=?;";
     }
@@ -262,7 +263,7 @@ sub get_trait_from_cvterm_id {
     }
     my $h = $schema->storage->dbh->prepare($q);
     $h->execute($cvterm_id);
-    $name = $h->fetchrow();
+    my $name = $h->fetchrow();
     return $name;
 }
 

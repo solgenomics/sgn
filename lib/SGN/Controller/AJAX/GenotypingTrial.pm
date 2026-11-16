@@ -271,7 +271,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     # report its messages back to this job, and can read the name of the plate off it. The plate
     # name is whatever the uploader typed, so it is passed on the job rather than on the command
     # line.
-    my $cmd = "perl \"$basepath/bin/parse_genotype_trial_file.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -i \"$archived_file_id\" -t \"$upload_type\" -fi \"".($include_facility_identifiers ? 1 : 0)."\" -j __SP_JOB_ID__";
+    my $cmd = "perl \"__BASEPATH__/bin/parse_genotype_trial_file.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -i \"$archived_file_id\" -t \"$upload_type\" -fi \"".($include_facility_identifiers ? 1 : 0)."\" -j __SP_JOB_ID__";
 
     my $upload_job = CXGN::Job->new({
         schema => $chado_schema,
@@ -283,6 +283,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         dbpass => $dbpass,
         basepath => $basepath,
         cmd => $cmd,
+        cmd_placeholders => { ARCHIVE_PATH => $archive_path },
         name => basename($archived_filename_with_path)." $genotyping_plate_name genotyping plate upload",
         job_type => 'upload',
         results_page => '/breeders/genotyping_projects',
@@ -336,7 +337,8 @@ sub parse_genotype_trial_file_POST : Args(0) {
         schema => $chado_schema,
         people_schema => $people_schema
     });
-    my $job_args = $finished_job->additional_args() || {};
+    # What the job recorded is sent back to the user, so server-only data is taken out of it first.
+    my $job_args = CXGN::Job->scrub_client_data($finished_job->additional_args() || {}, CXGN::Job->client_secrets($c->config));
 
     if ($job_args->{error_messages}) {
         $c->stash->{rest} = {error_string => $job_args->{error_messages}, missing_accessions => $job_args->{missing_accessions}};
@@ -430,7 +432,7 @@ sub store_genotype_trial_POST : Args(0) {
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job, and can read the plate it is to store off it.
-    my $cmd = "perl \"$basepath/bin/store_genotype_trial.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -un \"$user_name\" -j __SP_JOB_ID__";
+    my $cmd = "perl \"__BASEPATH__/bin/store_genotype_trial.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -un \"$user_name\" -j __SP_JOB_ID__";
 
     my $upload_job = CXGN::Job->new({
         schema => $schema,
@@ -491,7 +493,8 @@ sub store_genotype_trial_POST : Args(0) {
         schema => $schema,
         people_schema => $people_schema
     });
-    my $job_args = $finished_job->additional_args() || {};
+    # What the job recorded is sent back to the user, so server-only data is taken out of it first.
+    my $job_args = CXGN::Job->scrub_client_data($finished_job->additional_args() || {}, CXGN::Job->client_secrets($c->config));
 
     if ($job_args->{error_messages}) {
         $c->stash->{rest} = {error => $job_args->{error_messages}};

@@ -1102,7 +1102,7 @@ sub _upload_trial_stock_entries {
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job.
-    my $cmd = "perl \"$basepath/bin/".$args->{script}."\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -tf \"$tempfiles_subdir\" -i \"$archived_file_id\" -un \"$user_name\" -t \"".$args->{file_type}."\" -tr \"$trial_id\" -n \"$number_per_parent\" -j __SP_JOB_ID__";
+    my $cmd = "perl \"__BASEPATH__/bin/".$args->{script}."\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -tf \"$tempfiles_subdir\" -i \"$archived_file_id\" -un \"$user_name\" -t \"".$args->{file_type}."\" -tr \"$trial_id\" -n \"$number_per_parent\" -j __SP_JOB_ID__";
 
     my $upload_job = CXGN::Job->new({
         schema => $schema,
@@ -1114,6 +1114,7 @@ sub _upload_trial_stock_entries {
         dbpass => $dbpass,
         basepath => $basepath,
         cmd => $cmd,
+        cmd_placeholders => { ARCHIVE_PATH => $archive_path },
         name => basename($archived_filename_with_path)." $trial_name $entity upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
@@ -1167,7 +1168,8 @@ sub _upload_trial_stock_entries {
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema")
     });
-    my $job_args = $finished_job->additional_args() || {};
+    # What the job recorded is sent back to the user, so server-only data is taken out of it first.
+    my $job_args = CXGN::Job->scrub_client_data($finished_job->additional_args() || {}, CXGN::Job->client_secrets($c->config));
 
     if ($finished_job->status() eq "finished") {
         $c->stash->{rest} = { success => 1 };

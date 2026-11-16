@@ -329,6 +329,11 @@ sub scan_barcode_POST {
     # Every image to scan, as { filename => ..., file_path => ... }
     my @images_to_scan;
 
+    if (my $access_error = $self->_check_archived_file_access($c, \@archived_file_ids)) {
+        $c->stash->{rest} = { error => $access_error };
+        return;
+    }
+
     if (scalar(@archived_file_ids) > 0) {
         foreach my $archived_file_id (@archived_file_ids) {
             try {
@@ -514,6 +519,11 @@ sub verify_exif_POST {
 
     # Every image to check, as { filename => ..., file_path => ... }
     my @images_to_verify;
+
+    if (my $access_error = $self->_check_archived_file_access($c, \@archived_file_ids)) {
+        $c->stash->{rest} = { error => $access_error };
+        return;
+    }
 
     if (scalar(@archived_file_ids) > 0) {
         foreach my $archived_file_id (@archived_file_ids) {
@@ -782,6 +792,11 @@ sub store_images_POST {
         return;
     }
 
+    if (my $access_error = $self->_check_archived_file_access($c, \@archived_file_ids)) {
+        $c->stash->{rest} = { error => $access_error };
+        return;
+    }
+
     # The collection to add the stored images to, if one was chosen. It is checked again here since
     # the store script runs without a user, and a new collection is only created now, once the
     # images are actually being stored, so an abandoned validation does not leave an empty one.
@@ -821,7 +836,7 @@ sub store_images_POST {
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job.
-    my $cmd = "perl \"$basepath/bin/store_images.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -id \"$image_dir\" -i \"$file_ids\" -un \"$username\" -t \"$image_type\" -j __SP_JOB_ID__";
+    my $cmd = "perl \"__BASEPATH__/bin/store_images.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -id \"__IMAGE_DIR__\" -i \"$file_ids\" -un \"$username\" -t \"$image_type\" -j __SP_JOB_ID__";
     if ($upload_collection) {
         $cmd .= " -c \"".$upload_collection->{collection_id}."\"";
     }
@@ -838,6 +853,7 @@ sub store_images_POST {
         dbpass => $dbpass,
         basepath => $basepath,
         cmd => $cmd,
+        cmd_placeholders => { ARCHIVE_PATH => $archive_path, IMAGE_DIR => $image_dir },
         name => $job_name,
         job_type => 'upload',
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
@@ -865,6 +881,23 @@ sub store_images_POST {
     }
 
     $c->stash->{rest} = { success => 1, job_id => $upload_job->sp_job_id() };
+}
+
+# Archived file ids come straight from the request, so before any of them are read, stored or handed
+# to a background script, the user has to be allowed to use every one of them: curators may use any
+# archived file, everyone else only the files they archived themselves. Returns an error message
+# naming the ids that may not be used, or undef when all of them may.
+sub _check_archived_file_access {
+    my ($self, $c, $archived_file_ids) = @_;
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $inaccessible = CXGN::File->get_inaccessible_file_ids(
+        $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        $user_id,
+        $archived_file_ids,
+        $c->user()->check_roles("curator") ? 1 : 0
+    );
+    return undef if !@$inaccessible;
+    return "You do not have access to the archived file(s) with id ".join(", ", @$inaccessible).".";
 }
 
 # A validation job can be committed again, for example after a failed store. Once the new collection
@@ -926,7 +959,8 @@ sub _read_upload_collection {
 
     if (defined($collection_id) && length($collection_id)) {
         if ($collection_id !~ /^\d+$/) {
-            return (undef, "\"$collection_id\" is not a valid collection ID.");
+            # The rejected value is not repeated back, since this message can end up in a job report.
+            return (undef, "The collection ID given is not valid.");
         }
 
         my $collection = $self->_collection_object($c)->get_collection($collection_id);

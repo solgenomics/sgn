@@ -6,7 +6,7 @@ upload_genotype_data.pl
 
 =head1 SYNOPSIS
 
-upload_genotype_data.pl -H [dbhost] -D [dbname] -U [dbuser] -P [dbpass] -w [basepath] -ap [archive_path] -tf [tempfiles_subdir] -j [sp_job_id]
+upload_genotype_data.pl -H [dbhost] -D [dbname] -U [dbuser] -P [dbpass] -w [basepath] -ap [archive_path] -tf [tempfiles_subdir] -j [sp_job_id] [-rp rootpath]
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -19,6 +19,7 @@ ARGUMENTS
  -ap archive path (required) Ex: /home/production/volume/archive
  -tf tempfiles subdirectory, relative to the basepath (required) Ex: static/documents/tempfiles
  -j sp_job_id of the job that submitted this script (required)
+ -rp rootpath, the directory holding tassel-5-standalone (needed for Tassel HDF5 files) Ex: /home/production/cxgn
 
 =head2 DESCRIPTION
 
@@ -65,7 +66,7 @@ use CXGN::People::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::Tools::Run;
 
-my ( $help, $dbhost, $dbname, $dbuser, $dbpass, $basepath, $archive_path, $tempfiles_subdir, $sp_job_id );
+my ( $help, $dbhost, $dbname, $dbuser, $dbpass, $basepath, $archive_path, $tempfiles_subdir, $sp_job_id, $rootpath );
 GetOptions(
     'dbhost|H=s'        => \$dbhost,
     'dbname|D=s'        => \$dbname,
@@ -75,6 +76,7 @@ GetOptions(
     'archive_path|ap=s' => \$archive_path,
     'tempfiles|tf=s'    => \$tempfiles_subdir,
     'jobid|j=s'         => \$sp_job_id,
+    'rootpath|rp=s'     => \$rootpath,
     'help'              => \$help,
 );
 pod2usage(1) if $help;
@@ -244,7 +246,9 @@ sub export_tassel_hdf5_to_vcf {
     my $hdf5_file = shift;
 
     my $exported_vcf = tempfile_in('genotype_upload_tassel_hdf5', 'temp_vcf_XXXX').".vcf";
-    my $cmd = "perl ".$params->{rootpath}."/tassel-5-standalone/run_pipeline.pl -Xmx12g -h5 ".$hdf5_file." -export ".$exported_vcf." -exportType VCF";
+    # Jobs submitted before the rootpath was given on the command line carry it in their upload params.
+    my $tassel_root = $rootpath || $params->{rootpath};
+    my $cmd = "perl ".$tassel_root."/tassel-5-standalone/run_pipeline.pl -Xmx12g -h5 ".$hdf5_file." -export ".$exported_vcf." -exportType VCF";
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 

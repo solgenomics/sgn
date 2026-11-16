@@ -145,7 +145,7 @@ sub _upload_phenotypes {
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job.
-    my $cmd = "perl \"$basepath/bin/upload_phenotypes.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -tf \"$tempfiles_subdir\" -m \"$mode\" -i \"".$upload->{archived_file_id}."\" -un \"".$upload->{username}."\" -t \"".$upload->{validate_type}."\" -mt \"".$upload->{metadata_file_type}."\" -dl \"".$upload->{data_level}."\" -ti \"".$upload->{timestamp_included}."\" -ow \"".$upload->{overwrite_values}."\" -rv \"".$upload->{remove_values}."\" -iw \"".$upload->{ignore_warnings}."\" -tt \"".$upload->{is_treatment}."\" -j __SP_JOB_ID__";
+    my $cmd = "perl \"__BASEPATH__/bin/upload_phenotypes.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -tf \"$tempfiles_subdir\" -m \"$mode\" -i \"".$upload->{archived_file_id}."\" -un \"".$upload->{username}."\" -t \"".$upload->{validate_type}."\" -mt \"".$upload->{metadata_file_type}."\" -dl \"".$upload->{data_level}."\" -ti \"".$upload->{timestamp_included}."\" -ow \"".$upload->{overwrite_values}."\" -rv \"".$upload->{remove_values}."\" -iw \"".$upload->{ignore_warnings}."\" -tt \"".$upload->{is_treatment}."\" -j __SP_JOB_ID__";
     if ($upload->{archived_image_zipfile_id}) {
         $cmd .= " -iz \"".$upload->{archived_image_zipfile_id}."\"";
     }
@@ -160,6 +160,7 @@ sub _upload_phenotypes {
         dbpass => $dbpass,
         basepath => $basepath,
         cmd => $cmd,
+        cmd_placeholders => { ARCHIVE_PATH => $archive_path },
         name => $mode eq 'verify' ? "$filename file validation" : "$filename phenotype upload",
         job_type => 'upload',
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
@@ -204,7 +205,8 @@ sub _upload_phenotypes {
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema")
     });
-    my $job_args = $finished_job->additional_args() || {};
+    # What the job recorded is sent back to the user, so server-only data is taken out of it first.
+    my $job_args = CXGN::Job->scrub_client_data($finished_job->additional_args() || {}, CXGN::Job->client_secrets($c->config));
 
     my @success_messages = _split_job_messages($job_args->{success_messages});
     my @warning_messages = _split_job_messages($job_args->{warning_messages});
@@ -333,6 +335,23 @@ sub _prep_upload {
     if ($user_type ne 'submitter' && $user_type ne 'curator') {
         push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
         return (\@success_status, \@error_status);
+    }
+
+    # Files picked out of the archive come from the request, and are later handed to the upload
+    # script, so they must be files this user may use: curators may use any archived file, everyone
+    # else only their own.
+    my @requested_file_ids = grep { defined($_) } ($archived_file_id, $image_zipfile_id);
+    if (@requested_file_ids) {
+        my $inaccessible = CXGN::File->get_inaccessible_file_ids(
+            $c->dbic_schema("CXGN::Metadata::Schema"),
+            $user_id,
+            \@requested_file_ids,
+            $user_type eq 'curator' ? 1 : 0
+        );
+        if (@$inaccessible) {
+            push @error_status, "You do not have access to the archived file(s) with id ".join(", ", @$inaccessible).".";
+            return (\@success_status, \@error_status);
+        }
     }
 
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');

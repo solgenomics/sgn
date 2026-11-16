@@ -162,7 +162,7 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     };
     my $cmd_str = join(" ", (
         "Rscript ",
-        $c->config->{basepath} . "/R/dataset/rosner_test.R",
+        "__BASEPATH__/R/dataset/rosner_test.R",
         $trait_file_path,
         $stat_file_path
     ));
@@ -496,10 +496,10 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
     my $cmd = "mx-run CXGN::Dataset::ToolCompatibility".
                 " --dataset_id $dataset_id".
                 " --genotyping_protocol $genotyping_protocol".
-                " --dbhost $dbhost".
-                " --dbname $dbname".
-                " --user $dbuser".
-                " --password $dbpass";
+                " --dbhost __DBHOST__".
+                " --dbname __DBNAME__".
+                " --user __DBUSER__".
+                " --password __DBPASS__";
 
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 

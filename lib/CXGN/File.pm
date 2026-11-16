@@ -609,6 +609,59 @@ sub get_user_archived_files {
     return \@data;
 }
 
+=head2 get_inaccessible_file_ids($schema, $user_id, \@file_ids, $is_curator)
+
+Checks in a single query which of the given archived file ids the user may not work with, so that
+callers handling many files do not have to build a CXGN::File object for each one.
+
+A file id is inaccessible when it is not a positive integer, when no archived file has that id, or,
+unless $is_curator is true, when the file was archived by someone other than $user_id. Curators
+skip only the ownership test: malformed and missing ids are still rejected, since callers pass
+these ids on to background scripts.
+
+$schema can be any schema whose storage connects to the database (Bio::Chado::Schema,
+CXGN::Metadata::Schema, ...); the tables are named with their schema.
+
+Returns an arrayref of the inaccessible ids, in the order given and without duplicates. An empty
+arrayref means every id may be used.
+
+=cut
+
+sub get_inaccessible_file_ids {
+    my $class = shift;
+    my $schema = shift;
+    my $user_id = shift;
+    my $file_ids = shift || [];
+    my $is_curator = shift;
+
+    my %seen;
+    my @unique_ids = grep { defined($_) && !$seen{$_}++ } @$file_ids;
+
+    my @valid_ids = grep { /^\d+$/ && $_ > 0 } @unique_ids;
+
+    my %accessible;
+    if (@valid_ids && ($is_curator || defined($user_id))) {
+        my $q = "SELECT md_files.file_id FROM metadata.md_files
+            JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
+            WHERE md_files.file_id = ANY(?)";
+        my @q_params = (\@valid_ids);
+
+        if (!$is_curator) {
+            $q .= " AND md_metadata.create_person_id = ?";
+            push @q_params, $user_id;
+        }
+
+        my $h = $schema->storage()->dbh()->prepare($q);
+        $h->execute(@q_params);
+        while (my ($file_id) = $h->fetchrow_array()) {
+            $accessible{$file_id} = 1;
+        }
+    }
+
+    my @inaccessible = grep { !(/^\d+$/ && $accessible{$_}) } @unique_ids;
+    return \@inaccessible;
+}
+
 =head2 get_all_archived_files($bcs_schema)
 
 Retrieves all archived files. Typically used by a curator. 

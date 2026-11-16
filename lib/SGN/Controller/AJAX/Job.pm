@@ -397,7 +397,8 @@ sub retrieve_user_in_progress_uploads :Path('/ajax/job/uploads_in_progress') Arg
             $bcs_schema,
             $people_schema,
             $sp_person_id,
-            $role
+            $role,
+            CXGN::Job->client_secrets($c->config)
         );
     } catch {
         print STDERR $_, "\n";
@@ -431,7 +432,8 @@ sub retrieve_user_completed_uploads :Path('/ajax/job/completed_uploads') Args(1)
             $bcs_schema,
             $people_schema,
             $sp_person_id,
-            $role
+            $role,
+            CXGN::Job->client_secrets($c->config)
         );
     } catch {
         print STDERR $_, "\n";
@@ -467,7 +469,8 @@ sub retrieve_user_in_progress_validations :Path('/ajax/job/validations_in_progre
             $bcs_schema,
             $people_schema,
             $sp_person_id,
-            $role
+            $role,
+            CXGN::Job->client_secrets($c->config)
         );
     } catch {
         print STDERR $_, "\n";

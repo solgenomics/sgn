@@ -35,6 +35,51 @@
 
 import { create } from "d3";
 
+/*
+* File names, tags, user names, job names and job messages are all chosen by users, and curators see
+* every user's uploads, so none of them may be inserted into the page as HTML. These helpers build
+* the cells and the report text from that data as plain text instead.
+*/
+
+// A table cell holding text in a div, optionally with an id on the div.
+function text_cell(text, div_id) {
+    let div = jQuery('<div>').text(text ?? '');
+    if (div_id) {
+        div.attr('id', div_id);
+    }
+    return jQuery('<td>').append(div);
+}
+
+// A table cell linking to a user's profile, labeled with their name.
+function profile_link_cell(user_id, user_name) {
+    return jQuery('<td>').append(
+        jQuery('<a>').attr('href', '/solpeople/profile/' + encodeURIComponent(user_id ?? '')).text(user_name ?? '')
+    );
+}
+
+export function escape_html(text) {
+    return String(text ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
+ * Turns a job message into HTML that is safe to insert. Messages are written by many upload
+ * handlers, and some format them with line breaks or bold text, but they also carry file, collection
+ * and stock names that users chose. So the whole message is escaped, and only a few formatting tags
+ * without any attributes are let through again. A tag without attributes cannot run script or link
+ * anywhere.
+ */
+export function format_job_message(message) {
+    return escape_html(message).replace(
+        /&lt;(\/?)(br|b|strong|i|em|p|ul|ol|li)\s*\/?&gt;/gi,
+        (match, slash, tag) => `<${slash}${tag.toLowerCase()}>`
+    );
+}
+
 var upload_type_dict = {
     'trials' : "Multiple Trial Upload",
     'trial_metadata' : "Trial Metadata",
@@ -223,17 +268,27 @@ export function load_archived_files_table(user_id, interval) {
 
                     response.data.forEach(row => {
                         let tr = jQuery("<tr>");
-                        tr.append(jQuery("<td>").html("<div id='file_timestamp_"+row.file_id+"'>"+row.timestamp+"</div>"));
+                        tr.append(text_cell(row.timestamp, 'file_timestamp_'+row.file_id));
                         let include_viewlink = '';
                         // if (row.filename.includes(".xlsx")) {
                         //     include_viewlink = " &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>";
                         // } // this is commented out because the file viewer is broken and I think fixing it will be a different pull request.
-                        tr.append(jQuery("<td>").html("<a id='file_name_"+row.file_id+"' href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a>"+include_viewlink));
-                        tr.append(jQuery("<td>").html("<div id='file_tags_"+row.file_id+"'>"+(row.tags || '')+"</div>"));
+                        tr.append(jQuery("<td>").append(
+                            jQuery("<a>").attr('id', 'file_name_'+row.file_id).attr('href', '/breeders/phenotyping/download/'+encodeURIComponent(row.file_id)).text(row.filename ?? ''),
+                            include_viewlink
+                        ));
+                        tr.append(text_cell(row.tags || '', 'file_tags_'+row.file_id));
                         if (response.data[0].hasOwnProperty('user_id')) {
-                            tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
+                            tr.append(profile_link_cell(row.user_id, row.user_name));
                         }
-                        tr.append(jQuery("<td>").html("<select class='form-control form-control-sm upload-type-select' id='upload_select_type_"+row.file_id+"'>"+upload_type_options().replace(`value='${row.type}'`, `value='${row.type}' selected`)+"</select>"));
+                        let type_select = jQuery("<select class='form-control form-control-sm upload-type-select'>")
+                            .attr('id', 'upload_select_type_'+row.file_id)
+                            .html(upload_type_options())
+                            .val(row.type ?? '');
+                        if (type_select.prop('selectedIndex') < 0) { // a type with no option falls back to "Select..."
+                            type_select.prop('selectedIndex', 0);
+                        }
+                        tr.append(jQuery("<td>").append(type_select));
                         // if (row.type != null && row.type != "" && row.type != "null_choice") {
                         //     tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-primary check-format-btn' id='check_format_"+row.file_id+"'>Check format</button>"));
                         // } else {
@@ -301,13 +356,13 @@ function load_in_progress_validations_table(user_id) {
                     response.data.forEach(row => {
                         job_dict[row.job_id] = row;
                         let tr = jQuery("<tr>");
-                        tr.append(jQuery("<td>").html(`${row.create_timestamp}`));
-                        tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>${row.args.name}</div>`));
+                        tr.append(jQuery("<td>").text(row.create_timestamp ?? ''));
+                        tr.append(text_cell(row.args.name, 'job_'+row.job_id));
                         if (response.data[0].hasOwnProperty('user_id')) {
-                            tr.append(jQuery("<td>").html(`<a href='/solpeople/profile/${row.user_id}'>${row.args.additional_args?.user_name}</a>`));
+                            tr.append(profile_link_cell(row.user_id, row.args.additional_args?.user_name));
                         }
-                        tr.append(jQuery("<td>").html(`<div>${upload_type_dict[row.args.additional_args?.file_type]}</div>`));
-                        tr.append(jQuery("<td>").html(`<div>${row.status}</div>`));
+                        tr.append(text_cell(upload_type_dict[row.args.additional_args?.file_type]));
+                        tr.append(text_cell(row.status));
                         let commit_validation_btn = '';
                         let cancel_btn = '';
                         let view_report_btn = '';
@@ -391,13 +446,13 @@ function load_in_progress_uploads_table(user_id) {
                     response.data.forEach(row => {
                         job_dict[row.job_id] = row;
                         let tr = jQuery("<tr>");
-                        tr.append(jQuery("<td>").html(`${row.create_timestamp}`));
-                        tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>${row.args.name}</div>`));
+                        tr.append(jQuery("<td>").text(row.create_timestamp ?? ''));
+                        tr.append(text_cell(row.args.name, 'job_'+row.job_id));
                         if (response.data[0].hasOwnProperty('user_id')) {
-                            tr.append(jQuery("<td>").html(`<a href='/solpeople/profile/${row.user_id}'>${row.args.additional_args?.user_name}</a>`));
+                            tr.append(profile_link_cell(row.user_id, row.args.additional_args?.user_name));
                         }
-                        tr.append(jQuery("<td>").html(`<div>${upload_type_dict[row.args.additional_args?.file_type]}</div>`));
-                        tr.append(jQuery("<td>").html(`<div>${row.status}</div>`));
+                        tr.append(text_cell(upload_type_dict[row.args.additional_args?.file_type]));
+                        tr.append(text_cell(row.status));
                         let cancel_btn = '';
                         let dismiss_btn = '';
                         if (row.status != "submitted") {
@@ -471,13 +526,13 @@ function load_completed_uploads_table(user_id) {
                     response.data.forEach(row => {
                         job_dict[row.job_id] = row;
                         let tr = jQuery("<tr>");
-                        tr.append(jQuery("<td>").html(`${row.create_timestamp}`));
-                        tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>${row.args.name}</div>`));
+                        tr.append(jQuery("<td>").text(row.create_timestamp ?? ''));
+                        tr.append(text_cell(row.args.name, 'job_'+row.job_id));
                         if (response.data[0].hasOwnProperty('user_id')) {
-                            tr.append(jQuery("<td>").html(`<a href='/solpeople/profile/${row.user_id}'>${row.args.additional_args?.user_name}</a>`));
+                            tr.append(profile_link_cell(row.user_id, row.args.additional_args?.user_name));
                         }
-                        tr.append(jQuery("<td>").html(`<div>${upload_type_dict[row.args.additional_args?.file_type]}</div>`));
-                        tr.append(jQuery("<td>").html(`<div>${row.status}</div>`));
+                        tr.append(text_cell(upload_type_dict[row.args.additional_args?.file_type]));
+                        tr.append(text_cell(row.status));
                         let view_report_btn = '';
                         let dismiss_btn = `<button id='dismiss_job_${row.job_id}' class='btn btn-sm btn-danger job-dismiss-btn'>Dismiss</button>`;
                         if (row.status == 'finished' || row.status == 'consumed' || row.status == 'failed') {
@@ -930,9 +985,9 @@ function display_validate_submit_modal(options) {
     for (let key in options) {
         if (key == "parameters_json") {
             console.dir(options[key]);
-            jQuery('#upload_validation_parameters').html(options[key]);
+            jQuery('#upload_validation_parameters').text(JSON.stringify(options[key]));
         } else {
-            text += "<b>" + key + ": </b>&nbsp; <p style='white-space:pre'>" + options[key] + "</p>";
+            text += "<b>" + escape_html(key) + ": </b>&nbsp; <p style='white-space:pre'>" + escape_html(options[key]) + "</p>";
         }
     }
     jQuery('#validate_upload_review_text').html(text);

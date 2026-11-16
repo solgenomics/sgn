@@ -487,7 +487,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # );
     my $cmd_str = join(" ",(
         "Rscript ",
-        $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
+        "__BASEPATH__/R/solgwas/solgwas_script.R",
         $pheno_filepath,
         $geno_filepath2,
         $trait_id,

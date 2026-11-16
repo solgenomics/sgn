@@ -377,21 +377,24 @@ jQuery(document).ready(function(){
     jQuery(document).on('click', '.view-report-btn', function() {
         let job_id = jQuery(this).attr("id").replace('job_report_', '');
         jQuery('#view_report_dialog').modal("show");
+        // Job messages carry user chosen names, so they are escaped before display.
+        let format = jsMod["upload_factory"].format_job_message;
+        let job_args = jsMod["upload_factory"].job_dict[job_id].args.additional_args;
         let success = '';
         let warnings = '';
         let errors = '';
         let other = '';
-        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.success_messages) {
-            success = `<p class="list-group-item-success" >${jsMod["upload_factory"].job_dict[job_id].args.additional_args.success_messages}</p>`;
+        if (job_args?.success_messages) {
+            success = `<p class="list-group-item-success" >${format(job_args.success_messages)}</p>`;
         }
-        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.warning_messages) {
-            warnings = `<p class="list-group-item-warning" >${jsMod["upload_factory"].job_dict[job_id].args.additional_args.warning_messages}</p>`;
+        if (job_args?.warning_messages) {
+            warnings = `<p class="list-group-item-warning" >${format(job_args.warning_messages)}</p>`;
         }
-        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.error_messages) {
-            errors = `<p class="list-group-item-danger" >${jsMod["upload_factory"].job_dict[job_id].args.additional_args.error_messages}</p>`;
+        if (job_args?.error_messages) {
+            errors = `<p class="list-group-item-danger" >${format(job_args.error_messages)}</p>`;
         }
-        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.verify_accessions_report) {
-            other = `<p>${jsMod["upload_factory"].job_dict[job_id].args.additional_args.verify_accessions_report}</p>`;
+        if (job_args?.verify_accessions_report) {
+            other = `<p>${format(job_args.verify_accessions_report)}</p>`;
         }
         jQuery('#report_content_div').html(`${success}${warnings}${errors}${other}`);
     });

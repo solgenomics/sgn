@@ -177,7 +177,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     };
     my $cmd_str = join(" ",(
         "Rscript ",
-        $c->config->{basepath} . "/R/stability/ammi_script.R",
+        "__BASEPATH__/R/stability/ammi_script.R",
         $pheno_filepath,
         $trait_id,
         $imput_id,

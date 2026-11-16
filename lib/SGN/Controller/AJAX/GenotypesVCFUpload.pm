@@ -668,14 +668,15 @@ sub upload_genotype_verify_POST : Args(0) {
 
     # Everything that describes the upload goes on the job rather than on the command line. Most of
     # it is text the uploader typed, which does not belong in a shell string, and the design of a
-    # protocol would not fit on one anyway.
+    # protocol would not fit on one anyway. Site configuration (paths, database settings) is the
+    # opposite: it goes on the command line as placeholders that CXGN::Job only fills in when it
+    # runs the command, so that it is never stored with the job.
     my $upload_params = {
         parser_plugin => $parser_plugin,
         genotype_file_type => $genotype_file_type,
         archived_file_id => $archived_main_file_id,
         archived_marker_info_file => $archived_marker_info_file,
         tassel_hdf5_file => $tassel_hdf5_file,
-        rootpath => $c->config->{rootpath},
         user_id => $user_id,
         obs_type => $obs_type,
         organism_id => $organism_id,
@@ -703,7 +704,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job, and can read the upload it is to run off it.
-    my $cmd = "perl \"$basepath/bin/upload_genotype_data.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -tf \"$tempfiles_subdir\" -j __SP_JOB_ID__";
+    my $cmd = "perl \"__BASEPATH__/bin/upload_genotype_data.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -tf \"$tempfiles_subdir\" -rp \"__ROOTPATH__\" -j __SP_JOB_ID__";
 
     my $upload_job = CXGN::Job->new({
         schema => $schema,
@@ -715,6 +716,7 @@ sub upload_genotype_verify_POST : Args(0) {
         dbpass => $dbpass,
         basepath => $basepath,
         cmd => $cmd,
+        cmd_placeholders => { ARCHIVE_PATH => $archive_path, ROOTPATH => $c->config->{rootpath} },
         name => basename($archived_filename_with_path)." genotype data upload",
         job_type => 'upload',
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
@@ -764,7 +766,8 @@ sub upload_genotype_verify_POST : Args(0) {
         schema => $schema,
         people_schema => $people_schema
     });
-    my $job_args = $finished_job->additional_args() || {};
+    # What the job recorded is sent back to the user, so server-only data is taken out of it first.
+    my $job_args = CXGN::Job->scrub_client_data($finished_job->additional_args() || {}, CXGN::Job->client_secrets($c->config));
     print STDERR Dumper $job_args->{result};
     print STDERR Dumper $job_args->{success_messages};
     print STDERR Dumper $job_args->{warning_messages};
