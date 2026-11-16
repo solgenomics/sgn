@@ -124,7 +124,8 @@ sub observations {
         timestamp => $timestamp,
         user_id => $user_id,
         user_role => $user_type,
-        metadata_schema => $metadata_schema
+        metadata_schema => $metadata_schema,
+        file_type => 'brapi observations'
     });
     my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -136,6 +137,7 @@ sub observations {
     unlink $upload_tempfile;
 
     return {
+        archived_file_id => $archived_file_id,
         archived_filename_with_path => $archived_filename_with_path,
         error_message => $error_message,
         success_message => $success_message

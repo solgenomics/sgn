@@ -88,6 +88,7 @@ print STDERR "PARSED FILE: ".Dumper($parsed_file);
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2025-04-12_22:00:00";
@@ -291,6 +292,7 @@ print STDERR "PARSED FILE: ".Dumper($parsed_file);
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2025-04-12_22:00:00";

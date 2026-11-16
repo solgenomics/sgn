@@ -98,6 +98,7 @@ sub observations_store {
 
     my $response = $archived_request->get_path();
     my $file = $response->{archived_filename_with_path};
+    my $archived_file_id = $response->{archived_file_id};
     my $archive_error_message = $response->{error_message};
     my $archive_success_message = $response->{success_message};
     if ($archive_error_message){
@@ -113,7 +114,7 @@ sub observations_store {
     my %phenotype_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    $phenotype_metadata{'archived_file'} = $file;
+    $phenotype_metadata{'archived_file_id'} = $archived_file_id;
     $phenotype_metadata{'archived_file_type'} = 'brapi observations';
     $phenotype_metadata{'date'} = $timestamp;
 

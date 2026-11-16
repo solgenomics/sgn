@@ -10779,8 +10779,9 @@ sub _perform_phenotype_calculation {
         print STDERR "Read $line lines in results file\n";
 
         if ($line > 0) {
+            my $archived_file_id = _archive_phenotype_results_file($c, $metadata_schema, $archive_temp_results, 'drone_imagery_phenotype_calculation', $archive_file_type, $timestamp, $user_id, $user_role);
             my %phenotype_metadata = (
-                'archived_file' => $archive_temp_results,
+                'archived_file_id' => $archived_file_id,
                 'archived_file_type' => $archive_file_type,
                 'operator' => $user_name,
                 'date' => $timestamp
@@ -12185,8 +12186,9 @@ sub _perform_keras_cnn_predict {
     print STDERR "Read $iter lines in results file\n";
 
     if ($iter > 0) {
+        my $archived_file_id = _archive_phenotype_results_file($c, $metadata_schema, $archive_temp_output_file, 'drone_imagery_keras_cnn_predict', 'image_keras_prediction_output', $timestamp, $user_id, $user_role);
         my %phenotype_metadata = (
-            'archived_file' => $archive_temp_output_file,
+            'archived_file_id' => $archived_file_id,
             'archived_file_type' => 'image_keras_prediction_output',
             'operator' => $user_name,
             'date' => $timestamp
@@ -12702,8 +12704,9 @@ sub _perform_autoencoder_keras_cnn_vi {
     # print STDERR Dumper \%autoencoder_vi_phenotype_data;
 
     if ($line > 0) {
+        my $archived_file_id = _archive_phenotype_results_file($c, $metadata_schema, $archive_temp_output_file, 'drone_imagery_keras_autoencoder_vi', 'keras_autoencoder_vegetation_indices', $timestamp, $user_id, $user_role);
         my %phenotype_metadata = (
-            'archived_file' => $archive_temp_output_file,
+            'archived_file_id' => $archived_file_id,
             'archived_file_type' => 'keras_autoencoder_vegetation_indices',
             'operator' => $user_name,
             'date' => $timestamp
@@ -13644,6 +13647,39 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
         images_file_names_return => \@images_file_names_return,
         geojson_file_names_return => \@geojson_file_names_return
     };
+}
+
+# Copies a phenotype results file from tempfiles into the archive and records it in metadata.md_files,
+# so StorePhenotypes can link the stored phenotypes to it. Returns the new file_id.
+sub _archive_phenotype_results_file {
+    my $c = shift;
+    my $metadata_schema = shift;
+    my $results_file = shift;
+    my $subdirectory = shift;
+    my $file_type = shift;
+    my $timestamp = shift;
+    my $user_id = shift;
+    my $user_role = shift;
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $results_file,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $file_type.".csv",
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role,
+        metadata_schema => $metadata_schema,
+        file_type => $file_type
+    });
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+    if (!$archived_file_id) {
+        $c->stash->{rest} = { error => "Could not save phenotype results file $results_file in archive." };
+        $c->detach();
+    }
+    print STDERR "Archived phenotype results file: $archived_filename_with_path\n";
+
+    return $archived_file_id;
 }
 
 sub _check_user_login {
