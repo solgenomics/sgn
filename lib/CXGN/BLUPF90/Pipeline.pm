@@ -797,13 +797,21 @@ sub _genetic_model {
     $self->{genotype_random} = opt($gcfg, 'genotype', 'random') eq 'random' ? 1 : 0;
 }
 
-# Advanced settings of the model step (recipe.advanced). BLUPF90+ uses the
-# REML control (method, rounds, convergence criterion) for every fit, and the
-# unstructured / diagonal genotype x trial covariance in the single-stage
-# builder (random regression on the trial indicators). The other settings
-# (heterogeneous compound symmetry, residual per trial, structures of
-# repeated measurements, ML, R optimizers) are fitted by the R engine only:
-# a warning says so and the default is used.
+# Advanced settings of the model step (recipe.advanced), with BLUPF90+:
+#   REML control (method, rounds, convergence criterion): every fit
+#   gxe us | diag: single-stage builder, random regression of the accession
+#     on the trial indicators (two stages: R engine, the stage-1 errors
+#     cannot be held fixed reliably in blupf90+)
+#   residual trial: single stage, log-linear residual model on the trial
+#     dummies (hetres_pos / hetres_pol)
+#   time_within (repeated measurements, every fit with a plot effect: stage 1
+#     and single stage): us = random regression of the plot on the occasion
+#     indicators; ar1 | exp = supplied covariance of the plot x occasion
+#     effect, the correlation chosen on the REML likelihood over a grid
+#   time_genotype slope | us: single-stage builder, random regression of the
+#     accession on (1, time) or on the occasion indicators
+# Fitted by the R engine only (a warning says so, the default is used):
+# heterogeneous compound symmetry, ML, the R optimizers.
 our %GXE_LABEL = (cs => 'compound symmetry', cs_het => 'heterogeneous compound symmetry', diag => 'diagonal (one genetic variance per trial)', us => 'unstructured genetic covariance among trials');
 sub _advanced {
     my $self = shift;
@@ -824,9 +832,18 @@ sub _advanced {
     $f90->em_rounds($f90->max_rounds) if $method eq 'em';
     my @r_only;
     push @r_only, $GXE_LABEL{cs_het} if $gxe eq 'cs_het';
-    push @r_only, 'one residual variance per trial' if $pick->('residual', qw(homogeneous trial)) ne 'homogeneous';
-    push @r_only, 'the correlation of repeated measurements within a plot' if $pick->('time_within', qw(cs ar1 exp us)) ne 'cs';
-    push @r_only, 'the genotype in time (random regression / unstructured occasions)' if $pick->('time_genotype', qw(default slope us)) ne 'default';
+    my $resid = $pick->('residual', qw(homogeneous trial));
+    my $tw = $pick->('time_within', qw(cs ar1 exp us));
+    my $tg = $pick->('time_genotype', qw(default slope us));
+    if ($resid ne 'homogeneous' && $self->{strategy} eq 'two_stage') {
+        $self->warn_msg("One residual variance per trial applies to the single-stage model (in stage 2 the residual is the stage-1 error); one residual variance was fitted.");
+        $resid = 'homogeneous';
+    }
+    if ($tg ne 'default' && $self->{strategy} eq 'two_stage') {
+        $self->warn_msg("The genotype in time (random regression / unstructured occasions) applies to the single-stage model; stage 1 estimates accession means and stage 2 their genetic values.");
+        $tg = 'default';
+    }
+    $self->{adv_resid} = $resid; $self->{adv_time_within} = $tw; $self->{adv_time_geno} = $tg;
     push @r_only, 'maximum likelihood (ML)' if $pick->('method', qw(REML ML)) ne 'REML';
     push @r_only, 'the R optimizer settings' if $pick->('optimizer', qw(default bobyqa Nelder_Mead nlminbwrap)) ne 'default' || defined($a->{max_iter}) && $a->{max_iter} ne '';
     $self->warn_msg("Advanced settings fitted by the R engine only were not used with BLUPF90+: ", join('; ', @r_only), ".") if @r_only;
@@ -836,9 +853,10 @@ sub _advanced {
         $gxe = 'cs';
     }
     $self->{adv_gxe} = $gxe;
-    my @set = (($gxe ne 'cs' ? "genotype x trial $gxe" : ()), ($f90->max_rounds != $CXGN::BLUPF90::MAX_ROUNDS ? 'max. rounds ' . $f90->max_rounds : ()),
+    my @set = (($gxe ne 'cs' ? "genotype x trial $gxe" : ()), ($resid ne 'homogeneous' ? 'one residual variance per trial' : ()),
+               ($tw ne 'cs' ? "time within plot $tw" : ()), ($tg ne 'default' ? "genotype in time $tg" : ()), ($f90->max_rounds != $CXGN::BLUPF90::MAX_ROUNDS ? 'max. rounds ' . $f90->max_rounds : ()),
                ($f90->conv_crit ne '1e-9' ? 'convergence ' . $f90->conv_crit : ()), ($method ne 'ai' ? "method $method" . ($method eq 'em_ai' ? ' (' . $f90->em_rounds . ' EM rounds)' : '') : ()));
-    $self->{advanced_used} = { gxe => $gxe, f90_method => $method, f90_maxrounds => $f90->max_rounds, f90_conv => $f90->conv_crit, ($method eq 'em_ai' ? (f90_em_rounds => $f90->em_rounds) : ()) } if @set;
+    $self->{advanced_used} = { gxe => $gxe, residual => $resid, time_within => $tw, time_genotype => $tg, f90_method => $method, f90_maxrounds => $f90->max_rounds, f90_conv => $f90->conv_crit, ($method eq 'em_ai' ? (f90_em_rounds => $f90->em_rounds) : ()) } if @set;
     $self->step("Advanced settings: ", join(', ', @set)) if @set;
 }
 
@@ -1018,8 +1036,138 @@ sub finish_fit {
     return $fit;
 }
 
-# Fit independent model specs in parallel; returns results in order.
-sub fit_many { my ($self, $specs) = @_; return @$specs ? $self->{f90}->fit_all($specs) : []; }
+# Fit independent model specs in parallel; returns results in order. With a
+# within-plot structure of repeated measurements (advanced settings), every
+# spec with a plot effect on repeated measurements gets it: unstructured
+# (random regression), or AR(1) / exponential fitted for a grid of
+# correlations (coarse, then refined around the best) and the fit with the
+# best REML likelihood kept.
+our @RHO_GRID = (0.1, 0.3, 0.5, 0.7, 0.9);
+sub fit_many {
+    my ($self, $specs) = @_;
+    return [] if !@$specs;
+    my %var;
+    for my $i (0 .. $#$specs) { my $v = $self->_time_within_variants($specs->[$i], \@RHO_GRID); $var{$i} = $v if $v; }
+    return $self->{f90}->fit_all($specs) if !%var;
+    my $run = sub {
+        my $sets = shift;    # index -> [variants]
+        my @flat = map { @{ $sets->{$_} } } sort { $a <=> $b } keys %$sets;
+        my $fits = $self->{f90}->fit_all(\@flat);
+        my (%best, $k);
+        $k = 0;
+        foreach my $i (sort { $a <=> $b } keys %$sets) {
+            foreach my $v (@{ $sets->{$i} }) {
+                my $f = $fits->[$k++];
+                next if $f->{error} && $best{$i};
+                $f->{_tw} = $v->{_tw};
+                $best{$i} = $f if !$best{$i} || ($best{$i}->{error} && !$f->{error})
+                    || (!$f->{error} && defined($f->{m2logL}) && defined($best{$i}->{m2logL}) && $f->{m2logL} < $best{$i}->{m2logL});
+            }
+        }
+        return \%best;
+    };
+    my %sets = map { $_ => (exists $var{$_} ? $var{$_} : [ $specs->[$_] ]) } 0 .. $#$specs;
+    my $best = $run->(\%sets);
+    # refine the correlation around the best grid value
+    my %ref;
+    foreach my $i (keys %var) {
+        my $b = $best->{$i};
+        next if !$b || $b->{error} || !defined($b->{_tw}->{rho});
+        my $r0 = $b->{_tw}->{rho};
+        my @r = grep { $_ > 0.005 && $_ < 0.995 } map { $r0 + $_ } (-0.1, -0.05, 0.05, 0.1);
+        my $v = $self->_time_within_variants($specs->[$i], \@r);
+        $ref{$i} = [ @$v ] if $v && @$v;
+    }
+    if (%ref) {
+        my $b2 = $run->(\%ref);
+        foreach my $i (keys %$b2) {
+            my ($o, $n) = ($best->{$i}, $b2->{$i});
+            $best->{$i} = $n if !$n->{error} && defined($n->{m2logL}) && (!defined($o->{m2logL}) || $n->{m2logL} < $o->{m2logL});
+        }
+    }
+    foreach my $i (keys %var) {
+        my $f = $best->{$i};
+        my $t = $f->{_tw} or next;
+        next if $f->{error};
+        push @{ $self->{tw_rho}->{ $t->{kind} } }, $t->{rho} if defined $t->{rho};
+        $f->{vc}->{plot_u} *= $t->{mean_cor} if defined($t->{mean_cor}) && defined($f->{vc}->{plot_u});
+        $f->{model} .= defined($t->{rho}) ? sprintf(', plot x occasion ~ %s(rho = %.2f%s)', $t->{kind}, $t->{rho}, $t->{kind} eq 'exp' ? " per $t->{ref_days} days" : '') : '';
+    }
+    return [ map { $best->{$_} } 0 .. $#$specs ];
+}
+
+our $OCC_MAX = 8;    # occasions of an unstructured covariance
+# occasion of every record of repeated measurements: k-th measurement date
+# of its trial (records without a date: occasion 1)
+sub _occasions_of {
+    my $d = shift;
+    my %dates;
+    for my $i (0 .. nrow($d) - 1) { $dates{ $d->{trial}->[$i] }->{ $d->{mdate}->[$i] // '' } = 1; }
+    my %rank;
+    foreach my $t (keys %dates) { my @s = sort keys %{ $dates{$t} }; $rank{$t}->{ $s[$_] } = $_ + 1 for 0 .. $#s; }
+    return [ map { $rank{ $d->{trial}->[$_] }->{ $d->{mdate}->[$_] // '' } } 0 .. nrow($d) - 1 ];
+}
+
+# variants of a spec for the within-plot structure, or undef when it does not apply
+sub _time_within_variants {
+    my ($self, $spec, $rhos) = @_;
+    my $kind = $self->{adv_time_within} // 'cs';
+    my $d = $spec->{data};
+    return undef if $kind eq 'cs' || !$d->{mdate} || !grep { $_ eq 'plot_u' } @{ $spec->{random} || [] };
+    my $occ = _occasions_of($d);
+    my $K = max(@$occ);
+    return undef if $K < 2;
+    if ($kind eq 'us' && $K > $OCC_MAX) {
+        $self->warn_once('tw_us_k', "More than $OCC_MAX measurement occasions per plot: AR(1) was used instead of an unstructured covariance within plots.");
+        $kind = 'ar1';
+    }
+    if ($kind eq 'exp' && grep { !defined } @{ $d->{mday} || [] }) {
+        $self->warn_once('tw_exp_days', "Some measurements have no date: AR(1) between successive measurements was used instead of the exponential correlation in days.");
+        $kind = 'ar1';
+    }
+    if ($kind eq 'us') {
+        my @cols = map { my $k = $_; [ map { $_ == $k ? 1 : 0 } @$occ ] } 1 .. $K;
+        return [ { %$spec, rr_plot => { kind => 'us', group => 'plot_u', cols => \@cols, labels => [ 1 .. $K ], term => 'us(0 + occasion | plot)' }, _tw => { kind => 'us' } } ];
+    }
+    # AR(1) / exponential: covariance of the plot x occasion effect, block per plot
+    my $n = nrow($d);
+    my (%lev, @levels, @key, %by_plot);
+    for my $i (0 .. $n - 1) {
+        my $k = "$d->{plot_u}->[$i]\t$occ->[$i]";
+        if (!$lev{$k}) { push @levels, $k; $lev{$k} = scalar(@levels); push @{ $by_plot{ $d->{plot_u}->[$i] } }, [ $lev{$k}, $occ->[$i], $d->{mday} ? $d->{mday}->[$i] : undef ]; }
+        push @key, $k;
+    }
+    my $ref = 1;
+    if ($kind eq 'exp') {
+        my @gaps;
+        foreach my $p (values %by_plot) { my @dd = sort { $a <=> $b } map { $_->[2] } @$p; push @gaps, grep { $_ > 0 } map { $dd[$_] - $dd[$_ - 1] } 1 .. $#dd; }
+        my @g = sort { $a <=> $b } @gaps;
+        $ref = @g ? $g[ int($#g / 2) ] : 1;
+    }
+    make_path($self->{f90}->keep_dir);
+    $self->{tw_files}++;
+    my @out;
+    foreach my $rho (@$rhos) {
+        my $file = sprintf("%s/time_cov_%d_%s_%.3f.txt", $self->{f90}->keep_dir, $self->{tw_files}, $kind, $rho);
+        open(my $F, '>', $file) or die "Cannot write $file\n";
+        my ($mc, $np) = (0, 0);
+        foreach my $p (values %by_plot) {
+            my $tot = 0;
+            for my $a (@$p) { for my $b (@$p) {
+                my $dist = $kind eq 'exp' ? abs($a->[2] - $b->[2]) / $ref : abs($a->[1] - $b->[1]);
+                $tot += $rho ** $dist;
+                printf $F "%d %d %.10g\n", $a->[0], $b->[0], $rho ** $dist if $b->[0] >= $a->[0];
+            } }
+            $mc += $tot / (@$p * @$p); $np++;
+        }
+        close($F);
+        # mean correlation of a plot's measurements: the plot variance times
+        # it is the variance of the plot mean (as the plot effect in h2)
+        push @out, { %$spec, user_cov => { %{ $spec->{user_cov} || {} }, plot_u => { file => $file, levels => \@levels, key => \@key } },
+                     _tw => { kind => $kind, rho => $rho, ref_days => $ref, mean_cor => $np ? $mc / $np : 1 } };
+    }
+    return \@out;
+}
 
 sub _design_terms {
     my ($design, $d) = @_;
@@ -1893,9 +2041,42 @@ sub _single_stage {
             push @summary, { %res, message => $e };
             next;
         }
+        # advanced: the genotype in time (random regression of the accession
+        # on (1, time) or on the occasion indicators; repeated measurements)
+        my $tg_on = 0;
+        if ($rep_all && ($self->{adv_time_geno} // 'default') ne 'default') {
+            my $kind = $self->{adv_time_geno};
+            my $occ = _occasions_of($d);
+            my $K = max(@$occ);
+            my @days = @{ $d->{mday} || [] };
+            my $why = $custom ? 'the model is a written formula' : !$grandom ? 'it needs the genotype as random effect'
+                    : $spec->{_ped_on} ? 'BLUPF90+ fits it with unrelated accessions only, not with the pedigree / genomic relationship'
+                    : $K < 2 ? 'a single measurement occasion'
+                    : ($kind eq 'us' && $K > $OCC_MAX) ? "more than $OCC_MAX measurement occasions"
+                    : ($kind eq 'slope' && (!@days || grep { !defined } @days)) ? 'the measurement days are missing' : '';
+            if ($why eq '') {
+                if ($kind eq 'slope') {
+                    my $mx = max(@days) || 1;
+                    my @tday = map { $_ / $mx } @days;
+                    $spec->{gxe} = { kind => 'us', cols => [ [ (1) x @tday ], \@tday ], labels => [ 'intercept', 'slope' ], L => [ 1, mean(@tday) ], term => 'us(1 + time | accession)', report => 'slope' };
+                }
+                else {
+                    $spec->{gxe} = { kind => 'us', cols => [ map { my $k = $_; [ map { $_ == $k ? 1 : 0 } @$occ ] } 1 .. $K ], labels => [ 1 .. $K ], L => [ (1 / $K) x $K ], term => 'us(0 + occasion | accession)', report => 'occasion' };
+                }
+                $fml = join(' + ', "y ~ $spec->{gxe}->{term}", grep { $_ ne '(1|accession)' } split(/\s*\+\s*/, ($fml =~ s/^\s*y\s*~\s*//r)));
+                $tg_on = 1;
+                $self->warn_once("tg_gxe $t", short_trait($t), ": the genotype is modelled in time, so genotype x trial keeps compound symmetry for this trait.") if ($self->{adv_gxe} // 'cs') ne 'cs';
+            }
+            else { $self->warn_once("tg_off $t $why", short_trait($t), ": the genotype in time was not used ($why)."); }
+        }
+        # advanced: one residual variance per trial
+        if (($self->{adv_resid} // 'homogeneous') eq 'trial') {
+            if (n_levels(@{$d->{trial}}) > 1) { $spec->{hetres} = { by => 'trial' }; }
+            else { $self->warn_once('res_one', "One residual variance per trial needs several trials; one residual variance was fitted."); }
+        }
         # advanced: structured genotype x trial covariance (replaces accession
         # and accession:trial)
-        if (($self->{adv_gxe} // 'cs') ne 'cs') {
+        if (!$tg_on && ($self->{adv_gxe} // 'cs') ne 'cs') {
             my $why = $custom ? 'the model is a written formula' : !$grandom ? 'it needs the genotype as random effect'
                     : n_levels(@{$d->{trial}}) < 2 ? 'there is a single trial'
                     : $spec->{_ped_on} ? 'BLUPF90+ fits it with unrelated accessions only, not with the pedigree / genomic relationship' : '';
@@ -1927,10 +2108,21 @@ sub _single_stage {
         $res->{engine_used} = 'BLUPF90+';
         $res->{pedigree_used} = $f->{pedigree} ? $TRUE : $FALSE;
         $res->{relationship} = $f->{relationship} || 'I';
-        $res->{model} = pretty_model("BLUPF90+: $c->{fml}" . _rel_text($f) . ($f->{structure} ? '; value = mean over the trials; H2 = mean reliability' : ''));
+        my $st_kind = $specs[$k]->{gxe} ? ($specs[$k]->{gxe}->{report} // 'trial') : '';
+        my $fml_txt = $c->{fml};
+        if (my $tw = $f->{_tw}) {
+            my $term = $tw->{kind} eq 'us' ? 'us(0 + occasion | plot)' : $tw->{kind} eq 'exp' ? sprintf('exp(days | plot, rho = %.2f per %s days)', $tw->{rho}, $tw->{ref_days}) : sprintf('ar1(occasion | plot, rho = %.2f)', $tw->{rho});
+            $fml_txt =~ s/\(1\|plot_u\)/$term/;
+        }
+        $res->{model} = pretty_model("BLUPF90+: $fml_txt" . _rel_text($f) . ($f->{resid_by} ? ', one residual variance per trial' : '')
+                                     . ($f->{structure} ? ($st_kind eq 'slope' ? '; value at the mean measurement time' : $st_kind eq 'occasion' ? '; value = mean over the occasions' : '; value = mean over the trials') . '; H2 = mean reliability' : ''));
         $res->{var_e} = $vc->{Residual};
         push @{$self->{ancestor_values}}, map { +{ %$_, trait => $t } } @{ $f->{ancestors} || [] };
         foreach my $kk (sort keys %$vc) {
+            if ($kk eq 'Residual' && $f->{resid_by}) {
+                push @{$self->{variance_components}}, { trait => short_trait($t), component => "residual, trial $_", variance => $f->{resid_by}->{$_} } for sort keys %{ $f->{resid_by} };
+                next;
+            }
             my $lab = $kk;
             $lab =~ s/\Q$_\E/$self->{tf}->{$_}->{name}/ for @{$self->{tf_order}};
             push @{$self->{variance_components}}, { trait => short_trait($t), component => pretty_model($lab), variance => $vc->{$kk} };
@@ -1956,7 +2148,7 @@ sub _single_stage {
             my $den = $res->{var_g} + $gxe_part + ($vp + $res->{var_e} / meas_per_plot($d)) / plots_per_acc($d);
             $res->{h2} = $den > 0 ? $res->{var_g} / $den : undef;
         }
-        $self->_report_structure($t, $f, $res) if $f->{structure};
+        $self->_report_structure($t, $f, $res, $st_kind) if $f->{structure};
         $self->add_residuals($d->{unit}, $t, $f->{resid});
         push @gv, map { +{ %$_, trait => $t } } grep { defined $_->{value} } @{$f->{values}};
         push @summary, $res;
@@ -1970,19 +2162,27 @@ sub _single_stage {
 # var_g = variance of the value (mean over the trials), var_ge = mean variance
 # - mean covariance, H2 = mean reliability; components per trial; the matrix
 sub _report_structure {
-    my ($self, $t, $f, $res) = @_;
+    my ($self, $t, $f, $res, $kind) = @_;
+    $kind ||= 'trial';
     my $st = $f->{structure};
     my $G = $st->{G}; my $K = @$G;
     my ($dg, $off, $n_off) = (0, 0, 0);
     for my $i (0 .. $K - 1) { $dg += $G->[$i][$i]; for my $j ($i + 1 .. $K - 1) { $off += $G->[$i][$j]; $n_off++; } }
     $res->{var_g} = $st->{var_value};
-    $res->{var_ge} = $n_off ? $dg / $K - $off / $n_off : undef;
+    $res->{var_ge} = $n_off && $kind ne 'slope' ? $dg / $K - $off / $n_off : undef;
     $res->{h2} = $st->{reliability};
     my $short = short_trait($t);
-    push @{$self->{variance_components}}, { trait => $short, component => "genetic, trial $st->{labels}->[$_]", variance => $G->[$_][$_] } for 0 .. $K - 1;
-    push @{$self->{variance_components}}, { trait => $short, component => 'genetic covariance between trials (mean)', variance => $off / $n_off } if $n_off;
+    my $unit = $kind eq 'trial' ? 'trial' : 'occasion';
+    if ($kind eq 'slope') {
+        push @{$self->{variance_components}}, { trait => $short, component => 'genetic, intercept', variance => $G->[0][0] },
+             { trait => $short, component => 'genetic, slope (per time span)', variance => $G->[1][1] }, { trait => $short, component => 'genetic, intercept x slope covariance', variance => $G->[0][1] };
+    }
+    else {
+        push @{$self->{variance_components}}, { trait => $short, component => "genetic, $unit $st->{labels}->[$_]", variance => $G->[$_][$_] } for 0 .. $K - 1;
+        push @{$self->{variance_components}}, { trait => $short, component => "genetic covariance between ${unit}s (mean)", variance => $off / $n_off } if $n_off;
+    }
     my @C = map { my $i = $_; [ map { my $v = $G->[$i][$i] * $G->[$_][$_]; $v > 0 ? $G->[$i][$_] / sqrt($v) : undef } 0 .. $K - 1 ] } 0 .. $K - 1;
-    $self->{variance_structures}->{$short} = { structure => $st->{kind}, unit => 'trial', labels => $st->{labels}, G => $G, correlations => \@C,
+    $self->{variance_structures}->{$short} = { structure => ($kind eq 'trial' ? $st->{kind} : $kind), unit => $unit, labels => $st->{labels}, G => $G, correlations => \@C,
                                                weights => $st->{L}, var_value => $st->{var_value}, mean_reliability => $st->{reliability} };
 }
 
@@ -2356,6 +2556,11 @@ sub _write_json {
 
 sub _output {
     my $self = shift;
+    foreach my $k (sort keys %{ $self->{tw_rho} || {} }) {
+        my @r = sort { $a <=> $b } @{ $self->{tw_rho}->{$k} };
+        $self->warn_msg(sprintf("Correlation of the repeated measurements within plots (%s): chosen on the REML likelihood over a grid in each of %d model(s); median rho = %.2f (range %.2f - %.2f)%s.",
+                                $k eq 'exp' ? 'exponential in days' : 'AR(1) between successive measurements', scalar(@r), $r[ int($#r / 2) ], $r[0], $r[-1], $k eq 'exp' ? ', per median interval between measurements' : ''));
+    }
     my $d = $self->{dat};
     my @traits = @{$self->{traits}};
     my $ped = $self->{pedigree};
@@ -2428,7 +2633,7 @@ sub _output {
         covariates => [ map { $self->{cov_label}->{$_} } @{$self->{cov_vars}} ],
         multi_trait => $self->{multi_trait},
         ($self->{variance_structures} ? (variance_structures => $self->{variance_structures}) : ()),
-        ($self->{advanced_used} ? (advanced => $self->{advanced_used}) : ()),
+        ($self->{advanced_used} ? (advanced => { %{ $self->{advanced_used} }, ($self->{tw_rho} ? (time_correlation => { map { my @r = sort { $a <=> $b } @{ $self->{tw_rho}->{$_} }; ($_ => { n_fits => scalar(@r), median => $r[ int($#r / 2) ], min => $r[0], max => $r[-1] }) } keys %{ $self->{tw_rho} } }) : ()) }) : ()),
         software => $self->_software(),
         outliers => $self->{outliers},
         outlier_summary => $self->{outlier_summary},

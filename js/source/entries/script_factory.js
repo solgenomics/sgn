@@ -1552,7 +1552,7 @@ function renderModelPreview() {
 // ---------------------------------------------------------------------------
 const ADV_DEFAULTS = { gxe: 'cs', residual: 'homogeneous', time_within: 'cs', time_genotype: 'default', method: 'REML', optimizer: 'default', max_iter: '',
     f90_method: 'ai', f90_em_rounds: '', f90_maxrounds: '', f90_conv: '' };
-const ADV_KEYS = { lme4: ['gxe', 'residual', 'time_within', 'time_genotype', 'method', 'optimizer', 'max_iter'], blupf90: ['gxe', 'f90_method', 'f90_em_rounds', 'f90_maxrounds', 'f90_conv'] };
+const ADV_KEYS = { lme4: ['gxe', 'residual', 'time_within', 'time_genotype', 'method', 'optimizer', 'max_iter'], blupf90: ['gxe', 'residual', 'time_within', 'time_genotype', 'f90_method', 'f90_em_rounds', 'f90_maxrounds', 'f90_conv'] };
 const ADV_NUMERIC = ['max_iter', 'f90_em_rounds', 'f90_maxrounds'];
 const ADV_LABEL = {
     gxe: { cs_het: 'G×E heterogeneous compound symmetry', diag: 'G×E diagonal', us: 'G×E unstructured' },
@@ -1589,16 +1589,13 @@ function advBlocked(key, value) {
         if (!random) return 'needs the genotype as random effect';
         if (custom) return 'not with a written formula';
         if (eng === 'blupf90' && value === 'cs_het') return 'R engine only';
-        if (eng === 'blupf90' && two) return 'with BLUPF90+ in the single-stage model only (two stages: R engine)';
+        if (eng === 'blupf90' && two) return 'BLUPF90+: single stage only (stage 2 needs the stage-1 errors held fixed, which blupf90+ does not do reliably; R engine)';
         if (rel) return 'with unrelated accessions only (genetic model: identity)';
     }
     if (key === 'residual') {
-        if (eng === 'blupf90') return 'R engine only';
         if (two) return 'single stage only (in stage 2 the residual is the stage-1 error)';
     }
-    if (key === 'time_within' && eng === 'blupf90') return 'R engine only';
     if (key === 'time_genotype') {
-        if (eng === 'blupf90') return 'R engine only';
         if (two) return 'single stage only';
         if (custom) return 'not with a written formula';
         if (!random) return 'needs the genotype as random effect';
@@ -1676,13 +1673,15 @@ function advRefreshDialog() {
             (two ? 'In stage 2 the stage-1 standard errors are used as known residual variances. ' : 'It replaces the genotype &times; trial term of the builder. ') +
             (gxe === 'us' ? 'An unstructured matrix of K trials has K(K+1)/2 parameters: with many trials prefer diagonal or heterogeneous compound symmetry. ' : '') +
             'The results show the genetic variance of every trial and the genetic correlations between trials.'));
-    $('#sf_adv_residual_help').html($('#sf_adv_residual').val() === 'trial' ? 'Trials differ in precision: each gets its own residual variance (glmmTMB <code>dispformula = ~ 0 + trial</code>).' : '');
+    $('#sf_adv_residual_help').html($('#sf_adv_residual').val() === 'trial' ? 'Trials differ in precision: each gets its own residual variance (' +
+        (eng === 'blupf90' ? 'BLUPF90+: log-linear residual model on the trial dummies, <code>hetres_pos / hetres_pol</code>, AI-REML started from the fit with one residual' : 'glmmTMB <code>dispformula = ~ 0 + trial</code>') + ').' : '');
     const tw = $('#sf_adv_time_within').val(), tg = $('#sf_adv_time_genotype').val();
     $('#sf_adv_time_help').html('Traits measured several times per plot and set to <i>all measurements</i> under <b>Repeated measurements</b> (other traits are not affected). ' +
-        (eng === 'blupf90' ? '<b>These structures are fitted by the R engine (glmmTMB).</b> ' : '') +
-        (tw === 'ar1' ? 'AR(1): <code>ar1(0 + occasion | plot)</code> replaces the plot effect; the occasion is the k-th measurement date of the trial. ' : '') +
-        (tw === 'exp' ? 'Exponential: <code>exp(0 + days | plot)</code>, correlation &rho;<sup>&Delta;days</sup>, for dates at uneven intervals. ' : '') +
-        (tw === 'us' ? 'Unstructured: <code>us(0 + occasion | plot)</code> (it holds the residual). ' : '') +
+        (tw === 'ar1' ? 'AR(1): <code>ar1(0 + occasion | plot)</code> replaces the plot effect; the occasion is the k-th measurement date of the trial' +
+            (eng === 'blupf90' ? ' (BLUPF90+: the correlation &rho; is chosen on the REML likelihood over a grid of values, refined around the best). ' : '. ') : '') +
+        (tw === 'exp' ? 'Exponential: <code>exp(0 + days | plot)</code>, correlation &rho;<sup>&Delta;days</sup>, for dates at uneven intervals' +
+            (eng === 'blupf90' ? ' (BLUPF90+: &rho; per median interval chosen over a grid). ' : '. ') : '') +
+        (tw === 'us' ? 'Unstructured: <code>us(0 + occasion | plot)</code>' + (eng === 'blupf90' ? ' (BLUPF90+: random regression of the plot on the occasions). ' : ' (it holds the residual). ') : '') +
         (tw !== 'cs' ? 'Used in stage 1 (two stages) and in the single-stage model. ' : '') +
         (tg === 'slope' ? 'Random regression: <code>us(1 + time | accession)</code>, time scaled 0-1 over the season; the value of an accession is its predicted value at the mean measurement time. ' : '') +
         (tg === 'us' ? 'Unstructured over occasions: <code>us(0 + occasion | accession)</code>; the value is the mean over the occasions (for a full multi-trait model choose <i>multi-trait</i> under Repeated measurements). ' : ''));
