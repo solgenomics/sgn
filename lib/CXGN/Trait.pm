@@ -876,6 +876,11 @@ sub interactive_store {
 		cv_id => $trait_cv_id
 	})->name();
 
+	my $existing_cvterm = $schema->resultset("Cv::Cvterm")->search({ cv_id => $trait_cv_id })->search(\[ 'lower(me.name) = lower(?)', $name ])->first();
+	if ($existing_cvterm) {
+	    die "Another term in this ontology already has the name '" . $existing_cvterm->name() . "' (names are compared case-insensitively). Please choose a different name.\n";
+	}
+
 	my $parent_terms = [];
 	if ($parent_terms_json) {
 		$parent_terms = decode_json($parent_terms_json);

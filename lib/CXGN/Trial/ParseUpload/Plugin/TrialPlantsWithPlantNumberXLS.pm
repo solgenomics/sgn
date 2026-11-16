@@ -120,7 +120,7 @@ sub _validate_with_plugin {
             } 
             $seen_plant_coords{$plot_name}{$coord_pair} = 1;
         } elsif ($coords_given) {
-            push @error_messages, "Coordinates were given for some plant entries, but not for $plant_name in $plot_name.";
+            push @error_messages, "Cell C$row_name: row_num and col_num are missing, but other plant entries give coordinates.";
         }
 
         if (!$plot_name || $plot_name eq '' ) {

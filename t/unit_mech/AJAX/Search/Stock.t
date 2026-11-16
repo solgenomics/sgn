@@ -598,6 +598,13 @@ $mech->post_ok('http://localhost:3010/stock/prop/add',["stock_id"=>"38842", "pro
 print STDERR "CONTENTS: ".$mech->content;
 $response = decode_json $mech->content;
 print STDERR "AFTER ORGANIZATION ADD: ". Dumper $response;
+ok(!exists $response->{'error'}, 'stockprop add reports no error');
+like($response->{'message'}, qr/associated with value organization_name_1/, 'stockprop add reports the stored value');
+
+$mech->post_ok('http://localhost:3010/stock/prop/add',["stock_id"=>"999999999", "prop"=>"organization_name_2", "prop_type"=>"organization"] );
+$response = decode_json $mech->content;
+like($response->{'error'}, qr/^Cannot associate prop organization: organization_name_2 with stock 999999999/, 'stockprop add to an unknown stock reports the error');
+ok(!exists $response->{'message'}, 'stockprop add to an unknown stock reports no success');
 
 $mech->post_ok('http://localhost:3010/ajax/search/stocks',["editable_stockprop_values" => encode_json({"organization"=>{"matchtype"=>"contains", "value"=>"organization_name_1"}})] );
 $response = decode_json $mech->content;

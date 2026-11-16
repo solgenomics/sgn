@@ -5,19 +5,13 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::WWW::WebDriver;
-use Selenium::Firefox;
-use Selenium::Firefox::Profile;
 
-my $profile = Selenium::Firefox::Profile->new;
-$profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
-$profile->set_preference( 'browser.download.dir', '/tmp/download.txt' );
-$profile->set_preference( 'browser.download.manager.showWhenStarting', 0 );
-$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/octet-stream,text/csv,application/zip,text/plain' );
 
-my $driver = Selenium::Remote::Driver->new(firefox_profile => $profile, base_url => $ENV{SGN_TEST_SERVER}, remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
 
 my $d = SGN::Test::WWW::WebDriver->new();
-$d->driver($driver);
+
+my $download_dir = $d->download_dir();
+
 
 $d->while_logged_in_as("submitter", sub {
     # sleep(1);
@@ -143,6 +137,8 @@ $d->while_logged_in_as("submitter", sub {
 
     # Compare two lists
 
+    unlink glob("$download_dir/*");
+
     $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list 808")->click();
 
     sleep(1);
@@ -162,6 +158,22 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok("close_list_comparison_modal", "id", "find close comparison dialog button")->click();
 
     sleep(1);
+
+
+    my @files = glob("$download_dir/*");
+
+    ok(@files, "File downloaded to tmp directory");
+
+    my $downloaded_file = "$download_dir/Only in johndoe_1_private.txt";
+
+    ok(-f $downloaded_file, "Found downloaded file: $downloaded_file");
+
+    open my $fh, '<', $downloaded_file or die "Could not open $downloaded_file: $!";
+    my $contents = do {local $/; <$fh> };
+    close $fh;
+
+    my $expected = "test1\ntest2";
+    like($contents, qr/\Q$expected\E/, "Downloaded file contains expected content");
 
     ## Delete list group
 

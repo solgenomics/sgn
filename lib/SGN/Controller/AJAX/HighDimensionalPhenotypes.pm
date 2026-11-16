@@ -114,6 +114,10 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     }
     if ($validate_file == 1){
         push @success_status, "File valid: $upload_original_name.";
+    } elsif (!$validate_file->{'error'} && $validate_file->{'warning'}) {
+        # File is valid but has warnings (e.g. negative spectral values) to show the user
+        push @success_status, "File valid: $upload_original_name.";
+        push @warning_status, $validate_file->{'warning'};
     } else {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
@@ -338,6 +342,10 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     }
     if ($validate_file == 1){
         push @success_status, "File valid: $upload_original_name.";
+    } elsif (!$validate_file->{'error'} && $validate_file->{'warning'}) {
+        # File is valid but has warnings (e.g. negative spectral values), which were already shown on verify
+        push @success_status, "File valid: $upload_original_name.";
+        push @warning_status, $validate_file->{'warning'};
     } else {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};

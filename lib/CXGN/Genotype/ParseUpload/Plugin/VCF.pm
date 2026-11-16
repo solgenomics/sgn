@@ -36,7 +36,7 @@ sub _validate_with_plugin {
     my @header_info;
     my @fields;
     my @observation_unit_names;
-    open($F, "<", $filename) || die "Can't open file $filename\n";
+    open($F, "< :encoding(UTF-8)", $filename) || die "Can't open file $filename\n";
         while (<$F>) {
 	    $_ =~ s/\r//g;
 	    chomp;
@@ -57,7 +57,7 @@ sub _validate_with_plugin {
         }
     close($F);
 
-    open($F, "<", $filename) || die "Can't open file $filename\n";
+    open($F, "< :encoding(UTF-8)", $filename) || die "Can't open file $filename\n";
 
         my @chroms;
         my @positions;
@@ -289,7 +289,7 @@ sub _parse_with_plugin {
     print STDERR "Reading VCF to parse\n";
 
     my $F;
-    open($F, "<", $filename) || die "Can't open file $filename\n";
+    open($F, "< :encoding(UTF-8)", $filename) || die "Can't open file $filename\n";
     while (<$F> =~ m/^##/) {
         #Trash header lines
     }
@@ -337,7 +337,7 @@ sub next_genotype {
             my $chrom = $marker_info[0];
 
             my @format =  split /:/,  $marker_info_p8;
-            #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
+            #As it goes down the rows, it constructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
             for (my $i = 0; $i < scalar(@$observation_unit_names); $i++ ) {
                 my @fvalues = split /:/, $values[$i];
                 my %value;

@@ -1180,7 +1180,7 @@ CXGN.List.prototype = {
                         html += "<tr><td>"+response.found[i].unique_name+"</td></tr>";
                     }
                     html += "</tbody></table>";
-                    html += "<h2>"+list_type_name+" that are not found in the database, but fuzzy match (names are visibily similar)</h2>";
+                    html += "<h2>"+list_type_name+" that are not found in the database, but fuzzy match (names are visibly similar)</h2>";
                     html += "<table class='table table-hover table-bordered' ><thead><tr><th>Name In Your List</th><th>Found In Database</th><th>Distance Score <span style='position: relative; top: 0: right: 0; cursor: help;' title='The closer the score is to 1.0, the more similar the match'>(?)</span></th></tr></thead><tbody>";
                     for(var i=0; i<response.fuzzy.length; i++){
                         for(j=0; j <response.fuzzy[i].matches.length; j++){
@@ -2067,15 +2067,19 @@ function validate_interactive(response, type, list_id) {
     multiple_wrong_case = response.multiple_wrong_case;
     synonym_matches = response.synonyms;
     multiple_synonym_matches = response.multiple_synonyms;
+    discarded_seedlots = response.discarded;
     valid = response.valid;
 
     //alert("validate_interactive: "+JSON.stringify(response));
     if (warning !== undefined && type != 'accessions' && warning.length != 0) {
-	alert(warning.join(", "));
+        alert(warning.join(", "));
+    }
+    if (type === 'seedlots' && discarded_seedlots && discarded_seedlots.length > 0) {
+        alert(`WARNING: The following seedlots have been discarded: ${discarded_seedlots.join(', ')}`);
     }
     if (type == 'accessions' && valid == 1) {
-	alert("This list passed validation.");
-	return;
+        alert("This list passed validation.");
+        return;
     }
     else if (missing !== undefined  && type != 'accessions' && missing.length == 0) {
         alert("This list passed validation.");
