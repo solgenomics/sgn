@@ -195,6 +195,7 @@ sub _run {
         return;
     }
     $self->_genetic_model();
+    $self->_advanced();
     $self->_multi_trait_setup();
     $self->{variance_components} = [];
     $self->{residuals} = {};
@@ -794,6 +795,51 @@ sub _genetic_model {
     $self->{strategy} = opt($self->recipe, 'strategy', 'two_stage') eq 'single_stage' ? 'single_stage' : 'two_stage';
     my $gcfg = $self->{strategy} eq 'two_stage' ? opt($self->recipe, 'stage2', {}) : opt($self->recipe, 'single', {});
     $self->{genotype_random} = opt($gcfg, 'genotype', 'random') eq 'random' ? 1 : 0;
+}
+
+# Advanced settings of the model step (recipe.advanced). BLUPF90+ uses the
+# REML control (method, rounds, convergence criterion) for every fit, and the
+# unstructured / diagonal genotype x trial covariance in the single-stage
+# builder (random regression on the trial indicators). The other settings
+# (heterogeneous compound symmetry, residual per trial, structures of
+# repeated measurements, ML, R optimizers) are fitted by the R engine only:
+# a warning says so and the default is used.
+our %GXE_LABEL = (cs => 'compound symmetry', cs_het => 'heterogeneous compound symmetry', diag => 'diagonal (one genetic variance per trial)', us => 'unstructured genetic covariance among trials');
+sub _advanced {
+    my $self = shift;
+    my $a = opt($self->recipe, 'advanced', {});
+    $a = {} if ref($a) ne 'HASH';
+    my $pick = sub { my ($k, @ok) = @_; my $v = $a->{$k}; return (defined($v) && grep { $_ eq $v } @ok) ? $v : $ok[0]; };
+    my $gxe = $pick->('gxe', qw(cs us diag cs_het));
+    my $f90 = $self->{f90};
+    my $rounds = $a->{f90_maxrounds};
+    $f90->max_rounds(int($rounds)) if defined($rounds) && $rounds =~ /^\d+$/ && $rounds >= 10 && $rounds <= 100000;
+    my $conv = $a->{f90_conv};
+    $f90->conv_crit(sprintf('%.3g', $conv)) if defined($conv) && $conv =~ /^[\d.]+(?:[eE]-?\d+)?$/ && $conv > 0 && $conv < 1e-2;
+    my $method = $pick->('f90_method', qw(ai em_ai em));
+    if ($method eq 'em_ai') {
+        my $em = $a->{f90_em_rounds};
+        $f90->em_rounds(defined($em) && $em =~ /^\d+$/ && $em > 0 && $em < $f90->max_rounds ? int($em) : 10);
+    }
+    $f90->em_rounds($f90->max_rounds) if $method eq 'em';
+    my @r_only;
+    push @r_only, $GXE_LABEL{cs_het} if $gxe eq 'cs_het';
+    push @r_only, 'one residual variance per trial' if $pick->('residual', qw(homogeneous trial)) ne 'homogeneous';
+    push @r_only, 'the correlation of repeated measurements within a plot' if $pick->('time_within', qw(cs ar1 exp us)) ne 'cs';
+    push @r_only, 'the genotype in time (random regression / unstructured occasions)' if $pick->('time_genotype', qw(default slope us)) ne 'default';
+    push @r_only, 'maximum likelihood (ML)' if $pick->('method', qw(REML ML)) ne 'REML';
+    push @r_only, 'the R optimizer settings' if $pick->('optimizer', qw(default bobyqa Nelder_Mead nlminbwrap)) ne 'default' || defined($a->{max_iter}) && $a->{max_iter} ne '';
+    $self->warn_msg("Advanced settings fitted by the R engine only were not used with BLUPF90+: ", join('; ', @r_only), ".") if @r_only;
+    $gxe = 'cs' if $gxe eq 'cs_het';
+    if ($gxe ne 'cs' && $self->{strategy} eq 'two_stage') {
+        $self->warn_msg("Stage 2: the $GXE_LABEL{$gxe} needs the stage-1 errors as known residual variances, which BLUPF90+ cannot hold fixed reliably; it is fitted by the R engine (or in the single-stage model with BLUPF90+). Compound symmetry was fitted.");
+        $gxe = 'cs';
+    }
+    $self->{adv_gxe} = $gxe;
+    my @set = (($gxe ne 'cs' ? "genotype x trial $gxe" : ()), ($f90->max_rounds != $CXGN::BLUPF90::MAX_ROUNDS ? 'max. rounds ' . $f90->max_rounds : ()),
+               ($f90->conv_crit ne '1e-9' ? 'convergence ' . $f90->conv_crit : ()), ($method ne 'ai' ? "method $method" . ($method eq 'em_ai' ? ' (' . $f90->em_rounds . ' EM rounds)' : '') : ()));
+    $self->{advanced_used} = { gxe => $gxe, f90_method => $method, f90_maxrounds => $f90->max_rounds, f90_conv => $f90->conv_crit, ($method eq 'em_ai' ? (f90_em_rounds => $f90->em_rounds) : ()) } if @set;
+    $self->step("Advanced settings: ", join(', ', @set)) if @set;
 }
 
 # Genomic relationships (G: GBLUP; H: single-step, pedigree + genomic). Reads
@@ -1847,6 +1893,21 @@ sub _single_stage {
             push @summary, { %res, message => $e };
             next;
         }
+        # advanced: structured genotype x trial covariance (replaces accession
+        # and accession:trial)
+        if (($self->{adv_gxe} // 'cs') ne 'cs') {
+            my $why = $custom ? 'the model is a written formula' : !$grandom ? 'it needs the genotype as random effect'
+                    : n_levels(@{$d->{trial}}) < 2 ? 'there is a single trial'
+                    : $spec->{_ped_on} ? 'BLUPF90+ fits it with unrelated accessions only, not with the pedigree / genomic relationship' : '';
+            if ($why eq '') {
+                $spec->{random} = [ grep { $_ ne 'accession:trial' } @{$spec->{random}} ];
+                $spec->{gxe} = { kind => $self->{adv_gxe}, by => 'trial' };
+                $fml = join(' + ', "y ~ $self->{adv_gxe}(0 + trial | accession)", grep { $_ ne '(1|accession)' && $_ ne '(1|accession:trial)' } split(/\s*\+\s*/, ($fml =~ s/^\s*y\s*~\s*//r)));
+                my $K = n_levels(@{$d->{trial}});
+                $self->warn_once("gxe_k $t", short_trait($t), ": an unstructured covariance of $K trials has ", $K * ($K + 1) / 2, " parameters; with many trials a diagonal or compound symmetry model is more stable.") if $K > 15 && $self->{adv_gxe} eq 'us';
+            }
+            else { $self->warn_once("gxe_off $why", "The $GXE_LABEL{$self->{adv_gxe}} was not used ($why); compound symmetry was fitted."); }
+        }
         push @specs, $spec;
         push @ctx, { t => $t, d => $d, res => \%res, fml => $fml, rep_all => $rep_all };
     }
@@ -1866,7 +1927,7 @@ sub _single_stage {
         $res->{engine_used} = 'BLUPF90+';
         $res->{pedigree_used} = $f->{pedigree} ? $TRUE : $FALSE;
         $res->{relationship} = $f->{relationship} || 'I';
-        $res->{model} = pretty_model("BLUPF90+: $c->{fml}" . _rel_text($f));
+        $res->{model} = pretty_model("BLUPF90+: $c->{fml}" . _rel_text($f) . ($f->{structure} ? '; value = mean over the trials; H2 = mean reliability' : ''));
         $res->{var_e} = $vc->{Residual};
         push @{$self->{ancestor_values}}, map { +{ %$_, trait => $t } } @{ $f->{ancestors} || [] };
         foreach my $kk (sort keys %$vc) {
@@ -1895,6 +1956,7 @@ sub _single_stage {
             my $den = $res->{var_g} + $gxe_part + ($vp + $res->{var_e} / meas_per_plot($d)) / plots_per_acc($d);
             $res->{h2} = $den > 0 ? $res->{var_g} / $den : undef;
         }
+        $self->_report_structure($t, $f, $res) if $f->{structure};
         $self->add_residuals($d->{unit}, $t, $f->{resid});
         push @gv, map { +{ %$_, trait => $t } } grep { defined $_->{value} } @{$f->{values}};
         push @summary, $res;
@@ -1902,6 +1964,26 @@ sub _single_stage {
     my %order; @order{ map { short_trait($_) } @{$self->{traits}} } = 0 .. $#{$self->{traits}};
     $self->{stage2_summary} = [ sort { $order{$a->{trait}} <=> $order{$b->{trait}} } @summary ];
     $self->{genotype_values} = \@gv;
+}
+
+# results of a structured genotype x trial covariance (as the R engine):
+# var_g = variance of the value (mean over the trials), var_ge = mean variance
+# - mean covariance, H2 = mean reliability; components per trial; the matrix
+sub _report_structure {
+    my ($self, $t, $f, $res) = @_;
+    my $st = $f->{structure};
+    my $G = $st->{G}; my $K = @$G;
+    my ($dg, $off, $n_off) = (0, 0, 0);
+    for my $i (0 .. $K - 1) { $dg += $G->[$i][$i]; for my $j ($i + 1 .. $K - 1) { $off += $G->[$i][$j]; $n_off++; } }
+    $res->{var_g} = $st->{var_value};
+    $res->{var_ge} = $n_off ? $dg / $K - $off / $n_off : undef;
+    $res->{h2} = $st->{reliability};
+    my $short = short_trait($t);
+    push @{$self->{variance_components}}, { trait => $short, component => "genetic, trial $st->{labels}->[$_]", variance => $G->[$_][$_] } for 0 .. $K - 1;
+    push @{$self->{variance_components}}, { trait => $short, component => 'genetic covariance between trials (mean)', variance => $off / $n_off } if $n_off;
+    my @C = map { my $i = $_; [ map { my $v = $G->[$i][$i] * $G->[$_][$_]; $v > 0 ? $G->[$i][$_] / sqrt($v) : undef } 0 .. $K - 1 ] } 0 .. $K - 1;
+    $self->{variance_structures}->{$short} = { structure => $st->{kind}, unit => 'trial', labels => $st->{labels}, G => $G, correlations => \@C,
+                                               weights => $st->{L}, var_value => $st->{var_value}, mean_reliability => $st->{reliability} };
 }
 
 # ---------------------------------------------------------------------------
@@ -2345,6 +2427,8 @@ sub _output {
         repeated => { time => $self->{rep_time}, gxtime => $self->{rep_gxtime} ? $TRUE : $FALSE, traits => $self->{repeated_info} },
         covariates => [ map { $self->{cov_label}->{$_} } @{$self->{cov_vars}} ],
         multi_trait => $self->{multi_trait},
+        ($self->{variance_structures} ? (variance_structures => $self->{variance_structures}) : ()),
+        ($self->{advanced_used} ? (advanced => $self->{advanced_used}) : ()),
         software => $self->_software(),
         outliers => $self->{outliers},
         outlier_summary => $self->{outlier_summary},

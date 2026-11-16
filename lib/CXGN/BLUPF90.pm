@@ -90,6 +90,17 @@ has 'log' => (is => 'rw', isa => 'CodeRef', default => sub { sub { } });
 has 'max_parallel' => (is => 'rw', isa => 'Int', lazy => 1, builder => '_default_parallel');
 has 'n_fits' => (is => 'rw', isa => 'Int', default => 0);
 has 'numeric' => (is => 'rw', isa => 'ArrayRef', default => sub { [] });
+# REML control (advanced settings of the Analysis Pipeline); the defaults
+# write the same parameter files as before these settings existed
+has 'max_rounds' => (is => 'rw', isa => 'Int', default => sub { $MAX_ROUNDS });
+has 'conv_crit' => (is => 'rw', isa => 'Str', default => '1e-9');
+has 'em_rounds' => (is => 'rw', isa => 'Int', default => 0);    # EM-REML rounds before AI-REML (>= max_rounds: EM-REML only)
+
+# REML options of a parameter file
+sub _reml_options {
+    my $self = shift;
+    return ('OPTION conv_crit ' . $self->conv_crit, 'OPTION maxrounds ' . $self->max_rounds, ($self->em_rounds > 0 ? ('OPTION EM-REML ' . $self->em_rounds) : ()));
+}
 
 sub _default_parallel {
     my $n = $ENV{BLUPF90_PARALLEL};
@@ -241,6 +252,13 @@ sub _fmt { my $v = shift; return defined($v) ? (0 + sprintf('%.15g', $v)) : -999
 #   ped              { id => [names], s => [codes], d => [codes] }: the
 #                    genotype follows the pedigree (add_animal); its first
 #                    ids are the accessions of the data
+#   gxe              { kind => 'us' | 'diag', by => 'trial' }: the genotype
+#                    effect becomes one effect per level of 'by' (random
+#                    regression of the accession on the level indicators),
+#                    with an unstructured or diagonal covariance among the
+#                    levels; the genotype value is the mean over the levels,
+#                    its standard error exact from the prediction error
+#                    covariances (store_pev_pec). Genotype random, no pedigree.
 #   label            folder name
 # Returns a job (hashref) for run() / read(); dies on an impossible model.
 sub prepare {
@@ -253,6 +271,8 @@ sub prepare {
     die "a pedigree needs the genotype as random effect\n" if $ped && !$grandom;
     my $genomic = $spec->{genomic};
     die "genomic relationships need the pedigree coding of the genotyped accessions\n" if $genomic && !$ped;
+    my $gxe = $grandom && $spec->{gxe} ? $spec->{gxe} : undef;
+    die "a structured genotype x environment covariance is fitted with unrelated accessions only\n" if $gxe && $ped;
     my @notes;
 
     my $acc = _codes($d, ['accession'], $n);
@@ -373,7 +393,7 @@ sub prepare {
             $rcodes{accession} = { code => [ map { defined($_) ? $pos{$_} // 0 : 0 } @{$d->{accession}} ], n => scalar(@{$ped->{id}}), labels => $ped->{id} };
         }
         else { $rcodes{accession} = $acc; }
-        push @rnames, 'accession';
+        push @rnames, 'accession' if !$gxe;
     }
     # random effects with a supplied covariance (user_cov: name -> {file,
     # levels, key}: covariance over 'levels', the level key of every record)
@@ -392,6 +412,19 @@ sub prepare {
         push @rnames, $rt;
     }
     push @eff, $add_col->("r_$_", $rcodes{$_}->{code}) . " $rcodes{$_}->{n} cross" for @rnames;
+    # structured genotype x environment: accession nested in the indicator of
+    # every level (last effects, so the other random effects keep their numbers)
+    my ($gxe_first, $gxe_lv);
+    if ($gxe) {
+        $gxe_lv = _codes($d, [ $gxe->{by} ], $n);
+        die "the genotype x $gxe->{by} covariance needs at least two levels of $gxe->{by}\n" if $gxe_lv->{n} < 2;
+        my $apos = $add_col->('acc_g', $acc->{code});
+        $gxe_first = @eff + 1;
+        for my $k (1 .. $gxe_lv->{n}) {
+            my $ipos = $add_col->("in_$gxe->{by}_$k", [ map { $gxe_lv->{code}->[$_] == $k ? 1 : 0 } 0 .. $n - 1 ]);
+            push @eff, "$ipos $acc->{n} cov $apos";
+        }
+    }
 
     $self->n_fits($self->n_fits + 1);
     (my $safe = $spec->{label} // 'model') =~ s/[^A-Za-z0-9_.-]+/_/g;
@@ -403,10 +436,11 @@ sub prepare {
     close($D);
     _write_lines("$wd/data_columns.txt", map { $_->[0] } @cols);
 
-    my $vce = @rnames ? 1 : 0;
-    my $v0 = $vce ? (var(@{$d->{y}}) || 1e-6) / (@rnames + 1) : 1;
+    my $vce = (@rnames || $gxe) ? 1 : 0;
+    my $v0 = $vce ? (var(@{$d->{y}}) || 1e-6) / (@rnames + ($gxe ? 1 : 0) + 1) : 1;
     $v0 = 1e-6 if $v0 < 1e-6;
-    my $model = "y ~ " . join(' + ', ($grandom ? '(1|accession)' : 'accession'), @labs, map { "(1|$_)" } grep { $_ ne 'accession' } @rnames);
+    my $gterm = $gxe ? "$gxe->{kind}(0 + $gxe->{by} | accession)" : $grandom ? '(1|accession)' : 'accession';
+    my $model = "y ~ " . join(' + ', $gterm, @labs, map { "(1|$_)" } grep { $_ ne 'accession' } @rnames);
     my @par = ('DATAFILE', 'data.txt', 'NUMBER_OF_TRAITS', 1, 'NUMBER_OF_EFFECTS', scalar(@eff),
                'OBSERVATION(S)', 1, 'WEIGHT(S)', ($spec->{weights} ? 2 : ''),
                'EFFECTS: POSITIONS_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT[EFFECT NESTED]', @eff,
@@ -425,6 +459,14 @@ sub prepare {
         push @par, 'RANDOM_GROUP', $first_random + $k, 'RANDOM_TYPE', ($animal ? 'add_an_upginb' : 'diagonal'),
                    'FILE', ($animal ? 'pedigree.txt' : ''), '(CO)VARIANCES', sprintf('%.10g', $v0);
     }
+    if ($gxe) {
+        # one group: unstructured, or diagonal (zero starting covariances stay
+        # zero in AI-REML); prediction error covariances of the group
+        my $K = $gxe_lv->{n};
+        push @par, 'RANDOM_GROUP', join(' ', $gxe_first .. $gxe_first + $K - 1), 'RANDOM_TYPE', 'diagonal', 'FILE', '', '(CO)VARIANCES',
+             map { my $i = $_; join(' ', map { sprintf('%.10g', $i == $_ ? $v0 : ($gxe->{kind} eq 'us' ? 0.5 * $v0 : 0)) } 1 .. $K) } 1 .. $K;
+        push @par, "OPTION store_pev_pec $gxe_first";
+    }
     push @par, 'OPTION method VCE' if $vce;
     # YAMS (sparse supernodal factorization) pays off on large and pedigree models only
     push @par, 'OPTION use_yams' if $vce && ($ped || $n > 20000);
@@ -434,7 +476,7 @@ sub prepare {
         push @par, "OPTION SNP_file $snp", sprintf('OPTION minfreq %.4g', $genomic->{minfreq} // 0.05), sprintf('OPTION callrate %.4g', $genomic->{callrate} // 0.90);
     }
     push @par, 'OPTION sol se', 'OPTION missing -999999999', 'OPTION residual';
-    push @par, 'OPTION conv_crit 1e-9', "OPTION maxrounds $MAX_ROUNDS" if $vce;
+    push @par, $self->_reml_options() if $vce;
     _write_lines("$wd/f90.par", @par);
     _write_lines("$wd/README.txt", "# BLUPF90+ parameter file written by the Breedbase Analysis Pipeline (BLUPF90+ engine)",
                  "# model: $model" . ($dense ? "   [fixed effects other than accession as centred covariates]" : ''),
@@ -458,6 +500,7 @@ sub prepare {
         weights => $spec->{weights}, y => $d->{y},
         mean_by => $spec->{fixed_mean_by} ? $d->{ $spec->{fixed_mean_by} } : undef,
         n_fixed_other => scalar(@labs),
+        ($gxe ? (gxe => { kind => $gxe->{kind}, by => $gxe->{by}, first => $gxe_first, K => $gxe_lv->{n}, labels => $gxe_lv->{labels} }) : ()),
     };
 }
 
@@ -537,12 +580,14 @@ sub _round_limit {
     my @delta = map { /In round\s+\d+\s+convergence=\s*(\S+)/ ? $1 + 0 : () } @$out;
     my $last = @delta ? $delta[-1] : undef;
     if (defined($last) && $last < $STABLE_DELTA) {
-        return sprintf("AI-REML reached the %d-round limit with the estimates already settled (last convergence value %.1e); the results are reliable", $MAX_ROUNDS, $last);
+        return sprintf("AI-REML reached the %d-round limit with the estimates already settled (last convergence value %.1e); the results are reliable", $self->max_rounds, $last);
     }
     if (!$job->{em_refit}) {
         my $wd = $job->{dir};
         my @par = grep { !/^OPTION (maxrounds|EM-REML)\b/ } _read_lines("$wd/f90.par");
-        _write_lines("$wd/f90.par", @par, "OPTION EM-REML $EM_ROUNDS", 'OPTION maxrounds ' . (2 * $MAX_ROUNDS));
+        my $em = $self->em_rounds > $EM_ROUNDS ? $self->em_rounds : $EM_ROUNDS;
+        $em = 2 * $self->max_rounds if $self->em_rounds >= $self->max_rounds;    # EM-REML only
+        _write_lines("$wd/f90.par", @par, "OPTION EM-REML $em", 'OPTION maxrounds ' . (2 * $self->max_rounds));
         rename("$wd/blupf90.out", "$wd/blupf90_ai-reml.out");
         unlink("$wd/solutions");
         my $prog = $self->program() or return;
@@ -554,7 +599,7 @@ sub _round_limit {
         return;
     }
     return sprintf("estimates still changing after a refit with %d EM-REML rounds first (%d rounds in all, last convergence value %s); a variance component is probably close to zero, so the variance estimates of this fit are approximate",
-                   $EM_ROUNDS, 2 * $MAX_ROUNDS, defined($last) ? sprintf('%.1e', $last) : 'unknown');
+                   $EM_ROUNDS, 2 * $self->max_rounds, defined($last) ? sprintf('%.1e', $last) : 'unknown');
 }
 
 # Results of a fit run by run():
@@ -610,20 +655,21 @@ sub read {
         die "blupf90+ did not converge: " . $tail->() . "\n" if !defined($fe);
         for my $i ($fe .. $#out) {
             if ($out[$i] =~ /variance\(s\) for effect\s+(\d+)/) {
+                if ($job->{gxe} && $1 >= $job->{gxe}->{first}) { $job->{gxe}->{G} //= _matrix_flow(\@out, $i, $job->{gxe}->{K}); next; }
                 my $k = $1 - $job->{first_random};
                 ($vc{ $job->{rnames}->[$k] } = $out[$i + 1]) =~ s/^\s+|\s+$//g;
             }
             if ($out[$i] =~ /Residual variance/ && !defined($vc{Residual})) { ($vc{Residual} = $out[$i + 1]) =~ s/^\s+|\s+$//g; }
         }
         $vc{$_} += 0 for keys %vc;
-        my $limit = $job->{em_refit} ? 2 * $MAX_ROUNDS : $MAX_ROUNDS;
+        my $limit = $job->{em_refit} ? 2 * $self->max_rounds : $self->max_rounds;
         if ($rounds >= $limit) {
             my $note = $self->_round_limit($job, \@out);
             return $self->read($job) if !defined($note);    # refitted with EM-REML first
             push @notes, $note;
         }
         elsif ($job->{em_refit}) {
-            push @notes, "AI-REML did not settle in $MAX_ROUNDS rounds; refitted with $EM_ROUNDS EM-REML rounds first, which converged";
+            push @notes, "AI-REML did not settle in " . $self->max_rounds . " rounds; refitted with $EM_ROUNDS EM-REML rounds first, which converged";
         }
     }
     else {
@@ -675,6 +721,35 @@ sub read {
         my $labels = $job->{rcodes}->{$name}->{labels};
         $random{$name} = [ map { { level => $labels->[$_ - 1], solution => $u->{$_}->[0], se => $u->{$_}->[1] } } sort { $a <=> $b } keys %$u ];
     }
+    my $gxe_out;
+    if (my $gx = $job->{gxe}) {
+        # genotype value: mean over the levels; exact standard error from the
+        # prediction error covariances of the group (level + upper triangle)
+        my $K = $gx->{K};
+        die "blupf90+ returned no genotype x $gx->{by} covariance matrix\n" if !$gx->{G};
+        my %pec;
+        if (open(my $P, '<', "$wd/pev_pec_bf90")) {
+            while (my $l = <$P>) {
+                $l =~ s/^\s+|\s+$//g;
+                my ($lv, @v) = split /\s+/, $l;
+                next if !defined($lv) || @v != $K * ($K + 1) / 2;
+                my $p = 0; my $tot = 0;
+                for my $i (0 .. $K - 1) { for my $j ($i .. $K - 1) { $tot += ($i == $j ? 1 : 2) * $v[$p++]; } }
+                $pec{$lv} = $tot / ($K * $K);
+            }
+            close($P);
+        }
+        my $labels = $job->{acc}->{labels};
+        my @lv = sort { $a <=> $b } uniq_keys(map { keys %{ $sol{$_} || {} } } $gx->{first} .. $gx->{first} + $K - 1);
+        $random{accession} = [ map { my $l = $_; my $g = 0; $g += ($sol{$_}->{$l} ? $sol{$_}->{$l}->[0] : 0) for $gx->{first} .. $gx->{first} + $K - 1;
+                                     +{ level => $labels->[$l - 1], solution => $g / $K, se => (defined($pec{$l}) && $pec{$l} >= 0 ? sqrt($pec{$l}) : undef) } } @lv ];
+        my $G = $gx->{G};
+        my $vt = 0; for my $i (0 .. $K - 1) { $vt += $G->[$i][$_] for 0 .. $K - 1; } $vt /= $K * $K;
+        my @rel = map { 1 - $pec{$_} / $vt } grep { defined $pec{$_} } @lv;
+        $gxe_out = { kind => $gx->{kind}, labels => $gx->{labels}, G => $G, L => [ (1 / $K) x $K ], var_value => $vt,
+                     reliability => (@rel && $vt > 0 ? mean(map { $_ < 0 ? 0 : $_ } @rel) : undef) };
+        unlink("$wd/pev_pec_bf90");
+    }
     my $mu;
     if ($job->{mean_by}) {
         my (%s, %c);
@@ -699,6 +774,7 @@ sub read {
     my $sec = -e "$wd/elapsed.txt" ? (_read_lines("$wd/elapsed.txt"))[0] + 0 : undef;
     $self->log->(sprintf("  blupf90+ %s: %d records, %s, %.1f s", $job->{label}, $n, $job->{vce} ? "$rounds AI-REML rounds" : 'least squares', $sec // 0));
     return { values => \@values, vc => \%vc, resid => \@resid, random => \%random, mu => $mu, notes => \@notes, (%gs ? (genomic => \%gs) : ()), ($job->{inbreeding} ? (inbreeding => $job->{inbreeding}) : ()), ($job->{inbreeding} ? (inbreeding => $job->{inbreeding}) : ()),
+             ($gxe_out ? (structure => $gxe_out) : ()),
              rounds => $rounds, seconds => $sec, dir => $wd, engine => 'BLUPF90+', model => $job->{model} };
 }
 
@@ -767,7 +843,7 @@ sub prepare_mt {
                'RANDOM_GROUP', 2, 'RANDOM_TYPE', ($ped ? 'add_an_upginb' : 'diagonal'), 'FILE', ($ped ? 'pedigree.txt' : ''),
                '(CO)VARIANCES', $start->(),
                'OPTION method VCE', 'OPTION sol se', 'OPTION missing -999999999', 'OPTION store_pev_pec 2',
-               'OPTION conv_crit 1e-9', "OPTION maxrounds $MAX_ROUNDS");
+               $self->_reml_options());
     push @par, 'OPTION use_yams' if $ped;
     if ($genomic) {
         my $snp = File::Spec->abs2rel(File::Spec->rel2abs($genomic->{snp_file}), $wd);
@@ -797,6 +873,20 @@ sub _matrix_after {
     return \@m;
 }
 
+# K x K matrix after a header line, rows possibly wrapped over several lines
+# (blupf90+ prints at most 9 values per line)
+sub _matrix_flow {
+    my ($out, $i, $K) = @_;
+    my @v;
+    for (my $r = $i + 1; $r <= $#$out && @v < $K * $K; $r++) {
+        (my $l = $out->[$r]) =~ s/^\s+|\s+$//g;
+        last if $l eq '' || $l !~ /^-?[\d.]/;
+        push @v, map { $_ + 0 } split /\s+/, $l;
+    }
+    die "blupf90+ returned an incomplete covariance matrix\n" if @v != $K * $K;
+    return [ map { [ @v[ $_ * $K .. $_ * $K + $K - 1 ] ] } 0 .. $K - 1 ];
+}
+
 # Results of a multi-trait fit:
 #   G0, R0       K x K genetic and residual covariance matrices
 #   mu           per trait: mean of the trial solutions
@@ -820,14 +910,14 @@ sub read_mt {
     }
     die "blupf90+ returned no covariance matrices\n" if !$G0 || !$R0;
     my $rounds = scalar(grep { /In round/ } @out);
-    my $limit = $job->{em_refit} ? 2 * $MAX_ROUNDS : $MAX_ROUNDS;
+    my $limit = $job->{em_refit} ? 2 * $self->max_rounds : $self->max_rounds;
     if ($rounds >= $limit) {
         my $note = $self->_round_limit($job, \@out);
         return $self->read_mt($job) if !defined($note);
         push @notes, $note;
     }
     elsif ($job->{em_refit}) {
-        push @notes, "AI-REML did not settle in $MAX_ROUNDS rounds; refitted with $EM_ROUNDS EM-REML rounds first, which converged";
+        push @notes, "AI-REML did not settle in " . $self->max_rounds . " rounds; refitted with $EM_ROUNDS EM-REML rounds first, which converged";
     }
 
     my (%tsol, %asol);
@@ -890,6 +980,8 @@ sub fit_all {
     $self->run([ grep { !$_->{error} } @jobs ]);
     return [ map { my $j = $_; $j->{error} ? { error => _clean($j->{error}) } : (eval { $self->read($j) } // { error => _clean($@) }) } @jobs ];
 }
+
+sub uniq_keys { my %s; return grep { !$s{$_}++ } @_; }
 
 sub _clean { my $m = shift // ''; $m =~ s/\s+$//; $m =~ s/ at \S+ line \d+\.?$//; return $m; }
 

@@ -263,6 +263,10 @@ $license_json =~ s/</\\u003c/g;
               <span class="sf-option-text">The whole analysis runs without R: Breedbase (Perl) writes the models for BLUPF90+ (Fortran, sparse AI-REML; Misztal et al.) and fits the models of all trials and traits in parallel. Much faster on large multi-environment datasets and pedigrees; needed for pedigree (A matrix) models. Row &times; column trials get row / column effects and linear trends instead of SpATS (R only); custom formulas take random intercepts only. Parameter and data files are downloadable with the results.</span></label>
           </div>
           <div id="sf_engine_note"></div>
+          <div class="sf-adv-row">
+            <button class="btn btn-default btn-sm" id="sf_adv_btn"><span class="glyphicon glyphicon-cog"></span> Advanced settings <span class="label label-info" id="sf_adv_badge" style="display:none"></span></button>
+            <small class="sf-muted" id="sf_adv_summary">Variance structures (G&times;E, residuals, repeated measurements) and model fitting. Defaults are used unless you change them.</small>
+          </div>
         </div>
 
         <div class="sf-card" id="sf_stage1_card">
@@ -720,6 +724,117 @@ $license_json =~ s/</\\u003c/g;
   </div>
 </div>
 
+<!-- ===================== advanced settings modal ===================== -->
+<div class="modal fade" id="sf_adv_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title"><span class="glyphicon glyphicon-cog"></span>&nbsp; Advanced model settings <small id="sf_adv_engine_label"></small></h4>
+      </div>
+      <div class="modal-body sf-adv">
+        <p class="sf-help">Every setting starts at the default used by the basic analysis. Settings the chosen engine or strategy cannot fit are disabled and say why. Settings the data cannot support (for example a single trial) fall back to the default, with a note in the analysis log.</p>
+
+        <h4>Genotype &times; environment covariance <small>accession &times; trial</small></h4>
+        <select class="form-control input-sm sf-adv-opt" id="sf_adv_gxe">
+          <option value="cs">Compound symmetry (default): one genetic variance and one G&times;E variance for all trials</option>
+          <option value="cs_het">Heterogeneous compound symmetry: one genetic variance per trial, one common correlation</option>
+          <option value="diag">Diagonal: one genetic variance per trial, trials uncorrelated</option>
+          <option value="us">Unstructured: a genetic variance per trial and a genetic covariance for every pair of trials</option>
+        </select>
+        <div class="sf-help" id="sf_adv_gxe_help"></div>
+
+        <h4>Residual variance</h4>
+        <select class="form-control input-sm sf-adv-opt" id="sf_adv_residual">
+          <option value="homogeneous">Homogeneous (default): one residual variance</option>
+          <option value="trial">Heterogeneous: one residual variance per trial</option>
+        </select>
+        <div class="sf-help" id="sf_adv_residual_help"></div>
+
+        <h4>Repeated measurements / time series <small>traits set to <i>all measurements</i></small></h4>
+        <div class="row">
+          <div class="col-sm-6">
+            <label class="sf-label">Measurements of the same plot</label>
+            <select class="form-control input-sm sf-adv-opt" id="sf_adv_time_within">
+              <option value="cs">Plot effect (default): equal correlation between all measurements of a plot</option>
+              <option value="ar1">AR(1): correlation decays between successive measurements</option>
+              <option value="exp">Exponential in days: AR(1) for unevenly spaced dates</option>
+              <option value="us">Unstructured: a variance per measurement occasion and a covariance per pair (up to 8 occasions)</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="sf-label">Genotype over time</label>
+            <select class="form-control input-sm sf-adv-opt" id="sf_adv_time_genotype">
+              <option value="default">Accession effect (default), with genotype &times; date if chosen</option>
+              <option value="slope">Random regression: each accession has its own intercept and slope in time (correlated)</option>
+              <option value="us">Unstructured: a genetic variance per occasion and a genetic covariance per pair (up to 8 occasions)</option>
+            </select>
+          </div>
+        </div>
+        <div class="sf-help" id="sf_adv_time_help"></div>
+
+        <h4>Model fitting</h4>
+        <div class="row" id="sf_adv_fit_r">
+          <div class="col-sm-4">
+            <label class="sf-label">Estimation</label>
+            <select class="form-control input-sm sf-adv-opt" id="sf_adv_method">
+              <option value="REML">REML (default)</option>
+              <option value="ML">Maximum likelihood (ML)</option>
+            </select>
+          </div>
+          <div class="col-sm-4">
+            <label class="sf-label">Optimizer (lme4)</label>
+            <select class="form-control input-sm sf-adv-opt" id="sf_adv_optimizer">
+              <option value="default">Default (nloptwrap)</option>
+              <option value="bobyqa">bobyqa</option>
+              <option value="Nelder_Mead">Nelder-Mead</option>
+              <option value="nlminbwrap">nlminb</option>
+            </select>
+          </div>
+          <div class="col-sm-4">
+            <label class="sf-label">Maximum iterations</label>
+            <input type="number" class="form-control input-sm sf-adv-opt" id="sf_adv_max_iter" min="10" step="100" placeholder="default" />
+          </div>
+        </div>
+        <div class="row" id="sf_adv_fit_f90">
+          <div class="col-sm-3">
+            <label class="sf-label">REML algorithm</label>
+            <select class="form-control input-sm sf-adv-opt" id="sf_adv_f90_method">
+              <option value="ai">AI-REML (default)</option>
+              <option value="em_ai">EM-REML first, then AI-REML</option>
+              <option value="em">EM-REML only</option>
+            </select>
+          </div>
+          <div class="col-sm-3">
+            <label class="sf-label">EM-REML rounds first</label>
+            <input type="number" class="form-control input-sm sf-adv-opt" id="sf_adv_f90_em_rounds" min="1" step="1" placeholder="10" />
+          </div>
+          <div class="col-sm-3">
+            <label class="sf-label">Maximum rounds</label>
+            <input type="number" class="form-control input-sm sf-adv-opt" id="sf_adv_f90_maxrounds" min="10" step="50" placeholder="200" />
+          </div>
+          <div class="col-sm-3">
+            <label class="sf-label">Convergence criterion</label>
+            <select class="form-control input-sm sf-adv-opt" id="sf_adv_f90_conv">
+              <option value="">1e-9 (default)</option>
+              <option value="1e-7">1e-7</option>
+              <option value="1e-8">1e-8</option>
+              <option value="1e-10">1e-10</option>
+              <option value="1e-12">1e-12</option>
+            </select>
+          </div>
+        </div>
+        <div class="sf-help" id="sf_adv_fit_help"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-link pull-left" id="sf_adv_reset"><span class="glyphicon glyphicon-repeat"></span> Reset to defaults</button>
+        <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="sf_adv_apply"><span class="glyphicon glyphicon-ok"></span> Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== save list modal ===================== -->
 <div class="modal fade" id="sf_list_modal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
@@ -861,6 +976,11 @@ jQuery(document).ready(function() {
 .sf-stat-acc.sf-acc-low .v { color: #9b2c2c; }
 .sf-mt-cor td, .sf-mt-cor th { text-align: center; font-size: 12px; }
 .sf-mt-cor tbody th { text-align: left; white-space: nowrap; }
+.sf-adv-row { margin-top: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sf-adv h4 { margin-top: 18px; font-size: 15px; }
+.sf-adv h4:first-of-type { margin-top: 6px; }
+.sf-adv .sf-help { margin-top: 4px; }
+.sf-adv select option:disabled { color: #aaa; }
 .sf-trait-check { margin: 6px 0 0; padding-left: 20px; }
 .sf-apply-all-msg { font-size: 12px; color: #2b7a4b; margin-left: 4px; }
 .sf-run-progress { font-size: 14px; }

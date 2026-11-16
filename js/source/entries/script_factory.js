@@ -33,6 +33,7 @@ let $;
 let cfg = {};
 const state = {
     step: 1,
+    advanced: {},           // advanced settings changed from their defaults (dialog of the model engine card)
     dataset: null,          // response of /prepare
     traits: [],             // selected full trait names
     plotRaw: null,          // response of /plot_data (plot means and every repeated measurement)
@@ -177,6 +178,13 @@ function setRadio(name, value) {
 }
 
 function buildRecipe() {
+    const r = buildBaseRecipe();
+    const adv = advRecipe();
+    if (adv) r.advanced = adv;
+    return r;
+}
+
+function buildBaseRecipe() {
     const index = { enabled: $('#sf_index_enabled').is(':checked'), method: radio('sf_index_method'), selection_pct: Number($('#sf_selection_pct').val()), traits: {} };
     state.traits.forEach(t => {
         const c = state.indexCfg[t] || { weight: 0, direction: 'increase' };
@@ -278,6 +286,7 @@ function applyRecipe(r) {
     if (s2.genotype) $('#sf_stage2_genotype').val(s2.genotype);
     if (s2.weighting) $('#sf_stage2_weighting').val(s2.weighting);
     applySingle(r.single || {});
+    state.advanced = cleanAdvanced(r.advanced);
     // covariates: shared by both strategies since version 1.7 (single.covariates before)
     if (r.covariates) {
         state.singleCov = {};
@@ -1528,9 +1537,193 @@ function renderModelPreview() {
     const eng = effectiveEngine();
     txt += '\n# engine: ' + (eng === 'blupf90' ? 'BLUPF90+ without R (Breedbase CXGN::BLUPF90, blupf90+ AI-REML; independent models in parallel)' + (two ? '; row x column trials get a SpATS-like P-spline surface' : '')
         : 'R (lme4' + (two ? ' / SpATS' : '') + (['pedigree', 'genomic', 'single_step'].indexOf(g.model) >= 0 ? '; relationship matrix with AGHmatrix' : '') + ')');
+    const advTxt = advPreview();
+    if (advTxt) txt += '\n# advanced settings: ' + advTxt;
     $('#sf_model_preview').html('<div class="sf-formula">' + esc(txt) + '</div>');
+    renderAdvSummary();
     renderGeneticInfo();
     renderSuggestion();
+}
+
+// ---------------------------------------------------------------------------
+// Advanced settings (dialog of the model engine card). Only settings changed
+// from their default and usable by the chosen engine and strategy go into
+// the recipe (recipe.advanced); with none, the recipe is the basic one.
+// ---------------------------------------------------------------------------
+const ADV_DEFAULTS = { gxe: 'cs', residual: 'homogeneous', time_within: 'cs', time_genotype: 'default', method: 'REML', optimizer: 'default', max_iter: '',
+    f90_method: 'ai', f90_em_rounds: '', f90_maxrounds: '', f90_conv: '' };
+const ADV_KEYS = { lme4: ['gxe', 'residual', 'time_within', 'time_genotype', 'method', 'optimizer', 'max_iter'], blupf90: ['gxe', 'f90_method', 'f90_em_rounds', 'f90_maxrounds', 'f90_conv'] };
+const ADV_NUMERIC = ['max_iter', 'f90_em_rounds', 'f90_maxrounds'];
+const ADV_LABEL = {
+    gxe: { cs_het: 'G×E heterogeneous compound symmetry', diag: 'G×E diagonal', us: 'G×E unstructured' },
+    residual: { trial: 'one residual variance per trial' },
+    time_within: { ar1: 'AR(1) within plots', exp: 'exponential time correlation within plots', us: 'unstructured covariance within plots' },
+    time_genotype: { slope: 'random regression of the genotype in time', us: 'unstructured genetic covariance among occasions' },
+    method: { ML: 'ML' }, optimizer: { bobyqa: 'optimizer bobyqa', Nelder_Mead: 'optimizer Nelder-Mead', nlminbwrap: 'optimizer nlminb' },
+    f90_method: { em_ai: 'EM-REML then AI-REML', em: 'EM-REML only' }
+};
+const REL_MODELS = ['pedigree', 'genomic', 'single_step'];
+
+function cleanAdvanced(a) {
+    const out = {};
+    if (!a || typeof a !== 'object') return out;
+    Object.keys(ADV_DEFAULTS).forEach(k => {
+        if (a[k] === undefined || a[k] === null || a[k] === '' || String(a[k]) === String(ADV_DEFAULTS[k])) return;
+        out[k] = ADV_NUMERIC.indexOf(k) >= 0 ? Number(a[k]) : String(a[k]);
+    });
+    return out;
+}
+
+// why an option cannot be used with the current engine / strategy / model
+// ('' when it can); the server applies the same rules (and falls back with a
+// warning when the data cannot support a choice)
+function advBlocked(key, value) {
+    if (value === ADV_DEFAULTS[key]) return '';
+    const eng = effectiveEngine(), two = radio('sf_strategy') === 'two_stage';
+    const custom = !two && radio('sf_single_mode') === 'custom';
+    const rel = REL_MODELS.indexOf(geneticRecipe().model) >= 0;
+    const random = two ? $('#sf_stage2_genotype').val() === 'random' : (custom ? true : $('#sf_single_genotype').val() === 'random');
+    const tmb = key === 'gxe' || key === 'residual' || key === 'time_within' || key === 'time_genotype';
+    if (eng === 'lme4' && tmb && !cfg.glmmtmb_available) return 'needs the R package glmmTMB, not installed on this server';
+    if (key === 'gxe') {
+        if (!random) return 'needs the genotype as random effect';
+        if (custom) return 'not with a written formula';
+        if (eng === 'blupf90' && value === 'cs_het') return 'R engine only';
+        if (eng === 'blupf90' && two) return 'with BLUPF90+ in the single-stage model only (two stages: R engine)';
+        if (rel) return 'with unrelated accessions only (genetic model: identity)';
+    }
+    if (key === 'residual') {
+        if (eng === 'blupf90') return 'R engine only';
+        if (two) return 'single stage only (in stage 2 the residual is the stage-1 error)';
+    }
+    if (key === 'time_within' && eng === 'blupf90') return 'R engine only';
+    if (key === 'time_genotype') {
+        if (eng === 'blupf90') return 'R engine only';
+        if (two) return 'single stage only';
+        if (custom) return 'not with a written formula';
+        if (!random) return 'needs the genotype as random effect';
+        if (rel) return 'with unrelated accessions only (genetic model: identity)';
+    }
+    return '';
+}
+
+// settings of state.advanced the run will use
+function advRecipe() {
+    const a = state.advanced || {};
+    const eng = effectiveEngine();
+    const out = {};
+    ADV_KEYS[eng].forEach(k => {
+        if (a[k] === undefined || advBlocked(k, String(a[k]))) return;
+        if (k === 'f90_em_rounds' && a.f90_method !== 'em_ai') return;
+        out[k] = a[k];
+    });
+    return Object.keys(out).length ? out : null;
+}
+
+function advDescribe(a) {
+    const parts = [];
+    Object.keys(a || {}).forEach(k => {
+        const v = a[k];
+        if (ADV_LABEL[k] && ADV_LABEL[k][v]) parts.push(ADV_LABEL[k][v]);
+        else if (k === 'max_iter') parts.push('max. ' + v + ' iterations');
+        else if (k === 'f90_maxrounds') parts.push('max. ' + v + ' rounds');
+        else if (k === 'f90_em_rounds') parts.push(v + ' EM-REML rounds');
+        else if (k === 'f90_conv') parts.push('convergence ' + v);
+    });
+    return parts.join(', ');
+}
+
+function advPreview() { return advDescribe(advRecipe()); }
+
+function renderAdvSummary() {
+    const used = advRecipe();
+    const all = Object.keys(state.advanced || {}).length;
+    const n = used ? Object.keys(used).length : 0;
+    $('#sf_adv_badge').toggle(n > 0).text(n ? n + ' changed' : '');
+    let txt = n ? '<b>Using:</b> ' + esc(advDescribe(used)) + '.' : 'Variance structures (G&times;E, residuals, repeated measurements) and model fitting. Defaults are used unless you change them.';
+    if (all > n) txt += ' <span class="sf-warn-text">' + (all - n) + ' setting(s) not used with this engine / strategy (open the dialog to see why).</span>';
+    $('#sf_adv_summary').html(txt);
+}
+
+// dialog: controls <-> settings, options the engine cannot fit disabled
+function advFillDialog(a) {
+    Object.keys(ADV_DEFAULTS).forEach(k => $('#sf_adv_' + k).val(a[k] !== undefined ? String(a[k]) : ADV_DEFAULTS[k]));
+    advRefreshDialog();
+}
+
+function advRefreshDialog() {
+    const eng = effectiveEngine();
+    $('#sf_adv_engine_label').text(eng === 'blupf90' ? 'BLUPF90+ engine' : 'R engine');
+    ['gxe', 'residual', 'time_within', 'time_genotype'].forEach(k => {
+        const sel = $('#sf_adv_' + k);
+        sel.find('option').each(function() {
+            const why = advBlocked(k, $(this).val());
+            $(this).prop('disabled', !!why);
+            const base = $(this).data('label') || $(this).text();
+            $(this).data('label', base).text(why ? base + '  [' + why + ']' : base);
+        });
+        if (sel.find('option:selected').prop('disabled')) sel.val(ADV_DEFAULTS[k]);
+    });
+    $('#sf_adv_fit_r').toggle(eng === 'lme4');
+    $('#sf_adv_fit_f90').toggle(eng === 'blupf90');
+    $('#sf_adv_f90_em_rounds').prop('disabled', $('#sf_adv_f90_method').val() !== 'em_ai');
+    const gxe = $('#sf_adv_gxe').val();
+    const two = radio('sf_strategy') === 'two_stage';
+    $('#sf_adv_gxe_help').html(
+        (gxe === 'cs' ? 'The basic model: <code>(1|accession) + (1|accession:trial)</code>. ' :
+            'The accession effect becomes one effect per trial, <code>' + (gxe === 'cs_het' ? 'cs' : gxe) + '(0 + trial | accession)</code>' + (eng === 'blupf90' ? ' (BLUPF90+: random regression on the trial indicators)' : ' (glmmTMB)') +
+            '; the value of an accession is its mean over the trials (also predicted for trials where it was not tested, through the genetic covariances); H&sup2; is the mean reliability. ' +
+            (two ? 'In stage 2 the stage-1 standard errors are used as known residual variances. ' : 'It replaces the genotype &times; trial term of the builder. ') +
+            (gxe === 'us' ? 'An unstructured matrix of K trials has K(K+1)/2 parameters: with many trials prefer diagonal or heterogeneous compound symmetry. ' : '') +
+            'The results show the genetic variance of every trial and the genetic correlations between trials.'));
+    $('#sf_adv_residual_help').html($('#sf_adv_residual').val() === 'trial' ? 'Trials differ in precision: each gets its own residual variance (glmmTMB <code>dispformula = ~ 0 + trial</code>).' : '');
+    const tw = $('#sf_adv_time_within').val(), tg = $('#sf_adv_time_genotype').val();
+    $('#sf_adv_time_help').html('Traits measured several times per plot and set to <i>all measurements</i> under <b>Repeated measurements</b> (other traits are not affected). ' +
+        (eng === 'blupf90' ? '<b>These structures are fitted by the R engine (glmmTMB).</b> ' : '') +
+        (tw === 'ar1' ? 'AR(1): <code>ar1(0 + occasion | plot)</code> replaces the plot effect; the occasion is the k-th measurement date of the trial. ' : '') +
+        (tw === 'exp' ? 'Exponential: <code>exp(0 + days | plot)</code>, correlation &rho;<sup>&Delta;days</sup>, for dates at uneven intervals. ' : '') +
+        (tw === 'us' ? 'Unstructured: <code>us(0 + occasion | plot)</code> (it holds the residual). ' : '') +
+        (tw !== 'cs' ? 'Used in stage 1 (two stages) and in the single-stage model. ' : '') +
+        (tg === 'slope' ? 'Random regression: <code>us(1 + time | accession)</code>, time scaled 0-1 over the season; the value of an accession is its predicted value at the mean measurement time. ' : '') +
+        (tg === 'us' ? 'Unstructured over occasions: <code>us(0 + occasion | accession)</code>; the value is the mean over the occasions (for a full multi-trait model choose <i>multi-trait</i> under Repeated measurements). ' : ''));
+    $('#sf_adv_fit_help').html(eng === 'blupf90'
+        ? 'Applies to every BLUPF90+ fit of the run. EM-REML is slower but steadier near zero variances; AI-REML that reaches the round limit is still checked and refitted as in the basic analysis.'
+        : 'Applies to the stage-2 / single-stage model. ML estimates are needed to compare models with different fixed effects (likelihood ratio tests); REML gives unbiased variance components. The optimizer and iterations help when a model does not converge.');
+}
+
+function advReadDialog() {
+    const a = {};
+    Object.keys(ADV_DEFAULTS).forEach(k => {
+        let v = $('#sf_adv_' + k).val();
+        if (v === null || v === undefined) v = '';
+        v = String(v).trim();
+        if (ADV_NUMERIC.indexOf(k) >= 0 && v !== '' && !(Number(v) >= 1)) v = '';
+        a[k] = v;
+    });
+    if (a.f90_method !== 'em_ai') a.f90_em_rounds = '';
+    return cleanAdvanced(a);
+}
+
+// estimated covariance matrices of structured genotype x trial (or genotype
+// in time) models
+function structuresHtml(vs) {
+    if (!vs || !Object.keys(vs).length) return '';
+    const kindLabel = { us: 'unstructured', diag: 'diagonal', cs_het: 'heterogeneous compound symmetry', slope: 'random regression in time', occasion: 'unstructured over the measurement occasions' };
+    let h = '<h4>Variance structures: genetic variances and correlations</h4>';
+    Object.keys(vs).forEach(t => {
+        const m = vs[t], L = arr(m.labels).map(String), G = arr(m.G), C = arr(m.correlations);
+        const lab = l => m.structure === 'occasion' ? 'occasion ' + l : l;
+        const cell = v => {
+            if (v === null || v === undefined) return '<td>&ndash;</td>';
+            const a = Math.min(1, Math.abs(v));
+            return '<td style="background:' + (v >= 0 ? 'rgba(43,122,75,' : 'rgba(220,38,38,') + (0.12 + 0.55 * a).toFixed(2) + ')">' + Number(v).toFixed(2) + '</td>';
+        };
+        h += '<p><b>' + esc(t) + '</b>: ' + esc(kindLabel[m.structure] || m.structure) + ' &middot; variance of the reported value ' + fmt(m.var_value) +
+            (m.mean_reliability !== null && m.mean_reliability !== undefined ? ' &middot; mean reliability ' + fmt(m.mean_reliability) : '') + '</p>' +
+            '<div class="table-responsive"><table class="table table-condensed sf-mt-cor"><thead><tr><th></th><th>&sigma;&sup2;<sub>G</sub></th>' + L.map(l => '<th>' + esc(lab(l)) + '</th>').join('') + '</tr></thead><tbody>' +
+            C.map((row, i) => '<tr><th>' + esc(lab(L[i] || '')) + '</th><td>' + fmt(arr(G[i])[i]) + '</td>' + arr(row).map(cell).join('') + '</tr>').join('') + '</tbody></table></div>';
+    });
+    return h + '<p class="sf-help">Genetic variance of each trial (or time term) and the genetic correlations between them: a high correlation means the accessions rank alike in both, a low or negative one means crossover genotype &times; environment interaction.</p>';
 }
 
 const GENOMIC_MODELS = ['genomic', 'single_step'];
@@ -2594,6 +2787,7 @@ function renderResults() {
         { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status', f: (v, r) => esc(v) + (r.dropped_terms ? '<br/><small class="sf-muted" title="Terms the data could not support">left out: ' + esc(r.dropped_terms) + '</small>' : '') }
     ]) + '<p class="sf-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
     $('#sf_tab_model').append(multiTraitHtml(res.multi_trait));
+    $('#sf_tab_model').append(structuresHtml(res.variance_structures));
 
     // genotype values
     const gv = arr(res.genotype_values);
@@ -3126,6 +3320,15 @@ export function init(options) {
         renderModelPreview(); renderPipeline(); renderQuickRun();
     });
     $('#sf_apply_suggestion').on('click', e => { e.preventDefault(); applySuggestion(); });
+    $('#sf_adv_btn').on('click', e => { e.preventDefault(); advFillDialog(state.advanced || {}); $('#sf_adv_modal').modal('show'); });
+    $('#sf_adv_modal').on('change', '.sf-adv-opt', advRefreshDialog);
+    $('#sf_adv_reset').on('click', e => { e.preventDefault(); advFillDialog({}); });
+    $('#sf_adv_apply').on('click', e => {
+        e.preventDefault();
+        state.advanced = advReadDialog();
+        $('#sf_adv_modal').modal('hide');
+        renderModelPreview(); renderPipeline(); renderQuickRun();
+    });
     if (cfg.user_email) {
         $('#sf_notify_to').text('at ' + cfg.user_email);
     } else {
