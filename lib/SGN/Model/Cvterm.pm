@@ -23,6 +23,9 @@ Lukas Mueller
 
 package SGN::Model::Cvterm;
 
+use strict;
+use warnings;
+
 use CXGN::Chado::Cvterm;
 use Data::Dumper;
 
@@ -35,13 +38,13 @@ sub get_cvterm_object {
     my $cv = $schema->resultset('Cv::Cv')->find( { name => $cv_name });
 
     if (! $cv) {
-	print STDERR "CV $cv_name not found. Ignoring.";
-	return undef;
+        print STDERR "CV $cv_name not found. Ignoring.";
+        return;
     }
     my $term = CXGN::Chado::Cvterm->new_with_term_name(
-	$self->dbc()->dbh(),
-	$cvterm_name,
-	$cv->cv_id()
+        $self->dbc()->dbh(),
+        $cvterm_name,
+        $cv->cv_id()
 	);
 
     return $term;
@@ -69,7 +72,7 @@ sub get_cvterm_row_from_trait_name {
 
     #print STDERR $trait_name;
 
-    #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO_334:0000123. substring on last occurance of |
+    #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO_334:0000123. substring on last occurrence of |
     my $delim = "|";
     my $full_accession = substr $trait_name, rindex( $trait_name, $delim ) + length($delim);
     my $full_accession_length = length($full_accession) + length($delim);
@@ -242,7 +245,7 @@ sub get_trait_from_exact_components {
         push @trait_cvterm_ids, $trait_cvterm_id;
     }
     if (scalar(@trait_cvterm_ids) > 1){
-        die "More than one composed trait returned for the given set of exact componenets\n";
+        die "More than one composed trait returned for the given set of exact components\n";
     }
     return $trait_cvterm_ids[0];
 }
