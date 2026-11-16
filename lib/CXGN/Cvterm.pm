@@ -169,7 +169,7 @@ sub BUILD {
     } elsif ($self->accession )   {
 	my ($db_name, $dbxref_accession) = split "\:", $self->accession;
 
-	#InterPro accessions have a namespace (db.name) that is different from the accession prefic
+	#InterPro accessions have a namespace (db.name) that is different from the accession prefix
 	if ($self->accession =~ m/^IPR*/ ) {
 	    $db_name = 'InterPro';
 	    $dbxref_accession= $self->accession;
@@ -229,7 +229,7 @@ sub get_image_ids {
 =head2 function get_is_relationshiptype
 
  Usage: my $is_relationshiptype = $self->get_is_relationship_type
- Desc:  find the database value of teh cvterm column is_relationship_type (integer 0,1)
+ Desc:  find the database value of the cvterm column is_relationship_type (integer 0,1)
  Property
  Side Effects:
  Example:
