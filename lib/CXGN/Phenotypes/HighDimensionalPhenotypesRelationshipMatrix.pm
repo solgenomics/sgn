@@ -176,7 +176,8 @@ sub search {
     colnames(rel_mat) <- mat\$V1;
     write.table(rel_mat, file=\''.$relationship_matrix_file.'\', row.names=TRUE, col.names=NA, sep=\'\t\');
     "';
-    my $cmd_status = system($cmd);
+    my $cmd_status = system($cmd." > /dev/null");
+
 
     my %rel_matrix_data;
     my $csv = Text::CSV->new({ sep_char => "\t" });
