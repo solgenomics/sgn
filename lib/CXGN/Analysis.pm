@@ -209,6 +209,15 @@ information about the saved model.
 
 has 'saved_model' => (isa => 'HashRef', is => 'rw');
 
+=head2 archive_path()
+
+the archive_path from the site config, needed to build the full paths of the saved model files.
+Defaults to the archive_path in the site config if it is not given.
+
+=cut
+
+has 'archive_path' => (isa => 'Maybe[Str]', is => 'rw');
+
 
 sub BUILD {
     my $self = shift;
@@ -259,7 +268,8 @@ sub BUILD {
                 bcs_schema=>$schema,
                 metadata_schema=>$self->metadata_schema(),
                 phenome_schema=>$self->phenome_schema(),
-                nd_protocol_id=>$nd_protocol_id
+                nd_protocol_id=>$nd_protocol_id,
+                archive_path=>$self->get_archive_path()
             });
             my $saved_model_object = $m->get_model();
             $self->saved_model($saved_model_object);
@@ -271,6 +281,15 @@ sub BUILD {
         die "need a project id...";
     }
     $self->metadata($metadata);
+}
+
+sub get_archive_path {
+    my $self = shift;
+    if (!defined($self->archive_path())) {
+        require SGN::Context;
+        $self->archive_path(SGN::Context->new()->get_conf('archive_path'));
+    }
+    return $self->archive_path();
 }
 
 =head2 retrieve_analyses_by_user

@@ -11545,7 +11545,8 @@ sub _perform_save_trained_keras_cnn_model {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$saved_model_id
+        nd_protocol_id=>$saved_model_id,
+        archive_path=>$c->config->{archive_path}
     });
     $analysis_model->store_analysis_model_files({
         # project_id => $saved_analysis_id,
@@ -11750,7 +11751,8 @@ sub _perform_keras_cnn_predict {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$model_id
+        nd_protocol_id=>$model_id,
+        archive_path=>$c->config->{archive_path}
     });
     my $saved_model_object = $m->get_model();
     print STDERR Dumper $saved_model_object;
@@ -13269,7 +13271,8 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$saved_model_id
+        nd_protocol_id=>$saved_model_id,
+        archive_path=>$c->config->{archive_path}
     });
     $analysis_model->store_analysis_model_files({
         # project_id => $saved_analysis_id,
@@ -13312,7 +13315,8 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$model_id
+        nd_protocol_id=>$model_id,
+        archive_path=>$c->config->{archive_path}
     });
     my $saved_model_object = $m->get_model();
     print STDERR Dumper $saved_model_object;

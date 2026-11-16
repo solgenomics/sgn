@@ -10,7 +10,8 @@ my $m = CXGN::AnalysisModel::GetModel->new({
     bcs_schema=>$bcs_schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
-    nd_protocol_id=>$model_id
+    nd_protocol_id=>$model_id,
+    archive_path=>$c->config->{archive_path}
 });
 my $saved_model_object = $m->get_model();
 
@@ -32,6 +33,7 @@ use Bio::Chado::Schema;
 use CXGN::Metadata::Schema;
 use CXGN::People::Schema;
 use File::Basename qw | basename dirname|;
+use File::Spec;
 use JSON;
 
 has 'bcs_schema' => (
@@ -58,12 +60,20 @@ has 'nd_protocol_id' => (
     required => 1
 );
 
+# md_files.dirname is stored relative to the archive_path, so it is needed to build the full path of the model files
+has 'archive_path' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
 sub get_model {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $phenome_schema = $self->phenome_schema();
     my $metadata_schema = $self->metadata_schema();
     my $nd_protocol_id = $self->nd_protocol_id();
+    my $archive_path = $self->archive_path();
     my $model_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
     my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, md_files.file_id, md_files.filetype, nd_protocol.type_id, nd_experiment.nd_experiment_id, nd_experiment.type_id, property.type_id, property.value
@@ -87,7 +97,7 @@ sub get_model {
         $result{model_experiment_id} = $nd_experiment_id;
         $result{model_properties} = decode_json $property_value;
         if ($filename && $basename) {
-            $result{model_files}->{$filetype} = $filename."/".$basename;
+            $result{model_files}->{$filetype} = File::Spec->catfile($archive_path, $filename, $basename);
         }
         if ($basename) {
             $result{model_file_ids}->{$file_id} = $basename;
@@ -109,7 +119,7 @@ sub store_analysis_model_files {
     my $archived_training_data_file_type = $obj->{archived_training_data_file_type};
     my $archived_training_data_file = $obj->{archived_training_data_file};
     my $archived_auxiliary_files = $obj->{archived_auxiliary_files};
-    my $archive_path = $obj->{archive_path};
+    my $archive_path = $obj->{archive_path} || $self->archive_path();
     my $user_id = $obj->{user_id};
     my $user_role = $obj->{user_role};
 

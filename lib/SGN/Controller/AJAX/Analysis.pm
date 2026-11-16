@@ -728,7 +728,8 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
             people_schema => $people_schema,
             metadata_schema => $metadata_schema,
             phenome_schema => $phenome_schema,
-            trial_id => $c->stash->{analysis_id}
+            trial_id => $c->stash->{analysis_id},
+            archive_path => $c->config->{archive_path}
     });
 
     my $dataset_id = "";
@@ -804,7 +805,8 @@ sub analysis_model_delete :Path('/ajax/analysis_model/delete') Args(0) {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$model_id
+        nd_protocol_id=>$model_id,
+        archive_path=>$c->config->{archive_path}
     });
     my $saved_model_object = $m->get_model();
     my $nd_experiment_id = $saved_model_object->{model_experiment_id};
