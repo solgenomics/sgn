@@ -648,41 +648,12 @@ sub verify_exif_POST {
                     $stock_exists = "false";
                 }
             }
-            # Get cvterm_id of recorded trait, by id if given, otherwise by name -- falling back
-            # to a synonym match if there's no exact name match, since trait names coming from
-            # external sources aren't always the trait's primary name in the database.
-            my $observation_variable = $decoded_json->{observation_variable};
-            my $trait_id = $decoded_json->{observation_variable}->{external_db_id};
-            my $trait_name = $observation_variable->{observation_variable_name};
-
-            if ($trait_id) {
-                $trait_lookup_type  = "id";
-                $trait_lookup_value = $trait_id;
-                $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
-            }
-            elsif ($trait_name) {
-                $trait_lookup_type  = "name";
-                $trait_lookup_value = $trait_name;
-                my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $trait_name });
-                if ($cvterm) {
-                    $cvterm_id = $cvterm->cvterm_id();
-                } else {
-                    my $escaped_name = $trait_name;
-                    $escaped_name =~ s/([%_\\])/\\$1/g;
-
-                    my $synonym_row = $schema->resultset('Cv::Cvtermsynonym')->search( { synonym => { -ilike => '"' . $escaped_name . '"%' } } )->first;
-
-                    if ($synonym_row) {
-                        $cvterm_id = $synonym_row->cvterm_id();
-                        $trait_lookup_type = "synonym";
-
-                        my $matched_cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
-                        $trait_matched_name = $matched_cvterm ? $matched_cvterm->name() : undef;
-                    } else {
-                        $cvterm_id = undef;
-                    }
-                }
-            }
+            # Get cvterm_id of recorded trait. Storing the images looks the trait up the same way.
+            my $trait = SGN::Model::Cvterm->find_image_trait($schema, $decoded_json->{observation_variable});
+            $cvterm_id = $trait->{cvterm_id};
+            $trait_lookup_type = $trait->{lookup_type};
+            $trait_lookup_value = $trait->{lookup_value};
+            $trait_matched_name = $trait->{matched_name};
         } catch {
             $lookup_error = $_;
         };

@@ -303,9 +303,11 @@ sub read_exif_info {
         }
     }
 
+    # Looked up the same way validation does it, so an image that passed validation finds its trait,
+    # whether the metadata gives the trait by id, by name, or by a synonym of its name.
     my $trait_name = $exif->{observation_variable}->{observation_variable_name} || '';
-    my $trait_id = $exif->{observation_variable}->{external_db_id};
-    my $cvterm_id = $trait_id ? SGN::Model::Cvterm->find_trait_by_id($chado_schema, $trait_id) : undef;
+    my $trait = SGN::Model::Cvterm->find_image_trait($chado_schema, $exif->{observation_variable});
+    my $cvterm_id = $trait->{cvterm_id};
     if (!$cvterm_id) {
         my $trait_label = $trait_name ? $trait_name : "recorded in the EXIF metadata";
         die "the associated trait $trait_label does not exist in the database.\n";
