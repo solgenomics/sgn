@@ -62,6 +62,7 @@ Chris Simoes
 =cut
 
 use Moose;
+use utf8;
 use LWP::UserAgent;
 use JSON;
 use Encode qw(decode);
@@ -89,6 +90,22 @@ my $MUNICIPALITIES = 'https://raw.githubusercontent.com/kelvins/municipios-brasi
 my %UF = (11 => 'RO', 12 => 'AC', 13 => 'AM', 14 => 'RR', 15 => 'PA', 16 => 'AP', 17 => 'TO', 21 => 'MA', 22 => 'PI',
     23 => 'CE', 24 => 'RN', 25 => 'PB', 26 => 'PE', 27 => 'AL', 28 => 'SE', 29 => 'BA', 31 => 'MG', 32 => 'ES', 33 => 'RJ',
     35 => 'SP', 41 => 'PR', 42 => 'SC', 43 => 'RS', 50 => 'MS', 51 => 'MT', 52 => 'GO', 53 => 'DF');
+
+# Stations that stand on an Embrapa research centre (the networks do not say who hosts a station).
+# Checked 2026-11-16: station inside an Embrapa site mapped in OpenStreetMap (within ~1 km), plus
+# A569 at Embrapa Milho e Sorgo. Airports and stations only near an Embrapa building are left out.
+my %AT_SITE = (
+    'inmet:A569' => 'Embrapa Milho e Sorgo',
+    'inmet:A409' => 'Embrapa Tabuleiros Costeiros', 'synop:86616' => 'Embrapa Tabuleiros Costeiros',
+    'inmet:A313' => 'Embrapa Algodão', 'synop:81916' => 'Embrapa Algodão',
+    'inmet:A840' => 'Embrapa Uva e Vinho', 'synop:86979' => 'Embrapa Uva e Vinho',
+    'inmet:A880' => 'Embrapa Uva e Vinho, Vacaria', 'synop:86966' => 'Embrapa Uva e Vinho, Vacaria',
+    'inmet:A601' => 'Embrapa Agrobiologia', 'synop:86878' => 'Embrapa Agrobiologia',
+    'inmet:B806' => 'Embrapa Florestas',
+    'inmet:A046' => 'Embrapa Hortaliças',
+    'inmet:A406' => 'Embrapa Mandioca e Fruticultura', 'synop:86657' => 'Embrapa Mandioca e Fruticultura', 'synop:83222' => 'Embrapa Mandioca e Fruticultura',
+    'inmet:A312' => 'Embrapa Meio-Norte', 'synop:81827' => 'Embrapa Meio-Norte',
+);
 
 # ISO 3166 alpha-2 -> alpha-3 (the WMO registry uses alpha-3)
 my %ISO3 = map { substr($_, 0, 2) => substr($_, 2, 3) } split / /, 'ADAND AEARE AFAFG AGATG AIAIA ALALB AMARM AOAGO AQATA ARARG ASASM ATAUT AUAUS AWABW AXALA AZAZE BABIH BBBRB BDBGD BEBEL BFBFA BGBGR BHBHR BIBDI BJBEN BLBLM BMBMU BNBRN BOBOL BQBES BRBRA BSBHS BTBTN BVBVT BWBWA BYBLR BZBLZ CACAN CCCCK CDCOD CFCAF CGCOG CHCHE CICIV CKCOK CLCHL CMCMR CNCHN COCOL CRCRI CUCUB CVCPV CWCUW CXCXR CYCYP CZCZE DEDEU DJDJI DKDNK DMDMA DODOM DZDZA ECECU EEEST EGEGY EHESH ERERI ESESP ETETH FIFIN FJFJI FKFLK FMFSM FOFRO FRFRA GAGAB GBGBR GDGRD GEGEO GFGUF GGGGY GHGHA GIGIB GLGRL GMGMB GNGIN GPGLP GQGNQ GRGRC GSSGS GTGTM GUGUM GWGNB GYGUY HKHKG HMHMD HNHND HRHRV HTHTI HUHUN IDIDN IEIRL ILISR IMIMN ININD IOIOT IQIRQ IRIRN ISISL ITITA JEJEY JMJAM JOJOR JPJPN KEKEN KGKGZ KHKHM KIKIR KMCOM KNKNA KPPRK KRKOR KWKWT KYCYM KZKAZ LALAO LBLBN LCLCA LILIE LKLKA LRLBR LSLSO LTLTU LULUX LVLVA LYLBY MAMAR MCMCO MDMDA MEMNE MFMAF MGMDG MHMHL MKMKD MLMLI MMMMR MNMNG MOMAC MPMNP MQMTQ MRMRT MSMSR MTMLT MUMUS MVMDV MWMWI MXMEX MYMYS MZMOZ NANAM NCNCL NENER NFNFK NGNGA NINIC NLNLD NONOR NPNPL NRNRU NUNIU NZNZL OMOMN PAPAN PEPER PFPYF PGPNG PHPHL PKPAK PLPOL PMSPM PNPCN PRPRI PSPSE PTPRT PWPLW PYPRY QAQAT REREU ROROU RSSRB RURUS RWRWA SASAU SBSLB SCSYC SDSDN SESWE SGSGP SHSHN SISVN SJSJM SKSVK SLSLE SMSMR SNSEN SOSOM SRSUR SSSSD STSTP SVSLV SXSXM SYSYR SZSWZ TCTCA TDTCD TFATF TGTGO THTHA TJTJK TKTKL TLTLS TMTKM TNTUN TOTON TRTUR TTTTO TVTUV TWTWN TZTZA UAUKR UGUGA UMUMI USUSA UYURY UZUZB VAVAT VCVCT VEVEN VGVGB VIVIR VNVNM VUVUT WFWLF WSWSM YEYEM YTMYT ZAZAF ZMZMB ZWZWE';
@@ -444,6 +461,12 @@ sub nearby_stations {
                 : [];
         };
         if ($@) { push @errors, $@; next; }
+        foreach my $st (@$list) {
+            my $site = $AT_SITE{$st->{network} . ':' . uc($st->{id} // '')};
+            next if !$site;
+            $st->{site} = $site;
+            $st->{name} = ($st->{name} // $st->{id}) . " ($site)" if ($st->{name} // '') !~ /embrapa/i;
+        }
         push @stations, @$list;
     }
     @stations = sort { $a->{distance_km} <=> $b->{distance_km} } @stations;

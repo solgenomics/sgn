@@ -13,6 +13,8 @@
  *   Past years   the same dates in the previous years: was this season normal?
  *   Locations    the environments of several locations for the same dates
  *   Data sources map, stations and the comparison of the rain sources
+ *   Concepts     how GDD, ET0, water balance, stages and maize RM are calculated
+ * Temperatures are kept in °C; the °C / °F switch changes only what is shown.
  * Only observations of real stations are used (no model, no forecast).
  * Calculations: modules/weather_breeding.js; charts: modules/weather_charts.js.
  *
@@ -22,14 +24,14 @@
  */
 
 import '../legacy/leaflet.js';
-import { CROPS, DEFAULTS, num, addDays, daysBetween, median, seasonDays, summarize, cropStages, stressDays, verdicts, covariates, COVARIATE_COLUMNS, RM_STEPS, rmToGddF, rmSeason, rmDates, rmZone, rmBand, daysBand } from '../modules/weather_breeding.js';
+import { CROPS, DEFAULTS, num, addDays, daysBetween, median, seasonDays, summarize, cropStages, stressDays, verdicts, covariates, covariateColumns, RM_STEPS, rmToGddF, rmSeason, rmDates, rmZone, rmBand, daysBand,
+    UNITS, isF, tUnit, ddUnit, toT, toDD, fromT, fmtT, fmtTh, inUnit, rmReasonText } from '../modules/weather_breeding.js';
 import { chartXY as chartXYBase, stressStrip as stressStripBase, catBars as catBarsBase } from '../modules/weather_charts.js';
 
 let $;
 const API = '/ajax/weather';
 const KM_PER_MI = 1.609344;
 const COLORS = { tmax: '#eb6834', tmin: '#2a78d6', rain: '#2a78d6', et0: '#eb6834', gdd: '#1baf7a', dew: '#1baf7a', temp: '#eb6834' };
-const NET_COLORS = { airport: '#1d6fa5', synop: '#0f766e', cocorahs: '#be185d', ideam: '#a16207', inmet: '#2b7a4b', ana: '#7c3aed', cemaden: '#c2410c' };
 const NET_NAMES = { airport: 'Airport', synop: 'National service', cocorahs: 'CoCoRaHS', ideam: 'IDEAM', inmet: 'INMET', ana: 'ANA', cemaden: 'CEMADEN' };
 const RAIN_NETS = ['synop', 'cocorahs', 'ideam', 'inmet', 'ana', 'cemaden'];
 const TEMP_NETS = ['airport', 'synop', 'inmet'];
@@ -45,7 +47,7 @@ const S = {
     cfg: null, locations: [], lfilter: 'coords', lsearch: '', ltype: '',
     loc: null, range: 200, unit: 'km', stations: [], netFilter: 'all', station: null, tempStation: null, compare: null,
     tab: 'season', preset: '90', start: '', end: '', planting: '', plantingSet: false, trials: [], trialsAll: [],
-    daily: null, dailyKey: '', seq: 0, cache: {},
+    daily: null, dailyKey: '', seq: 0, cache: {}, autoPicked: false, skipped: [], silent: {},
     crop: '', p: Object.assign({}, DEFAULTS),
     trialRows: null, years: null, locRows: null, locPick: {},
     map: null, mapLayers: null,
@@ -86,6 +88,22 @@ function stationLabel(s) {
     if (!s) return '';
     return s.network === 'cemaden' ? (s.code || s.id) + ' ' + String(s.name || '').replace(/^.*\(/, '(') : s.id + ' ' + (s.name || '');
 }
+// stations the page may pick by itself, best first: rain gauges, then stations reporting now, then any;
+// stations already found silent for the current dates are left out
+function autoCandidates() {
+    const ok = s => s.ready && !(S.silent || {})[stationKey(s) + '|' + S.start + '|' + S.end];
+    const list = [];
+    const add = s => { if (s && !list.includes(s)) list.push(s); };
+    S.stations.filter(s => measuresRain(s) && ok(s)).forEach(add);
+    S.stations.filter(s => ok(s) && (s.network !== 'airport' || s.latest)).forEach(add);
+    S.stations.filter(ok).forEach(add);
+    return list;
+}
+// did the station send anything for these dates?
+function hasObservations(r) {
+    return (r.days || []).some(d => num(d.tmax) !== null || num(d.tmin) !== null || num(d.rain) !== null || num(d.rain_hours));
+}
+
 function measuresRain(s) { return s && RAIN_NETS.includes(s.network) && s.ready; }
 function measuresTemp(s) { return s && TEMP_NETS.includes(s.network) && s.ready && !s.rain_only; }
 function plainStation(s) {
@@ -159,11 +177,16 @@ function selectLocation(id) {
         lon: l.station.temp_lon, elev: l.station.temp_elev, distance_km: l.station.temp_distance_km, ready: 1,
     } : null;
     S.compare = null;
+    S.autoPicked = false; S.skipped = []; S.silent = {};
     if (S.station && !TEMP_NETS.includes(S.station.network)) S.station.rain_only = 1;
     S.station && (S.station.ready = 1);
     S.range = num(l.station && l.station.range) || S.cfg.range;
     S.unit = (l.station && l.station.unit) || storage('unit') || S.cfg.unit;
     S.daily = null; S.dailyKey = ''; S.trialRows = null; S.years = null;
+    S.lastFind = null;
+    findRun++;
+    setFindBusy(false);
+    findStatus('', '');
     try { window.history.replaceState(null, '', '?location_id=' + l.id); } catch (e) { /* ignore */ }
     renderLocations();
     $('#wx_empty').hide();
@@ -228,17 +251,74 @@ function renderRangeStep() {
     $('#wx_range_title').text(S.range + ' ' + (S.unit === 'mi' ? 'miles' : 'km'));
 }
 
+// ---------------------------------------------------------------- step 1: search status (running / done / failed / out of date)
+const SPIN = '<span class="glyphicon glyphicon-refresh wx-spin"></span>';
+let findTimer = null;
+let findRun = 0;
+function findStatus(kind, html) {
+    $('#wx_find_status').attr('class', 'wx-find-status' + (kind ? ' ' + kind : '')).html(html || '');
+}
+function setFindBusy(busy) {
+    if (findTimer) { clearInterval(findTimer); findTimer = null; }
+    $('#wx_find').prop('disabled', busy)
+        .html(busy ? SPIN + ' Searching...' : '<span class="glyphicon glyphicon-search"></span> Find stations');
+}
+function rangeText(range, unit) { return range + ' ' + (unit === 'mi' ? 'miles' : 'km'); }
+function clockNow() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+
+// tell the user when the typed range differs from the one the list was found with
+function checkRangeStale() {
+    const last = S.lastFind;
+    if (!last || findTimer) return;
+    const r = num($('#wx_range').val());
+    if (r && (r !== last.range || S.unit !== last.unit)) {
+        findStatus('stale', '<span class="glyphicon glyphicon-exclamation-sign"></span> Range changed to <b>' + esc(rangeText(r, S.unit))
+            + '</b>: click <b>Find stations</b> to update. The list still shows the stations within ' + esc(rangeText(last.range, last.unit)) + '.');
+    }
+    else findStatus(last.kind, last.html);
+}
+
 function findStations() {
     const range = num($('#wx_range').val());
-    if (!range || range <= 0) { flash('warning', 'Type a distance range.'); return; }
+    if (!range || range <= 0) { findStatus('err', 'Type a distance range first.'); return; }
     S.range = range;
     renderRangeStep();
     const seq = S.seq;
+    const run = ++findRun;
+    const t0 = Date.now();
+    const label = rangeText(S.range, S.unit);
     $('#wx_n_stations').text('');
-    $('#wx_station_table').html(loading('Looking for weather stations within ' + S.range + ' ' + S.unit + '...'));
+    $('#wx_station_table').html(loading('Looking for weather stations within ' + label + '...'));
     $('#wx_step1').addClass('on');
+    setFindBusy(true);
+    const tick = () => findStatus('run', SPIN + ' <b>Searching</b> all station networks within ' + esc(label) + '... '
+        + Math.round((Date.now() - t0) / 1000) + ' s<span class="wx-sub">Some national services answer slowly: this can take up to about 20 seconds.</span>');
+    tick();
+    findTimer = setInterval(tick, 1000);
+    const secs = () => Math.max(1, Math.round((Date.now() - t0) / 1000));
     call('GET', API + '/nearby', { location_id: S.loc.id, range: S.range, unit: S.unit }).then(r => {
-        if (seq !== S.seq) return;
+        if (seq !== S.seq || run !== findRun) return;
+        const list = r.stations || [];
+        const nWarn = (r.warnings || []).length;
+        let kind, html;
+        if (list.length) {
+            const byNet = {};
+            list.forEach(s => { byNet[s.network] = (byNet[s.network] || 0) + 1; });
+            kind = 'done';
+            html = '<span class="glyphicon glyphicon-ok"></span> <b>Done: ' + list.length + ' station' + (list.length === 1 ? '' : 's') + '</b> within ' + esc(label)
+                + ' · updated ' + clockNow() + ' (' + secs() + ' s)'
+                + '<span class="wx-sub">' + Object.keys(byNet).map(n => byNet[n] + ' ' + esc(NET_NAMES[n] || n)).join(', ')
+                + (nWarn ? ' · ' + nWarn + ' source' + (nWarn === 1 ? '' : 's') + ' did not answer (see Data sources)' : '')
+                + ' · <a data-goto-tab="sources">show list and map</a></span>';
+        }
+        else {
+            kind = 'empty';
+            html = '<span class="glyphicon glyphicon-exclamation-sign"></span> <b>Done: no station</b> within ' + esc(label) + ' · updated ' + clockNow()
+                + '<span class="wx-sub">Try a larger distance range.' + (nWarn ? ' ' + nWarn + ' source' + (nWarn === 1 ? '' : 's') + ' did not answer: <a id="wx_find_retry">try again</a>' : '') + '</span>';
+        }
+        S.lastFind = { range: S.range, unit: S.unit, kind, html };
+        setFindBusy(false);
+        findStatus(kind, html);
         S.stations = r.stations || [];
         if (S.station) {
             const same = S.stations.find(s => stationKey(s) === stationKey(S.station));
@@ -246,8 +326,8 @@ function findStations() {
         }
         else if (S.stations.length) {
             // suggest the nearest station that measures rain amounts, else the nearest readable one
-            const first = S.stations.find(measuresRain) || S.stations.find(s => s.ready && (s.network !== 'airport' || s.latest)) || S.stations.find(s => s.ready);
-            if (first) S.station = first;
+            const first = autoCandidates()[0];
+            if (first) { S.station = first; S.autoPicked = true; }
         }
         if (S.tempStation) {
             const same = S.stations.find(s => stationKey(s) === stationKey(S.tempStation));
@@ -263,9 +343,15 @@ function findStations() {
         if (warn) $('#wx_station_table').prepend(alertHtml('warning', warn));
         if (S.station) stationChanged();
     }).catch(e => {
-        if (seq !== S.seq) return;
+        if (seq !== S.seq || run !== findRun) return;
+        setFindBusy(false);
+        S.lastFind = null;
+        findStatus('err', '<span class="glyphicon glyphicon-remove"></span> <b>Search failed</b> after ' + secs() + ' s: ' + esc(e.message)
+            + ' · <a id="wx_find_retry">try again</a>');
         $('#wx_station_table').html(alertHtml('danger', esc(e.message)));
-    }).finally(() => $('#wx_step1').removeClass('on'));
+    }).finally(() => {
+        if (run === findRun) $('#wx_step1').removeClass('on');
+    });
 }
 
 // ---------------------------------------------------------------- stations: list and map
@@ -291,7 +377,7 @@ function renderStations() {
         const de = elev !== null && num(s.elev) !== null ? Math.round(s.elev - elev) : null;
         let now;
         if (s.network === 'airport') {
-            now = m.time ? f1(m.temp_c, 0) + ' °C · ' + (m.rh !== null && m.rh !== undefined ? m.rh + '% · ' : '') + (m.wind_kmh !== null && m.wind_kmh !== undefined ? m.wind_kmh + ' km/h' : '') + ' <span class="wx-muted wx-small">' + ago(m.time) + '</span> <span class="wx-muted wx-small" title="Airports here report rain hours, not millimetres">· no rain mm</span>' : '<span class="wx-muted">no recent report</span>';
+            now = m.time ? f1(toT(m.temp_c), 0) + ' ' + tUnit() + ' · ' + (m.rh !== null && m.rh !== undefined ? m.rh + '% · ' : '') + (m.wind_kmh !== null && m.wind_kmh !== undefined ? m.wind_kmh + ' km/h' : '') + ' <span class="wx-muted wx-small">' + ago(m.time) + '</span> <span class="wx-muted wx-small" title="Airports here report rain hours, not millimetres">· no rain mm</span>' : '<span class="wx-muted">no recent report</span>';
         }
         else if (s.network === 'cemaden') {
             now = m.time ? 'rain 24 h: <b>' + f1(m.rain_24h) + '</b> mm · 96 h: ' + f1(m.rain_96h) + ' mm <span class="wx-muted wx-small">' + ago(m.time) + '</span>' : '<span class="wx-muted">no recent value</span>';
@@ -332,7 +418,8 @@ function drawMap() {
     const L = window.L;
     if (!L || !document.getElementById('wx_map')) return;
     if (!S.map) {
-        S.map = L.map('wx_map', { scrollWheelZoom: false });
+        // a first view: Leaflet adds layers only to a map that has one (the tab may still be hidden)
+        S.map = L.map('wx_map', { scrollWheelZoom: false }).setView([0, 0], 2);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri', maxZoom: 17,
         }).addTo(S.map);
@@ -340,27 +427,64 @@ function drawMap() {
     }
     S.mapLayers.clearLayers();
     const l = S.loc;
-    if (!hasCoords(l)) { S.map.setView([0, 0], 2); return; }
+    if (!hasCoords(l)) { S.mapBounds = null; S.map.setView([0, 0], 2); $('#wx_map_legend').empty(); return; }
     const center = [Number(l.lat), Number(l.lon)];
     const rkm = S.unit === 'mi' ? S.range * KM_PER_MI : S.range;
-    const circle = L.circle(center, { radius: rkm * 1000, color: '#1d6fa5', weight: 1.5, fillOpacity: 0.04, dashArray: '4 4' }).addTo(S.mapLayers);
+    L.circle(center, { radius: rkm * 1000, color: '#1d6fa5', weight: 1.5, fillOpacity: 0.04, dashArray: '4 4' }).addTo(S.mapLayers);
+    const tip = s => '<b>' + esc(s.id) + '</b> ' + esc(s.name) + '<br>' + dist(s.distance_km) + ' ' + esc(s.direction)
+        + (s.latest && s.latest.temp_c !== null && s.latest.temp_c !== undefined ? '<br>' + fmtT(s.latest.temp_c, 0) + ' ' + ago(s.latest.time) : '');
+    let chosen = null;
     S.stations.forEach(s => {
-        const on = stationKey(s) === stationKey(S.station);
+        if (stationKey(s) === stationKey(S.station)) { chosen = s; return; }
+        // the other stations: small and grey, so that only the location and the chosen station stand out
         L.circleMarker([s.lat, s.lon], {
-            radius: on ? 9 : 6, color: '#fff', weight: 2, fillColor: NET_COLORS[s.network] || '#555', fillOpacity: s.ready ? 0.95 : 0.4,
-        }).bindTooltip('<b>' + esc(s.id) + '</b> ' + esc(s.name) + '<br>' + dist(s.distance_km) + ' ' + esc(s.direction)
-            + (s.latest && s.latest.temp_c !== null && s.latest.temp_c !== undefined ? '<br>' + s.latest.temp_c + ' °C ' + ago(s.latest.time) : ''))
+            radius: 4, color: '#fff', weight: 1, fillColor: '#64748b', fillOpacity: s.ready ? 0.75 : 0.3,
+        }).bindTooltip(tip(s) + (s.ready ? '<br><i>click to choose it</i>' : ''))
             .on('click', () => { if (s.ready) chooseStation(stationKey(s)); })
             .addTo(S.mapLayers);
     });
-    L.circleMarker(center, { radius: 8, color: '#fff', weight: 3, fillColor: '#b91c1c', fillOpacity: 1 })
+    L.circleMarker(center, { radius: 9, color: '#fff', weight: 3, fillColor: '#dc2626', fillOpacity: 1 })
         .bindTooltip('<b>' + esc(l.name) + '</b> (research station)', { permanent: false }).addTo(S.mapLayers);
-    setTimeout(() => { S.map.invalidateSize(); S.map.fitBounds(circle.getBounds(), { padding: [10, 10] }); }, 50);
+    // the chosen weather station: a golden star, drawn last so it stays on top
+    if (!chosen && S.station && num(S.station.lat) !== null && num(S.station.lon) !== null) chosen = S.station;
+    if (chosen) {
+        L.marker([chosen.lat, chosen.lon], { icon: L.divIcon({ className: 'wx-star-icon', html: STAR_SVG, iconSize: [30, 30], iconAnchor: [15, 16] }), zIndexOffset: 1000, keyboard: false })
+            .bindTooltip('<b>Chosen weather station</b><br>' + tip(chosen), { offset: [0, -8] }).addTo(S.mapLayers);
+    }
+    renderMapLegend(chosen);
+    // from the centre and the radius: circle.getBounds() needs a map already drawn
+    S.mapBounds = L.latLng(center).toBounds(rkm * 2000);
+    fitMap();
+}
+
+const STAR_SVG = '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M12 1.8l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 17.9l-6.4 3.5 1.4-7.1-5.3-5 7.2-.9z" fill="#f5b400" stroke="#7a5200" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+
+// what the symbols of the map mean
+function renderMapLegend(chosen) {
+    $('#wx_map_legend').html(
+        '<span><i class="wx-lg-dot wx-lg-loc"></i>Location: ' + esc(S.loc.name) + '</span>'
+        + (chosen ? '<span><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 1.8l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 17.9l-6.4 3.5 1.4-7.1-5.3-5 7.2-.9z" fill="#f5b400" stroke="#7a5200" stroke-width="1.5"/></svg>Weather station: ' + esc(stationLabel(chosen)) + '</span>' : '')
+        + (S.stations.length > (chosen ? 1 : 0) ? '<span><i class="wx-lg-dot wx-lg-other"></i>Other weather stations (click one to choose it)</span>' : '')
+        + '<span><i class="wx-lg-ring"></i>Search range (' + esc(rangeText(S.range, S.unit)) + ')</span>');
+}
+
+// Leaflet cannot size a map in a hidden tab (0 x 0 px): the view is set when the Data sources tab is visible
+function fitMap() {
+    if (!S.map) return;
+    setTimeout(() => {
+        const el = document.getElementById('wx_map');
+        if (!el || !el.offsetWidth || !el.offsetHeight) return;    // hidden: showTab('sources') calls again
+        S.map.invalidateSize();
+        if (S.mapBounds) S.map.fitBounds(S.mapBounds, { padding: [10, 10] });
+        else S.map.setView([0, 0], 2);
+    }, 50);
 }
 
 function chooseStation(key) {
     const s = S.stations.find(x => stationKey(x) === key);
     if (!s) return;
+    S.autoPicked = false;
+    S.skipped = [];
     S.station = Object.assign(s, { saved: S.loc.station && (S.loc.station.network + ':' + S.loc.station.station_id) === key });
     suggestTempStation();
     renderStations();
@@ -384,10 +508,37 @@ function stationChanged() {
 }
 
 // ---------------------------------------------------------------- step 2: chosen station
+// the data a station gives (from its network: no request needed)
+function dataTypes(x) {
+    if (x.network === 'inmet') return ['temperature', 'rain', 'radiation', 'humidity', 'wind'];
+    if (x.network === 'synop') return ['temperature', 'rain', 'humidity', 'wind'];
+    if (x.network === 'airport') return x.country === 'US' ? ['temperature', 'rain', 'humidity', 'wind'] : ['temperature', 'humidity', 'wind'];
+    return ['rain'];
+}
+const isSilent = x => !!(S.silent || {})[stationKey(x) + '|' + S.start + '|' + S.end];
+
+// drop-down of the stations found, nearest first; the readable one(s) with the most data types are highlighted
+function stationSelectHtml() {
+    const opts = S.stations.slice();
+    if (S.station && !opts.some(x => stationKey(x) === stationKey(S.station))) opts.unshift(S.station);
+    if (!opts.length) return '';
+    const usable = opts.filter(x => x.ready && !isSilent(x));
+    const most = usable.length ? Math.max(...usable.map(x => dataTypes(x).length)) : 0;
+    const best = x => x.ready && !isSilent(x) && dataTypes(x).length === most && most > 1;
+    const note = x => (!x.ready ? ' - not readable' : isSilent(x) ? ' - no data for these dates' : x.network === 'airport' && !x.latest ? ' - no recent report' : '');
+    return '<select class="form-control input-sm" id="wx_station_select" style="width:100%;margin-bottom:6px" title="Nearest first. ✔ = the most types of data">'
+        + (S.station ? '' : '<option value="">Choose a weather station...</option>')
+        + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (best(x) ? ' style="font-weight:bold"' : '')
+            + (stationKey(x) === stationKey(S.station) ? ' selected' : '') + (x.ready ? '' : ' disabled') + '>'
+            + esc((best(x) ? '✔ ' : '') + dist(x.distance_km) + ' · ' + (NET_NAMES[x.network] || x.network) + ' ' + stationLabel(x)
+                + ': ' + dataTypes(x).join(', ') + (best(x) ? ' (most data)' : '') + note(x)) + '</option>').join('')
+        + '</select>';
+}
+
 function renderChosen() {
     const s = S.station;
     if (!s) {
-        $('#wx_chosen').html('<span class="wx-muted">' + (S.stations.length ? 'Choose a station in the list or on the map.' : 'Find the stations, then choose one in the list or on the map.') + '</span>');
+        $('#wx_chosen').html(stationSelectHtml() + '<span class="wx-muted">' + (S.stations.length ? 'Choose a station above, in the list or on the map.' : 'Find the stations, then choose one in the list or on the map.') + '</span>');
         return;
     }
     const linkedKey = S.loc.station ? S.loc.station.network + ':' + S.loc.station.station_id : '';
@@ -417,7 +568,7 @@ function renderChosen() {
             + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (stationKey(x) === stationKey(S.tempStation) ? ' selected' : '') + '>' + esc((NET_NAMES[x.network] || x.network) + ' ' + x.id + ' · ' + x.name + ' · ' + dist(x.distance_km)) + '</option>').join('')
             + '</select></div>';
     }
-    $('#wx_chosen').html('<b>' + netLabel(s.network) + ' ' + esc(s.id) + '</b>'
+    $('#wx_chosen').html(stationSelectHtml() + '<b>' + netLabel(s.network) + ' ' + esc(s.id) + '</b>'
         + '<div>' + esc(s.name) + '</div>'
         + '<div class="wx-small wx-muted">' + dist(s.distance_km) + (s.direction ? ' ' + esc(s.direction) : '') + (num(s.elev) !== null ? ' · ' + Math.round(s.elev) + ' m' : '') + '</div>'
         + (inRange ? '' : '<div class="wx-small" style="color:#92400e">Outside the current range</div>')
@@ -468,11 +619,11 @@ function seasonTiles(x) {
     }
     else t.push(tile('Rain hours', x.rainHours, 'h', 'this station gives no mm'));
     if (x.et0 !== null) t.push(tile('ET0', f1(x.et0, 0), 'mm', 'crop water demand (reference)'));
-    if (x.gdd !== null) t.push(tile('Degree-days', f1(x.gdd, 0), '°C·d', 'base ' + S.p.base + ' °C'));
+    if (x.gdd !== null) t.push(tile('Degree-days', f1(toDD(x.gdd), 0), ddUnit(), 'base ' + fmtTh(S.p.base)));
     if (x.hasTemp) {
-        t.push(tile('Mean max / min', f1(x.tmax) + ' / ' + f1(x.tmin), '°C', 'from ' + f1(x.absMin) + ' to ' + f1(x.absMax) + ' °C'));
-        t.push(tile('Heat days', x.heat, '', 'max ≥ ' + S.p.heat + ' °C', x.heat ? 'wx-stat-bad' : ''));
-        t.push(tile('Frost days', x.frost, '', 'min ≤ ' + S.p.frost + ' °C', x.frost ? 'wx-stat-bad' : ''));
+        t.push(tile('Mean max / min', f1(toT(x.tmax)) + ' / ' + f1(toT(x.tmin)), tUnit(), 'from ' + fmtT(x.absMin) + ' to ' + fmtT(x.absMax)));
+        t.push(tile('Heat days', x.heat, '', 'max ≥ ' + fmtTh(S.p.heat), x.heat ? 'wx-stat-bad' : ''));
+        t.push(tile('Frost days', x.frost, '', 'min ≤ ' + fmtTh(S.p.frost), x.frost ? 'wx-stat-bad' : ''));
     }
     t.push(tile('Days observed', Math.round(100 * x.coverage), '%', x.withData + ' of ' + x.days, x.coverage < 0.8 ? 'wx-stat-warn' : ''));
     return t;
@@ -489,7 +640,7 @@ function showTab(tab) {
     S.tab = tab;
     $('.wx-tab').each(function () { $(this).toggleClass('on', $(this).data('tab') === tab); });
     $('.wx-pane').each(function () { $(this).toggle($(this).data('pane') === tab); });
-    if (tab === 'sources' && S.map) setTimeout(() => S.map.invalidateSize(), 30);
+    if (tab === 'sources') fitMap();
     if (!S.loc || !hasCoords(S.loc)) return;
     if (tab === 'season') loadSeason();
     if (tab === 'trials') loadTrialsTab();
@@ -601,10 +752,39 @@ function loadSeason() {
     $('#wx_season').html(loading('Reading ' + daysBetween(S.start, S.end) + ' days of observations of ' + stationLabel(s) + (t ? ' and ' + stationLabel(t) : '') + '... (a long period can take some seconds the first time)'));
     fetchPair(s, t, S.start, S.end).then(r => {
         if (seq !== S.seq || stationKey(S.station) !== stationKey(s)) return;
+        // a station the page picked by itself sent nothing (listed but silent): try the next one
+        if (!hasObservations(r)) {
+            // remember it: the drop-down lists it under 'Sent no observations for these dates'
+            S.silent = S.silent || {};
+            S.silent[stationKey(s) + '|' + S.start + '|' + S.end] = 1;
+            renderChosen();
+        }
+        if (!hasObservations(r) && S.autoPicked && S.skipped.length < 4) {
+            const next = autoCandidates().find(x => stationKey(x) !== stationKey(s));
+            if (next) {
+                if (S.skippedKey !== S.start + '|' + S.end) S.skipped = [];
+                S.skipped.push(s);
+                S.skippedKey = S.start + '|' + S.end;
+                S.station = next;
+                if (next.rain_only) suggestTempStation();
+                renderStations(); drawMap(); renderChosen();
+                $('#wx_season').html(loading(stationLabel(s) + ' sent no observations for these dates: trying ' + stationLabel(next) + ' (' + dist(next.distance_km) + ')...'));
+                setTimeout(loadSeason, 0);
+                return;
+            }
+        }
         S.daily = r;
         S.dailyKey = key;
         renderSeason();
     }).catch(e => $('#wx_season').html(alertHtml('danger', esc(e.message))));
+}
+
+// stations with a 'Choose' button, for an empty result
+function alternativesHtml() {
+    const alts = S.stations.filter(x => x.ready && stationKey(x) !== stationKey(S.station)).slice(0, 4);
+    if (!alts.length) return '';
+    return '<div class="wx-inline" style="margin-top:8px">Try: ' + alts.map(x => '<button class="btn btn-default btn-xs" data-choose="' + esc(stationKey(x)) + '">'
+        + esc((NET_NAMES[x.network] || x.network) + ' ' + stationLabel(x) + ' · ' + dist(x.distance_km)) + '</button>').join(' ') + '</div>';
 }
 
 function stageBands(stages) {
@@ -624,8 +804,12 @@ function issueChips(issues) {
 
 function renderSeason() {
     const r = S.daily;
-    if (!(r.days || []).length) {
-        $('#wx_season').html(alertHtml('warning', 'The station has no observation between ' + fmtDate(S.start) + ' and ' + fmtDate(S.end) + '. Try another station (Data sources) or other dates.'));
+    if (S.skippedKey !== S.start + '|' + S.end) S.skipped = [];    // skipped for other dates
+    if (!hasObservations(r)) {
+        $('#wx_season').html(alertHtml('warning', '<b>' + esc(stationLabel(S.station)) + ' sent no observations between ' + fmtDate(S.start) + ' and ' + fmtDate(S.end) + '.</b> '
+            + 'Some stations are listed by their network but do not report, or stopped reporting. '
+            + (S.skipped.length ? 'Also tried: ' + S.skipped.map(x => esc(stationLabel(x))).join(', ') + '. ' : '')
+            + 'Choose another station or other dates.' + alternativesHtml()));
         $('#wx_stats').hide();
         return;
     }
@@ -653,36 +837,37 @@ function renderSeason() {
         const s = st.s;
         return '<tr class="' + (st.critical ? 'wx-crit' : '') + '"><td><b>' + esc(st.name) + '</b>' + (st.critical ? ' <span class="wx-pill wx-pill-warn">critical</span>' : '') + '</td>'
             + '<td style="white-space:nowrap">' + shortDate(st.start) + ' – ' + shortDate(st.end) + '</td><td class="n">' + st.days.length + '</td>'
-            + '<td class="n">' + f1(s.gdd, 0) + '</td>'
+            + '<td class="n">' + f1(toDD(s.gdd), 0) + '</td>'
             + (rep ? '<td class="n">' + f1(s.rain, 0) + '</td>' : '<td class="n">' + s.rainHours + ' h</td>')
             + '<td class="n">' + f1(s.et0, 0) + '</td>'
             + (rep ? '<td class="n ' + (s.balance !== null && s.balance < 0 ? 'wx-neg' : 'wx-pos') + '">' + (s.balance === null ? '–' : sign(s.balance)) + '</td><td class="n">' + (s.dry ? s.dry.days : '–') + '</td>' : '')
-            + '<td class="n">' + f1(s.tmax) + '</td><td class="n">' + (s.heat === null ? '–' : s.heat) + '</td><td class="n">' + (s.frost === null ? '–' : s.frost) + '</td>'
+            + '<td class="n">' + f1(toT(s.tmax)) + '</td><td class="n">' + (s.heat === null ? '–' : s.heat) + '</td><td class="n">' + (s.frost === null ? '–' : s.frost) + '</td>'
             + '<td><div class="wx-flags">' + issueChips(st.issues) + '</div></td></tr>';
     }).join('');
     const stageTable = '<div class="wx-card"><div class="wx-card-head"><h4><span class="glyphicon glyphicon-tasks"></span> Crop stages</h4>'
         + '<span class="wx-muted wx-small">' + (A.stages[0] && A.stages[0].byGdd ? 'by degree-days' : 'by days (no temperature data)') + '</span></div>'
-        + '<div class="wx-table-wrap"><table class="table table-condensed wx-table"><thead><tr><th>Stage</th><th>Dates</th><th class="n">Days</th><th class="n">Degree-days</th>'
+        + '<div class="wx-table-wrap"><table class="table table-condensed wx-table"><thead><tr><th>Stage</th><th>Dates</th><th class="n">Days</th><th class="n">Degree-days ' + ddUnit() + '</th>'
         + (rep ? '<th class="n">Rain mm</th>' : '<th class="n">Rain hours</th>') + '<th class="n">ET0 mm</th>' + (rep ? '<th class="n">Balance mm</th><th class="n">Longest dry spell</th>' : '')
-        + '<th class="n">Mean max °C</th><th class="n">Heat days</th><th class="n">Frost days</th><th>Stress</th></tr></thead><tbody>' + stageRows + '</tbody></table></div></div>';
+        + '<th class="n">Mean max ' + tUnit() + '</th><th class="n">Heat days</th><th class="n">Frost days</th><th>Stress</th></tr></thead><tbody>' + stageRows + '</tbody></table></div></div>';
 
     // stress calendar + aligned charts
     const pts = A.days.map(d => ({
         x: new Date(d.date + 'T12:00:00').getTime(), label: d.date, short: shortDate(d.date), stage: stageOf(d.date),
-        tmax: num(d.tmax), tmin: num(d.tmin), rain: num(d.rain), rain_hours: num(d.rain_hours), gddCum: d.gdd === null && !d.gddCum ? null : d.gddCum,
+        tmax: toT(d.tmax), tmin: toT(d.tmin), rain: num(d.rain), rain_hours: num(d.rain_hours), gddCum: d.gdd === null && !d.gddCum ? null : toDD(d.gddCum),
         rainCum: d.rainCum, et0Cum: num(d.et0) === null && !d.et0Cum ? null : d.et0Cum,
     }));
     const hasEt0 = x.et0 !== null;
-    const charts = '<div class="wx-card"><div class="wx-card-head"><h4><span class="glyphicon glyphicon-calendar"></span> Stress calendar</h4><span class="wx-muted wx-small">heat ≥ ' + S.p.heat + ' °C · frost ≤ ' + S.p.frost + ' °C · dry spell ≥ ' + S.p.dry + ' days under 1 mm · heavy rain ≥ ' + S.p.heavy + ' mm</span></div>'
+    const charts = '<div class="wx-card"><div class="wx-card-head"><h4><span class="glyphicon glyphicon-calendar"></span> Stress calendar</h4><span class="wx-muted wx-small">heat ≥ ' + fmtTh(S.p.heat) + ' · frost ≤ ' + fmtTh(S.p.frost) + ' · dry spell ≥ ' + S.p.dry + ' days under 1 mm · heavy rain ≥ ' + S.p.heavy + ' mm</span></div>'
         + '<div class="wx-chart" id="wx_c_stress"></div>'
-        + (x.hasTemp ? '<div class="wx-sub">Daily maximum and minimum temperature (°C)</div><div class="wx-legend"><span><i style="background:' + COLORS.tmax + '"></i>Maximum</span><span><i style="background:' + COLORS.tmin + '"></i>Minimum</span></div><div class="wx-chart" id="wx_c_temp"></div>' : '')
+        + (x.hasTemp ? '<div class="wx-sub">Daily maximum and minimum temperature (' + tUnit() + ')</div><div class="wx-legend"><span><i style="background:' + COLORS.tmax + '"></i>Maximum</span><span><i style="background:' + COLORS.tmin + '"></i>Minimum</span></div><div class="wx-chart" id="wx_c_temp"></div>' : '')
         + '<div class="wx-sub">' + (rep ? 'Daily rain (mm)' : 'Hours with rain per day (this station gives no mm)') + '</div><div class="wx-chart" id="wx_c_rain"></div>'
         + (rep || hasEt0 ? '<div class="wx-sub">' + (rep && hasEt0 ? 'Water: accumulated rain against accumulated crop water demand (ET0), mm' : rep ? 'Accumulated rain (mm)' : 'Accumulated ET0 (mm)') + '</div>'
             + (rep && hasEt0 ? '<div class="wx-legend"><span><i style="background:' + COLORS.rain + '"></i>Rain</span><span><i style="background:' + COLORS.et0 + '"></i>ET0 (the gap is the water deficit)</span></div>' : '') + '<div class="wx-chart" id="wx_c_water"></div>' : '')
-        + (x.gdd !== null ? '<div class="wx-sub">Accumulated degree-days (°C·d, base ' + S.p.base + ' °C)</div><div class="wx-chart" id="wx_c_gdd"></div>' : '')
+        + (x.gdd !== null ? '<div class="wx-sub">Accumulated degree-days (' + ddUnit() + ', base ' + fmtTh(S.p.base) + ')</div><div class="wx-chart" id="wx_c_gdd"></div>' : '')
         + '<p class="wx-note">The shaded band is the critical stage. Hover the charts to read each day.</p></div>';
 
     const notes = [
+        S.skipped.length ? '<span class="glyphicon glyphicon-random"></span>' + S.skipped.map(x => esc(stationLabel(x))).join(', ') + ' (nearer) sent no observations for these dates, so ' + esc(stationLabel(S.station)) + ' is used.' : '',
         '<span class="glyphicon glyphicon-info-sign"></span><b>Data:</b> ' + esc(r.source) + (r.temp_source ? '; temperature and ET0: ' + esc(r.temp_source) : '') + '. ' + esc(r.note || ''),
         r.rain_reported ? '' : '<span class="glyphicon glyphicon-tint"></span>This station gives rain hours, not millimetres: water balance and dry spells need a rain gauge (Data sources).',
         x.coverage < 0.8 ? '<span class="glyphicon glyphicon-warning-sign" style="color:#b45309"></span>Only ' + Math.round(100 * x.coverage) + '% of the days were observed' + (r.history_hours ? ' (CEMADEN keeps only the last ' + r.history_hours / 24 + ' days)' : '') + ': totals are lower than the real ones.' : '',
@@ -699,14 +884,14 @@ function renderSeason() {
 
     const bandOpt = { bands };
     stressStrip('#wx_c_stress', A.stress, STRESS_ROWS.filter(rw => (rw.key !== 'dry' && rw.key !== 'heavy') || rep).filter(rw => (rw.key !== 'heat' && rw.key !== 'frost') || x.hasTemp),
-        { bands, stageOf, detail: date => { const d = A.days.find(z => z.date === date) || {}; return 'max ' + f1(d.tmax) + ' / min ' + f1(d.tmin) + ' °C · ' + (rep ? 'rain ' + f1(d.rain) + ' mm' : 'rain hours ' + (d.rain_hours === undefined ? '–' : d.rain_hours)); } });
-    chartXY('#wx_c_temp', pts, [{ key: 'tmax', label: 'Maximum', color: COLORS.tmax, unit: '°C' }, { key: 'tmin', label: 'Minimum', color: COLORS.tmin, unit: '°C' }],
-        Object.assign({ slots: true, bandLabels: false, refLines: [{ y: S.p.heat, label: 'heat ' + S.p.heat + ' °C', color: '#e34948' }, { y: S.p.frost, label: 'frost ' + S.p.frost + ' °C', color: '#6250d6' }] }, bandOpt));
+        { bands, stageOf, detail: date => { const d = A.days.find(z => z.date === date) || {}; return 'max ' + f1(toT(d.tmax)) + ' / min ' + f1(toT(d.tmin)) + ' ' + tUnit() + ' · ' + (rep ? 'rain ' + f1(d.rain) + ' mm' : 'rain hours ' + (d.rain_hours === undefined ? '–' : d.rain_hours)); } });
+    chartXY('#wx_c_temp', pts, [{ key: 'tmax', label: 'Maximum', color: COLORS.tmax, unit: tUnit() }, { key: 'tmin', label: 'Minimum', color: COLORS.tmin, unit: tUnit() }],
+        Object.assign({ slots: true, bandLabels: false, refLines: [{ y: toT(S.p.heat), label: 'heat ' + fmtTh(S.p.heat), color: '#e34948' }, { y: toT(S.p.frost), label: 'frost ' + fmtTh(S.p.frost), color: '#6250d6' }] }, bandOpt));
     chartXY('#wx_c_rain', pts, [rep ? { key: 'rain', label: 'Rain', color: COLORS.rain, unit: 'mm', colorOf: p => (p.rain >= S.p.heavy ? '#1e3a8a' : null) } : { key: 'rain_hours', label: 'Rain hours', color: COLORS.rain, unit: 'h', digits: 0 }],
         Object.assign({ zero: true, height: 150, bandLabels: false, type: 'bar' }, bandOpt));
     chartXY('#wx_c_water', pts, (rep ? [{ key: 'rainCum', label: 'Rain', color: COLORS.rain, unit: 'mm' }] : []).concat(hasEt0 ? [{ key: 'et0Cum', label: 'ET0', color: COLORS.et0, unit: 'mm' }] : []),
         Object.assign({ zero: true, slots: true, bandLabels: false }, bandOpt));
-    chartXY('#wx_c_gdd', pts, [{ key: 'gddCum', label: 'Degree-days', color: COLORS.gdd, unit: '°C·d', digits: 0 }], Object.assign({ zero: true, height: 150, slots: true, bandLabels: false }, bandOpt));
+    chartXY('#wx_c_gdd', pts, [{ key: 'gddCum', label: 'Degree-days', color: COLORS.gdd, unit: ddUnit(), digits: 0 }], Object.assign({ zero: true, height: 150, slots: true, bandLabels: false }, bandOpt));
 }
 
 // ---------------------------------------------------------------- maize relative maturity
@@ -744,7 +929,7 @@ function rmCard(A) {
         ? 'No killing frost: the season length, not frost, limits the hybrid. Here an <b>RM ' + S.p.rmRef + '</b> hybrid planted ' + fmtDate(A.from) + ' silks in <b class="wx-big">' + (r.refSilkDays || '–') + ' days</b> and reaches black layer in <b class="wx-big">' + (r.refDays || '–') + ' days</b>'
             + (r.gddFPerDay ? ' (' + r.gddFPerDay.toFixed(1) + ' GDD °F a day)' : '') + (r.refDays ? '.' : ': not reached by ' + fmtDate(r.end) + '.')
         : r.rm !== null
-            ? 'Hybrids up to <b class="wx-big">RM ' + r.rm + '</b> reach black layer: ' + fmtInt(r.gddF) + ' GDD °F (' + fmtInt(r.gddC) + ' °C·d) from planting ' + fmtDate(A.from) + ' to ' + fmtDate(r.end) + ' (' + esc(r.reason) + ').'
+            ? 'Hybrids up to <b class="wx-big">RM ' + r.rm + '</b> reach black layer: ' + fmtInt(r.gddF) + ' GDD °F' + (isF() ? '' : ' (' + fmtInt(r.gddC) + ' °C·d)') + ' from planting ' + fmtDate(A.from) + ' to ' + fmtDate(r.end) + ' (' + esc(rmReasonText(r.reason, r.killTemp)) + ').'
             : 'Only ' + fmtInt(r.gddF) + ' GDD °F before the killing frost of ' + fmtDate(r.end) + ': not enough for an RM ' + RM_STEPS[0] + ' hybrid.';
     return '<div class="wx-card">' + head + '<p class="wx-rm-head">' + headline + '</p>'
         + (tropical ? '<p class="wx-note"><span class="glyphicon glyphicon-info-sign"></span>Where there is no frost, hybrids are placed by how fast they mature (days to silking and black layer) against the length of the rainy season or of the planting window. The reference RM can be changed in the settings.</p>' : '')
@@ -760,21 +945,31 @@ function monthTable(days, rep) {
         return '<tr><td>' + m + '</td><td class="n">' + s.withData + ' / ' + s.days + '</td>'
             + (rep ? '<td class="n">' + f1(s.rain) + '</td><td class="n">' + s.rainyDays + '</td>' : '<td class="n">' + s.rainHours + '</td>')
             + '<td class="n">' + f1(s.et0) + '</td>' + (rep ? '<td class="n ' + (s.balance !== null && s.balance < 0 ? 'wx-neg' : 'wx-pos') + '">' + (s.balance === null ? '–' : sign(s.balance)) + '</td>' : '')
-            + '<td class="n">' + f1(s.tmax) + '</td><td class="n">' + f1(s.tmin) + '</td><td class="n">' + f1(s.gdd, 0) + '</td>'
+            + '<td class="n">' + f1(toT(s.tmax)) + '</td><td class="n">' + f1(toT(s.tmin)) + '</td><td class="n">' + f1(toDD(s.gdd), 0) + '</td>'
             + '<td class="n">' + (s.heat === null ? '–' : s.heat) + '</td><td class="n">' + (s.frost === null ? '–' : s.frost) + '</td></tr>';
     }).join('');
     return '<div class="wx-table-wrap"><table class="table table-condensed wx-table"><thead><tr><th>Month</th><th class="n">Days observed</th>'
         + (rep ? '<th class="n">Rain mm</th><th class="n">Rainy days</th>' : '<th class="n">Rain hours</th>')
-        + '<th class="n">ET0 mm</th>' + (rep ? '<th class="n">Balance mm</th>' : '') + '<th class="n">Mean max °C</th><th class="n">Mean min °C</th>'
-        + '<th class="n">Degree-days</th><th class="n">Heat days</th><th class="n">Frost days</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+        + '<th class="n">ET0 mm</th>' + (rep ? '<th class="n">Balance mm</th>' : '') + '<th class="n">Mean max ' + tUnit() + '</th><th class="n">Mean min ' + tUnit() + '</th>'
+        + '<th class="n">Degree-days ' + ddUnit() + '</th><th class="n">Heat days</th><th class="n">Frost days</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 function dailyCols(rep) {
     return [
-        ['date', 'Date'], ['tmax', 'Max °C'], ['tmin', 'Min °C'], ['tmean', 'Mean °C'], ['rh', 'RH %'],
+        ['date', 'Date'], ['tmax', 'Max ' + tUnit()], ['tmin', 'Min ' + tUnit()], ['tmean', 'Mean ' + tUnit()], ['rh', 'RH %'],
         rep ? ['rain', 'Rain mm'] : null, ['rain_hours', 'Rain hours'], ['et0', 'ET0 mm'], ['et0_method', 'ET0 method'],
-        ['gdd', 'Degree-days'], ['radiation', 'Radiation MJ/m²'], ['wind_mean', 'Wind km/h'], ['hours', 'Reports'],
+        ['gdd', 'Degree-days ' + ddUnit()], ['radiation', 'Radiation MJ/m²'], ['wind_mean', 'Wind km/h'], ['hours', 'Reports'],
     ].filter(Boolean);
+}
+
+// a daily value in the display unit (temperatures and degree-days rounded to 0.1)
+const TEMP_COLS = ['tmax', 'tmin', 'tmean'];
+function dailyVal(d, k) {
+    if (k === 'gdd' || TEMP_COLS.includes(k)) {
+        const v = inUnit(k, k === 'gdd' ? d.gdd : d[k]);
+        return v === null || v === undefined ? null : (Math.round(v * 10) / 10).toFixed(1);
+    }
+    return d[k];
 }
 
 function dailyTable(days, rep) {
@@ -782,8 +977,8 @@ function dailyTable(days, rep) {
     const cell = (d, k) => {
         if (k === 'date') return esc(d.date);
         if (k === 'et0_method') return d.et0_method === 'PM' ? 'Penman-Monteith' : d.et0_method === 'HS' ? 'Hargreaves' : '';
-        if (k === 'gdd') return d.gdd === null || d.gdd === undefined ? '–' : d.gdd.toFixed(1);
-        return num(d[k]) === null ? '–' : esc(d[k]);
+        const v = dailyVal(d, k);
+        return v === null || v === undefined || v === '' ? '–' : esc(v);
     };
     const rows = days.slice().reverse().map(d => '<tr' + (d.missing || !d.complete ? ' class="wx-fc" title="no or incomplete observation"' : '') + '>'
         + cols.map(c => '<td' + (c[0] === 'date' || c[0] === 'et0_method' ? '' : ' class="n"') + '>' + cell(d, c[0]) + '</td>').join('') + '</tr>').join('');
@@ -808,16 +1003,16 @@ function stationText(r) {
 function downloadDaily() {
     const A = S.season, cols = dailyCols(A.rep);
     csvDownload('weather_' + S.loc.name + '_' + S.start + '_' + S.end + '.csv', ['location', 'stations'].concat(cols.map(c => c[1])),
-        A.days.map(d => [S.loc.name, stationText(S.daily)].concat(cols.map(c => (c[0] === 'gdd' ? (d.gdd === null || d.gdd === undefined ? '' : d.gdd.toFixed(1)) : d[c[0]])))));
+        A.days.map(d => [S.loc.name, stationText(S.daily)].concat(cols.map(c => dailyVal(d, c[0])))));
 }
 
 const r1 = v => (v === null || v === undefined ? '' : typeof v === 'number' ? Math.round(v * 10) / 10 : v);
-function covRow(c) { return COVARIATE_COLUMNS.map(([k]) => (k === 'coverage' ? Math.round(100 * c.coverage) : r1(c[k]))); }
+function covRow(c) { return covariateColumns().map(([k]) => (k === 'coverage' ? Math.round(100 * c.coverage) : r1(inUnit(k, c[k])))); }
 
 function downloadSeasonCov() {
     const c = covariates(S.season.days, S.season.rep, S.p, S.crop);
     csvDownload('environment_' + S.loc.name + '_' + S.start + '_' + S.end + '.csv',
-        ['location', 'stations', 'crop', 'start', 'end', 'planting'].concat(COVARIATE_COLUMNS.map(c2 => c2[1])),
+        ['location', 'stations', 'crop', 'start', 'end', 'planting'].concat(covariateColumns().map(c2 => c2[1])),
         [[S.loc.name, stationText(S.daily), (CROPS.find(x => x.v === S.crop) || CROPS[0]).label, S.start, S.end, S.season.from].concat(covRow(c))]);
 }
 
@@ -877,7 +1072,7 @@ function covTable(rows, labelCell, extraHead, opt) {
         if (row.state === 'error') return '<tr>' + head + '<td colspan="11" class="text-danger wx-small">' + esc(row.error) + '</td></tr>';
         const c = row.cov;
         if (c.coverage < 0.2) return '<tr class="wx-fc">' + head + '<td class="n wx-warn-txt">' + Math.round(100 * c.coverage) + '%</td><td colspan="10" class="wx-muted wx-small">too few days observed by this station for these dates (the station may not have existed yet)</td>' + (isMaize() ? '<td class="n">' + rmCell(c) + '</td>' : '') + '<td></td>' + (opt.tail ? opt.tail(row) : '') + '</tr>';
-        const n = (k, d) => (num(c[k]) === null ? '–' : (+c[k]).toFixed(d || 0));
+        const n = (k, d) => { const v = num(inUnit(k, c[k])); return v === null ? '–' : v.toFixed(d || 0); };
         return '<tr' + (row.highlight ? ' class="on"' : '') + '>' + head
             + '<td class="n' + (c.coverage < 0.8 ? ' wx-warn-txt' : '') + '">' + Math.round(100 * c.coverage) + '%</td>'
             + '<td class="n">' + (row.rep ? n('rain') + bar(c.rain, M2.rain) : '–') + '</td>'
@@ -893,8 +1088,8 @@ function covTable(rows, labelCell, extraHead, opt) {
             + (opt.tail ? opt.tail(row) : '') + '</tr>';
     }).join('');
     return '<div class="wx-table-wrap"><table class="table table-condensed wx-table"><thead><tr>' + extraHead
-        + '<th class="n">Days observed</th><th class="n">Rain mm</th><th class="n">Balance mm</th><th class="n">Longest dry spell</th><th class="n">Degree-days</th>'
-        + '<th class="n">Mean max °C</th><th class="n">Heat days</th><th class="n">Frost days</th><th class="n" title="Rain − ET0 in the critical stage">Critical balance mm</th><th class="n">Critical heat days</th>' + (isMaize() ? '<th class="n" title="Largest RM reaching black layer before the first killing frost; without frost, days for the reference RM to reach black layer">Max RM / days to black layer</th>' : '') + '<th>Main stress</th>'
+        + '<th class="n">Days observed</th><th class="n">Rain mm</th><th class="n">Balance mm</th><th class="n">Longest dry spell</th><th class="n">Degree-days ' + ddUnit() + '</th>'
+        + '<th class="n">Mean max ' + tUnit() + '</th><th class="n">Heat days</th><th class="n">Frost days</th><th class="n" title="Rain − ET0 in the critical stage">Critical balance mm</th><th class="n">Critical heat days</th>' + (isMaize() ? '<th class="n" title="Largest RM reaching black layer before the first killing frost; without frost, days for the reference RM to reach black layer">Max RM / days to black layer</th>' : '') + '<th>Main stress</th>'
         + (opt.tailHead || '') + '</tr></thead><tbody>' + body + '</tbody></table></div>';
 }
 
@@ -920,10 +1115,10 @@ function renderTrials() {
         + table + charts
         + '<p class="wx-note"><span class="glyphicon glyphicon-info-sign"></span>Use these covariates to explain genotype × environment interaction: a trial with a water deficit or heat at flowering is a stress environment. Values come from the weather station of the location (' + esc(stationText(null)) + ').</p></div>');
     if (ok.length > 1) {
-        const items = k => ok.map(r => ({ label: r.t.name, value: num(r.cov[k]) }));
+        const items = k => ok.map(r => ({ label: r.t.name, value: num(inUnit(k, r.cov[k])) }));
         catBars('#wx_tc_rain', items('rain'), { unit: 'mm', ref: median(items('rain').map(i => i.value).filter(v => v !== null)) });
         catBars('#wx_tc_crit', items('critical_balance'), { unit: 'mm', color: '#f4a3a3', ref: 0, refLabel: 'no deficit' });
-        catBars('#wx_tc_gdd', items('gdd'), { unit: '°C·d', color: '#9fdcc3' });
+        catBars('#wx_tc_gdd', items('gdd'), { unit: ddUnit(), color: '#9fdcc3' });
         catBars('#wx_tc_heat', items('heat_days'), { unit: 'days', color: '#f4a3a3' });
     }
 }
@@ -931,7 +1126,7 @@ function renderTrials() {
 function downloadTrials() {
     const ok = S.trialRows.rows.filter(r => r.state === 'ok');
     csvDownload('trial_environments_' + S.loc.name + '.csv',
-        ['trial_id', 'trial', 'year', 'location', 'stations', 'crop', 'planting', 'end', 'harvest_date_known'].concat(COVARIATE_COLUMNS.map(c => c[1])),
+        ['trial_id', 'trial', 'year', 'location', 'stations', 'crop', 'planting', 'end', 'harvest_date_known'].concat(covariateColumns().map(c => c[1])),
         ok.map(r => [r.t.id, r.t.name, r.t.year, S.loc.name, stationText(null), (CROPS.find(x => x.v === S.crop) || CROPS[0]).label, r.w.start, r.w.end, r.w.noHarvest ? 'no' : 'yes'].concat(covRow(r.cov))));
 }
 
@@ -1038,11 +1233,11 @@ function renderYears() {
         + '<h5 class="wx-sub" style="margin-top:14px">Every year</h5>' + table
         + '<p class="wx-note">Years with less than 80% of the days observed are not ranked (shown faded). The same planting date and crop stages are used every year.</p></div>');
     if (ok.length > 1) {
-        const items = k => ok.map(y => ({ label: label(y), value: num(y.cov[k]), highlight: y.k === 0, faded: y.cov.coverage < 0.8 }));
-        const ref = k => median(ok.filter(y => y.cov.coverage >= 0.8 && num(y.cov[k]) !== null).map(y => y.cov[k]));
+        const items = k => ok.map(y => ({ label: label(y), value: num(inUnit(k, y.cov[k])), highlight: y.k === 0, faded: y.cov.coverage < 0.8 }));
+        const ref = k => median(ok.filter(y => y.cov.coverage >= 0.8 && num(y.cov[k]) !== null).map(y => num(inUnit(k, y.cov[k]))));
         catBars('#wx_yc_rain', items('rain'), { unit: 'mm', ref: ref('rain') });
         catBars('#wx_yc_crit', items('critical_balance'), { unit: 'mm', ref: ref('critical_balance'), color: '#f4a3a3', highlightColor: '#c0392b' });
-        catBars('#wx_yc_gdd', items('gdd'), { unit: '°C·d', ref: ref('gdd'), color: '#9fdcc3', highlightColor: '#0f8a5f' });
+        catBars('#wx_yc_gdd', items('gdd'), { unit: ddUnit(), ref: ref('gdd'), color: '#9fdcc3', highlightColor: '#0f8a5f' });
         catBars('#wx_yc_heat', items('heat_days'), { unit: 'days', ref: ref('heat_days'), color: '#f4a3a3', highlightColor: '#c0392b' });
         if (isMaize()) {
             const tempYears = list.filter(y => y.state === 'ok' && y.cov.rm_temp_ok).slice().reverse();
@@ -1058,7 +1253,7 @@ function renderYears() {
 function downloadYears() {
     const ok = S.years.list.filter(y => y.state === 'ok');
     csvDownload('past_years_' + S.loc.name + '_' + S.start + '_' + S.end + '.csv',
-        ['location', 'stations', 'start', 'end', 'planting', 'this_season'].concat(COVARIATE_COLUMNS.map(c => c[1])),
+        ['location', 'stations', 'start', 'end', 'planting', 'this_season'].concat(covariateColumns().map(c => c[1])),
         ok.map(y => [S.loc.name, stationText(null), y.start, y.end, y.planting, y.k === 0 ? 'yes' : 'no'].concat(covRow(y.cov))));
 }
 
@@ -1129,10 +1324,10 @@ function renderLocRows() {
             + '<div><div class="wx-sub">Heat-stress days</div><div id="wx_lc_heat"></div></div></div>' : '')
         + table + (isMaize() ? rmZonesCard(ok) : '') + '</div>');
     if (ok.length > 1) {
-        const items = k => ok.map(r => ({ label: r.l.name, value: num(r.cov[k]), highlight: r.highlight, faded: r.cov.coverage < 0.8 }));
+        const items = k => ok.map(r => ({ label: r.l.name, value: num(inUnit(k, r.cov[k])), highlight: r.highlight, faded: r.cov.coverage < 0.8 }));
         catBars('#wx_lc_rain', items('rain'), { unit: 'mm', ref: median(items('rain').map(i => i.value).filter(v => v !== null)) });
         catBars('#wx_lc_crit', items('critical_balance'), { unit: 'mm', color: '#f4a3a3', highlightColor: '#c0392b', ref: 0, refLabel: 'no deficit' });
-        catBars('#wx_lc_gdd', items('gdd'), { unit: '°C·d', color: '#9fdcc3', highlightColor: '#0f8a5f' });
+        catBars('#wx_lc_gdd', items('gdd'), { unit: ddUnit(), color: '#9fdcc3', highlightColor: '#0f8a5f' });
         catBars('#wx_lc_heat', items('heat_days'), { unit: 'days', color: '#f4a3a3', highlightColor: '#c0392b' });
     }
 }
@@ -1159,7 +1354,7 @@ function rmZonesCard(ok) {
 function downloadLocs() {
     const ok = S.locRows.rows.filter(r => r.state === 'ok');
     csvDownload('location_environments_' + S.start + '_' + S.end + '.csv',
-        ['location_id', 'location', 'station', 'temperature_station', 'start', 'end', 'planting'].concat(COVARIATE_COLUMNS.map(c => c[1])),
+        ['location_id', 'location', 'station', 'temperature_station', 'start', 'end', 'planting'].concat(covariateColumns().map(c => c[1])),
         ok.map(r => [r.l.id, r.l.name, stationLabel(r.st), r.t ? r.t.network + ' ' + r.t.id : '', S.start, S.end, S.planting || S.start].concat(covRow(r.cov))));
 }
 
@@ -1295,10 +1490,12 @@ function renderCompare() {
 // ---------------------------------------------------------------- crop and thresholds
 function readParams() {
     const v = (id, d) => { const x = num($(id).val()); return x === null ? d : x; };
-    S.p = { base: v('#wx_base', DEFAULTS.base), cap: v('#wx_cap', DEFAULTS.cap), heat: v('#wx_heat', DEFAULTS.heat), frost: v('#wx_frost', DEFAULTS.frost), dry: Math.max(2, v('#wx_dry', DEFAULTS.dry)), heavy: v('#wx_heavy', DEFAULTS.heavy),
-        kill: v('#wx_kill', DEFAULTS.kill), rm100: v('#wx_rm100', DEFAULTS.rm100), rmDay: Math.max(1, v('#wx_rmday', DEFAULTS.rmDay)), silk: v('#wx_silk', DEFAULTS.silk), rmRef: v('#wx_rmref', DEFAULTS.rmRef) };
+    const t = (id, d) => { const x = fromT($(id).val()); return x === null ? d : x; };    // typed in the unit shown, kept in C
+    S.p = { base: t('#wx_base', DEFAULTS.base), cap: t('#wx_cap', DEFAULTS.cap), heat: t('#wx_heat', DEFAULTS.heat), frost: t('#wx_frost', DEFAULTS.frost), dry: Math.max(2, v('#wx_dry', DEFAULTS.dry)), heavy: v('#wx_heavy', DEFAULTS.heavy),
+        kill: t('#wx_kill', DEFAULTS.kill), rm100: v('#wx_rm100', DEFAULTS.rm100), rmDay: Math.max(1, v('#wx_rmday', DEFAULTS.rmDay)), silk: v('#wx_silk', DEFAULTS.silk), rmRef: v('#wx_rmref', DEFAULTS.rmRef) };
     storage('params', { crop: S.crop, p: S.p });
     S.years = null; S.locRows = null;
+    renderConcepts();
     refreshAnalysis();
 }
 
@@ -1311,8 +1508,11 @@ function refreshAnalysis() {
 
 function renderParams() {
     $('#wx_crop').html(CROPS.map(c => '<option value="' + c.v + '"' + (c.v === S.crop ? ' selected' : '') + '>' + esc(c.label) + '</option>').join(''));
-    $('#wx_base').val(S.p.base); $('#wx_cap').val(S.p.cap); $('#wx_heat').val(S.p.heat); $('#wx_frost').val(S.p.frost); $('#wx_dry').val(S.p.dry); $('#wx_heavy').val(S.p.heavy);
-    $('#wx_kill').val(S.p.kill); $('#wx_rm100').val(S.p.rm100); $('#wx_rmday').val(S.p.rmDay); $('#wx_silk').val(S.p.silk); $('#wx_rmref').val(S.p.rmRef);
+    const tv = c => { const x = toT(c); return x === null ? '' : Math.round(x * 10) / 10; };
+    $('#wx_base').val(tv(S.p.base)); $('#wx_cap').val(tv(S.p.cap)); $('#wx_heat').val(tv(S.p.heat)); $('#wx_frost').val(tv(S.p.frost)); $('#wx_dry').val(S.p.dry); $('#wx_heavy').val(S.p.heavy);
+    $('#wx_kill').val(tv(S.p.kill));
+    $('.wx-tunit').text(tUnit());
+    $('#wx_tunit button').each(function () { $(this).toggleClass('on', $(this).data('tunit') === UNITS.temp); }); $('#wx_rm100').val(S.p.rm100); $('#wx_rmday').val(S.p.rmDay); $('#wx_silk').val(S.p.silk); $('#wx_rmref').val(S.p.rmRef);
     $('.wx-rm-params').toggle(S.crop === 'maize');
 }
 
@@ -1331,9 +1531,17 @@ function bind() {
             S.unit = u;
             storage('unit', u);
             renderRangeStep(); renderStations(); renderChosen(); renderLocations();
+            if (S.lastFind && !findTimer) {
+                // same distance in the other unit: the list is still valid, only its labels change
+                S.lastFind.range = S.range; S.lastFind.unit = S.unit;
+                checkRangeStale();
+            }
         })
-        .on('keydown', '#wx_range', e => { if (e.key === 'Enter') findStations(); })
-        .on('click', '#wx_find', () => { $('#wx_flash').empty(); findStations(); })
+        .on('click', '#wx_tunit button', function () { setTempUnit(String($(this).data('tunit'))); })
+        .on('input', '#wx_range', checkRangeStale)
+        .on('keydown', '#wx_range', e => { if (e.key === 'Enter' && !findTimer) findStations(); })
+        .on('click', '#wx_find, #wx_find_retry', () => { $('#wx_flash').empty(); findStations(); })
+        .on('click', '[data-goto-tab]', function (e) { e.preventDefault(); showTab($(this).data('goto-tab')); })
         .on('click', '[data-choose]', function (e) { e.stopPropagation(); chooseStation(String($(this).data('choose'))); })
         .on('click', '#wx_station_table tbody tr', function () {
             const s = S.stations.find(x => stationKey(x) === String($(this).data('skey')));
@@ -1359,7 +1567,7 @@ function bind() {
         .on('change', '#wx_crop', function () {
             S.crop = $(this).val();
             const c = CROPS.find(x => x.v === S.crop);
-            if (c) { $('#wx_base').val(c.base); $('#wx_cap').val(c.cap); }
+            if (c) { $('#wx_base').val(Math.round(toT(c.base) * 10) / 10); $('#wx_cap').val(Math.round(toT(c.cap) * 10) / 10); }
             $('.wx-rm-params').toggle(S.crop === 'maize');
             readParams();
         })
@@ -1373,6 +1581,7 @@ function bind() {
         .on('change', '[data-lpick]', function () { S.locPick[$(this).data('lpick')] = $(this).is(':checked'); })
         .on('click', '#wx_locs_go', loadLocRows)
         .on('click', '#wx_locs_csv', downloadLocs)
+        .on('change', '#wx_station_select', function () { const k = String($(this).val() || ''); if (k && k !== stationKey(S.station)) chooseStation(k); })
         .on('change', '#wx_temp_station', function () {
             const k = $(this).val();
             S.tempStation = S.stations.find(x => stationKey(x) === k) || (S.tempStation && stationKey(S.tempStation) === k ? S.tempStation : null);
@@ -1393,6 +1602,28 @@ function bind() {
     });
 }
 
+// Concepts tab: the explanations quote the current settings
+function renderConcepts() {
+    const p = S.p;
+    const set = { base: fmtTh(p.base), cap: fmtTh(p.cap), heat: fmtTh(p.heat), frost: fmtTh(p.frost), kill: fmtTh(p.kill),
+        dry: p.dry, heavy: p.heavy + ' mm', rm100: fmtInt(p.rm100), rmday: p.rmDay, rm110: fmtInt(rmToGddF(110, p)), silk: p.silk + '%', rmref: p.rmRef };
+    Object.keys(set).forEach(k => $('[data-c="' + k + '"]').text(set[k]));
+}
+
+// °C / °F: only the display changes, every value is kept in °C
+function setTempUnit(u) {
+    if (u !== 'C' && u !== 'F') return;
+    UNITS.temp = u;
+    storage('tunit', u);
+    renderParams();
+    if (S.stations.length) renderStations();
+    if (S.tab === 'season' && S.daily) renderSeason();
+    if (S.tab === 'trials' && S.trialRows) renderTrials();
+    if (S.tab === 'years' && S.years) renderYears();
+    if (S.tab === 'locations' && S.locRows) renderLocRows();
+    renderConcepts();
+}
+
 function useTrialSeason(t) {
     const w = trialWindow(t);
     S.start = w.start; S.end = w.end; S.planting = t.planting; S.plantingSet = true; S.preset = '';
@@ -1406,7 +1637,9 @@ export function init() {
     $ = window.jQuery;
     const saved = storage('params');
     if (saved && saved.p) { S.crop = saved.crop || ''; S.p = Object.assign({}, DEFAULTS, saved.p); }
+    if (storage('tunit') === 'F') UNITS.temp = 'F';
     renderParams();
+    renderConcepts();
     bind();
     call('GET', API + '/config').then(cfg => {
         S.cfg = cfg;

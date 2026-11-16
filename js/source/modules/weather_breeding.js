@@ -37,6 +37,28 @@ export const CROPS = [
     { v: 'coffee', label: 'Coffee', base: 10, cap: 34, stages: [['Early', 0.33], ['Flowering and fruit set', 0.66, 1], ['Fruit filling', 1]] },
 ];
 
+// ---------------------------------------------------------------- temperature display unit
+// Every calculation and every stored value stays in degrees C; only what is shown
+// (tables, charts, texts, CSV) follows the unit chosen on the page.
+export const UNITS = { temp: 'C' };
+export const isF = () => UNITS.temp === 'F';
+export const tUnit = () => (isF() ? '°F' : '°C');
+export const ddUnit = () => (isF() ? '°F·d' : '°C·d');
+// a temperature, and a temperature difference / degree-days (no 32 offset)
+export function toT(c) { const x = num(c); return x === null ? null : isF() ? x * 1.8 + 32 : x; }
+export function toDD(c) { const x = num(c); return x === null ? null : isF() ? x * 1.8 : x; }
+export function fromT(v) { const x = num(v); return x === null ? null : isF() ? Math.round(((x - 32) / 1.8) * 100) / 100 : x; }
+// '35.2 °C' / '95.4 °F'; a threshold drops a trailing .0 ('0 °C', '32 °F', '28.4 °F')
+export function fmtT(c, d) { const x = toT(c); return x === null ? '?' : x.toFixed(d === undefined ? 1 : d) + ' ' + tUnit(); }
+export function fmtTh(c) { const x = toT(c); return x === null ? '?' : String(Math.round(x * 10) / 10) + ' ' + tUnit(); }
+export const TEMP_KEYS = ['tmax', 'tmin', 'tmean', 'tmax_mean', 'tmin_mean', 'tmax_abs', 'tmin_abs', 'critical_tmax_mean', 'rm_kill_temp'];
+// a value of a covariate / daily column in the display unit
+export function inUnit(key, v) {
+    if (TEMP_KEYS.includes(key)) return toT(v);
+    if (key === 'gdd') return toDD(v);
+    return v;
+}
+
 export const DEFAULTS = { base: 10, cap: 30, heat: 35, frost: 0, dry: 10, heavy: 50, kill: -2, rm100: 2450, rmDay: 25, silk: 50, rmRef: 110 };
 
 // ---------------------------------------------------------------- maize relative maturity (RM / CRM)
@@ -51,10 +73,10 @@ export function gddFToRm(gddF, p) { return 100 + (gddF - p.rm100) / p.rmDay; }
 // degree-days available to a maize crop: from planting to the first killing frost
 // (min <= kill, after the first 3 weeks) or to the end of the period
 export function rmSeason(days, p) {
-    let gddC = 0, end = null, reason = 'end of the period';
+    let gddC = 0, end = null, reason = 'end of the period', killTemp = null;
     for (let i = 0; i < days.length; i++) {
         const d = days[i];
-        if (i > 21 && num(d.tmin) !== null && d.tmin <= p.kill) { end = d.date; reason = 'killing frost (' + d.tmin.toFixed(1) + ' °C)'; break; }
+        if (i > 21 && num(d.tmin) !== null && d.tmin <= p.kill) { end = d.date; reason = 'killing frost'; killTemp = d.tmin; break; }
         if (d.gdd !== null && d.gdd !== undefined) gddC += d.gdd;
         end = d.date;
     }
@@ -67,7 +89,7 @@ export function rmSeason(days, p) {
     const frost = /frost/.test(reason);
     const ref = ok ? rmDates(days, p.rmRef, p) : null;
     return { gddC, gddF, rm: frost && rm !== null && rm >= 60 ? rm : null, rmIfEnd: rm !== null && rm >= 60 ? rm : null, gddFPerDay: ok && days.length ? gddF / Math.max(1, days.indexOf(days.find(d => d.date === end)) + 1) : null,
-        refDays: ref && ref.black ? daysBetween(days[0].date, ref.black) : null, refSilkDays: ref && ref.silk ? daysBetween(days[0].date, ref.silk) : null, tooShort: ok && gddFToRm(gddF, p) < 60, end, reason, ok, tempCoverage: days.length ? tempDays / days.length : 0, frost: /frost/.test(reason) };
+        refDays: ref && ref.black ? daysBetween(days[0].date, ref.black) : null, refSilkDays: ref && ref.silk ? daysBetween(days[0].date, ref.silk) : null, tooShort: ok && gddFToRm(gddF, p) < 60, end, reason, killTemp, ok, tempCoverage: days.length ? tempDays / days.length : 0, frost: /frost/.test(reason) };
 }
 
 // silking and black-layer dates of a hybrid of RM rm planted on the first day
@@ -85,6 +107,8 @@ export function rmDates(days, rm, p) {
 }
 
 // RM zone over several seasons: the largest RM reaching black layer in at least share of them
+export function rmReasonText(reason, killTemp) { return reason + (killTemp !== null && killTemp !== undefined ? ' (' + fmtT(killTemp) + ')' : ''); }
+
 export function rmZone(rms, share) {
     const v = rms.filter(x => x !== null && x !== undefined).sort((a, b) => a - b);
     if (v.length < 3) return null;
@@ -209,8 +233,9 @@ export function stageIssues(s, p) {
         else if (ratio < 0.8) out.push({ level: 'warn', kind: 'water', text: 'some water deficit', detail: 'rain ' + s.rain.toFixed(0) + ' mm vs ET0 ' + s.et0.toFixed(0) + ' mm' });
     }
     if (s.dry && s.dry.days >= p.dry) out.push({ level: s.dry.days >= p.dry * 2 ? 'bad' : 'warn', kind: 'dry', text: 'dry spell of ' + s.dry.days + ' days', detail: s.dry.start + ' to ' + s.dry.end });
-    if (s.heat) out.push({ level: s.heat >= 3 ? 'bad' : 'warn', kind: 'heat', text: s.heat + ' heat-stress day' + (s.heat > 1 ? 's' : ''), detail: 'max ≥ ' + p.heat + ' °C (highest ' + (s.absMax !== null ? s.absMax.toFixed(1) : '?') + ' °C)' });
-    if (s.frost) out.push({ level: 'bad', kind: 'frost', text: s.frost + ' frost day' + (s.frost > 1 ? 's' : ''), detail: 'min ≤ ' + p.frost + ' °C (lowest ' + (s.absMin !== null ? s.absMin.toFixed(1) : '?') + ' °C)' });
+    // getters: the temperatures are written in the unit shown at the time they are read
+    if (s.heat) out.push({ level: s.heat >= 3 ? 'bad' : 'warn', kind: 'heat', text: s.heat + ' heat-stress day' + (s.heat > 1 ? 's' : ''), get detail() { return 'max ≥ ' + fmtTh(p.heat) + ' (highest ' + fmtT(s.absMax) + ')'; } });
+    if (s.frost) out.push({ level: 'bad', kind: 'frost', text: s.frost + ' frost day' + (s.frost > 1 ? 's' : ''), get detail() { return 'min ≤ ' + fmtTh(p.frost) + ' (lowest ' + fmtT(s.absMin) + ')'; } });
     if (s.heavy) out.push({ level: 'warn', kind: 'wet', text: s.heavy + ' day' + (s.heavy > 1 ? 's' : '') + ' of heavy rain', detail: '≥ ' + p.heavy + ' mm (max ' + (s.maxRain !== null ? s.maxRain.toFixed(0) : '?') + ' mm): waterlogging, lodging, disease' });
     if (s.rain !== null && s.et0 && s.rainCoverage >= 0.8 && s.rain / s.et0 > 2 && s.rain > 100) out.push({ level: 'warn', kind: 'wet', text: 'very wet', detail: 'rain ' + s.rain.toFixed(0) + ' mm, twice the ET0' });
     const order = { bad: 0, warn: 1 };
@@ -243,7 +268,8 @@ export function stressDays(days, rainReported, p) {
 export function verdicts(stages, season, p) {
     const out = [];
     stages.filter(s => s.critical).concat(stages.filter(s => !s.critical)).forEach(st => {
-        st.issues.forEach(i => out.push(Object.assign({ stage: st.name, critical: st.critical }, i)));
+        // copy the property descriptors (Object.assign would freeze the detail getters)
+        st.issues.forEach(i => out.push(Object.defineProperties({ stage: st.name, critical: st.critical }, Object.getOwnPropertyDescriptors(i))));
     });
     if (season.coverage < 0.8) out.push({ level: 'info', stage: 'Data', text: Math.round(100 * season.coverage) + '% of the days observed', detail: 'totals are lower than the real ones; see Data sources' });
     return out;
@@ -267,21 +293,26 @@ export function covariates(days, rainReported, p, cropKey) {
         critical_tmax_mean: crit ? crit.s.tmax : null,
         gdd_f: s.gdd !== null ? s.gdd * 1.8 : null,
         ...(cropKey === 'maize' ? (r => ({
-            max_rm: r.rm, rm_season_end: r.end, rm_end_reason: r.reason, rm_temp_ok: r.ok,
+            max_rm: r.rm, rm_season_end: r.end, rm_end_reason: r.reason, rm_kill_temp: r.killTemp, rm_temp_ok: r.ok,
             rm_ref_days: r.refDays, rm_ref_silk_days: r.refSilkDays, gdd_f_per_day: r.gddFPerDay,
         }))(rmSeason(days, p)) : {}),
         issues: verdicts(stages, s, p).filter(v => v.level !== 'info'),
     };
 }
 
-export const COVARIATE_COLUMNS = [
-    ['days', 'Days'], ['coverage', 'Days observed (%)'], ['rain', 'Rain (mm)'], ['rainy_days', 'Rainy days'],
-    ['longest_dry_spell', 'Longest dry spell (days)'], ['et0', 'ET0 (mm)'], ['water_balance', 'Water balance (mm)'],
-    ['gdd', 'Degree-days'], ['tmax_mean', 'Mean max (°C)'], ['tmin_mean', 'Mean min (°C)'], ['tmax_abs', 'Highest (°C)'],
-    ['tmin_abs', 'Lowest (°C)'], ['heat_days', 'Heat days'], ['frost_days', 'Frost days'], ['heavy_rain_days', 'Heavy-rain days'],
-    ['critical_stage', 'Critical stage'], ['critical_start', 'Critical from'], ['critical_end', 'Critical to'],
-    ['critical_rain', 'Critical rain (mm)'], ['critical_et0', 'Critical ET0 (mm)'], ['critical_balance', 'Critical balance (mm)'],
-    ['critical_heat_days', 'Critical heat days'], ['critical_tmax_mean', 'Critical mean max (°C)'],
-    ['gdd_f', 'GDD (°F, 50/86)'], ['max_rm', 'Max maize RM (black layer, frost-limited)'], ['rm_season_end', 'RM season end'], ['rm_end_reason', 'RM season end reason'],
-    ['rm_ref_silk_days', 'Days to silking of the reference RM'], ['rm_ref_days', 'Days to black layer of the reference RM'], ['gdd_f_per_day', 'GDD °F per day'],
-];
+// covariate columns, labelled in the temperature unit shown
+export function covariateColumns() {
+    const t = tUnit();
+    return [
+        ['days', 'Days'], ['coverage', 'Days observed (%)'], ['rain', 'Rain (mm)'], ['rainy_days', 'Rainy days'],
+        ['longest_dry_spell', 'Longest dry spell (days)'], ['et0', 'ET0 (mm)'], ['water_balance', 'Water balance (mm)'],
+        ['gdd', 'Degree-days (' + ddUnit() + ')'], ['tmax_mean', 'Mean max (' + t + ')'], ['tmin_mean', 'Mean min (' + t + ')'], ['tmax_abs', 'Highest (' + t + ')'],
+        ['tmin_abs', 'Lowest (' + t + ')'], ['heat_days', 'Heat days'], ['frost_days', 'Frost days'], ['heavy_rain_days', 'Heavy-rain days'],
+        ['critical_stage', 'Critical stage'], ['critical_start', 'Critical from'], ['critical_end', 'Critical to'],
+        ['critical_rain', 'Critical rain (mm)'], ['critical_et0', 'Critical ET0 (mm)'], ['critical_balance', 'Critical balance (mm)'],
+        ['critical_heat_days', 'Critical heat days'], ['critical_tmax_mean', 'Critical mean max (' + t + ')'],
+        ['gdd_f', 'GDD (°F, 50/86)'], ['max_rm', 'Max maize RM (black layer, frost-limited)'], ['rm_season_end', 'RM season end'], ['rm_end_reason', 'RM season end reason'],
+        ['rm_kill_temp', 'Killing frost minimum (' + t + ')'],
+        ['rm_ref_silk_days', 'Days to silking of the reference RM'], ['rm_ref_days', 'Days to black layer of the reference RM'], ['gdd_f_per_day', 'GDD °F per day'],
+    ];
+}

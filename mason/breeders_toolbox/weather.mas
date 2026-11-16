@@ -100,8 +100,23 @@ Chris Simoes
 .wx-tab { background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; padding: 8px 14px; font-weight: 600; color: var(--wx-muted); }
 .wx-tab:hover { color: #111827; }
 .wx-tab.on { color: var(--wx-accent); border-bottom-color: var(--wx-accent); }
+.wx-tunit-switch { margin-left: auto; align-self: center; font-size: 12px; color: var(--wx-muted); display: inline-flex; align-items: center; gap: 6px; }
+.wx-concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
+.wx-concepts .wx-card { margin: 0; }
+.wx-concepts h4 .glyphicon { color: var(--wx-accent); margin-right: 4px; }
+.wx-concepts p, .wx-concepts li { font-size: 13px; line-height: 1.5; color: #374151; }
+.wx-concepts ul { padding-left: 18px; margin-bottom: 6px; }
+.wx-formula { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; background: var(--wx-bg); border: 1px solid var(--wx-border); border-radius: 6px; padding: 7px 10px; margin: 6px 0 8px; white-space: normal; }
+.wx-concepts .wx-ex { font-size: 12.5px; color: var(--wx-muted); }
 .wx-tab .badge { background: #e5e7eb; color: #374151; font-weight: 600; margin-left: 4px; }
-.wx-map { height: 380px; border-radius: 8px; border: 1px solid var(--wx-border); margin-bottom: 12px; z-index: 0; }
+.wx-map { height: 380px; border-radius: 8px; border: 1px solid var(--wx-border); margin-bottom: 6px; z-index: 0; }
+.wx-map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: #4b5563; margin-bottom: 12px; }
+.wx-map-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.wx-lg-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; }
+.wx-lg-loc { background: #dc2626; width: 13px; height: 13px; }
+.wx-lg-other { background: #64748b; width: 9px; height: 9px; opacity: .8; }
+.wx-lg-ring { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1.5px dashed #1d6fa5; background: rgba(29,111,165,.06); }
+.wx-star-icon { background: none; border: 0; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.45)); }
 .wx-table-wrap { overflow: auto; max-height: 60vh; border: 1px solid var(--wx-border); border-radius: 8px; }
 .wx-table { margin: 0; font-size: 13px; }
 .wx-table thead th { position: sticky; top: 0; background: var(--wx-bg); z-index: 1; white-space: nowrap; border-bottom: 1px solid var(--wx-border) !important; font-size: 12px; color: #374151; }
@@ -128,6 +143,13 @@ Chris Simoes
 .wx-params label { margin: 0; font-weight: normal; display: inline-flex; gap: 6px; align-items: center; }
 .wx-params input[type=number] { width: 70px; }
 .wx-note { font-size: 12px; color: var(--wx-muted); margin: 6px 0 0; }
+.wx-find-status { display: none; font-size: 12px; line-height: 1.45; margin-top: 7px; padding: 6px 9px; border-radius: 7px; border-left: 3px solid transparent; }
+.wx-find-status.run { display: block; background: #eff6ff; color: #1e3a8a; border-left-color: #3b82f6; }
+.wx-find-status.done { display: block; background: #ecfdf5; color: #065f46; border-left-color: #10b981; }
+.wx-find-status.empty, .wx-find-status.stale { display: block; background: #fffbeb; color: #92400e; border-left-color: #f59e0b; }
+.wx-find-status.err { display: block; background: #fef2f2; color: #991b1b; border-left-color: #ef4444; }
+.wx-find-status a { font-weight: 600; cursor: pointer; white-space: nowrap; }
+.wx-find-status .wx-sub { display: block; opacity: .85; }
 .wx-note .glyphicon { margin-right: 3px; }
 .wx-flags { display: flex; flex-wrap: wrap; gap: 4px; }
 .wx-flag { display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 11px; font-weight: 600; white-space: nowrap; }
@@ -223,6 +245,7 @@ Chris Simoes
               <span class="wx-unit" id="wx_unit"><button type="button" data-unit="km">km</button><button type="button" data-unit="mi">miles</button></span>
               <button class="btn btn-primary btn-sm" id="wx_find"><span class="glyphicon glyphicon-search"></span> Find stations</button>
             </div>
+            <div class="wx-find-status" id="wx_find_status" role="status" aria-live="polite"></div>
             <p class="wx-note" id="wx_range_note"></p>
           </div>
           <div class="wx-step" id="wx_step2">
@@ -262,21 +285,24 @@ Chris Simoes
           <button class="wx-tab" data-tab="years"><span class="glyphicon glyphicon-stats"></span> Past years</button>
           <button class="wx-tab" data-tab="locations"><span class="glyphicon glyphicon-globe"></span> Locations</button>
           <button class="wx-tab" data-tab="sources"><span class="glyphicon glyphicon-map-marker"></span> Data sources <span class="badge" id="wx_n_stations"></span></button>
+          <button class="wx-tab" data-tab="concepts"><span class="glyphicon glyphicon-education"></span> Concepts</button>
+          <span class="wx-tunit-switch" title="Temperature unit of the whole page and of the CSV files">Temperature
+            <span class="wx-unit" id="wx_tunit"><button type="button" data-tunit="C">&deg;C</button><button type="button" data-tunit="F">&deg;F</button></span></span>
         </div>
 
         <details class="wx-params-box">
           <summary>Stress thresholds and degree-days</summary>
           <div class="wx-params">
-            <label>Base temperature <input type="number" class="form-control input-sm" id="wx_base" step="0.5" /> &deg;C</label>
-            <label>Upper limit <input type="number" class="form-control input-sm" id="wx_cap" step="0.5" /> &deg;C</label>
-            <label>Heat stress from <input type="number" class="form-control input-sm" id="wx_heat" step="0.5" /> &deg;C</label>
-            <label>Frost at or below <input type="number" class="form-control input-sm" id="wx_frost" step="0.5" /> &deg;C</label>
+            <label>Base temperature <input type="number" class="form-control input-sm" id="wx_base" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
+            <label>Upper limit <input type="number" class="form-control input-sm" id="wx_cap" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
+            <label>Heat stress from <input type="number" class="form-control input-sm" id="wx_heat" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
+            <label>Frost at or below <input type="number" class="form-control input-sm" id="wx_frost" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
             <label>Dry spell from <input type="number" class="form-control input-sm" id="wx_dry" step="1" min="2" /> days</label>
             <label>Heavy rain from <input type="number" class="form-control input-sm" id="wx_heavy" step="5" /> mm</label>
           </div>
           <div class="wx-params wx-rm-params" style="display:none">
             <b class="wx-small">Maize RM</b>
-            <label>Killing frost at or below <input type="number" class="form-control input-sm" id="wx_kill" step="0.5" /> &deg;C</label>
+            <label>Killing frost at or below <input type="number" class="form-control input-sm" id="wx_kill" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
             <label>RM 100 needs <input type="number" class="form-control input-sm" id="wx_rm100" step="25" style="width:80px" /> GDD &deg;F to black layer</label>
             <label>plus <input type="number" class="form-control input-sm" id="wx_rmday" step="1" /> GDD &deg;F per RM day</label>
             <label>Silking at <input type="number" class="form-control input-sm" id="wx_silk" step="1" /> % of it</label>
@@ -289,6 +315,83 @@ Chris Simoes
         <div class="wx-pane" data-pane="years" style="display:none"><div id="wx_years"></div></div>
         <div class="wx-pane" data-pane="locations" style="display:none"><div id="wx_locs"></div></div>
 
+        <div class="wx-pane" data-pane="concepts" style="display:none">
+          <p class="wx-note" style="margin:0 0 12px"><span class="glyphicon glyphicon-info-sign"></span>How the numbers on this page are calculated. Values in <b>bold</b> are the current settings ("Stress thresholds and degree-days") and follow the &deg;C / &deg;F switch.</p>
+          <div class="wx-concepts">
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-fire"></span> Degree-days (GDD)</h4>
+              <p>Plants develop faster when it is warm, so crop development is measured in accumulated heat rather than in days. Each day adds:</p>
+              <div class="wx-formula">GDD = (Tmax* + Tmin*) / 2 &minus; Tbase</div>
+              <ul>
+                <li>Tmax* and Tmin* are the day's maximum and minimum, held between the base temperature (<b data-c="base"></b>) and the upper limit (<b data-c="cap"></b>): below the base the crop does not develop, and above the limit it does not develop faster.</li>
+                <li>A day never adds less than 0. The days are summed from planting.</li>
+                <li>The base and the limit change with the crop chosen in step 3 (maize 10 / 30 &deg;C, wheat 0 / 30 &deg;C, cotton 15.6 / 32 &deg;C...).</li>
+              </ul>
+              <p class="wx-ex">Example: max 32, min 18 &deg;C, base 10, limit 30 &rarr; (30 + 18) / 2 &minus; 10 = 14 &deg;C&middot;d. In &deg;F (base 50, limit 86) the same day is 25.2 &deg;F&middot;d: degree-days in &deg;F are always 1.8 &times; those in &deg;C.</p>
+              <p class="wx-ex">Days without temperature add nothing, so check "Days observed".</p>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-cloud-upload"></span> ET0 (reference evapotranspiration)</h4>
+              <p>The water, in mm per day, that a reference crop (short, well-watered grass) loses through its leaves and from the soil. It is the <b>demand</b> of the atmosphere: it rises with sun, heat, dry air and wind. Typical values: 2&ndash;4 mm a day in cool or cloudy weather, 5&ndash;8 mm in hot, dry, windy weather.</p>
+              <ul>
+                <li><b>Penman-Monteith</b> (FAO-56), when the station measures solar radiation, humidity and wind (e.g. INMET automatic stations). This is the standard method.</li>
+                <li><b>Hargreaves-Samani</b>, from the maximum and minimum temperature and the latitude, for the other stations (airports, national services). It is less precise in humid or windy places.</li>
+                <li>Only days with at least 16 hourly reports get an ET0.</li>
+              </ul>
+              <p class="wx-ex">A real crop uses Kc &times; ET0: Kc is about 0.3&ndash;0.5 after emergence and 1.0&ndash;1.2 at flowering. The page shows ET0 itself, as a demand that can be compared between environments.</p>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-tint"></span> Water balance</h4>
+              <div class="wx-formula">Water balance = rain &minus; ET0 &nbsp;(mm, over the period or a crop stage)</div>
+              <ul>
+                <li>Negative: the atmosphere asked for more water than it rained (deficit). Positive: rain exceeded the demand.</li>
+                <li>A stage is flagged with a <b>water deficit</b> when rain is less than 50% of ET0, and with <b>some water deficit</b> when it is 50&ndash;80%. It is <b>very wet</b> when rain is more than twice ET0 and over 100 mm.</li>
+                <li>It is computed only when rain was measured on at least 80% of the days. A missing day is not a dry day.</li>
+              </ul>
+              <p class="wx-ex">It does not include the water stored in the soil at planting, runoff, irrigation or Kc. Use it to compare environments and seasons (G&times;E), not to schedule irrigation.</p>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-tasks"></span> Crop stages and stress days</h4>
+              <p>Stages are estimated by dividing the degree-days from planting to the end of the period in proportions typical of the crop. For maize, flowering (the critical stage) is 45&ndash;58% of the season's GDD. Without temperature data, days are used instead of GDD. When the trial has real flowering dates, use those.</p>
+              <ul>
+                <li><b>Heat day</b>: maximum &ge; <b data-c="heat"></b>.</li>
+                <li><b>Frost day</b>: minimum &le; <b data-c="frost"></b>.</li>
+                <li><b>Dry spell</b>: at least <b data-c="dry"></b> days in a row with less than 1 mm of rain.</li>
+                <li><b>Heavy rain</b>: at least <b data-c="heavy"></b> in a day (waterlogging, lodging, disease).</li>
+              </ul>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-dashboard"></span> Maize relative maturity (RM)</h4>
+              <p>Seed companies rate hybrids by RM (or CRM), in days. Behind each rating is the heat the hybrid needs, in GDD &deg;F (base 50 &deg;F, limit 86 &deg;F), from planting to <b>black layer</b> (physiological maturity):</p>
+              <div class="wx-formula">GDD &deg;F needed = <span data-c="rm100"></span> + <span data-c="rmday"></span> &times; (RM &minus; 100)</div>
+              <ul>
+                <li>Example: RM 110 needs <b data-c="rm110"></b> GDD &deg;F. Silking happens at about <b data-c="silk"></b> of it.</li>
+                <li>The season runs from planting to the first <b>killing frost</b> (minimum &le; <b data-c="kill"></b>, ignoring the first 3 weeks), or to the end of the period.</li>
+                <li><b>Max RM</b> is the largest RM whose GDD fits in that season. The <b>RM zone</b> (Past years tab) is the RM that matures in at least 8 of 10 years.</li>
+                <li>Where there is no frost (tropics), the maximum RM means nothing. Instead, the page shows how many days a reference RM <b data-c="rmref"></b> hybrid takes to silk and to reach black layer.</li>
+                <li>RM needs temperature on at least 80% of the days. RM is always in GDD &deg;F, the unit used for seed ratings, whatever the &deg;C / &deg;F switch says.</li>
+              </ul>
+              <p class="wx-ex">Companies rate differently: set the two numbers in the settings to match the ratings you use.</p>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-check"></span> Days observed and data sources</h4>
+              <p>Every value comes from observations of a real station, never from a model or a grid. "Days observed" is the share of days with a complete report.</p>
+              <ul>
+                <li>Below 80%, totals (rain, ET0, GDD) are lower than the real ones, the water balance is not computed, and past years are not ranked.</li>
+                <li>Rain varies a lot within a few kilometres. Use the "Which rain source to trust?" comparison in Data sources, and prefer the nearest gauge that agrees with its neighbours.</li>
+                <li>Airports outside the USA report the hours with rain, not millimetres. Pair a rain gauge with a station that has temperature (step 2).</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
         <div class="wx-pane" data-pane="sources" style="display:none">
           <div class="wx-card">
             <div class="wx-card-head">
@@ -296,6 +399,7 @@ Chris Simoes
               <div class="wx-segs" id="wx_netfilter" style="margin:0"></div>
             </div>
             <div id="wx_map" class="wx-map"></div>
+            <div class="wx-map-legend" id="wx_map_legend"></div>
             <div id="wx_station_table"></div>
             <p class="wx-note"><span class="glyphicon glyphicon-info-sign"></span> All values are observations of the station itself, never interpolated. The farther and the higher (or lower) the station is from the research station, the more its weather can differ: check distance and elevation.</p>
           </div>
