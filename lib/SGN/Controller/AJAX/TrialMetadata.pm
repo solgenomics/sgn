@@ -1598,7 +1598,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         results_page => "/breeders/trial/$trial_id",
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         additional_args => {
-            ignore_warnings => $override ? 1 : undef,
+            ignore_warnings => $override eq 'check' ? 0 : 1,
             final_upload => 1,
             file_type => 'change_accessions',
             user_name => "$user_first_name $user_last_name",
@@ -5281,7 +5281,9 @@ sub upload_entry_number_template_POST : Args(0) {
     my $c = shift;
     my $upload = $c->req->upload('upload_entry_numbers_file');
     my $archived_file_id = $c->req->param('archived_file_id') || undef;
-    my $ignore_warnings = $c->req->param('ignore_warnings') eq 'true';
+    # The entry numbers dialog sends 'true' or 'false', and the upload manager sends 1 or 0.
+    my $ignore_warnings_param = $c->req->param('ignore_warnings') // '';
+    my $ignore_warnings = $ignore_warnings_param eq 'true' || $ignore_warnings_param eq '1';
     my (@errors, %response);
 
     my $subdirectory = "trial_entry_numbers";
@@ -5349,7 +5351,7 @@ sub upload_entry_number_template_POST : Args(0) {
         results_page => "/breeders/trial/$trial_id",
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         additional_args => {
-            ignore_warnings => $ignore_warnings eq "true" ? 1 : 0,
+            ignore_warnings => $ignore_warnings ? 1 : 0,
             final_upload => 1,
             file_type => 'entry_numbers',
             user_name => "$user_first_name $user_last_name",

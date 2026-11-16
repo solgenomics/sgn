@@ -2438,9 +2438,22 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
     jQuery('#upload_validation_parameters').text(JSON.stringify(submit_params));
 }
 
+/**
+ * Encodes a yes/no option as 1 or 0 for the upload endpoints. Sending a javascript boolean as is
+ * makes jQuery send the string "false", which perl treats as true, so every ignore_warnings flag the
+ * upload manager sends goes through here. Older validation jobs stored "true"/"false" strings, so
+ * those are understood too.
+ */
+function as_flag(value) {
+    if (typeof value === 'string') {
+        return ['true', '1', 'on', 'yes'].includes(value.trim().toLowerCase()) ? 1 : 0;
+    }
+    return value ? 1 : 0;
+}
+
 export function submit_upload_job() {
     let submit_params = JSON.parse(jQuery('#upload_validation_parameters').text());
-    let ignore_warnings = jQuery('#upload_submit_ignore_warnings').prop('checked');
+    let ignore_warnings = as_flag(jQuery('#upload_submit_ignore_warnings').prop('checked'));
 
     jQuery('.modal.fade').each(function(index, element){
         jQuery(this).modal("hide");
@@ -2454,7 +2467,6 @@ export function submit_upload_job() {
                 url: '/ajax/trial/upload_multiple_trial_designs_file',
                 type: 'POST',
                 data: {
-                    'upload_multiple_trials_ignore_warnings' : 'on',
                     'email_option_to_recieve_trial_upload_status' : 'off',
                     'archived_file_id' : submit_params.file_id,
                     'upload_multiple_trials_ignore_warnings' : ignore_warnings
@@ -2972,7 +2984,7 @@ export function submit_upload_job() {
             });
             break;
         case 'change_accessions' :
-            let override = ignore_warnings ? "" : "check";
+            let override = ignore_warnings ? "override" : "check";
             jQuery.ajax({
                 url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/change_plot_accessions_using_file/'+override,
                 data : {
@@ -2993,7 +3005,7 @@ export function submit_upload_job() {
             jQuery.ajax({
                 url : '/ajax/breeders/trial_entry_numbers/upload',
                 data : {
-                    ignore_warnings : ignore_warnings ? "true" : "false",
+                    ignore_warnings : ignore_warnings,
                     archived_file_id : submit_params.file_id,
                 },
                 success : function(response) {
@@ -3071,7 +3083,7 @@ export function submit_upload_job() {
                 data : {
                     'archived_file_id' : submit_params.file_id,
                     'upload_nirs_spreadsheet_protocol_id' : submit_params.additional_args.nirs_protocol_id,
-                    'ignore_warnings' : ignore_warnings ? 1 : 0
+                    'ignore_warnings' : ignore_warnings
                 },
                 success: function(response) {
                     if (response.error) {
@@ -3093,7 +3105,7 @@ export function submit_upload_job() {
                     'archived_file_id' : submit_params.file_id,
                     'archived_metadata_file_id' : submit_params.additional_args.details_file_id,
                     'upload_metabolomics_spreadsheet_protocol_id' : submit_params.additional_args.metabolomics_protocol_id,
-                    'ignore_warnings' : ignore_warnings ? 1 : 0
+                    'ignore_warnings' : ignore_warnings
                 },
                 success: function(response) {
                     if (response.error) {
@@ -3115,7 +3127,7 @@ export function submit_upload_job() {
                     'archived_file_id' : submit_params.file_id,
                     'archived_metadata_file_id' : submit_params.additional_args.details_file_id,
                     'upload_transcriptomics_spreadsheet_protocol_id' : submit_params.additional_args.transcriptomics_protocol_id,
-                    'ignore_warnings' : ignore_warnings ? 1 : 0
+                    'ignore_warnings' : ignore_warnings
                 },
                 success: function(response) {
                     if (response.error) {
@@ -3321,7 +3333,7 @@ function send_upload_commit(job_id) {
                     'upload_spreadsheet_phenotype_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_phenotype_timestamp_checkbox,
                     'upload_spreadsheet_phenotype_data_level' : job.args.additional_args.upload_spreadsheet_phenotype_data_level,
                     'archived_file_id' : job.args.additional_args.file_id,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings,
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings),
                     'phenotype_upload_overwrite_values' : job.args.additional_args.overwrite_values,
                     'phenotype_upload_remove_values' : job.args.additional_args.remove_values
                 },
@@ -3349,7 +3361,7 @@ function send_upload_commit(job_id) {
                     'upload_spreadsheet_phenotype_file_format' : job.args.additional_args.upload_spreadsheet_phenotype_file_format,
                     'archived_file_id' : job.args.additional_args.file_id,
                     'archived_image_zipfile_id' : job.args.additional_args.image_zipfile_id,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings,
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings),
                     'phenotype_upload_overwrite_values' : job.args.additional_args.overwrite_values,
                     'phenotype_upload_remove_values' : job.args.additional_args.remove_values
                 },
@@ -3380,7 +3392,7 @@ function send_upload_commit(job_id) {
                 data : {
                     'archived_file_ids' : job.args.additional_args.file_ids,
                     'image_type' : upload_type,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings,
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings),
                     // the collection chosen when the images were validated, kept on the validation job.
                     // A new collection is recorded back onto that job once it is created.
                     'validation_job_id' : job_id,
@@ -3411,7 +3423,7 @@ function send_upload_commit(job_id) {
                     'upload_spreadsheet_treatment_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_treatment_timestamp_checkbox,
                     'upload_spreadsheet_treatment_data_level' : job.args.additional_args.upload_spreadsheet_treatment_data_level,
                     'archived_file_id' : job.args.additional_args.file_id,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings)
                 },
                 success: function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in
@@ -3436,7 +3448,7 @@ function send_upload_commit(job_id) {
                 data : {
                     'upload_datacollector_phenotype_timestamp_checkbox' : job.args.additional_args.upload_datacollector_phenotype_timestamp_checkbox,
                     'archived_file_id' : job.args.additional_args.file_id,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings)
                 },
                 success: function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in
@@ -3462,7 +3474,7 @@ function send_upload_commit(job_id) {
                     'upload_fieldbook_phenotype_data_level' : job.args.additional_args.upload_fieldbook_phenotype_data_level,
                     'archived_image_zipfile_id' : job.args.additional_args.image_zipfile_id,
                     'archived_file_id' : job.args.additional_args.file_id,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings)
                 },
                 success: function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in
@@ -3507,7 +3519,7 @@ function send_upload_commit(job_id) {
                 type : 'POST',
                 data : {
                     'archived_file_id' : job.args.additional_args.file_id,
-                    'overwrite_pedigrees' : job.args.additional_args.ignore_warnings,
+                    'overwrite_pedigrees' : as_flag(job.args.additional_args.ignore_warnings),
                     'pedigree_data' : job.args.additional_args.pedigree_data
                 },
                 success : function(response) {
@@ -3528,7 +3540,7 @@ function send_upload_commit(job_id) {
                 type : 'POST',
                 data : Object.assign({
                     'archived_file_id' : job.args.additional_args.file_id,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings)
                 }, job.args.additional_args.protocol_params),
                 success: function(response) {
                     if (response.error) {
@@ -3549,7 +3561,7 @@ function send_upload_commit(job_id) {
                 data : Object.assign({
                     'archived_file_id' : job.args.additional_args.file_id,
                     'archived_metadata_file_id' : job.args.additional_args.metadata_file_id,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings)
                 }, job.args.additional_args.protocol_params),
                 success: function(response) {
                     if (response.error) {
@@ -3570,7 +3582,7 @@ function send_upload_commit(job_id) {
                 data : Object.assign({
                     'archived_file_id' : job.args.additional_args.file_id,
                     'archived_metadata_file_id' : job.args.additional_args.metadata_file_id,
-                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                    'ignore_warnings' : as_flag(job.args.additional_args.ignore_warnings)
                 }, job.args.additional_args.protocol_params),
                 success: function(response) {
                     if (response.error) {

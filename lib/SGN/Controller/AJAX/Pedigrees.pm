@@ -128,7 +128,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
             user_name => "$user_first_name $user_last_name",
             file_id => $archived_file_id,
             file_name => $upload_original_name,
-            ignore_warnings => $ignore_warnings
+            ignore_warnings => $ignore_warnings ? 1 : 0
         }
     });
 

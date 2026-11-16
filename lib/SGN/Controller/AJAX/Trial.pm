@@ -1404,7 +1404,9 @@ sub upload_multiple_trial_designs_file : Path('/ajax/trial/upload_multiple_trial
 sub upload_multiple_trial_designs_file_POST : Args(0) {
     my ($self, $c) = @_;
     my $upload                     = $c->req->upload('multiple_trial_designs_upload_file');
-    my $ignore_warnings            = $c->req->param('upload_multiple_trials_ignore_warnings') eq 'on';
+    # The trial upload form's checkbox sends 'on', and the upload manager sends 1 or 0.
+    my $ignore_warnings_param      = $c->req->param('upload_multiple_trials_ignore_warnings') // '';
+    my $ignore_warnings            = $ignore_warnings_param eq 'on' || $ignore_warnings_param eq '1';
     my $email_address              = $c->req->param('trial_email_address_upload');
     my $email_option_enabled       = $c->req->param('email_option_to_recieve_trial_upload_status') eq 'on';
     my $archived_file_id           = $c->req->param('archived_file_id') || undef;

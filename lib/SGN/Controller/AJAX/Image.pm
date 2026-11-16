@@ -375,7 +375,7 @@ sub scan_barcode_POST {
         additional_args => {
             is_validation => 1,
             file_type => 'images_barcodes',
-            ignore_warnings => $ignore_warnings,
+            ignore_warnings => $ignore_warnings ? 1 : 0,
             user_name => "$user_first_name $user_last_name",
             file_id => $archived_file_ids[0],
             file_ids => \@archived_file_ids
@@ -561,7 +561,7 @@ sub verify_exif_POST {
         additional_args => {
             is_validation => 1,
             file_type => 'images',
-            ignore_warnings => $ignore_warnings,
+            ignore_warnings => $ignore_warnings ? 1 : 0,
             user_name => "$user_first_name $user_last_name",
             file_id => $archived_file_ids[0],
             file_ids => \@archived_file_ids
@@ -873,7 +873,7 @@ sub store_images_POST {
         additional_args => {
             final_upload => 1,
             file_type => $image_type,
-            ignore_warnings => $ignore_warnings,
+            ignore_warnings => $ignore_warnings ? 1 : 0,
             user_name => "$user_first_name $user_last_name",
             file_id => $archived_file_ids[0],
             file_ids => \@archived_file_ids,
