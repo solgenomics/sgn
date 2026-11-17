@@ -122,13 +122,12 @@ for (trait in userResponse) {
 
     cat(spatial_call, file = model_string_outfile, append = FALSE)
 
-    residuals <- as.data.frame(residuals(spatial_model))
+    # The value of a plot without the field trend: the prediction for its
+    # accession plus the plot's own residual. The prediction is looked up by
+    # accession name, so every value stays on its plot.
     acc_blues <- as.data.frame(predict.SpATS(spatial_model, which='germplasmName'))
-
-    userPheno$residuals <- residuals[["residuals(spatial_model)"]]
-
-    plot_adjusted_vals <- merge(userPheno, acc_blues, by = 'germplasmName', sort = FALSE, all.x = TRUE)
-    rownames(plot_adjusted_vals) <- plot_adjusted_vals$observationUnitName
+    predicted <- setNames(acc_blues$predicted.values, as.character(acc_blues$germplasmName))
+    corrected <- unname(predicted[as.character(userPheno$germplasmName)]) + as.numeric(residuals(spatial_model))
 
     coordinates <- userPheno[, c("rowNumber", "colNumber"), drop = FALSE]
     k <- 3
@@ -137,7 +136,7 @@ for (trait in userResponse) {
     weights <- nb2listw(nb)
     moran <- NULL
     tryCatch({
-            moran <- moran.test(plot_adjusted_vals[[trait]] + plot_adjusted_vals$residuals, weights, na.action = na.exclude )
+            moran <- moran.test(corrected, weights, na.action = na.exclude )
         },
         error = function(e) { #This happens when there is missing data. 
             moran$p.value <- NaN
@@ -159,7 +158,7 @@ for (trait in userResponse) {
     }
 
     output[[trait]] <- userPheno[[trait]]
-    output[[paste(trait, "_spatially_corrected", sep = "")]] <- plot_adjusted_vals[[trait]] + plot_adjusted_vals$residuals
+    output[[paste(trait, "_spatially_corrected", sep = "")]] <- corrected
     output[[paste(trait, "_spatially_corrected", sep = "")]][output[[paste(trait, "_spatially_corrected", sep = "")]] < domain$min] <- domain$min #prevent out of bounds values
     output[[paste(trait, "_spatially_corrected", sep = "")]][output[[paste(trait, "_spatially_corrected", sep = "")]] > domain$max] <- domain$max
     output[[paste(trait, "_spatial_adjustment", sep = "")]] <- output[[paste(trait, "_spatially_corrected", sep = "")]] - output[[trait]]
