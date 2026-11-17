@@ -6,7 +6,7 @@ $transformation_notes
 $FEC_batch
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "CXGN.Trial"] &>
+<& /util/import_javascript.mas, classes => ["jquery"] &>
 
 <div class="modal fade" id="transformation_details_edit_dialog" tabindex="-1" role="dialog" aria-labelledby="transformationDetailsEditDialog">
     <div class="modal-dialog modal-lg" role="document">
