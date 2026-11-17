@@ -61,7 +61,7 @@ $number_of_insertions => undef
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <&| /page/info_section.mas, title => 'Add accession names to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding accession names to a new or exisiting list</i>'&>
+                        <&| /page/info_section.mas, title => 'Add accession names to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding accession names to a new or existing list</i>'&>
                             <br>
                             <div id="related_transformants_to_new_list" style="display:none"></div>
                             <div id="related_transformants_add_to_list"></div>
@@ -83,7 +83,7 @@ $number_of_insertions => undef
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <&| /page/info_section.mas, title => 'Add accession names to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding accession names to a new or exisiting list</i>'&>
+                        <&| /page/info_section.mas, title => 'Add accession names to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding accession names to a new or existing list</i>'&>
                             <br>
                             <div id="control_transformants_to_new_list" style="display:none"></div>
                             <div id="control_transformants_add_to_list"></div>
