@@ -10,7 +10,9 @@ set.seed(54326)
 ##### Getting data #####
 args = commandArgs(trailingOnly = TRUE)
 
-pheno <- read.table(args[1], sep = "\t", header = TRUE)
+# Trial descriptions and notes are free text: an apostrophe or a # in them
+# must not be read as a quote or a comment.
+pheno <- read.table(args[1], sep = "\t", header = TRUE, quote = "", comment.char = "")
 study_trait <- args[2]
 imputPheno <- args[3]
 stability_method <- args[4]
@@ -20,7 +22,9 @@ messageFile <- args[7]
 jsonSummary <- args[8]
 
 
-study_trait <- gsub("\\."," ",study_trait)
+# The column names went through make.names() in read.table(); the trait name
+# must take the same way, or a name with "-" or "%" never finds its column.
+study_trait <- gsub("\\."," ",make.names(study_trait))
 
 #Making names standard
 names <- colnames(pheno)
@@ -213,7 +217,9 @@ if(stability_method=="ammi" && length(errorMessages) == 0 ){
 
 	## Preparing table with GxE effects
 	list_data <- list(model$genXenv)
-	dataGraphic <- data.frame(plyr::ldply(list_data))
+	# check.names = FALSE keeps the location names as they are in the means
+	# table ("Site-A", "St. Louis"), so the join below finds every location.
+	dataGraphic <- data.frame(plyr::ldply(list_data), check.names = FALSE)
 	rownames(dataGraphic) <- model$means$GEN[1:(nrow(dataGraphic))]
 	dataGraphic <- tibble::rownames_to_column(dataGraphic, "Accession")
 
@@ -247,7 +253,6 @@ if(stability_method=="ammi" && length(errorMessages) == 0 ){
 	meanDFF$value <- scaled_values
 
 	myData <- data.frame(pivot_longer(dataGraphic, 2:ncol(dataGraphic), names_to = "location", values_to = "Effect"))
-	myData$location <- gsub("\\."," ", myData$location)
 
 	preFinal <- left_join(myData, myMeans, by = c("Accession", "location"))
 	selLocations <- data.frame(locName = unique(preFinal$location), locNumber = c(1:length(unique(preFinal$location))))
@@ -298,7 +303,7 @@ if(stability_method=="ammi" && length(errorMessages) == 0 ){
 		gathered_df$rank <- gsub("X", "", gathered_df$rank)
 		gathered_df$rank <- as.numeric(gathered_df$rank)
 
-		test1 <- data.frame(effectsDF$ge_means)
+		test1 <- data.frame(effectsDF$ge_means, check.names = FALSE)
 		gathered_mean <- gather(test1, key = "locations", value = "means", -Gen)
 
 
@@ -315,7 +320,6 @@ if(stability_method=="ammi" && length(errorMessages) == 0 ){
 		finalDF <- left_join(gathered_df, gathered_mean, by = "track") %>% dplyr::select(
 		  genotypes, locations, means, rank
 		)
-		finalDF$locations <- gsub("\\."," ",finalDF$locations)
 
 		rankDF <- data.frame(sumRank=tapply(finalDF$rank, finalDF$genotypes, sum))
 		rankDF$genotypes <- rownames(rankDF)
