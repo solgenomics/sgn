@@ -510,7 +510,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    Suppress user defined phenotype outliers
                   </label>
                 </div>
               </td>
@@ -577,7 +577,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-high-dim-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    Suppress user defined phenotype outliers
                   </label>
                 </div>
               </td>
