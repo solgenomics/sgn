@@ -1,0 +1,68 @@
+<div class="modal fade" id="pedigrees_upload_spreadsheet_info_dialog" name="pedigrees_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="pedigreeUploadInfoDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="pedigreeUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+        <& /help/file_upload_type.mas, type => "Pedigrees", optional_column => 0 &>
+	  <hr>
+	  <b>Header:</b>
+	  <br>
+	  <p>The first row (header) should contain the following:</p>
+
+	  <table class="table table-hover table-bordered">
+  	  <body>
+	    <tr>
+    	      <td>progeny name</td>
+    	      <td>female parent accession</td>
+    	      <!--<td>male parent accession(s) (if more than one, separate using commas)</td>-->
+              <td>male parent accession</td>
+              <td>type</td>
+
+  	    </tr>
+	  </body>
+	  </table>
+
+	  <h4>Required fields:</h4>
+	  <ul>
+        <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
+        <li>female parent accession (must exist in the database)</li>
+        <li>type (biparental, self, open, backcross, sib, polycross, reselected)</li>
+            <ul class="a">
+                <li>cross type descriptions:</li>
+                <ul class="b">
+                    <li>biparental: An individual plant pollinated by another individual plant.</li>
+                    <li>self: A self pollinated individual plant.</li>
+                    <li>open: An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                    <li>backcross: An individual plant pollinated by one of its parents.</li>
+                    <li>sib: Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
+                    <li>polycross: Mating between individual female parent from a population and the corresponding male population.</li>
+                    <li>reselected: Selection of a new accession from an existing line (e.g. caused by a mutation).</li>
+                    <li>doubled_haploid: Chromosome doubling of a haploid plant.</li>
+                    <li>dihaploid_induction: Generation of dihaploids from a tetraploid plant.</li>
+                </ul>
+            </ul>
+      </ul>
+
+	  <h4>Optional fields</h4>
+	  <ul>
+        <li>male parent accession (can be accession uniquename or accession synonym or population name). Required for most cross types. </li>
+	  </ul>
+
+	  <h4>Notes</h4>
+	  <ul>
+	    <li>Always specify the type of the cross (biparental, self, open, sib, backcross, polycross or reselected).</li>
+	    <li>If the type is open and no potential male parent is known, leave the male parent field empty.</li>
+	     <li>For all other cases, list both known parents, even if they are the same, such as in the case of self.</li>
+	  </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -27,11 +27,14 @@ use File::Slurp;
 use File::Spec;
 use File::Copy;
 use Data::Dumper;
-use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
+use CXGN::File;
+use File::Basename qw | basename dirname|;
 use CXGN::Phenotype;
 use CXGN::Trial;
 use CXGN::Project;
@@ -48,160 +51,224 @@ __PACKAGE__->config(
 sub upload_phenotype_verify :  Path('/ajax/phenotype/upload_verify') : ActionClass('REST') { }
 sub upload_phenotype_verify_POST : Args(1) {
     my ($self, $c, $file_type, $is_treatment) = @_;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
-    if (scalar(@$error_status)>0) {
-        $c->stash->{rest} = {success => $success_status, error => $error_status };
-        return;
-    }
-
-    my $timestamp = 0;
-    if ($timestamp_included) {
-        $timestamp = 1;
-    }
-
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-        basepath=>$c->config->{basepath},
-        dbhost=>$c->config->{dbhost},
-        dbname=>$c->config->{dbname},
-        dbuser=>$c->config->{dbuser},
-        dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
-        bcs_schema=>$schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        user_id=>$user_id,
-        stock_list=>$plots,
-        trait_list=>$traits,
-        values_hash=>$parsed_data,
-        has_timestamps=>$timestamp,
-        metadata_hash=>$phenotype_metadata,
-        image_zipfile_path=>$image_zip,
-        composable_validation_check_name=>$c->config->{composable_validation_check_name}
-    );
-
-    my ($warning_status, $verified_warning, $verified_error);
-    try {
-        ($verified_warning, $verified_error) = $store_phenotypes->verify();
-    }
-    catch {
-        $verified_error = $_;
-	print STDERR "ERROR DURING UPLOAD: $verified_error\n";
-    };
-
-    if ($verified_error) {
-        push @$error_status, $verified_error;
-        $c->stash->{rest} = {success => $success_status, error => $error_status };
-        return;
-    }
-    if ($verified_warning) {
-        push @$warning_status, $verified_warning;
-    }
-    push @$success_status, "File data verified. Plot names and trait names are valid.";
-
-    $c->stash->{rest} = {success => $success_status, warning => $warning_status, error => $error_status};
+    $self->_upload_phenotypes($c, $file_type, $is_treatment, 'verify');
 }
 
 sub upload_phenotype_store :  Path('/ajax/phenotype/upload_store') : ActionClass('REST') { }
 sub upload_phenotype_store_POST : Args(1) {
     my ($self, $c, $file_type, $is_treatment) = @_;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
-    if (scalar(@$error_status)>0) {
-        $c->stash->{rest} = {success => $success_status, error => $error_status };
-        return;
-    }
-    my $overwrite = 0;
-    if ($overwrite_values) {
-        $overwrite = 1;
-    }
-    my $remove = 0;
-    if ($remove_values) {
-        $remove = 1;
-    }
-    my $timestamp = 0;
-    if ($timestamp_included) {
-        $timestamp = 1;
-    }
-
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-        basepath=>$c->config->{basepath},
-        dbhost=>$c->config->{dbhost},
-        dbname=>$c->config->{dbname},
-        dbuser=>$c->config->{dbuser},
-        dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
-        bcs_schema=>$schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        user_id=>$user_id,
-        stock_list=>$plots,
-        trait_list=>$traits,
-        values_hash=>$parsed_data,
-        has_timestamps=>$timestamp,
-        overwrite_values=>$overwrite,
-        remove_values=>$remove,
-        metadata_hash=>$phenotype_metadata,
-        image_zipfile_path=>$image_zip,
-        composable_validation_check_name=>$c->config->{composable_validation_check_name},
-        allow_repeat_measures=>$c->config->{allow_repeat_measures}
-    );
-
-    #upload_phenotype_store function redoes the same verification that upload_phenotype_verify does before actually uploading. maybe this should be commented out.
-    #my ($verified_warning, $verified_error) = $store_phenotypes->verify($c,$plots,$traits, $parsed_data, $phenotype_metadata);
-    #if ($verified_error) {
-	#push @$error_status, $verified_error;
-	#$c->stash->{rest} = {success => $success_status, error => $error_status };
-	#return;
-    #}
-    #push @$success_status, "File data verified. Plot names and trait names are valid.";
-
-    my ($stored_phenotype_error, $stored_phenotype_success);
-    try {
-        ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
-    }
-    catch {
-        $stored_phenotype_error = $_;
-    };
-
-    if ($stored_phenotype_error) {
-        push @$error_status, $stored_phenotype_error;
-        $c->stash->{rest} = {success => $success_status, error => $error_status};
-        return;
-    }
-    if ($stored_phenotype_success) {
-        push @$success_status, $stored_phenotype_success;
-    }
-
-    if ($validate_type eq 'field book' && $image_zip) {
-        my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-        my $image_error = $image->upload_fieldbook_zipfile($image_zip, $user_id);
-        if ($image_error) {
-            push @$error_status, $image_error;
-        }
-    }
-
-    push @$success_status, "Metadata saved for archived file.";
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = {success => $success_status, error => $error_status};
+    $self->_upload_phenotypes($c, $file_type, $is_treatment, 'store');
 }
 
+=head2 _upload_phenotypes($c, $file_type, $is_treatment, $mode)
+
+Archives an uploaded phenotype file and hands it to the background script that reads it. Shared by
+the verify and store endpoints, which differ only in what the script is asked to do with the file:
+"verify" reports on the file without saving anything, "store" saves the values in it.
+
+The upload manager archives the file before calling here and follows the job itself, so it gets an
+answer as soon as the job has been submitted. The upload dialogs post the file directly and show
+the outcome when the request comes back, so those wait for the job to finish before they are
+answered.
+
+=cut
+
+sub _upload_phenotypes {
+    my $self = shift;
+    my $c = shift;
+    my $file_type = shift;
+    my $is_treatment = shift;
+    my $mode = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my ($success_status, $error_status, $upload) = _prep_upload($c, $file_type, $is_treatment);
+    if (scalar(@$error_status) > 0) {
+        $c->stash->{rest} = { success => $success_status, error => $error_status };
+        return;
+    }
+
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
+    my $filename = basename($upload->{archived_file_path});
+
+    # The upload manager reads these back off a validation job to build the request that stores the
+    # file once someone has looked at the validation, so a validation job has to carry everything
+    # the store it leads to will need.
+    my $additional_args = {
+        file_type => $upload->{job_file_type},
+        ignore_warnings => $upload->{ignore_warnings},
+        overwrite_values => $upload->{overwrite_values},
+        remove_values => $upload->{remove_values},
+        user_name => "$user_first_name $user_last_name",
+        file_id => $upload->{archived_file_id}
+    };
+
+    if ($mode eq 'verify') {
+        $additional_args->{is_validation} = 1;
+    } else {
+        $additional_args->{final_upload} = 1;
+    }
+
+    if ($upload->{is_treatment}) {
+        $additional_args->{upload_spreadsheet_treatment_timestamp_checkbox} = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
+        $additional_args->{upload_spreadsheet_treatment_data_level} = $upload->{data_level};
+        $additional_args->{upload_spreadsheet_treatment_file_format} = $c->req->param('upload_spreadsheet_treatment_file_format');
+    } elsif ($upload->{job_file_type} eq "phenotyping_spreadsheet" || $upload->{job_file_type} eq "images_phenotypes") {
+        $additional_args->{upload_spreadsheet_phenotype_timestamp_checkbox} = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
+        $additional_args->{upload_spreadsheet_phenotype_data_level} = $upload->{data_level};
+        $additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
+    } elsif ($upload->{job_file_type} eq "datacollector_spreadsheet") {
+        $additional_args->{upload_datacollector_phenotype_timestamp_checkbox} = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
+    } elsif ($upload->{job_file_type} eq "fieldbook_phenotypes") {
+        $additional_args->{upload_fieldbook_phenotype_data_level} = $upload->{data_level};
+    }
+
+    if ($upload->{archived_image_zipfile_id}) {
+        $additional_args->{image_zipfile_id} = $upload->{archived_image_zipfile_id};
+    }
+
+    # Archiving is the only part of the upload that happens here, so what it had to say is recorded
+    # on the job before the script starts adding its own messages.
+    if (scalar(@$success_status) > 0) {
+        $additional_args->{success_messages} = join("<br>", @$success_status);
+    }
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+    my $archive_path = $c->config->{archive_path};
+    my $tempfiles_subdir = $c->config->{tempfiles_subdir};
+
+    # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
+    # report its messages back to this job. The command runs in a shell, so every value is quoted.
+    my @cmd_args = (
+        "perl", shell_quote("__BASEPATH__/bin/upload_phenotypes.pl"),
+        "-H", shell_quote("__DBHOST__"),
+        "-D", shell_quote("__DBNAME__"),
+        "-U", shell_quote("__DBUSER__"),
+        "-P", shell_quote("__DBPASS__"),
+        "-w", shell_quote("__BASEPATH__"),
+        "-ap", shell_quote("__ARCHIVE_PATH__"),
+        "-tf", shell_quote($tempfiles_subdir),
+        "-m", shell_quote($mode),
+        "-i", shell_quote($upload->{archived_file_id}),
+        "-un", shell_quote($upload->{username}),
+        "-t", shell_quote($upload->{validate_type}),
+        "-mt", shell_quote($upload->{metadata_file_type}),
+        "-dl", shell_quote($upload->{data_level}),
+        "-ti", shell_quote($upload->{timestamp_included}),
+        "-ow", shell_quote($upload->{overwrite_values}),
+        "-rv", shell_quote($upload->{remove_values}),
+        "-iw", shell_quote($upload->{ignore_warnings}),
+        "-tt", shell_quote($upload->{is_treatment}),
+        "-j", "__SP_JOB_ID__"
+    );
+    if ($upload->{archived_image_zipfile_id}) {
+        push @cmd_args, "-iz", shell_quote($upload->{archived_image_zipfile_id});
+    }
+    my $cmd = join(" ", @cmd_args);
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $upload->{user_id},
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
+        cmd => $cmd,
+        cmd_placeholders => { ARCHIVE_PATH => $archive_path },
+        name => $mode eq 'verify' ? "$filename file validation" : "$filename phenotype upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => $additional_args
+    });
+
+    my $submit_error;
+    try {
+        $upload_job->submit();
+    } catch {
+        $submit_error = $_;
+    };
+    if ($submit_error) {
+        push @$error_status, "Could not submit the phenotype upload: $submit_error";
+        $c->stash->{rest} = { success => $success_status, error => $error_status };
+        return;
+    }
+
+    if ($upload->{from_upload_manager}) {
+        $c->stash->{rest} = { success => $success_status, error => $error_status, job_id => $upload_job->sp_job_id() };
+        return;
+    }
+
+    # Shorter than CXGN::Job::wait()'s default, because a server worker is held for as long as
+    # this waits, and there are only so many of them.
+    my $wait_error;
+    try {
+        $upload_job->wait(300);
+    } catch {
+        $wait_error = $_;
+    };
+    if ($wait_error) {
+        push @$error_status, "The phenotype upload did not finish: $wait_error";
+        $c->stash->{rest} = { success => $success_status, error => $error_status };
+        return;
+    }
+
+    # The script reports its results by writing them to the job, so they have to be read back from
+    # the database rather than from the object that submitted it.
+    my $finished_job = CXGN::Job->new({
+        sp_job_id => $upload_job->sp_job_id(),
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema")
+    });
+    # What the job recorded is sent back to the user, so server-only data is taken out of it first.
+    my $job_args = CXGN::Job->scrub_client_data($finished_job->additional_args() || {}, CXGN::Job->client_secrets($c->config));
+
+    my @success_messages = _split_job_messages($job_args->{success_messages});
+    my @warning_messages = _split_job_messages($job_args->{warning_messages});
+    my @error_messages = _split_job_messages($job_args->{error_messages});
+
+    if (!scalar(@success_messages) && !scalar(@warning_messages) && !scalar(@error_messages)) {
+        # The job left the queue without recording an outcome, which happens if the script died
+        # before it could report anything.
+        push @error_messages, "The upload did not report a result. Check the status of upload job ".$upload_job->sp_job_id().".";
+    }
+
+    $c->stash->{rest} = { success => \@success_messages, warning => \@warning_messages, error => \@error_messages };
+}
+
+=head2 _split_job_messages($messages)
+
+Splits the messages a job recorded back into the list the upload dialogs display them as. A job
+holds each kind of message as a single string, since that is how the upload manager shows them.
+
+=cut
+
+sub _split_job_messages {
+    my $messages = shift;
+
+    return () if !defined($messages) || $messages eq '';
+
+    return grep { $_ ne '' } split(/<br>/, $messages);
+}
+
+=head2 _prep_upload($c, $file_type, $is_treatment)
+
+Checks that the user is allowed to upload this file, works out what kind of file it is, and archives
+it along with any image zipfile that came with it. Reading the file is left to the background
+script, so what comes back describes the upload rather than anything out of the file itself.
+
+=cut
+
 sub _prep_upload {
-    my ($c, $file_type, $is_treatment, $schema) = @_;
+    my ($c, $file_type, $is_treatment) = @_;
 	my @success_status;
 	my @error_status;
 
@@ -212,29 +279,45 @@ sub _prep_upload {
 		return (\@success_status, \@error_status);
 	}
 
+    my $treatment = ($is_treatment && $is_treatment eq "treatment") ? 1 : 0;
+
     my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
-    my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $timestamp_included;
     my $upload;
     my $subdirectory;
     my $validate_type;
     my $metadata_file_type;
+    my $job_file_type;
     my $data_level;
     my $image_zip;
+    my $image_zipfile_id = $c->req->param('archived_image_zipfile_id') || undef;
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $upload_file_type;
+
+    # The upload manager archives a file before calling here, so a file that is already in the
+    # archive is one it is going to follow the job for itself.
+    my $from_upload_manager = $archived_file_id ? 1 : 0;
+
     if ($file_type eq "spreadsheet") {
         my $spreadsheet_format;
-        if ($is_treatment eq "treatment") {
+        if ($treatment) {
             $spreadsheet_format = $c->req->param("upload_spreadsheet_treatment_file_format");
             $timestamp_included = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
             $data_level = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
             $upload = $c->req->upload('upload_spreadsheet_treatment_file_input');
             $image_zip = $c->req->upload('upload_spreadsheet_treatment_associated_images_file_input');
+            $upload_file_type = "treatments";
+            $job_file_type = "treatments";
         } else {
             $spreadsheet_format = $c->req->param("upload_spreadsheet_phenotype_file_format"); #simple or detailed or nirs or scio or associated_images
             $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
             $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
             $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
             $image_zip = $c->req->upload('upload_spreadsheet_phenotype_associated_images_file_input');
+            $upload_file_type = "phenotyping_spreadsheet";
+            # An associated images spreadsheet is uploaded together with an image zipfile, so it
+            # gets its own type to keep it distinguishable from a plain phenotyping spreadsheet.
+            $job_file_type = ($spreadsheet_format && $spreadsheet_format eq 'associated_images') ? "images_phenotypes" : "phenotyping_spreadsheet";
         }
         # print STDERR "File type is Spreadsheet and format is $spreadsheet_format\n";
         $metadata_file_type = "spreadsheet phenotype file";
@@ -255,6 +338,7 @@ sub _prep_upload {
         $subdirectory = "tablet_phenotype_upload";
         $validate_type = "field book";
         $metadata_file_type = "tablet phenotype file";
+        $job_file_type = "fieldbook_phenotypes";
         $timestamp_included = 1;
         $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
         $image_zip = $c->req->upload('upload_fieldbook_phenotype_images_zipfile');
@@ -265,6 +349,7 @@ sub _prep_upload {
         $subdirectory = "data_collector_phenotype_upload";
         $validate_type = "datacollector spreadsheet";
         $metadata_file_type = "data collector phenotype file";
+        $job_file_type = "datacollector_spreadsheet";
         $timestamp_included = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
         $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
@@ -275,7 +360,30 @@ sub _prep_upload {
         return (\@success_status, \@error_status);
     }
 
+    # Files picked out of the archive come from the request, and are later handed to the upload
+    # script, so they must be files this user may use: curators may use any archived file, everyone
+    # else only their own.
+    my @requested_file_ids = grep { defined($_) } ($archived_file_id, $image_zipfile_id);
+    if (@requested_file_ids) {
+        my $inaccessible = CXGN::File->get_inaccessible_file_ids(
+            $c->dbic_schema("CXGN::Metadata::Schema"),
+            $user_id,
+            \@requested_file_ids,
+            $user_type eq 'curator' ? 1 : 0
+        );
+        if (@$inaccessible) {
+            push @error_status, "You do not have access to the archived file(s) with id ".join(", ", @$inaccessible).".";
+            return (\@success_status, \@error_status);
+        }
+    }
+
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
+    my $remove_values = $overwrite_values && $c->req->param('phenotype_upload_remove_values');
+    my $ignore_warnings = $c->req->param('ignore_warnings');
+    if ($ignore_warnings) {
+        $overwrite_values = 1;
+        $remove_values = 1;
+    }
     if ($overwrite_values) {
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
@@ -283,7 +391,6 @@ sub _prep_upload {
             return (\@success_status, \@error_status);
         }
     }
-    my $remove_values = $overwrite_values && $c->req->param('phenotype_upload_remove_values');
     if ( $remove_values ) {
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to remove values! Please contact us!';
@@ -291,35 +398,50 @@ sub _prep_upload {
         }
     }
 
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my %phenotype_metadata;
+    my $archived_filename_with_path;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $upload_original_name;
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        return (\@success_status, \@error_status);
+    if (! $archived_file_id) {
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            file_type => $upload_file_type
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            push @error_status, "Could not save file $upload_original_name in archive.";
+            return (\@success_status, \@error_status);
+        } else {
+            push @success_status, "File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
     } else {
-        push @success_status, "File $upload_original_name saved in archive.";
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
     }
-    unlink $upload_tempfile;
-    #print STDERR "Archived Phenotype File: $archived_filename_with_path\n";
 
-    my $archived_image_zipfile_with_path;
-    if ($image_zip) {
-        my $upload_original_name = $image_zip->filename();
+    print STDERR "Archived Phenotype File: $archived_filename_with_path\n";
+
+    # The script is told which archived file the images are in rather than where they are on disk,
+    # so a zipfile that is archived here has to hand its id back the same way one that was picked
+    # out of the archive already did.
+    if ($image_zip && !$image_zipfile_id) {
+        $upload_original_name = $image_zip->filename();
         my $upload_tempfile = $image_zip->tempname;
         my $uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
@@ -328,9 +450,11 @@ sub _prep_upload {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_type
+            user_role => $user_type,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
         });
-        $archived_image_zipfile_with_path = $uploader->archive();
+        my $archived_image_zipfile_with_path;
+        ($image_zipfile_id, $archived_image_zipfile_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_image_zipfile_with_path);
         if (!$archived_image_zipfile_with_path) {
             push @error_status, "Could not save images zipfile $upload_original_name in archive.";
@@ -342,66 +466,23 @@ sub _prep_upload {
         #print STDERR "Archived Zipfile: $archived_image_zipfile_with_path\n";
     }
 
-    ## Validate and parse uploaded file
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, undef);
-    if (!$validate_file) {
-        push @error_status, "Archived file not valid: $upload_original_name.";
-        return (\@success_status, \@error_status);
-    }
-    if ($validate_file == 1){
-        push @success_status, "File valid: $upload_original_name.";
-    } else {
-        if ($validate_file->{'error'}) {
-            push @error_status, $validate_file->{'error'};
-        }
-        return (\@success_status, \@error_status);
-    }
-
-    ## Set metadata
-    $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
-    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
-    my $operator = $user->get_object()->get_username();
-    $phenotype_metadata{'operator'} = $operator;
-    $phenotype_metadata{'date'} = $timestamp;
-
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, undef);
-    if (!$parsed_file) {
-        push @error_status, "Error parsing file $upload_original_name.";
-        return (\@success_status, \@error_status);
-    }
-    if ($parsed_file->{'error'}) {
-        push @error_status, $parsed_file->{'error'};
-    }
-    my %parsed_data;
-    my @plots;
-    my @traits;
-
-    if (scalar(@error_status) == 0) { #TODO: check for treatment and propagate values to child stocks
-        if ($parsed_file && !$parsed_file->{'error'}) {
-            %parsed_data = %{$parsed_file->{'data'}};
-            @plots = @{$parsed_file->{'units'}};
-            @traits = @{$parsed_file->{'variables'}};
-            push @success_status, "File data successfully parsed.";
-        }
-        if ($is_treatment eq "treatment") {
-            foreach my $plot (@plots) {
-                my $plot_obj = CXGN::Stock->new({
-                    schema => $schema,
-                    uniquename => $plot
-                });
-                my $child_stocks = $plot_obj->get_child_stocks_flat_list();
-                foreach my $child (@{$child_stocks}) {
-                    next if ($child->{type} eq "accession");
-                    push @plots, $child->{name};
-                    foreach my $trait (@traits) {
-                        $parsed_data{$child->{name}}->{$trait} = $parsed_data{$plot}->{$trait};
-                    }
-                }
-            }
-        }
-    }
-
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
+    return (\@success_status, \@error_status, {
+        user_id => $user_id,
+        username => $user->get_object()->get_username(),
+        archived_file_id => $archived_file_id,
+        archived_file_path => $archived_filename_with_path,
+        archived_image_zipfile_id => $image_zipfile_id,
+        validate_type => $validate_type,
+        metadata_file_type => $metadata_file_type,
+        job_file_type => $job_file_type,
+        data_level => $data_level || 'plots',
+        timestamp_included => $timestamp_included ? 1 : 0,
+        overwrite_values => $overwrite_values ? 1 : 0,
+        remove_values => $remove_values ? 1 : 0,
+        ignore_warnings => $ignore_warnings ? 1 : 0,
+        is_treatment => $treatment,
+        from_upload_manager => $from_upload_manager
+    });
 }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }

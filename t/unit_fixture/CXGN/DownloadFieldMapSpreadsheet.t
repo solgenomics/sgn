@@ -168,6 +168,8 @@ foreach (values %$tl) {
 }
 $trial_layout->generate_and_cache_layout();
 
+$test->clean_up_db();
+
 
 done_testing();
 

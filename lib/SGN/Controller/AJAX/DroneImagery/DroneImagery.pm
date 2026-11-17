@@ -5377,8 +5377,8 @@ sub _perform_plot_polygon_assign {
         my ($previous_result, $previous_total_count) = $previous_images_search->search();
 
         if (scalar(@$previous_result) == scalar(@found_stock_ids)) {
-            print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occured. Skipping \n";
-            return {warning => "Plot polygon assignment already occured for $assign_plot_polygons_type on project $drone_run_band_project_id."};
+            print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occurred. Skipping \n";
+            return {warning => "Plot polygon assignment already occurred for $assign_plot_polygons_type on project $drone_run_band_project_id."};
         }
     }
 
@@ -10779,8 +10779,9 @@ sub _perform_phenotype_calculation {
         print STDERR "Read $line lines in results file\n";
 
         if ($line > 0) {
+            my $archived_file_id = _archive_phenotype_results_file($c, $metadata_schema, $archive_temp_results, 'drone_imagery_phenotype_calculation', $archive_file_type, $timestamp, $user_id, $user_role);
             my %phenotype_metadata = (
-                'archived_file' => $archive_temp_results,
+                'archived_file_id' => $archived_file_id,
                 'archived_file_type' => $archive_file_type,
                 'operator' => $user_name,
                 'date' => $timestamp
@@ -11544,7 +11545,8 @@ sub _perform_save_trained_keras_cnn_model {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$saved_model_id
+        nd_protocol_id=>$saved_model_id,
+        archive_path=>$c->config->{archive_path}
     });
     $analysis_model->store_analysis_model_files({
         # project_id => $saved_analysis_id,
@@ -11749,7 +11751,8 @@ sub _perform_keras_cnn_predict {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$model_id
+        nd_protocol_id=>$model_id,
+        archive_path=>$c->config->{archive_path}
     });
     my $saved_model_object = $m->get_model();
     print STDERR Dumper $saved_model_object;
@@ -12185,8 +12188,9 @@ sub _perform_keras_cnn_predict {
     print STDERR "Read $iter lines in results file\n";
 
     if ($iter > 0) {
+        my $archived_file_id = _archive_phenotype_results_file($c, $metadata_schema, $archive_temp_output_file, 'drone_imagery_keras_cnn_predict', 'image_keras_prediction_output', $timestamp, $user_id, $user_role);
         my %phenotype_metadata = (
-            'archived_file' => $archive_temp_output_file,
+            'archived_file_id' => $archived_file_id,
             'archived_file_type' => 'image_keras_prediction_output',
             'operator' => $user_name,
             'date' => $timestamp
@@ -12702,8 +12706,9 @@ sub _perform_autoencoder_keras_cnn_vi {
     # print STDERR Dumper \%autoencoder_vi_phenotype_data;
 
     if ($line > 0) {
+        my $archived_file_id = _archive_phenotype_results_file($c, $metadata_schema, $archive_temp_output_file, 'drone_imagery_keras_autoencoder_vi', 'keras_autoencoder_vegetation_indices', $timestamp, $user_id, $user_role);
         my %phenotype_metadata = (
-            'archived_file' => $archive_temp_output_file,
+            'archived_file_id' => $archived_file_id,
             'archived_file_type' => 'keras_autoencoder_vegetation_indices',
             'operator' => $user_name,
             'date' => $timestamp
@@ -13266,7 +13271,8 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$saved_model_id
+        nd_protocol_id=>$saved_model_id,
+        archive_path=>$c->config->{archive_path}
     });
     $analysis_model->store_analysis_model_files({
         # project_id => $saved_analysis_id,
@@ -13309,7 +13315,8 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$model_id
+        nd_protocol_id=>$model_id,
+        archive_path=>$c->config->{archive_path}
     });
     my $saved_model_object = $m->get_model();
     print STDERR Dumper $saved_model_object;
@@ -13644,6 +13651,39 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
         images_file_names_return => \@images_file_names_return,
         geojson_file_names_return => \@geojson_file_names_return
     };
+}
+
+# Copies a phenotype results file from tempfiles into the archive and records it in metadata.md_files,
+# so StorePhenotypes can link the stored phenotypes to it. Returns the new file_id.
+sub _archive_phenotype_results_file {
+    my $c = shift;
+    my $metadata_schema = shift;
+    my $results_file = shift;
+    my $subdirectory = shift;
+    my $file_type = shift;
+    my $timestamp = shift;
+    my $user_id = shift;
+    my $user_role = shift;
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $results_file,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $file_type.".csv",
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role,
+        metadata_schema => $metadata_schema,
+        file_type => $file_type
+    });
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+    if (!$archived_file_id) {
+        $c->stash->{rest} = { error => "Could not save phenotype results file $results_file in archive." };
+        $c->detach();
+    }
+    print STDERR "Archived phenotype results file: $archived_filename_with_path\n";
+
+    return $archived_file_id;
 }
 
 sub _check_user_login {

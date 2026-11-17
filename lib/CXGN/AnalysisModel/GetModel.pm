@@ -10,7 +10,8 @@ my $m = CXGN::AnalysisModel::GetModel->new({
     bcs_schema=>$bcs_schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
-    nd_protocol_id=>$model_id
+    nd_protocol_id=>$model_id,
+    archive_path=>$c->config->{archive_path}
 });
 my $saved_model_object = $m->get_model();
 
@@ -32,6 +33,7 @@ use Bio::Chado::Schema;
 use CXGN::Metadata::Schema;
 use CXGN::People::Schema;
 use File::Basename qw | basename dirname|;
+use File::Spec;
 use JSON;
 
 has 'bcs_schema' => (
@@ -58,12 +60,20 @@ has 'nd_protocol_id' => (
     required => 1
 );
 
+# md_files.dirname is stored relative to the archive_path, so it is needed to build the full path of the model files
+has 'archive_path' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
 sub get_model {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $phenome_schema = $self->phenome_schema();
     my $metadata_schema = $self->metadata_schema();
     my $nd_protocol_id = $self->nd_protocol_id();
+    my $archive_path = $self->archive_path();
     my $model_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
     my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, md_files.file_id, md_files.filetype, nd_protocol.type_id, nd_experiment.nd_experiment_id, nd_experiment.type_id, property.type_id, property.value
@@ -87,7 +97,7 @@ sub get_model {
         $result{model_experiment_id} = $nd_experiment_id;
         $result{model_properties} = decode_json $property_value;
         if ($filename && $basename) {
-            $result{model_files}->{$filetype} = $filename."/".$basename;
+            $result{model_files}->{$filetype} = File::Spec->catfile($archive_path, $filename, $basename);
         }
         if ($basename) {
             $result{model_file_ids}->{$file_id} = $basename;
@@ -109,7 +119,7 @@ sub store_analysis_model_files {
     my $archived_training_data_file_type = $obj->{archived_training_data_file_type};
     my $archived_training_data_file = $obj->{archived_training_data_file};
     my $archived_auxiliary_files = $obj->{archived_auxiliary_files};
-    my $archive_path = $obj->{archive_path};
+    my $archive_path = $obj->{archive_path} || $self->archive_path();
     my $user_id = $obj->{user_id};
     my $user_role = $obj->{user_role};
 
@@ -141,30 +151,22 @@ sub store_analysis_model_files {
             archive_filename => $model_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema,
+            file_type => $archived_model_file_type
         });
-        my $archived_filename_with_path = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         if (!$archived_filename_with_path) {
             return { error => "Could not save file $model_original_name in archive." };
         }
         print STDERR "Archived Model File: $archived_filename_with_path\n";
 
-        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-        my $file_row = $metadata_schema->resultset("MdFiles")->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => $archived_model_file_type,
-            md5checksum => $md5->hexdigest(),
-            metadata_id => $md_row->metadata_id()
-        });
-
         my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $nd_experiment_id,
-            file_id => $file_row->file_id()
+            file_id => $archived_file_id
         });
 
-        $model_file_md_file_id = $file_row->file_id();
+        $model_file_md_file_id = $archived_file_id;
         # unlink($model_file);
     }
 
@@ -179,27 +181,19 @@ sub store_analysis_model_files {
         archive_filename => $model_aux_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema,
+        file_type => $archived_training_data_file_type
     });
-    my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
-    my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
+    my ($archived_aux_file_id, $archived_aux_filename_with_path) = $uploader_autoencoder->archive();
     if (!$archived_aux_filename_with_path) {
         return { error => "Could not save file $model_aux_original_name in archive." };
     }
     print STDERR "Archived Auxiliary Model File: $archived_aux_filename_with_path\n";
 
-    my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    my $file_row_aux = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_aux_filename_with_path),
-        dirname => dirname($archived_aux_filename_with_path),
-        filetype => $archived_training_data_file_type,
-        md5checksum => $md5_aux->hexdigest(),
-        metadata_id => $md_row_aux->metadata_id()
-    });
-
     my $experiment_files_pheno = $phenome_schema->resultset("NdExperimentMdFiles")->create({
         nd_experiment_id => $nd_experiment_id,
-        file_id => $file_row_aux->file_id()
+        file_id => $archived_aux_file_id
     });
 
     # SAVING AUXILIARY FILES, LIKE AUXILIARY TRAINING DATA AND PREPROCESSING MODELS
@@ -218,27 +212,19 @@ sub store_analysis_model_files {
                 archive_filename => $model_aux_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema,
+                file_type => $auxiliary_model_file_archive_type
             });
-            my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
-            my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
+            my ($archived_aux_file_id, $archived_aux_filename_with_path) = $uploader_autoencoder->archive();
             if (!$archived_aux_filename_with_path) {
                 return { error => "Could not save file $model_aux_original_name in archive." };
             }
             print STDERR "Archived Auxiliary Model File: $archived_aux_filename_with_path\n";
 
-            my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-            my $file_row_aux = $metadata_schema->resultset("MdFiles")->create({
-                basename => basename($archived_aux_filename_with_path),
-                dirname => dirname($archived_aux_filename_with_path),
-                filetype => $auxiliary_model_file_archive_type,
-                md5checksum => $md5_aux->hexdigest(),
-                metadata_id => $md_row_aux->metadata_id()
-            });
-
             my $experiment_files_aux = $phenome_schema->resultset("NdExperimentMdFiles")->create({
                 nd_experiment_id => $nd_experiment_id,
-                file_id => $file_row_aux->file_id()
+                file_id => $archived_aux_file_id
             });
 
             # unlink($auxiliary_model_file);

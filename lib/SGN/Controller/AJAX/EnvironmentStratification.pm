@@ -171,7 +171,7 @@ sub generate_results : Path('/ajax/environment_stratification/generate_results')
     my $cmd_str = join(" ", (
         "Rscript",
         map { _shell_quote($_) } (
-            $c->config->{basepath} . "/R/environment_stratification.R",
+            "__BASEPATH__/R/environment_stratification.R",
             $pheno_filepath,
             $r_trait,
             $alpha,

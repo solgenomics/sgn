@@ -1,0 +1,54 @@
+<%args>
+$editable_vector_props => {}
+$editable_stock_props_definitions
+</%args>
+
+<div class="modal fade" id="vectors_upload_spreadsheet_format_modal" name="vectors_upload_spreadsheet_format_modal" tabindex="-1" role="dialog" aria-labelledby="uploadVectorsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadVectorsInfoDialog">Upload Vectors Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the uniquename column. Additional information can be included by selecting optional column(s) (see below). : 
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>uniquename </td>
+%  foreach my $editable_stockprop (@$editable_vector_props) {
+%                               print "<td>$editable_stockprop</td>";
+% }
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required Fields:</b>
+                    <ul>
+                    <li>uniquename (vector name must be unique)</li>
+                    </ul>
+                    <b>Optional Fields:</b>
+                    <ul>
+%  foreach my $editable_stockprop (@$editable_vector_props) {
+%    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
+%                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
+%    } else {
+%                   print "<li>$editable_stockprop (no definition available)</li>";
+%    }
+%  }
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -18,6 +18,8 @@ my $filename = "t/data/trial/upload_phenotypin_spreadsheet_exact_repeats1.xlsx";
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
 
+my $metadata_schema = $f->metadata_schema;
+
 # create cvterms with a "multiple" property 
 
 my @terms = ("dry matter content percentage", "fresh root weight", "fresh shoot weight measurement in kg", "harvest index variable");
@@ -50,11 +52,13 @@ my $uploader = CXGN::UploadFile->new(
 	archive_filename => $timestamp."_".$basename,
 	timestamp => $timestamp,
 	user_id => 41, #janedoe in fixture
-	user_role => 'curator'
+	user_role => 'curator',
+    metadata_schema => $metadata_schema,
+    file_type => 'phenotyping_spreadsheet'
     });
 
 ## Store uploaded temporary file in archive
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 
 print STDERR "ARCHIVED FILENAME: $archived_filename_with_path\n";
 
@@ -84,6 +88,7 @@ print STDERR "PARSED FILE: ".Dumper($parsed_file);
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2025-04-12_22:00:00";
@@ -251,11 +256,13 @@ my $uploader = CXGN::UploadFile->new(
 	archive_filename => $timestamp."_".$basename,
 	timestamp => $timestamp,
 	user_id => 41, #janedoe in fixture
-	user_role => 'curator'
+	user_role => 'curator',
+    metadata_schema => $metadata_schema,
+    file_type => 'phenotyping_spreadsheet'
     });
 
 ## Store uploaded temporary file in archive
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 
 print STDERR "ARCHIVED FILENAME: $archived_filename_with_path\n";
 
@@ -285,6 +292,7 @@ print STDERR "PARSED FILE: ".Dumper($parsed_file);
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2025-04-12_22:00:00";

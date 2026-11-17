@@ -452,7 +452,8 @@ sub generate_predictions_POST : Args(0) {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$model_id
+        nd_protocol_id=>$model_id,
+        archive_path=>$c->config->{archive_path}
     });
     my $saved_model_object = $m->get_model();
     print STDERR Dumper $saved_model_object;

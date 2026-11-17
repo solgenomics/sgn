@@ -2,6 +2,7 @@ package SGN::Controller::Collection;
 
 use Moose;
 use CXGN::Collection;
+use CXGN::File;
 use SGN::Image;
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use File::Spec;
@@ -136,9 +137,17 @@ sub collection_download : Path('/collection/download') : Args(1) {
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     foreach my $file_id (@$file_ids) {
-        my $file_row = $metadata_schema->resultset('MdFiles')->find({ file_id => $file_id });
-        my $name = $file_row ? $file_row->basename : "file_$file_id";
-        my $path = $file_row ? File::Spec->catfile($file_row->dirname, $file_row->basename) : '';
+        # md_files.dirname is relative to the archive path, so CXGN::File builds the full path
+        my $archived_file = eval {
+            CXGN::File->new({
+                file_id         => $file_id,
+                metadata_schema => $metadata_schema,
+                archive_path    => $c->config->{archive_path},
+            });
+        };
+        # archived basenames carry a timestamp prefix; name the zip entry by the original filename
+        my $name = $archived_file ? ($archived_file->filename() || $archived_file->basename()) : "file_$file_id";
+        my $path = $archived_file ? $archived_file->get_path() : '';
         if (!$path || !-e $path) {
             push @missing, "file $file_id: $name";
             next;

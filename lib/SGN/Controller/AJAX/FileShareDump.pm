@@ -54,24 +54,17 @@ sub filesharedump_upload_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema,
+        file_type => $archived_file_type
     });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not store uploaded file!"};
         return;
     }
     unlink $upload_tempfile;
 
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => $archived_file_type,
-        md5checksum => $md5->hexdigest(),
-        metadata_id => $md_row->metadata_id()
-    });
     $c->stash->{rest} = {success => 1};
 }
 

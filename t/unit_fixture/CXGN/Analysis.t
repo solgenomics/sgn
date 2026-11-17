@@ -189,7 +189,8 @@ for my $extension ("xls", "xlsx") {
         bcs_schema      => $schema,
         metadata_schema => $metadata_schema,
         phenome_schema  => $phenome_schema,
-        nd_protocol_id  => $saved_analysis_object->{model_id}
+        nd_protocol_id  => $saved_analysis_object->{model_id},
+        archive_path    => $t->config->{archive_path}
     });
     my $saved_model_object = $m->get_model();
     print STDERR Dumper $saved_model_object;
@@ -272,6 +273,12 @@ for my $extension ("xls", "xlsx") {
     my $stored_analysis_phenotypes = $a->get_phenotype_matrix();
     print STDERR Dumper $stored_analysis_phenotypes;
     is(scalar(@$stored_analysis_phenotypes), 6);
+
+    my $uploaded_model_files = $a->saved_model()->{model_files} || {};
+    ok(scalar(keys %$uploaded_model_files) > 0, 'uploaded analysis model has files');
+    foreach my $model_file (values %$uploaded_model_files) {
+        ok(-e $model_file, "saved model file $model_file exists under the archive_path");
+    }
 
     print STDERR "DELETE ANALYSIS & DATASET...\n";
 

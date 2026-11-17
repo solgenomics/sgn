@@ -255,7 +255,7 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation group identifers!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload propagation group identifiers!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -293,11 +293,12 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema
     });
 
-        ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+        ## Store uploaded temporary file in archive
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -495,7 +496,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifers!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifiers!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -527,11 +528,12 @@ sub upload_propagation_identifiers_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema
     });
 
-        ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+        ## Store uploaded temporary file in archive
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -909,7 +911,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifer statuses!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifier statuses!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -941,11 +943,12 @@ sub upload_propagation_identifier_status_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema
     });
 
-        ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+        ## Store uploaded temporary file in archive
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};

@@ -178,7 +178,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     };
     # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
     my $cmd_str = join(" ", "Rscript", shell_quote(
-        $c->config->{basepath} . "/R/stability/ammi_script.R",
+        "__BASEPATH__/R/stability/ammi_script.R",
         $pheno_filepath,
         $trait_id,
         $imput_id,

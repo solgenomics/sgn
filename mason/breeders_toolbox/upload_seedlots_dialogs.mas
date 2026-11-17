@@ -240,125 +240,7 @@ $default_seedlot_material_type => undef
     </div>
 </div>
 
-<div class="modal fade" id="seedlot_upload_spreadsheet_info_dialog" name="seedlot_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInfoDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information For Named Accessions</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>seedlot_name</td>
-                                <td>accession_name</td>
-                                <td>operator_name</td>
-                                <td>amount</td>
-                                <td>weight_gram</td>
-                                <td>description</td>
-                                <td>box_name</td>
-                                <td>quality</td>
-                                <td>source</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <ul>
-                    <li>seedlot_name (must be unique)</li>
-                    <li>accession_name (must exist in the database. the accession_name is the unique identifier for the named genotype)</li>
-                    <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
-                    <li>
-                    amount (number of materials in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
-                    <br/><b>AND/OR</b><br/>
-                    weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight_gram or both.)
-                    </li>
-                    <li>box_name (the box name that the plant material is located in. can be any name.)</li>
-                    </ul>
-
-                    <b>Optional fields:</b>
-                    <ul>
-                      <li>description (information about why this seedlot is being added)</li>
-                      <li>quality (status of the seedlot, for example "ok", "moldy", "insect damage" etc.</li>
-                      <li>source (an alternate source, such as a plot, subplot, or plant identifier from which the seed was collected)</li>
-                    </ul>
-                </div>
-                <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
-            </div>
-            <div class="modal-footer">
-                <button id="close_seedlot_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="seedlot_upload_spreadsheet_harvested_info_dialog" name="seedlot_upload_spreadsheet_harvested_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotHarvestedInfoDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotHarvestedInfoDialog">Upload Template Information For Harvested Seedlots</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>seedlot_name</td>
-                                <td>cross_unique_id</td>
-                                <td>operator_name</td>
-                                <td>amount</td>
-                                <td>weight_gram</td>
-                                <td>description</td>
-                                <td>box_name</td>
-                                <td>quality</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <ul>
-                    <li>seedlot_name (must be unique)</li>
-                    <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
-                    <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
-                    <li>
-                    amount (number of materials in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
-                    <br/><b>AND/OR</b><br/>
-                    weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight_gram or both.)
-                    </li>
-                    <li>box_name (the box name that the plant material is located in. can be any name.)</li>
-                    </ul>
-
-                    <b>Optional fields:</b>
-                    <ul>
-                      <li>description (information about why this seedlot is being added)</li>
-                      <li>quality (brief description of quality, e.g.,  "ok", "moldy", "insect damage", etc)</li>
-                    </ul>
-                </div>
-                <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
-            </div>
-            <div class="modal-footer">
-                <button id="close_seedlot_harvested_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
+<& /file_formats/seedlot_upload.mas &>
 
 <script>
 jQuery(document).ready(function(){
@@ -515,7 +397,7 @@ jQuery(document).ready(function(){
     jQuery(document).on('click', '[name="upload_seedlot_success_complete_button"]', function(){
         alert('Seedlots were saved in the database');
         jQuery('#upload_seedlot_dialog').modal('hide');
-        //location.reload();
+        location.reload();
     });
 
     jQuery('[name="close_seedlots_upload"]').click(function () {
@@ -524,7 +406,7 @@ jQuery(document).ready(function(){
         jQuery('#upload_seedlot_organization_name').val("");
         jQuery('#seedlot_uploaded_file').val("");
         jQuery('#seedlot_harvested_uploaded_file').val("");
-        location.reload();
+        //location.reload();
     });
 
 

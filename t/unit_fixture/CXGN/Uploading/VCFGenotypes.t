@@ -122,8 +122,9 @@ $message_hash = decode_json $message;
 is($message_hash->{$project_id}->[0]->{exists}, 'true');
 is($message_hash->{$project_id}->[0]->{genotyping_project_id}, $project_id);
 
+my $vcf_file_id = $message_hash->{$project_id}->[0]->{file_id};
 my $vcf_basename = $message_hash->{$project_id}->[0]->{basename};
-$response = $ua->get("http://localhost:3010/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=$project_id&basename=$vcf_basename");
+$response = $ua->get("http://localhost:3010/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=$project_id&file_id=$vcf_file_id");
 ok($response->is_success);
 # The archived original VCF is stored and served gzipped
 is($response->header('Content-Type'), 'application/gzip');
@@ -412,7 +413,7 @@ $message_hash = decode_json $message;
 is($message_hash->{success}, 1, "adding a second project (tissue_sample observation units) to the existing 'stocks' protocol succeeds");
 is($message_hash->{nd_protocol_id}, $mixed_protocol_id, "second project is stored under the same existing protocol");
 ok(my $mixed_project_id_2 = $message_hash->{project_id}, "second upload returns a project_id");
-isnt($mixed_project_id_2, $mixed_project_id_1, "second project is a different project from the first");
+ok($mixed_project_id_2 != $mixed_project_id_1, "second project is a different project from the first");
 
 my $genotypes_search_mixed_2 = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,

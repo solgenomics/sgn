@@ -169,7 +169,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     };
     # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
     my $cmd_str = join(" ", "Rscript", shell_quote(
-        $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
+        "__BASEPATH__/R/heritability/h2_blup_rscript.R",
         $pheno_filepath,
         $trait_id,
         $h2File,

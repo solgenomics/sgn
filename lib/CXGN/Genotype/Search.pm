@@ -138,7 +138,7 @@ has 'marker_name_list' => (
 has 'genotypeprop_hash_select' => (
     isa => 'ArrayRef[Str]',
     is => 'ro',
-    default => sub {['GT', 'AD', 'DP', 'GQ', 'DS', 'PL', 'NT']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES
+    default => sub {['GT', 'AD', 'DP', 'GQ', 'DS', 'PL', 'NT']} #THESE ARE THE GENERIC AND EXPECTED VCF ATTRIBUTES
 );
 
 has 'protocolprop_top_key_select' => (
@@ -411,7 +411,6 @@ sub get_genotype_info {
     my @where_clause;
 
     my $vcf_genotyping_cvterm_id = $self->search_vcf_genotyping_cvterm_id({protocol_id => $protocol_id_list->[0],genotype_id => $markerprofile_id_list->[0]});
-    my $vcf_genotyping_cvterm_id = $self->search_vcf_genotyping_cvterm_id();
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
@@ -1289,7 +1288,18 @@ sub get_cached_file_search_json {
     my $file_handle;
     if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
-    } else {
+        # The cache index can disagree with its backing file, leaving an entry that
+        # exists but reads as empty. Serving that looks exactly like "no genotypes
+        # found", so throw it away and regenerate instead. Note that the index size
+        # cannot be trusted here, it is the thing that is wrong; stat the handle.
+        if (!$file_handle || (stat($file_handle))[7] == 0) {
+            print STDERR "discarding empty cached json file for key $key, regenerating\n";
+            undef $file_handle;
+            $self->cache()->remove($key);
+        }
+    }
+
+    if (!$file_handle) {
         # Set the temp dir and temp output file
         my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_json";
 	print STDERR "creating cached json file in $tmp_output_dir\n";
@@ -1327,7 +1337,7 @@ sub get_cached_file_search_json {
         my $counter = 0;
         while (my $geno = $self->get_next_genotype_info) {
 
-            # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+            # OLD GENOTYPING PROTOCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
@@ -1426,7 +1436,7 @@ sub get_cached_file_dosage_matrix {
         my $counter = 0;
         while (my $geno = $self->get_next_genotype_info) {
 
-            # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+            # OLD GENOTYPING PROTOCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
@@ -1752,7 +1762,7 @@ sub get_cached_file_VCF {
         my $counter = 0;
         my $usingGT;
         while (my $geno = $self->get_next_genotype_info) {
-            # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+            # OLD GENOTYPING PROTOCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
@@ -2158,7 +2168,7 @@ sub get_cached_file_VCF_compute_from_parents {
                     $genotype_string .= "\n";
                     $genotype_string .= "FORMAT\t";
                     foreach my $m (@all_marker_objects) {
-                        my $format = 'DS'; #When calculating genotypes from parents, only will return dosages atleast for now
+                        my $format = 'DS'; #When calculating genotypes from parents, only will return dosages at least for now
                         $genotype_string .= $format . "\t";
                         $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{format} = $format;
                         $m->{format} = $format;

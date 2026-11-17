@@ -11,6 +11,7 @@ use File::Spec;
 use Data::Dumper;
 use CXGN::Tools::Run;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use Excel::Writer::XLSX;
 use POSIX qw(strftime);
 use Archive::Zip qw(:ERROR_CODES :CONSTANTS);
@@ -75,16 +76,25 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
     my $emails = join(",", @{ $data->{emails} // [] });
     my $report_scripts = $data->{report_scripts} // [];
 
+    # A script name may only name a script in the reports directory.
+    if (ref($report_scripts) ne "ARRAY" || grep { !defined($_) || $_ !~ m/^\w+$/ } @$report_scripts) {
+        $c->stash->{rest} = { success => JSON::false, error => "Unknown report script." };
+        $c->detach;
+    }
+
     make_path($out_directory);
 
     foreach my $script (@$report_scripts) {
         my $script_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);
         my $file_basename = "${script}_${script_date}";
 
-        my $script_cmd = "perl ${basepath}${reports_dir}${script}.pl "
-            . "-U $dbuser -H $dbhost -P $dbpass -D $dbname "
-            . "-o '$out_directory' -f '$file_basename' "
-            . "-s '$start_date' -e '$end_date'";
+        # The script names and dates come from the request, and the command runs in a shell, so every
+        # value is quoted.
+        my $script_cmd = join(" ",
+            "perl", shell_quote("__BASEPATH__${reports_dir}${script}.pl"),
+            "-U", shell_quote("__DBUSER__"), "-H", shell_quote("__DBHOST__"), "-P", shell_quote("__DBPASS__"), "-D", shell_quote("__DBNAME__"),
+            "-o", shell_quote($out_directory), "-f", shell_quote($file_basename),
+            "-s", shell_quote($start_date), "-e", shell_quote($end_date));
 
         my $pid = fork();
         if (!defined $pid) {
@@ -98,6 +108,11 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
                 schema => $schema,
                 people_schema => $people_schema,
                 sp_person_id => $sp_person_id,
+                dbhost => $dbhost,
+                dbname => $dbname,
+                dbuser => $dbuser,
+                dbpass => $dbpass,
+                basepath => $basepath,
                 name => $file_basename." report generation",
                 cmd => $script_cmd,
                 job_type => 'report'
@@ -107,7 +122,8 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
             print("Starting command $script_cmd \n");
             print("Files directory $out_directory \n");
             
-            system($script_cmd);
+            # The job record keeps the command with its placeholders; only the copy run gets the values.
+            system($report_job_record->fill_placeholders($script_cmd));
             $report_job_record->update_status("submitted");
             
             my $exit_code = $? >> 8;

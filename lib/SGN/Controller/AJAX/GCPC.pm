@@ -385,7 +385,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     print STDERR "NOW SUBMITTING R JOB...\n";
     # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
     my $cmd_str = join(" ", "Rscript", shell_quote(
-            $c->config->{basepath} . "/R/GCPC.R",
+            "__BASEPATH__/R/GCPC.R",
             $pheno_filepath.".clean",
             $geno_filepath,
             $si_traits,

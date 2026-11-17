@@ -488,7 +488,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # );
     # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
     my $cmd_str = join(" ", "Rscript", shell_quote(
-        $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
+        "__BASEPATH__/R/solgwas/solgwas_script.R",
         $pheno_filepath,
         $geno_filepath2,
         $trait_id,

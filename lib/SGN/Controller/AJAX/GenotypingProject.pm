@@ -121,7 +121,7 @@ sub genotyping_project_delete_POST : Args(1) {
         close($fh);
         # my $async_delete = CXGN::Tools::Run->new();
 	    # $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
-        my $cmd = "perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id";
+        my $cmd = "perl __BASEPATH__/bin/delete_nd_experiment_entries.pl -H __DBHOST__ -D __DBNAME__ -U __DBUSER__ -P __DBPASS__ -i $temp_file_nd_experiment_id";
         my $async_delete = CXGN::Job->new({
             people_schema => $c->dbic_schema('CXGN::People::Schema', undef, $user_id),
             schema => $bcs_schema,

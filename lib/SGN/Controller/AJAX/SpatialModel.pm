@@ -176,7 +176,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     };
     my $cmd_str = join(" ", (
         "Rscript ",
-        $c->config->{basepath} . "/R/spatial_correlation_check.R",
+        "__BASEPATH__/R/spatial_correlation_check.R",
         $pheno_filepath.".clean",
         "'".$si_traits."'"
     ));

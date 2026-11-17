@@ -50,6 +50,7 @@ sub analysis_detail :Path('/analyses') Args(1) {
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         trial_id => $analysis_id,
+        archive_path => $c->config->{archive_path},
     });
     };
 
@@ -95,7 +96,8 @@ sub analysis_model_detail :Path('/analyses_model') Args(1) {
         bcs_schema=>$bcs_schema,
         metadata_schema=>$c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
         phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
-        nd_protocol_id=>$model_id
+        nd_protocol_id=>$model_id,
+        archive_path=>$c->config->{archive_path}
     });
     my $saved_model_object = $m->get_model();
     #print STDERR Dumper $saved_model_object;

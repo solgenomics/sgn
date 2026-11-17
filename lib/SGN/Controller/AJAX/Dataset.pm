@@ -10,6 +10,7 @@ use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use CXGN::DB::Connection;
 use CXGN::Page::UserPrefs;
 use Text::CSV ("csv");
@@ -162,7 +163,7 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     };
     my $cmd_str = join(" ", (
         "Rscript ",
-        $c->config->{basepath} . "/R/dataset/rosner_test.R",
+        "__BASEPATH__/R/dataset/rosner_test.R",
         $trait_file_path,
         $stat_file_path
     ));
@@ -493,13 +494,14 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
     my $dbpass = $c->config->{dbpass};
     my $basepath = $c->config->{basepath};
     
-    my $cmd = "mx-run CXGN::Dataset::ToolCompatibility".
-                " --dataset_id $dataset_id".
-                " --genotyping_protocol $genotyping_protocol".
-                " --dbhost $dbhost".
-                " --dbname $dbname".
-                " --user $dbuser".
-                " --password $dbpass";
+    # The dataset id comes from the URL, and the command runs in a shell, so every value is quoted.
+    my $cmd = join(" ", "mx-run", "CXGN::Dataset::ToolCompatibility",
+                "--dataset_id", shell_quote($dataset_id),
+                "--genotyping_protocol", shell_quote($genotyping_protocol),
+                "--dbhost", shell_quote("__DBHOST__"),
+                "--dbname", shell_quote("__DBNAME__"),
+                "--user", shell_quote("__DBUSER__"),
+                "--password", shell_quote("__DBPASS__"));
 
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
@@ -949,7 +951,7 @@ sub publish_dataset_generate_POST {
 }
 
 #
-# Submit the arcived files to the specified article on the external service
+# Submit the archived files to the specified article on the external service
 #
 sub publish_dataset_submit : Path('/ajax/dataset/publish/submit') : ActionClass('REST') { }
 sub publish_dataset_submit_POST {
@@ -1219,7 +1221,7 @@ sub publish_dataset_finalize_POST {
     $md->{data}->{$type}->{complete} = $iscomplete;
     $dataset->update_published($key, $md);
 
-    # Return an error if the upload was not completly successful
+    # Return an error if the upload was not completely successful
     if ( !$iscomplete ) {
         $c->stash->{rest} = { error => "The upload for $type was not complete" };
         return;

@@ -629,7 +629,8 @@ sub store {
         bcs_schema=>$bcs_schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        nd_protocol_id=>$analysis_model_protocol_id
+        nd_protocol_id=>$analysis_model_protocol_id,
+        archive_path=>$archive_path
     });
 
 if ($analysis_model_file) {

@@ -23,6 +23,9 @@ Lukas Mueller
 
 package SGN::Model::Cvterm;
 
+use strict;
+use warnings;
+
 use CXGN::Chado::Cvterm;
 use Data::Dumper;
 
@@ -35,13 +38,13 @@ sub get_cvterm_object {
     my $cv = $schema->resultset('Cv::Cv')->find( { name => $cv_name });
 
     if (! $cv) {
-	print STDERR "CV $cv_name not found. Ignoring.";
-	return undef;
+        print STDERR "CV $cv_name not found. Ignoring.";
+        return;
     }
     my $term = CXGN::Chado::Cvterm->new_with_term_name(
-	$self->dbc()->dbh(),
-	$cvterm_name,
-	$cv->cv_id()
+        $self->dbc()->dbh(),
+        $cvterm_name,
+        $cv->cv_id()
 	);
 
     return $term;
@@ -69,7 +72,7 @@ sub get_cvterm_row_from_trait_name {
 
     #print STDERR $trait_name;
 
-    #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO_334:0000123. substring on last occurance of |
+    #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO_334:0000123. substring on last occurrence of |
     my $delim = "|";
     my $full_accession = substr $trait_name, rindex( $trait_name, $delim ) + length($delim);
     my $full_accession_length = length($full_accession) + length($delim);
@@ -161,6 +164,69 @@ sub find_trait_by_id {
     return $cvterm_id;
 }
 
+=head2 find_image_trait($schema, $observation_variable)
+
+Finds the trait recorded in an image's EXIF metadata. $observation_variable is the metadata's
+observation_variable hash. The trait is looked up by its id (external_db_id) if one is given,
+otherwise by its name, falling back to a synonym match if no trait has that exact name, since trait
+names coming from external sources aren't always the trait's primary name in the database.
+
+Validating and storing images both go through this, so that an image which passes validation finds
+the same trait when it is stored.
+
+Returns a hashref with
+ cvterm_id     the trait's cvterm_id, or undef if it was not found
+ lookup_type   "id", "name" or "synonym", or undef if the metadata names no trait
+ lookup_value  the id or name that was looked up
+ matched_name  the trait's name, when it was matched by synonym
+
+=cut
+
+sub find_image_trait {
+    my $self = shift;
+    my $schema = shift;
+    my $observation_variable = shift || {};
+
+    my $trait_id = $observation_variable->{external_db_id};
+    my $trait_name = $observation_variable->{observation_variable_name};
+
+    my %result = (
+        cvterm_id => undef,
+        lookup_type => undef,
+        lookup_value => undef,
+        matched_name => undef
+    );
+
+    if ($trait_id) {
+        $result{lookup_type} = "id";
+        $result{lookup_value} = $trait_id;
+        $result{cvterm_id} = $self->find_trait_by_id($schema, $trait_id);
+    }
+    elsif ($trait_name) {
+        $result{lookup_type} = "name";
+        $result{lookup_value} = $trait_name;
+
+        my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $trait_name });
+        if ($cvterm) {
+            $result{cvterm_id} = $cvterm->cvterm_id();
+        } else {
+            my $escaped_name = $trait_name;
+            $escaped_name =~ s/([%_\\])/\\$1/g;
+
+            my $synonym_row = $schema->resultset('Cv::Cvtermsynonym')->search( { synonym => { -ilike => '"' . $escaped_name . '"%' } } )->first;
+            if ($synonym_row) {
+                $result{cvterm_id} = $synonym_row->cvterm_id();
+                $result{lookup_type} = "synonym";
+
+                my $matched_cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $result{cvterm_id} });
+                $result{matched_name} = $matched_cvterm ? $matched_cvterm->name() : undef;
+            }
+        }
+    }
+
+    return \%result;
+}
+
 sub get_trait_from_exact_components {
     my $self= shift;
     my $schema = shift;
@@ -179,7 +245,7 @@ sub get_trait_from_exact_components {
         push @trait_cvterm_ids, $trait_cvterm_id;
     }
     if (scalar(@trait_cvterm_ids) > 1){
-        die "More than one composed trait returned for the given set of exact componenets\n";
+        die "More than one composed trait returned for the given set of exact components\n";
     }
     return $trait_cvterm_ids[0];
 }
@@ -188,6 +254,7 @@ sub get_trait_from_cvterm_id {
     my $schema = shift;
     my $cvterm_id = shift;
     my $format = shift; #can be 'concise' for just the name or 'extended' for name|DB:0000001
+    my $q;
     if ($format eq 'concise'){
         $q = "SELECT name FROM cvterm WHERE cvterm_id=?;";
     }
@@ -196,7 +263,7 @@ sub get_trait_from_cvterm_id {
     }
     my $h = $schema->storage->dbh->prepare($q);
     $h->execute($cvterm_id);
-    $name = $h->fetchrow();
+    my $name = $h->fetchrow();
     return $name;
 }
 

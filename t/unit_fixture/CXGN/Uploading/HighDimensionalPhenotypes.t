@@ -73,6 +73,8 @@ $response = $ua->post(
         upload_transcriptomics_spreadsheet_protocol_unit         => "TPM",
         upload_transcriptomics_spreadsheet_protocol_genome       => "v1",
         upload_transcriptomics_spreadsheet_protocol_annotation   => "v1",
+        upload_transcriptomics_spreadsheet_protocol_instrument_model => "Test Instrument",
+        upload_transcriptomics_spreadsheet_protocol_read_length => "150",
 
         upload_transcriptomics_spreadsheet_data_level => 'tissue_samples',
         upload_transcriptomics_spreadsheet_file_input => [$matrix_file, "transcriptomics_data_matrix"],
@@ -88,6 +90,19 @@ is($verify_message_hash->{success}->[1], 'File transcriptomics_details saved in 
 is($verify_message_hash->{success}->[2], 'File valid: transcriptomics_data_matrix.');
 is($verify_message_hash->{success}->[3], 'File data successfully parsed.');
 is($verify_message_hash->{success}->[4], 'File data verified. Plot names and trait names are valid.');
+
+# The validation job keeps every protocol detail, since committing it from the upload manager
+# builds the store request from them, and a new protocol is created from that request.
+my ($validation_args_json) = $f->dbh()->selectrow_array(
+    "SELECT args::text FROM sgn_people.sp_job
+      WHERE args->'additional_args'->>'file_type' = 'transcriptomics'
+        AND args->'additional_args'->>'is_validation' = '1'
+      ORDER BY sp_job_id DESC LIMIT 1"
+);
+my $protocol_params = decode_json($validation_args_json)->{additional_args}->{protocol_params};
+is($protocol_params->{upload_transcriptomics_spreadsheet_protocol_instrument_model}, 'Test Instrument', 'validation job keeps the instrument model');
+is($protocol_params->{upload_transcriptomics_spreadsheet_protocol_read_length}, '150', 'validation job keeps the read length');
+ok(exists $protocol_params->{upload_transcriptomics_spreadsheet_protocol_nucleic_acid_extraction_method}, 'validation job keeps the extraction method field');
 
 # POST to STORE endpoint
 my $ua = LWP::UserAgent->new;

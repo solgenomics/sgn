@@ -34,6 +34,7 @@ use File::Spec;
 use Data::Dumper;
 use JSON;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use Encode;
 use Cwd;
 
@@ -76,7 +77,8 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
 
     my $outdir = "$temp_basedir/obo_downloads";
 
-    my $cmd = "perl ./bin/download_obo.pl -i $db_name -H $dbhost -D $dbname -U $dbuser -P $dbpass -o $outdir";
+    # $db_name comes from the URL, and the command runs in a shell, so every value is quoted.
+    my $cmd = join(" ", "perl", "./bin/download_obo.pl", "-i", shell_quote($db_name), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-U", shell_quote("__DBUSER__"), "-P", shell_quote("__DBPASS__"), "-o", shell_quote($outdir));
 
     print STDERR "Dumping OBO file at $outdir/$db_name.breedbase.obo\n";
 
@@ -104,11 +106,20 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
     };
 
     if ($@) {
-        $c->stash->rest = {error => "An error occurred starting the download: $@"};
+        $c->stash->{rest} = {error => "An error occurred starting the download: $@"};
         return;
     }
 
-    $obo_downloader->wait();
+    # Shorter than CXGN::Job::wait()'s default, because a server worker is held for as long as
+    # this waits, and there are only so many of them.
+    eval {
+        $obo_downloader->wait(300);
+    };
+
+    if ($@) {
+        $c->stash->{rest} = {error => "The download did not finish: $@"};
+        return;
+    }
 
     $c->res->content_type('application/octet-stream');
     $c->res->header('Content-Disposition' => "attachment; filename=\"$db_name.obo\"");
@@ -224,9 +235,7 @@ sub make_cvtermpath : Path('/ajax/onto/make_cvtermpath') Args(1) {
         return;
     }
 
-    my $script = File::Spec->catfile($basepath, 'bin', 'sgn_gmod_make_cvtermpath.pl');
-
-    my $cmd = "perl $script -H $dbhost -D $dbname -d Pg -u $dbuser -p '$dbpass' -c '$cv_name'";
+    my $cmd = join(" ", "perl", shell_quote("__BASEPATH__/bin/sgn_gmod_make_cvtermpath.pl"), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-d", "Pg", "-u", shell_quote("__DBUSER__"), "-p", shell_quote("__DBPASS__"), "-c", shell_quote($cv_name));
 
     my $sp_job_id;
 
