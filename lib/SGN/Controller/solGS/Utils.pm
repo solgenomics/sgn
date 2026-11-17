@@ -248,7 +248,8 @@ sub trial_traits {
 sub clean_traits {
     my ($self, $terms) = @_;
 
-    $terms =~ s/(\|\w+:\d+)//g;
+    # the ontology id after the name; the accession may have letters (|MYONT:LEAF_6)
+    $terms =~ s/\|\w+:[^\s|]+//g;
     $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
     $terms =~ s/"|\://g;
