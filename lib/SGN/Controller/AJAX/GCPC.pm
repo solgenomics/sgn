@@ -20,6 +20,7 @@ use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
 use SGN::Model::Cvterm;
 use Cwd qw(cwd);
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -146,7 +147,7 @@ sub get_method: Path('/ajax/gcpc/get_method') : {
     my $method_1 = $c->req->param('method_id');
     print STDERR Dumper($method_1);
     $method_id = $method_1;
-    print "The vairable method_id is $method_id \n";
+    print "The variable method_id is $method_id \n";
 }
 
 
@@ -382,16 +383,16 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $genotype_data_fh = $ds->retrieve_genotypes( $protocol->[0], $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host},  $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 
     print STDERR "NOW SUBMITTING R JOB...\n";
-    my $cmd_str = join(" ", (
-        "Rscript ",
+    # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
+    my $cmd_str = join(" ", "Rscript", shell_quote(
             "__BASEPATH__/R/GCPC.R",
             $pheno_filepath.".clean",
             $geno_filepath,
-            "'".$si_traits."'",
-            "'".$si_weights."'",
-            "'".$plant_sex_variable_name_R."'",
-        "'".$fixed_factors."'",
-        "'".$random_factors."'",
+            $si_traits,
+            $si_weights,
+            $plant_sex_variable_name_R,
+            $fixed_factors,
+            $random_factors,
     ));
     my $cxgn_tools_run_config = {
         backend => $c->config->{backend},

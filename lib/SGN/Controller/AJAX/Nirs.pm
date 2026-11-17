@@ -21,6 +21,7 @@ use CXGN::UploadFile;
 use DateTime;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -382,7 +383,8 @@ sub generate_results_POST : Args(0) {
     # $cmd->is_cluster(1);
     # $cmd->wait;
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs.R '$seltrait' '$preprocessing_boolean' '$niter_id' '$algo_id' '$tune_id' '$rf_var_imp' '$cv_scheme' '$train_json_filepath' '$test_json_filepath' 'TRUE' '$output_model_filepath' '$output_table2_filepath' '$output_figure2_filepath' '$output_table_filepath' '$output_figure_filepath' ";
+    # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
+    my $cmd_s = join(" ", "Rscript", shell_quote($c->config->{basepath} . "/R/Nirs/nirs.R", $seltrait, $preprocessing_boolean, $niter_id, $algo_id, $tune_id, $rf_var_imp, $cv_scheme, $train_json_filepath, $test_json_filepath, 'TRUE', $output_model_filepath, $output_table2_filepath, $output_figure2_filepath, $output_table_filepath, $output_figure_filepath));
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
@@ -700,7 +702,7 @@ sub _check_user_login_nirs {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            return {error=>'You must be logged in to do this!'};
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'}; $c->detach();
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
@@ -708,7 +710,7 @@ sub _check_user_login_nirs {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            return {error=>'You must be logged in to do this!'};
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'}; $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
@@ -718,17 +720,17 @@ sub _check_user_login_nirs {
     if ($check_priv) {
         if ($user_role eq 'user') {
             if ($check_priv ne 'user') {
-                return {error=>'You must be logged in and have privileges to do this!'};
+                $c->stash->{rest} = {error=>'You must be logged in and have privileges to do this!'}; $c->detach();
             }
         }
         elsif ($user_role eq 'submitter') {
             if ($check_priv ne 'user' && $check_priv ne 'submitter') {
-                return {error=>'You must be logged in and have privileges to do this!'};
+                $c->stash->{rest} = {error=>'You must be logged in and have privileges to do this!'}; $c->detach();
             }
         }
         elsif ($user_role eq 'sequencer') {
             if ($check_priv ne 'user' && $check_priv ne 'submitter' && $check_priv ne 'sequencer') {
-                return {error=>'You must be logged in and have privileges to do this!'};
+                $c->stash->{rest} = {error=>'You must be logged in and have privileges to do this!'}; $c->detach();
             }
         }
         elsif ($user_role eq 'curator') {
