@@ -585,8 +585,46 @@ const VALIDATION_UPLOAD_TYPES = new Set([
     'genotyping_plate_custom_android'
 ]);
 
+// The longest the tab switch waits for open modals to close before switching anyway, so that a
+// modal that stays open (or never reports closing) cannot leave the user on the wrong tab.
+const TAB_SWITCH_MAX_WAIT_MS = 5000;
+
+/*
+* Switches to the given tab once no modal is on screen. A submission or commit switches tabs while
+* its modals (the confirmation, then the working modal) are closing, and the tab's fade would play
+* hidden behind their backdrop; waiting for them lets the user see the switch.
+*/
 export function show_upload_factory_tab(tab) {
-    jQuery(`#upload_factory_tabs a[href="${UPLOAD_FACTORY_TABS[tab]}"]`).tab('show');
+    let tab_link = jQuery(`#upload_factory_tabs a[href="${UPLOAD_FACTORY_TABS[tab]}"]`);
+    let deadline = Date.now() + TAB_SWITCH_MAX_WAIT_MS;
+    let switched = false;
+
+    let modal_on_screen = function() {
+        return jQuery('body').hasClass('modal-open') || jQuery('.modal.in, .modal-backdrop').length > 0;
+    };
+
+    let switch_tab = function() {
+        if (switched) {
+            return;
+        }
+        let wait = Math.min(250, deadline - Date.now());
+        if (modal_on_screen() && wait > 0) {
+            // Check again when a modal finishes closing, or after a short wait, whichever is first.
+            let check_again = function() {
+                clearTimeout(timer);
+                jQuery(document).off('hidden.bs.modal', check_again);
+                switch_tab();
+            };
+            let timer = setTimeout(check_again, wait);
+            jQuery(document).one('hidden.bs.modal', check_again);
+            return;
+        }
+        switched = true;
+        tab_link.tab('show');
+    };
+
+    // Let the caller open or close its modals first; they are called right after this.
+    setTimeout(switch_tab, 0);
 }
 
 function set_tab_count(badge_id, count) {
