@@ -497,16 +497,6 @@ sub set_transformation_control {
         my $transformation_rs = $schema->resultset("Stock::Stock")->find({stock_id => $transformation_stock_id, type_id => $transformation_cvterm_id });
 
         if ($transformation_control_stock_id) {
-#            my $previous_control = $schema->resultset('Stock::StockRelationship')->search({
-#                type_id => $control_of_cvterm_id,
-#                object_id => $transformation_stock_id,
-#            });
-#            if ($previous_control) {
-#                while(my $r = $previous_control->next()){
-#                    $r->delete();
-#                }
-#            }
-
              $transformation_rs->find_or_create_related('stock_relationship_subjects', {
                 type_id    => $control_of_cvterm_id,
                 object_id  => $transformation_rs->stock_id(),
