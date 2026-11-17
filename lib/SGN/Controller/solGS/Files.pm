@@ -778,7 +778,9 @@ sub cache_file {
     if (!$cache_dir) {
         $cache_dir = $c->stash->{cache_dir} || $c->stash->{analysis_cache_dir};
     }
-    
+
+    $self->clear_stale_trial_cache($c, $cache_dir);
+
     my $file_cache  = Cache::File->new(cache_root => $cache_dir,
 				       lock_level => Cache::File::LOCK_NFS()
 	);
@@ -809,6 +811,103 @@ sub cache_file {
 
     $c->stash->{$cache_data->{stash_key}} = $file;
 
+}
+
+# The phenotype file of a trial and the results computed from it are cached
+# for 30 days. Deleting phenotypes clears them (solGS::clearCache), but nothing
+# does when values are stored or changed, so the analysis tools kept showing
+# the old data. The fingerprint of the trial's stored phenotypes is kept next
+# to its cache and compared with the database once per request; when it
+# differs (or was never written), the trial's cached analyses are cleared.
+# As with solGS::clearCache, a job of the trial that is running at that moment
+# loses its files.
+sub clear_stale_trial_cache {
+    my ($self, $c, $cache_dir) = @_;
+
+    my $trial_id = $self->trial_id_of_cache_dir($cache_dir);
+    return if !$trial_id;
+    return if $c->stash->{trial_cache_checked}->{$trial_id}++;
+
+    my $fingerprint = eval { $self->trial_phenotypes_fingerprint($c, $trial_id) };
+    if ($@) {
+        $c->log->error("Could not read the phenotypes fingerprint of trial $trial_id: $@");
+        return;
+    }
+    # A combined population keeps its cache under a numeric id too.
+    return if !defined $fingerprint;
+
+    my $fingerprint_file = $self->trial_phenotypes_fingerprint_file($c, $trial_id);
+    my $stored = -e $fingerprint_file ? read_file($fingerprint_file, {binmode => ':utf8'}) : '';
+    return if $stored eq $fingerprint;
+
+    # The request may already have made some of the trial's directories;
+    # they are emptied, not taken away from it.
+    my $clear_cache = $c->controller('solGS::clearCache');
+    my @trial_dirs = grep { -d $_ } map {
+        ($clear_cache->analysis_cache_dir($c, $trial_id, $_), $clear_cache->analysis_tempfiles_dir($c, $trial_id, $_))
+    } @SGN::Controller::solGS::clearCache::ANALYSIS_TYPES;
+
+    my $cleared = $clear_cache->clear_cached_analyses_result($c, {'trials' => [$trial_id]});
+    if (!$cleared) {
+        $c->log->error("Could not clear the cached analyses of trial $trial_id after its phenotypes changed.");
+        return;
+    }
+
+    make_path(@trial_dirs, $cache_dir, { mode => oct('0755') });
+    write_file($fingerprint_file, {binmode => ':utf8'}, $fingerprint);
+}
+
+# .../<analysis type>/trials/<id>/cache -> the id; nothing for the caches of
+# lists, datasets and other analyses.
+sub trial_id_of_cache_dir {
+    my ($self, $cache_dir) = @_;
+
+    return if !defined $cache_dir;
+    my ($trial_id) = $cache_dir =~ m{/trials/(\d+)/cache/?$};
+
+    return $trial_id;
+}
+
+sub trial_phenotypes_fingerprint_file {
+    my ($self, $c, $trial_id) = @_;
+
+    $self->get_solgs_dirs($c) if !$c->stash->{solgs_dir};
+    my $trial_dir = File::Spec->catdir($c->stash->{solgs_dir}, $trial_id);
+    make_path($trial_dir, { mode => oct('0755') }) unless -d $trial_dir;
+
+    return File::Spec->catfile($trial_dir, 'phenotypes_fingerprint');
+}
+
+sub trial_phenotypes_fingerprint {
+    my ($self, $c, $trial_id) = @_;
+
+    my $dbh = $c->dbic_schema('Bio::Chado::Schema')->storage->dbh;
+
+    return $self->phenotypes_fingerprint($dbh, $trial_id);
+}
+
+# Number of the trial's stored phenotype values and a checksum of their ids,
+# observation units, traits and values: it changes when a value is added,
+# changed, deleted or moved to another plot. Nothing when no project has this
+# id (the id of a combined population is a checksum, not a project).
+sub phenotypes_fingerprint {
+    my ($self, $dbh, $trial_id) = @_;
+
+    my ($is_project) = $dbh->selectrow_array("SELECT 1 FROM project WHERE project_id = ?::bigint", undef, $trial_id);
+    return if !$is_project;
+
+    my $q = "SELECT count(DISTINCT phenotype.phenotype_id), md5(coalesce(string_agg(
+                 format('%s:%s:%s:%L', phenotype.phenotype_id, nd_experiment_stock.stock_id, phenotype.cvalue_id, phenotype.value),
+                 ',' ORDER BY phenotype.phenotype_id, nd_experiment_stock.stock_id), ''))
+             FROM nd_experiment_project
+             JOIN nd_experiment_phenotype ON nd_experiment_phenotype.nd_experiment_id = nd_experiment_project.nd_experiment_id
+             JOIN phenotype ON phenotype.phenotype_id = nd_experiment_phenotype.phenotype_id
+             LEFT JOIN nd_experiment_stock ON nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id
+             WHERE nd_experiment_project.project_id = ?::bigint";
+
+    my ($count, $checksum) = $dbh->selectrow_array($q, undef, $trial_id);
+
+    return "$count:$checksum";
 }
 
 sub copy_to_tempfiles_subdir {

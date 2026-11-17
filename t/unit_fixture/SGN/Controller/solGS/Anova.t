@@ -116,6 +116,8 @@ $context->{stash} = {trial_id => $trial_id, training_pop_id => $trial_id,
     analysis_metadata_dir => "$directory/metadata", data_set_type => 'single_population'};
 $context->mock(stash => sub { $context->{stash} });
 make_path($context->stash->{analysis_metadata_dir});
+# The cache freshness check may clear the trial's cached analyses of every type.
+$context->{stash}->{"${_}_dir"} //= "$directory/$_/trials" for @SGN::Controller::solGS::clearCache::ANALYSIS_TYPES;
 $context->mock(controller => sub { $controller_lookup{lc($_[1])} or die "Unexpected controller $_[1]" });
 $context->mock(error => sub { [] });
 $context->mock(user => sub { $f->user });

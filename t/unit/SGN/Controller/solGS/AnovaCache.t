@@ -54,6 +54,13 @@ $context->mock(req => sub { $request });
 my $logger = Test::MockObject->new;
 $logger->mock(error => sub { die "Unexpected cache removal error: $_[1]" });
 $context->mock(log => sub { $logger });
+# The stored phenotypes of the synthetic trials do not change in this test:
+# their fingerprint is the one already kept next to the cache.
+$context->{stash}->{"${_}_dir"} //= File::Spec->catdir($directory, $_, 'trials')
+    for @SGN::Controller::solGS::clearCache::ANALYSIS_TYPES;
+my $files_mock = Test::MockModule->new('SGN::Controller::solGS::Files');
+$files_mock->mock(trial_phenotypes_fingerprint => sub { 'unchanged' });
+write_file($files->trial_phenotypes_fingerprint_file($context, $_), 'unchanged') for $trial_id, $other_trial_id;
 
 my $raw_file = $anova->trial_phenotype_file($context, $trial_id);
 my $old_content = "unit\tsynthetic_trait\nsynthetic_unit\t1\n";
