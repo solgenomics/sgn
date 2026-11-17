@@ -951,7 +951,7 @@ sub publish_dataset_generate_POST {
 }
 
 #
-# Submit the arcived files to the specified article on the external service
+# Submit the archived files to the specified article on the external service
 #
 sub publish_dataset_submit : Path('/ajax/dataset/publish/submit') : ActionClass('REST') { }
 sub publish_dataset_submit_POST {
@@ -1221,7 +1221,7 @@ sub publish_dataset_finalize_POST {
     $md->{data}->{$type}->{complete} = $iscomplete;
     $dataset->update_published($key, $md);
 
-    # Return an error if the upload was not completly successful
+    # Return an error if the upload was not completely successful
     if ( !$iscomplete ) {
         $c->stash->{rest} = { error => "The upload for $type was not complete" };
         return;

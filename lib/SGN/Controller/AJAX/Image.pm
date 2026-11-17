@@ -911,7 +911,7 @@ sub _check_archived_file_access {
         $archived_file_ids,
         $c->user()->check_roles("curator") ? 1 : 0
     );
-    return undef if !@$inaccessible;
+    return if !@$inaccessible;
     return "You do not have access to the archived file(s) with id ".join(", ", @$inaccessible).".";
 }
 
