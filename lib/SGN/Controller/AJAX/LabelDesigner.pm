@@ -20,6 +20,7 @@ use CXGN::Cross;
 use SGN::Model::Cvterm;
 use Sort::Naturally;
 use CXGN::BreederSearch;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -396,7 +397,8 @@ __PACKAGE__->config(
        # decode json
        # my $json = JSON->new;
        #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
-       my $design_params = decode_json($design_json);
+       # characters when Catalyst has decoded the form field, UTF-8 octets otherwise
+       my $design_params = decode_stored_json($design_json);
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
        my $start_number = $design_params->{'start_number'} || undef;
        my $end_number = $design_params->{'end_number'} || undef;
@@ -535,6 +537,7 @@ __PACKAGE__->config(
 
            print STDERR "Creating the PDF : ".localtime()."\n";
            my $pdf  = PDF::API2->new(-file => $FH);
+           my %unicode_fonts;
            my $page = $pdf->page();
            my $text = $page->text();
            my $gfx = $page->gfx();
@@ -608,7 +611,7 @@ __PACKAGE__->config(
                            }
                            else { #Text
 
-                                my $font = $pdf->corefont($element{'font'});
+                                my $font = _pdf_font($pdf, \%unicode_fonts, $element{'font'}, $filled_value);
                                 my $adjusted_size = $element{'size'} / $conversion_factor;
                                 my $height = $element{'height'} / $conversion_factor;
                                 my $line_spacing = $adjusted_size * 1.2; # padding between lines
@@ -671,6 +674,7 @@ __PACKAGE__->config(
            }
            $zpl_obj->end_sequence();
            my $zpl_template = $zpl_obj->render();
+           binmode($FH, ':encoding(UTF-8)');
            foreach my $key ( @sorted_keys ) {
 
                if ($start_number && ($key_number < $start_number)){
@@ -685,6 +689,7 @@ __PACKAGE__->config(
 
                my $zpl = $zpl_template;
                $zpl =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
+               $zpl =~ s/\A\^XA\n/^XA\n^CI28\n/ if $zpl =~ /[^\x00-\x7F]/; # non-ASCII text: declare UTF-8
               for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
                   print $FH $zpl;
                }
@@ -843,7 +848,7 @@ sub get_trial_design {
                 @detail_hash{@keys} = @{$outer_array[$i]};
 
                 $detail_hash{'brief_management_regime'} = _format_management_regime($trial_management_regime);
-                $detail_hash{'full_management_regime'} = $trial_management_regime ? encode_json($trial_management_regime) : '';
+                $detail_hash{'full_management_regime'} = $trial_management_regime ? JSON->new->encode($trial_management_regime) : '';
                 $detail_hash{'entry_number'} = $entry_numbers ? $entry_numbers->{$detail_hash{accession_id}} : undef;
                 $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
 
@@ -1122,6 +1127,28 @@ sub get_additional_list_data {
     }
 
     return \%fields;
+}
+
+# PDF core fonts draw Latin-1 text only. Text with other characters (Cyrillic, Greek, a dash) uses
+# the Liberation TrueType font of the same family, which has the same widths, when it is installed.
+my $LIBERATION_DIR = '/usr/share/fonts/truetype/liberation';
+my %LIBERATION_FONT = (
+    'Courier' => 'LiberationMono-Regular', 'Courier-Bold' => 'LiberationMono-Bold',
+    'Courier-Oblique' => 'LiberationMono-Italic', 'Courier-BoldOblique' => 'LiberationMono-BoldItalic',
+    'Helvetica' => 'LiberationSans-Regular', 'Helvetica-Bold' => 'LiberationSans-Bold',
+    'Helvetica-Oblique' => 'LiberationSans-Italic', 'Helvetica-BoldOblique' => 'LiberationSans-BoldItalic',
+    'Times' => 'LiberationSerif-Regular', 'Times-Roman' => 'LiberationSerif-Regular',
+    'Times-Bold' => 'LiberationSerif-Bold', 'Times-Italic' => 'LiberationSerif-Italic',
+    'Times-BoldItalic' => 'LiberationSerif-BoldItalic',
+);
+
+sub _pdf_font {
+    my ($pdf, $loaded, $name, $text) = @_;
+    if (defined($text) && $text =~ /[^\x00-\xFF]/ && $LIBERATION_FONT{$name}) {
+        my $file = "$LIBERATION_DIR/$LIBERATION_FONT{$name}.ttf";
+        return $loaded->{$file} //= $pdf->ttfont($file) if -r $file;
+    }
+    return $pdf->corefont($name);
 }
 
 sub _format_management_regime { #management regime is a list of hashes. This condenses it because it would be too large otherwise
