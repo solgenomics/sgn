@@ -17,14 +17,14 @@ function run_callback(on_done) {
 }
 
 export function dismiss_job(job_id, on_done) {
-    if(confirm("Job dismissal removes record of this submission, but does not delete any resulting analyses or other data. Are you sure you want to proceed?")) {
+    if(confirm("Dismissing this job hides it from your job lists. The job record is kept, and no resulting analyses or other data are deleted. Are you sure you want to proceed?")) {
         jQuery.ajax({
             url: '/ajax/job/delete/'+job_id,
             success: function(response) {
                 if (response.error) {
                     alert("Error dismissing job.");
                 } else {
-                    alert("Job record deleted.");
+                    alert("Job dismissed.");
                 }
             },
             error: function(response) {
@@ -46,7 +46,7 @@ export function dismiss_finished_jobs(user_id, on_done) {
                 if (response.error) {
                     alert("Error dismissing jobs.");
                 } else {
-                    alert("Jobs cleared.");
+                    alert("Jobs dismissed.");
                 }
             },
             error: function(response) {
@@ -90,7 +90,7 @@ export function keep_recent_jobs(user_id, on_done) {
                 if (response.error) {
                     alert("Error dismissing jobs.");
                 } else {
-                    alert("Jobs cleared.");
+                    alert("Jobs dismissed.");
                 }
             },
             error: function(response) {
@@ -111,7 +111,7 @@ export function dismiss_dead_jobs(user_id, on_done) {
                 if (response.error) {
                     alert("Error dismissing jobs.");
                 } else {
-                    alert("Jobs cleared.");
+                    alert("Jobs dismissed.");
                 }
             },
             error: function(response) {

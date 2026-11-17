@@ -508,7 +508,7 @@ sub check_status {
 
 =head2 delete()
 
-Deletes the job from the database
+Permanently deletes the job row from the database. Dismissing a job does not use this; see obsolete().
 
 =cut
 
@@ -529,6 +529,34 @@ sub delete {
         $row->delete();
     } catch {
         die "An error occurred deleting job from database: $_\n";
+    } ;
+}
+
+=head2 obsolete()
+
+Marks the job as obsolete (dismissed). The row stays in sgn_people.sp_job, but the job listing
+methods leave it out. The flag is written directly to the row and is not part of store(), so a
+background script that still holds this job and stores its result afterwards does not undo it.
+
+=cut
+
+sub obsolete {
+    my $self = shift;
+
+    if (!$self->has_sp_job_id()) {
+        die "Dismissal has no meaning for jobs that have not yet been stored.\n";
+    }
+
+    my $rs = _prepare_people_schema($self->people_schema())->resultset("SpJob")->search({ sp_job_id => $self->sp_job_id() });
+
+    if (!$rs->count()){
+        die "The specified job does not exist in the database.\n";
+    }
+
+    try {
+        $rs->update({ is_obsolete => 1 });
+    } catch {
+        die "An error occurred dismissing job: $_\n";
     } ;
 }
 
@@ -1267,7 +1295,7 @@ sub scrub_client_data {
 
 =head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id, user_role)
 
-Returns a listref of sp_job_ids submitted by the given user id
+Returns a listref of sp_job_ids submitted by the given user id (all users' jobs if curator). Obsolete (dismissed) jobs are left out.
 
 =cut
 
@@ -1287,7 +1315,7 @@ sub get_user_submitted_jobs {
     my $rs;
     if ($user_role eq 'curator') {
         $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search(
-            {},
+            { 'me.is_obsolete' => 0 },
             {
                 join     => 'sp_person',
                 order_by => [
@@ -1299,7 +1327,7 @@ sub get_user_submitted_jobs {
         );
     } else {
         $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search(
-            { 'me.sp_person_id' => $sp_person_id },
+            { 'me.sp_person_id' => $sp_person_id, 'me.is_obsolete' => 0 },
             { order_by => { -desc => 'me.create_timestamp' } },
         );
     }
@@ -1311,13 +1339,13 @@ sub get_user_submitted_jobs {
     return \@user_jobs;
 }
 
-=head2 delete_dead_jobs(bcs_schema, people_schema, user_id, is_curator)
+=head2 obsolete_dead_jobs(bcs_schema, people_schema, user_id, is_curator)
 
-Deletes dead jobs (failed or timed out) belonging to a user_id
+Marks dead jobs (failed or timed out) belonging to a user_id as obsolete (dismissed). All such jobs if curator.
 
 =cut
 
-sub delete_dead_jobs {
+sub obsolete_dead_jobs {
     my $class = shift;
     my $bcs_schema = shift;
     my $people_schema = shift;
@@ -1331,7 +1359,7 @@ sub delete_dead_jobs {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( {status => { in => ['failed', 'timed_out'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { is_obsolete => 0, status => { in => ['failed', 'timed_out'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -1341,15 +1369,15 @@ sub delete_dead_jobs {
                     schema => $bcs_schema,
                     sp_job_id => $job_id
                 });
-                $job->delete();
+                $job->obsolete();
             }
         } catch {
-            die "Encountered an error trying to delete jobs: $_\n";
+            die "Encountered an error trying to dismiss jobs: $_\n";
         } ;
     } else {
         try {
             my @job_ids;
-            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, is_obsolete => 0, status => { in => ['failed', 'timed_out'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -1359,21 +1387,21 @@ sub delete_dead_jobs {
                     schema => $bcs_schema,
                     sp_job_id => $job_id
                 });
-                $job->delete();
+                $job->obsolete();
             }
         } catch {
-            die "Encountered an error trying to delete jobs: $_\n";
+            die "Encountered an error trying to dismiss jobs: $_\n";
         } ;
     }
 } 
 
-=head2 delete_jobs_older_than(bcs_schema, people_schema, user_id, time_limit, is_curator)
+=head2 obsolete_jobs_older_than(bcs_schema, people_schema, user_id, time_limit, is_curator)
 
-Deletes jobs belonging to user_id older than the given time string.
+Marks jobs belonging to user_id older than the given time string as obsolete (dismissed). All such jobs if curator.
 
 =cut
 
-sub delete_jobs_older_than {
+sub obsolete_jobs_older_than {
     my $class = shift;
     my $bcs_schema = shift;
     my $people_schema = shift;
@@ -1397,7 +1425,7 @@ sub delete_jobs_older_than {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search();
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { is_obsolete => 0 });
             while(my $row = $rs->next()) {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
@@ -1415,15 +1443,15 @@ sub delete_jobs_older_than {
                     schema => $bcs_schema,
                     sp_job_id => $job_id
                 });
-                $job->delete();
+                $job->obsolete();
             }
         } catch {
-            die "Encountered an error trying to delete jobs: $_\n";
+            die "Encountered an error trying to dismiss jobs: $_\n";
         } ;
     } else {
         try {
             my @job_ids;
-            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, is_obsolete => 0 });
             while(my $row = $rs->next()) {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
@@ -1441,21 +1469,21 @@ sub delete_jobs_older_than {
                     schema => $bcs_schema,
                     sp_job_id => $job_id
                 });
-                $job->delete();
+                $job->obsolete();
             }
         } catch {
-            die "Encountered an error trying to delete jobs: $_\n";
+            die "Encountered an error trying to dismiss jobs: $_\n";
         } ;
     }
 }
 
-=head2 delete_finished_jobs(bcs_schema, people_schema, user_id, is_curator)
+=head2 obsolete_finished_jobs(bcs_schema, people_schema, user_id, is_curator)
 
-Deletes finished, consumed and canceled jobs for the given user. All such jobs if curator.
+Marks finished, consumed and canceled jobs for the given user as obsolete (dismissed). All such jobs if curator.
 
 =cut
 
-sub delete_finished_jobs {
+sub obsolete_finished_jobs {
     my $class = shift;
     my $bcs_schema = shift;
     my $people_schema = shift;
@@ -1469,7 +1497,7 @@ sub delete_finished_jobs {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { status => { in => ['finished', 'consumed', 'canceled'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { is_obsolete => 0, status => { in => ['finished', 'consumed', 'canceled'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -1479,15 +1507,15 @@ sub delete_finished_jobs {
                     schema => $bcs_schema,
                     sp_job_id => $job_id
                 });
-                $job->delete();
+                $job->obsolete();
             }
         } catch {
-            die "Encountered an error trying to delete jobs: $_\n";
+            die "Encountered an error trying to dismiss jobs: $_\n";
         } ;
     } else {
         try {
             my @job_ids;
-            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'consumed', 'canceled'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, is_obsolete => 0, status => { in => ['finished', 'consumed', 'canceled'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -1497,21 +1525,21 @@ sub delete_finished_jobs {
                     schema => $bcs_schema,
                     sp_job_id => $job_id
                 });
-                $job->delete();
+                $job->obsolete();
             }
         } catch {
-            die "Encountered an error trying to delete jobs: $_\n";
+            die "Encountered an error trying to dismiss jobs: $_\n";
         } ;
     }
 }
 
-=head2 delete_finished_upload_jobs(bcs_schema, people_schema, user_id)
+=head2 obsolete_finished_upload_jobs(bcs_schema, people_schema, user_id)
 
-Deletes file upload jobs that have finished (including consumed) or canceled for the given user. Does not include validation jobs, which are still "in progress" even if the job itself has a finished status
+Marks as obsolete (dismissed) file upload jobs that have finished (including consumed) or canceled for the given user. Does not include validation jobs, which are still "in progress" even if the job itself has a finished status
 
 =cut
 
-sub delete_finished_upload_jobs {
+sub obsolete_finished_upload_jobs {
     my $class = shift;
     my $bcs_schema = shift;
     my $people_schema = shift;
@@ -1523,7 +1551,7 @@ sub delete_finished_upload_jobs {
 
     eval {
         my @job_ids;
-        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'consumed', 'canceled'] } });
+        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, is_obsolete => 0, status => { in => ['finished', 'consumed', 'canceled'] } });
         while(my $row = $rs->next()) {
             push @job_ids, $row->sp_job_id();
         }
@@ -1535,23 +1563,23 @@ sub delete_finished_upload_jobs {
             });
             my $additional_args = $job->additional_args() || {}; # jobs submitted without additional args store none
             if (($job->job_type() // '') eq "upload" && $additional_args->{final_upload}) {
-                $job->delete();
+                $job->obsolete();
             }
         }
     };
 
     if ($@) {
-        die "Encountered an error trying to delete jobs: $@\n";
+        die "Encountered an error trying to dismiss jobs: $@\n";
     }
 }
 
-=head2 delete_dead_upload_jobs(bcs_schema, people_schema, user_id)
+=head2 obsolete_dead_upload_jobs(bcs_schema, people_schema, user_id)
 
-Deletes failed and timed out upload jobs for the given user
+Marks failed and timed out upload jobs for the given user as obsolete (dismissed)
 
 =cut
 
-sub delete_dead_upload_jobs {
+sub obsolete_dead_upload_jobs {
     my $class = shift;
     my $bcs_schema = shift;
     my $people_schema = shift;
@@ -1563,7 +1591,7 @@ sub delete_dead_upload_jobs {
 
     eval {
         my @job_ids;
-        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, is_obsolete => 0, status => { in => ['failed', 'timed_out'] } });
         while(my $row = $rs->next()) {
             push @job_ids, $row->sp_job_id();
         }
@@ -1575,13 +1603,13 @@ sub delete_dead_upload_jobs {
             });
             my $additional_args = $job->additional_args() || {}; # jobs submitted without additional args store none
             if (($job->job_type() // '') eq "upload" && $additional_args->{final_upload}) {
-                $job->delete();
+                $job->obsolete();
             }
         }
     };
 
     if ($@) {
-        die "Encountered an error trying to delete jobs: $@\n";
+        die "Encountered an error trying to dismiss jobs: $@\n";
     }
 }
 
@@ -1619,9 +1647,9 @@ sub get_user_in_progress_uploads {
 
     my $uploads_rs;
     if ($user_role eq "curator") {
-        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id, is_obsolete => 0 });
     } else {
-        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id, is_obsolete => 0 });
     }
 
     while (my $upload = $uploads_rs->next()) {
@@ -1688,9 +1716,9 @@ sub get_user_completed_uploads {
 
     my $uploads_rs;
     if ($user_role eq "curator") {
-        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id, is_obsolete => 0 });
     } else {
-        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id, is_obsolete => 0 });
     }
 
     while (my $upload = $uploads_rs->next()) {
@@ -1756,9 +1784,9 @@ sub get_user_in_progress_validations {
 
     my $validation_rs;
     if ($user_role eq "curator") {
-        $validation_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+        $validation_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id, is_obsolete => 0 });
     } else {
-        $validation_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+        $validation_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id, is_obsolete => 0 });
     }
 
     while (my $validation = $validation_rs->next()) {

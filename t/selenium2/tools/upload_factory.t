@@ -67,9 +67,29 @@ ok($intertek_setup_message->{success}, "prerequisite intertek project/protocol c
 # Selenium helpers
 #
 
+# The upload factory keeps each table in its own nav-pill tab, and only the active tab is shown.
+# The page switches tabs by itself after a submission or commit, so each helper opens the tab it
+# needs before clicking anything in it; Selenium cannot click elements in a hidden tab.
+my %TABLE_PANES = (
+    upload_factory_archived_files_table      => 'upload_factory_archived_files_pane',
+    upload_factory_validated_files_table     => 'upload_factory_validations_pane',
+    upload_factory_in_progress_uploads_table => 'upload_factory_in_progress_uploads_pane',
+    upload_factory_completed_uploads_table   => 'upload_factory_completed_uploads_pane',
+);
+
+sub show_tab {
+    my ($pane_id) = @_;
+    my $tab_link = $t->find_element_ok("//ul[\@id='upload_factory_tabs']//a[\@href='#$pane_id']", "xpath", "find tab for $pane_id");
+    $t->driver()->execute_script("window.scrollTo(0,0);");
+    $tab_link->click();
+    sleep(1); # the panes fade in
+}
+
 sub archive_file {
     my ($relative_path) = @_;
     my $filename = "$basepath/$relative_path";
+
+    show_tab('upload_factory_archived_files_pane');
 
     # The archive file input has the "multiple" attribute, and repeated send_keys() calls append
     # to its selection rather than replacing it, so clear it first to avoid re-archiving every
@@ -95,6 +115,7 @@ sub archive_file {
 
 sub find_archived_file_id {
     my ($basename) = @_;
+    show_tab('upload_factory_archived_files_pane');
     my $select = $t->find_element_ok(
         "//tr[.//a[contains(text(),'$basename')]]//select[contains(\@id,'upload_select_type_')]",
         "xpath",
@@ -124,7 +145,26 @@ sub refresh_tables {
     sleep(3);
 }
 
+# Sets the confirm-submission modal's "ignore warnings" checkbox. With data-toggle="toggle" the
+# checkbox may be drawn as a bootstrap-toggle widget that hides the real input, so click the widget
+# when there is one. The checkbox keeps its state between submissions, so it is set every time.
+sub set_ignore_warnings {
+    my ($want) = @_;
+    my $is_checked = sub { $t->driver()->execute_script("return jQuery('#upload_submit_ignore_warnings').prop('checked') ? 1 : 0;") };
+    if ($is_checked->() != ($want ? 1 : 0)) {
+        $t->find_element_ok(
+            "//input[\@id='upload_submit_ignore_warnings']/parent::div[contains(\@class,'toggle')] | //input[\@id='upload_submit_ignore_warnings'][not(parent::div[contains(\@class,'toggle')])]",
+            "xpath",
+            "click ignore-warnings checkbox"
+        )->click();
+        sleep(1);
+    }
+    is($is_checked->(), ($want ? 1 : 0), "ignore-warnings checkbox is " . ($want ? "checked" : "unchecked"));
+}
+
 sub confirm_and_submit {
+    my ($ignore_warnings) = @_;
+    set_ignore_warnings($ignore_warnings);
     $t->find_element_ok("submit_validate_upload", "id", "click submit on confirm-submission modal")->click();
     sleep(5);
     refresh_tables();
@@ -145,9 +185,9 @@ sub wait_for_first_row_status {
         refresh_tables();
         my $rows = $t->driver()->find_elements("//table[\@id='$table_id']/tbody/tr[1]", "xpath");
         if (scalar(@$rows) > 0) {
-            # These tables live inside a collapsible section that starts collapsed, so get_text()
-            # (which only returns rendered text) can read empty even once the row exists.
-            # textContent isn't affected by visibility.
+            # These tables live in tabs that may not be the active one, so get_text() (which only
+            # returns rendered text) can read empty even once the row exists. textContent isn't
+            # affected by visibility.
             $text = $rows->[0]->get_attribute('textContent');
             last if $text =~ /finished|failed|timed_out|canceled/;
         }
@@ -157,6 +197,7 @@ sub wait_for_first_row_status {
 
 sub view_report_text_for_first_row {
     my ($table_id) = @_;
+    show_tab($TABLE_PANES{$table_id});
     $t->find_element_ok("//table[\@id='$table_id']/tbody/tr[1]//button[contains(\@id,'job_report_')]", "xpath", "click view-report button for first row of $table_id")->click();
     sleep(3);
     my $report_div = $t->find_element_ok("report_content_div", "id", "find report content div");
@@ -167,6 +208,7 @@ sub view_report_text_for_first_row {
 }
 
 sub commit_first_row {
+    show_tab('upload_factory_validations_pane');
     $t->find_element_ok("//table[\@id='upload_factory_validated_files_table']/tbody/tr[1]//button[contains(\@id,'validation_commit_')]", "xpath", "click commit-to-database button for first validated row")->click();
     sleep(5);
     refresh_tables();
@@ -331,7 +373,9 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok('genotype_data_upload_choices_next_btn', 'id', 'click next on genotype data choices')->click();
     sleep(2);
 
-    confirm_and_submit();
+    # The prerequisite setup above already stored this same Intertek data in this project and
+    # protocol, so the upload warns that the accessions already have genotypes; accept that.
+    confirm_and_submit(1);
 
     my $intertek_status = wait_for_first_row_status("upload_factory_completed_uploads_table");
     ok($intertek_status =~ /finished/, "genotype data (Intertek) upload job finished")

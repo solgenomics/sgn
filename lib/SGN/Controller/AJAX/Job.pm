@@ -196,11 +196,11 @@ sub delete :Path('/ajax/job/delete') Args(1) {
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {
-        $c->stash->{rest} = {error => "You do not have permission to delete this job.\n"} ;
+        $c->stash->{rest} = {error => "You do not have permission to dismiss this job.\n"} ;
         return;
     }
 
-    $job->delete();
+    $job->obsolete();
     $c->stash->{rest} = {success => 1};
 }
 
@@ -302,13 +302,13 @@ sub delete_dead_jobs :Path('/ajax/job/delete_dead_jobs') Args(1) {
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
     if ($sp_person_id ne $logged_user && $role ne "curator") {
-        $c->stash->{rest} = {error => "You do not have permission to delete these job logs.\n"} ;
+        $c->stash->{rest} = {error => "You do not have permission to dismiss these jobs.\n"} ;
         return;
     }
 
     my $is_curator = $role eq "curator" ? 1 : 0;
 
-    CXGN::Job->delete_dead_jobs(
+    CXGN::Job->obsolete_dead_jobs(
         $bcs_schema,
         $people_schema,
         $sp_person_id,
@@ -329,7 +329,7 @@ sub delete_older_than :Path('/ajax/job/delete_older_than') Args(2) {
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
     if ($sp_person_id ne $logged_user && $role ne "curator") {
-        $c->stash->{rest} = {error => "You do not have permission to delete these job logs.\n"} ;
+        $c->stash->{rest} = {error => "You do not have permission to dismiss these jobs.\n"} ;
         return;
     }
 
@@ -340,7 +340,7 @@ sub delete_older_than :Path('/ajax/job/delete_older_than') Args(2) {
 
     my $is_curator = $role eq "curator" ? 1 : 0;
 
-    CXGN::Job->delete_jobs_older_than(
+    CXGN::Job->obsolete_jobs_older_than(
         $bcs_schema,
         $people_schema,
         $sp_person_id,
@@ -361,13 +361,13 @@ sub delete_finished :Path('/ajax/job/delete_finished') Args(1) {
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
     if ($sp_person_id ne $logged_user && $role ne "curator") {
-        $c->stash->{rest} = {error => "You do not have permission to delete these job logs.\n"} ;
+        $c->stash->{rest} = {error => "You do not have permission to dismiss these jobs.\n"} ;
         return;
     }
 
     my $is_curator = $role eq "curator" ? 1 : 0;
 
-    CXGN::Job->delete_finished_jobs(
+    CXGN::Job->obsolete_finished_jobs(
         $bcs_schema,
         $people_schema,
         $sp_person_id,
@@ -501,7 +501,7 @@ sub delete_completed_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Ar
     }
 
     try {
-        CXGN::Job->delete_finished_upload_jobs(
+        CXGN::Job->obsolete_finished_upload_jobs(
             $bcs_schema,
             $people_schema,
             $sp_person_id
@@ -532,7 +532,7 @@ sub delete_dead_upload_jobs :Path('/ajax/job/dismiss_dead_uploads') Args(1) {
     }
 
     try {
-        CXGN::Job->delete_dead_upload_jobs(
+        CXGN::Job->obsolete_dead_upload_jobs(
             $bcs_schema,
             $people_schema,
             $sp_person_id

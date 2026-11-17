@@ -193,7 +193,7 @@ is($reload->($timestamped_report)->check_status(), 'finished', 'Other jobs with 
 
 my $finish_cmd = $timestamped_report->generate_finish_timestamp_cmd();
 like($finish_cmd, qr/sp_job_exit_code=\$\?;/, 'The finish timestamp command keeps the job\'s exit code');
-like($finish_cmd, qr/record_finish_timestamp\.pl .* -e \$sp_job_exit_code/, 'and passes it to record_finish_timestamp.pl');
+like($finish_cmd, qr/record_finish_timestamp\.pl'? .* -e \$sp_job_exit_code/, 'and passes it to record_finish_timestamp.pl');
 like($finish_cmd, qr/exit \$sp_job_exit_code\s*$/, 'and exits with it');
 
 # the same, end to end through the job queue
@@ -230,6 +230,48 @@ SKIP: {
     my $plain_failure = $run->("perl -e 'exit 2'", 'report', {});
     is($plain_failure->status(), 'failed', 'A queued job of another kind that exits with an error is failed');
 }
+
+# dismissing jobs marks them obsolete instead of deleting them, and listings leave them out
+#
+my $spj_row = sub { $t->people_schema()->resultset('SpJob')->find({ sp_job_id => shift }) };
+
+eval { $unsaved_job->obsolete(); };
+like($@, qr/Dismissal has no meaning for jobs that have not yet been stored/, 'An unsaved job cannot be dismissed');
+
+my $dismissed_job = $new_status_job->('failed');
+ok(!$spj_row->($dismissed_job->sp_job_id())->is_obsolete(), 'A new job is not obsolete');
+ok((grep { $_ == $dismissed_job->sp_job_id() } @{ CXGN::Job->get_user_submitted_jobs($t->bcs_schema(), $t->people_schema(), 41, 'user') }), 'A job that is not obsolete is listed');
+
+eval { $dismissed_job->obsolete(); };
+is($@, '', 'A stored job can be dismissed');
+ok($spj_row->($dismissed_job->sp_job_id()), 'A dismissed job is still in the database');
+ok($spj_row->($dismissed_job->sp_job_id())->is_obsolete(), 'A dismissed job is obsolete');
+ok(!(grep { $_ == $dismissed_job->sp_job_id() } @{ CXGN::Job->get_user_submitted_jobs($t->bcs_schema(), $t->people_schema(), 41, 'user') }), 'A dismissed job is not in the job log');
+ok(!(grep { $_ == $dismissed_job->sp_job_id() } @{ CXGN::Job->get_user_submitted_jobs($t->bcs_schema(), $t->people_schema(), 41, 'curator') }), 'A dismissed job is not in the curator job log');
+ok(!(grep { $_->{job_id} == $dismissed_job->sp_job_id() } @{ CXGN::Job->get_user_in_progress_validations($t->bcs_schema(), $t->people_schema(), 41, 'user') }), 'A dismissed validation is not listed with the validations');
+
+$dismissed_job->update_status('failed');
+ok($spj_row->($dismissed_job->sp_job_id())->is_obsolete(), 'Storing a dismissed job again does not bring it back');
+
+my $reloaded_dismissed_job = CXGN::Job->new({
+    schema => $t->bcs_schema(),
+    people_schema => $t->people_schema(),
+    sp_job_id => $dismissed_job->sp_job_id()
+});
+is($reloaded_dismissed_job->status(), 'failed', 'A dismissed job can still be loaded by its id');
+
+my $dead_job = $new_status_job->('timed_out');
+my $live_job = $new_status_job->('submitted');
+CXGN::Job->obsolete_dead_jobs($t->bcs_schema(), $t->people_schema(), 41, 0);
+ok($spj_row->($dead_job->sp_job_id()), 'Dismissing dead jobs keeps them in the database');
+ok($spj_row->($dead_job->sp_job_id())->is_obsolete(), 'Dismissing dead jobs marks them obsolete');
+ok(!$spj_row->($live_job->sp_job_id())->is_obsolete(), 'Dismissing dead jobs leaves a submitted job alone');
+
+my $done_job = $new_status_job->('canceled');
+CXGN::Job->obsolete_finished_jobs($t->bcs_schema(), $t->people_schema(), 41, 0);
+ok($spj_row->($done_job->sp_job_id()), 'Dismissing finished jobs keeps them in the database');
+ok($spj_row->($done_job->sp_job_id())->is_obsolete(), 'Dismissing finished jobs marks them obsolete');
+ok(!$spj_row->($live_job->sp_job_id())->is_obsolete(), 'Dismissing finished jobs leaves a submitted job alone');
 
 $_->delete() foreach @status_jobs;
 
