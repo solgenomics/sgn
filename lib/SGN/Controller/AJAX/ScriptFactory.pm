@@ -8,7 +8,9 @@ SGN::Controller::AJAX::ScriptFactory - AJAX backend for the Analysis Pipeline
 Endpoints used by /tools/script_factory:
 
   /ajax/script_factory/prepare        write the dataset phenotype file, describe traits and trials
+                                      (source=database: read from the tables, not the search cache)
   /ajax/script_factory/plot_data      plot level values of selected traits (outlier explorer)
+  /ajax/script_factory/correlations   plot level correlation of each trait with each covariate
   /ajax/script_factory/outliers/mark  check / mark / unmark outliers as dataset or database outliers
   /ajax/script_factory/run            submit the R pipeline as a background job
   /ajax/script_factory/status         poll a submitted job, return the results when done
@@ -49,6 +51,9 @@ use CXGN::Analysis::AnalysisCreate;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
 use CXGN::JSONUtils qw(decode_stored_json);
+
+# summaries of a repeated trait per plot sent to the outlier explorer (_repeated_plot_values)
+our @REPEATED_STATS = qw| mean sum first last max min |;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -418,19 +423,23 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     return if $c->stash->{rest};
 
     # Breedbase reads datasets from the phenotype search cache (materialized
-    # views), which on a large database can be hours behind new uploads. When
-    # the cache does not hold every value of the dataset's trials, the dataset
-    # is read from the database tables instead, so the summary and the
-    # analysis always use all of its data.
+    # views), which on a large database can be hours behind new uploads. The
+    # dataset is read from the cache (fast) and the trials whose values differ
+    # from the database tables are reported, so the user can reload it from
+    # the tables (source=database; slow on a large database). The tables are
+    # also read when the cache holds no phenotypes of the dataset at all.
     my $cache = try { _phenotype_cache_check($schema, $ds, $traits_in_ds) }
                 catch { print STDERR "Analysis Pipeline: phenotype cache of dataset $dataset_id not checked: $_\n"; undef };
-    my $source = ($cache && @{$cache->{stale}}) ? 'database' : 'cache';
+    my $source = (($c->req->param('source') // '') eq 'database') ? 'database' : 'cache';
     try {
-        if ($source eq 'database') {
-            _write_native_phenotypes($schema, $ds, $traits_in_ds, $pheno_file);
-        } else {
+        if ($source eq 'cache') {
             $ds->retrieve_phenotypes($pheno_file);
+            # the file has a header line even without phenotypes
+            my $n_lines = 0;
+            if (open(my $F, '<', $pheno_file)) { $n_lines++ while <$F>; close($F); }
+            $source = 'database' if $n_lines < 2 && $cache && @{$cache->{stale}};
         }
+        _write_native_phenotypes($schema, $ds, $traits_in_ds, $pheno_file) if $source eq 'database';
     } catch {
         $c->stash->{rest} = { error => "Could not retrieve the dataset phenotypes: $_" };
     };
@@ -576,10 +585,13 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         n_accessions => scalar(keys %accessions),
         n_locations => scalar(keys %locations),
         n_years => scalar(keys %years),
-        # where the phenotypes were read from: 'cache' (search cache, up to date)
-        # or 'database' (tables, because the cache missed values of stale_trials)
+        # where the phenotypes were read from: 'cache' (search cache) or
+        # 'database' (tables: asked for, or the cache had none of the dataset).
+        # stale_trials: trials whose values in the cache differ from the tables
+        # ([{trial, n_database, n_cache}] in stale_detail)
         phenotype_source => $source,
         stale_trials => $cache ? $cache->{stale} : [],
+        stale_detail => $cache ? $cache->{detail} : [],
         pedigree => $pedigree,
         treatments => $treatments,
         treatment_types => _treatment_types($c),
@@ -622,29 +634,86 @@ sub plot_data : Path('/ajax/script_factory/plot_data') Args(0) {
         push @out, \@rec if $has_value;
     }
 
-    # every measurement of the traits measured more than once per plot (the
-    # dataset file has their plot mean), in date order: the page shows them as
-    # the value per plot chosen for the model (mean, sum, first, last...)
-    my %repeated;
-    my %wanted = map { $_ => 1 } @traits;
-    my $rep_file = _work_dir($c) . "/$token.repeated.txt";
-    if (-e $rep_file) {
-        open(my $fh, '<', $rep_file) or die "Cannot read $rep_file: $!";
-        while (my $line = <$fh>) {
-            chomp $line;
-            my ($unit, $trait, $value) = split /\t/, $line;
-            next if !defined($trait) || !$wanted{$trait} || !_is_number($value);
-            push @{ $repeated{$trait}->{$unit} }, $value + 0;
-        }
-        close($fh);
-    }
-
     $c->stash->{rest} = {
         columns => [ qw | unit trial accession rep block row col |, @traits ],
         traits => \@traits,
         rows => \@out,
-        repeated => \%repeated,
+        # traits measured more than once per plot: the value per plot of each
+        # summary (the dataset file has their plot mean), not every measurement
+        repeated_stats => [ @REPEATED_STATS ],
+        repeated => _repeated_plot_values(_work_dir($c) . "/$token.repeated.txt", \@traits),
     };
+}
+
+# Value per plot of the traits measured more than once per plot, for each way
+# the outlier explorer can show them (same order as @REPEATED_STATS). Read from
+# <token>.repeated.txt (unit, trait, value, date; in date order).
+# Returns { trait => { unit => [mean, sum, first, last, max, min] } }.
+sub _repeated_plot_values {
+    my ($file, $traits) = @_;
+    my %wanted = map { $_ => 1 } @$traits;
+    my %values;
+    return {} if !-e $file;
+    open(my $fh, '<', $file) or die "Cannot read $file: $!";
+    while (my $line = <$fh>) {
+        chomp $line;
+        my ($unit, $trait, $value) = split /\t/, $line;
+        next if !defined($trait) || !$wanted{$trait} || !_is_number($value);
+        push @{ $values{$trait}->{$unit} }, $value + 0;
+    }
+    close($fh);
+    my %out;
+    foreach my $t (keys %values) {
+        foreach my $u (keys %{ $values{$t} }) {
+            my @v = @{ $values{$t}->{$u} };
+            my ($sum, $max, $min) = (0, $v[0], $v[0]);
+            foreach my $x (@v) { $sum += $x; $max = $x if $x > $max; $min = $x if $x < $min; }
+            $out{$t}->{$u} = [ $sum / @v, $sum, $v[0], $v[-1], $max, $min ];
+        }
+    }
+    return \%out;
+}
+
+# Plot level Pearson correlation of each trait with each covariate (step 4
+# review: a covariate strongly correlated with a trait is worth a note).
+# Plots with both values; pairs with fewer than 10 such plots are left out.
+# Returns { corr => { trait => { covariate => r } } }.
+sub correlations : Path('/ajax/script_factory/correlations') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+
+    my $token = $c->req->param('token');
+    my $file = _valid_token($token) ? _work_dir($c) . "/$token.phenotype.txt" : undef;
+    if (!$file || !-e $file) {
+        $c->stash->{rest} = { error => 'The dataset file has expired; please select the dataset again.' };
+        return;
+    }
+    my $decode = sub { my $p = $c->req->param($_[0]); my $v = $p ? (try { decode_json($p) } catch { [] }) : []; return ref($v) eq 'ARRAY' ? $v : [] };
+    my ($traits, $covs) = ($decode->('traits'), $decode->('covariates'));
+
+    my ($keys, $idx, $rows) = _read_pheno_file($file);
+    my $level_i = $idx->{observationLevel};
+    my @plots = grep { !defined($level_i) || !defined($_->[$level_i]) || $_->[$level_i] eq '' || lc($_->[$level_i]) eq 'plot' } @$rows;
+
+    my %corr;
+    foreach my $t (grep { exists $idx->{$_} } @$traits) {
+        foreach my $cv (grep { exists($idx->{$_}) && $_ ne $t } @$covs) {
+            my ($i, $j) = ($idx->{$t}, $idx->{$cv});
+            my @xy = map { [ $_->[$i] + 0, $_->[$j] + 0 ] } grep { _is_number($_->[$i]) && _is_number($_->[$j]) } @plots;
+            next if @xy < 10;
+            my ($mx, $mean_y) = (0, 0);
+            foreach my $p (@xy) { $mx += $p->[0]; $mean_y += $p->[1]; }
+            $mx /= @xy; $mean_y /= @xy;
+            my ($sxy, $sxx, $syy) = (0, 0, 0);
+            foreach my $p (@xy) {
+                my ($dx, $dy) = ($p->[0] - $mx, $p->[1] - $mean_y);
+                $sxy += $dx * $dy; $sxx += $dx * $dx; $syy += $dy * $dy;
+            }
+            $corr{$t}->{$cv} = $sxy / sqrt($sxx * $syy) if $sxx > 0 && $syy > 0;
+        }
+    }
+    $c->stash->{rest} = { corr => \%corr };
 }
 
 # ---------------------------------------------------------------------------
@@ -798,12 +867,13 @@ sub _resolve_phenotypes {
 # database tables with those in the phenotype search cache
 # (materialized_phenotype_jsonb_table), counting distinct phenotype ids on both
 # sides. Only the dataset's trials are read, so it stays fast on a large
-# database. Returns { stale => [trial names whose counts differ] }.
+# database. Returns { stale => [trial names whose counts differ],
+# detail => [{trial, n_database, n_cache}] of those trials }.
 sub _phenotype_cache_check {
     my ($schema, $ds, $traits) = @_;
     my %trial_name = map { ref($_) ? ($_->[0] => $_->[1]) : ($_ => $_) } @{ $ds->retrieve_trials() || [] };
     my @trial_ids = grep { defined && /^\d+$/ } keys %trial_name;
-    return { stale => [] } if !@trial_ids;
+    return { stale => [], detail => [] } if !@trial_ids;
     # no traits in the dataset: all traits, as the dataset search does
     my @trait_ids = grep { defined && /^\d+$/ } map { ref($_) ? $_->[0] : $_ } @{ $traits || [] };
     my $dbh = $schema->storage->dbh();
@@ -830,8 +900,10 @@ sub _phenotype_cache_check {
 
     my %n_tables = map { $_->[0] => $_->[1] } @$tables;
     my %n_cached = map { $_->[0] => $_->[1] } @$cached;
-    my @stale = sort map { $trial_name{$_} } grep { ($n_tables{$_} // 0) != ($n_cached{$_} // 0) } @trial_ids;
-    return { stale => \@stale };
+    my @detail = sort { $a->{trial} cmp $b->{trial} }
+                 map { { trial => $trial_name{$_}, n_database => ($n_tables{$_} // 0) + 0, n_cache => ($n_cached{$_} // 0) + 0 } }
+                 grep { ($n_tables{$_} // 0) != ($n_cached{$_} // 0) } @trial_ids;
+    return { stale => [ map { $_->{trial} } @detail ], detail => \@detail };
 }
 
 # Writes the dataset's phenotype file as CXGN::Dataset::File does (tab

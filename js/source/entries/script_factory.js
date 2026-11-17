@@ -38,7 +38,7 @@ const state = {
     interactions: [],       // interactions built by the user: [{ factors: [ids], effect: 'fixed' | 'random' }] (recipe.interactions)
     dataset: null,          // response of /prepare
     traits: [],             // selected full trait names
-    plotRaw: null,          // response of /plot_data (plot means and every repeated measurement)
+    plotRaw: null,          // response of /plot_data (plot means; value per plot of repeated traits for each summary)
     plotData: null,         // plotRaw with each repeated trait as its value per plot (refreshPlotView)
     plotDataKey: '',
     outlierView: {},        // trait -> value per plot the outlier rules judge (repeated traits): sum | first | last (default mean)
@@ -507,7 +507,11 @@ function selectedDatasetId() {
     return checked.length ? checked.first().val() : null;
 }
 
-function loadDataset() {
+// opts.fromDatabase: read the phenotypes from the database tables instead of
+// the search cache (slow on a large database; offered when the cache is stale).
+// loadDataset is also a click handler, so opts may be an event.
+function loadDataset(opts) {
+    const fromDatabase = !!(opts && opts.fromDatabase === true);
     const id = selectedDatasetId();
     if (!id) {
         $('#sf_dataset_message').html(alertBox('warning', 'Please tick one dataset in the table above.'));
@@ -517,14 +521,19 @@ function loadDataset() {
         $('#sf_dataset_message').html(alertBox('warning', 'Please select only one dataset.'));
         return;
     }
-    $('#sf_dataset_message').html('<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh sf-spin"></span> Retrieving phenotypes. Large datasets can take a minute...</div>');
+    $('#sf_dataset_message').html('<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh sf-spin"></span> ' +
+        (fromDatabase ? 'Reading the phenotypes from the database. On a large database this can take several minutes...'
+                      : 'Retrieving phenotypes. Large datasets can take a minute...') + '</div>');
+    $('#sf_cache_reload').prop('disabled', true);
     $('#sf_load_dataset').prop('disabled', true);
     // the dataset loads as soon as it is ticked: only the latest choice counts
     const seq = state.loadSeq = (state.loadSeq || 0) + 1;
     state.datasetLoading = true;
     updateStep1Next();
 
-    post('/ajax/script_factory/prepare', { dataset_id: id })
+    const params = { dataset_id: id };
+    if (fromDatabase) params.source = 'database';
+    post('/ajax/script_factory/prepare', params)
         .then(r => {
             if (seq !== state.loadSeq) return;
             const keepTraits = state.dataset ? state.traits.map(shortTrait) : null;
@@ -572,6 +581,7 @@ function loadDataset() {
         .catch(e => { if (seq === state.loadSeq) $('#sf_dataset_message').html(alertBox('danger', esc(e.message))); })
         .finally(() => {
             $('#sf_load_dataset').prop('disabled', false);
+            $('#sf_cache_reload').prop('disabled', false);
             if (seq === state.loadSeq) { state.datasetLoading = false; updateStep1Next(); }
         });
 }
@@ -645,16 +655,34 @@ function factorCell(t, f, n) {
     return '<td>' + (shown ? '<span class="sf-warn-text" title="Not used as a model factor: ' + esc(s.why) + '"><s>' + n + '</s> <span class="glyphicon glyphicon-ban-circle"></span></span>' : n) + '</td>';
 }
 
+// Where the phenotypes came from. Read from the search cache while it differs
+// from the database for some trials: warn, with a button to reload the
+// dataset from the database tables.
+function cacheNote(r) {
+    const detail = arr(r.stale_detail).length ? arr(r.stale_detail)
+                 : arr(r.stale_trials).map(t => ({ trial: t }));
+    if (!detail.length) return '';
+    const trials = detail.map(d => esc(d.trial) + (d.n_database !== undefined
+        ? ' <small class="sf-muted">(' + esc(d.n_cache) + ' of ' + esc(d.n_database) + ' values in the cache)</small>' : '')).join(', ');
+    if (r.phenotype_source === 'database') {
+        return alertBox('info', '<span class="glyphicon glyphicon-refresh"></span> ' +
+            "Read directly from the database: Breedbase's phenotype search cache is not up to date for " + detail.length +
+            ' trial(s) of this dataset (' + trials + '). The summary and the analysis use every value.');
+    }
+    return alertBox('warning', '<span class="glyphicon glyphicon-warning-sign"></span> ' +
+        "Breedbase's phenotype search cache is not up to date for " + detail.length + ' trial(s) of this dataset (' + trials +
+        '). The summary and the analysis use the cached values, so recent uploads or changes may be missing until the cache is refreshed.' +
+        '<div style="margin-top:8px"><button class="btn btn-default btn-sm" id="sf_cache_reload"><span class="glyphicon glyphicon-refresh"></span> Reload from database</button>' +
+        ' <small class="sf-muted">Reads every value from the database tables. On a large database this can take several minutes.</small></div>');
+}
+
 function renderDatasetOverview() {
     const r = state.dataset;
     const stat = (v, l) => '<div class="sf-stat"><div class="v">' + esc(v) + '</div><div class="l">' + esc(l) + '</div></div>';
     $('#sf_dataset_stats').html(
         stat(r.trials.length, 'Trials') + stat(r.n_locations, 'Locations') + stat(r.n_years, 'Years') +
         stat(r.n_accessions, 'Accessions') + stat(r.n_plots, 'Plots') + stat(r.traits.length, 'Numeric traits'));
-    const stale = r.stale_trials || [];
-    $('#sf_cache_note').html(r.phenotype_source === 'database' ? alertBox('info', '<span class="glyphicon glyphicon-refresh"></span> ' +
-        "Breedbase's phenotype search cache is not up to date for " + stale.length + ' trial(s) of this dataset (' + stale.map(esc).join(', ') +
-        '), so the data were read directly from the database: the summary and the analysis use every value. Loading may take a little longer until the cache is refreshed.') : '');
+    $('#sf_cache_note').html(cacheNote(r));
 
     let h = '<table class="table table-condensed table-hover"><thead><tr><th>Trial</th><th>Location</th><th>Year</th><th>Design</th><th>Plots</th><th>Accessions</th><th>Reps</th><th>Blocks</th><th>Layout</th></tr></thead><tbody>';
     r.trials.forEach(t => {
@@ -952,16 +980,9 @@ function ensurePlotData() {
 
 // Value per plot of a trait measured several times per plot that the outlier
 // rules judge (step 2), chosen apart from the value the model uses (step 3):
-// e.g. outliers found on the last measurement, model on the mean. vals are in
-// date order.
-const PLOT_SUMMARY = {
-    mean: v => v.reduce((a, b) => a + b, 0) / v.length,
-    sum: v => v.reduce((a, b) => a + b, 0),
-    first: v => v[0],
-    last: v => v[v.length - 1],
-    max: v => Math.max.apply(null, v),
-    min: v => Math.min.apply(null, v)
-};
+// e.g. outliers found on the last measurement, model on the mean. The server
+// computes each summary per plot (/plot_data repeated, in repeated_stats order).
+const PLOT_SUMMARY = { mean: 1, sum: 1, first: 1, last: 1, max: 1, min: 1 };
 const EXPLORER_REP = [['mean', 'Average'], ['sum', 'Sum'], ['first', 'First value'], ['last', 'Last value']];
 
 // value per plot judged by the outlier rules for a repeated trait
@@ -982,14 +1003,15 @@ function refreshPlotView() {
     const raw = state.plotRaw;
     if (!raw) { state.plotData = null; return; }
     const rep = raw.repeated || {};
-    const traits = Object.keys(rep).filter(t => raw.columns.indexOf(t) >= 0 && explorerHow(t) !== 'mean');
+    const stats = arr(raw.repeated_stats);
+    const traits = Object.keys(rep).filter(t => raw.columns.indexOf(t) >= 0 && explorerHow(t) !== 'mean' && stats.indexOf(explorerHow(t)) >= 0);
     if (!traits.length) { state.plotData = raw; }
     else {
-        const cols = traits.map(t => [raw.columns.indexOf(t), rep[t], PLOT_SUMMARY[explorerHow(t)]]);
+        const cols = traits.map(t => [raw.columns.indexOf(t), rep[t], stats.indexOf(explorerHow(t))]);
         state.plotData = Object.assign({}, raw, {
             rows: raw.rows.map(r => {
                 const c = r.slice();
-                cols.forEach(([i, units, f]) => { const v = units[r[0]]; if (v && v.length) c[i] = f(v); });
+                cols.forEach(([i, units, k]) => { const v = units[r[0]]; if (v && v[k] !== null && v[k] !== undefined) c[i] = v[k]; });
                 return c;
             })
         });
@@ -2760,28 +2782,14 @@ function reviewContext(corr) {
     };
 }
 
-// plot-level correlation of each analysed trait with each covariate
+// plot-level correlation of each analysed trait with each covariate (computed
+// on the server: { trait: { covariate: r } })
 function traitCovariateCorr(recipe) {
     const covs = arr(recipe.covariates);
     if (!covs.length || !state.dataset) return Promise.resolve({});
-    const cols = recipe.traits.concat(covs).filter((v, i, a) => a.indexOf(v) === i);
-    return post('/ajax/script_factory/plot_data', { token: state.dataset.token, traits: JSON.stringify(cols) }).then(pd => {
-        const out = {};
-        recipe.traits.forEach(t => {
-            const i = pd.columns.indexOf(t);
-            covs.forEach(c => {
-                const j = pd.columns.indexOf(c);
-                if (i < 0 || j < 0 || c === t) return;
-                const xy = pd.rows.filter(r => r[i] !== null && r[j] !== null && r[i] !== undefined && r[j] !== undefined).map(r => [r[i], r[j]]);
-                if (xy.length < 10) return;
-                const n = xy.length, mx = xy.reduce((a, p) => a + p[0], 0) / n, my = xy.reduce((a, p) => a + p[1], 0) / n;
-                let sxy = 0, sxx = 0, syy = 0;
-                xy.forEach(p => { sxy += (p[0] - mx) * (p[1] - my); sxx += (p[0] - mx) ** 2; syy += (p[1] - my) ** 2; });
-                if (sxx > 0 && syy > 0) (out[t] = out[t] || {})[c] = sxy / Math.sqrt(sxx * syy);
-            });
-        });
-        return out;
-    }).catch(() => ({}));
+    return post('/ajax/script_factory/correlations', { token: state.dataset.token, traits: JSON.stringify(arr(recipe.traits)), covariates: JSON.stringify(covs) })
+        .then(r => r.corr || {})
+        .catch(() => ({}));
 }
 
 function startReview(recipe) {
@@ -3517,6 +3525,7 @@ export function init(options) {
 
     // step 1
     $('#sf_load_dataset').on('click', loadDataset);
+    $('#sf_cache_note').on('click', '#sf_cache_reload', () => loadDataset({ fromDatabase: true }));
     // ticking a dataset loads it (one dataset at a time)
     $('#sf_dataset_select').on('change', 'input[name=sf_dataset_checkbox]', function() {
         if (!$(this).is(':checked')) return;
