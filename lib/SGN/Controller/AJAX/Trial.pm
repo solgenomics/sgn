@@ -56,6 +56,7 @@ use CXGN::File::Parse;
 use CXGN::People::Person;
 use CXGN::Tools::Run;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use CXGN::File;
 use Cwd;
 use CXGN::Phenotypes::StorePhenotypes;
@@ -1489,7 +1490,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     # Build the backend script command to parse, validate, and upload the trials
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job.
-    my $cmd = "perl \"__BASEPATH__/bin/upload_multiple_trial_design.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -i \"$archived_file_id\" -t \"$temp_basedir\" -un \"$username\" -j __SP_JOB_ID__";
+    my $cmd = join(" ", "perl", shell_quote("__BASEPATH__/bin/upload_multiple_trial_design.pl"), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-U", shell_quote("__DBUSER__"), "-P", shell_quote("__DBPASS__"), "-w", shell_quote("__BASEPATH__"), "-ap", shell_quote("__ARCHIVE_PATH__"), "-i", shell_quote($archived_file_id), "-t", shell_quote($temp_basedir), "-un", shell_quote($username), "-j", "__SP_JOB_ID__");
     $cmd .= " -e \"$email_address\"" if $email_option_enabled && $email_address;
     $cmd .= " -iw" if $ignore_warnings;
 

@@ -16,6 +16,7 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Cross;
 use CXGN::Phenotypes::TrialPhenotype;
 use CXGN::Login;
+use CXGN::People::Person;
 use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
@@ -43,6 +44,7 @@ use CXGN::BreedersToolbox::Projects;
 use Sort::Key::Natural qw(natkeysort);
 use CXGN::Trial::ParseUpload;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use CXGN::File;
 use CXGN::List::Transform;
 
@@ -1043,10 +1045,29 @@ sub _upload_trial_stock_entries {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    # Adding entries changes the trial, so only curators and submitters in one of the breeding
+    # programs that own it may start the job. This is checked before anything is archived.
+    if (my $permission_error = $self->_trial_stock_upload_denied($c, $user_id)) {
+        $c->stash->{rest} = { error => $permission_error, error_string => $permission_error };
+        $c->detach();
+    }
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload($args->{upload_field});
     my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $number_per_parent = $c->req->param($args->{number_param});
+
+    # A file archived beforehand (by the upload factory) must belong to the user, unless they are a
+    # curator.
+    if ($archived_file_id) {
+        my $is_curator = grep { $_ eq 'curator' } CXGN::People::Person->new($c->dbc->dbh, $user_id)->get_roles();
+        my $denied = CXGN::File->get_inaccessible_file_ids($c->dbic_schema("CXGN::Metadata::Schema"), $user_id, [ $archived_file_id ], $is_curator);
+        if (@$denied) {
+            my $message = "You do not have access to the selected file.";
+            $c->stash->{rest} = { error => $message, error_string => $message };
+            $c->detach();
+        }
+    }
 
     # The upload factory archives the file before calling here and follows the job itself, so it
     # gets an answer as soon as the job has been submitted. The trial detail page dialogs post the
@@ -1101,8 +1122,23 @@ sub _upload_trial_stock_entries {
     my $tempfiles_subdir = $c->config->{tempfiles_subdir};
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
-    # report its messages back to this job.
-    my $cmd = "perl \"__BASEPATH__/bin/".$args->{script}."\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -tf \"$tempfiles_subdir\" -i \"$archived_file_id\" -un \"$user_name\" -t \"".$args->{file_type}."\" -tr \"$trial_id\" -n \"$number_per_parent\" -j __SP_JOB_ID__";
+    # report its messages back to this job. The command runs in a shell, so every value is quoted.
+    my $cmd = join(" ",
+        "perl", shell_quote("__BASEPATH__/bin/".$args->{script}),
+        "-H", shell_quote("__DBHOST__"),
+        "-D", shell_quote("__DBNAME__"),
+        "-U", shell_quote("__DBUSER__"),
+        "-P", shell_quote("__DBPASS__"),
+        "-w", shell_quote("__BASEPATH__"),
+        "-ap", shell_quote("__ARCHIVE_PATH__"),
+        "-tf", shell_quote($tempfiles_subdir),
+        "-i", shell_quote($archived_file_id),
+        "-un", shell_quote($user_name),
+        "-t", shell_quote($args->{file_type}),
+        "-tr", shell_quote($trial_id),
+        "-n", shell_quote($number_per_parent),
+        "-j", "__SP_JOB_ID__"
+    );
 
     my $upload_job = CXGN::Job->new({
         schema => $schema,
@@ -3448,6 +3484,35 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
     } else {
         $c->stash->{rest} = { success => 1 };
     }
+}
+
+=head2 _trial_stock_upload_denied($c, $user_id)
+
+Returns an error message if the user may not add plants or subplots to the trial in the stash, or
+undef if they may. Curators may add them to any trial, and submitters to the trials of a breeding
+program they belong to. The roles are read for $user_id, since the upload endpoints also accept a
+session id in place of the login cookie, in which case $c->user is not set.
+
+=cut
+
+sub _trial_stock_upload_denied {
+    my $self = shift;
+    my $c = shift;
+    my $user_id = shift;
+
+    return "You must be logged in to add entries to this trial." if !$user_id;
+
+    my %roles = map { $_ => 1 } CXGN::People::Person->new($c->dbc->dbh, $user_id)->get_roles();
+    return if $roles{curator};
+
+    if ($roles{submitter}) {
+        # Read through the breeding program relationship itself, so that a trial in a folder still
+        # finds its program.
+        my $breeding_programs = CXGN::BreedersToolbox::Projects->new({ schema => $c->stash->{schema} })->get_breeding_programs_by_trial($c->stash->{trial_id}) || [];
+        return if grep { $roles{$_->[1]} } @$breeding_programs;
+    }
+
+    return "You need to be either a curator, or a submitter associated with the breeding program of this trial, to add entries to it.";
 }
 
 sub privileges_denied {

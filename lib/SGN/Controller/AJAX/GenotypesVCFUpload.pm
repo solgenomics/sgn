@@ -32,6 +32,7 @@ use CXGN::Genotype::Protocol;
 use CXGN::Genotype::GenotypingProject;
 use CXGN::File;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use File::Basename qw | basename dirname|;
 use JSON;
 use Encode qw(decode FB_CROAK);
@@ -704,7 +705,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job, and can read the upload it is to run off it.
-    my $cmd = "perl \"__BASEPATH__/bin/upload_genotype_data.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -tf \"$tempfiles_subdir\" -rp \"__ROOTPATH__\" -j __SP_JOB_ID__";
+    my $cmd = join(" ", "perl", shell_quote("__BASEPATH__/bin/upload_genotype_data.pl"), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-U", shell_quote("__DBUSER__"), "-P", shell_quote("__DBPASS__"), "-w", shell_quote("__BASEPATH__"), "-ap", shell_quote("__ARCHIVE_PATH__"), "-tf", shell_quote($tempfiles_subdir), "-rp", shell_quote("__ROOTPATH__"), "-j", "__SP_JOB_ID__");
 
     my $upload_job = CXGN::Job->new({
         schema => $schema,

@@ -34,6 +34,7 @@ use File::Spec;
 use Data::Dumper;
 use JSON;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use Encode;
 use Cwd;
 
@@ -76,7 +77,8 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
 
     my $outdir = "$temp_basedir/obo_downloads";
 
-    my $cmd = "perl ./bin/download_obo.pl -i $db_name -H __DBHOST__ -D __DBNAME__ -U __DBUSER__ -P __DBPASS__ -o $outdir";
+    # $db_name comes from the URL, and the command runs in a shell, so every value is quoted.
+    my $cmd = join(" ", "perl", "./bin/download_obo.pl", "-i", shell_quote($db_name), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-U", shell_quote("__DBUSER__"), "-P", shell_quote("__DBPASS__"), "-o", shell_quote($outdir));
 
     print STDERR "Dumping OBO file at $outdir/$db_name.breedbase.obo\n";
 
@@ -233,7 +235,7 @@ sub make_cvtermpath : Path('/ajax/onto/make_cvtermpath') Args(1) {
         return;
     }
 
-    my $cmd = "perl __BASEPATH__/bin/sgn_gmod_make_cvtermpath.pl -H __DBHOST__ -D __DBNAME__ -d Pg -u __DBUSER__ -p '__DBPASS__' -c '$cv_name'";
+    my $cmd = join(" ", "perl", shell_quote("__BASEPATH__/bin/sgn_gmod_make_cvtermpath.pl"), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-d", "Pg", "-u", shell_quote("__DBUSER__"), "-p", shell_quote("__DBPASS__"), "-c", shell_quote($cv_name));
 
     my $sp_job_id;
 

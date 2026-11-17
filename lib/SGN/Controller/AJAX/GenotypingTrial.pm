@@ -15,6 +15,7 @@ use CXGN::Genotype::StoreGenotypingProject;
 use CXGN::Stock::TissueSample::Search;
 use CXGN::Genotype::Delete;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use CXGN::File;
 use File::Basename qw | basename |;
 
@@ -271,7 +272,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     # report its messages back to this job, and can read the name of the plate off it. The plate
     # name is whatever the uploader typed, so it is passed on the job rather than on the command
     # line.
-    my $cmd = "perl \"__BASEPATH__/bin/parse_genotype_trial_file.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -i \"$archived_file_id\" -t \"$upload_type\" -fi \"".($include_facility_identifiers ? 1 : 0)."\" -j __SP_JOB_ID__";
+    my $cmd = join(" ", "perl", shell_quote("__BASEPATH__/bin/parse_genotype_trial_file.pl"), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-U", shell_quote("__DBUSER__"), "-P", shell_quote("__DBPASS__"), "-w", shell_quote("__BASEPATH__"), "-ap", shell_quote("__ARCHIVE_PATH__"), "-i", shell_quote($archived_file_id), "-t", shell_quote($upload_type), "-fi", shell_quote($include_facility_identifiers ? 1 : 0), "-j", "__SP_JOB_ID__");
 
     my $upload_job = CXGN::Job->new({
         schema => $chado_schema,
@@ -432,7 +433,7 @@ sub store_genotype_trial_POST : Args(0) {
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job, and can read the plate it is to store off it.
-    my $cmd = "perl \"__BASEPATH__/bin/store_genotype_trial.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -un \"$user_name\" -j __SP_JOB_ID__";
+    my $cmd = join(" ", "perl", shell_quote("__BASEPATH__/bin/store_genotype_trial.pl"), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-U", shell_quote("__DBUSER__"), "-P", shell_quote("__DBPASS__"), "-w", shell_quote("__BASEPATH__"), "-un", shell_quote($user_name), "-j", "__SP_JOB_ID__");
 
     my $upload_job = CXGN::Job->new({
         schema => $schema,

@@ -65,6 +65,7 @@ use CXGN::Metadata::Schema;
 use CXGN::People::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::Tools::Run;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 my ( $help, $dbhost, $dbname, $dbuser, $dbpass, $basepath, $archive_path, $tempfiles_subdir, $sp_job_id, $rootpath );
 GetOptions(
@@ -248,7 +249,8 @@ sub export_tassel_hdf5_to_vcf {
     my $exported_vcf = tempfile_in('genotype_upload_tassel_hdf5', 'temp_vcf_XXXX').".vcf";
     # Jobs submitted before the rootpath was given on the command line carry it in their upload params.
     my $tassel_root = $rootpath || $params->{rootpath};
-    my $cmd = "perl ".$tassel_root."/tassel-5-standalone/run_pipeline.pl -Xmx12g -h5 ".$hdf5_file." -export ".$exported_vcf." -exportType VCF";
+    # The archived file name includes the name the user gave the file, so every value is quoted.
+    my $cmd = join(" ", "perl", shell_quote($tassel_root."/tassel-5-standalone/run_pipeline.pl"), "-Xmx12g", "-h5", shell_quote($hdf5_file), "-export", shell_quote($exported_vcf), "-exportType", "VCF");
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -912,7 +914,7 @@ sub refresh_matviews {
     # genotypes that were just stored, so this is a warning on a successful upload, not an error.
     try {
         my $markerview_refresh = CXGN::Tools::Run->new();
-        $markerview_refresh->run("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+        $markerview_refresh->run(join(" ", "perl", shell_quote("$basepath/bin/refresh_materialized_markerview.pl"), "-H", shell_quote($dbhost), "-D", shell_quote($dbname), "-U", shell_quote($dbuser), "-P", shell_quote($dbpass)));
     } catch {
         push @warning_messages, "The marker search table was not refreshed: $_";
     } ;

@@ -21,6 +21,7 @@ use CXGN::AnalysisModel::GetModel;
 use CXGN::UploadFile;
 use CXGN::File;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use CXGN::Login;
 use CXGN::People::Person;
 use DateTime;
@@ -684,7 +685,7 @@ sub _submit_high_dim_upload {
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
     # report its messages back to this job, and can read the upload it is to run off it.
-    my $cmd = "perl \"__BASEPATH__/bin/".$args->{script}."\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -tf \"$tempfiles_subdir\" -m \"".$args->{mode}."\" -j __SP_JOB_ID__";
+    my $cmd = join(" ", "perl", shell_quote("__BASEPATH__/bin/".$args->{script}), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-U", shell_quote("__DBUSER__"), "-P", shell_quote("__DBPASS__"), "-w", shell_quote("__BASEPATH__"), "-ap", shell_quote("__ARCHIVE_PATH__"), "-tf", shell_quote($tempfiles_subdir), "-m", shell_quote($args->{mode}), "-j", "__SP_JOB_ID__");
 
     my $upload_job = CXGN::Job->new({
         schema => $schema,

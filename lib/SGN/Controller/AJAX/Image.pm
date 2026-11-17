@@ -35,6 +35,7 @@ use SGN::Model::Cvterm;
 use CXGN::Collection;
 use CXGN::File;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -835,11 +836,25 @@ sub store_images_POST {
     my $file_ids = join(",", @archived_file_ids);
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
-    # report its messages back to this job.
-    my $cmd = "perl \"__BASEPATH__/bin/store_images.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -id \"__IMAGE_DIR__\" -i \"$file_ids\" -un \"$username\" -t \"$image_type\" -j __SP_JOB_ID__";
+    # report its messages back to this job. The command runs in a shell, so every value is quoted.
+    my @cmd_args = (
+        "perl", shell_quote("__BASEPATH__/bin/store_images.pl"),
+        "-H", shell_quote("__DBHOST__"),
+        "-D", shell_quote("__DBNAME__"),
+        "-U", shell_quote("__DBUSER__"),
+        "-P", shell_quote("__DBPASS__"),
+        "-w", shell_quote("__BASEPATH__"),
+        "-ap", shell_quote("__ARCHIVE_PATH__"),
+        "-id", shell_quote("__IMAGE_DIR__"),
+        "-i", shell_quote($file_ids),
+        "-un", shell_quote($username),
+        "-t", shell_quote($image_type),
+        "-j", "__SP_JOB_ID__"
+    );
     if ($upload_collection) {
-        $cmd .= " -c \"".$upload_collection->{collection_id}."\"";
+        push @cmd_args, "-c", shell_quote($upload_collection->{collection_id});
     }
+    my $cmd = join(" ", @cmd_args);
 
     my $job_name = scalar(@archived_file_ids) == 1 ? "1 image upload" : scalar(@archived_file_ids)." images upload";
 

@@ -32,6 +32,7 @@ use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use CXGN::File;
 use File::Basename qw | basename dirname|;
 use CXGN::Phenotype;
@@ -144,11 +145,33 @@ sub _upload_phenotypes {
     my $tempfiles_subdir = $c->config->{tempfiles_subdir};
 
     # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
-    # report its messages back to this job.
-    my $cmd = "perl \"__BASEPATH__/bin/upload_phenotypes.pl\" -H \"__DBHOST__\" -D \"__DBNAME__\" -U \"__DBUSER__\" -P \"__DBPASS__\" -w \"__BASEPATH__\" -ap \"__ARCHIVE_PATH__\" -tf \"$tempfiles_subdir\" -m \"$mode\" -i \"".$upload->{archived_file_id}."\" -un \"".$upload->{username}."\" -t \"".$upload->{validate_type}."\" -mt \"".$upload->{metadata_file_type}."\" -dl \"".$upload->{data_level}."\" -ti \"".$upload->{timestamp_included}."\" -ow \"".$upload->{overwrite_values}."\" -rv \"".$upload->{remove_values}."\" -iw \"".$upload->{ignore_warnings}."\" -tt \"".$upload->{is_treatment}."\" -j __SP_JOB_ID__";
+    # report its messages back to this job. The command runs in a shell, so every value is quoted.
+    my @cmd_args = (
+        "perl", shell_quote("__BASEPATH__/bin/upload_phenotypes.pl"),
+        "-H", shell_quote("__DBHOST__"),
+        "-D", shell_quote("__DBNAME__"),
+        "-U", shell_quote("__DBUSER__"),
+        "-P", shell_quote("__DBPASS__"),
+        "-w", shell_quote("__BASEPATH__"),
+        "-ap", shell_quote("__ARCHIVE_PATH__"),
+        "-tf", shell_quote($tempfiles_subdir),
+        "-m", shell_quote($mode),
+        "-i", shell_quote($upload->{archived_file_id}),
+        "-un", shell_quote($upload->{username}),
+        "-t", shell_quote($upload->{validate_type}),
+        "-mt", shell_quote($upload->{metadata_file_type}),
+        "-dl", shell_quote($upload->{data_level}),
+        "-ti", shell_quote($upload->{timestamp_included}),
+        "-ow", shell_quote($upload->{overwrite_values}),
+        "-rv", shell_quote($upload->{remove_values}),
+        "-iw", shell_quote($upload->{ignore_warnings}),
+        "-tt", shell_quote($upload->{is_treatment}),
+        "-j", "__SP_JOB_ID__"
+    );
     if ($upload->{archived_image_zipfile_id}) {
-        $cmd .= " -iz \"".$upload->{archived_image_zipfile_id}."\"";
+        push @cmd_args, "-iz", shell_quote($upload->{archived_image_zipfile_id});
     }
+    my $cmd = join(" ", @cmd_args);
 
     my $upload_job = CXGN::Job->new({
         schema => $schema,

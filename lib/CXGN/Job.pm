@@ -20,7 +20,7 @@ my $job = CXGN::Job->new({
     dbpass => $dbpass,
     basepath => $basepath,
     sp_person_id => $c->user->get_object()->get_sp_person_id(),
-    cmd => "perl __BASEPATH__/bin/script.pl -H __DBHOST__ -D __DBNAME__ -U __DBUSER__ -P __DBPASS__ -ap __ARCHIVE_PATH__ -j __SP_JOB_ID__",
+    cmd => join(" ", "perl", shell_quote("__BASEPATH__/bin/script.pl"), "-H", shell_quote("__DBHOST__"), "-D", shell_quote("__DBNAME__"), "-U", shell_quote("__DBUSER__"), "-P", shell_quote("__DBPASS__"), "-ap", shell_quote("__ARCHIVE_PATH__"), "-un", shell_quote($username), "-j", "__SP_JOB_ID__"),
     cmd_placeholders => { ARCHIVE_PATH => $archive_path },
     cxgn_tools_run_config => {
         'temp_base' => $temp_base, 
@@ -61,6 +61,10 @@ are filled in from the job's own dbhost, dbname, dbuser, dbpass and basepath. An
 such as __ARCHIVE_PATH__ above, is given in cmd_placeholders (or to submit()), keyed by its name
 without the underscores. __SP_JOB_ID__ is filled in with the job's id. The values are only put into
 the copy of the command that is run.
+
+The command runs in a shell, so every value in it must be quoted with
+CXGN::Tools::ShellQuote::shell_quote(), placeholders included: a placeholder is filled in after
+quoting, so it should sit inside single quotes, where its value is taken literally.
 
 To create a job object representing an already submitted job, supply a job ID as sp_job_id. 
 If constructing a new job to submit(), do not supply an sp_job_id. To specify 
@@ -756,7 +760,7 @@ sub generate_finish_timestamp_cmd {
     # the job's own command failed, rather than whether recording the timestamp did.
     return ";
 sp_job_exit_code=\$?;
-perl __BASEPATH__/bin/record_finish_timestamp.pl -H __DBHOST__ -D __DBNAME__ -U __DBUSER__ -P __DBPASS__ -j $sp_job_id -e \$sp_job_exit_code ;
+perl '__BASEPATH__/bin/record_finish_timestamp.pl' -H '__DBHOST__' -D '__DBNAME__' -U '__DBUSER__' -P '__DBPASS__' -j $sp_job_id -e \$sp_job_exit_code ;
 exit \$sp_job_exit_code
 ";
 }

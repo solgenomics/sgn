@@ -10,6 +10,7 @@ use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
 use CXGN::Job;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use CXGN::DB::Connection;
 use CXGN::Page::UserPrefs;
 use Text::CSV ("csv");
@@ -493,13 +494,14 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
     my $dbpass = $c->config->{dbpass};
     my $basepath = $c->config->{basepath};
     
-    my $cmd = "mx-run CXGN::Dataset::ToolCompatibility".
-                " --dataset_id $dataset_id".
-                " --genotyping_protocol $genotyping_protocol".
-                " --dbhost __DBHOST__".
-                " --dbname __DBNAME__".
-                " --user __DBUSER__".
-                " --password __DBPASS__";
+    # The dataset id comes from the URL, and the command runs in a shell, so every value is quoted.
+    my $cmd = join(" ", "mx-run", "CXGN::Dataset::ToolCompatibility",
+                "--dataset_id", shell_quote($dataset_id),
+                "--genotyping_protocol", shell_quote($genotyping_protocol),
+                "--dbhost", shell_quote("__DBHOST__"),
+                "--dbname", shell_quote("__DBNAME__"),
+                "--user", shell_quote("__DBUSER__"),
+                "--password", shell_quote("__DBPASS__"));
 
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
