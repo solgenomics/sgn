@@ -471,6 +471,7 @@ sub replace_plot_name_fieldMap {
     my $valid_new_plot_name = @{$new_plot_name_validator->validate($schema,'plots',[$new_plot_name])->{'missing'}};
     if (!$valid_new_plot_name) {
         $error .= "Plot name $new_plot_name already exists in the database";
+        return $error;  # nothing is renamed, neither plants nor samples
     } else {
         my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         my $stock_rs = $schema->resultset("Stock::Stock")->search(
@@ -499,7 +500,9 @@ sub replace_plot_name_fieldMap {
         my $stock_rs = $schema->resultset("Stock::Stock")->search({
             stock_id => $stock_id,
         });
-        my $new_name = $child->{name} =~ s/$old_plot_name/$new_plot_name/r;
+        # only names that start with the plot name, which may contain regex characters
+        my $new_name = $child->{name} =~ s/^\Q$old_plot_name\E/$new_plot_name/r;
+        next if $new_name eq $child->{name};
         $stock_rs->update({
             name => $new_name,
             uniquename => $new_name
@@ -562,7 +565,8 @@ sub replace_trial_stock_fieldMap {
 # The purpose of this function is to recalculate replicate numbers using plot numbers after an accession swap has occurred, then save the new rep numbers.
 # takes as argument a hash of accessions with the plot IDs and plot numbers of the plots with those accessions. Plots are sorted based on their plot number and 
 # assigned new rep numbers.
-# data structure generated in trial_change_plot_accessions_upload in TrialMetadata.pm. The structure is accession_id->{
+# data structure generated in trial_change_plot_accessions_upload in TrialMetadata.pm. The structure is 
+# accession_id->{
 #   start -> {plot->{plot_number}...more plots...},
 #   add -> {...plots...},
 #   remove -> {...plots...}

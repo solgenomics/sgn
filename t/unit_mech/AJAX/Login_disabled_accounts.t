@@ -61,7 +61,7 @@ sub check_no_session {
     my $username = $login->get_username();
 
     my $mech = Test::WWW::Mechanize->new;
-    $mech->get_ok("http://localhost:3010/ajax/user/login?username=$username&password=$password");
+    $mech->post_ok("http://localhost:3010/ajax/user/login", [ username => $username, password => $password ]);
     my $response = decode_json $mech->content;
     like($response->{error}, qr/This account has been deactivated/, "$label: login is refused");
     unlike($mech->res->header('Set-Cookie') || '', qr/sgn_session_id=\w/, "$label: no session cookie is set");
@@ -107,7 +107,7 @@ check_no_session($deactivated, 'deactivated account');
 #
 my $active = create_account('disabled_login_active', undef);
 my $mech = Test::WWW::Mechanize->new;
-$mech->get_ok("http://localhost:3010/ajax/user/login?username=disabled_login_active&password=$password");
+$mech->post_ok("http://localhost:3010/ajax/user/login", [ username => 'disabled_login_active', password => $password ]);
 is(decode_json($mech->content)->{message}, 'Login successful', 'active account: login successful');
 $mech->get_ok('http://localhost:3010/user/logged_in');
 is(decode_json($mech->content)->{user_id}, $active->get_sp_person_id(), 'active account: logged in');
