@@ -351,8 +351,6 @@ function load_in_progress_validations_table(user_id) {
 
                 if (response.data.length > 0 ) {
 
-                    jQuery("#in_progress_validations_table_section_onswitch").trigger("click");
-
                     response.data.forEach(row => {
                         job_dict[row.job_id] = row;
                         let tr = jQuery("<tr>");
@@ -384,9 +382,9 @@ function load_in_progress_validations_table(user_id) {
                         tr.append(jQuery("<td>").html(`${view_report_btn} ${commit_validation_btn} ${dismiss_btn} ${cancel_btn}`));
                         file_tbody.append(tr);
                     });
-                } else {
-                    jQuery("#in_progress_validations_table_section_offswitch").trigger("click");
                 }
+
+                set_tab_count('#upload_factory_validations_count', response.data.length);
 
                 jQuery('#validation-loading-spinner').hide();
                 jQuery('#upload_factory_validated_files_table').show();
@@ -441,8 +439,6 @@ function load_in_progress_uploads_table(user_id) {
 
                 if (response.data.length > 0 ) {
 
-                    jQuery("#in_progress_uploads_table_section_onswitch").trigger("click");
-
                     response.data.forEach(row => {
                         job_dict[row.job_id] = row;
                         let tr = jQuery("<tr>");
@@ -464,9 +460,9 @@ function load_in_progress_uploads_table(user_id) {
                         tr.append(jQuery("<td>").html(`${dismiss_btn} ${cancel_btn}`));
                         file_tbody.append(tr);
                     });
-                } else {
-                    jQuery("#in_progress_uploads_table_section_offswitch").trigger("click");
                 }
+
+                set_tab_count('#upload_factory_in_progress_uploads_count', response.data.length);
 
                 jQuery('#uploads-loading-spinner').hide();
                 jQuery('#upload_factory_in_progress_uploads_table').show();
@@ -521,8 +517,6 @@ function load_completed_uploads_table(user_id) {
 
                 if (response.data.length > 0 ) {
 
-                    jQuery("#completed_uploads_table_section_onswitch").trigger("click");
-
                     response.data.forEach(row => {
                         job_dict[row.job_id] = row;
                         let tr = jQuery("<tr>");
@@ -541,9 +535,9 @@ function load_completed_uploads_table(user_id) {
                         tr.append(jQuery("<td>").html(`${view_report_btn} ${dismiss_btn}`));
                         file_tbody.append(tr);
                     });
-                } else {
-                    jQuery("#completed_uploads_table_section_offswitch").trigger("click");
                 }
+
+                set_tab_count('#upload_factory_completed_uploads_count', response.data.length);
 
                 jQuery('#completed-loading-spinner').hide();
                 jQuery('#upload_factory_completed_uploads_table').show();
@@ -559,8 +553,56 @@ function load_completed_uploads_table(user_id) {
     });
 }
 
+/*
+* The upload tables live in nav-pill tabs (see manage_upload.mas). The page always opens on the
+* uploaded files tab; it only switches tabs when the user submits or commits an upload, to show
+* where the new job went. The other tabs show a count of their jobs instead.
+*/
+const UPLOAD_FACTORY_TABS = {
+    archived_files : '#upload_factory_archived_files_pane',
+    validations : '#upload_factory_validations_pane',
+    in_progress_uploads : '#upload_factory_in_progress_uploads_pane',
+    completed_uploads : '#upload_factory_completed_uploads_pane'
+};
+
+// Upload types that are submitted as a validation job and committed later in send_upload_commit().
+// Every other upload type goes straight to data extraction.
+const VALIDATION_UPLOAD_TYPES = new Set([
+    'phenotyping_spreadsheet',
+    'images_phenotypes',
+    'images',
+    'images_barcodes',
+    'treatments',
+    'datacollector_spreadsheet',
+    'fieldbook_phenotypes',
+    'accessions',
+    'pedigrees',
+    'nirs',
+    'metabolomics',
+    'transcriptomics',
+    'genotyping_plate_excel',
+    'genotyping_plate_default_android',
+    'genotyping_plate_custom_android'
+]);
+
+export function show_upload_factory_tab(tab) {
+    jQuery(`#upload_factory_tabs a[href="${UPLOAD_FACTORY_TABS[tab]}"]`).tab('show');
+}
+
+function set_tab_count(badge_id, count) {
+    jQuery(badge_id).text(count > 0 ? count : '');
+}
+
+// The page passes the user id on its first refresh. Later refreshes (after a submission, commit or
+// dismissal) are called without one and reuse it.
+let upload_tables_user_id;
+
 export function refresh_upload_tables(user_id) {
-    load_in_progress_validations_table(user_id)
+    if (user_id) {
+        upload_tables_user_id = user_id;
+    }
+    user_id = upload_tables_user_id;
+    load_in_progress_validations_table(user_id);
     load_in_progress_uploads_table(user_id);
     load_completed_uploads_table(user_id);
 }
@@ -2514,6 +2556,8 @@ export function submit_upload_job() {
         jQuery(this).modal("hide");
     });
 
+    show_upload_factory_tab(VALIDATION_UPLOAD_TYPES.has(submit_params.upload_type) ? 'validations' : 'in_progress_uploads');
+
     jQuery('#working_modal').modal("show");
 
     switch(submit_params.upload_type) {
@@ -3354,6 +3398,7 @@ export function submit_upload_job() {
  * commit writes to the validation job, as an image upload creating a new collection does.
  */
 export function commit_upload_job(job_id) {
+    show_upload_factory_tab('in_progress_uploads');
     jQuery('#working_modal').modal("show");
     jQuery.ajax({
         url: '/ajax/job/consume/'+job_id,

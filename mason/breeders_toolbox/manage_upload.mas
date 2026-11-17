@@ -30,71 +30,84 @@ $allowed_upload_types => undef
 .ui-autocomplete {
     z-index: 5000;
 }
+#upload_factory_tabs {
+    margin: 15px 0;
+    padding: 5px;
+    background-color: #e8e8e8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
 </style>
 
 <div class="container-fluid">
 
 <button id="upload_factory_matviews_refresh_btn" class="btn btn-primary">Refresh materialized views</button><img id="matviews-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
-<div class="well well-sm">
-    <h3>Uploaded files</h3>
-        <&| /page/info_section.mas, title => ' ', subtitle => 'Files that are stored in the site archive; their data has not necessarily been saved to the database.', id => 'archived_files_table_section', collapsible => 1, collapsed => 0 &>
-            <table style="width:100%">
-                <tr>
-                    <td>
-                        <div class="form-group">
-                            <label class="col-sm-6 control-label">Check formatting requirements: </label>
-                            <div class="col-sm-6">
-                                <select class="form-control form-control-sm" id="upload_factory_check_file_format">
-                                </select>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        &nbsp; &nbsp; &nbsp; &nbsp; 
-                    </td>
-                    <td>
-                        <div style="display:flex;justify-content:flex-end;">
-                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_factory_file_form" name="upload_factory_file_form">
-                                <div class="form-group">
-                                    <label class="col-sm-4 control-label">Upload files: </label>
-                                    <div class="col-sm-6">
-                                        <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file[]" multiple>
-                                    </div>
-                                    <div class="col-sm-2">
-                                        <button type="submit" class="btn btn-primary" id="upload_factory_new_file_btn"><span class="glyphicon glyphicon-floppy-open"></span></button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <select id="file_time_interval_select" style="width: auto" class="form-control form-control-sm">
-                            <option value="1 week">Show files from this week</option>
-                            <option value="1 month">Show files from this month</option>
-                            <option value="3 months" selected>Show files from the last three months</option>
-                            <option value="6 months">Show files from the last six months</option>
-                            <option value="1 year">Show files from the last year</option>
-                            <option value="all time">Show all archived files</option>
-                        </select>
-                    </td>
-                </tr>
-            </table>
-            <table id="upload_factory_archived_files_table">
-                <thead>
-                </thead>
-                <tbody>
-                </tbody>
-                <tfoot>
-                </tfoot>
-            </table>
-        </&>
-</div>
+<ul class="nav nav-pills" id="upload_factory_tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#upload_factory_archived_files_pane" aria-controls="upload_factory_archived_files_pane" role="tab" data-toggle="pill">Uploaded files</a></li>
+    <li role="presentation"><a href="#upload_factory_validations_pane" aria-controls="upload_factory_validations_pane" role="tab" data-toggle="pill">File validation <span class="badge" id="upload_factory_validations_count"></span></a></li>
+    <li role="presentation"><a href="#upload_factory_in_progress_uploads_pane" aria-controls="upload_factory_in_progress_uploads_pane" role="tab" data-toggle="pill">Data extraction in-progress <span class="badge" id="upload_factory_in_progress_uploads_count"></span></a></li>
+    <li role="presentation"><a href="#upload_factory_completed_uploads_pane" aria-controls="upload_factory_completed_uploads_pane" role="tab" data-toggle="pill">Processed uploads <span class="badge" id="upload_factory_completed_uploads_count"></span></a></li>
+</ul>
 
-<div class="well well-sm">
-<h3>File validation</h3>
-    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to commit the data after passing validation. Warning and error conditions will cause an upload to fail.', id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
+<div class="tab-content">
+
+    <div role="tabpanel" class="tab-pane fade in active well well-sm" id="upload_factory_archived_files_pane">
+        <p class="help-block">Files that are stored in the site archive; their data has not necessarily been saved to the database.</p>
+        <table style="width:100%">
+            <tr>
+                <td>
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Check formatting requirements: </label>
+                        <div class="col-sm-6">
+                            <select class="form-control form-control-sm" id="upload_factory_check_file_format">
+                            </select>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    &nbsp; &nbsp; &nbsp; &nbsp; 
+                </td>
+                <td>
+                    <div style="display:flex;justify-content:flex-end;">
+                        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_factory_file_form" name="upload_factory_file_form">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Upload files: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file[]" multiple>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button type="submit" class="btn btn-primary" id="upload_factory_new_file_btn"><span class="glyphicon glyphicon-floppy-open"></span></button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <select id="file_time_interval_select" style="width: auto" class="form-control form-control-sm">
+                        <option value="1 week">Show files from this week</option>
+                        <option value="1 month">Show files from this month</option>
+                        <option value="3 months" selected>Show files from the last three months</option>
+                        <option value="6 months">Show files from the last six months</option>
+                        <option value="1 year">Show files from the last year</option>
+                        <option value="all time">Show all archived files</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <table id="upload_factory_archived_files_table">
+            <thead>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </table>
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade well well-sm" id="upload_factory_validations_pane">
+        <p class="help-block">Some file types include a file validation step. Be sure to commit the data after passing validation. Warning and error conditions will cause an upload to fail.</p>
         <img id="validation-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
         <table id="upload_factory_validated_files_table">
             <thead>
@@ -104,12 +117,10 @@ $allowed_upload_types => undef
             <tfoot>
             </tfoot>
         </table>
-        </&>
-</div>
+    </div>
 
-<div class="well well-sm">
-<h3>Data extraction in-progress</h3>
-    <&| /page/info_section.mas, title => ' ', id => 'in_progress_uploads_table_section', collapsible => 1, collapsed => 1 &>
+    <div role="tabpanel" class="tab-pane fade well well-sm" id="upload_factory_in_progress_uploads_pane">
+        <p class="help-block">Uploads whose data is currently being extracted and saved to the database.</p>
         <img id="uploads-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
         <table id="upload_factory_in_progress_uploads_table">
             <thead>
@@ -119,16 +130,12 @@ $allowed_upload_types => undef
             <tfoot>
             </tfoot>
         </table>
-    </&>
-</div>
+    </div>
 
-
-<div class="well well-sm">
-<h3>Processed uploads</h3>
-    <&| /page/info_section.mas, title => ' ', subtitle => 'Jobs for which data has been extracted and committed to the database.', id => 'completed_uploads_table_section', collapsible => 1, collapsed => 1 &>
-        <br>
+    <div role="tabpanel" class="tab-pane fade well well-sm" id="upload_factory_completed_uploads_pane">
+        <p class="help-block">Jobs for which data has been extracted and committed to the database.</p>
         <button id="dismiss_completed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all completed uploads</button> &nbsp; &nbsp;
-        <button id="dismiss_failed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all failed and timed-out uploads</button> &nbsp; &nbsp;
+        <button id="dismiss_failed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all failed and timed-out uploads</button>
         <br>
         <br>
         <img id="completed-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
@@ -140,7 +147,8 @@ $allowed_upload_types => undef
             <tfoot>
             </tfoot>
         </table>
-    </&>
+    </div>
+
 </div>
 
 
@@ -361,12 +369,16 @@ jQuery(document).ready(function(){
 
     jQuery(document).on('click', '.job-dismiss-btn', function() {
         let job_id = jQuery(this).attr("id").replace('dismiss_job_', '');
-        jsMod["job"].dismiss_job(job_id);
+        jsMod["job"].dismiss_job(job_id, function() {
+            jsMod["upload_factory"].refresh_upload_tables();
+        });
     });
 
     jQuery(document).on('click', '.job-cancel-btn', function() {
         let job_id = jQuery(this).attr("id").replace('cancel_job_', '');
-        jsMod["job"].cancel_job(job_id);
+        jsMod["job"].cancel_job(job_id, function() {
+            jsMod["upload_factory"].refresh_upload_tables();
+        });
     });
 
     jQuery(document).on('click', '.validation-commit-btn', function() {
@@ -482,6 +494,11 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#submit_validate_upload').on('click', jsMod["upload_factory"].submit_upload_job);
+
+    // DataTables in a hidden tab can't measure their columns, so resize them once the tab is shown.
+    jQuery('#upload_factory_tabs a[data-toggle="pill"]').on('shown.bs.tab', function() {
+        jQuery.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+    });
 
 });
 </script>

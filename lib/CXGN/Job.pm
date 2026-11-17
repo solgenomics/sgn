@@ -1533,7 +1533,8 @@ sub delete_finished_upload_jobs {
                 schema => $bcs_schema,
                 sp_job_id => $job_id
             });
-            if ($job->job_type() eq "upload" && $job->additional_args->{final_upload}) {
+            my $additional_args = $job->additional_args() || {}; # jobs submitted without additional args store none
+            if (($job->job_type() // '') eq "upload" && $additional_args->{final_upload}) {
                 $job->delete();
             }
         }
@@ -1572,7 +1573,8 @@ sub delete_dead_upload_jobs {
                 schema => $bcs_schema,
                 sp_job_id => $job_id
             });
-            if ($job->job_type() eq "upload" && $job->additional_args->{final_upload}) {
+            my $additional_args = $job->additional_args() || {}; # jobs submitted without additional args store none
+            if (($job->job_type() // '') eq "upload" && $additional_args->{final_upload}) {
                 $job->delete();
             }
         }
