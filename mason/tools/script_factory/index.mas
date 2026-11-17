@@ -21,6 +21,7 @@ $blupf90_available => 0
 $blupf90_allowed => 0
 $glmmtmb_available => 0
 $aghmatrix_available => 0
+$breedtools_available => 0
 $blupf90_license_contact => ''
 </%args>
 
@@ -457,6 +458,16 @@ $license_json =~ s/</\\u003c/g;
           <small class="sf-muted">Used by stage 2 and by the single-stage model, with the genotype as random effect. Mother / father: random effects of the parents recorded in Breedbase; the genetic value of an accession is the sum of its parents' and its own effect. Pedigree: the accession effect follows the additive relationship of all known ancestors, with the inbreeding of every individual (inbred lines), giving breeding values (EBVs) for the accessions and for their ancestors. Genomic (G): relationships from the markers of a genotyping protocol (VanRaden G built by BLUPF90+ after quality control: minor allele frequency, call rate, monomorphic markers), giving genomic breeding values (GEBVs); accessions without genotypes are treated as unrelated. Single-step (H): pedigree and genomic relationships together, so accessions without genotypes borrow information through their genotyped relatives. Pedigree, G and H models are fitted with BLUPF90+ (the whole analysis then runs on the BLUPF90+ engine). Checks: a fixed check / test effect, so test entries are not shrunk toward the mean of the checks.</small>
         </div>
 
+        <div class="sf-card" id="sf_anova_card">
+          <label class="sf-check"><input type="checkbox" id="sf_anova_enabled" /> <b>ANOVA by experimental design</b>
+            <small class="sf-muted">F-tests of the fixed effects, comparisons of means and model checks, in a model that follows the design of each trial (breedtools)</small></label>
+          <div class="sf-adv-row" id="sf_anova_opts" style="display:none">
+            <button class="btn btn-default btn-sm" id="sf_anova_btn"><span class="glyphicon glyphicon-cog"></span> ANOVA settings</button>
+            <small class="sf-muted" id="sf_anova_summary"></small>
+          </div>
+          <div id="sf_anova_note" class="sf-help"></div>
+        </div>
+
         <div class="sf-card sf-formula-card">
           <h4>Model preview</h4>
           <div id="sf_model_preview"></div>
@@ -476,6 +487,7 @@ $license_json =~ s/</\\u003c/g;
             <label class="sf-switch"><input type="checkbox" id="sf_index_enabled" /><span class="sf-slider"></span> Build an index</label>
           </div>
           <p class="sf-help">Combine the genotype values of several traits into a single score to rank accessions.</p>
+          <div class="alert alert-info sf-index-basis" id="sf_index_basis"></div>
           <div id="sf_index_body" class="sf-disabled">
             <div class="sf-options sf-options-2">
               <label class="sf-option sf-option-sm"><input type="radio" name="sf_index_method" value="zscore" checked />
@@ -629,6 +641,7 @@ $license_json =~ s/</\\u003c/g;
             <li><a data-toggle="tab" href="#sf_tab_outliers">Outliers</a></li>
             <li id="sf_tab_stage1_li"><a data-toggle="tab" href="#sf_tab_stage1">Stage 1</a></li>
             <li><a data-toggle="tab" href="#sf_tab_model" id="sf_tab_model_link">Stage 2</a></li>
+            <li id="sf_tab_anova_li" style="display:none"><a data-toggle="tab" href="#sf_tab_anova">ANOVA</a></li>
             <li><a data-toggle="tab" href="#sf_tab_values">Genotype values</a></li>
             <li id="sf_tab_index_li"><a data-toggle="tab" href="#sf_tab_index">Selection index</a></li>
             <li id="sf_tab_zones_li"><a data-toggle="tab" href="#sf_tab_zones">Zones</a></li>
@@ -639,6 +652,7 @@ $license_json =~ s/</\\u003c/g;
             <div class="tab-pane" id="sf_tab_outliers"></div>
             <div class="tab-pane" id="sf_tab_stage1"></div>
             <div class="tab-pane" id="sf_tab_model"></div>
+            <div class="tab-pane" id="sf_tab_anova"></div>
             <div class="tab-pane" id="sf_tab_values"></div>
             <div class="tab-pane" id="sf_tab_index"></div>
             <div class="tab-pane" id="sf_tab_zones"></div>
@@ -852,6 +866,48 @@ $license_json =~ s/</\\u003c/g;
   </div>
 </div>
 
+<!-- ===================== ANOVA settings modal ===================== -->
+<div class="modal fade" id="sf_anova_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title"><span class="glyphicon glyphicon-cog"></span>&nbsp; ANOVA settings</h4>
+      </div>
+      <div class="modal-body sf-adv">
+        <p class="sf-help">A fixed-effects analysis of variance that follows the design of each trial (replicates, blocks within replicates, rows and columns, as detected by breedtools). It is reported next to the mixed-model results and does not change the genotype values, the selection index or the zones.</p>
+
+        <h4>Analysis</h4>
+        <label class="sf-check"><input type="radio" name="sf_anova_scope" value="joint" /> <b>Joint analysis</b> across trials
+          <small class="sf-muted">one ANOVA of all trials: trial + design terms within trial + treatments + accession + accession &times; trial (G&times;E); with a summary of each trial and Hartley's test of equal residual variances</small></label>
+        <label class="sf-check"><input type="radio" name="sf_anova_scope" value="per_trial" /> <b>Each trial</b> on its own
+          <small class="sf-muted">a full ANOVA, means comparison and model checks for every trial</small></label>
+        <label class="sf-check"><input type="radio" name="sf_anova_scope" value="both" /> <b>Both</b>
+          <small class="sf-muted">the joint analysis and the analysis of each trial</small></label>
+
+        <h4>Comparison of means</h4>
+        <label class="sf-check"><input type="radio" name="sf_anova_test" value="tukey" /> <b>Tukey HSD</b>
+          <small class="sf-muted">controls the error rate over all pairs of means (conservative; recommended when many means are compared)</small></label>
+        <label class="sf-check"><input type="radio" name="sf_anova_test" value="lsd" /> <b>Fisher LSD</b>
+          <small class="sf-muted">t-test of each pair (more pairs declared different; use for a few planned comparisons)</small></label>
+        <p class="sf-help">Means are compared for significant factors (treatments, accessions) with up to 50 levels; when a factor interacts significantly with another one, within each level of the other factor. Means sharing a letter do not differ.</p>
+
+        <h4>Significance level (&alpha;)</h4>
+        <select class="form-control input-sm" id="sf_anova_alpha" style="width:auto">
+          <option value="0.05">0.05</option>
+          <option value="0.01">0.01</option>
+          <option value="0.1">0.10</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-link pull-left" id="sf_anova_reset"><span class="glyphicon glyphicon-repeat"></span> Reset to defaults</button>
+        <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="sf_anova_apply"><span class="glyphicon glyphicon-ok"></span> Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== save list modal ===================== -->
 <div class="modal fade" id="sf_list_modal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
@@ -894,6 +950,7 @@ jQuery(document).ready(function() {
     blupf90_allowed: <% $blupf90_allowed ? 1 : 0 %>,
     glmmtmb_available: <% $glmmtmb_available ? 1 : 0 %>,
     aghmatrix_available: <% $aghmatrix_available ? 1 : 0 %>,
+    breedtools_available: <% $breedtools_available ? 1 : 0 %>,
     blupf90_license_contact: <% $license_json | n %>,
     user_email: "<% $user_email =~ /^[^\s"<>\\]+@[^\s"<>\\]+$/ ? $user_email : '' %>"
   });

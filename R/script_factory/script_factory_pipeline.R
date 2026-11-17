@@ -2917,6 +2917,8 @@ for (t in traits) {
     if (nrow(rr)) plots_out[[paste0("resid:", st)]] <- rr$resid[match(plots_out$unit, rr$unit)]
   }
 }
+# level of every treatment of the models on each plot (ANOVA step)
+for (k in union(trt_use, trt_gxt)) plots_out[[paste0("treatment:", k)]] <- dat[[k]]
 variance_components <- if (length(variance_components)) do.call(rbind, variance_components) else NULL
 
 trial_table <- do.call(rbind, lapply(trial_info, function(x) data.frame(

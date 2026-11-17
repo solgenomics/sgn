@@ -62,6 +62,8 @@ my $TMP_SUBDIR = 'script_factory_files';
 my $PIPELINE = 'R/script_factory/script_factory_pipeline.R';
 # BLUPF90+ engine: the same pipeline without R (CXGN::BLUPF90::Pipeline)
 my $F90_PIPELINE = 'bin/script_factory_blupf90.pl';
+# optional last step of a run, after either engine: ANOVA by experimental design
+my $ANOVA_STEP = 'R/script_factory/script_factory_anova.R';
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -199,6 +201,14 @@ sub r_package_available {
 }
 sub glmmtmb_available { return r_package_available('glmmTMB'); }
 sub aghmatrix_available { return r_package_available('AGHmatrix'); }
+# breedtools: design of each trial for the ANOVA step
+sub breedtools_available { return r_package_available('breedtools'); }
+
+# does the recipe ask for the ANOVA by experimental design?
+sub _anova_enabled {
+    my $recipe = shift;
+    return ref($recipe->{anova}) eq 'HASH' && $recipe->{anova}->{enabled} ? 1 : 0;
+}
 
 # contact shown to commercial users of BLUPF90+ (free for research only)
 sub blupf90_license_contact {
@@ -1213,10 +1223,14 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     $recipe->{engine} = $engine;
     delete $recipe->{engine_reason};
     $meta{engine} = $engine;
+    # with the ANOVA step the engine writes its results to a first file, the
+    # step adds the ANOVA and writes the results file (the run is finished
+    # when the results file appears)
+    my $anova = $mode ne 'preview' && _anova_enabled($recipe);
     my @args = (
         "$dir/$token.phenotype.txt",
         "$run_base.recipe.json",
-        "$run_base.results.json",
+        ($anova ? "$run_base.model_results.json" : "$run_base.results.json"),
         "$run_base.exclusions.json",
         $run_base,
         (-s $pedigree_file ? ("--pedigree=$pedigree_file") : ()),
@@ -1245,6 +1259,12 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     $cmd .= " > " . _shell_quote("$run_base.log") . " 2>&1";
     # genotypes first (its messages start the log)
     $cmd = "$geno_cmd > " . _shell_quote("$run_base.log") . " 2>&1; " . ($cmd =~ s/ > (\S+) 2>&1$/ >> $1 2>&1/r) if $geno_cmd;
+    if ($anova) {
+        # the results are kept when the step fails
+        my ($in, $out) = map { _shell_quote($_) } ("$run_base.model_results.json", "$run_base.results.json");
+        $cmd .= "; if [ -s $in ]; then Rscript " . _shell_quote("$basepath/$ANOVA_STEP") . " $in $out >> " . _shell_quote("$run_base.log")
+            . " 2>&1 || cp $in $out; rm -f $in; fi";
+    }
     write_file("$run_base.recipe.json", encode_json($recipe));
     if ($meta{notify_email}) {
         $cmd .= "; perl -I" . _shell_quote("$basepath/lib") . " " . _shell_quote("$basepath/bin/script_factory_notify.pl")
@@ -1550,10 +1570,12 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
     my %names = map { ($_->{location} // '') => 1 } @{ $results->{trials} || [] };
     delete $names{''};
     my %coords;
+    my %location_ids;    # every location, with or without coordinates (links to the weather page)
     if (%names) {
         my ($schema) = _schemas($c);
         my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search({ description => { -in => [ keys %names ] } });
         while (my $loc = $rs->next()) {
+            $location_ids{$loc->description()} = $loc->nd_geolocation_id();
             my ($lat, $lon) = ($loc->latitude(), $loc->longitude());
             next if !defined($lat) || !defined($lon) || ($lat == 0 && $lon == 0);
             $coords{$loc->description()} = { latitude => $lat + 0, longitude => $lon + 0, altitude => $loc->altitude(), location_id => $loc->nd_geolocation_id() };
@@ -1571,6 +1593,9 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
             is_owner => (($meta->{sp_person_id} // -1) == $sp_person_id) ? 1 : 0,
         },
         locations => \%coords,
+        location_ids => \%location_ids,
+        # the weather page (/breeders/weather) when this site has it
+        weather_page => SGN::Controller::BreedersToolbox->can('weather') ? 1 : 0,
         results => $results,
     };
 }
@@ -1728,6 +1753,12 @@ RECIPE_JSON <- r"---($pretty)---"
 
 HEADER
 
+    # the ANOVA by experimental design (breedtools) runs on the results at the end
+    if (_anova_enabled($recipe)) {
+        my $step = read_file($c->config->{basepath} . "/$ANOVA_STEP");
+        $pipeline .= "\n\n# ANOVA by experimental design (needs the R package breedtools)\nSF_ANOVA_EMBEDDED <- TRUE\n$step\n"
+            . "tryCatch(sf_anova_run(output_file, output_file), error = function(e) message(\"ANOVA step failed: \", conditionMessage(e)))\n";
+    }
     return ("$file_name.R", $script . $pipeline);
 }
 
@@ -1739,6 +1770,9 @@ sub _blupf90_script {
     delete $recipe->{stop_after};
     my $pretty = JSON->new->canonical(1)->pretty(1)->encode($recipe);
     my $date = DateTime->now()->ymd();
+    # ANOVA by experimental design (R, breedtools) on the results
+    my $anova_line = _anova_enabled($recipe)
+        ? "[ \$STATUS -eq 0 ] && Rscript \"\$SGN/$ANOVA_STEP\" \"\$OUT\" \"\$OUT\"\n" : '';
     return <<"SCRIPT";
 #!/bin/bash
 # =============================================================================
@@ -1761,7 +1795,7 @@ PHENO=\$1; OUT=\$2; shift 2
 perl -I"\$SGN/lib" "\$SGN/bin/script_factory_blupf90.pl" "\$PHENO" "\$RECIPE" "\$OUT" "" "\${OUT%.json}" "\$@"
 STATUS=\$?
 rm -f "\$RECIPE"
-exit \$STATUS
+${anova_line}exit \$STATUS
 SCRIPT
 }
 
@@ -2205,10 +2239,10 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
 # ---------------------------------------------------------------------------
 # A link is kept in the meeting's meeting_json project property, as
 # related_analyses: [{analysis_id, name, linked_by, linked_at}]. Saving the
-# meeting's decisions keeps it (it merges into the stored JSON). Analyses can
-# be added after the decisions are saved (flagged after_save), but once they are
-# saved no analysis can be removed: the evidence of a decision is a permanent
-# record. An analysis linked to a meeting cannot be deleted (see
+# meeting's decisions keeps it (it merges into the stored JSON). Once the
+# decisions are saved the meeting is closed: no analysis can be added or
+# removed, the evidence of a decision is a permanent record (links added after
+# saving by earlier versions keep their after_save flag). An analysis linked to a meeting cannot be deleted (see
 # meetings_using_analysis). Every change is kept in analyses_history
 # [{action, analysis_id, name, by, on}].
 
@@ -2318,9 +2352,8 @@ sub meetings : Path('/ajax/script_factory/meetings') Args(0) {
 }
 
 # POST meeting_id, analysis_id (one id or a comma separated list), action (link | unlink).
-# Links can change after the decisions are saved: the decisions stay as they
-# were, analyses added later are flagged (after_save) and every change is kept
-# in analyses_history.
+# Only open meetings change (every change is kept in analyses_history); a
+# meeting whose decisions are saved is closed.
 sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2361,20 +2394,21 @@ sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
             my $prop = $schema->resultset('Project::Projectprop')->search({ projectprop_id => $m->{prop}->projectprop_id() }, { for => 'update' })->single();
             my $d = _decode_meeting($prop->value());
             $m->{saved} = _meeting_is_saved($d);
+            die "The decisions of this meeting are saved: the meeting is closed and no analysis can be added.\n" if $m->{saved} && $action eq 'link';
             my @list = grep { ref($_) eq 'HASH' && ($_->{analysis_id} // '') =~ /^\d+$/ } @{ ref($d->{related_analyses}) eq 'ARRAY' ? $d->{related_analyses} : [] };
             my %have = map { $_->{analysis_id} => $_ } @list;
             my @history = grep { ref($_) eq 'HASH' } @{ ref($d->{analyses_history}) eq 'ARRAY' ? $d->{analyses_history} : [] };
             foreach my $id (@ids) {
                 if ($action eq 'link') {
                     next if $have{$id};
-                    push @list, { analysis_id => $id + 0, name => $info{$id}->{name}, linked_by => $who, linked_at => $today, ($m->{saved} ? (after_save => 1) : ()) };
+                    push @list, { analysis_id => $id + 0, name => $info{$id}->{name}, linked_by => $who, linked_at => $today };
                 } else {
                     next if !$have{$id};
                     die "The decisions of this meeting are saved: the analyses it used as evidence are a permanent record and cannot be removed.\n" if $m->{saved};
                     @list = grep { $_->{analysis_id} != $id } @list;
                 }
                 push @history, { action => ($action eq 'link' ? 'added' : 'removed'), analysis_id => $id + 0, name => ($info{$id} ? $info{$id}->{name} : $have{$id}->{name}),
-                                 by => $who, on => $today, ($m->{saved} ? (after_save => 1) : ()) };
+                                 by => $who, on => $today };
                 $n++;
             }
             return if !$n;

@@ -2786,6 +2786,10 @@ sub _output {
             $p{$st} = $d->{$t}->[$i];
             $p{"resid:$st"} = $self->{residuals}->{$t}->{ $d->{unit}->[$i] } if $self->{residuals}->{$t};
         }
+        # level of every treatment of the models (ANOVA step)
+        foreach my $v (uniq(@{$self->{trt_use}}, @{$self->{trt_gxt}})) {
+            $p{"treatment:$v"} = $d->{$v}->[$i] if $d->{$v};
+        }
         push @plots, \%p;
     }
     my $info = $self->{trial_info};

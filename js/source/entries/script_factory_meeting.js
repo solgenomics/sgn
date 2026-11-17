@@ -6,10 +6,11 @@
  * the evidence per accession (genotype value and rank per trait, selection
  * index, environmental zones), restricted by default to the accessions of
  * the meeting. Links are kept in the meeting (meeting_json related_analyses).
- * Several analyses can be added or removed at once. After the decisions are
- * saved, analyses can still be added (flagged "added after the decisions were
- * saved") but none can be removed: the evidence is a permanent record. Every
- * change is kept in the meeting's history (analyses_history).
+ * Several analyses can be added or removed at once while the meeting is open.
+ * Once the decisions are saved the meeting is closed: no analysis can be added
+ * or removed, the evidence is a permanent record (analyses added after saving
+ * by earlier versions keep their label). Every change is kept in the
+ * meeting's history (analyses_history).
  *
  * Author: Chris Simoes <ccs263@cornell.edu>
  */
@@ -96,8 +97,8 @@ function renderLinked() {
     const r = S.data;
     const list = r.analyses || [];
     const closed = r.meeting.saved;
-    let h = '<p><b>' + esc(r.meeting.name) + '</b> ' + (closed ? '<span class="label label-default" title="The decisions are saved: analyses can still be added, but the evidence of the decisions cannot be removed">decisions saved</span>' : '<span class="label label-success">open</span>') + ' &middot; ';
-    h += list.length ? list.length + ' analysis(es) as evidence. Click one to see its results per accession.' : 'No analysis linked yet.' + (r.can_link ? ' Use <b>Add analyses</b>.' : '');
+    let h = '<p><b>' + esc(r.meeting.name) + '</b> ' + (closed ? '<span class="label label-default" title="The decisions are saved: the meeting is closed and its evidence is a permanent record">decisions saved</span>' : '<span class="label label-success">open</span>') + ' &middot; ';
+    h += list.length ? list.length + ' analysis(es) as evidence. Click one to see its results per accession.' : 'No analysis linked' + (closed ? '.' : ' yet.' + (r.can_link ? ' Use <b>Add analyses</b>.' : ''));
     h += '</p>';
     h += list.map(a => '<div class="sfm-card' + (S.current === a.analysis_id ? ' on' : '') + '" data-id="' + esc(a.analysis_id) + '">' +
         '<div class="sfm-card-title">' + esc(a.name || ('analysis ' + a.analysis_id)) + '</div>' +
@@ -110,11 +111,11 @@ function renderLinked() {
         '</div>').join('');
     $('#sfm_linked').html(h);
 
-    $('#sfm_actions').toggle(!!r.can_link || !!(r.history || []).length);
-    $('#sfm_add_toggle').toggle(!!r.can_link);
+    $('#sfm_actions').toggle((!!r.can_link && !closed) || !!(r.history || []).length);
+    $('#sfm_add_toggle').toggle(!!r.can_link && !closed);
     $('#sfm_remove_toggle').toggle(!!r.can_link && list.length > 0 && !closed);
     $('#sfm_history_toggle').toggle(!!(r.history || []).length);
-    if (!r.can_link) $('#sfm_add_row, #sfm_remove_row').hide();
+    if (!r.can_link || closed) $('#sfm_add_row, #sfm_remove_row').hide();
     if (!list.length || closed) $('#sfm_remove_row').hide();
     renderAddList();
     renderRemoveList();

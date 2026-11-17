@@ -64,6 +64,7 @@ $run_id => ''
         <li class="sfd-zones-only"><a href="#sfd_zones_section">Zones</a></li>
         <li><a href="#sfd_outliers_section">Outliers</a></li>
         <li><a href="#sfd_model_section">Model</a></li>
+        <li id="sfd_nav_anova" style="display:none"><a href="#sfd_anova_section">ANOVA</a></li>
         <li id="sfd_nav_software" style="display:none"><a href="#sfd_software_section">Software</a></li>
         <li><a href="#sfd_log_section">Analysis log</a></li>
       </ul>
@@ -184,6 +185,7 @@ $run_id => ''
                 </div>
               </div>
             </div>
+            <p class="sfd-help" id="sfd_sel_basis"></p>
             <div class="sfd-sel-top">
             <div class="sfd-slider">
               <label for="sfd_sel_pct">Select the top <b id="sfd_sel_pct_label">10</b>% &rarr; <b id="sfd_sel_n">0</b> accession(s)</label>
@@ -267,6 +269,14 @@ $run_id => ''
           </div>
         </section>
 
+        <!-- ANOVA by experimental design (optional step) -->
+        <section class="sfd-section" id="sfd_anova_section" style="display:none">
+          <div class="sfd-card">
+            <div class="sfd-card-head"><h3>ANOVA by experimental design</h3><span class="sfd-help" id="sfd_anova_help"></span></div>
+            <div id="sfd_anova"></div>
+          </div>
+        </section>
+
         <!-- analysis log -->
         <section class="sfd-section" id="sfd_software_section" style="display:none">
           <div class="sfd-card">
@@ -345,6 +355,10 @@ jQuery(document).ready(function() {
 .sfd-stat .v { font-size: 22px; font-weight: 600; color: #111827; line-height: 1.2; }
 .sfd-stat .l { font-size: 12px; color: var(--m); }
 .sfd-plot { width: 100%; overflow-x: auto; }
+.sfd-anova-table td.sig { font-weight: 600; color: #166534; }
+.sfd-anova-plots { display: flex; flex-wrap: wrap; gap: 12px; }
+.sfd-anova-plots > div { flex: 1 1 300px; min-width: 0; }
+.sfd-anova-group { display: inline-block; min-width: 1.6em; padding: 0 5px; border-radius: 3px; background: #ecfdf5; color: #166534; font-weight: 600; font-family: monospace; }
 .sfd-plot svg, .sfd-scroll svg { display: block; max-width: 100%; height: auto; }
 .sfd-scroll { overflow: auto; max-height: 640px; }
 .sfd-map-wrap { position: relative; }

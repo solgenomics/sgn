@@ -31,6 +31,8 @@ let cfg = {};
 let R = null;        // results of the run
 let META = {};
 let LOCS = {};       // location name -> {latitude, longitude}
+let LOC_IDS = {};    // location name -> Breedbase location id
+let WEATHER = false; // the site has the weather page (/breeders/weather)
 const D = {};        // derived data
 const S = {          // view state
     trait: null,
@@ -414,7 +416,9 @@ function renderHeader() {
 // software and packages the run used: version, what each did in this run,
 // reference to cite (runs made before this was recorded have none)
 function renderSoftware() {
-    const sw = arr(R.software);
+    const sw = arr(R.software).slice();
+    if (R.anova && R.anova.software) sw.push({ name: 'breedtools', version: (R.anova.software.match(/breedtools ([\d.]+)/) || [])[1], used_for: 'ANOVA by experimental design: design of each trial and its model terms, Hartley\'s Fmax test',
+        reference: 'Simoes CC. breedtools: design, analysis and Breedbase storage of plant breeding trials. R package. https://github.com/solgenomics/breedtools' });
     $('#sfd_software_section, #sfd_nav_software').toggle(sw.length > 0);
     if (!sw.length) return;
     $('#sfd_software').html('<div class="table-responsive"><table class="table table-condensed sfd-software"><thead><tr><th>Software</th><th>Version</th><th>What it did in this analysis</th><th>Reference</th></tr></thead><tbody>' +
@@ -564,6 +568,15 @@ function zoneColor(z) {
     return ZONE_COLORS[Math.max(0, names.indexOf(z)) % ZONE_COLORS.length];
 }
 
+// link to the weather page of a location (greyed out until the site has the page)
+function weatherLink(name) {
+    const id = LOC_IDS[name];
+    if (!id) return '';
+    const icon = '<span class="glyphicon glyphicon-cloud"></span> Weather';
+    return WEATHER ? '<a href="/breeders/weather?location_id=' + encodeURIComponent(id) + '" target="_blank" title="Weather of this location (stations, season, crop stages)">' + icon + '</a>'
+        : '<span class="sfd-help" style="cursor:not-allowed" title="The weather page is not installed on this site yet">' + icon + '</span>';
+}
+
 function renderMap() {
     $('#sfd_map_zone_target').toggle(S.mapColor === 'zone');
     $('#sfd_map_accession').toggle(S.mapColor === 'accession');
@@ -601,7 +614,8 @@ function renderMap() {
     // popups
     const popup = n => {
         const L0 = D.locations[n], v = vals[n];
-        let h = '<b style="font-size:14px">' + esc(n) + '</b><table>' +
+        const wl = weatherLink(n);
+        let h = '<b style="font-size:14px">' + esc(n) + '</b>' + (wl ? ' <small style="margin-left:6px">' + wl + '</small>' : '') + '<table>' +
             L0.trials.map(x => '<tr><td>' + esc(x.trial) + '</td><td class="sfd-help">' + esc(x.year) + ' &middot; ' + esc(x.design) + ' &middot; ' + esc(x.n_plots) + ' plots</td></tr>').join('') + '</table>' +
             '<div style="margin-top:4px">' + esc(t) + ': mean <b>' + fmt(v.mean) + '</b>' + (v.cv !== null ? ', CV ' + fmt(v.cv, 1) + '%' : '') + (v.h2 !== null ? ', H&sup2; ' + h2Badge(v.h2) : '') + '</div>';
         if (v.zones.length) h += '<div>Zone: ' + v.zones.map(z => '<span class="sfd-zone-chip" style="background:' + zoneColor(z) + '">' + esc(z) + '</span>').join(' ') + '</div>';
@@ -648,7 +662,8 @@ function renderMap() {
         { k: 'trials', l: 'Trials', f: v => v }, { k: 'plots', l: 'Plots', f: v => v },
         { k: 'mean', l: 'Mean ' + esc(t) }, { k: 'cv', l: 'CV %', f: v => fmt(v, 1) }, { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) },
         { k: 'zones', l: 'Zone', f: v => arr(v).map(z => '<span class="sfd-zone-chip" style="background:' + zoneColor(z) + '">' + esc(z) + '</span>').join(' ') },
-        { k: 'top', l: 'Best accession here', f: v => v.length ? accLink(v[0].a) : '' }
+        { k: 'top', l: 'Best accession here', f: v => v.length ? accLink(v[0].a) : '' },
+        { k: 'location', l: '', f: v => weatherLink(v) }
     ]));
 }
 
@@ -706,7 +721,14 @@ function renderField() {
     const head = document.createElement('div');
     head.className = 'sfd-help';
     head.style.marginBottom = '6px';
-    head.innerHTML = (withRC ? nr + ' rows &times; ' + nc + ' columns, ' : '<b>No row/column coordinates</b>: plots drawn in replicate order. ') + plots.length + ' plots &middot; ' + legend;
+    // removed values of this trial (red X) and the weather of its location
+    const nOut = plots.filter(p => D.outlierSet[p.unit + '|' + t]).length;
+    const xMark = '<svg width="11" height="11" style="vertical-align:-1px"><path d="M1 1L10 10M10 1L1 10" stroke="#dc2626" stroke-width="1.6"/></svg>';
+    const trialInfo = D.trials.find(x => x.trial === tr) || {};
+    const wl = weatherLink(trialInfo.location);
+    head.innerHTML = (withRC ? nr + ' rows &times; ' + nc + ' columns, ' : '<b>No row/column coordinates</b>: plots drawn in replicate order. ') + plots.length + ' plots &middot; ' + legend +
+        (nOut ? ' &middot; ' + xMark + ' value removed as outlier (' + nOut + ')' : '') +
+        (wl ? '<span style="float:right">' + esc(trialInfo.location) + ' &middot; ' + wl + '</span>' : '');
     b.appendChild(head);
     const s = svg(b, W, H);
     for (let c = c0; c <= c1; c += Math.max(1, Math.ceil(nc / 20))) el('text', { x: M.l + (c - c0 + 0.5) * cs, y: 14, 'text-anchor': 'middle', fill: '#9ca3af', 'font-size': 10 }, s, withRC ? c : '');
@@ -860,6 +882,7 @@ function renderSelection() {
     const rows = rankRows();
     const nSel = rows.filter(r => r.selected).length;
     $('#sfd_sel_pct_label').text(S.selPct);
+    $('#sfd_sel_basis').html('Ranking and selection index use the <b>' + esc(D.label) + 's</b> of the model (genotype values from step 3), not raw or ANOVA means.');
     $('#sfd_sel_n').text(nSel + ' of ' + rows.length);
     $('#sfd_stat_sel').text(nSel);
     $('#sfd_rank_dir').toggle(S.rankBy !== 'index');
@@ -1427,6 +1450,129 @@ function renderModel() {
 }
 
 // ---------------------------------------------------------------------------
+// ANOVA by experimental design (optional step, focus trait)
+// ---------------------------------------------------------------------------
+
+function pval(p) {
+    const x = num(p);
+    if (x === null) return '';
+    return x < 0.0001 ? '&lt; 0.0001' : x.toFixed(4);
+}
+function stars(p) {
+    const x = num(p);
+    return x === null ? '' : x < 0.001 ? '***' : x < 0.01 ? '**' : x < 0.05 ? '*' : x < 0.1 ? '.' : '';
+}
+
+// small scatter of [x, y] pairs: normal Q-Q (line y = x) or residuals vs fitted (line y = 0)
+function anovaScatter(id, pts, kind) {
+    const b = box(id);
+    pts = arr(pts).filter(p => p && num(p[0]) !== null && num(p[1]) !== null);
+    if (!b || pts.length < 3) return;
+    const W = 380, H = 260, M = { l: 52, r: 10, t: 22, b: 42 };
+    const xv = pts.map(p => p[0]), yv = pts.map(p => p[1]);
+    const lo = a => Math.min.apply(null, a), hi = a => Math.max.apply(null, a);
+    let x0 = lo(xv), x1 = hi(xv), y0 = Math.min(lo(yv), kind === 'qq' ? x0 : -3), y1 = Math.max(hi(yv), kind === 'qq' ? x1 : 3);
+    const px = (x1 - x0) * 0.05 || 1, py = (y1 - y0) * 0.05 || 1;
+    x0 -= px; x1 += px; y0 -= py; y1 += py;
+    const s = svg(b, W, H);
+    el('text', { x: M.l, y: 13, fill: '#111', 'font-weight': 600 }, s, kind === 'qq' ? 'Normal Q-Q of the residuals' : 'Residuals vs fitted values');
+    const ax = axes(s, { x0: M.l, x1: W - M.r, y0: M.t, y1: H - M.b, xmin: x0, xmax: x1, ymin: y0, ymax: y1,
+        xlabel: kind === 'qq' ? 'Theoretical quantiles' : 'Fitted value', ylabel: 'Standardized residual', grid: true });
+    if (kind === 'qq') el('line', { x1: ax.xs(Math.max(x0, y0)), y1: ax.ys(Math.max(x0, y0)), x2: ax.xs(Math.min(x1, y1)), y2: ax.ys(Math.min(x1, y1)), stroke: '#dc2626', 'stroke-dasharray': '5,4' }, s);
+    else [-3, 0, 3].forEach(v => { if (v > y0 && v < y1) el('line', { x1: M.l, x2: W - M.r, y1: ax.ys(v), y2: ax.ys(v), stroke: v ? '#fca5a5' : '#dc2626', 'stroke-dasharray': '5,4' }, s); });
+    pts.forEach(p => el('circle', { cx: ax.xs(p[0]), cy: ax.ys(p[1]), r: 2.6, fill: Math.abs(p[1]) > 3 ? '#dc2626' : '#4b5563', 'fill-opacity': 0.55 }, s));
+}
+
+function renderAnova() {
+    const A = R.anova;
+    $('#sfd_anova_section, #sfd_nav_anova').toggle(!!A);
+    if (!A) return;
+    $('#sfd_anova_help').text('Focus trait; all effects fixed, F-tests against the residual');
+    if (A.message) { $('#sfd_anova').html('<p class="sfd-help">' + esc(A.message) + '</p>'); return; }
+    const T = arr(A.traits).find(x => x.trait === S.trait);
+    if (!T) { $('#sfd_anova').html('<p class="sfd-help">No analysis of variance for this trait.</p>'); return; }
+    // views: the joint analysis (or, with each trial only, the summary of the trials) and each trial
+    const views = [];
+    if (T.table || T.message || !arr(T.trials).length) views.push({ label: 'Joint analysis (all trials)', t: T });
+    else if (arr(T.by_trial).length > 1) views.push({ label: 'Summary of the trials', t: { by_trial: T.by_trial, homogeneity: T.homogeneity, n: T.n, n_trials: T.n_trials } });
+    arr(T.trials).forEach(x => views.push({ label: 'Trial ' + x.trial, t: x }));
+    if (S.anovaTrait !== T.trait) { S.anovaTrait = T.trait; S.anovaView = 0; }
+    const vi = Math.min(S.anovaView || 0, views.length - 1);
+    const t = views[vi].t;
+    let h = views.length > 1 ? '<select class="form-control input-sm" id="sfd_anova_view" style="width:auto;margin-bottom:8px">' +
+        views.map((x, i) => '<option value="' + i + '"' + (i === vi ? ' selected' : '') + '>' + esc(x.label) + '</option>').join('') + '</select>' : '';
+    if (t.model) h += '<p><code>' + esc(t.model) + '</code><br/><span class="sfd-help">' + t.n + ' plots' + (t.n_trials > 1 ? ' in ' + t.n_trials + ' trials' : '') +
+        (num(t.mean) !== null ? ' &middot; mean ' + fmt(t.mean) : '') + (num(t.cv) !== null ? ' &middot; CV ' + fmt(t.cv, 1) + '%' : '') + (num(t.r2) !== null ? ' &middot; R&sup2; ' + fmt(t.r2, 3) : '') + '</span></p>';
+    if (t.message) h += '<div class="alert alert-warning">' + esc(t.message) + '</div>';
+    const designs = {};
+    arr(t.designs).forEach(d => { (designs[d.design] = designs[d.design] || []).push(d.trial); });
+    if (Object.keys(designs).length) h += '<p class="sfd-help">Design (breedtools): ' + Object.keys(designs).map(k => '<b>' + esc(k) + '</b>' + (t.n_trials > 1 ? ' (' + designs[k].length + ' trial' + (designs[k].length > 1 ? 's' : '') + ')' : '')).join(', ') + '</p>';
+
+    // ANOVA table
+    if (arr(t.table).length) {
+        h += '<div class="table-responsive"><table class="table table-condensed sfd-anova-table"><thead><tr><th>Source</th><th>df</th><th>Sum of squares</th><th>Mean square</th><th>F</th><th>p-value</th><th></th></tr></thead><tbody>' +
+            arr(t.table).map(r => {
+                const sig = num(r.p_value) !== null && r.p_value < A.alpha;
+                return '<tr><td>' + esc(r.label) + '</td><td>' + r.df + '</td><td>' + fmt(r.sum_sq) + '</td><td>' + fmt(r.mean_sq) + '</td><td>' + (num(r.f_value) !== null ? fmt(r.f_value, 2) : '') +
+                    '</td><td' + (sig ? ' class="sig"' : '') + '>' + pval(r.p_value) + '</td><td>' + stars(r.p_value) + '</td></tr>';
+            }).join('') + '</tbody></table></div>' +
+            '<p class="sfd-help">Sequential (type I) sums of squares in the order shown: design terms first, so treatments and accessions are adjusted for them. Significance: *** 0.001, ** 0.01, * 0.05, . 0.1.</p>';
+    }
+
+    // means comparisons
+    arr(t.comparisons).forEach((c, ci) => {
+        const groups = arr(c.groups);
+        h += '<h4>' + esc(c.factor) + (c.by ? ' within ' + esc(c.by.toLowerCase()) : '') + ' <small>' + esc(c.test) + ', &alpha; = ' + c.alpha + '</small></h4>';
+        if (c.by) h += '<p class="sfd-help">The interaction with ' + esc(c.by.toLowerCase()) + ' is significant, so ' + esc(c.factor.toLowerCase()) + ' is compared within each level.</p>';
+        if (groups.length > 1) h += '<select class="form-control input-sm sfd-anova-by" data-c="' + ci + '" style="width:auto;display:inline-block;margin-bottom:6px">' +
+            groups.map((g, gi) => '<option value="' + gi + '">' + esc(c.by) + ': ' + esc(g.group) + '</option>').join('') + '</select>';
+        h += '<div id="sfd_anova_cmp_' + ci + '"></div>';
+    });
+
+    // model checks
+    const dg = t.diagnostics || {};
+    const checks = [];
+    if (dg.shapiro) checks.push('Normality of the residuals (Shapiro-Wilk' + (dg.shapiro.n < dg.n ? ', ' + dg.shapiro.n + ' residuals' : '') + '): W = ' + fmt(dg.shapiro.w, 3) + ', p = ' + pval(dg.shapiro.p_value) +
+        (dg.shapiro.p_value < 0.05 ? ' <span class="text-warning">&ndash; departs from normality' + (dg.shapiro.n > 300 ? ' (with many plots the test flags even small departures: look at the Q-Q plot)' : '') + '</span>' : ' &ndash; no evidence against normality'));
+    const hg = t.homogeneity;
+    if (hg) checks.push('Equal residual variances across trials (' + esc(hg.test) + ', ' + hg.n_trials + ' trials): Fmax = ' + fmt(hg.fmax, 2) + ', critical value ' + fmt(hg.critical, 2) +
+        (hg.homogeneous ? ' &ndash; homogeneous' : ' <span class="text-warning">&ndash; not homogeneous: the trials differ in precision; the weighted two-stage analysis accounts for it</span>'));
+    arr(dg.levene).forEach(l => checks.push('Equal variances across ' + esc(l.factor) + ' levels (Brown-Forsythe): F = ' + fmt(l.f_value, 2) + ', p = ' + pval(l.p_value) + (l.p_value < 0.05 ? ' <span class="text-warning">&ndash; not equal</span>' : '')));
+    if (dg.n_large) checks.push(dg.n_large + ' plot(s) with a standardized residual beyond &plusmn;3');
+    if (checks.length || dg.qq) {
+        h += '<h4>Model checks</h4><ul>' + checks.map(x => '<li>' + x + '</li>').join('') + '</ul>' +
+            '<div class="sfd-anova-plots"><div id="sfd_anova_qq" class="sfd-plot"></div><div id="sfd_anova_rf" class="sfd-plot"></div></div>';
+        if (arr(dg.large_residuals).length) h += table(dg.large_residuals, [{ k: 'unit', l: 'Plot' }, { k: 'trial', l: 'Trial' }, { k: 'accession', l: 'Accession', f: v => accLink(v), order: v => v },
+            { k: 'value', l: 'Value' }, { k: 'std_residual', l: 'Std. residual', f: v => fmt(v, 2) }]);
+    }
+
+    // summary of each trial (collapsed under the joint analysis)
+    if (arr(t.by_trial).length > 1) {
+        const open = !t.table;
+        h += '<h4><a data-toggle="collapse" href="#sfd_anova_trials">Each trial: summary <span class="caret"></span></a></h4><div id="sfd_anova_trials" class="collapse' + (open ? ' in' : '') + '">' +
+            table(t.by_trial, [{ k: 'trial', l: 'Trial' }, { k: 'design', l: 'Design' }, { k: 'n', l: 'Plots', f: v => v }, { k: 'mean', l: 'Mean' }, { k: 'cv', l: 'CV %', f: v => fmt(v, 1) },
+                { k: 'df_error', l: 'Residual df', f: v => (v === null ? 'none (unreplicated)' : v) }, { k: 'ms_error', l: 'Residual MS' },
+                { k: 'f_accession', l: 'F accession', f: v => fmt(v, 2) }, { k: 'p_accession', l: 'p-value', f: v => pval(v) + ' ' + stars(v) }], { id: 'sfd_dt_anova_trials' }) + '</div>';
+    }
+    if (arr(t.notes).length) h += '<p class="sfd-help">' + arr(t.notes).map(esc).join('<br/>') + '</p>';
+    $('#sfd_anova').html(h);
+
+    const showGroup = (ci, gi) => {
+        const c = arr(t.comparisons)[ci], g = arr(c.groups)[gi];
+        $('#sfd_anova_cmp_' + ci).html(table(g.means, [
+            { k: 'level', l: esc(c.factor), f: v => c.term === 'accession' ? accLink(v) : esc(v), order: v => v },
+            { k: 'mean', l: 'Mean' }, { k: 'se', l: 'SE' }, { k: 'group', l: 'Group', f: v => v ? '<span class="sfd-anova-group">' + esc(v) + '</span>' : '' }
+        ]) + '<p class="sfd-help">Means sharing a letter do not differ (' + esc(c.test) + ', &alpha; = ' + c.alpha + '); ' + g.n_signif + ' of ' + g.n_pairs + ' pairs differ. ' +
+            (c.test === 'Fisher LSD' ? 'LSD' : 'HSD') + ' &asymp; ' + fmt(g.msd) + '.</p>');
+    };
+    arr(t.comparisons).forEach((c, ci) => showGroup(ci, 0));
+    $('#sfd_anova .sfd-anova-by').on('change', function() { showGroup(Number($(this).data('c')), Number($(this).val())); });
+    $('#sfd_anova_view').on('change', function() { S.anovaView = Number($(this).val()); renderAnova(); });
+    anovaScatter('sfd_anova_qq', dg.qq, 'qq');
+    anovaScatter('sfd_anova_rf', dg.fitted, 'rf');
+}
+
+// ---------------------------------------------------------------------------
 // controls
 // ---------------------------------------------------------------------------
 
@@ -1437,6 +1583,7 @@ function renderTraitDependent() {
     safely('stability', renderStability);
     safely('reaction norm', renderReaction);
     safely('accession x environment', renderGxeHeat);
+    safely('ANOVA', renderAnova);
 }
 
 function initControls() {
@@ -1572,6 +1719,7 @@ function renderAll() {
     safely('outliers', renderOutliers);
     safely('software', renderSoftware);
     safely('model', renderModel);
+    safely('ANOVA', renderAnova);
     safely('ranking', renderRankTable);
 }
 
@@ -1596,15 +1744,23 @@ function renderMeetings() {
     body.html('<span class="glyphicon glyphicon-refresh"></span> Loading the meetings...');
     $.ajax({ url: '/ajax/script_factory/meetings', data: { analysis_id: id }, dataType: 'json', cache: false }).done(r => {
         if (r.error) { body.html('<div class="alert alert-danger">' + esc(r.error) + '</div>'); return; }
-        const list = r.meetings || [];
-        if (!list.length) { body.html('<div class="alert alert-info">No decision meeting exists yet. Create one on the <a href="/breeders/meeting" target="_blank">Decision Meeting</a> page.</div>'); return; }
+        // saved (closed) meetings take no new analysis: listed only when they already use this one
+        const all = r.meetings || [];
+        const list = all.filter(m => !m.saved || m.linked);
+        if (!list.length) {
+            body.html('<div class="alert alert-info">' + (all.length ? 'Every decision meeting is closed (its decisions are saved). Create a new one' : 'No decision meeting exists yet. Create one') +
+                ' on the <a href="/breeders/meeting" target="_blank">Decision Meeting</a> page.</div>');
+            return;
+        }
         let h = r.can_link ? '' : '<div class="alert alert-warning">Your account cannot add analyses to meetings (decision meeting roles of the site configuration).</div>';
         h += '<table class="table table-condensed table-hover"><thead><tr><th>Meeting</th><th>Date</th><th>Programs</th><th>Location</th><th>Status</th><th></th></tr></thead><tbody>' +
             list.map(m => '<tr><td><b>' + esc(m.name) + '</b><br/><small class="sfd-help">' + (m.n_accessions ? m.n_accessions + ' accessions, ' : '') + m.n_analyses + ' analysis(es)</small></td>' +
                 '<td>' + esc(m.date || '') + '</td><td>' + esc((m.programs || []).join(', ')) + '</td><td>' + esc(m.location || '') + '</td>' +
-                '<td>' + (m.saved ? '<span class="label label-default" title="Decisions saved: an analysis added now is flagged as added after the decisions">decisions saved</span>' : '<span class="label label-success">open</span>') + (m.linked ? ' <span class="label label-primary">uses this analysis</span>' : '') + '</td>' +
-                '<td>' + (!r.can_link ? '' : '<button class="btn btn-xs ' + (m.linked ? 'btn-default' : 'btn-success') + ' sfd-meeting-link" data-id="' + esc(m.meeting_id) + '" data-action="' + (m.linked ? 'unlink' : 'link') + '">' +
+                '<td>' + (m.saved ? '<span class="label label-default" title="Decisions saved: the meeting is closed">decisions saved</span>' : '<span class="label label-success">open</span>') + (m.linked ? ' <span class="label label-primary">uses this analysis</span>' : '') + '</td>' +
+                '<td>' + (m.saved ? '<span class="sfd-help" title="The decisions are saved: this evidence is a permanent record"><span class="glyphicon glyphicon-lock"></span> permanent record</span>' : !r.can_link ? '' : '<button class="btn btn-xs ' + (m.linked ? 'btn-default' : 'btn-success') + ' sfd-meeting-link" data-id="' + esc(m.meeting_id) + '" data-action="' + (m.linked ? 'unlink' : 'link') + '">' +
                     (m.linked ? '<span class="glyphicon glyphicon-remove"></span> Remove' : '<span class="glyphicon glyphicon-link"></span> Add') + '</button>') + '</td></tr>').join('') + '</tbody></table>';
+        const nClosed = all.filter(m => m.saved && !m.linked).length;
+        if (nClosed) h += '<p class="sfd-help">' + nClosed + ' meeting(s) with saved decisions are not listed: a closed meeting takes no new analysis.</p>';
         body.html(h);
     }).fail(() => body.html('<div class="alert alert-danger">The meetings could not be loaded.</div>'));
 }
@@ -1656,7 +1812,7 @@ export function init(options) {
                 $('#sfd_message').html('<div class="alert alert-warning">' + esc(r.error) + ' <a href="/tools/script_factory">Go to the Analysis Pipeline</a>.</div>');
                 return;
             }
-            R = r.results; META = r.meta || {}; LOCS = r.locations || {};
+            R = r.results; META = r.meta || {}; LOCS = r.locations || {}; LOC_IDS = r.location_ids || {}; WEATHER = !!r.weather_page;
             prepare();
             $('#sfd_body').show();
             initControls();

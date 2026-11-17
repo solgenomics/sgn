@@ -34,6 +34,7 @@ let cfg = {};
 const state = {
     step: 1,
     advanced: {},           // advanced settings changed from their defaults (dialog of the model engine card)
+    anova: { scope: 'joint', test: 'tukey', alpha: 0.05 },  // ANOVA settings (dialog of the ANOVA card)
     interactions: [],       // interactions built by the user: [{ factors: [ids], effect: 'fixed' | 'random' }] (recipe.interactions)
     dataset: null,          // response of /prepare
     traits: [],             // selected full trait names
@@ -183,6 +184,8 @@ function buildRecipe() {
     const adv = advRecipe();
     if (adv) r.advanced = adv;
     if (state.interactions.length) r.interactions = JSON.parse(JSON.stringify(state.interactions));
+    // ANOVA by experimental design: written only when on (older scripts stay unchanged)
+    if ($('#sf_anova_enabled').is(':checked')) r.anova = { enabled: true, scope: state.anova.scope, test: state.anova.test, alpha: state.anova.alpha };
     return r;
 }
 
@@ -297,6 +300,9 @@ function applyRecipe(r) {
         renderSingleCovariates();
     }
     applyRepeated(r.repeated || {});
+    const an = r.anova || {};
+    $('#sf_anova_enabled').prop('checked', !!an.enabled);
+    state.anova = anovaClean(an);
     const tr = r.treatments;
     state.trt = tr ? { use: toSet(tr.use), gxt: toSet(tr.gxt) } : null;
     renderTreatments();
@@ -463,6 +469,9 @@ function refreshToggles() {
     $('#sf_single_custom').toggle(custom);
     $('input[name=sf_single_mode]').each(function() { $(this).closest('label').toggleClass('active', $(this).is(':checked')); });
 
+    $('#sf_anova_opts').toggle($('#sf_anova_enabled').is(':checked'));
+    $('#sf_anova_summary').html(anovaLabel(state.anova));
+    $('#sf_anova_note').html(cfg.breedtools_available ? '' : '<span class="text-warning">The R package <code>breedtools</code> is not installed on this server: ask the site administrator to install it to run the ANOVA.</span>');
     $('#sf_index_body').toggleClass('sf-disabled', !$('#sf_index_enabled').is(':checked'));
     $('#sf_zones_body').toggleClass('sf-disabled', !$('#sf_zones_enabled').is(':checked'));
     const lin = radio('sf_zones_method') === 'lin';
@@ -2486,10 +2495,47 @@ function geneticChip(r) {
             : m === 'single_step' ? ', single-step (H' + (r.genetic.protocol_name ? ': ' + esc(r.genetic.protocol_name) : '') + ')' : m === 'parents' ? ', mother + father' : '');
 }
 
+// genotype values the model gives (and the selection index uses)
+function valueKind(r) {
+    let random;
+    if (r.strategy === 'two_stage') random = r.stage2.genotype === 'random';
+    else if (r.single.mode === 'custom') { const chk = checkFormula(r.single.formula); random = !!chk.random; }
+    else random = r.single.genotype !== 'fixed';
+    if (!random) return { label: 'BLUEs', text: 'best linear unbiased estimates: the genotype is a fixed effect' };
+    if (r.genetic.model === 'pedigree') return { label: 'EBVs', text: 'BLUPs of breeding values from the pedigree relationship (A)' };
+    if (r.genetic.model === 'genomic' || r.genetic.model === 'single_step') return { label: 'GEBVs', text: 'BLUPs of genomic breeding values (' + (r.genetic.model === 'genomic' ? 'G' : 'H') + ' matrix)' };
+    return { label: 'BLUPs', text: 'best linear unbiased predictions: the genotype is a random effect, so values are shrunk toward the mean by the heritability' };
+}
+
+// ANOVA settings: defaults for anything missing or unknown
+function anovaClean(a) {
+    a = a || {};
+    return {
+        scope: ['joint', 'per_trial', 'both'].indexOf(a.scope) >= 0 ? a.scope : 'joint',
+        test: a.test === 'lsd' ? 'lsd' : 'tukey',
+        alpha: [0.01, 0.1].indexOf(Number(a.alpha)) >= 0 ? Number(a.alpha) : 0.05
+    };
+}
+function anovaLabel(a) {
+    return { joint: 'Joint analysis across trials', per_trial: 'Each trial on its own', both: 'Joint analysis and each trial' }[a.scope || 'joint'] +
+        ', ' + (a.test === 'lsd' ? 'Fisher LSD' : 'Tukey HSD') + ' (&alpha; = ' + a.alpha + ')';
+}
+function anovaFillDialog(a) {
+    setRadio('sf_anova_scope', a.scope);
+    setRadio('sf_anova_test', a.test);
+    $('#sf_anova_alpha').val(String(a.alpha));
+}
+
 function renderPipeline() {
     updateStep1Next();
     const r = buildRecipe();
     const items = [];
+    // what the selection index is computed on (step 4)
+    const vk = valueKind(r);
+    $('#sf_index_basis').html('<span class="glyphicon glyphicon-info-sign"></span> The index is computed on the <b>' + vk.label + '</b> of the model chosen in step 3 (' + esc(vk.text) +
+        '), not on the raw means or on the ANOVA means. To use other values, change the genotype effect or the genetic model in step 3.');
+    // the model steps only show their settings as active once there is data to analyse
+    const noData = !state.dataset;
     items.push({ t: 'Data', d: state.dataset ? esc(state.dataset.dataset_name) + '<br/>' + state.traits.length + ' trait(s), ' + state.dataset.trials.length + ' trial(s)' : 'no dataset loaded', off: !state.dataset });
     const o = r.outliers;
     const exKeys = Object.keys(state.exclusions).filter(k => state.traits.indexOf(state.exclusions[k].trait) >= 0);
@@ -2499,8 +2545,8 @@ function renderPipeline() {
         (nEx ? '<br/>' + nEx + ' individual exclusion(s)' : '') + (nMk ? '<br/>' + nMk + ' value(s) marked as outliers in Breedbase' : ''), off: o.method === 'none' && !nEx && !nMk });
     if (r.strategy === 'two_stage') {
         items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] + trtChip(r.treatments.use, 'adjusted for ') +
-            (r.covariates.length ? '<br/>covariate' + (r.covariates.length > 1 ? 's ' : ' ') + r.covariates.map(t => esc(shortTrait(t))).join(', ') : '') + repeatedChip(r) });
-        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r) });
+            (r.covariates.length ? '<br/>covariate' + (r.covariates.length > 1 ? 's ' : ' ') + r.covariates.map(t => esc(shortTrait(t))).join(', ') : '') + repeatedChip(r), off: noData });
+        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r), off: noData });
     } else {
         let d;
         if (r.single.mode === 'custom') {
@@ -2512,8 +2558,12 @@ function renderPipeline() {
                 (r.single.trend === 'linear' ? ', linear trend' : '') + (r.covariates.length ? ', ' + r.covariates.length + ' covariate(s)' : '');
         }
         if (r.single.mode !== 'custom') d += trtChip(r.treatments.use, 'adjusted for ') + trtChip(r.treatments.gxt, 'G&times;');
-        items.push({ t: 'Single stage', d: d + repeatedChip(r) + geneticChip(r) });
+        items.push({ t: 'Single stage', d: d + repeatedChip(r) + geneticChip(r), off: noData });
     }
+    // always listed, so the option is visible; off unless ticked in step 3
+    items.push({ t: 'ANOVA by design', off: noData || !r.anova,
+        d: r.anova ? anovaLabel(r.anova) + ', model checks<br/><small>ANOVA tab in the results</small>'
+            : 'off' });
     const nIdx = Object.keys(r.index.traits).length;
     items.push({ t: 'Selection index', d: r.index.enabled ? (r.index.method === 'rank_sum' ? 'rank sum' : 'weighted Z-score') + ', ' + nIdx + ' trait(s), top ' + r.index.selection_pct + '%' : 'off', off: !r.index.enabled });
     items.push({ t: 'Environmental zones', d: r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin G&times;E test' : 'correlation clustering') + ' by ' + r.zones.unit.replace('_', ' &times; ') + (r.zones.accessions.set === 'checks' ? ', on the checks' : r.zones.accessions.set === 'list' ? ', on list ' + esc(r.zones.accessions.list_name || '') : '') + '<br/>' + r.zones.targets.map(x => x === 'index' ? 'index' : esc(shortTrait(x))).join(', ') : 'off', off: !r.zones.enabled });
@@ -2548,6 +2598,7 @@ function validateRecipe(r) {
         if (!rnd) problems.push('Genomic models need the genotype as random effect (step 3).');
     }
     missingRPackages(r).forEach(pk => problems.push('With the R engine this analysis needs the R package ' + pk + ', which is not installed on this server' + (cfg.blupf90_available ? ' (or choose the BLUPF90+ engine)' : '') + ' (step 3).'));
+    if (r.anova && !cfg.breedtools_available) problems.push('The ANOVA by experimental design needs the R package breedtools, which is not installed on this server (step 3).');
     if (r.zones.enabled && !r.zones.targets.length) problems.push('Choose what to group environments on (step 5).');
     if (r.zones.enabled && r.zones.targets.indexOf('index') >= 0 && !r.index.enabled) problems.push('Zoning on the index requires the selection index (step 4).');
     if (r.zones.enabled && state.dataset && state.dataset.trials.length < 2) problems.push('Environmental zoning needs at least two trials.');
@@ -2566,6 +2617,7 @@ function renderRunReview() {
         cell('Outliers', r.outliers.method === 'none' ? 'none' : r.outliers.method.toUpperCase()) +
         cell('Model', (r.strategy === 'two_stage' ? 'Two stages' : 'Single stage' + (r.single.mode === 'custom' ? ' (custom formula)' : '')) +
             ' &middot; ' + (effectiveEngine() === 'blupf90' ? 'BLUPF90+' : 'R') + ({ pedigree: ' &middot; pedigree (A)', genomic: ' &middot; genomic (G)', single_step: ' &middot; single-step (H)', parents: ' &middot; mother + father' }[r.genetic.model] || '')) +
+        cell('ANOVA', r.anova ? anovaLabel(r.anova) : 'off') +
         cell('Index', r.index.enabled ? 'on' : 'off') +
         cell('Zones', r.zones.enabled ? 'on' : 'off') + '</div>';
     if (problems.length) h += alertBox('warning', problems.map(esc).join('<br/>'));
@@ -2970,6 +3022,9 @@ function renderResults() {
     ]) + '<p class="sf-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
     $('#sf_tab_model').append(multiTraitHtml(res.multi_trait));
     $('#sf_tab_model').append(structuresHtml(res.variance_structures));
+    // ANOVA by experimental design: only when the run had it
+    $('#sf_tab_anova_li').toggle(!!res.anova);
+    if (res.anova) renderAnovaResults(res.anova);
 
     // genotype values
     const gv = arr(res.genotype_values);
@@ -2991,6 +3046,65 @@ function renderResults() {
 
     $('#sf_result_tabs a[href="#sf_tab_overview"]').tab('show');
     $('html, body').animate({ scrollTop: $('#sf_results').offset().top - 70 }, 300);
+}
+
+// ANOVA by experimental design (optional step): one trait at a time
+function anovaPval(p) {
+    if (p === null || p === undefined || !isFinite(Number(p))) return '';
+    const x = Number(p);
+    return (x < 0.0001 ? '&lt; 0.0001' : x.toFixed(4)) + ' ' + (x < 0.001 ? '***' : x < 0.01 ? '**' : x < 0.05 ? '*' : x < 0.1 ? '.' : '');
+}
+// views of one trait: the joint analysis (or, with each trial only, the
+// summary of the trials) and the analysis of each trial
+function anovaViews(T) {
+    const v = [];
+    if (T.table || T.message || !arr(T.trials).length) v.push({ label: 'Joint analysis (all trials)', t: T });
+    else if (arr(T.by_trial).length > 1) v.push({ label: 'Summary of the trials', t: { by_trial: T.by_trial, homogeneity: T.homogeneity, n: T.n, n_trials: T.n_trials } });
+    arr(T.trials).forEach(x => v.push({ label: 'Trial ' + x.trial, t: x }));
+    return v;
+}
+function renderAnovaResults(A, trait, view) {
+    if (A.message) { $('#sf_tab_anova').html('<p class="sf-muted">' + esc(A.message) + '</p>'); return; }
+    const traits = arr(A.traits);
+    const T = traits.find(x => x.trait === trait) || traits[0];
+    if (!T) { $('#sf_tab_anova').html('<p class="sf-muted">No analysis of variance.</p>'); return; }
+    const views = anovaViews(T);
+    const vi = Math.min(Number(view) || 0, views.length - 1);
+    const t = views[vi].t;
+    const sel = (id, opts) => '<select class="form-control input-sm" id="' + id + '" style="width:auto;display:inline-block;margin:0 6px 8px 0">' + opts + '</select>';
+    let h = (traits.length > 1 ? sel('sf_anova_trait', traits.map(x => '<option value="' + esc(x.trait) + '"' + (x === T ? ' selected' : '') + '>' + esc(x.trait) + '</option>').join('')) : '') +
+        (views.length > 1 ? sel('sf_anova_view', views.map((x, i) => '<option value="' + i + '"' + (i === vi ? ' selected' : '') + '>' + esc(x.label) + '</option>').join('')) : '');
+    if (t.model) h += '<p><code style="font-size:11px">' + esc(t.model) + '</code><br/><span class="sf-muted">' + t.n + ' plots' + (t.n_trials > 1 ? ' in ' + t.n_trials + ' trials' : '') +
+        (t.cv !== null && t.cv !== undefined ? ' &middot; CV ' + fmt(t.cv, 1) + '%' : '') + (t.r2 !== null && t.r2 !== undefined ? ' &middot; R&sup2; ' + fmt(t.r2, 3) : '') + '</span></p>';
+    if (t.message) h += '<div class="alert alert-warning">' + esc(t.message) + '</div>';
+    h += simpleTable(t.table, [
+        { k: 'label', l: 'Source' }, { k: 'df', l: 'df', f: v => v }, { k: 'sum_sq', l: 'Sum of squares' }, { k: 'mean_sq', l: 'Mean square' },
+        { k: 'f_value', l: 'F', f: v => (v === null || v === undefined ? '' : fmt(v, 2)) },
+        { k: 'p_value', l: 'p-value', f: v => (v !== null && v !== undefined && v < A.alpha ? '<b style="color:#166534">' + anovaPval(v) + '</b>' : anovaPval(v)) }
+    ]) + '<p class="sf-help">All effects fixed; sequential (type I) sums of squares, design terms first; F-tests against the residual.</p>';
+    arr(t.comparisons).forEach(c => {
+        const g = arr(c.groups);
+        h += '<h4>' + esc(c.factor) + (c.by ? ' within ' + esc(c.by.toLowerCase()) : '') + ' <small>' + esc(c.test) + ', &alpha; = ' + c.alpha + '</small></h4>';
+        g.slice(0, 3).forEach(x => {
+            h += (x.group ? '<b>' + esc(c.by) + ': ' + esc(x.group) + '</b> ' : '') + arr(x.means).map(m => esc(m.level) + ' ' + fmt(m.mean) + ' <b>' + esc(m.group || '') + '</b>').join(' &middot; ') + '<br/>';
+        });
+        if (g.length > 3) h += '<span class="sf-muted">' + (g.length - 3) + ' more groups in the dashboard.</span><br/>';
+    });
+    const dg = t.diagnostics || {}, hg = t.homogeneity;
+    const checks = [];
+    if (dg.shapiro) checks.push('Shapiro-Wilk W = ' + fmt(dg.shapiro.w, 3) + ', p = ' + anovaPval(dg.shapiro.p_value));
+    if (hg) checks.push('Hartley Fmax = ' + fmt(hg.fmax, 2) + ' (critical ' + fmt(hg.critical, 2) + '): ' + (hg.homogeneous ? 'homogeneous' : 'not homogeneous') + ' residual variances across trials');
+    arr(dg.levene).forEach(l => checks.push('Brown-Forsythe (' + esc(l.factor) + '): p = ' + anovaPval(l.p_value)));
+    if (dg.n_large) checks.push(dg.n_large + ' plot(s) with a standardized residual beyond &plusmn;3');
+    if (checks.length) h += '<h4>Model checks</h4><ul><li>' + checks.join('</li><li>') + '</li></ul>';
+    if (arr(t.by_trial).length > 1) h += '<h4>Each trial: summary</h4>' + simpleTable(t.by_trial, [
+        { k: 'trial', l: 'Trial' }, { k: 'design', l: 'Design' }, { k: 'n', l: 'Plots', f: v => v }, { k: 'mean', l: 'Mean' }, { k: 'cv', l: 'CV %', f: v => fmt(v, 1) },
+        { k: 'df_error', l: 'Residual df', f: v => (v === null || v === undefined ? 'none' : v) }, { k: 'f_accession', l: 'F accession', f: v => fmt(v, 2) }, { k: 'p_accession', l: 'p-value', f: v => anovaPval(v) }]);
+    if (arr(t.notes).length) h += '<p class="sf-help">' + arr(t.notes).map(esc).join('<br/>') + '</p>';
+    h += '<p class="sf-help">Q-Q and residual plots and all comparison groups: ANOVA section of the results dashboard.</p>';
+    $('#sf_tab_anova').html(h);
+    $('#sf_anova_trait').on('change', function() { renderAnovaResults(A, $(this).val(), 0); });
+    $('#sf_anova_view').on('change', function() { renderAnovaResults(A, T.trait, $(this).val()); });
 }
 
 function h2Badge(v) {
@@ -3030,6 +3144,7 @@ function renderIndexResults(ix, label) {
         '<div class="sf-stat"><div class="v">' + ix.selection_pct + '%</div><div class="l">Selection intensity</div></div>' +
         '<div class="sf-stat"><div class="v">' + (ix.method === 'rank_sum' ? 'Rank sum' : 'Z-score') + '</div><div class="l">Method</div></div>' +
         accuracyStat(ix) + '</div>';
+    h += '<p class="sf-help">The index was computed on the <b>' + esc(label) + 's</b> of the model (genotype values), not on raw or ANOVA means.</p>';
     h += '<h4>Expected response to selection</h4>' + simpleTable(ix.gains, [
         { k: 'trait', l: 'Trait' }, { k: 'in_index', l: 'In index', f: v => v ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '' },
         { k: 'weight', l: 'Weight', f: (v, r) => r.in_index ? fmt(v, 2) + (r.direction === 'decrease' ? ' &darr;' : ' &uarr;') : '' },
@@ -3500,6 +3615,15 @@ export function init(options) {
         const p = datasetProtocols().find(x => String(x.protocol_id) === String($('#sf_geno_protocol').val()));
         state.genoProtocol = p ? { id: String(p.protocol_id), name: p.name } : null;
         renderModelPreview(); renderPipeline(); renderQuickRun();
+    });
+    $('#sf_anova_enabled').on('change', () => { refreshToggles(); renderPipeline(); });
+    $('#sf_anova_btn').on('click', e => { e.preventDefault(); anovaFillDialog(state.anova); $('#sf_anova_modal').modal('show'); });
+    $('#sf_anova_reset').on('click', e => { e.preventDefault(); anovaFillDialog(anovaClean({})); });
+    $('#sf_anova_apply').on('click', e => {
+        e.preventDefault();
+        state.anova = anovaClean({ scope: radio('sf_anova_scope'), test: radio('sf_anova_test'), alpha: $('#sf_anova_alpha').val() });
+        $('#sf_anova_modal').modal('hide');
+        refreshToggles(); renderPipeline();
     });
     $('#sf_apply_suggestion').on('click', e => { e.preventDefault(); applySuggestion(); });
     $('#sf_adv_btn').on('click', e => { e.preventDefault(); advFillDialog(state.advanced || {}); advIx = ixClean(state.interactions); ixRender(); $('#sf_adv_modal').modal('show'); });
