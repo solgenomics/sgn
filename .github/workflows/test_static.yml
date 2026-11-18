@@ -29,7 +29,9 @@ jobs:
           fetch-depth: 0
           # A pull request from a fork has its branch in the fork, not in this repository.
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.event.pull_request.head.ref }}        
+          # Fork builds only validate the commit that triggered this run.
+          # In-repository builds still need a branch to push the generated files.
+          ref: ${{ github.event.pull_request.head.repo.full_name != github.repository && github.event.pull_request.head.sha || github.event.pull_request.head.ref }}
       - name: Save directory for checkout
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Create gitbook         
