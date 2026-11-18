@@ -45,25 +45,37 @@ R
 write_file("$directory/compare.R", <<'R');
 directory <- commandArgs(trailingOnly = TRUE)[1]
 out <- read.delim(file.path(directory, "field.txt.spatially_corrected"))
+missing <- out[out$observationUnitName == "plot_7_1", ]
+missing_ok <- nrow(missing) == 1 && is.na(missing$Yield) &&
+              is.na(missing$Yield_spatially_corrected) && is.na(missing$Yield_spatial_adjustment)
 m <- merge(out, read.delim(file.path(directory, "field.truth")), by = "observationUnitName")
 m <- m[!is.na(m$Yield), ]
 next_plot <- m[match(paste0("plot_", m$rowNumber + 1, "_", m$colNumber), m$observationUnitName), ]
 cat(nrow(out), cor(m$Yield, m$truth), cor(m$Yield_spatially_corrected, m$truth),
     mean(abs(m$Yield_spatial_adjustment - next_plot$Yield_spatial_adjustment), na.rm = TRUE),
-    max(abs(m$Yield_spatially_corrected - m$Yield - m$Yield_spatial_adjustment)), sep = "\n")
+    max(abs(m$Yield_spatially_corrected - m$Yield - m$Yield_spatial_adjustment)),
+    as.integer(missing_ok), sep = "\n")
 R
 
 my ($out, $err);
 ok(run([$rscript, "$directory/simulate.R", $directory], '>', \$out, '2>', \$err), 'the field is simulated') or BAIL_OUT($err);
-ok(run([$rscript, $script, "$directory/field.txt", "$directory/field.txt.spatial_correlation_summary", 1, 0, 0.67, 'x'],
-    '>', \$out, '2>', \$err), 'the actual spatial correction R script completes') or diag($err);
-ok(run([$rscript, "$directory/compare.R", $directory], '>', \$out, '2>', \$err), 'the result is read back') or diag($err);
-my ($plots, $raw, $corrected, $step, $drift) = split /\n/, $out;
 
-is($plots, 600, 'every plot has a result line');
-cmp_ok($raw, '<', 0.8, sprintf('the raw plot values are far from the truth (r = %.2f)', $raw));
-cmp_ok($corrected, '>', 0.95, sprintf('the corrected value of each plot is close to its truth (r = %.2f)', $corrected));
-cmp_ok($step, '<', 0.5, sprintf('neighbouring plots get nearly the same adjustment (mean difference %.2f)', $step));
-cmp_ok($drift, '<', 1e-9, 'adjustment = corrected - original');
+for my $as_random (0, 1) {
+    my $mode = $as_random ? 'random genotype effect' : 'fixed genotype effect';
+    subtest $mode => sub {
+        ok(run([$rscript, $script, "$directory/field.txt", "$directory/field.txt.spatial_correlation_summary", 1, $as_random, 0.67, 'x'],
+            '>', \$out, '2>', \$err), 'the spatial correction script completes') or return diag($err);
+        ok(run([$rscript, "$directory/compare.R", $directory], '>', \$out, '2>', \$err),
+            'the result is read back') or return diag($err);
+        my ($plots, $raw, $corrected, $step, $drift, $missing_ok) = split /\n/, $out;
+
+        is($plots, 600, 'every plot has a result line');
+        cmp_ok($raw, '<', 0.8, sprintf('the raw plot values are far from the truth (r = %.2f)', $raw));
+        cmp_ok($corrected, '>', 0.95, sprintf('the corrected value of each plot is close to its truth (r = %.2f)', $corrected));
+        cmp_ok($step, '<', 0.5, sprintf('neighbouring plots get nearly the same adjustment (mean difference %.2f)', $step));
+        cmp_ok($drift, '<', 1e-9, 'adjustment = corrected - original');
+        is($missing_ok, 1, 'the plot with no observed value keeps NA in both derived columns');
+    };
+}
 
 done_testing();
