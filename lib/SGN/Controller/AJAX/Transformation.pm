@@ -167,6 +167,7 @@ sub add_transformation_identifier_POST :Args(0){
     my $program_name = $c->req->param('program_name');
     my $transformation_project_id = $c->req->param('transformation_project_id');
     my $is_a_control = $c->req->param('is_a_control');
+    my $FEC_batch = $c->req->param('FEC_batch');
     $transformation_identifier =~ s/^\s+|\s+$//g;
 
     if (!$c->user()) {
@@ -221,7 +222,8 @@ sub add_transformation_identifier_POST :Args(0){
             vector_construct => $vector_construct,
             notes => $notes,
             owner_id => $user_id,
-            is_a_control => $is_a_control
+            is_a_control => $is_a_control,
+            FEC_batch => $FEC_batch
         });
 
         my $add = $add_transformation->add_transformation_identifier();
@@ -390,6 +392,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
                 my $vector_construct = $parsed_data->{$row}->{'vector_construct'};
                 my $notes = $parsed_data->{$row}->{'notes'};
                 my $is_a_control = $parsed_data->{$row}->{'is_a_control'};
+                my $FEC_batch = $parsed_data->{$row}->{'FEC_batch'};
                 my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
                     chado_schema => $schema,
                     phenome_schema => $phenome_schema,
@@ -401,6 +404,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
                     notes => $notes,
                     owner_id => $user_id,
                     is_a_control => $is_a_control,
+                    FEC_batch => $FEC_batch
                 });
 
                 $add_transformation->add_transformation_identifier();
@@ -432,17 +436,30 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
 
     my @transformations;
     foreach my $r (@$result){
-        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name) =@$r;
+        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $FEC_batch) =@$r;
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
         my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
+        my $transformation_controls = $transformation_obj->get_transformation_controls();
+
+        my $control_string;
+        if (scalar @$transformation_controls > 0) {
+            my @control_links;
+            foreach my $control (@$transformation_controls) {
+                my $control_stock_id = $control->[0];
+                my $control_name = $control->[1];
+                push @control_links, qq{<a href="/transformation/$control_stock_id">$control_name</a>}
+            }
+            $control_string = join("<br>", @control_links);
+        }
+
         my $control_column_info;
         if($is_a_control) {
             $control_column_info = 'is a control';
-        } elsif ($control_id) {
-            $control_column_info = qq{<a href="/transformation/$control_id">$control_name</a>};
+        } elsif ($control_string) {
+            $control_column_info = $control_string
         }
-        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $FEC_batch, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };
@@ -463,7 +480,7 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
 
     my @transformations;
     foreach my $r (@$result){
-        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $status_type) =@$r;
+        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $FEC_batch, $control_id, $control_name, $status_type) =@$r;
 
         if ($status_type eq 'terminated_metadata') {
             $status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
@@ -481,7 +498,7 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
             $control_column_info = qq{<a href="/transformation/$control_id">$control_name</a>}
         }
 
-        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $FEC_batch, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };
@@ -965,7 +982,7 @@ sub set_transformation_control_POST :Args(0){
     my ($self, $c) = @_;
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
-    my $control_stock_id = $c->req->param('control_stock_id');
+    my $selected_control_name = $c->req->param('selected_control_name');
     my $program_name = $c->req->param('program_name');
 
     if (!$c->user()) {
@@ -989,6 +1006,13 @@ sub set_transformation_control_POST :Args(0){
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+
+    my $transformation_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation','stock_type')->cvterm_id();
+    my $control_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $selected_control_name, type_id => $transformation_cvterm_id})->stock_id();
+    if (!$transformation_stock_id) {
+        $c->stash->{rest} = {error =>  "Error retrieving selected control information." };
+        return;
+    }
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_control_stock_id=>$control_stock_id});
     my $error = $transformation_obj->set_transformation_control();
@@ -1064,6 +1088,7 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$stock_id});
     my $vector_construct = $transformant_obj->vector_construct();
     my $plant_material = $transformant_obj->plant_material();
+    my $FEC_batch = $transformant_obj->FEC_batch();
     my $transformation_identifier = $transformant_obj->transformation_identifier();
 
     if (@$vector_construct) {
@@ -1092,7 +1117,7 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     }
 
     my @transformant_experiment_info;
-    push @transformant_experiment_info, [$vector_link, $plant_link, $transformation_link, $project_link];
+    push @transformant_experiment_info, [$vector_link, $plant_link, $FEC_batch, $transformation_link, $project_link];
 
     $c->stash->{rest} = { data => \@transformant_experiment_info };
 
@@ -1149,20 +1174,17 @@ sub get_control_transformants :Path('/ajax/transformation/control_transformants'
 
     my @control_transformants;
     if ($transformation_id) {
-        my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
-        my $transformation_control_rs = $schema->resultset("Stock::StockRelationship")->find({ object_id => $transformation_id, type_id => $control_of_type_id});
-        my $control_id;
-        if ($transformation_control_rs) {
-            $control_id = $transformation_control_rs->subject_id();
-            my $control_transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$control_id});
-            my $result = $control_transformation_obj->transformants();
-            my @sorted_names = natkeysort {($_->[1])} @$result;
+        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+        my $results = $transformation_obj->get_control_transformant_details();
+        if (scalar @$results > 0) {
+            foreach my $r (@$results){
+                my ($stock_id, $stock_name, $number_of_insertions, $control_transformation_id, $control_transformation_name) =@$r;
 
-            foreach my $r (@sorted_names) {
-                my ($stock_id, $stock_name) =@$r;
                 push @control_transformants, {
                     control_transformant_id => $stock_id,
                     control_transformant_name => $stock_name,
+                    control_transformation_id => $control_transformation_id,
+                    control_transformation_name => $control_transformation_name
                 };
             }
         }
@@ -1305,12 +1327,17 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     my @all_batch_info = ();
     if ($parsed_data){
         foreach my $batch_number (sort keys %$parsed_data) {
-            my $control_transformation_id;
+            my $batch_info = {};
+            my @control_transformation_ids = ();
             my @transformation_ids = ();
-            my $batch_info = $parsed_data->{$batch_number};
+            $batch_info = $parsed_data->{$batch_number};
             foreach my $vector_construct (sort keys %$batch_info) {
-                my $vector_construct_info = $batch_info->{$vector_construct};
-                my @check_type = keys %$vector_construct_info;
+                my $vector_type_info = {};
+                my $vector_FEC_batch_info;
+                $vector_type_info = $batch_info->{$vector_construct}->{'type'};
+                $vector_FEC_batch_info = $batch_info->{$vector_construct}->{'FEC_batch'};
+
+                my @check_type = keys %$vector_type_info;
                 if (scalar(@check_type) > 1) {
                     $c->stash->{rest} = { error => "Error! Vector construct: $vector_construct in batch: $batch_number is assigned as both a control and a construct. Please check is_a_control column."};
                     return;
@@ -1323,7 +1350,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     $is_a_control = 1;
                 }
 
-                my $transformant_info = $vector_construct_info->{$type};
+                my $transformant_info = $vector_type_info->{$type};
                 my @check_accession_type = keys %$transformant_info;
                 if (scalar(@check_accession_type) > 1) {
                     $c->stash->{rest} = { error => "Error! All accessions in the same file should have the same accession type (either an existing accession in the database or new accession)."};
@@ -1346,7 +1373,8 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     plant_material => $default_plant_material_name,
                     vector_construct => $vector_construct,
                     owner_id => $user_id,
-                    is_a_control => $is_a_control
+                    is_a_control => $is_a_control,
+                    FEC_batch => $vector_FEC_batch_info
                 });
 
                 my $add = $add_transformation->add_transformation_identifier();
@@ -1399,20 +1427,22 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
                 if ($transformation_stock_id) {
                     if ($is_a_control) {
-                        $control_transformation_id = $transformation_stock_id;
+                        push @control_transformation_ids, $transformation_stock_id;
                     } else {
                         push @transformation_ids, $transformation_stock_id;
                     }
                 }
             }
 
-            if ($control_transformation_id && (scalar @transformation_ids > 0)) {
+            if ((scalar @control_transformation_ids > 0) && (scalar @transformation_ids > 0)) {
                 foreach my $id (@transformation_ids) {
-                    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_transformation_id});
-                    my $error = $transformation_obj->set_transformation_control();
-                    if ($error) {
-                        $c->stash->{rest} = { error => "An error occurred attempting to set transformation control for batch: $batch_number. ($@)" };
-                        return;
+                    foreach my $control_id (@control_transformation_ids) {
+                        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_id});
+                        my $error = $transformation_obj->set_transformation_control();
+                        if ($error) {
+                            $c->stash->{rest} = { error => "An error occurred attempting to set transformation control for batch: $batch_number. ($@)" };
+                            return;
+                        }
                     }
                 }
             }
@@ -1869,6 +1899,7 @@ sub update_transformation_metadata_POST :Args(0){
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
     my $new_transformation_name = $c->req->param('new_transformation_name');
     my $new_transformation_notes = $c->req->param('new_transformation_notes');
+    my $new_FEC_batch = $c->req->param('new_FEC_batch');
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -1883,7 +1914,7 @@ sub update_transformation_metadata_POST :Args(0){
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
-    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_name=>$new_transformation_name, transformation_notes=>$new_transformation_notes});
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_name=>$new_transformation_name, transformation_notes=>$new_transformation_notes, FEC_batch=>$new_FEC_batch});
     my $error = $transformation_obj->update_transformation_metadata();
 
     if ($error) {
@@ -1895,6 +1926,34 @@ sub update_transformation_metadata_POST :Args(0){
 
 }
 
+
+sub get_control_transgenic_line_details :Path('/ajax/transformation/control_transgenic_line_details') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformation_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+    my $results = $transformation_obj->get_control_transformant_details();
+
+    my @transformant_details;
+    if (scalar @$results > 0) {
+        foreach my $r (@$results){
+            my ($stock_id, $stock_name, $number_of_insertions, $control_transformation_id, $control_transformation_name) =@$r;
+            push @transformant_details, {
+                control_transformant_id => $stock_id,
+                control_transformant_name => $stock_name,
+                number_of_insertions => $number_of_insertions,
+                control_transformation_id => $control_transformation_id,
+                control_transformation_name => $control_transformation_name
+            };
+        }
+    }
+
+    $c->stash->{rest} = { data => \@transformant_details };
+
+}
 
 sub upload_transgenic_lines : Path('/ajax/transformation/upload_transgenic_lines') : ActionClass('REST'){ }
 

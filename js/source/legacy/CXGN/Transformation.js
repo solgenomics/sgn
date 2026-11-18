@@ -29,7 +29,7 @@ function deleteTransformationID(transformation_stock_id){
     }
 }
 
-function setTransformationControl(transformation_id, control_stock_id, program_name){
+function setTransformationControl(transformation_id, selected_control_name, program_name){
 
     jQuery.ajax({
         url : '/ajax/transformation/set_transformation_control',
@@ -37,7 +37,7 @@ function setTransformationControl(transformation_id, control_stock_id, program_n
         type: 'POST',
         data : {
             'transformation_stock_id': transformation_id,
-            'control_stock_id': control_stock_id,
+            'selected_control_name': selected_control_name,
             'program_name': program_name,
         },
         beforeSend: function(response){
