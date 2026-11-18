@@ -70,7 +70,8 @@ is($response->{'userDisplayName'}, 'Jane Doe', 'check login name');
 #
 $mech->post_ok("$url/ajax/cvterm/delete_parent_term", [ cvterm_id => $cvterm_id, cvterm_relationship_id => $first_link_id ]);
 $response = decode_json $mech->content;
-like($response->{error}, qr/Cannot remove the last parent of a term/, 'the last parent is not removed');
+is($response->{error}, "Error deleting parent term: Cannot remove the last parent of a term.\n",
+    'rejecting removal of the last parent returns a plain error');
 is(scalar(parent_links($cvterm_id)), 1, 'the term still has its parent');
 
 # add a second parent, then remove it again
@@ -90,7 +91,8 @@ my ($second_link) = grep { $_->{cvterm_relationship_id} != $first_link_id } @lin
 #
 $mech->post_ok("$url/ajax/cvterm/delete_parent_term", [ cvterm_id => $links[0]->{object_cvterm_id}, cvterm_relationship_id => $second_link->{cvterm_relationship_id} ]);
 $response = decode_json $mech->content;
-like($response->{error}, qr/This relationship is not a parent of this term/, 'a link of another term is not removed');
+is($response->{error}, "Error deleting parent term: This relationship is not a parent of this term.\n",
+    'rejecting a link of another term returns a plain error');
 is(scalar(parent_links($cvterm_id)), 2, 'the term still has two parent links');
 
 $mech->post_ok("$url/ajax/cvterm/delete_parent_term", [ cvterm_id => $cvterm_id, cvterm_relationship_id => $second_link->{cvterm_relationship_id} ]);

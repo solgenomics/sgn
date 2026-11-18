@@ -682,8 +682,9 @@ sub delete_parent_term_POST {
 
         $cvterm->delete_parent_term($relationship_id);
     };
-    if ($@) {
-        $c->stash->{rest} = { error => "Error deleting parent term: $@" };
+    if (my $error = $@) {
+        print STDERR $error;
+        $c->stash->{rest} = { error => "Error deleting parent term: $error" };
         return;
     }
 

@@ -466,6 +466,7 @@ sub delete_parent_term {
     my $relationship_id = shift;
 
     my $schema = $self->schema();
+    my $error;
 
     $schema->txn_do(sub {
         # lock the term, so that two requests cannot each remove one of the last two parents
@@ -481,11 +482,18 @@ sub delete_parent_term {
         );
 
         my $link = $parent_links->find({ 'me.cvterm_relationship_id' => $relationship_id });
-        die "This relationship is not a parent of this term.\n" unless $link;
-        die "Cannot remove the last parent of a term.\n" if $parent_links->count() < 2;
+        if (!$link) {
+            $error = "This relationship is not a parent of this term.\n";
+            return;
+        }
+        if ($parent_links->count() < 2) {
+            $error = "Cannot remove the last parent of a term.\n";
+            return;
+        }
 
         $link->delete();
     });
+    die $error if $error;
     return;
 }
 
