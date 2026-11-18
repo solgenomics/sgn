@@ -169,7 +169,7 @@ sub BUILD {
     } elsif ($self->accession )   {
 	my ($db_name, $dbxref_accession) = split "\:", $self->accession;
 
-	#InterPro accessions have a namespace (db.name) that is different from the accession prefic
+	#InterPro accessions have a namespace (db.name) that is different from the accession prefix
 	if ($self->accession =~ m/^IPR*/ ) {
 	    $db_name = 'InterPro';
 	    $dbxref_accession= $self->accession;
@@ -229,7 +229,7 @@ sub get_image_ids {
 =head2 function get_is_relationshiptype
 
  Usage: my $is_relationshiptype = $self->get_is_relationship_type
- Desc:  find the database value of teh cvterm column is_relationship_type (integer 0,1)
+ Desc:  find the database value of the cvterm column is_relationship_type (integer 0,1)
  Property
  Side Effects:
  Example:
@@ -450,6 +450,51 @@ sub add_parent_terms {
             });
         }
     });
+}
+
+=head2 delete_parent_term
+
+ Usage: $cvterm->delete_parent_term($cvterm_relationship_id);
+ Desc:  removes one is_a or VARIABLE_OF link from this term to a parent term.
+        Dies if the link is not a parent link of this term, or if it is the
+        last one (the term would no longer be part of the ontology tree).
+
+=cut
+
+sub delete_parent_term {
+    my $self            = shift;
+    my $relationship_id = shift;
+
+    my $schema = $self->schema();
+    my $error;
+
+    $schema->txn_do(sub {
+        # lock the term, so that two requests cannot each remove one of the last two parents
+        $schema->resultset("Cv::Cvterm")->search({ cvterm_id => $self->cvterm_id() }, { for => 'update' })->first();
+
+        my $parent_links = $schema->resultset("Cv::CvtermRelationship")->search(
+            {
+                'me.subject_id' => $self->cvterm_id(),
+                'type.name'     => { -in => [ 'is_a', 'VARIABLE_OF' ] },
+                'cv.name'       => 'relationship',
+            },
+            { join => { type => 'cv' } }
+        );
+
+        my $link = $parent_links->find({ 'me.cvterm_relationship_id' => $relationship_id });
+        if (!$link) {
+            $error = "This relationship is not a parent of this term.\n";
+            return;
+        }
+        if ($parent_links->count() < 2) {
+            $error = "Cannot remove the last parent of a term.\n";
+            return;
+        }
+
+        $link->delete();
+    });
+    die $error if $error;
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;
