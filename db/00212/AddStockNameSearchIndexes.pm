@@ -80,12 +80,36 @@ CREATE INDEX IF NOT EXISTS stock_uniquename_trgm_idx ON public.stock USING gin (
 CREATE INDEX IF NOT EXISTS stock_description_trgm_idx ON public.stock USING gin (description gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS stockprop_synonym_value_trgm_idx ON public.stockprop USING gin (value gin_trgm_ops) WHERE type_id = $synonym_id;
 EOSQL
-    # IF NOT EXISTS also skips an index left invalid by an interrupted CONCURRENTLY build.
-    my $invalid = $dbh->selectcol_arrayref(q{SELECT ix.relname FROM pg_index idx
-        JOIN pg_class ix ON ix.oid = idx.indexrelid JOIN pg_namespace ns ON ns.oid = ix.relnamespace
-        WHERE ns.nspname = 'public' AND ix.relname = ANY(?) AND NOT idx.indisvalid},
-        undef, [qw(stock_name_trgm_idx stock_uniquename_trgm_idx stock_description_trgm_idx stockprop_synonym_value_trgm_idx)]);
-    die "Not valid: @$invalid. Drop them and run this patch again\n" if @$invalid;
+    # IF NOT EXISTS skips any object of the same name, even if it cannot serve these queries.
+    my $index_definition = <<'SQL';
+SELECT 1
+FROM pg_index idx
+JOIN pg_class ix ON ix.oid = idx.indexrelid
+JOIN pg_am am ON am.oid = ix.relam
+JOIN pg_opclass opc ON opc.oid = idx.indclass[0]
+WHERE idx.indexrelid = to_regclass(?)
+  AND idx.indrelid = to_regclass(?)
+  AND am.amname = 'gin' AND opc.opcname = 'gin_trgm_ops'
+  AND idx.indisvalid AND idx.indisready AND idx.indnatts = 1
+  AND pg_get_indexdef(idx.indexrelid, 1, true) = ?
+  AND pg_get_expr(idx.indpred, idx.indrelid) IS NOT DISTINCT FROM ?
+SQL
+    my @expected = (
+        ['stock_name_trgm_idx', 'stock', 'name', undef],
+        ['stock_uniquename_trgm_idx', 'stock', 'uniquename', undef],
+        ['stock_description_trgm_idx', 'stock', 'description', undef],
+        ['stockprop_synonym_value_trgm_idx', 'stockprop', 'value', "(type_id = $synonym_id)"],
+    );
+    my @invalid;
+    for my $index (@expected) {
+        my ($name, $table, $column, $predicate) = @$index;
+        my ($matches) = $dbh->selectrow_array($index_definition, undef, "public.$name", "public.$table", $column, $predicate);
+        push @invalid, $name if !$matches;
+    }
+    if (@invalid) {
+        $dbh->rollback();
+        die "Invalid or incompatible trigram indexes: @invalid. Drop them and run this patch again.\n";
+    }
     if ($self->trial) {
         $dbh->rollback();
         print "Trial mode: the indexes were built and rolled back.\n";
