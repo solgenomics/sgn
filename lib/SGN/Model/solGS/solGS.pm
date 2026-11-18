@@ -454,6 +454,54 @@ sub has_genotype {
 
 }
 
+sub count_phenotyped_genotyped_accessions {
+    my ( $self, $trials_ids, $protocol_id ) = @_;
+
+    $trials_ids = [$trials_ids] if ref $trials_ids ne 'ARRAY';
+
+    my $q = "SELECT COUNT(DISTINCT phenoview.accession_id)
+                 FROM materialized_phenoview AS phenoview
+                 JOIN materialized_genoview AS genoview
+                   ON genoview.accession_id = phenoview.accession_id
+                  AND genoview.genotyping_protocol_id = ?
+                 WHERE phenoview.trial_id = ANY(?)
+                   AND phenoview.trait_id IS NOT NULL";
+
+    my $sth = $self->schema->storage->dbh->prepare($q);
+    $sth->execute( $protocol_id, $trials_ids );
+
+    my ($count) = $sth->fetchrow_array();
+
+    return $count || 0;
+
+}
+
+sub protocol_marker_count {
+    my ( $self, $protocol_id ) = @_;
+
+    # counts the markers of one genotype in the protocol; vcf genotypes are
+    # stored in a genotypeprop per chromosome, each with a 'CHROM' key
+    my $q = "SELECT SUM((SELECT COUNT(*) FROM jsonb_object_keys(gp.value) AS k
+                          WHERE k <> 'CHROM'))
+                 FROM genotypeprop AS gp
+                 WHERE jsonb_typeof(gp.value) = 'object'
+                   AND gp.genotype_id = (
+                       SELECT neg.genotype_id
+                         FROM nd_experiment_protocol AS nep
+                         JOIN nd_experiment_genotype AS neg USING (nd_experiment_id)
+                         JOIN genotypeprop AS gp2 ON gp2.genotype_id = neg.genotype_id
+                        WHERE nep.nd_protocol_id = ?
+                        LIMIT 1)";
+
+    my $sth = $self->schema->storage->dbh->prepare($q);
+    $sth->execute($protocol_id);
+
+    my ($count) = $sth->fetchrow_array();
+
+    return $count || 0;
+
+}
+
 sub project_details {
     my ( $self, $pr_id ) = @_;
 
