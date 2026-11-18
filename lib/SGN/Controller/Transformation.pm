@@ -97,7 +97,7 @@ sub transformation_page : Path('/transformation') Args(1) {
         $control_links_string = join("<br>", @control_links);
     }
 
-    my $updated_status_type = $info->[0]->[8];
+    my $updated_status_type = $info->[0]->[6];
     my $completed_metadata;
     my $terminated_metadata;
     my $status_display;

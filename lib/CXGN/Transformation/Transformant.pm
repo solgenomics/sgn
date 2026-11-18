@@ -211,10 +211,14 @@ sub _get_FEC_batch {
     my $schema = $self->schema();
     my $transformant_stock_id = $self->transformant_stock_id();
     my $FEC_batch_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'FEC_batch', 'stock_property')->cvterm_id();
-    my $FEC_batch = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformant_stock_id, type_id => $FEC_batch_type_id})->value();
+    my $FEC_batch_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformant_stock_id, type_id => $FEC_batch_type_id});
+    my $FEC_batch;
+    if ($FEC_batch_rs) {
+        $FEC_batch = $FEC_batch_rs->value();        
+    }
 
     $self->FEC_batch($FEC_batch);
-    
+
 }
 
 
