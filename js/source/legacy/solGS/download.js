@@ -95,11 +95,12 @@ solGS.download = {
 
         var traitsAcronymLink = this.createTraitsAcronymLinks(res);
 
+        var links = [genoFileLink, phenoFileLink, traitsAcronymLink].filter(function (link) {
+            return link;
+        });
+
         var downloadLinks =
-            " <strong>Download training population</strong>: " +
-            genoFileLink +
-            " | " +
-            phenoFileLink + " | " + traitsAcronymLink;
+            " <strong>Download training population</strong>: " + links.join(" | ");
 
         jQuery("#training_pop_download").prepend(
             '<p style="margin-top: 20px">' + downloadLinks + "</p>"

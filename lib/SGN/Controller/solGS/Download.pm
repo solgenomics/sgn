@@ -188,6 +188,7 @@ sub download_raw_pheno_data_file {
 
     foreach my $trial_id (@trials_ids) {
         my $file = $c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
+        next if !-s $file;
         $file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
         push @files, $file;
@@ -216,6 +217,7 @@ sub download_raw_geno_data_file {
 
     foreach my $trial_id (@trials_ids) {
         my $file = $c->controller('solGS::Files')->genotype_file_name($c, $trial_id, $protocol_id);
+        next if !-s $file;
         $file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $file, 'solgs');
 
         push @files, $file;
