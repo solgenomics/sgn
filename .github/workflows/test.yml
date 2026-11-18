@@ -46,16 +46,16 @@ jobs:
               run_files t/selenium2/breeders "$BREEDERS_SPLIT_2" ""
           - part: selenium_1
             tests: |
-              /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
-              /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
-              /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
+              run_with_failure_log /entrypoint.sh --nopatch t/selenium2/01_list
+              run_with_failure_log /entrypoint.sh --nopatch t/selenium2/02_trial
+              run_with_failure_log /entrypoint.sh --nopatch t/selenium2/03_dataset
           - part: selenium_2
             tests: |
-              /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null
-              /entrypoint.sh --nopatch t/selenium2/onto 2>/dev/null
-              /entrypoint.sh --nopatch t/selenium2/search 2>/dev/null
-              /entrypoint.sh --nopatch t/selenium2/stock 2>/dev/null
-              /entrypoint.sh --nopatch t/selenium2/tools 2>/dev/null
+              run_with_failure_log /entrypoint.sh --nopatch t/selenium2/authenticate
+              run_with_failure_log /entrypoint.sh --nopatch t/selenium2/onto
+              run_with_failure_log /entrypoint.sh --nopatch t/selenium2/search
+              run_with_failure_log /entrypoint.sh --nopatch t/selenium2/stock
+              run_with_failure_log /entrypoint.sh --nopatch t/selenium2/tools
 
     container:
       image: breedbase/breedbase:latest
@@ -139,7 +139,7 @@ jobs:
 
       - name: Run unit tests
         if: matrix.part == 'unit_mech'
-        run: prove --recurse t/unit 2>/dev/null
+        run: prove --recurse t/unit
 
       - name: Load/dump fixture database
         # --noserver: each /entrypoint.sh call below starts its own server,
@@ -159,6 +159,19 @@ jobs:
         # need entrypoint.sh to start slurm
         # --nopatch to skip running fixture and db patches (already done in previous step)
         run: |
+          # The test server can be verbose. Keep its diagnostics for failed tests.
+          run_with_failure_log() (
+            stderr_log=$(mktemp)
+            trap 'rm -f "$stderr_log"' 0
+            if "$@" 2>"$stderr_log"; then
+              exit 0
+            else
+              status=$?
+              cat "$stderr_log" >&2
+              exit "$status"
+            fi
+          )
+
           # run_files FOLDER FROM TO: run the test files of FOLDER whose path
           # sorts from FROM (included) to TO (excluded); "" = no limit
           run_files() {
@@ -172,7 +185,7 @@ jobs:
             for file in $files; do
               set -- "$@" "$file"
             done
-            /entrypoint.sh --nopatch "$@" 2>/dev/null
+            run_with_failure_log /entrypoint.sh --nopatch "$@"
           }
           ${{ matrix.tests }}
 
