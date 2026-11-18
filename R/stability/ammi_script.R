@@ -43,7 +43,7 @@ pheno_imputation <- function(inData){
   final_imputed <- complete(pre_imputed, 1)
   
   final_imputed <- gather(final_imputed, "Env", "Yield", -c("Gen","Rep"))
-  cat("Imput ok!")
+  cat("Imputation ok!")
   return(final_imputed)
 }
 
@@ -66,7 +66,7 @@ imputation_accuracy <- function(checkDF, fMissing){
   
   imputed_test <- pheno_imputation(testindDF)
   imputed_test <- imputed_test[order(imputed_test$Gen, imputed_test$Env), ]
-  cat("Imput Acc ok!\n")
+  cat("Imputation accuracy ok!\n")
   corrImput <- cor(realData$Yield,imputed_test$Yield, use = "complete")
   return(corrImput)
   
