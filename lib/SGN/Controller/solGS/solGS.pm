@@ -1380,10 +1380,15 @@ sub format_phenotype_dataset_headers {
     my @headers = split( "\t", $all_headers );
 
     foreach my $hd (@headers) {
-        my $acronym;
-        foreach my $acr ( keys %$acronym_table ) {
-            $acronym = $acr if $acronym_table->{$acr} =~ /$hd/;
-            last if $acronym;
+        # the trait with exactly this name first: a name that is part of another
+        # trait name ("plant height", "plant height at maturity") must not get
+        # the acronym of the other trait
+        my ($acronym) = grep { $acronym_table->{$_} eq $hd } sort keys %$acronym_table;
+        if ( !$acronym ) {
+            foreach my $acr ( sort keys %$acronym_table ) {
+                $acronym = $acr if $acronym_table->{$acr} =~ /$hd/;
+                last if $acronym;
+            }
         }
 
         $formatted_headers .= $acronym ? $acronym : $hd;

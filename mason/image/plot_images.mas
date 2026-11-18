@@ -14,6 +14,32 @@ $stockref => undef
 
 
 <div class="well well-sm table-responsive">
+    <h4 style="margin-top:0;">Image collections for this trial</h4>
+    <div id="trial_collections_loading" class="text-muted" style="padding:5px;">
+        <span class="glyphicon glyphicon-refresh"></span> Loading collections&hellip;
+    </div>
+    <div id="trial_collections_empty" class="text-muted" style="display:none; padding:5px;">
+        No collections contain images from this trial yet. To add images to a
+        collection, select them in <a href="/search/images">image search</a> and use
+        <b>Add selected to collection</b>.
+    </div>
+    <table class="table table-hover table-condensed" id="trial_collections_table"
+           style="width:100%; display:none;">
+        <thead>
+          <tr>
+            <th>Collection</th>
+            <th>Type</th>
+            <th>Owner</th>
+            <th>Trial Images</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <hr/>
+</div>
+
+<div class="well well-sm table-responsive">
     <table id="plot_images_results" class="table table-hover table-striped">
     <thead>
         <tr>
@@ -66,12 +92,62 @@ jQuery(document).ready( function() {
 
     jQuery('#trial_images_section_onswitch').click(function() {
         getStocksWithImages();
+        loadTrialCollections();
     });
 
     jQuery('#plot_images_results').on( 'draw.dt', function () {
         jQuery('a.image_search_group').colorbox();
     });
 });
+
+function loadTrialCollections() {
+    jQuery('#trial_collections_loading').show();
+    jQuery('#trial_collections_table').hide();
+    jQuery('#trial_collections_empty').hide();
+
+    jQuery.ajax({
+        method: 'GET',
+        url: '/ajax/collection/for_trial',
+        data: { trial_id: trial_id, collection_type: 'image' },
+        success: function (response) {
+            jQuery('#trial_collections_loading').hide();
+
+            if (response && response.error) {
+                jQuery('#trial_collections_empty').text(response.error).show();
+                return;
+            }
+
+            var collections = (response && response.collections) || [];
+            if (!collections.length) {
+                jQuery('#trial_collections_empty').show();
+                return;
+            }
+
+            var $tb = jQuery('#trial_collections_table tbody').empty();
+            collections.forEach(function (c) {
+                $tb.append(
+                    '<tr>' +
+                      '<td><a href="/collection/' + esc(c.collection_id) + '">' + esc(c.name) + '</a></td>' +
+                      '<td>' + (c.collection_type ? esc(c.collection_type) : '') + '</td>' +
+                      '<td>' + (c.username ? esc(c.username) : '') + '</td>' +
+                      '<td>' + esc(c.n_trial_images) + '</td>' +
+                      '<td>' + (c.create_date ? esc(c.create_date) : '') + '</td>' +
+                    '</tr>'
+                );
+            });
+            jQuery('#trial_collections_table').show();
+        },
+        error: function () {
+            jQuery('#trial_collections_loading').hide();
+            jQuery('#trial_collections_empty')
+                .text('Could not load collections.').show();
+        }
+    });
+}
+
+function esc(s) {
+    return jQuery('<div>').text(s == null ? '' : s).html();
+}
 
 function getStocksWithImages() {
     jQuery.ajax({

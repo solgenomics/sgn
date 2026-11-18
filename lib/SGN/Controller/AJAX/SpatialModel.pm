@@ -26,6 +26,7 @@ use namespace::autoclean;
 use Storable qw(retrieve);
 use Storable qw(store);
 use POSIX qw(strftime);
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -294,6 +295,12 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my $headers = $c->req->param("headers");
     my $phenotype_file = $c->req->param("phenotype_file");
     print STDERR "PHENOTYPE FILE: $phenotype_file\n";
+    # Only the cleaned phenotype file that generate_results wrote and sent back.
+    my $spatial_dir = $c->config->{cluster_shared_tempdir} . "/spatial_model_files";
+    if (!defined($phenotype_file) || $phenotype_file !~ m{\A\Q$spatial_dir\E/spatial_model_download_[A-Za-z0-9_]+_phenotype\.txt\.clean\z} || !-f $phenotype_file) {
+        $c->stash->{rest} = { error => "Unknown phenotype file." };
+        return;
+    }
     # Convert the data and headers to a format suitable for passing to the second R script
     my $data_string = join("\n", map { join("\t", @$_) } @$dataTableData);
     my $headers_string = join(",", map { $_->{title} } @$headers);
@@ -315,15 +322,18 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         max_cluster_jobs => 1_000_000_000,
     });
 
+    # Every argument is quoted: values come from the request, and the job runs the command in bash.
     $cmd->run_cluster(
-	    "Rscript ",
+	    "Rscript",
+        shell_quote(
         $c->config->{basepath} . "/R/Spatial_Correction.R",
         $phenotype_file,
         $phenotype_file.".spatial_correlation_summary",
         $include_rc_random,
         $genotype_as_random,
         $nseg_degree,
-        "'".$headers_string."'",
+        $headers_string,
+        ),
 	);
 
     while ($cmd->alive) {
