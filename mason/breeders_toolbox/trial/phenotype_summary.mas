@@ -182,7 +182,7 @@ input[type="text"] {
     var draw_histogram = stackedObservationPhenotypeHistogram.draw;
     // The Histogram links in the summary table call this function from their
     // onclick attribute, which only sees global names.
-    window.trait_summary_hist_change = trait_summary_hist_change;
+    globalThis.trait_summary_hist_change = trait_summary_hist_change;
 
     jQuery(document).ready(function () {
         var type = "<% $trial_stock_type %>";
