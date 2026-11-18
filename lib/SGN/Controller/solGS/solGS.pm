@@ -1359,26 +1359,19 @@ sub format_phenotype_dataset_rows {
 sub format_phenotype_dataset_headers {
     my ( $self, $all_headers, $meta_headers, $traits_file ) = @_;
 
-    $all_headers = SGN::Controller::solGS::Utils->clean_traits($all_headers);
-
-    # the columns by position: a trait keeps its own acronym, also when another
-    # trait has the same name after cleaning, or its name has a metadata header
-    # or a regular expression character in it
-    my %is_meta = map { $_ => 1 } @$meta_headers;
     my @headers = split( /\t/, $all_headers, -1 );
-    my @traits  = map { $is_meta{$_} ? '' : $_ } @headers;
+    # The phenotyping download writes the metadata columns first. Match by
+    # position so a trait called "replicate" still gets a distinct column.
+    my @metadata = splice @headers, 0, scalar(@$meta_headers);
+    my @traits = map { SGN::Controller::solGS::Utils->clean_traits($_) } @headers;
 
-    write_file( $traits_file, { binmode => ':utf8' }, join( "\t", @traits ) )
+    write_file( $traits_file, { binmode => ':utf8' }, join( "\t", (('') x @metadata), @traits ) )
       if $traits_file && $traits_file =~ /pop_list/;
 
     my $acronymized_traits =
-      SGN::Controller::solGS::Utils->acronymize_traits( \@traits );
-    my @acronyms =
-      split( /\t/, $acronymized_traits->{acronymized_traits} // '', -1 );
+      SGN::Controller::solGS::Utils->acronymize_traits( [map { length($_) ? $_ : 'trait' } @traits], \@metadata );
 
-    return join( "\t",
-        map { length $acronyms[$_] ? $acronyms[$_] : $headers[$_] }
-          0 .. $#headers );
+    return join( "\t", @metadata, split(/\t/, $acronymized_traits->{acronymized_traits} // '', -1) );
 
 }
 
