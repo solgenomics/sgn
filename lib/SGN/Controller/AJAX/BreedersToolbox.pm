@@ -48,8 +48,9 @@ sub store_breeding_program :Path('/breeders/program/store') Args(0) {
     my $name = $c->req->param("name");
     my $desc = $c->req->param("desc");
 
-    if (!($c->user() || $c->user()->check_roles('submitter'))) {
+    if (!($c->user() && $c->user()->check_roles('curator'))) {
         $c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add or edit a breeding program.' };
+        return;
     }
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
