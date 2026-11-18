@@ -201,6 +201,7 @@ sub search {
 
     my @where_clause;
     my @and_clause;
+    my @and_values;   # bind values of @and_clause, in the same order; appended after all other values
     my @question_mark_values;
 
     if ($collection_id_list && scalar(@$collection_id_list) > 0) {
@@ -217,7 +218,7 @@ sub search {
         } else {
             foreach (@$name_list) {
                 push @and_clause, "collection.name ilike ?";
-                push @question_mark_values, '%' . $_ . '%';
+                push @and_values, '%' . $_ . '%';
             }
         }
     }
@@ -230,7 +231,7 @@ sub search {
         } else {
             foreach (@$description_list) {
                 push @and_clause, "collection.description ilike ?";
-                push @question_mark_values, '%' . $_ . '%';
+                push @and_values, '%' . $_ . '%';
             }
         }
     }
@@ -276,7 +277,7 @@ sub search {
         } else {
             foreach (@$creator_username_list) {
                 push @and_clause, "creator.username ilike ?";
-                push @question_mark_values, '%' . $_ . '%';
+                push @and_values, '%' . $_ . '%';
             }
         }
     }
@@ -333,14 +334,14 @@ sub search {
         foreach my $term (@$file_name_list) {
             push @where_clause,
                 "EXISTS (SELECT 1 FROM metadata.md_collection_file AS fname_cf
-                          JOIN metadata.md_files AS fname_files
-                            ON (fname_files.file_id = fname_cf.file_id)
-                          LEFT JOIN metadata.md_metadata AS fname_fm
-                                 ON (fname_fm.metadata_id = fname_files.metadata_id)
+                          JOIN metadata.md_files AS files
+                            ON (files.file_id = fname_cf.file_id)
+                          LEFT JOIN metadata.md_metadata AS file_metadata
+                                 ON (file_metadata.metadata_id = files.metadata_id)
                          WHERE fname_cf.collection_id = collection.collection_id
                            AND $file_obsolete_sql
-                           AND (fname_files.basename ilike ?
-                                 OR fname_files.comment ilike ?))";
+                           AND (files.basename ilike ?
+                                 OR files.comment ilike ?))";
             push @question_mark_values, ('%' . $term . '%') x 2;
         }
     }
@@ -352,6 +353,7 @@ sub search {
     if (scalar(@and_clause) > 0) {
         my $w = " ( " . (join(" AND ", @and_clause)) . " ) ";
         push @where_clause, $w;
+        push @question_mark_values, @and_values;
     }
 
     my $where_clause = scalar(@where_clause) > 0
