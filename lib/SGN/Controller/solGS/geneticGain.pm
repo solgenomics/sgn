@@ -26,7 +26,6 @@ use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use List::MoreUtils qw /uniq/;
-use String::CRC32;
 use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -183,7 +182,8 @@ sub boxplot_id {
 
     my $multi_traits = $c->stash->{training_traits_ids};
     if ($multi_traits && scalar(@$multi_traits) > 1 ) {
-        $trait_id = crc32( join( '', @$multi_traits ) );
+        $trait_id = $c->controller('solGS::Gebvs')
+          ->create_traits_selection_id($multi_traits);
     }
 
     $c->stash->{boxplot_id} =
