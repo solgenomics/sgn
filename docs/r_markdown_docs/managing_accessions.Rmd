@@ -155,12 +155,14 @@ may remain blank. For self, enter the same parent in both fields. For doubled
 haploid and dihaploid induction, enter both recorded parents, as in pedigree
 uploads. The dialog does not infer a missing parent or cross type. When names coincide, select the intended record from the suggestions; its stock type and species are shown.
 
-Existing parents and known cross types are read-only in this dialog. An
-unspecified existing type may be kept unspecified or supplied explicitly.
-Saving validates both parents and saves the pair together; an error leaves the
-saved pedigree unchanged. To replace a parent, close the dialog and use **Remove
-parent** to select the female or male relationship first. The role is shown even
-when the same accession is used for both parents. If a connection fails during saving, wait for the dialog to check the saved state before retrying.
+To change an existing parent, select **Replace saved parents**, edit the
+appropriate field and click **Save Parents**. The saved cross type stays the
+same. An unspecified existing type may be kept unspecified or supplied
+explicitly. Both parents are validated and saved together. If another user
+changes the pedigree while the dialog is open, reopen it before saving. Use
+**Remove parent** only to delete a relationship without replacing it. The role
+is shown even when the same accession is used for both parents. If a connection
+fails during saving, wait for the dialog to check the saved state before retrying.
 
 ## Working with grafts
 

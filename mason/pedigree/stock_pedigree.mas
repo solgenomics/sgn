@@ -52,7 +52,7 @@ $stock_id
                 <div class="modal-body">
                     <div id="add_parent_status" class="alert alert-info" role="status" aria-live="polite" style="display:none;"></div>
                     <div id="add_parent_error" class="alert alert-danger" role="alert" style="display:none;"></div>
-                    <p>Enter the parents and cross type for this accession. Existing parents are read-only.</p>
+                    <p>Enter the parents and cross type for this accession.</p>
                     <div class="form-group">
                         <label class="col-sm-4 control-label" for="add_parent_female">Female Parent</label>
                         <div class="col-sm-8"><input id="add_parent_female" class="form-control" type="text" autocomplete="off" required /></div>
@@ -82,7 +82,10 @@ $stock_id
                             <span class="help-block">For self, enter the same parent in both fields. Enter both recorded parents for doubled haploid and dihaploid induction.</span>
                         </div>
                     </div>
-                    <p class="help-block">To replace an existing parent, close this dialog and remove the specific parent relationship first. An unspecified existing cross type may be left unchanged.</p>
+                    <div class="checkbox" id="replace_saved_parents_option" style="display:none;">
+                        <label><input type="checkbox" id="replace_saved_parents" /> Replace saved parents</label>
+                    </div>
+                    <p class="help-block">A saved cross type is kept when replacing a parent. An unspecified existing cross type may be left unchanged.</p>
                 </div>
                 <div class="modal-footer">
                     <button id="close_add_parent_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>

@@ -1573,8 +1573,10 @@ sub add_stock_parent_GET :Args(0) {
 
 =head2 add_stock_parents
 
-POST stock_id, female_parent, male_parent and cross_type to add missing parents
-atomically. Existing parent identities and known cross types are read-only.
+POST stock_id, female_parent, male_parent and cross_type to save parents
+atomically. To replace a parent, also send replace_existing=1 and the saved
+expected_female_parent_id, expected_male_parent_id and expected_cross_type.
+An absent parent is sent as 0. Known cross types are preserved.
 Uses the same submitter/curator permission as the legacy single-parent action.
 
 =cut
@@ -1599,9 +1601,18 @@ sub add_stock_parents_POST : Args(0) {
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
+    my $expected;
+    if (($c->req->param('replace_existing') // '') eq '1') {
+        $expected = {
+            female => scalar($c->req->param('expected_female_parent_id')),
+            male => scalar($c->req->param('expected_male_parent_id')),
+            type => scalar($c->req->param('expected_cross_type')),
+        };
+    }
     my $error = $stock->add_parents(
         scalar($c->req->param('female_parent')), scalar($c->req->param('male_parent')), scalar($c->req->param('cross_type')),
         {female => scalar($c->req->param('female_parent_id')), male => scalar($c->req->param('male_parent_id'))},
+        $expected,
     );
     $c->stash->{rest} = $error ? { error => $error } : { success => 1 };
 }

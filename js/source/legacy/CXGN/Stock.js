@@ -97,7 +97,7 @@ function remove_parents(stock_id, parent_id, parent_type) {
     });
 }
 
-/** Add missing parents using explicit names or selected stock identities. */
+/** Save a parent pair using explicit names or selected stock identities. */
 // biome-ignore lint/correctness/noUnusedVariables: Called through the legacy Mason global API.
 function stock_pedigree_dialog_init(stock_id) {
     var $ = jQuery;
@@ -105,6 +105,7 @@ function stock_pedigree_dialog_init(stock_id) {
     var female = $('#add_parent_female');
     var male = $('#add_parent_male');
     var crossType = $('#add_parent_cross_type');
+    var replace = $('#replace_saved_parents');
     var save = $('#add_parent_submit');
     var error = $('#add_parent_error');
     var status = $('#add_parent_status');
@@ -122,11 +123,16 @@ function stock_pedigree_dialog_init(stock_id) {
     function showStatus(message) { status.text(message).toggle(!!message); }
     function normalType(value) { return value && value !== 'null' ? String(value) : ''; }
     function changed() {
-        return female.val() !== (saved.female ? saved.female.parent_name : '')
-            || male.val() !== (saved.male ? saved.male.parent_name : '')
-            || crossType.val() !== saved.type;
+        return ['female', 'male'].some(role => {
+            var parent = saved[role];
+            return fields[role].val() !== (parent ? parent.parent_name : '')
+                || (parent && selected[role] && String(selected[role].id) !== String(parent.parent_id));
+        }) || crossType.val() !== saved.type;
     }
     function updateRequirements() {
+        $.each(['female', 'male'], (_, role) => {
+            fields[role].prop('readOnly', !!saved[role] && !replace.prop('checked'));
+        });
         var type = crossType.val();
         var required = !!type && type !== 'open';
         male.prop('required', required && !male.prop('readOnly'));
@@ -135,6 +141,7 @@ function stock_pedigree_dialog_init(stock_id) {
     }
     function busy(value) {
         female.add(male).prop('disabled', value);
+        replace.prop('disabled', value);
         if (value) { female.add(male).autocomplete('close'); }
         crossType.prop('disabled', value || !!(saved.female && saved.type));
         if (value) { save.prop('disabled', true); }
@@ -181,6 +188,8 @@ function stock_pedigree_dialog_init(stock_id) {
                 }
                 // biome-ignore lint/complexity/useOptionalChain: Legacy scripts are served without Babel transforms.
                 saved = { female: rows.female, male: rows.male, type: normalType(rows.female && rows.female.cross_type) };
+                replace.prop('checked', false);
+                $('#replace_saved_parents_option').toggle(!!(rows.female || rows.male));
                 $.each(['female', 'male'], (_, role) => {
                     var parent = rows[role];
                     fields[role].val(parent ? parent.parent_name : '').prop('readOnly', !!parent);
@@ -230,6 +239,17 @@ function stock_pedigree_dialog_init(stock_id) {
         });
     });
     crossType.off('.pedigree').on('change.pedigree', updateRequirements);
+    replace.off('.pedigree').on('change.pedigree', () => {
+        if (!replace.prop('checked')) {
+            $.each(['female', 'male'], (_, role) => {
+                var parent = saved[role];
+                if (!parent) { return; }
+                fields[role].val(parent.parent_name);
+                selected[role] = { id: parent.parent_id, name: parent.parent_name };
+            });
+        }
+        updateRequirements();
+    });
     modal.off('.pedigree').on('hide.bs.modal.pedigree', () => {
         opened = false;
         loaded = false;
@@ -270,6 +290,12 @@ function stock_pedigree_dialog_init(stock_id) {
         $.each(['female', 'male'], (_, role) => {
             if (selected[role] && selected[role].id !== undefined) { data[role + '_parent_id'] = selected[role].id; }
         });
+        if (replace.prop('checked')) {
+            data.replace_existing = 1;
+            data.expected_female_parent_id = saved.female ? saved.female.parent_id : 0;
+            data.expected_male_parent_id = saved.male ? saved.male.parent_id : 0;
+            data.expected_cross_type = saved.type;
+        }
         var token = generation;
         saveInFlight = true;
         busy(true);
@@ -279,7 +305,7 @@ function stock_pedigree_dialog_init(stock_id) {
             var current = opened && token === generation;
             if (!uncertain && pedigree_response_object(response) && response.success === 1 && !response.error) {
                 if (current) {
-                    alert('The parents have been added.');
+                    alert('The parents have been saved.');
                     modal.modal('hide');
                     window.location.reload();
                 } else {

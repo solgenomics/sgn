@@ -64,6 +64,28 @@ for my $parent ($female, $male) {
 $mech->get_ok('http://localhost:3010/brapi/v2/germplasm/'.$child->stock_id);
 is(decode_json($mech->content)->{result}{breedingMethodDbId}, 'biparental', 'BrAPI germplasm read sees the stored type');
 
+subtest 'replacement is atomic and preserves the saved cross type' => sub {
+    my $replacement = stock('replacement');
+    my $rels = $schema->resultset('Stock::StockRelationship')->search({object_id => $child->stock_id});
+    my %snapshot = (replace_existing => 1, expected_female_parent_id => $female->stock_id,
+        expected_male_parent_id => $male->stock_id, expected_cross_type => 'biparental');
+    my $replace = sub {
+        my ($name) = @_;
+        $mech->post_ok($url, [stock_id => $child->stock_id, female_parent => $name,
+            male_parent => $male->uniquename, cross_type => 'biparental', %snapshot]);
+        return decode_json($mech->content);
+    };
+    my $male_relationship_id = $rels->find({type_id => $types{male}})->stock_relationship_id;
+    like($replace->($child->uniquename)->{error}, qr/own ancestor/, 'a cycle is rejected');
+    is($rels->find({type_id => $types{female}})->subject_id, $female->stock_id, 'the original female survives rejection');
+    is_deeply($replace->($replacement->uniquename), {success => 1}, 'replace the female in one request');
+    my $current = $rels->find({type_id => $types{female}});
+    is($current->subject_id, $replacement->stock_id, 'new female is saved');
+    is($current->value, 'biparental', 'saved cross type remains on the female link');
+    is($rels->find({type_id => $types{male}})->stock_relationship_id, $male_relationship_id, 'male link was not rewritten');
+    like($replace->($female->uniquename)->{error}, qr/saved pedigree changed/i, 'a stale snapshot cannot overwrite the new parent');
+};
+
 subtest 'real BrAPI germplasm POST and PUT retain female-only type storage' => sub {
     my $ua = LWP::UserAgent->new;
     $ua->default_header('Authorization' => 'Bearer '.$token);

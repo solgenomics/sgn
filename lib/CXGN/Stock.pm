@@ -1632,18 +1632,19 @@ sub add_parent {
     return $error || undef;
 }
 
-=head2 add_parents($female_name, $male_name, $cross_type, $parent_ids)
+=head2 add_parents($female_name, $male_name, $cross_type, $parent_ids, $expected)
 
 Add or complete an accession pedigree atomically. Existing identities are kept
 by their recorded IDs, including a renamed or ambiguously named parent. Optional
 selected IDs disambiguate new parents; names remain supported for old callers.
-Known types cannot be replaced here and historical missing types stay missing
-unless explicitly supplied. Returns an error string, or undef on success.
+An optional snapshot of the female and male IDs and the cross type permits
+replacing saved parents only if the pedigree still matches that snapshot.
+Known types are preserved. Returns an error string, or undef on success.
 
 =cut
 
 sub add_parents {
-    my ($self, $female_name, $male_name, $cross_type, $ids) = @_;
+    my ($self, $female_name, $male_name, $cross_type, $ids, $expected) = @_;
     $ids ||= {};
     return "Parent IDs must be an object." unless ref($ids) eq 'HASH';
     return "Parent names must be strings." if ref($female_name) || ref($male_name);
@@ -1668,6 +1669,16 @@ sub add_parents {
                 my $role = $role_for{$r->type_id};
                 die "More than one $role parent is stored. Review the existing pedigree first.\n" if $existing{$role};
                 $existing{$role} = $r;
+            }
+            my $stored_type = $existing{female} ? CXGN::Pedigree::Parentage->normalize_type($existing{female}->value) : undef;
+            if ($expected) {
+                for my $role (qw(female male)) {
+                    my $actual = $existing{$role} ? $existing{$role}->subject_id : 0;
+                    die "The saved pedigree changed. Reload it before replacing a parent.\n"
+                        unless defined($expected->{$role}) && "$actual" eq $expected->{$role};
+                }
+                die "The saved pedigree changed. Reload it before replacing a parent.\n"
+                    unless defined($expected->{type}) && ($stored_type // '') eq $expected->{type};
             }
             my %names = (female => $female_name // '', male => $male_name);
             my (%parents, @unresolved, @selected_labels);
@@ -1700,23 +1711,26 @@ sub add_parents {
                 if (!$parents{$role} && length($names{$role})) {
                     $parents{$role} = CXGN::Pedigree::Parentage->choose($matches, $names{$role}, \@allowed, $v);
                 }
-                if ($existing{$role} && (!$parents{$role} || $existing{$role}->subject_id != $parents{$role}{stock_id})) {
+                my $replaces_parent = $existing{$role}
+                    && (!$parents{$role} || $existing{$role}->subject_id != $parents{$role}{stock_id});
+                if ($replaces_parent && !$expected) {
                     die "The existing $role parent cannot be replaced here. Reload the saved pedigree.\n";
                 }
-                if ($parents{$role} && !$existing{$role}) {
+                if ($parents{$role} && (!$existing{$role} || $replaces_parent)) {
                     my %allowed = map {$_ => 1} @allowed;
                     die "The selected $role parent has an unsupported stock type.\n"
                         unless $allowed{$v->{stock_names}{$parents{$role}{type_id}} || ''};
                 }
             }
             die "A female parent is required.\n" unless $parents{female};
-            my $stored_type = $existing{female} ? CXGN::Pedigree::Parentage->normalize_type($existing{female}->value) : undef;
             die "The existing cross type cannot be replaced here. Reload the saved pedigree.\n"
                 if defined($stored_type) && (!defined($cross_type) || $stored_type ne $cross_type);
             my $same_type = (!defined($stored_type) && !defined($cross_type))
                 || (defined($stored_type) && defined($cross_type) && $stored_type eq $cross_type);
             my $unchanged = $existing{female} && $same_type
-                && ((!$parents{male} && !$existing{male}) || ($parents{male} && $existing{male}));
+                && $existing{female}->subject_id == $parents{female}{stock_id}
+                && ((!$parents{male} && !$existing{male})
+                    || ($parents{male} && $existing{male} && $existing{male}->subject_id == $parents{male}{stock_id}));
             return if $unchanged;
             my %supported = map {$_ => 1} CXGN::Pedigree::Parentage->supported_cross_types;
             if (!$existing{female} || (!defined($stored_type) && defined($cross_type)) || (defined($cross_type) && $supported{$cross_type})) {
@@ -1724,9 +1738,20 @@ sub add_parents {
                 CXGN::Pedigree::Parentage->validate_pair($cross_type, $parents{female}{stock_id},
                     $parents{male} ? $parents{male}{stock_id} : undef);
             }
+            if ($expected) {
+                for my $role (qw(female male)) {
+                    my $old = $existing{$role} or next;
+                    if (!$parents{$role}) {
+                        $old->delete();
+                    } elsif ($old->subject_id != $parents{$role}{stock_id}) {
+                        $old->update({ subject_id => $parents{$role}{stock_id} });
+                    }
+                }
+            }
             CXGN::Pedigree::Parentage->apply($schema, [{child_id => $self->stock_id,
                 female => $parents{female}{stock_id}, male => $parents{male} ? $parents{male}{stock_id} : undef,
                 type => $cross_type}], 0, $v);
+            CXGN::Pedigree::Parentage->assert_acyclic($schema, [$self->stock_id], $v) if $expected;
         });
     };
     $error = $@;

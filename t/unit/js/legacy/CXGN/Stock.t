@@ -92,6 +92,22 @@ const rows = [
 ];
 {
     const h = harness(), $ = h.$;
+    h.open(); h.finish(0, {relationships: rows});
+    $('#replace_saved_parents').prop('checked', true).trigger('change');
+    result['explicit replacement unlocks the saved parents but keeps the cross type locked'] =
+        !$('#add_parent_female').prop('readOnly') && !$('#add_parent_male').prop('readOnly')
+        && $('#add_parent_cross_type').prop('disabled');
+    $('#add_parent_female').val('Another mother').trigger('input');
+    h.submit();
+    const data = h.params(1);
+    result['parent replacement submits the new name and the expected saved pedigree together'] =
+        data.get('replace_existing') === '1' && data.get('female_parent') === 'Another mother'
+        && data.get('expected_female_parent_id') === '101' && data.get('expected_male_parent_id') === '202'
+        && data.get('expected_cross_type') === 'biparental';
+    h.w.close();
+}
+{
+    const h = harness(), $ = h.$;
     h.open(); h.finish(0, {relationships: []});
     result['new pedigree has separate fields and no inferred cross type'] = $('#add_parent_female').length === 1 && $('#add_parent_male').length === 1 && $('#add_parent_cross_type').val() === '' && $('input[name="parent_type"]').length === 0;
     result['unchanged empty form does not offer a redundant save'] = $('#add_parent_submit').prop('disabled');
