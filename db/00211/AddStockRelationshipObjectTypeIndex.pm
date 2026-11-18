@@ -70,11 +70,24 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 CREATE INDEX IF NOT EXISTS stock_relationship_object_id_type_id_idx ON public.stock_relationship (object_id, type_id);
 EOSQL
-    # IF NOT EXISTS also skips an index left invalid by an interrupted CONCURRENTLY build.
-    my ($valid) = $self->dbh->selectrow_array(q{SELECT idx.indisvalid FROM pg_index idx
-        JOIN pg_class ix ON ix.oid = idx.indexrelid JOIN pg_namespace ns ON ns.oid = ix.relnamespace
-        WHERE ns.nspname = 'public' AND ix.relname = 'stock_relationship_object_id_type_id_idx'});
-    die "Index stock_relationship_object_id_type_id_idx is not valid: drop it and run this patch again\n" if !$valid;
+    # IF NOT EXISTS also skips an invalid or differently defined namesake.
+    my ($matches) = $self->dbh->selectrow_array(<<'SQL');
+SELECT 1
+FROM pg_index idx
+JOIN pg_class ix ON ix.oid = idx.indexrelid
+JOIN pg_am am ON am.oid = ix.relam
+WHERE idx.indexrelid = to_regclass('public.stock_relationship_object_id_type_id_idx')
+  AND idx.indrelid = 'public.stock_relationship'::regclass
+  AND am.amname = 'btree'
+  AND idx.indisvalid AND idx.indisready AND NOT idx.indisunique
+  AND idx.indnatts = 2 AND idx.indpred IS NULL
+  AND pg_get_indexdef(idx.indexrelid, 1, true) = 'object_id'
+  AND pg_get_indexdef(idx.indexrelid, 2, true) = 'type_id'
+SQL
+    if (!$matches) {
+        $self->dbh->rollback();
+        die "Index stock_relationship_object_id_type_id_idx must be a valid btree on stock_relationship (object_id, type_id). Drop the incompatible index and run this patch again.\n";
+    }
     if ($self->trial) {
         $self->dbh->rollback();
         print "Trial mode: the index was built and rolled back.\n";
