@@ -80,6 +80,17 @@ if (@{$trial_rows{137}} >= 2 * $page_size) {
 }
 is_deeply($page_observations, undef, 'page observations are absent when not requested');
 
+my %tied_order = (trial_list => [137], order_by => 'project.project_id');
+my ($tied_rows) = search_layout(%tied_order);
+my @expected_ids = sort { $a <=> $b } map { $_->{obsunit_stock_id} } @$tied_rows;
+my ($first_tied_page) = search_layout(%tied_order, limit => $page_size);
+my ($second_tied_page) = search_layout(%tied_order, limit => $page_size, offset => $page_size);
+is_deeply(
+    [map { $_->{obsunit_stock_id} } @$first_tied_page, @$second_tied_page],
+    [@expected_ids[0 .. 2 * $page_size - 1]],
+    'consecutive pages use observation unit IDs to break ties',
+);
+
 my ($missing, $missing_observations) = search_layout(trial_list => [-1]);
 is_deeply($missing, [], 'unknown trial returns no units');
 is_deeply($missing_observations, undef, 'unknown trial has no observations');

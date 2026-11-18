@@ -194,7 +194,13 @@ sub search {
 
     my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, min(additional_info.value) as additional_info, min(plot_geo_json.value) as plot_geo_json, array_agg(distinct stock_image.image_id) as image_ids, STRING_AGG(DISTINCT(istock.stock_id::text), '|'), STRING_AGG(DISTINCT(istock.uniquename), ',') ";
 
-    my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
+    my $order = $self->order_by || 'project.name, observationunit.uniquename';
+    # Keep page boundaries stable when the primary sort keys tie. A unit can
+    # appear more than once when it has multiple related rows.
+    my $order_clause = " ORDER BY $order, project.project_id, observationunit.stock_id,
+        germplasm.stock_id, breeding_program.project_id, folder.project_id, seedlot.stock_id,
+        rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value,
+        col_number.value, plant_number.value, location.value";
 
     my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename ";
 
