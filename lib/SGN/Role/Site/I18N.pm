@@ -53,7 +53,7 @@ before dispatch => sub {
     my $asked   = $c->req->param('lang');
     my $cookie  = $c->req->cookie('lang');
     my @wanted  = map { lc } grep { defined } $asked, ( $cookie ? $cookie->value : undef ),
-        implicate_supers( I18N::LangTags::Detect->http_accept_langs( _accepted( $c->req->header('Accept-Language') ) ) );
+        _requested_languages( $c->req->header('Accept-Language') );
     my ($language) = grep { my $tag = $_; grep { $_ eq $tag } @enabled, 'en' } @wanted;
     $language //= 'en';
     $c->res->cookies->{lang} = { value => $language, expires => '+1y' } if defined $asked && lc $asked eq $language;
@@ -61,8 +61,21 @@ before dispatch => sub {
     Locale::Util::set_locale( LC_MESSAGES, $language, undef, 'utf-8' ) if $language ne 'en';
 };
 
-# Accept-Language without the languages the browser refuses (q=0).
-sub _accepted { return join ',', grep { !/;\s*q\s*=\s*0(?:\.0*)?\s*$/i } split /,/, shift // '' }
+# A regional tag can imply a base language. Keep explicit exclusions when
+# adding those base languages to the browser's preferences.
+sub _requested_languages {
+    my ($header) = @_;
+    my (@accepted, %refused);
+    for my $range (split /,/, $header // '') {
+        if ($range =~ /^\s*([a-z0-9-]+)\s*;\s*q\s*=\s*0(?:\.0*)?\s*$/i) {
+            $refused{lc $1} = 1;
+        } else {
+            push @accepted, $range;
+        }
+    }
+    return grep { !$refused{lc $_} }
+        implicate_supers( I18N::LangTags::Detect->http_accept_langs( join ',', @accepted ) );
+}
 
 # The locale belongs to the process: every request starts and ends in English, also when it dies.
 sub _reset_language { setlocale( LC_MESSAGES, 'C' ) if shift->i18n_languages; return }

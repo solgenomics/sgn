@@ -105,6 +105,8 @@ subtest 'language from the browser' => sub {
     is( ( request( accept => 'uk;q=0, en' ) )[0],              $english,   'refused language' );
     is( ( request( accept => 'uk;q=0, de' ) )[0],              $english,   'refused language, nothing else enabled' );
     is( ( request( accept => 'uk;q=0.0' ) )[0],                $english,   'refused language, written q=0.0' );
+    is( ( request( accept => 'uk-UA, uk;q=0, en;q=0.8' ) )[0], $english,   'regional tag cannot restore an excluded base language' );
+    is( ( request( accept => 'en-US, EN;q=0, uk;q=0.8' ) )[0], $ukrainian, 'explicit exclusion still allows the next enabled language' );
     is( ( request( accept => 'de' ) )[0],                      $english,   'not enabled' );
     is( ( request() )[0],                                      $english,   'no header' );
 };
