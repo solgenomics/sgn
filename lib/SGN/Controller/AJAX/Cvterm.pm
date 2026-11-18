@@ -688,7 +688,10 @@ sub delete_parent_term_POST {
         return;
     }
 
-    $c->stash->{rest} = { message => "Parent term removed." };
+    $c->stash->{rest} = {
+        message => "Parent term removed.",
+        warning => "Rebuild cvterm paths for this ontology in the trait or treatment designer. Until the rebuild finishes, searches that use ontology paths may still show the removed relationship.",
+    };
 }
 
 ####

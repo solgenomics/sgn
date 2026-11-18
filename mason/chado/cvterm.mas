@@ -395,6 +395,9 @@ my $edit_privs = $curator ;
           if (response.error) {
             alert(response.error);
           } else {
+            if (response.warning) {
+              alert(response.message + " " + response.warning);
+            }
             window.location.reload();
           }
         },

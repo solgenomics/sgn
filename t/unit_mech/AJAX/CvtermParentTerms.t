@@ -98,6 +98,7 @@ is(scalar(parent_links($cvterm_id)), 2, 'the term still has two parent links');
 $mech->post_ok("$url/ajax/cvterm/delete_parent_term", [ cvterm_id => $cvterm_id, cvterm_relationship_id => $second_link->{cvterm_relationship_id} ]);
 $response = decode_json $mech->content;
 is($response->{message}, 'Parent term removed.', 'the second parent was removed');
+like($response->{warning}, qr/Rebuild cvterm paths/, 'deletion tells the curator to rebuild ontology paths');
 
 @links = parent_links($cvterm_id);
 is(scalar(@links), 1, 'the term has one parent link again');
