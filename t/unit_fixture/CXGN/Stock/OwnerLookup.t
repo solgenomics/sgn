@@ -56,4 +56,40 @@ for my $seedlot (@$seedlots) {
         "seedlot $seedlot->{seedlot_stock_id} owners match SQL");
 }
 
+subtest 'seedlot owners on consecutive pages' => sub {
+    my @schemas = ($schema, $fixture->people_schema(), $fixture->phenome_schema());
+    my $db = $schema->storage->dbh;
+    $db->begin_work();
+    my @page_ids;
+    for my $offset (0, 1) {
+        # BrAPI uses an inclusive end offset for a page of one.
+        my ($page) = CXGN::Stock::Seedlot->list_seedlots(@schemas, $offset, $offset);
+        is(scalar(@$page), 1, "page $offset has one seedlot");
+        next unless @$page == 1;
+        my $id = $page->[0]{seedlot_stock_id};
+        push @page_ids, $id;
+        $db->do(<<'SQL', undef, $id, $id);
+INSERT INTO phenome.stock_owner (stock_id, sp_person_id)
+SELECT ?, p.sp_person_id
+FROM sgn_people.sp_person p
+WHERE NOT EXISTS (
+    SELECT 1 FROM phenome.stock_owner o WHERE o.stock_id = ? AND o.sp_person_id = p.sp_person_id
+)
+ORDER BY p.sp_person_id LIMIT 2
+SQL
+        my ($with_owners) = CXGN::Stock::Seedlot->list_seedlots(@schemas, $offset, $offset);
+        is($with_owners->[0]{seedlot_stock_id}, $id, 'the owners do not change the page');
+        my $query = $db->prepare($owners_query->{Statement});
+        $query->execute($id);
+        my @links;
+        while (my ($person, $first, $last) = $query->fetchrow_array()) {
+            push @links, qq{<a href="/solpeople/personal-info.pl?sp_person_id=$person">$first $last</a>};
+        }
+        cmp_ok(scalar(@links), '>=', 2, 'seedlot has multiple owners');
+        is($with_owners->[0]{owners_string}, join(', ', @links), 'page has the owners of its own seedlot');
+    }
+    $db->rollback();
+    isnt($page_ids[0], $page_ids[1], 'adjacent pages have different seedlots') if @page_ids == 2;
+};
+
 done_testing();
