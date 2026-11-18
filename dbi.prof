@@ -1,0 +1,8 @@
+DBI::ProfileDumper 2.015325
+Path = [ !Statement ]
+Program = /tmp/sf_prof2.pl
+
++ 1 
+= 5 0.000111818313598633 9.5367431640625e-07 0 0.00010991096496582 1794954554.6684 1794954554.66852
++ 1 SELECT me.project_id, me.name, me.description, me.create_date, me.type_id FROM project me WHERE ( project_id IN ( ?, ? ) )
+= 1 9.5367431640625e-07 9.5367431640625e-07 9.5367431640625e-07 9.5367431640625e-07 1794954554.66841 1794954554.66841

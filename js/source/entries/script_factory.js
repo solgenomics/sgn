@@ -508,7 +508,7 @@ function selectedDatasetId() {
 }
 
 // opts.fromDatabase: read the phenotypes from the database tables instead of
-// the search cache (slow on a large database; offered when the cache is stale).
+// the search cache (offered when the cache is stale).
 // loadDataset is also a click handler, so opts may be an event.
 function loadDataset(opts) {
     const fromDatabase = !!(opts && opts.fromDatabase === true);
@@ -522,7 +522,7 @@ function loadDataset(opts) {
         return;
     }
     $('#sf_dataset_message').html('<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh sf-spin"></span> ' +
-        (fromDatabase ? 'Reading the phenotypes from the database. On a large database this can take several minutes...'
+        (fromDatabase ? 'Reading the phenotypes from the database...'
                       : 'Retrieving phenotypes. Large datasets can take a minute...') + '</div>');
     $('#sf_cache_reload').prop('disabled', true);
     $('#sf_load_dataset').prop('disabled', true);
@@ -669,11 +669,57 @@ function cacheNote(r) {
             "Read directly from the database: Breedbase's phenotype search cache is not up to date for " + detail.length +
             ' trial(s) of this dataset (' + trials + '). The summary and the analysis use every value.');
     }
+    const cache = r.cache || {};
     return alertBox('warning', '<span class="glyphicon glyphicon-warning-sign"></span> ' +
         "Breedbase's phenotype search cache is not up to date for " + detail.length + ' trial(s) of this dataset (' + trials +
         '). The summary and the analysis use the cached values, so recent uploads or changes may be missing until the cache is refreshed.' +
+        (cache.last_refresh ? ' <small class="sf-muted">Cache last updated ' + esc(cache.last_refresh) + '.</small>' : '') +
         '<div style="margin-top:8px"><button class="btn btn-default btn-sm" id="sf_cache_reload"><span class="glyphicon glyphicon-refresh"></span> Reload from database</button>' +
-        ' <small class="sf-muted">Reads every value from the database tables. On a large database this can take several minutes.</small></div>');
+        ' <small class="sf-muted">Reads every value of these trials from the database tables.</small></div>' +
+        (cache.can_update ? '<div style="margin-top:6px"><button class="btn btn-default btn-sm" id="sf_cache_update"' + (cache.refreshing ? ' disabled' : '') +
+            '><span class="glyphicon glyphicon-cloud-upload"></span> Update cache</button>' +
+            ' <small class="sf-muted" id="sf_cache_update_status">' + (cache.refreshing ? cacheUpdatingText() : 'Updates the search cache of the whole database, for every tool. On a large database this can take a long time; you can keep working meanwhile.') + '</small></div>'
+            : (cache.refreshing ? '<div style="margin-top:6px"><small class="sf-muted">' + cacheUpdatingText() + '</small></div>' : '')));
+}
+
+function cacheUpdatingText() {
+    return '<span class="glyphicon glyphicon-refresh sf-spin"></span> The search cache is being updated. This page will tell you when it is done.';
+}
+
+// starts an update of the phenotype search cache, then follows it
+function updateCache() {
+    $('#sf_cache_update').prop('disabled', true);
+    $('#sf_cache_update_status').html('<span class="glyphicon glyphicon-refresh sf-spin"></span> Starting the update...');
+    post('/ajax/script_factory/cache/update', {})
+        .then(r => {
+            if (r.message) $('#sf_cache_update_status').html(esc(r.message));
+            else $('#sf_cache_update_status').html(cacheUpdatingText());
+            pollCache(true);
+        })
+        .catch(e => {
+            $('#sf_cache_update').prop('disabled', false);
+            $('#sf_cache_update_status').html('<span class="sf-warn-text">' + esc(e.message) + '</span>');
+        });
+}
+
+// polls the cache status while an update runs; when it ends, offers to load
+// the dataset again from the updated cache
+function pollCache(started) {
+    clearTimeout(state.cachePoll);
+    state.cachePoll = setTimeout(() => {
+        post('/ajax/script_factory/cache/status', {})
+            .then(r => {
+                if (state.dataset) state.dataset.cache = r;
+                if (r.refreshing) { $('#sf_cache_update_status').html(cacheUpdatingText()); pollCache(true); return; }
+                if (!started) return;
+                $('#sf_cache_update').prop('disabled', false);
+                $('#sf_cache_note').append(alertBox('success', '<span class="glyphicon glyphicon-ok"></span> The search cache was updated' +
+                    (r.last_refresh ? ' (' + esc(r.last_refresh) + ')' : '') + '. ' +
+                    '<button class="btn btn-default btn-sm" id="sf_cache_reload_updated"><span class="glyphicon glyphicon-refresh"></span> Load the dataset again</button>'));
+                $('#sf_cache_update_status').html('');
+            })
+            .catch(() => pollCache(started));
+    }, 15000);
 }
 
 function renderDatasetOverview() {
@@ -683,6 +729,7 @@ function renderDatasetOverview() {
         stat(r.trials.length, 'Trials') + stat(r.n_locations, 'Locations') + stat(r.n_years, 'Years') +
         stat(r.n_accessions, 'Accessions') + stat(r.n_plots, 'Plots') + stat(r.traits.length, 'Numeric traits'));
     $('#sf_cache_note').html(cacheNote(r));
+    if (r.cache && r.cache.refreshing) pollCache(true);
 
     let h = '<table class="table table-condensed table-hover"><thead><tr><th>Trial</th><th>Location</th><th>Year</th><th>Design</th><th>Plots</th><th>Accessions</th><th>Reps</th><th>Blocks</th><th>Layout</th></tr></thead><tbody>';
     r.trials.forEach(t => {
@@ -3526,6 +3573,8 @@ export function init(options) {
     // step 1
     $('#sf_load_dataset').on('click', loadDataset);
     $('#sf_cache_note').on('click', '#sf_cache_reload', () => loadDataset({ fromDatabase: true }));
+    $('#sf_cache_note').on('click', '#sf_cache_update', updateCache);
+    $('#sf_cache_note').on('click', '#sf_cache_reload_updated', () => loadDataset());
     // ticking a dataset loads it (one dataset at a time)
     $('#sf_dataset_select').on('change', 'input[name=sf_dataset_checkbox]', function() {
         if (!$(this).is(':checked')) return;

@@ -11,6 +11,8 @@ Endpoints used by /tools/script_factory:
                                       (source=database: read from the tables, not the search cache)
   /ajax/script_factory/plot_data      plot level values of selected traits (outlier explorer)
   /ajax/script_factory/correlations   plot level correlation of each trait with each covariate
+  /ajax/script_factory/cache/status   is the phenotype search cache being updated, when it was last updated
+  /ajax/script_factory/cache/update   start an update of the phenotype search cache (curators, breeders)
   /ajax/script_factory/outliers/mark  check / mark / unmark outliers as dataset or database outliers
   /ajax/script_factory/run            submit the R pipeline as a background job
   /ajax/script_factory/status         poll a submitted job, return the results when done
@@ -44,7 +46,11 @@ use DateTime;
 use Try::Tiny;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
-use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Calendar;
+use CXGN::BreedersToolbox::Projects;
+use List::Util;
+use CXGN::Tools::Run;
+use Time::HiRes;
 use CXGN::Job;
 use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
@@ -426,7 +432,7 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     # views), which on a large database can be hours behind new uploads. The
     # dataset is read from the cache (fast) and the trials whose values differ
     # from the database tables are reported, so the user can reload it from
-    # the tables (source=database; slow on a large database). The tables are
+    # the tables (source=database, _write_native_phenotypes). The tables are
     # also read when the cache holds no phenotypes of the dataset at all.
     my $cache = try { _phenotype_cache_check($schema, $ds, $traits_in_ds) }
                 catch { print STDERR "Analysis Pipeline: phenotype cache of dataset $dataset_id not checked: $_\n"; undef };
@@ -592,6 +598,7 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         phenotype_source => $source,
         stale_trials => $cache ? $cache->{stale} : [],
         stale_detail => $cache ? $cache->{detail} : [],
+        cache => _cache_status($schema->storage->dbh(), $c),
         pedigree => $pedigree,
         treatments => $treatments,
         treatment_types => _treatment_types($c),
@@ -863,6 +870,73 @@ sub _resolve_phenotypes {
     return (\%ids, \%in_db, $outlier_type_id);
 }
 
+# Phenotype search cache (materialized views) update: bin/refresh_matviews.pl
+# -m phenotypes -c refreshes materialized_phenoview and
+# materialized_phenotype_jsonb_table concurrently (searches keep working
+# meanwhile). The script holds advisory lock 67895 while it runs, whatever
+# the mode, so the lock tells whether an update is in progress.
+sub _cache_refreshing {
+    my $dbh = shift;
+    my ($running) = $dbh->selectrow_array(
+        "SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory' AND classid = 0 AND objid = 67895 AND objsubid = 1)");
+    return $running ? 1 : 0;
+}
+
+sub _can_update_cache { return _can_mark_database(shift) }
+
+# { refreshing, last_refresh (of the phenotype cache, if recorded), can_update }
+sub _cache_status {
+    my ($dbh, $c) = @_;
+    my ($last) = try { $dbh->selectrow_array(
+        "SELECT to_char(last_refresh, 'YYYY-MM-DD HH24:MI') FROM public.matviews WHERE mv_name = 'materialized_phenotype_jsonb_table'") } catch { undef };
+    return { refreshing => _cache_refreshing($dbh), last_refresh => $last, can_update => _can_update_cache($c) };
+}
+
+sub cache_status : Path('/ajax/script_factory/cache/status') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+    my ($schema) = _schemas($c);
+    $c->stash->{rest} = _cache_status($schema->storage->dbh(), $c);
+}
+
+sub cache_update : Path('/ajax/script_factory/cache/update') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+    if (!_can_update_cache($c)) {
+        $c->stash->{rest} = { error => 'Only curators and breeders can update the phenotype search cache.' };
+        return;
+    }
+    my ($schema) = _schemas($c);
+    my $dbh = $schema->storage->dbh();
+    if (_cache_refreshing($dbh)) {
+        $c->stash->{rest} = { started => 0, refreshing => 1, message => 'An update of the search cache is already in progress.' };
+        return;
+    }
+    my $basepath = $c->config->{basepath};
+    my $run = CXGN::Tools::Run->new();
+    try {
+        $run->run_async('perl', "$basepath/bin/refresh_matviews.pl", '-H', $c->config->{dbhost}, '-D', $c->config->{dbname},
+                        '-U', $c->config->{dbuser}, '-P', $c->config->{dbpass}, '-m', 'phenotypes', '-c');
+    } catch {
+        $c->stash->{rest} = { error => "The search cache update could not be started: $_" };
+    };
+    return if $c->stash->{rest};
+    # wait (up to ~5 s) until the script holds its lock, so the page shows the
+    # update as running from the first status poll on
+    for (1 .. 25) {
+        last if _cache_refreshing($dbh) || !$run->alive();
+        Time::HiRes::sleep(0.2);
+    }
+    my $refreshing = _cache_refreshing($dbh);
+    if (!$refreshing && !$run->alive()) {
+        my $err = try { $run->err() } catch { '' };
+        print STDERR "Analysis Pipeline: search cache update ended at once: $err\n" if $err;
+    }
+    $c->stash->{rest} = { started => 1, refreshing => $refreshing };
+}
+
 # Compares, for each trial of the dataset, the plot values of its traits in the
 # database tables with those in the phenotype search cache
 # (materialized_phenotype_jsonb_table), counting distinct phenotype ids on both
@@ -907,25 +981,203 @@ sub _phenotype_cache_check {
 }
 
 # Writes the dataset's phenotype file as CXGN::Dataset::File does (tab
-# separated, no quotes), but read with the Native search, from the database
-# tables instead of the search cache. Same filters as
-# CXGN::Dataset::retrieve_phenotypes; outliers are kept (step 2 handles them).
+# separated, no quotes, same columns as the search cache file), read with
+# direct SQL from the database tables instead of the search cache. Only the
+# dataset's trials are read, so it stays fast on a large database (the Native
+# PhenotypeMatrix search took ~10 minutes for two trials). Same rows and
+# values as CXGN::Dataset::retrieve_phenotypes: observation units of the
+# dataset's level with an accession (or cross, family name), units without a
+# value of the dataset's traits left out, several values of one trait on a
+# unit averaged (values marked as outliers left out of the average, as
+# PhenotypeMatrix does). Outliers are kept (step 2 handles them). The planted
+# seedlot columns are left empty (the pipeline does not use them).
 sub _write_native_phenotypes {
     my ($schema, $ds, $traits, $file) = @_;
-    my $ids = sub { [ grep { defined } map { ref($_) ? $_->[0] : $_ } @{ $_[0] || [] } ] };
-    my $matrix = CXGN::Phenotypes::PhenotypeMatrix->new(
-        search_type => 'Native',
-        bcs_schema => $schema,
-        data_level => $ds->data_level(),
-        trait_list => $ids->($traits),
-        trial_list => $ids->($ds->retrieve_trials()),
-        accession_list => $ids->($ds->retrieve_accessions()),
-        exclude_phenotype_outlier => 0,
-    );
-    my @rows = $matrix->get_phenotype_matrix();
+    my $ids = sub { [ grep { defined && /^\d+$/ } map { ref($_) ? $_->[0] : $_ } @{ $_[0] || [] } ] };
+    my $trial_ids = $ids->($ds->retrieve_trials());
+    my $trait_ids = $ids->($traits);
+    my $accession_ids = $ids->($ds->retrieve_accessions());
+    my $dbh = $schema->storage->dbh();
+    my $type_ids = sub {
+        my $cv = shift;
+        return [ map { $_->cvterm_id() } grep { defined } map { SGN::Model::Cvterm->get_cvterm_row($schema, $_, $cv) } @_ ];
+    };
+    my $type_id = sub { my $r = SGN::Model::Cvterm->get_cvterm_row($schema, $_[0], $_[1]); return $r ? $r->cvterm_id() : -1 };
+
+    my @meta_headers = qw| studyYear programDbId programName programDescription studyDbId studyName studyDescription studyDesign
+        plotWidth plotLength fieldSize fieldTrialIsPlannedToBeGenotyped fieldTrialIsPlannedToCross plantingDate harvestDate
+        locationDbId locationName germplasmDbId germplasmName germplasmSynonyms observationLevel observationUnitDbId
+        observationUnitName replicate blockNumber plotNumber rowNumber colNumber entryType plantNumber
+        plantedSeedlotStockDbId plantedSeedlotStockUniquename plantedSeedlotCurrentCount plantedSeedlotCurrentWeightGram
+        plantedSeedlotBoxName plantedSeedlotTransactionCount plantedSeedlotTransactionWeight
+        plantedSeedlotTransactionDescription availableGermplasmSeedlotUniquenames |;
+
+    # selected traits always get a column (as in PhenotypeMatrix)
+    my %trait_name;
+    if (@$trait_ids) {
+        my $r = $dbh->selectall_arrayref(
+            "SELECT cvterm.cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession
+               FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id = ANY(?)", undef, $trait_ids);
+        $trait_name{$_->[0]} = $_->[1] for @$r;
+    }
+    if (!@$trial_ids) {
+        write_file($file, join("\t", @meta_headers, (sort values %trait_name), 'notes') . "\n");
+        return 0;
+    }
+
+    # observation units of the trials, at the dataset's level, with their germplasm
+    my $level = $ds->data_level() // 'plot';
+    my $unit_types = $type_ids->('stock_type', $level eq 'all' ? qw| plot plant subplot tissue_sample analysis_instance | : $level);
+    my $units = $dbh->selectall_arrayref(
+        "SELECT DISTINCT u.stock_id, u.uniquename, ut.name, g.stock_id, g.uniquename, nepr.project_id
+           FROM nd_experiment_project nepr
+           JOIN nd_experiment e ON e.nd_experiment_id = nepr.nd_experiment_id AND e.type_id = ANY(?)
+           JOIN nd_experiment_stock nes ON nes.nd_experiment_id = e.nd_experiment_id
+           JOIN stock u ON u.stock_id = nes.stock_id AND u.type_id = ANY(?)
+           JOIN cvterm ut ON ut.cvterm_id = u.type_id
+           JOIN stock_relationship sr ON sr.subject_id = u.stock_id AND sr.type_id = ANY(?)
+           JOIN stock g ON g.stock_id = sr.object_id AND g.type_id = ANY(?)
+          WHERE nepr.project_id = ANY(?)" . (@$accession_ids ? " AND g.stock_id = ANY(?)" : ''), undef,
+        $type_ids->('experiment_type', qw| field_layout genotyping_layout phenotyping_experiment analysis_experiment |),
+        $unit_types,
+        $type_ids->('stock_relationship', qw| plot_of plant_of subplot_of analysis_of |),
+        $type_ids->('stock_type', qw| accession cross family_name |),
+        $trial_ids, (@$accession_ids ? ($accession_ids) : ()));
+    my %unit;
+    foreach my $u (@$units) {
+        $unit{"$u->[0]|$u->[5]"} ||= { id => $u->[0], name => $u->[1], level => $u->[2], germplasm_id => $u->[3], germplasm => $u->[4], trial_id => $u->[5] };
+    }
+    return _write_phenotype_rows($file, \@meta_headers, \%trait_name, []) if !%unit;
+    my @unit_ids = do { my %seen; grep { !$seen{$_}++ } map { $_->{id} } values %unit };
+
+    # values of the units in the trials (several per trait are averaged below);
+    # filtered to the units in Perl: a unit id list in the query makes it slow
+    my $outlier_type_id = $type_id->('phenotype_outlier', 'phenotype_property');
+    my $values = $dbh->selectall_arrayref(
+        "SELECT nes.stock_id, nepr.project_id, ph.cvalue_id, ph.value, pp.value
+           FROM nd_experiment_project nepr
+           JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nepr.nd_experiment_id
+           JOIN nd_experiment_phenotype nep ON nep.nd_experiment_id = nepr.nd_experiment_id
+           JOIN phenotype ph ON ph.phenotype_id = nep.phenotype_id
+           LEFT JOIN phenotypeprop pp ON pp.phenotype_id = ph.phenotype_id AND pp.type_id = ?
+          WHERE nepr.project_id = ANY(?) AND ph.value IS NOT NULL" .
+          (@$trait_ids ? " AND ph.cvalue_id = ANY(?)" : '') .
+          " ORDER BY ph.phenotype_id", undef,
+        $outlier_type_id, $trial_ids, (@$trait_ids ? ($trait_ids) : ()));
+    my (%obs, %seen_trait);
+    foreach my $v (@$values) {
+        my ($stock_id, $trial_id, $trait_id, $value, $outlier) = @$v;
+        my $u = $unit{"$stock_id|$trial_id"} or next;
+        push @{ $u->{obs}->{$trait_id} }, [ $value, $outlier ];
+        $seen_trait{$trait_id} = 1;
+    }
+    my @missing = grep { !exists $trait_name{$_} } keys %seen_trait;
+    if (@missing) {
+        my $r = $dbh->selectall_arrayref(
+            "SELECT cvterm.cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession
+               FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id = ANY(?)", undef, \@missing);
+        $trait_name{$_->[0]} = $_->[1] for @$r;
+    }
+    # units without a value of the traits are not in the file (as with the cache)
+    my @rows = grep { $_->{obs} || !@$trait_ids } values %unit;
+    return _write_phenotype_rows($file, \@meta_headers, \%trait_name, []) if !@rows;
+
+    # unit properties (design layout)
+    my %prop_of = map { $type_id->($_->[0], 'stock_property') => $_->[1] }
+        (['replicate', 'rep'], ['block', 'block'], ['plot number', 'plot_number'], ['row_number', 'row'], ['col_number', 'col'],
+         ['plant_index_number', 'plant'], ['is a control', 'control'], ['notes', 'notes']);
+    my $props = $dbh->selectall_arrayref(
+        "SELECT stock_id, type_id, value, rank FROM stockprop WHERE stock_id = ANY(?) AND type_id = ANY(?) ORDER BY stock_id, rank, stockprop_id",
+        undef, \@unit_ids, [ grep { $_ > 0 } keys %prop_of ]);
+    my %unit_prop;
+    foreach my $p (@$props) {
+        my ($stock_id, $t, $value, $rank) = @$p;
+        my $k = $prop_of{$t};
+        if ($k eq 'notes') { push @{ $unit_prop{$stock_id}->{notes} }, $value if defined $value; next; }
+        next if ($k eq 'row' || $k eq 'col') && ($rank // 0) != 0;
+        $unit_prop{$stock_id}->{$k} //= $value;
+    }
+
+    # trial properties, breeding program, location names
+    my %trial_prop_of = map { $type_id->($_->[0], 'project_property') => $_->[1] }
+        (['project year', 'year'], ['design', 'design'], ['project location', 'location_id'], ['project_planting_date', 'planting_date'],
+         ['project_harvest_date', 'harvest_date'], ['plot_width', 'plot_width'], ['plot_length', 'plot_length'], ['field_size', 'field_size'],
+         ['field_trial_is_planned_to_be_genotyped', 'genotyped'], ['field_trial_is_planned_to_cross', 'cross']);
+    my %trial;
+    my $tr = $dbh->selectall_arrayref("SELECT project_id, name, description FROM project WHERE project_id = ANY(?)", undef, $trial_ids);
+    $trial{$_->[0]} = { name => $_->[1], description => $_->[2] } for @$tr;
+    my $tp = $dbh->selectall_arrayref(
+        "SELECT project_id, type_id, value FROM projectprop WHERE project_id = ANY(?) AND type_id = ANY(?) ORDER BY rank, projectprop_id",
+        undef, $trial_ids, [ grep { $_ > 0 } keys %trial_prop_of ]);
+    $trial{$_->[0]}->{ $trial_prop_of{$_->[1]} } //= $_->[2] for @$tp;
+    my $bp = $dbh->selectall_arrayref(
+        "SELECT pr.subject_project_id, bp.project_id, bp.name, bp.description FROM project_relationship pr
+           JOIN project bp ON bp.project_id = pr.object_project_id
+          WHERE pr.subject_project_id = ANY(?) AND pr.type_id = ?", undef,
+        $trial_ids, $type_id->('breeding_program_trial_relationship', 'project_relationship'));
+    @{ $trial{$_->[0]} }{qw| program_id program program_description |} = @$_[1..3] for @$bp;
+    my @loc_ids = grep { defined && /^\d+$/ } map { $_->{location_id} } values %trial;
+    my %location = @loc_ids ? map { @$_ } @{ $dbh->selectall_arrayref(
+        "SELECT nd_geolocation_id, description FROM nd_geolocation WHERE nd_geolocation_id = ANY(?)", undef, \@loc_ids) } : ();
+    my $calendar = CXGN::Calendar->new({});
+
+    # germplasm synonyms (accessions)
+    my %synonyms;
+    my $syn = $dbh->selectall_arrayref(
+        "SELECT stock_id, value FROM stockprop WHERE stock_id = ANY(?) AND type_id = ? ORDER BY value", undef,
+        [ do { my %s; grep { !$s{$_}++ } map { $_->{germplasm_id} } @rows } ], $type_id->('stock_synonym', 'stock_property'));
+    push @{ $synonyms{$_->[0]} }, $_->[1] for @$syn;
+
+    my @lines;
     no warnings 'uninitialized';
-    write_file($file, map { my $s = join("\t", @$_); $s =~ s/[\r\n]//g; "$s\n" } @rows);
-    return scalar(@rows);
+    foreach my $u (sort { $trial{$a->{trial_id}}->{name} cmp $trial{$b->{trial_id}}->{name} || $a->{name} cmp $b->{name} } @rows) {
+        my $t = $trial{ $u->{trial_id} } || {};
+        my $p = $unit_prop{ $u->{id} } || {};
+        (my $trial_name = $t->{name}) =~ s/\s+$//;
+        (my $trial_desc = $t->{description}) =~ s/\s+$//;
+        my %value;
+        foreach my $trait_id (keys %{ $u->{obs} || {} }) {
+            my @o = @{ $u->{obs}->{$trait_id} };
+            if (@o == 1) { $value{$trait_id} = $o[0]->[0]; next; }
+            # several values: the average of those not marked as outliers
+            my @v = map { $_->[0] } grep { !$_->[1] && _is_number($_->[0]) } @o;
+            $value{$trait_id} = @v ? List::Util::sum(@v) / @v : undef;
+        }
+        push @lines, {
+            unit => $u->{id},
+            meta => [ $t->{year}, $t->{program_id}, $t->{program}, $t->{program_description}, $u->{trial_id}, $trial_name, $trial_desc,
+                      $t->{design}, $t->{plot_width}, $t->{plot_length}, $t->{field_size}, $t->{genotyped}, $t->{cross},
+                      scalar($calendar->display_start_date($t->{planting_date})), scalar($calendar->display_start_date($t->{harvest_date})),
+                      $t->{location_id}, ($t->{location_id} ? $location{ $t->{location_id} } : ''),
+                      $u->{germplasm_id}, $u->{germplasm}, join(',', @{ $synonyms{ $u->{germplasm_id} } || [] }),
+                      $u->{level}, $u->{id}, $u->{name}, $p->{rep}, $p->{block}, $p->{plot_number}, $p->{row}, $p->{col},
+                      ($p->{control} ? 'check' : 'test'), $p->{plant}, ('') x 9 ],
+            values => \%value,
+            notes => join(', ', do { my %s; sort grep { !$s{$_}++ } @{ $p->{notes} || [] } }),
+        };
+    }
+    return _write_phenotype_rows($file, \@meta_headers, \%trait_name, \@lines, $schema, $trial_ids);
+}
+
+# Writes the phenotype file: header (metadata, traits sorted by name, notes,
+# treatments) and one line per observation unit.
+sub _write_phenotype_rows {
+    my ($file, $meta_headers, $trait_name, $lines, $schema, $trial_ids) = @_;
+    my @traits = sort { $trait_name->{$a} cmp $trait_name->{$b} } keys %$trait_name;
+    my $treatments = { treatment_names => [], treatment_details => {} };
+    if (@$lines) {
+        my %seen = map { $_->{unit} => 1 } @$lines;
+        $treatments = CXGN::BreedersToolbox::Projects->new({ schema => $schema })->get_related_treatments($trial_ids, \%seen);
+    }
+    my @names = @{ $treatments->{treatment_names} || [] };
+    my @out = ([ @$meta_headers, (map { $trait_name->{$_} } @traits), 'notes', @names ]);
+    foreach my $l (@$lines) {
+        my $trt = $treatments->{treatment_details}->{ $l->{unit} } || {};
+        push @out, [ @{ $l->{meta} }, (map { $l->{values}->{$_} } @traits), $l->{notes}, (map { $trt->{$_} } @names) ];
+    }
+    no warnings 'uninitialized';
+    write_file($file, map { my $s = join("\t", @$_); $s =~ s/[\r\n]//g; "$s\n" } @out);
+    return scalar(@out);
 }
 
 # Values of the dataset (plots of its trials, its traits) marked as outliers:
