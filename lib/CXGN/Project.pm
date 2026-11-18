@@ -3656,7 +3656,8 @@ sub save_plant_entries {
     eval {
         $self->bcs_schema()->txn_do($create_plant_entities_txn);
 
-        if ($inherits_plot_treatments && $treatments) {
+        # Skip storing when no plot has a treatment value to inherit; StorePhenotypes fails on an empty stock list
+        if ($inherits_plot_treatments && $treatments && %phenostore_stocks) {
             my @treatment_names = map {$_->{trait_name}} @{$treatments};
 
             my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({

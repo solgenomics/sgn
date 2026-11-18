@@ -1327,9 +1327,11 @@ sub upload_trial_file_POST : Args(0) {
                 $phenostore_stocks{$plot} = 1;
                 foreach my $treatment (keys(%{$treatment_design->{$plot}})) {
                     $phenostore_treatments{$treatment} = 1;
+                    # The collection date is the timestamp given in the cell, if any; it is not the upload time
+                    my ($value, $collect_timestamp) = @{$treatment_design->{$plot}->{$treatment}};
                     $phenostore_data_hash->{$plot}->{$treatment} = [
-                        $treatment_design->{$plot}->{$treatment},
-                        $pheno_timestamp,
+                        $value,
+                        $collect_timestamp,
                         $user_name,
                         '',''
                     ];

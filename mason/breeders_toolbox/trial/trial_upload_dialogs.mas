@@ -744,6 +744,7 @@ $design_types => ()
                     <b>Traits & Treatments:</b>
                     <ul>
                     <li>Phenotypic data can be uploaded along with treatments. They may be included as additional columns in a trial upload, formatted as <code>experimental treatment|EXPERIMENT_TREATMENT:0000001</code> or <code>dry matter content percentage|CO_334:0000092</code>. Both can also be uploaded from the trial detail page after trial creation. </li>
+                    <li>A value is stored without a collection date unless its cell includes one after a comma, as in phenotype uploads: <code>30,2025-06-15 10:30:00-0500</code> (YYYY-MM-DD HH:MM:SS followed by the time zone offset).</li>
                     </ul>
 
                     <hr />
@@ -857,6 +858,7 @@ $design_types => ()
                     <b>Traits & Treatments:</b>
                     <ul>
                     <li>Phenotypic data can be uploaded along with treatments. They may be included as additional columns in a trial upload, formatted as <code>experimental treatment|EXPERIMENT_TREATMENT:0000001</code> or <code>dry matter content percentage|CO_334:0000092</code>. Both can also be uploaded from the trial detail page after trial creation. </li>
+                    <li>A value is stored without a collection date unless its cell includes one after a comma, as in phenotype uploads: <code>30,2025-06-15 10:30:00-0500</code> (YYYY-MM-DD HH:MM:SS followed by the time zone offset).</li>
                     </ul>
 
                     <hr />

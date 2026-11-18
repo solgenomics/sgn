@@ -171,7 +171,7 @@ my $coderef = sub {
         if ($trial_design->{'design_details'}{'treatments'}) { #construct treatment hash
             foreach my $plot (keys(%{$trial_design->{'design_details'}{'treatments'}})) {
                 foreach my $treatment (keys(%{$trial_design->{'design_details'}{'treatments'}->{$plot}})) {
-                    push @{$trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment}}, $phenotimestamp;
+                    # The parser stores [ value, timestamp ]; the collection date is the timestamp given in the cell, if any, not the upload time
                     push @{$trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment}}, $username;
                     push @{$trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment}}, '';
                     push @{$trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment}}, '';

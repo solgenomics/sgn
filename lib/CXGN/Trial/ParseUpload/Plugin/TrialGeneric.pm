@@ -123,14 +123,19 @@ sub _validate_with_plugin {
                 bcs_schema => $schema,
                 cvterm_id => $treatment_id
             });
-            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
+            # Cells may hold "value,timestamp"; the value alone is checked against the term's limits
+            my ($value, undef, $timestamp_error) = $self->split_value_timestamp($data->{$treatment});
+            if ($timestamp_error) {
+                push @error_messages, "Row $row: $timestamp_error in column $treatment.";
+            }
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($value) && $value < $treatment_obj->minimum()) {
                 push @error_messages, "Row $row: value for $treatment is lower than the allowed minimum for that treatment.";
             }
-            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->maximum()) && defined($data->{$treatment}) && $data->{$treatment} > $treatment_obj->maximum()) {
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->maximum()) && defined($value) && $value > $treatment_obj->maximum()) {
                 push @error_messages, "Row $row: value for $treatment is higher than the allowed maximum for that treatment.";
             }
-            if ($treatment_obj->format() eq "qualitative" && defined($treatment_obj->categories()) && defined($data->{$treatment})) {
-                my $qual_value = $data->{$treatment};
+            if ($treatment_obj->format() eq "qualitative" && defined($treatment_obj->categories()) && defined($value)) {
+                my $qual_value = $value;
                 my $categories = $treatment_obj->categories();
                 if ( $categories !~ m/$qual_value/) {
                     push @error_messages, "Row $row: value for $treatment is not in the valid categories for that treatment.";
@@ -522,7 +527,9 @@ sub _parse_with_plugin {
         }
         foreach my $treatment (@{$treatments}) {
             if (defined($r->{$treatment})) {
-                $treatment_design->{$plot_name}->{$treatment} = $r->{$treatment};
+                # Stored as [ value, timestamp ]; the timestamp is '' when the cell has none
+                my ($value, $timestamp) = $self->split_value_timestamp($r->{$treatment});
+                $treatment_design->{$plot_name}->{$treatment} = [ $value, $timestamp ];
             }
         }
     }

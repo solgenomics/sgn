@@ -135,6 +135,97 @@ $mech->post('http://localhost:3010/brapi/v2/observationunits/', Content => encod
 }]));
 ok(!$schema->resultset('Stock::Stock')->find({ uniquename => 'inheritance_test_wrong_germplasm' }), 'plant with mismatched germplasm is not created');
 
+# A new plot sent with a tissue sample whose name already exists is not stored, so the request can be corrected and resent
+$mech->post('http://localhost:3010/brapi/v2/observationunits/', Content => encode_json([
+    {
+        germplasmDbId => "$germplasm_id",
+        observationUnitName => 'inheritance_test_new_plot',
+        studyDbId => "$study_id",
+        trialDbId => "$study_id",
+        observationUnitPosition => {
+            observationLevel => { levelName => 'plot', levelCode => '9001' },
+            observationLevelRelationships => [ { levelName => 'rep', levelCode => '1' }, { levelName => 'block', levelCode => '1' } ]
+        }
+    },
+    {
+        germplasmDbId => "$germplasm_id",
+        observationUnitName => 'inheritance_test_plot_sample',
+        studyDbId => "$study_id",
+        trialDbId => "$study_id",
+        observationUnitPosition => { observationLevel => { levelName => 'tissue_sample', levelCode => '2' } },
+        additionalInfo => { observationUnitParent => "$plot_id" }
+    }
+]));
+my $duplicate_response = decode_json($mech->content);
+like(join('; ', map { $_->{message} } @{$duplicate_response->{metadata}->{status} || []}), qr/already exist.*inheritance_test_plot_sample/, 'existing tissue sample name is reported');
+ok(!$schema->resultset('Stock::Stock')->find({ uniquename => 'inheritance_test_new_plot' }), 'new plot is not stored when a tissue sample in the same request would fail');
+
+# Plant coordinates: each new plant keeps its own row and column, whether or not the other new plants in its plot have them
+sub post_plants {
+    my ($plot_name, @plants) = @_; # each plant is [ name, x (col), y (row) ]
+    my $parent_id = $schema->resultset('Stock::Stock')->find({ uniquename => $plot_name })->stock_id();
+    my ($plot_germplasm_id) = $dbh->selectrow_array(
+        "SELECT object_id FROM stock_relationship JOIN cvterm ON (stock_relationship.type_id = cvterm.cvterm_id)
+         WHERE subject_id = ? AND cvterm.name = 'plot_of'", undef, $parent_id);
+    my $index = 1;
+    $mech->post('http://localhost:3010/brapi/v2/observationunits/', Content => encode_json([ map {
+        my ($name, $x, $y) = @$_;
+        my $position = { observationLevel => { levelName => 'plant', levelCode => $index++ } };
+        $position->{positionCoordinateX} = $x if defined $x;
+        $position->{positionCoordinateY} = $y if defined $y;
+        {
+            germplasmDbId => "$plot_germplasm_id",
+            observationUnitName => $name,
+            studyDbId => "$study_id",
+            trialDbId => "$study_id",
+            observationUnitPosition => $position,
+            additionalInfo => { observationUnitParent => "$parent_id" }
+        }
+    } @plants ]));
+    return decode_json($mech->content);
+}
+
+sub status_messages {
+    my $response = shift;
+    return join('; ', map { $_->{message} } @{$response->{metadata}->{status} || []});
+}
+
+sub post_plants_ok {
+    my ($label, $plot_name, @plants) = @_;
+    my $response = post_plants($plot_name, @plants);
+    is(scalar(@{$response->{result}->{data} || []}), scalar(@plants), "$label: plants created") or diag(status_messages($response));
+}
+
+sub plant_coords {
+    my $name = shift;
+    my %coords;
+    my $sth = $dbh->prepare(
+        "SELECT cvterm.name, stockprop.value FROM stockprop JOIN stock USING(stock_id) JOIN cvterm ON (stockprop.type_id = cvterm.cvterm_id)
+         WHERE stock.uniquename = ? AND cvterm.name IN ('row_number', 'col_number')");
+    $sth->execute($name);
+    while (my ($type, $value) = $sth->fetchrow_array()) { push @{$coords{$type}}, $value; }
+    return \%coords;
+}
+
+# Every new plant in the plot has coordinates
+post_plants_ok('all plants with coordinates', 'CASS_6Genotypes_104', ['coords_test_all_1', 1, 1], ['coords_test_all_2', 2, 1]);
+is_deeply(plant_coords('coords_test_all_1'), { row_number => ['1'], col_number => ['1'] }, 'all plants with coordinates: first plant keeps its coordinates');
+is_deeply(plant_coords('coords_test_all_2'), { row_number => ['1'], col_number => ['2'] }, 'all plants with coordinates: second plant keeps its coordinates');
+
+# Only some new plants in the plot have coordinates
+post_plants_ok('some plants with coordinates', 'CASS_6Genotypes_105', ['coords_test_some_1', 3, 2], ['coords_test_some_2']);
+is_deeply(plant_coords('coords_test_some_1'), { row_number => ['2'], col_number => ['3'] }, 'some plants with coordinates: plant with coordinates keeps them');
+is_deeply(plant_coords('coords_test_some_2'), {}, 'some plants with coordinates: plant without coordinates has none');
+
+# No new plant in the plot has coordinates
+post_plants_ok('no plants with coordinates', 'CASS_6Genotypes_106', ['coords_test_none_1'], ['coords_test_none_2']);
+is_deeply(plant_coords('coords_test_none_1'), {}, 'no plants with coordinates: plant has none');
+
+# A plant whose position is taken by an existing plant of the same plot is rejected, along with the rest of the request
+my $occupied_response = post_plants('CASS_6Genotypes_104', ['coords_test_free', 3, 3], ['coords_test_occupied', 1, 1]);
+like(status_messages($occupied_response), qr/coords_test_occupied.*occupied/, 'occupied position is reported');
+ok(!$schema->resultset('Stock::Stock')->find({ uniquename => $_ }), "$_ is not created when a position in the request is occupied") for qw(coords_test_free coords_test_occupied);
+
 $f->clean_up_db();
 CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $study_id, experiment_type => 'field_layout' })->generate_and_cache_layout();
 
