@@ -664,11 +664,8 @@ function cacheNote(r) {
     if (!detail.length) return '';
     const trials = detail.map(d => esc(d.trial) + (d.n_database !== undefined
         ? ' <small class="sf-muted">(' + esc(d.n_cache) + ' of ' + esc(d.n_database) + ' values in the cache)</small>' : '')).join(', ');
-    if (r.phenotype_source === 'database') {
-        return alertBox('info', '<span class="glyphicon glyphicon-refresh"></span> ' +
-            "Read directly from the database: Breedbase's phenotype search cache is not up to date for " + detail.length +
-            ' trial(s) of this dataset (' + trials + '). The summary and the analysis use every value.');
-    }
+    // read from the database tables: every value is there, nothing to report
+    if (r.phenotype_source === 'database') return '';
     const cache = r.cache || {};
     return alertBox('warning', '<span class="glyphicon glyphicon-warning-sign"></span> ' +
         "Breedbase's phenotype search cache is not up to date for " + detail.length + ' trial(s) of this dataset (' + trials +
@@ -743,9 +740,10 @@ function renderDatasetOverview() {
     h += '</tbody></table>';
     $('#sf_trials_table').html(h);
     const rpt = (r.repeated || []).filter(x => x.n_repeated_units > 0);
-    $("#sf_repeated_note").html(rpt.length ? alertBox('warning', '<span class="glyphicon glyphicon-repeat"></span> <b>Repeated measurements:</b> ' +
-        rpt.map(x => "<b>" + esc(x.short) + '</b> (up to ' + x.max_n + ' values on ' + x.n_repeated_units + ' of ' + x.n_units + ' plots' + (x.n_dates > 1 ? ', ' + x.n_dates + ' dates' : ', same date') + ')').join(', ') +
-        '. The table below shows their plot means; choose how each is used (mean, last, area under the curve, every measurement...) under <i>Repeated measurements</i> in step 3, where Breedbase suggests a choice.') : '');
+    // a plain note (not an alert box): site themes color alerts differently
+    $("#sf_repeated_note").html(rpt.length ? '<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-repeat"></span> Measured more than once per plot: ' +
+        rpt.map(x => esc(x.short) + ' <small class="sf-muted">(up to ' + x.max_n + ' values' + (x.n_dates > 1 ? ', ' + x.n_dates + ' dates' : '') + ')</small>').join(', ') +
+        '. The table shows plot means; you choose how to use them in step 3.</div>' : '');
     renderTraits();
     renderTreatments();
     // covariates of a script loaded before the dataset: match them by name
