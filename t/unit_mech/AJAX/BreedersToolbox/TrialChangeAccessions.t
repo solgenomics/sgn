@@ -619,4 +619,20 @@ subtest 'BrAPI bulk PUT keeps the replicates and check marks that the change set
     restore();
 };
 
+subtest 'BrAPI bulk PUT rolls back an earlier row when a later update fails' => sub {
+    my ($first, $second) = sort { $a <=> $b } ($plot{1}, $plot{10});
+    my $before = plot_state($first)->{rep};
+    my $ua = LWP::UserAgent->new;
+    $ua->default_header('Content-Type' => 'application/json');
+    $ua->default_header('Authorization' => 'Bearer '.$access_token);
+    my $response = $ua->put("$base/brapi/v2/observationunits", Content => encode_json({
+        $first => { observationUnitPosition => { observationLevel => { levelName => 'plot' },
+            observationLevelRelationships => [ { levelName => 'rep', levelCode => '99' } ] } },
+        $second => { germplasmDbId => '999999999', observationUnitPosition => { observationLevel => { levelName => 'plot' } } },
+    }));
+    ok(!$response->is_success, 'bulk update with an unknown accession is rejected');
+    is(plot_state($first)->{rep}, $before, 'the earlier replicate change was rolled back');
+    restore();
+};
+
 done_testing();

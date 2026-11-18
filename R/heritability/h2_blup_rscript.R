@@ -23,6 +23,7 @@ cat("study trait is ", study_trait,"\n")
 
 names <- colnames(pheno)
 allTraits <- grep("CO_", names, value = TRUE)
+study_ids <- pheno$studyDbId
 library(dplyr)
 pheno <- pheno[,colnames(pheno) %in% c("locationName", "germplasmName", "studyYear", "blockNumber","replicate", allTraits)]
 names <- colnames(pheno)
@@ -76,7 +77,12 @@ tryCatch({ for(i in 6:ncol(pheno)){
     # One level per block in which this trait was observed, not a numeric trend; with a
     # single block it stays a constant, which lmer drops from the fixed effects.
     # A plot without a block number is not a block of its own
-    traitData <- pheno[!is.na(pheno[[outcome]]), ]
+    observed <- !is.na(pheno[[outcome]])
+    traitData <- pheno[observed, ]
+    if (length(unique(na.omit(study_ids))) > 1) {
+      # A block number identifies a physical block within its study only.
+      traitData$blockNumber <- interaction(study_ids[observed], traitData$blockNumber, drop = TRUE)
+    }
     if (length(unique(na.omit(traitData$blockNumber))) > 1) {
       traitData$blockNumber <- as.factor(traitData$blockNumber)
     } else {

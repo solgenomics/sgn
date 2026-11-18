@@ -52,6 +52,27 @@ subtest 'h2_blup_rscript.R' => sub {
         or diag($stderr);
 };
 
+subtest 'h2_blup separates identically numbered blocks of different trials' => sub {
+    my $pheno = "$directory/multiple_trials.txt";
+    my %out = map { $_ => "$directory/multiple_trials_$_" } qw(h2.json h2.csv error.txt);
+    my @combined;
+    for my $study (1, 2) {
+        for my $accession (1 .. 6) {
+            push @combined, [2025, 'test_location', "G$accession", 1, $study, $study,
+                10 + 2 * $accession + 100 * $study + $noise[6 * ($study - 1) + $accession - 1]];
+        }
+    }
+    write_file($pheno, join("\n",
+        join("\t", qw(studyYear locationName germplasmName blockNumber replicate studyDbId), 'trait a|CO_000:0000001'),
+        map { join("\t", @$_) } @combined)."\n");
+    my ($stdout, $stderr);
+    ok(run([$rscript, 'R/heritability/h2_blup_rscript.R', $pheno, 'trait.a', @out{qw(h2.json h2.csv error.txt)}],
+        '<', \undef, '>', \$stdout, '2>', \$stderr), 'heritability script completes') or diag($stderr);
+    my $csv = -e $out{'h2.csv'} ? read_file($out{'h2.csv'}) : '';
+    my ($estimate) = $csv =~ /^"\d+","trait a",([0-9.]+),/m;
+    cmp_ok($estimate // 0, '>', 0.9, 'the difference between trials is absorbed by the study-specific blocks') or diag($csv, $stderr);
+};
+
 subtest 'h2_rscript.R' => sub {
     my @packages = qw(ltm rjson data.table phenoAnalysis dplyr na.tools lmerTest tibble);
     my $check = 'quit(status = !all(sapply(c('.join(',', map { "'$_'" } @packages).'), requireNamespace, quietly = TRUE)))';

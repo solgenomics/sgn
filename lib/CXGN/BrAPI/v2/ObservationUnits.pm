@@ -371,16 +371,47 @@ sub detail {
 }
 
 sub observationunits_update {
-    my $self = shift;
-    my $data = shift;
-    my $c = shift;
-    my $user_id = shift;
+    my ($self, $data, $c, $user_id) = @_;
 
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my $status = $self->status;
+    my (%refresh, $error_response);
+    try {
+        $self->bcs_schema->txn_do(sub {
+            %refresh = ();
+            $error_response = $self->_apply_observation_unit_updates($data, $user_id, \%refresh);
+            die "Observation unit update rejected\n" if $error_response;
+        });
+    } catch {
+        if (!$error_response) {
+            print STDERR "Updating observation units failed: $_\n";
+            $error_response = CXGN::BrAPI::JSONResponse->return_error(
+                $self->status, 'The observation unit updates could not be saved.', 500);
+        }
+    };
+    return $error_response if $error_response;
 
-    my $dbh = $self->bcs_schema()->storage()->dbh();
+    # The refresh uses a separate database connection and must see committed changes.
+    if (%refresh) {
+        my @trials = sort { $a <=> $b } keys %refresh;
+        my $matviews = grep($_ eq 'fullview', values %refresh) ? 'fullview' : 'phenotypes';
+        try {
+            my $bs = CXGN::BreederSearch->new({ dbh => $c->dbc->dbh(), dbname => $c->config->{dbname} });
+            $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews, 'concurrent', $c->config->{basepath});
+        } catch {
+            print STDERR "Could not refresh views after updating observation units: $_\n";
+        };
+        try {
+            $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, { trials => \@trials });
+        } catch {
+            print STDERR "Could not clear cached analyses after updating observation units: $_\n";
+        };
+    }
+
+    return $self->search({ observationUnitDbIds => [map { $_->{observationUnitDbId} } @$data] }, $c);
+}
+
+sub _apply_observation_unit_updates {
+    my ($self, $data, $user_id, $refresh) = @_;
+
     my $schema = $self->bcs_schema;
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
@@ -399,7 +430,29 @@ sub observationunits_update {
     # set (see _change_plot); the values sent for them are the ones from before the change
     my %set_by_change = ( germplasm => {}, replicate => {}, check => {} );
 
+    my %stock_type_of;
     foreach my $params (@$data) {
+        my $id = $params->{observationUnitDbId};
+        my $position = $params->{observationUnitPosition};
+        my $level = ref($position) eq 'HASH' && ref($position->{observationLevel}) eq 'HASH'
+            ? $position->{observationLevel}->{levelName} // '' : '';
+        my $stock = defined($id) && $id =~ /\A[0-9]+\z/
+            ? $schema->resultset('Stock::Stock')->find({ stock_id => $id }) : undef;
+        if (!$stock || ($stock->type_id != $plot_cvterm_id && $stock->type_id != $plant_cvterm_id)
+            || ($level ne 'plot' && $level ne 'plant' && $level ne 'tissue_sample')) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status,
+                "Only 'plot', 'plant' or 'tissue_sample' allowed for observation level and observationUnitDbId.", 400);
+        }
+        $stock_type_of{$id} = $stock->type_id;
+    }
+    # A plot update can also change its plants. Apply plots first, so a plant's
+    # payload is checked against the same parent change regardless of JSON key order.
+    my @ordered = sort {
+        ($stock_type_of{$b->{observationUnitDbId}} == $plot_cvterm_id)
+            <=> ($stock_type_of{$a->{observationUnitDbId}} == $plot_cvterm_id)
+        || $a->{observationUnitDbId} <=> $b->{observationUnitDbId}
+    } @$data;
+    foreach my $params (@ordered) {
         my $observation_unit_db_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
         my $data_level = $params->{observationUnitLevelName}->[0] || 'all';
         my $years_arrayref = $params->{seasonDbId} ? $params->{seasonDbId} : undef;
@@ -422,11 +475,10 @@ sub observationunits_update {
         my $level_relations = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
         my $level_name = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
         my $level_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
-        my $raw_additional_info = $params->{additionalInfo} || undef;
-        my $is_a_control = $raw_additional_info->{control} ? $raw_additional_info->{control} : undef;
+        my $raw_additional_info = $params->{additionalInfo} || {};
 
         my $entry_type = $params->{observationUnitPosition}->{entryType} ? $params->{observationUnitPosition}->{entryType} : undef;
-        my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
+        my $is_a_control = $raw_additional_info->{control} ? $raw_additional_info->{control} : undef;
 
         # BrAPI entryType overrides additionalinfo.control
         if ($entry_type) {
@@ -456,13 +508,7 @@ sub observationunits_update {
             }
         }
 
-        #Check if observation_unit_db_id is plot or plant and not other stock type
-        my $stock = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$observation_unit_db_id});
-        my $stock_type = $stock->type_id;
-
-        if (( $stock_type ne $plot_cvterm_id && $stock_type ne $plant_cvterm_id ) || ($level_name ne 'plant' && $level_name ne 'plot' && $level_name ne 'tissue_sample')){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Only 'plot', 'plant' or 'tissue_sample' allowed for observation level and observationUnitDbId."), 400);
-        }
+        my $stock_type = $stock_type_of{$observation_unit_db_id};
 
         #Update: accession
         # if (! defined $accession_id && ! defined $accession_name) {
@@ -516,7 +562,7 @@ sub observationunits_update {
                         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('The germplasm can only be changed for plots.'), 400);
                     }
                     # a trial with phenotypes or seedlots keeps its germplasm here, also for a curator
-                    my $error_response = $self->_change_plot($c, $user_id, { plot_id => $observation_unit_db_id, new_stock_id => $accession_id }, 1, \%set_by_change);
+                    my $error_response = $self->_change_plot($user_id, { plot_id => $observation_unit_db_id, new_stock_id => $accession_id }, \%set_by_change, $refresh);
                     return $error_response if $error_response;
                 }
             }
@@ -576,30 +622,21 @@ sub observationunits_update {
         }
     }
 
-    my @observation_unit_db_ids;
-    foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
-
-    my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
-    return $self->search($search_params, $c);
+    return;
 }
 
 # Changes one plot through CXGN::Trial::AccessionChange, with the rules of the
 # trial page: a curator, or a submitter of the trial's breeding program; plots
 # with phenotypes or with samples in other trials only by a curator. Once the
-# trial has phenotypes or seedlots only a curator may, and nobody when
-# $refuse_after_data is set. Returns an error response, or undef when the change
+# trial has phenotypes or seedlots this endpoint refuses the change.
+# Returns an error response, or undef when the change
 # was made or there was nothing to change. $set_by_change, when given, gets the
 # units whose replicate ({replicate}) or check mark ({check}) the change set: the
 # changed plot, the plots numbered again, and their plants, subplots and tissue
 # samples in the trial; and the old germplasm of the plants, subplots and tissue
 # samples that got the new one with their plot ({germplasm}).
 sub _change_plot {
-    my $self = shift;
-    my $c = shift;
-    my $user_id = shift;
-    my $change = shift;
-    my $refuse_after_data = shift;
-    my $set_by_change = shift;
+    my ($self, $user_id, $change, $set_by_change, $refresh) = @_;
     my $schema = $self->bcs_schema;
 
     my $trial_id = CXGN::Trial::AccessionChange->field_trial_of_plot($schema, $change->{plot_id});
@@ -628,7 +665,7 @@ sub _change_plot {
         }
     }
     my $precheck_error = CXGN::Trial::FieldMap->new({ bcs_schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' })->update_fieldmap_precheck();
-    if ($precheck_error && ($refuse_after_data || !$roles{curator})) {
+    if ($precheck_error) {
         return CXGN::BrAPI::JSONResponse->return_error($self->status, $precheck_error, 403);
     }
 
@@ -658,15 +695,8 @@ sub _change_plot {
         }
     }
 
-    # as on the trial page: the views and the analyses cached by solGS used the old state of the plot
-    my $bs = CXGN::BreederSearch->new({ dbh => $c->dbc->dbh(), dbname => $c->config->{dbname} });
-    my $matviews = @{ $plan->{external_samples} || [] } ? 'fullview' : 'phenotypes';
-    $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews, 'concurrent', $c->config->{basepath});
-    try {
-        $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, { trials => [ $trial_id ] });
-    } catch {
-        print STDERR "Could not clear the cached analyses of trial $trial_id: $_\n";
-    };
+    $refresh->{$trial_id} ||= 'phenotypes';
+    $refresh->{$trial_id} = 'fullview' if @{ $plan->{external_samples} || [] };
     return;
 }
 
