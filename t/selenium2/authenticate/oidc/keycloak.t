@@ -1,7 +1,7 @@
 
 use strict;
 use lib 't/lib';
-use Test::More 'tests' => 88;
+use Test::More 'tests' => 90;
 use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
 use Try::Tiny;
@@ -82,6 +82,10 @@ sub logout_keycloak {
 sub logout_breedbase {
     ok( wait_for sub {$d->find_element_by_id('navbar_logout')->click() }, 'click logout button');
     ok( wait_for sub {$d->accept_alert }, 'confirm logout');
+    # The page sends the logout request and then reloads itself. Wait for the
+    # reloaded page: leaving earlier aborts a request of the page, and the page
+    # answers an aborted request with an alert that nobody expects.
+    ok( wait_for sub { $d->find_element_by_id('site_login_button') }, 'locate login button' );
 }
 
 # Preemptive cleanup
@@ -117,9 +121,6 @@ ok( wait_for_source(qr/What is Breedbase/), 'locate home page content');
 
 # Logout Through Breedbase
 logout_breedbase();
-
-# Check that we logged out successfully by the presence of the 'Login' button again
-ok( wait_for sub { $d->find_element_by_id('site_login_button') }, 'locate login button' );
 
 # Check that single sign on has kept the user logged in
 ok( wait_for sub { $d->navigate('/user/login')}, 'open login dialog');
