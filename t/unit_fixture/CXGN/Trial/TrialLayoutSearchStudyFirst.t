@@ -7,6 +7,7 @@ use Test::More;
 use JSON;
 use SGN::Test::Fixture;
 use CXGN::Trial::TrialLayoutSearch;
+use CXGN::BrAPI::v2::ObservationUnits;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
@@ -69,6 +70,22 @@ if (defined $accession) {
 my ($plots, $plot_observations) = search_layout(trial_list => [137], data_level => 'plot');
 compare_by_units('trial and plot level', $plots, $plot_observations, data_level => 'plot');
 ok(!scalar(grep { $_->{obsunit_type_name} ne 'plot' } @$plots), 'plot filter returns only plots');
+
+subtest 'BrAPI sorts the study plots numerically when configured' => sub {
+    local $f->config->{brapi_ou_order_plot_num} = 1;
+    my $brapi = CXGN::BrAPI::v2::ObservationUnits->new(
+        bcs_schema => $schema, metadata_schema => $f->metadata_schema,
+        phenome_schema => $f->phenome_schema, people_schema => $f->people_schema,
+        context => $f, page => 0, page_size => 4, status => [],
+    );
+    my @expected = sort {
+        $a->{plot_number} <=> $b->{plot_number}
+            || $a->{obsunit_stock_id} <=> $b->{obsunit_stock_id}
+    } @$plots;
+    my $response = $brapi->search({studyDbId => [137], observationUnitLevelName => ['plot']}, $f);
+    is_deeply([map { $_->{observationUnitDbId} } @{$response->{result}{data}}],
+        [map { $_->{obsunit_stock_id} } @expected[0 .. 3]], 'first page follows numeric plot order');
+};
 
 my $page_size = 2;
 my ($page, $page_observations) = search_layout(trial_list => [137], limit => $page_size, offset => $page_size);
