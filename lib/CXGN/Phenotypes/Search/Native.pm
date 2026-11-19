@@ -367,17 +367,11 @@ sub search {
         $design_layout_select = " ,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value";
     }
 
+    # Join the outlier mark itself and leave out the marked values in the
+    # WHERE clause. An inner join on the unmarked values also dropped every
+    # observation unit that has no value at all.
     if ($self->exclude_phenotype_outlier) {
-        $phenotypeprop_sql = "JOIN (
-                SELECT phenotype_id
-                FROM phenotype
-                WHERE phenotype_id NOT IN (
-                    SELECT phenotype_id
-                    FROM phenotypeprop
-                    WHERE type_id = $phenotype_outlier_type_id
-                )
-            ) AS not_outliers
-            ON not_outliers.phenotype_id = nd_experiment_phenotype.phenotype_id"
+        $phenotypeprop_sql = "LEFT JOIN phenotypeprop AS outlier_mark ON (outlier_mark.phenotype_id = phenotype.phenotype_id AND outlier_mark.type_id = $phenotype_outlier_type_id)";
     };
 
     my $from_clause = " FROM stock as observationunit
@@ -504,6 +498,7 @@ sub search {
                     external_references.value ".$design_layout_select;
 
     my @where_clause;
+    push @where_clause, "outlier_mark.phenotypeprop_id IS NULL" if $self->exclude_phenotype_outlier;
     my @bind_values;
     my $accession_list = $self->accession_list;
     print STDERR "Native search Accession list is ".Dumper($accession_list)."\n";
