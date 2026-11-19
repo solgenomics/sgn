@@ -3,6 +3,7 @@ package CXGN::BrAPI::v1::ObservationVariables;
 use Moose;
 use Data::Dumper;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
@@ -104,7 +105,7 @@ sub observation_variable_ontologies {
 			my $info = {};
 			if($dbxref_description){
 				# dbxref.description is free text; only use it when it holds a JSON object
-				my $decoded = eval { decode_json($dbxref_description) };
+				my $decoded = eval { decode_stored_json($dbxref_description) };
 				$info = $decoded if ref($decoded) eq 'HASH';
 			}
 			push @available, {

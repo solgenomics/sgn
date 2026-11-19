@@ -2589,7 +2589,7 @@ sub add_management_factor {
     });
 
     if ($mf_rs) {
-        my $management_regime = decode_json($mf_rs->value());
+        my $management_regime = decode_stored_json($mf_rs->value());
         push @{$management_regime}, $management_factor;
         $management_regime = encode_json($management_regime);
         $mf_rs->update({
@@ -2614,7 +2614,7 @@ sub get_management_regime {
     });
 
     if ($mf_rs) {
-        my $management_regime = decode_json($mf_rs->value());
+        my $management_regime = decode_stored_json($mf_rs->value());
         return $management_regime;
     } else {
         return "";
@@ -2632,7 +2632,7 @@ sub remove_management_factor {
     });
 
     if ($mf_rs) {
-        my $management_regime = decode_json($mf_rs->value());
+        my $management_regime = decode_stored_json($mf_rs->value());
         $management_regime = [grep {
             !($_->{type} eq $management_factor->{type} &&
             $_->{schedule} eq $management_factor->{schedule} && 
