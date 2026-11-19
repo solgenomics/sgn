@@ -700,7 +700,7 @@ sub anova_trial_cache_dir {
 
     $trial_id = $c->stash->{trial_id} if !$trial_id;
 
-    my $cache_dir = File::Spec->catdir( $c->stash->{anova_dir}, $trial_id, 'cache', 'columns_v2' );
+    my $cache_dir = File::Spec->catdir( $c->stash->{anova_dir}, $trial_id, 'cache', 'columns_v3' );
     make_path($cache_dir, { mode => oct('0755') }) unless -d $cache_dir;
 
     return $cache_dir;

@@ -1360,18 +1360,22 @@ sub format_phenotype_dataset_headers {
     my ( $self, $all_headers, $meta_headers, $traits_file ) = @_;
 
     my @headers = split( /\t/, $all_headers, -1 );
-    # The phenotyping download writes the metadata columns first. Match by
-    # position so a trait called "replicate" still gets a distinct column.
-    my @metadata = splice @headers, 0, scalar(@$meta_headers);
-    my @traits = map { SGN::Controller::solGS::Utils->clean_traits($_) } @headers;
+    # Native and materialized downloads include different metadata columns.
+    # Match the raw header before stripping ontology IDs. A trait may clean
+    # to a metadata name, and notes follows the traits in both downloads.
+    my %metadata = map { $_ => 1 } @$meta_headers;
+    my @trait_indices = grep { !delete $metadata{$headers[$_]} } 0 .. $#headers;
+    my @traits = map { SGN::Controller::solGS::Utils->clean_traits($headers[$_]) } @trait_indices;
+    if ($traits_file && $traits_file =~ /pop_list/) {
+        my @trait_list = ('') x @headers;
+        @trait_list[@trait_indices] = @traits;
+        write_file($traits_file, { binmode => ':utf8' }, join("\t", @trait_list));
+    }
 
-    write_file( $traits_file, { binmode => ':utf8' }, join( "\t", (('') x @metadata), @traits ) )
-      if $traits_file && $traits_file =~ /pop_list/;
-
-    my $acronymized_traits =
-      SGN::Controller::solGS::Utils->acronymize_traits( [map { length($_) ? $_ : 'trait' } @traits], \@metadata );
-
-    return join( "\t", @metadata, split(/\t/, $acronymized_traits->{acronymized_traits} // '', -1) );
+    my $names = SGN::Controller::solGS::Utils->acronymize_traits(
+        [map { length($_) ? $_ : 'trait' } @traits], $meta_headers);
+    @headers[@trait_indices] = split(/\t/, $names->{acronymized_traits} // '', -1);
+    return join("\t", @headers);
 
 }
 

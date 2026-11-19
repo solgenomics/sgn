@@ -165,4 +165,14 @@ subtest 'every trait column gets its own name' => sub {
     is($format->('replicate [cm', 'height'), "germplasmName\treplicate\tR[CM\theight", 'and a regular expression character with it');
 };
 
+subtest 'optional metadata and trailing notes keep their actual positions' => sub {
+    my @metadata = qw(germplasmName replicate plantedSeedlotStockDbId notes);
+    my @columns = ('germplasmName', 'replicate', 'dry matter content percentage|CO_334:0000001',
+        'notes|CO_334:0000002', 'notes');
+    my $format = SGN::Controller::solGS::solGS->format_phenotype_dataset_headers(
+        join("\t", @columns), \@metadata);
+    is($format, "germplasmName\treplicate\tDMCP\tnotes.2\tnotes",
+        'the first trait survives omitted seedlot metadata and notes keeps its own header');
+};
+
 done_testing();
