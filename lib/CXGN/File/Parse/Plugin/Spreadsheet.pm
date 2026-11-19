@@ -4,6 +4,7 @@ use strict;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use Spreadsheet::ParseODS;
+use CXGN::File::Spreadsheet qw(cell_value);
 use List::MoreUtils qw|uniq|;
 
 sub type {
@@ -91,7 +92,7 @@ sub parse {
       my $h = $worksheet->get_cell(0, $col)->value();
       my $hv = $super->clean_header($h);
       my $c = $worksheet->get_cell($row, $col);
-      my $v = $c ? $c->value() : undef;
+      my $v = $c ? cell_value($c, $workbook) : undef;
       $v = $super->clean_value($v, $hv);
 
       if ( defined($v) && $v ne '' ) {
@@ -127,6 +128,5 @@ sub parse {
 
   return \%rtn;
 }
-
 
 1;

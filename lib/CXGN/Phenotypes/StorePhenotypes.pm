@@ -407,7 +407,7 @@ sub create_hash_lookups {
            errors should be breaking, warnings not.
    Desc:   uses the data provided to the object, so the corresponding parameters have to be set.
            This includes the values_hash, metadata_hash, triat_list, and stock_list.
-           The function will check if all the provided identifiers are in teh database use list
+           The function will check if all the provided identifiers are in the database use list
            validators. Then each measurement is submitted to the check_measurement function, which
            checks additional properties (see description there).
 
@@ -683,6 +683,11 @@ sub check_measurement {
                 }
             }
 
+            # New date values use ISO 8601 so their meaning does not depend on the display format.
+            if ($self->check_trait_format->{$trait_cvterm_id} =~ m/^date$/i && !_is_iso_date($trait_value)) {
+                $error_message .= "<small>This trait value should be a date in the form YYYY-MM-DD: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+            }
+
             #check, if the trait value is an image
             if ($self->check_trait_format->{$trait_cvterm_id} eq 'image') {
                 $trait_value =~ s/^.*photos\///;
@@ -752,12 +757,13 @@ sub check_measurement {
         my $repeat_type = "single";
 
         if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
-            if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
-                $repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
+            my $stored_repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id} // '';
+            if (grep { $_ eq $stored_repeat_type } ("single", "multiple", "time_series")) {
+                $repeat_type = $stored_repeat_type;
                 #print STDERR "Trait repeat type: $repeat_type\n";
             }
             else {
-                print STDERR "the trait repeat type of $self->check_trait_repeat_type->{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
+                print STDERR "the trait repeat type of $stored_repeat_type has no meaning. Assuming 'single'.\n";
             }
         }
 
@@ -778,7 +784,10 @@ sub check_measurement {
             }
             elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
                 my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
-                if ( defined($prev) ) {
+                if (_trait_values_equal($prev, $trait_value, $self->check_trait_format->{$trait_cvterm_id})) {
+                    $self->same_value_count($self->same_value_count() + 1);
+                }
+                elsif ( defined($prev) ) {
                     $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name on $timestamp.</small><hr>";
                 }
             }
@@ -802,13 +811,19 @@ sub check_measurement {
             }
             elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
                 my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
-                if ( defined($prev) ) {
+                if (_trait_values_equal($prev, $trait_value, $self->check_trait_format->{$trait_cvterm_id})) {
+                    $self->same_value_count($self->same_value_count() + 1);
+                }
+                elsif ( defined($prev) ) {
                     $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name.</small><hr>";
                 }
             }
             elsif (exists($self->unique_trait_stock->{$trait_cvterm_id, $stock_id})) {
                 my $prev = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
-                if ( defined($prev) ) {
+                if (_trait_values_equal($prev, $trait_value, $self->check_trait_format->{$trait_cvterm_id})) {
+                    $self->same_value_count($self->same_value_count() + 1);
+                }
+                elsif ( defined($prev) ) {
                     $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name.</small><hr>";
                 }
             }
@@ -1174,7 +1189,7 @@ sub store {
 
                         #     elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
 
-                        #         print STDERR "TYPE IS MULTIPE OR TIME SERIES...\n";
+                        #         print STDERR "TYPE IS MULTIPLE OR TIME SERIES...\n";
                         #         # otherwise, we deal with a time series and we add a new value
                         #         # if there is no other exact same value with exactly the same timestamp
                         #         #
@@ -1199,7 +1214,7 @@ sub store {
                         #         elsif ($self->remove_values()) {
 
                         #             print STDERR "REMOVE VALUES IS SET...\n";
-                        #             # if observations are emtpy, with this option,
+                        #             # if observations are empty, with this option,
                         #             # remove the measurement from the database
                         #             #
                         #             $phenotype_object->phenotype_id($phenotype_id);
@@ -1650,6 +1665,87 @@ sub _json_trait_entry_value {
     }
 
     return ref($entry) ? undef : $entry;
+}
+
+sub _trait_values_equal {
+    my ($stored, $incoming, $format) = @_;
+    return 0 if !defined($stored) || !defined($incoming);
+    if (defined($format) && $format =~ m/^date$/i) {
+        my $stored_date = _date_comparison_value($stored);
+        my $incoming_date = _date_comparison_value($incoming);
+        if (defined($stored_date) && defined($incoming_date)) {
+            return $stored_date eq $incoming_date;
+        }
+    }
+    return $stored eq $incoming;
+}
+
+# One comparable form of a date or a date and time: YYYY-MM-DD, followed by HH:MM:SS after a space when
+# the value has a time other than midnight; undef for anything else. Besides ISO dates this reads the
+# display text older uploads stored, such as 3/24/2026 or 24/3/2026, but only where one reading is
+# possible: 3/4/2026 is March 4 or April 3, so it is left to compare as text. Fractions of a second
+# are ignored.
+sub _date_comparison_value {
+    my $value = shift;
+    my ($year, $month, $day, $time);
+    if ($value =~ m{^(\d{1,2})/(\d{1,2})/(\d{4})(?:\s+(.+))?$}) {
+        my ($first, $second) = ($1, $2);
+        ($year, $time) = ($3, $4);
+        if ($first == $second || ($first <= 12 && $second > 12)) {
+            ($month, $day) = ($first, $second);
+        }
+        elsif ($first > 12 && $second <= 12) {
+            ($month, $day) = ($second, $first);
+        }
+        else {
+            return undef;
+        }
+    }
+    elsif ($value =~ m/^(\d{4})-(\d{2})-(\d{2})(?:[ T](.+))?$/) {
+        ($year, $month, $day, $time) = ($1, $2, $3, $4);
+    }
+    else {
+        return undef;
+    }
+    return undef if !_is_calendar_date($year, $month, $day);
+    my $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
+    return $date if !defined($time);
+    my $clock = _time_of_day($time);
+    return undef if !defined($clock);
+    return $clock eq '00:00:00' ? $date : "$date $clock";
+}
+
+# HH:MM:SS for a time of day written H:MM or H:MM:SS, with a fraction of a second or AM or PM allowed;
+# undef for anything else.
+sub _time_of_day {
+    my $time = shift;
+    my ($hour, $minute, $second, $half) = $time =~ m/^(\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:\s*([AaPp][Mm]))?$/ or return undef;
+    $second //= 0;
+    if (defined($half)) {
+        return undef if $hour < 1 || $hour > 12;
+        $hour = $hour % 12 + (lc($half) eq 'pm' ? 12 : 0);
+    }
+    return undef if $hour > 23 || $minute > 59 || $second > 59;
+    return sprintf('%02d:%02d:%02d', $hour, $minute, $second);
+}
+
+sub _is_calendar_date {
+    my ($year, $month, $day) = @_;
+    return 0 if $month < 1 || $month > 12 || $day < 1;
+    my $leap = ($year % 4 == 0 && $year % 100 != 0) || $year % 400 == 0;
+    my @days_in_month = (31, $leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+    return $day <= $days_in_month[$month - 1] ? 1 : 0;
+}
+
+# True for a calendar date written YYYY-MM-DD, optionally followed by a space or T and a time of day,
+# HH:MM or HH:MM:SS with a fraction of a second allowed.
+sub _is_iso_date {
+    my $value = shift;
+    return 0 if !defined($value);
+    my ($year, $month, $day, $hour, $minute, $second) = $value =~ m/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?$/ or return 0;
+    return 0 if !_is_calendar_date($year, $month, $day);
+    return 1 if !defined($hour);
+    return $hour <= 23 && $minute <= 59 && ($second // 0) <= 59 ? 1 : 0;
 }
 
 ###
