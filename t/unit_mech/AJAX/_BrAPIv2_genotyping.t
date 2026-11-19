@@ -111,10 +111,14 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::VariantSets'},{'message' => 'VariantSets result constructed','messageType' => 'INFO'}],'pagination' => {'currentPage' => 0,'pageSize' => 10,'totalPages' => 24,'totalCount' => 235}},'result' => {'data' => [{'additionalInfo' => {},'callSetDbId' => '38878','callSetName' => 'UG120001','created' => undef,'sampleDbId' => '38878','updated' => undef,'studyDbId' => '140','variantSetDbIds' => ['140p1']},{'callSetName' => 'UG120002','callSetDbId' => '38879','additionalInfo' => {},'sampleDbId' => '38879','created' => undef,'studyDbId' => '140','updated' => undef,'variantSetDbIds' => ['140p1']},{'updated' => undef,'studyDbId' => '140','variantSetDbIds' => ['140p1'],'callSetName' => 'UG120003','additionalInfo' => {},'callSetDbId' => '38880','sampleDbId' => '38880','created' => undef},{'updated' => undef,'studyDbId' => '140','variantSetDbIds' => ['140p1'],'callSetName' => 'UG120004','callSetDbId' => '38881','additionalInfo' => {},'sampleDbId' => '38881','created' => undef},{'studyDbId' => '140','updated' => undef,'variantSetDbIds' => ['140p1'],'additionalInfo' => {},'callSetDbId' => '38882','callSetName' => 'UG120005','created' => undef,'sampleDbId' => '38882'},{'studyDbId' => '140','updated' => undef,'variantSetDbIds' => ['140p1'],'additionalInfo' => {},'callSetDbId' => '38883','callSetName' => 'UG120006','sampleDbId' => '38883','created' => undef},{'callSetName' => 'UG120007','additionalInfo' => {},'callSetDbId' => '38884','created' => undef,'sampleDbId' => '38884','updated' => undef,'studyDbId' => '140','variantSetDbIds' => ['140p1']},{'created' => undef,'sampleDbId' => '38885','callSetDbId' => '38885','additionalInfo' => {},'callSetName' => 'UG120008','variantSetDbIds' => ['140p1'],'studyDbId' => '140','updated' => undef},{'studyDbId' => '140','updated' => undef,'variantSetDbIds' => ['140p1'],'callSetDbId' => '38886','additionalInfo' => {},'callSetName' => 'UG120009','sampleDbId' => '38886','created' => undef},{'variantSetDbIds' => ['140p1'],'updated' => undef,'studyDbId' => '140','sampleDbId' => '38887','created' => undef,'callSetDbId' => '38887','additionalInfo' => {},'callSetName' => 'UG120010'}]}} );
 
-#no data for variants
-# $mech->get_ok('http://localhost:3010/brapi/v2/variants');
-# $response = decode_json $mech->content;
-# print STDERR Dumper $response;
+# The fixture has no marker details for its protocols, so these calls return
+# no variants; they must answer instead of failing without a variant set.
+$mech->get_ok('http://localhost:3010/brapi/v2/variants');
+$response = decode_json $mech->content;
+is_deeply($response->{result}->{data}, [], 'variants search without variantSetDbId');
+$mech->get_ok('http://localhost:3010/brapi/v2/variants/S10114_185859');
+$response = decode_json $mech->content;
+is_deeply($response->{result}->{data}, [], 'variant detail');
 # $mech->get_ok('http://localhost:3010/brapi/v2/variantsets/140p1/variants');
 # $response = decode_json $mech->content;
 # print STDERR Dumper $response;
