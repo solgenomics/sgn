@@ -55,9 +55,6 @@ if(isNumeric == "FALSE"){
   message2 <- c()
 }
 
-#checkning number of locations
-szloc <- length(unique(pheno$locationName))
-szyr <- length(unique(pheno$studyYear))
 
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
@@ -72,33 +69,50 @@ resp_var = c()
 j = 1
 tryCatch({ for(i in 6:ncol(pheno)){
     outcome = colnames(pheno)[i]    
-    # the block effect is the block number; the replicate counts the plots of an accession.
-    # One level per block in which this trait was observed, not a numeric trend; with a
-    # single block it stays a constant, which lmer drops from the fixed effects.
-    # A plot without a block number is not a block of its own
     observed <- !is.na(pheno[[outcome]])
-    traitData <- pheno[observed, ]
-    if (length(unique(na.omit(study_ids))) > 1) {
-      # A block number identifies a physical block within its study only.
-      traitData$blockNumber <- interaction(study_ids[observed], traitData$blockNumber, drop = TRUE)
+    traitData <- pheno[observed, , drop = FALSE]
+    studies <- study_ids[observed]
+    multi_study <- length(unique(na.omit(studies))) > 1
+    if (multi_study) {
+      traitData$blockNumber <- interaction(studies, traitData$blockNumber, drop = TRUE)
     }
+
+    formula <- get(outcome) ~ (1 | germplasmName)
     if (length(unique(na.omit(traitData$blockNumber))) > 1) {
-      traitData$blockNumber <- as.factor(traitData$blockNumber)
-    } else {
-      traitData$blockNumber <- 1
+      traitData <- traitData[!is.na(traitData$blockNumber), , drop = FALSE]
+      if (multi_study && length(unique(na.omit(traitData$locationName))) > 1) {
+        traitData <- traitData[!is.na(traitData$locationName), , drop = FALSE]
+        # A separate intercept for every study-block would absorb location means.
+        # Fit sum-to-zero differences between the observed blocks at each location.
+        contrasts_by_site <- lapply(split(seq_len(nrow(traitData)), traitData$locationName, drop = TRUE), function(rows) {
+          blocks <- factor(traitData$blockNumber[rows])
+          if (nlevels(blocks) < 2) return(NULL)
+          columns <- matrix(0, nrow(traitData), nlevels(blocks) - 1)
+          columns[rows, ] <- contr.sum(nlevels(blocks))[as.integer(blocks), , drop = FALSE]
+          columns
+        })
+        block_effects <- do.call(cbind, contrasts_by_site)
+        if (!is.null(block_effects)) {
+          traitData$block_effects <- I(block_effects)
+          formula <- update(formula, . ~ . + block_effects)
+        }
+      } else if (length(unique(traitData$blockNumber)) > 1) {
+        traitData$blockNumber <- factor(traitData$blockNumber)
+        formula <- update(formula, . ~ . + blockNumber)
+      }
     }
-    formula <- get(outcome) ~ (1 | germplasmName) + blockNumber
-    if (szloc > 1) {
+    multi_location <- length(unique(na.omit(traitData$locationName))) > 1
+    if (multi_location) {
       formula <- update(formula, . ~ . + (1 | locationName))
     }
-    if (szyr > 1) {
+    if (length(unique(na.omit(traitData$studyYear))) > 1) {
       formula <- update(formula, . ~ . + studyYear)
     }
     model <- lmer(formula, na.action = na.exclude, data = traitData)
     variance <- as.data.frame(VarCorr(model))
     components <- setNames(variance$vcov, variance$grp)
     gvar <- components[["germplasmName"]]
-    envar <- if (szloc > 1) components[["locationName"]] else 0
+    envar <- if (multi_location) components[["locationName"]] else 0
     resvar <- components[["Residual"]]
 
     H2 = append(H2, gvar/ (gvar + (envar) + (resvar)))

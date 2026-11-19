@@ -93,6 +93,18 @@ subtest 'genetic variance keeps its label when locations outnumber genotypes' =>
     my ($h2, $genetic, $location) = $csv =~ /^"\d+","trait a",([\d.]+),([\d.]+),([\d.]+),/m;
     cmp_ok($h2 // 0, '>', 0.99, 'the dominant genotype effect gives high heritability') or diag($csv, $stderr);
     cmp_ok($genetic // 0, '>', 100 * ($location // 0), 'Vg and Ve correspond to the fitted groups');
+
+    # One study and one block per site: adding the study IDs must preserve the fit.
+    $lines[0] .= "\tstudyDbId";
+    for my $index (1 .. $#lines) {
+        my ($site) = $lines[$index] =~ /\tL(\d+)\t/;
+        $lines[$index] .= "\t$site";
+    }
+    write_file($pheno, join("\n", @lines)."\n");
+    unlink $out{'h2.csv'} or die $!;
+    ok(run([$rscript, 'R/heritability/h2_blup_rscript.R', $pheno, 'trait.a', @out{qw(h2.json h2.csv error.txt)}],
+        '<', \undef, '>', \$stdout, '2>', \$stderr), 'study-labelled fit completes') or diag($stderr);
+    is(scalar(read_file($out{'h2.csv'})), $csv, 'study labels do not absorb the between-location variance');
 };
 
 subtest 'h2_rscript.R' => sub {
