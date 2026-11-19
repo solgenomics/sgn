@@ -111,7 +111,9 @@ sub _search {
             include_observations=>  lc($include_observations) eq 'true' ? 1 : 0,
             xref_id_list=>$reference_ids_arrayref,
             xref_source_list=>$reference_sources_arrayref,
-            order_by=> ($c && $c->config->{brapi_ou_order_plot_num}) ? 'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::numeric' : undef,
+            order_by => $c->config->{brapi_ou_order_plot_num}
+                ? q{NULLIF(regexp_replace(plot_number.value, '\D', '', 'g'), '')::numeric}
+                : undef,
             limit=>$limit,
             offset=>$offset,
         }
