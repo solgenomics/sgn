@@ -26,7 +26,7 @@ Chris Simoes
 
 </%doc>
 
-<& /util/import_javascript.mas, classes => ['jquery'], entries => ['weather'] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'moment_min', 'daterangepicker'], entries => ['weather'] &>
 <& /util/import_css.mas, paths => ['leaflet.css'] &>
 
 <style>
@@ -86,6 +86,7 @@ Chris Simoes
 .wx-step-t b { display: inline-block; width: 18px; height: 18px; border-radius: 9px; background: var(--wx-accent); color: #fff; text-align: center; line-height: 18px; margin-right: 4px; font-size: 11px; }
 .wx-inline { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .wx-inline .form-control { display: inline-block; width: auto; }
+.wx-inline .form-control.wx-date { width: 105px; }
 .wx-unit { display: inline-flex; border: 1px solid var(--wx-border); border-radius: 6px; overflow: hidden; }
 .wx-unit button { border: 0; background: #fff; padding: 4px 10px; font-size: 12.5px; }
 .wx-unit button.on { background: var(--wx-accent); color: #fff; }
@@ -265,14 +266,14 @@ Chris Simoes
               <button class="wx-seg" data-preset="lastyear">Last year</button>
             </div>
             <div class="wx-inline">
-              <input type="date" class="form-control input-sm" id="wx_start" title="Start" />
+              <input type="text" class="form-control input-sm wx-date" id="wx_start" title="Start (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
               <span class="wx-muted">to</span>
-              <input type="date" class="form-control input-sm" id="wx_end" title="End" />
+              <input type="text" class="form-control input-sm wx-date" id="wx_end" title="End (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
               <button class="btn btn-primary btn-sm" id="wx_apply"><span class="glyphicon glyphicon-ok"></span> Apply</button>
             </div>
             <div class="wx-inline" style="margin-top:6px">
               <label class="wx-small" style="margin:0;font-weight:normal">Crop <select class="form-control input-sm" id="wx_crop"></select></label>
-              <label class="wx-small" style="margin:0;font-weight:normal">planted <input type="date" class="form-control input-sm" id="wx_planting" title="Planting date: the crop stages start here" /></label>
+              <label class="wx-small" style="margin:0;font-weight:normal">planted <input type="text" class="form-control input-sm wx-date" id="wx_planting" title="Planting date (YYYY-MM-DD): the crop stages start here" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" /></label>
             </div>
           </div>
         </div>

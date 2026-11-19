@@ -660,10 +660,25 @@ function applyPreset(p) {
     renderDates();
 }
 
+// dates are shown and typed as YYYY-MM-DD (a native date input follows the browser locale)
+const isIsoDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '') && !isNaN(Date.parse(v));
+function setDateInput(sel, v) {
+    $(sel).val(v || '');
+    const dp = $(sel).data('daterangepicker');
+    if (dp && isIsoDate(v)) { dp.setStartDate(v); dp.setEndDate(v); }
+}
+function initDatePickers() {
+    if (!$.fn.daterangepicker) return;
+    $('#wx_start, #wx_end, #wx_planting').each(function () {
+        $(this).daterangepicker({ singleDatePicker: true, showDropdowns: true, autoUpdateInput: false, locale: { format: 'YYYY-MM-DD' } })
+            .on('apply.daterangepicker', function (e, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD')).trigger('change'); });
+    });
+}
+
 function renderDates() {
-    $('#wx_start').val(S.start);
-    $('#wx_end').val(S.end);
-    $('#wx_planting').val(S.planting);
+    setDateInput('#wx_start', S.start);
+    setDateInput('#wx_end', S.end);
+    setDateInput('#wx_planting', S.planting);
     $('#wx_presets .wx-seg').each(function () { $(this).toggleClass('on', String($(this).data('preset')) === String(S.preset)); });
 }
 
@@ -671,6 +686,8 @@ function applyDates() {
     const a = $('#wx_start').val(), b = $('#wx_end').val();
     let pl = $('#wx_planting').val() || a;
     if (!a || !b) { flash('warning', 'Choose the start and the end date.'); return; }
+    if (!isIsoDate(a) || !isIsoDate(b)) { flash('warning', 'Write the dates as YYYY-MM-DD.'); return; }
+    if (!isIsoDate(pl)) pl = a;
     if (a > b) { flash('warning', 'The start date must be before the end date.'); return; }
     const n = daysBetween(a, b);
     if (n > S.cfg.max_days) { flash('warning', 'The period has ' + n + ' days; the limit is ' + S.cfg.max_days + ' days.'); return; }
@@ -1552,7 +1569,7 @@ function bind() {
         .on('click', '#wx_clear', clearStation)
         .on('click', '.wx-tab', function () { showTab($(this).data('tab')); })
         .on('click', '.wx-seg[data-preset]', function () { applyPreset(String($(this).data('preset'))); $('#wx_trial').val(''); applyDates(); })
-        .on('change', '#wx_start, #wx_end', () => { S.preset = ''; $('#wx_presets .wx-seg').removeClass('on'); if (!S.plantingSet) $('#wx_planting').val($('#wx_start').val()); })
+        .on('change', '#wx_start, #wx_end', () => { S.preset = ''; $('#wx_presets .wx-seg').removeClass('on'); if (!S.plantingSet) setDateInput('#wx_planting', $('#wx_start').val()); })
         .on('change', '#wx_planting', () => { S.plantingSet = true; applyDates(); })
         .on('click', '#wx_apply', applyDates)
         .on('change', '#wx_trial', function () {
@@ -1641,6 +1658,7 @@ export function init() {
     renderParams();
     renderConcepts();
     bind();
+    initDatePickers();
     call('GET', API + '/config').then(cfg => {
         S.cfg = cfg;
         S.range = cfg.range;
