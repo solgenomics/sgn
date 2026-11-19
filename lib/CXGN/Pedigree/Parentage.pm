@@ -288,7 +288,8 @@ sub apply {
     die "A target accession was not found.\n" unless @locked == @ids;
     my %role_for = reverse %{$v->{roles}};
     my %existing;
-    my $rs = $schema->resultset('Stock::StockRelationship')->search({object_id => {-in => \@ids}, type_id => {-in => [values %{$v->{roles}}]}});
+    my $rs = $schema->resultset('Stock::StockRelationship')->search({object_id => {-in => \@ids}, type_id => {-in => [values %{$v->{roles}}]}},
+        {order_by => 'stock_relationship_id'});
     while (my $r = $rs->next) {push @{$existing{$r->object_id}{$role_for{$r->type_id}}}, $r}
     my (@changed, $unchanged);
     for my $plan (@$plans) {
@@ -313,19 +314,32 @@ sub apply {
             if !$overwrite && defined($old_type) && !$same_type;
         $different = 1 unless $same_type;
         if (!$different) {$unchanged++; next}
-        if ($overwrite) {
-            $schema->resultset('Stock::StockRelationship')->search({object_id => $id, type_id => {-in => [values %{$v->{roles}}]}})->delete;
-            $current = {};
-        }
         for my $role (qw(female male)) {
-            next unless defined($plan->{$role});
-            my $old = $current->{$role} && $current->{$role}[0];
-            if (!$old) {
-                $schema->resultset('Stock::StockRelationship')->create({object_id => $id,
-                    subject_id => $plan->{$role}, type_id => $v->{roles}{$role}, value => $role eq 'female' ? $type : undef});
-            } elsif ($role eq 'female' && !defined($old_type) && defined($type)) {
-                $old->update({value => $type});
+            my $parent = $plan->{$role};
+            my @rows = @{$current->{$role} || []};
+            if (!defined $parent) {
+                $_->delete for @rows;
+                next;
             }
+            # Keep the matching link (including its rank and metadata) when
+            # explicit overwrite repairs a legacy pedigree with duplicate roles.
+            my ($keep) = grep { $_->subject_id == $parent } @rows;
+            $keep ||= $rows[0];
+            if (!$keep) {
+                $schema->resultset('Stock::StockRelationship')->create({object_id => $id,
+                    subject_id => $parent, type_id => $v->{roles}{$role}, value => $role eq 'female' ? $type : undef});
+                next;
+            }
+            $_->delete for grep { $_->stock_relationship_id != $keep->stock_relationship_id } @rows;
+            my %update;
+            $update{subject_id} = $parent if $keep->subject_id != $parent;
+            if ($role eq 'female') {
+                my $saved_type = $class->normalize_type($keep->value);
+                $update{value} = $type if ($saved_type // '') ne ($type // '');
+            } elsif (exists $update{subject_id} && defined $keep->value) {
+                $update{value} = undef;
+            }
+            $keep->update(\%update) if %update;
         }
         push @changed, $id;
     }

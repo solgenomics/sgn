@@ -1738,20 +1738,9 @@ sub add_parents {
                 CXGN::Pedigree::Parentage->validate_pair($cross_type, $parents{female}{stock_id},
                     $parents{male} ? $parents{male}{stock_id} : undef);
             }
-            if ($expected) {
-                for my $role (qw(female male)) {
-                    my $old = $existing{$role} or next;
-                    if (!$parents{$role}) {
-                        $old->delete();
-                    } elsif ($old->subject_id != $parents{$role}{stock_id}) {
-                        $old->update({ subject_id => $parents{$role}{stock_id} });
-                    }
-                }
-            }
             CXGN::Pedigree::Parentage->apply($schema, [{child_id => $self->stock_id,
                 female => $parents{female}{stock_id}, male => $parents{male} ? $parents{male}{stock_id} : undef,
-                type => $cross_type}], 0, $v);
-            CXGN::Pedigree::Parentage->assert_acyclic($schema, [$self->stock_id], $v) if $expected;
+                type => $cross_type}], $expected ? 1 : 0, $v);
         });
     };
     $error = $@;

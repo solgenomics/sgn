@@ -158,12 +158,15 @@ sub pedigree {
 subtest 'explicit upload overwrite replaces both roles and rejects malformed batches' => sub {
     my $new = stock('upload');
     $new->add_parents($mother->uniquename, $father->uniquename, 'biparental');
+    my $female_link = relationships($new)->find({type_id => $types{female}})->stock_relationship_id;
     my $open = pedigree($new, $mother->uniquename, '', 'open');
     my $writer = CXGN::Pedigree::AddPedigrees->new(schema => $schema, pedigrees => [$open]);
     ok(!$writer->add_pedigrees(1)->{error}, 'overwrite to mother-only open');
     is(relationships($new)->search({type_id => $types{male}})->count, 0, 'old father is removed');
     my $both = pedigree($new, $mother->uniquename, $father->uniquename, 'biparental');
     ok(!CXGN::Pedigree::AddPedigrees->new(schema => $schema, pedigrees => [$both])->add_pedigrees(1)->{error}, 'overwrite back to two parents');
+    is(relationships($new)->find({type_id => $types{female}})->stock_relationship_id, $female_link,
+        'changing the cross type retains the female relationship and its metadata');
     my $before = snapshot($new);
     for my $bad (pedigree($new, 'missing_parentage_female', '', 'open'), pedigree($new, $mother->uniquename, 'missing_parentage_male', 'biparental')) {
         my $r = CXGN::Pedigree::AddPedigrees->new(schema => $schema, pedigrees => [$bad])->add_pedigrees(1);
