@@ -450,6 +450,9 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         $c->stash->{rest} = { error => "Could not retrieve the dataset phenotypes: $_" };
     };
     return if $c->stash->{rest};
+    # the source goes with the runs of this token (a reopened run reads its
+    # dataset from the same source)
+    write_file("$tempfile.source", $source);
 
     if (!-s $pheno_file) {
         $c->stash->{rest} = { error => 'The dataset has no phenotypes. Please choose a dataset with trials and traits.' };
@@ -571,8 +574,11 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     # genotyping protocols with genotypes of the dataset's accessions (G and H models)
     my $genotyping = try { _genotyping_protocols($schema, [ map { $_->[0] } @{ $ds->retrieve_accessions() || [] } ]) }
                      catch { print STDERR "Analysis Pipeline: genotyping protocols of dataset $dataset_id not read: $_\n"; [] };
-    # traits measured more than once per plot (all measurements to <token>.repeated.txt)
-    my $repeated = try { _repeated_measurements($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info, "$tempfile.repeated.txt") }
+    # traits measured more than once per plot (all measurements to <token>.repeated.txt).
+    # They are always read from the tables: with the cache as source, the plots of
+    # stale trials are counted (n_stale_units) so the page can say they may differ.
+    my %stale_trial = ($source eq 'cache' && $cache) ? (map { $_ => 1 } @{ $cache->{stale} }) : ();
+    my $repeated = try { _repeated_measurements($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info, "$tempfile.repeated.txt", \%stale_trial) }
                    catch { print STDERR "Analysis Pipeline: repeated measurements of dataset $dataset_id not read: $_\n"; [] };
 
     $c->stash->{rest} = {
@@ -1230,11 +1236,15 @@ sub _marked_outliers {
 # averages them), so every measurement of these traits is written to
 # $file (unit, trait, value, date; one line per measurement) for the
 # pipeline, which can summarise them differently or model all of them.
-# Returns [{trait, short, repeat_type, n_units, n_repeated_units, max_n,
+# $stale_trial: {trial name => 1} of trials whose search cache is stale while the
+# plot values come from the cache; their plots with several values are counted
+# in n_stale_units (these measurements may differ from the plot values).
+# Returns [{trait, short, repeat_type, n_units, n_repeated_units, n_stale_units, max_n,
 # n_dates, first_date, last_date}], one entry per trait with a repeat type
 # other than 'single' or with repeated values in the dataset.
 sub _repeated_measurements {
-    my ($schema, $ds, $trait_names, $unit_info, $file) = @_;
+    my ($schema, $ds, $trait_names, $unit_info, $file, $stale_trial) = @_;
+    $stale_trial ||= {};
     my $trials = [ map { ref($_) ? $_->[0] : $_ } @{ $ds->retrieve_trials() || [] } ];
     return [] if !@$trials || !@$trait_names || !%$unit_info;
 
@@ -1292,6 +1302,7 @@ sub _repeated_measurements {
         push @summary, {
             trait => $t, short => _short_trait($t), repeat_type => $type,
             n_units => scalar(keys %$units) + 0, n_repeated_units => scalar(@rep_units) + 0, max_n => $max_n + 0,
+            n_stale_units => scalar(grep { $stale_trial->{ $unit_info->{$_}->[0] // '' } } @rep_units) + 0,
             n_dates => scalar(@d) + 0, first_date => $d[0], last_date => $d[-1],
         };
     }
@@ -1528,6 +1539,8 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
         dataset_id => (defined($dataset_id) && $dataset_id =~ /^\d+$/) ? $dataset_id : undef,
         dataset_name => scalar($c->req->param('dataset_name')) // '',
         token => $token,    # input files of the run (archived when the analysis is stored)
+        # where the dataset was read from (prepare): a reopened run reads it from there again
+        phenotype_source => _token_source($dir, $token),
     );
     # email when the run ends (address from the account, never from the request)
     if ($mode ne 'preview' && $c->req->param('notify')) {
@@ -1846,6 +1859,14 @@ sub _job_args {
 sub _write_run_meta {
     my ($c, $run_id, $meta) = @_;
     write_file(_work_dir($c) . "/$run_id.meta.json", encode_json($meta));
+}
+
+# 'database' or 'cache': where prepare read the phenotypes of a token
+sub _token_source {
+    my ($dir, $token) = @_;
+    my $file = "$dir/$token.source";
+    my $s = -e $file ? (try { read_file($file) } catch { '' }) : '';
+    return ($s // '') =~ /^database/ ? 'database' : 'cache';
 }
 
 # owner and context of a run, written when it is submitted
@@ -2223,6 +2244,7 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         heritability => \%h2,
         statistical_terms => $terms,
         run_id => $run_id,
+        phenotype_source => $meta->{phenotype_source} // 'cache',
     };
 
     # files of the run, with readable names in the archive
@@ -2426,6 +2448,7 @@ sub _stored_analysis {
         dataset_id => (try { $analysis->metadata()->dataset_id() } catch { undef }) // $props->{dataset_id},
         files => $model->{model_files} || {},
         run_id => $summary->{run_id},
+        phenotype_source => $summary->{phenotype_source},
     };
 }
 
@@ -2521,6 +2544,7 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
             dataset_id => $info->{dataset_id},
             is_owner => $info->{is_owner},
             exclusions => _read_exclusions($info->{files}->{script_factory_exclusions}),
+            phenotype_source => $info->{phenotype_source} // 'cache',
             results_url => '/tools/script_factory/analysis/' . $info->{analysis_id},
         };
         return;
@@ -2549,6 +2573,7 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
         dataset_id => $meta->{dataset_id},
         is_owner => 1,
         exclusions => _read_exclusions("$dir/$run_id.exclusions.json"),
+        phenotype_source => $meta->{phenotype_source} // 'cache',
         analysis_id => $meta->{stored} ? $meta->{stored}->{analysis_id} : undef,
         results_url => "/tools/script_factory/results/$run_id",
     };

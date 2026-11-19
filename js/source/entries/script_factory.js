@@ -533,6 +533,14 @@ function loadDataset(opts) {
 
     const params = { dataset_id: id };
     if (fromDatabase) params.source = 'database';
+    // reloading the same dataset from the tables keeps the values excluded by
+    // hand (they come back through applyPendingExclusions). The values marked
+    // in Breedbase are read again with the dataset.
+    if (fromDatabase && state.dataset && String(state.dataset.dataset_id) === String(id) && !state.pendingExclusions) {
+        const hand = Object.keys(state.exclusions).filter(k => !state.exclusions[k].marked)
+            .map(k => ({ unit: state.exclusions[k].unit, trait: state.exclusions[k].trait }));
+        if (hand.length) { state.pendingExclusions = hand; state.pendingHandReload = true; }
+    }
     post('/ajax/script_factory/prepare', params)
         .then(r => {
             if (seq !== state.loadSeq) return;
@@ -549,7 +557,9 @@ function loadDataset(opts) {
             state.outlierFocus = null;
             state.outlierStatus = {};
             excludeMarked(true);
-            const nRestored = applyPendingExclusions();
+            const handReload = state.pendingHandReload;
+            state.pendingHandReload = false;
+            const nRestored = applyPendingExclusions(handReload);
             state.results = null;
             state.lastRun = null;
             state.runFailed = false;
@@ -572,13 +582,18 @@ function loadDataset(opts) {
             const nMarked = arr(r.marked_outliers).length;
             $('#sf_dataset_message').html(r.traits.length ? (nMarked ? alertBox('info', '<span class="glyphicon glyphicon-flag"></span> <b>' + nMarked + '</b> value(s) of this dataset are marked as outliers in Breedbase. ' +
                 'They are excluded in step 2 (only those values, not the whole plots); you can bring them back there.') : '') : alertBox('warning', 'No numeric trait was found in this dataset.'));
-            if (nRestored) $('#sf_dataset_message').append(alertBox('info', '<span class="glyphicon glyphicon-scissors"></span> <b>' + nRestored + '</b> value(s) removed by hand in that analysis are excluded again (step 2), so a new run uses the same data.'));
+            if (nRestored) $('#sf_dataset_message').append(alertBox('info', '<span class="glyphicon glyphicon-scissors"></span> <b>' + nRestored + '</b> value(s) ' +
+                (handReload ? 'you removed by hand are still excluded (step 2).' : 'removed by hand in that analysis are excluded again (step 2), so a new run uses the same data.')));
             renderDatasetOverview();
             renderExclusions();
             renderPipeline();
             renderQuickRun();
         })
-        .catch(e => { if (seq === state.loadSeq) $('#sf_dataset_message').html(alertBox('danger', esc(e.message))); })
+        .catch(e => {
+            // a failed reload leaves the loaded dataset and its exclusions as they were
+            if (state.pendingHandReload) { state.pendingExclusions = null; state.pendingHandReload = false; }
+            if (seq === state.loadSeq) $('#sf_dataset_message').html(alertBox('danger', esc(e.message)));
+        })
         .finally(() => {
             $('#sf_load_dataset').prop('disabled', false);
             $('#sf_cache_reload').prop('disabled', false);
@@ -589,13 +604,15 @@ function loadDataset(opts) {
 // exclusions of a reopened run or stored analysis: the values it removed by
 // hand come back as exclusions, and of the values marked in Breedbase only
 // those it excluded stay excluded (a re-run uses the same data)
-function applyPendingExclusions() {
+// handOnly: only the values removed by hand (reload of the same dataset from
+// the database); the values marked in Breedbase stay as excludeMarked set them
+function applyPendingExclusions(handOnly) {
     const pend = state.pendingExclusions;
     state.pendingExclusions = null;
     if (!pend) return 0;
     const keep = {};
     pend.forEach(e => { const t = matchTrait(e.trait) || e.trait; keep[e.unit + '|' + t] = { unit: e.unit, trait: t, source: e.source }; });
-    Object.keys(state.exclusions).forEach(k => { if (state.exclusions[k].marked && !keep[k]) delete state.exclusions[k]; });
+    if (!handOnly) Object.keys(state.exclusions).forEach(k => { if (state.exclusions[k].marked && !keep[k]) delete state.exclusions[k]; });
     let n = 0;
     Object.keys(keep).forEach(k => {
         if (state.exclusions[k]) return;
@@ -743,7 +760,7 @@ function renderDatasetOverview() {
     // a plain note (not an alert box): site themes color alerts differently
     $("#sf_repeated_note").html(rpt.length ? '<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-repeat"></span> Measured more than once per plot: ' +
         rpt.map(x => esc(x.short) + ' <small class="sf-muted">(up to ' + x.max_n + ' values' + (x.n_dates > 1 ? ', ' + x.n_dates + ' dates' : '') + ')</small>').join(', ') +
-        '. The table shows plot means; you choose how to use them in step 3.</div>' : '');
+        '. The table shows plot means; you choose how to use them in step 3.</div>' + repeatedStaleNote(rpt) : '');
     renderTraits();
     renderTreatments();
     // covariates of a script loaded before the dataset: match them by name
@@ -803,6 +820,21 @@ function applyRepeated(rp) {
     renderRepeated();
 }
 
+// The repeated measurements are always read from the database tables, the plot
+// values from the search cache unless reloaded: on trials whose cache is stale
+// the two can differ (n_stale_units: plots with several values in those trials)
+function staleRepeatedFlag(x) {
+    return x.n_stale_units > 0 ? ' <span class="glyphicon glyphicon-warning-sign sf-warn-text" title="' + x.n_stale_units +
+        ' of these plots are in trials whose search cache is not up to date: their repeated measurements are read from the database and may differ from the plot values. Reload from database in step 1 to use the same data."></span>' : '';
+}
+function repeatedStaleNote(list) {
+    const st = list.filter(x => x.n_stale_units > 0);
+    if (!st.length) return '';
+    return '<div class="sf-help sf-warn-text" style="margin-top:6px"><span class="glyphicon glyphicon-warning-sign"></span> The repeated measurements of ' +
+        st.map(x => esc(x.short)).join(', ') + ' are read from the database, but the plot values come from the search cache, which is not up to date for some of their trials. ' +
+        'They may differ until you use <b>Reload from database</b>.</div>';
+}
+
 // traits modelled measurement by measurement among the selected ones
 function repeatedAllTraits() { return state.traits.filter(t => repeatedChoice(t) === 'all'); }
 
@@ -831,7 +863,7 @@ function renderRepeated() {
         }).join('');
         const used = [state.traits.indexOf(x.trait) >= 0 ? '<span class="label label-primary">analysed</span>' : '', state.singleCov[x.trait] ? '<span class="label label-info">covariate' + (cur === 'all' ? ' (plot mean)' : '') + '</span>' : ''].filter(Boolean).join(' ') || '<span class="sf-muted">not selected</span>';
         h += '<tr><td title="' + esc(x.trait) + '"><b>' + esc(x.short) + '</b></td><td>' + esc(x.repeat_type === 'single' ? 'single (but several values stored)' : x.repeat_type.replace('_', ' ')) + '</td>' +
-            '<td>' + x.n_repeated_units + ' of ' + x.n_units + '</td><td>' + x.max_n + '</td><td>' + range(x) + '</td>' +
+            '<td>' + x.n_repeated_units + ' of ' + x.n_units + staleRepeatedFlag(x) + '</td><td>' + x.max_n + '</td><td>' + range(x) + '</td>' +
             '<td><select class="form-control input-sm sf-rep-summary" data-trait="' + esc(x.trait) + '">' + opts + '</select>' + outlierReminder(x.trait) + '</td><td>' + used + '</td></tr>';
     });
     h += '</tbody></table></div>';
@@ -3376,6 +3408,8 @@ function openPipeline(p) {
     state.scriptLoaded = true;
     // the values that run excluded in step 2: put back when its dataset loads
     state.pendingExclusions = arr(p.exclusions);
+    // read the dataset from where that run read it (database tables or search cache)
+    state.pendingFromDatabase = p.phenotype_source === 'database';
     applyRecipe(p.recipe);
     setScriptName();
     const links = [
@@ -3560,7 +3594,9 @@ export function init(options) {
                 return;
             }
             box.prop('checked', true);
-            loadDataset();
+            const fromDatabase = !!(p && state.pendingFromDatabase);
+            state.pendingFromDatabase = false;
+            loadDataset({ fromDatabase: fromDatabase });
         })
     });
 
