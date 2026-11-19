@@ -109,7 +109,11 @@ sub get_variables {
 
 sub get_root_nodes {
       my $self = shift;
-      my $cv_type = shift;
+      my $cv_types = shift;
+
+      if (ref($cv_types) ne 'ARRAY') {
+          die "get_root_nodes requires an arrayref of cv types\n";
+      }
 
       my $query = "SELECT cv.cv_id, (((db.name::text || ':'::text) || dbxref.accession::text) || ' '::text) || cvterm.name AS name
                     FROM cv
@@ -121,11 +125,14 @@ sub get_root_nodes {
                     WHERE cvterm_relationship.subject_id IS NULL AND cvterm.is_obsolete= 0 AND cvterm.is_relationshiptype = 0 AND db.name <> '' AND db.name <> 'null'";
 
       my $h = $self->schema->storage->dbh->prepare($query);
-      $h->execute($cv_type);
 
+      # Query each cv type in turn so results follow the order of the supplied types
       my @results;
-      while (my ($id, $name) = $h->fetchrow_array()) {
-        push @results, [$id, $name];
+      foreach my $cv_type (@$cv_types) {
+          $h->execute($cv_type);
+          while (my ($id, $name) = $h->fetchrow_array()) {
+              push @results, [$id, $name];
+          }
       }
 
       return @results;
@@ -604,7 +611,7 @@ sub store_observation_variable_trait_method_scale {
 
 
 #
-# Recursively get the children (and all granchildren, etc) of the specified cvterm
+# Recursively get the children (and all grandchildren, etc) of the specified cvterm
 # ARGS:
 #   - cvterm_id = id of the root cvterm
 # RETURNS: an arrayref of hashes of the children of the cvterm, with the following keys:

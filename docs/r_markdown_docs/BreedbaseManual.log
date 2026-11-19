@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.29)  16 JUL 2026 15:30
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.29)  19 NOV 2026 15:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1388,27 +1388,32 @@ File: assets/images/trial_create_form_8.png Graphic file (type bmp)
 File: assets/images/trial_create_manage_trials.png Graphic file (type bmp)
 <assets/images/trial_create_manage_trials.png>
 
+Underfull \hbox (badness 5345) in paragraph at lines 1339--1340
+\TU/lmr/m/n/12 and num_seed_per_plot and weight_gram_seed_per_plot represent
+ []
+
+
 Underfull \vbox (badness 1199) has occurred while \output is active []
 
 [111]
 File: assets/images/manage_trials_upload_trial_1.png Graphic file (type bmp)
 <assets/images/manage_trials_upload_trial_1.png>
-File: assets/images/manage_trials_upload_trial_2.png Graphic file (type bmp)
-<assets/images/manage_trials_upload_trial_2.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [112]
+File: assets/images/manage_trials_upload_trial_2.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_2.png>
 File: assets/images/manage_trials_upload_trial_template.png Graphic file (type 
 bmp)
 <assets/images/manage_trials_upload_trial_template.png>
-
+[113]
 Overfull \hbox (33.10004pt too wide) in paragraph at lines 1359--1361
 \TU/lmr/m/n/12 range_number row_number col_number seedlot_name num_seed_per_plo
 t
  []
 
-[113]
+
 Overfull \hbox (49.91434pt too wide) in paragraph at lines 1382--1383
 []\TU/lmr/bx/n/12 plot_name  
  []
@@ -1548,36 +1553,40 @@ ant-
 [114]
 File: assets/images/manage_trials_upload_trial_3.png Graphic file (type bmp)
 <assets/images/manage_trials_upload_trial_3.png>
-File: assets/images/manage_trials_upload_trial_4.png Graphic file (type bmp)
-<assets/images/manage_trials_upload_trial_4.png>
-
-Underfull \vbox (badness 4242) has occurred while \output is active []
-
-[115]
-File: assets/images/manage_trials_upload_trial_5.png Graphic file (type bmp)
-<assets/images/manage_trials_upload_trial_5.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[116] [117]
+[115]
+File: assets/images/manage_trials_upload_trial_4.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_4.png>
+[116]
+File: assets/images/manage_trials_upload_trial_5.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_5.png>
+[117]
 File: assets/images/manage_trials_upload_trial_7.png Graphic file (type bmp)
 <assets/images/manage_trials_upload_trial_7.png>
 File: assets/images/manage_trials_upload_trial_8.png Graphic file (type bmp)
 <assets/images/manage_trials_upload_trial_8.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
 [118]
 File: assets/images/multiple_trial_upload_with_email.png Graphic file (type bmp
 )
 <assets/images/multiple_trial_upload_with_email.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
 [119]
 File: assets/images/fieldmap_trial_layout.png Graphic file (type bmp)
 <assets/images/fieldmap_trial_layout.png>
+[120]
 File: assets/images/fieldmap_multi_trial_layout.png Graphic file (type bmp)
 <assets/images/fieldmap_multi_trial_layout.png>
-[120]
 File: assets/images/fieldmap_plot_image.png Graphic file (type bmp)
 <assets/images/fieldmap_plot_image.png>
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 7238) has occurred while \output is active []
 
 [121]
 File: assets/images/fieldmap_view_plot_image.png Graphic file (type bmp)
@@ -2841,7 +2850,7 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  26432 strings out of 478682
  666591 string characters out of 5849005
- 1862018 words of memory out of 6000000
+ 1863018 words of memory out of 6000000
  45902 multiletter control sequences out of 15000+600000
  518740 words of font info for 86 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191

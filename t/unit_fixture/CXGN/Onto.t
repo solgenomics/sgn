@@ -20,7 +20,7 @@ my $schema = $t->bcs_schema();
 my $onto = CXGN::Onto->new( { schema => $t->bcs_schema() });
 
 my $cv_type = 'attribute_ontology';
-my @results = $onto->get_root_nodes($cv_type);
+my @results = $onto->get_root_nodes([$cv_type]);
 #print STDERR "test 1 results " .Dumper @results;
 
 is_deeply(@results, [

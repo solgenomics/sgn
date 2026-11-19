@@ -22,7 +22,7 @@ sub trait_design_page : Path('/traits/design/') Args(0) {
     my $ontology_obj = CXGN::Onto->new({
         schema => $schema
     });
-    my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
+    my @root_nodes = $ontology_obj->get_root_nodes(['trait_ontology']);
 
     my @db_names;
 

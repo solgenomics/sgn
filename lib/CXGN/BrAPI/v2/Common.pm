@@ -26,6 +26,8 @@ package CXGN::BrAPI::v2::Common;
 =cut
 
  use Moose;
+ use File::Temp;
+ use DateTime;
 
  has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -73,5 +75,36 @@ package CXGN::BrAPI::v2::Common;
     is => 'rw',
     required => 1,
     );
+
+# Builds the phenotype_store_config hashref expected by the CXGN::Trial methods that create child
+# observation units (save_plant_entries, create_tissue_samples, save_tissue_sample_entries) so that
+# they can store the treatments inherited from the parent.
+ sub phenotype_store_config {
+    my ($self, $c, $user_id, $user_name) = @_;
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = $c->config->{basepath};
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/") {
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = File::Temp::tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+    my $time = DateTime->now();
+
+    return {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbname => $c->config->{dbname},
+        dbuser => $c->config->{dbuser},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $time->ymd()."_".$time->hms()
+        }
+    };
+ }
 
  1;
