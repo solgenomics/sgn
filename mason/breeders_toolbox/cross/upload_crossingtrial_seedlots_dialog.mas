@@ -87,15 +87,12 @@ $locations_by_program_json
                                 <li>You can print barcodes for the seedlots.</li>
                             </ul>
                             <br/>
-                            <center>
-                                <button class="btn btn-primary" name="upload_seedlot_success_complete_button">The seedlots were saved to the database with no errors! Congrats Click Here</button><br/><br/>
-                            </center>
                         </&>
                     </&>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_seedlot_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_seedlot_upload_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -258,11 +255,12 @@ jQuery(document).ready(function(){
         }
     });
 
-    jQuery(document).on('click', '[name="upload_seedlot_success_complete_button"]', function(){
-        alert('Seedlots were saved in the database');
+    jQuery("#close_seedlot_upload_button").click(function(){
+        jQuery('#seedlot_harvested_uploaded_file').val('');
         jQuery('#upload_seedlot_dialog').modal('hide');
-        //location.reload();
+        location.reload();
     });
+
 
 });
 

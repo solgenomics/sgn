@@ -225,9 +225,6 @@ $default_seedlot_material_type => undef
                                 <li>You can print barcodes for the seedlots.</li>
                             </ul>
                             <br/>
-                            <div style="text-align: center">
-                                <button class="btn btn-primary" name="upload_seedlot_success_complete_button">The seedlots were saved to the database with no errors! Congrats Click Here</button><br/><br/>
-                            </div>
                         </&>
                     </&>
 
@@ -525,6 +522,12 @@ jQuery(document).ready(function(){
         jQuery('#seedlot_uploaded_file').val("");
         jQuery('#seedlot_harvested_uploaded_file').val("");
         location.reload();
+    });
+
+    jQuery("#close_seedlot_upload_dialog").click(function(){
+        jQuery('#seedlot_uploaded_file').val('');
+        jQuery('#seedlot_harvested_uploaded_file').val('');
+        jQuery('#upload_seedlot_dialog').modal('hide');
     });
 
 
