@@ -101,8 +101,8 @@ for my $case (
         my $query = Test::MockModule->new('SGN::Controller::solGS::Anova');
         $query->mock(plot_trait_columns => sub {
             return {} if $case->{map_empty};
-            return {'another trait' => 'unrelated'} if $case->{map_missing};
-            return {$clean_trait => $abbr};
+            return {999 => 'unrelated'} if $case->{map_missing};
+            return {201 => $abbr};
         });
         $query->mock(create_anova_phenodata_file => sub {
             write_file($file, {binmode => ':utf8'}, $content) unless $case->{no_data};
@@ -146,6 +146,33 @@ subtest 'a trait name inside another trait name keeps its own column' => sub {
     $seen{ SGN::Controller::solGS::solGS->format_phenotype_dataset_headers(
         join("\t", 'germplasmName', @traits), ['germplasmName']) }++ for 1 .. 40;
     is_deeply([keys %seen], ["germplasmName\tPHAM\tPH"], 'each trait has its own acronym in 40 of 40 headers');
+};
+
+subtest 'every trait column gets its own name' => sub {
+    my $format = sub {
+        return eval { SGN::Controller::solGS::solGS->format_phenotype_dataset_headers(
+            join("\t", 'germplasmName', 'replicate', @_), ['germplasmName', 'replicate']) } // "died: $@";
+    };
+    is($format->('height|CO_334:0000001', 'height|CO_334:0000002', 'yield'), "germplasmName\treplicate\theight\theight.2\tyield",
+        'traits with the same name after cleaning');
+    is($format->('dry weight|CO_334:0000001', 'dry weight|CO_334:0000002'), "germplasmName\treplicate\tDW\tDW.2",
+        'also as the last columns');
+    is($format->('0', '100'), "germplasmName\treplicate\t0\t100", 'a trait named 0');
+    is($format->('0|CO_334:0000001', '0|CO_334:0000002'), "germplasmName\treplicate\t0\t0.2", 'two traits named 0');
+    is($format->('replicate|CO_334:0000001', 'height'), "germplasmName\treplicate\treplicate.2\theight",
+        'trait name identical to a metadata column');
+    is($format->('replicate height', 'height'), "germplasmName\treplicate\tRH\theight", 'a metadata header in a trait name');
+    is($format->('replicate [cm', 'height'), "germplasmName\treplicate\tR[CM\theight", 'and a regular expression character with it');
+};
+
+subtest 'optional metadata and trailing notes keep their actual positions' => sub {
+    my @metadata = qw(germplasmName replicate plantedSeedlotStockDbId notes);
+    my @columns = ('germplasmName', 'replicate', 'dry matter content percentage|CO_334:0000001',
+        'notes|CO_334:0000002', 'notes');
+    my $format = SGN::Controller::solGS::solGS->format_phenotype_dataset_headers(
+        join("\t", @columns), \@metadata);
+    is($format, "germplasmName\treplicate\tDMCP\tnotes.2\tnotes",
+        'the first trait survives omitted seedlot metadata and notes keeps its own header');
 };
 
 done_testing();

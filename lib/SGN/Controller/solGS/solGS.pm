@@ -1359,43 +1359,23 @@ sub format_phenotype_dataset_rows {
 sub format_phenotype_dataset_headers {
     my ( $self, $all_headers, $meta_headers, $traits_file ) = @_;
 
-    $all_headers = SGN::Controller::solGS::Utils->clean_traits($all_headers);
-
-    my $traits = $all_headers;
-
-    foreach my $mh (@$meta_headers) {
-        $traits =~ s/($mh)//g;
+    my @headers = split( /\t/, $all_headers, -1 );
+    # Native and materialized downloads include different metadata columns.
+    # Match the raw header before stripping ontology IDs. A trait may clean
+    # to a metadata name, and notes follows the traits in both downloads.
+    my %metadata = map { $_ => 1 } @$meta_headers;
+    my @trait_indices = grep { !delete $metadata{$headers[$_]} } 0 .. $#headers;
+    my @traits = map { SGN::Controller::solGS::Utils->clean_traits($headers[$_]) } @trait_indices;
+    if ($traits_file && $traits_file =~ /pop_list/) {
+        my @trait_list = ('') x @headers;
+        @trait_list[@trait_indices] = @traits;
+        write_file($traits_file, { binmode => ':utf8' }, join("\t", @trait_list));
     }
 
-    write_file( $traits_file, { binmode => ':utf8' }, $traits )
-      if $traits_file && $traits_file =~ /pop_list/;
-
-    my @filtered_traits = split( /\t/, $traits );
-
-    my $acronymized_traits =
-      SGN::Controller::solGS::Utils->acronymize_traits( \@filtered_traits );
-    my $acronym_table = $acronymized_traits->{acronym_table};
-
-    my $formatted_headers;
-    my @headers = split( "\t", $all_headers );
-
-    foreach my $hd (@headers) {
-        # the trait with exactly this name first: a name that is part of another
-        # trait name ("plant height", "plant height at maturity") must not get
-        # the acronym of the other trait
-        my ($acronym) = grep { $acronym_table->{$_} eq $hd } sort keys %$acronym_table;
-        if ( !$acronym ) {
-            foreach my $acr ( sort keys %$acronym_table ) {
-                $acronym = $acr if $acronym_table->{$acr} =~ /$hd/;
-                last if $acronym;
-            }
-        }
-
-        $formatted_headers .= $acronym ? $acronym : $hd;
-        $formatted_headers .= "\t" unless ( $headers[-1] eq $hd );
-    }
-
-    return $formatted_headers;
+    my $names = SGN::Controller::solGS::Utils->acronymize_traits(
+        [map { length($_) ? $_ : 'trait' } @traits], $meta_headers);
+    @headers[@trait_indices] = split(/\t/, $names->{acronymized_traits} // '', -1);
+    return join("\t", @headers);
 
 }
 

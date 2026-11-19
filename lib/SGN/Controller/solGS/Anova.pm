@@ -218,9 +218,7 @@ sub get_traits_abbrs {
     $c->controller('solGS::Files')->all_traits_file( $c, $trial_id );
 
     $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
-    my $utils = $c->controller('solGS::Utils');
-    my $trait_name = $utils->clean_traits($c->stash->{trait_name});
-    my $trait_abbr = $self->plot_trait_columns($c, $trial_id)->{$trait_name};
+    my $trait_abbr = $self->plot_trait_columns($c, $trial_id)->{$trait_id};
     if (!defined $trait_abbr) {
         $c->stash->{anova_data_error} = 'The selected trait is not present in the phenotype data.';
     }
@@ -233,8 +231,8 @@ sub get_traits_abbrs {
     return $traits_abbrs;
 }
 
-# The column names of the traits in the phenotype file of a trial, by trait name
-# (clean_traits). The file has the traits of the plots only, each once and sorted,
+# The column names of the traits in the phenotype file of a trial, by cvterm ID.
+# The file has the traits of the plots only, each once and sorted by raw name,
 # named by format_phenotype_dataset_headers. The abbreviations of the trial page also
 # count the traits of plants: a plant trait that sorts first takes the plain
 # abbreviation there, and the plot trait a suffixed one that is not in the file.
@@ -243,13 +241,13 @@ sub plot_trait_columns {
 
     my $trial = CXGN::Trial->new({ bcs_schema => $self->schema($c), trial_id => $trial_id });
     my %seen;
-    my @traits = grep { !$seen{$_}++ } sort map { $_->[1] } @{ $trial->get_traits_assayed('plot') };
+    my @traits = grep { !$seen{$_->[0]}++ }
+        sort { $a->[1] cmp $b->[1] } @{ $trial->get_traits_assayed('plot') };
     my $metadata = $c->controller('solGS::Search')->model($c)->trial_metadata();
     my @columns = split /\t/, $c->controller('solGS::solGS')
-        ->format_phenotype_dataset_headers(join("\t", @$metadata, @traits), $metadata);
-    my $utils = $c->controller('solGS::Utils');
+        ->format_phenotype_dataset_headers(join("\t", @$metadata, map { $_->[1] } @traits), $metadata);
 
-    return { map { $utils->clean_traits($traits[$_]) => $columns[ @$metadata + $_ ] } 0 .. $#traits };
+    return { map { $traits[$_][0] => $columns[ @$metadata + $_ ] } 0 .. $#traits };
 }
 
 sub is_valid_anova_trait_data {
@@ -702,7 +700,7 @@ sub anova_trial_cache_dir {
 
     $trial_id = $c->stash->{trial_id} if !$trial_id;
 
-    my $cache_dir = File::Spec->catdir( $c->stash->{anova_dir}, $trial_id, 'cache' );
+    my $cache_dir = File::Spec->catdir( $c->stash->{anova_dir}, $trial_id, 'cache', 'columns_v3' );
     make_path($cache_dir, { mode => oct('0755') }) unless -d $cache_dir;
 
     return $cache_dir;
