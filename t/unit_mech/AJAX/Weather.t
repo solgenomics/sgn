@@ -20,8 +20,17 @@ my $mech = Test::WWW::Mechanize->new;
 my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->find({ description => 'test_location' });
 ok($loc, 'fixture location');
 my $loc_id = $loc->nd_geolocation_id;
-my ($old_lat, $old_lon) = ($loc->latitude, $loc->longitude);
+my ($old_lat, $old_lon, $old_alt) = ($loc->latitude, $loc->longitude, $loc->altitude);
 $loc->update({ latitude => -22.70, longitude => -47.62, altitude => 580 });
+
+# put test_location back and clean up even if a test dies, since the BrAPI
+# tests that run later expect the fixture coordinates
+END {
+    local $?;
+    eval { $loc->update({ latitude => $old_lat, longitude => $old_lon, altitude => $old_alt }) if $loc; 1 }
+        or diag("could not restore test_location: $@");
+    eval { $f->clean_up_db(); 1 } or diag("clean_up_db failed: $@");
+}
 
 # logged out
 $mech->get("$base/ajax/weather/config");
@@ -99,8 +108,5 @@ SKIP: {
     $mech->get_ok("$base/ajax/weather/daily?location_id=$loc_id&network=airport&station=SBKP&start=2026-10-01&end=2026-10-07&lat=-23.007&lon=-47.135&elev=659");
     ok(scalar(@{decode_json($mech->content)->{days}}) >= 5, 'daily observations of an airport');
 }
-
-$loc->update({ latitude => $old_lat, longitude => $old_lon });
-$f->clean_up_db();
 
 done_testing();
