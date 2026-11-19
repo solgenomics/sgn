@@ -15,7 +15,7 @@ my $f = SGN::Test::Fixture->new();
 my $solgs_data = SGN::Test::solGSData->new({
     'fixture' => $f, 
     'accessions_list_subset' => 60, 
-    'plots_list_subset' => 60,
+    'plots_list_subset' => 160,
     'user_id' => 40,
 });
 
@@ -24,45 +24,29 @@ print STDERR "\nbase_analyses_cache_dir-- $cache_dir\n";
 
 
 my $accessions_list =  $solgs_data->load_accessions_list();
-# my $accessions_list = $solgs_data->get_list_details('accessions');
 my $accessions_list_name = $accessions_list->{list_name};
 my $accessions_list_id = 'list_' . $accessions_list->{list_id};
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
+
 my $plots_list =  $solgs_data->load_plots_list();
-# my $plots_list =  $solgs_data->get_list_details('plots');
 my $plots_list_name = $plots_list->{list_name};
 my $plots_list_id = 'list_' . $plots_list->{list_id};
 
-print STDERR "\nadding trials list '\n";
 my $trials_list =  $solgs_data->load_trials_list();
-# my $trials_list =  $solgs_data->get_list_details('trials');
 my $trials_list_name = $trials_list->{list_name};
 my $trials_list_id = 'list_' . $trials_list->{list_id};
-print STDERR "\nadding trials dataset\n";
-# my $trials_dt =  $solgs_data->get_dataset_details('trials');
+
 my $trials_dt = $solgs_data->load_trials_dataset();
 my $trials_dt_name = $trials_dt->{dataset_name};
 my $trials_dt_id = 'dataset_' . $trials_dt->{dataset_id};
-print STDERR "\nadding accessions dataset\n";
-# my $accessions_dt =  $solgs_data->get_dataset_details('accessions');
+
 my $accessions_dt = $solgs_data->load_accessions_dataset();
 my $accessions_dt_name = $accessions_dt->{dataset_name};
 my $accessions_dt_id = 'dataset_' . $accessions_dt->{dataset_id};
 
-print STDERR "\nadding plots dataset\n";
-# my $plots_dt =  $solgs_data->get_dataset_details('plots');
 my $plots_dt = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id = 'dataset_' . $plots_dt->{dataset_id};
 
-#$accessions_dt_name = '' . $accessions_dt_name . '';
-print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
-print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
-print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
-
-print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
-print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 remove_tree($cache_dir, {safe => 1});
 sleep(5);
@@ -84,9 +68,9 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(120);
+    sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(5);
+    sleep(10);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
@@ -108,13 +92,13 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(3);
+    sleep(5);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(5);
 
@@ -131,7 +115,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
+    sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(10);
 
@@ -148,7 +132,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc Selection index')->click();
-    sleep(120);
+    sleep(250);
 
     my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-10);", $si);
@@ -214,7 +198,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
+    sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
 
@@ -240,9 +224,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(20);
 
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(10);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -252,16 +236,16 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(250);
+    sleep(300);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(3);
+    sleep(10);
 
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
-    sleep(15);
+    sleep(25);
 
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(5);
@@ -276,7 +260,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
+    sleep(300);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
 
@@ -285,14 +269,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//select[@id="si_pops_select"]/option[contains(text(), "Training population 280")]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc Selection index')->click();
-    sleep(120);
+    sleep(250);
 
     my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-10);", $si);
@@ -317,7 +301,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(4);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc Selection index')->click();
-    sleep(120);
+    sleep(250);
 
     my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-10);", $si);
