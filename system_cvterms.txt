@@ -602,6 +602,7 @@ project_property	drone_run_standard_process_in_progress	Running a standard proce
 project_property	drone_run_standard_process_phenotype_calculation_in_progress	Running a standard process to calculate phenotypes on the drone run can take time, so this is an indicator for if the process is occurring	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_vi_completed	If the drone run had the vegetative index standard process run	10/5/2018	nm529	00103
 project_property	field_size		04/05/2018	nm529	00093
+project_property	field_number	Trial field identifier	11/05/2026		00210
 project_property	field_trial_is_planned_to_be_genotyped		04/05/2018	nm529	00093
 project_property	field_trial_is_planned_to_cross		04/05/2018	nm529	00093
 project_property	file_metadata_json For recording metadata of intercross files (downloaded and uploaded files)	 tt15	00155
@@ -630,6 +631,7 @@ project_property	product_profile_json		00131
 project_property	project fertilizer date
 project_property	project first harvest date					sgn database
 project_property	project_harvest_date				00080
+project_property	project_second_harvest_date	Second harvest date for a trial	11/05/2026		00210
 project_property	project harvested plants
 project_property	project_has_plant_entries				00054
 project_property	project_has_subplot_entries				00084
