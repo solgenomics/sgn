@@ -19,7 +19,8 @@ which ignores cv_id: the term went to the 'null' cv instead of 'job_type', so
 it was never found again and every job of that type (e.g. the Analysis
 Pipeline's script_factory_analysis) was stored without a type (empty Type in
 the job list). This patch moves those terms to the 'job_type' cv and sets the
-type of the jobs stored without one.
+type of the jobs stored without one. It also adds the job types used by the
+code that AddJobsTable (00192) did not create (e.g. deletion).
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -39,6 +40,7 @@ it under the same terms as Perl itself.
 package FixJobTypeIds;
 
 use Moose;
+use Bio::Chado::Schema;
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -71,6 +73,15 @@ UPDATE cvterm c SET cv_id = jt.cv_id
    AND c.name IN (SELECT args->>'job_type' FROM sgn_people.sp_job WHERE args->>'job_type' IS NOT NULL
                   UNION SELECT 'script_factory_analysis')
    AND NOT EXISTS (SELECT 1 FROM cvterm o WHERE o.cv_id = jt.cv_id AND o.name = c.name);
+EOSQL
+
+    # job types used by the code but not seeded by AddJobsTable (00192)
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh } );
+    foreach my $term (qw(deletion environment_stratification ontology_indexing phenotypic_analysis script_factory_analysis)) {
+        $schema->resultset("Cv::Cvterm")->create_with({ name => $term, cv => 'job_type' });
+    }
+
+    $self->dbh->do(<<EOSQL);
 
 -- Analysis Pipeline jobs stored without a type (their args have no job_type either)
 UPDATE sgn_people.sp_job j
