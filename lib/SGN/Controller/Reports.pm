@@ -47,7 +47,7 @@ sub overview : Path('/reports/overview') Args(0) {
 
     # number of accessions
     #
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_property')->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $rs = $schema->resultset("Stock::Stock")->search( { type_id => $accession_type_id });
     $stats{accession_count} = $rs->count();
 
@@ -55,6 +55,7 @@ sub overview : Path('/reports/overview') Args(0) {
     my $accession_with_pedigrees = $schema->resultset("Stock::Stock")->search( { type_id => $accession_type_id }, { join => 'object', '+select' => 'object.type_id', '+as' => 'relationship_type_id' });
     
     
+    $c->stash->{stats} = \%stats;
     $c->stash->{template} = '/reports/overview.mas';
 }
 
