@@ -25,7 +25,7 @@
 
 import '../legacy/leaflet.js';
 import { CROPS, DEFAULTS, num, addDays, daysBetween, median, seasonDays, summarize, cropStages, stressDays, verdicts, covariates, covariateColumns, RM_STEPS, rmToGddF, rmSeason, rmDates, rmZone, rmBand, daysBand,
-    UNITS, isF, tUnit, ddUnit, toT, toDD, fromT, fmtT, fmtTh, inUnit, rmReasonText } from '../modules/weather_breeding.js';
+    UNITS, isF, tUnit, ddUnit, toT, toDD, toCelsius, fmtT, fmtTh, inUnit, rmReasonText } from '../modules/weather_breeding.js';
 import { chartXY as chartXYBase, stressStrip as stressStripBase, catBars as catBarsBase } from '../modules/weather_charts.js';
 
 let $;
@@ -1490,7 +1490,7 @@ function renderCompare() {
 // ---------------------------------------------------------------- crop and thresholds
 function readParams() {
     const v = (id, d) => { const x = num($(id).val()); return x === null ? d : x; };
-    const t = (id, d) => { const x = fromT($(id).val()); return x === null ? d : x; };    // typed in the unit shown, kept in C
+    const t = (id, d) => { const x = toCelsius($(id).val()); return x === null ? d : x; };    // typed in the unit shown, kept in C
     S.p = { base: t('#wx_base', DEFAULTS.base), cap: t('#wx_cap', DEFAULTS.cap), heat: t('#wx_heat', DEFAULTS.heat), frost: t('#wx_frost', DEFAULTS.frost), dry: Math.max(2, v('#wx_dry', DEFAULTS.dry)), heavy: v('#wx_heavy', DEFAULTS.heavy),
         kill: t('#wx_kill', DEFAULTS.kill), rm100: v('#wx_rm100', DEFAULTS.rm100), rmDay: Math.max(1, v('#wx_rmday', DEFAULTS.rmDay)), silk: v('#wx_silk', DEFAULTS.silk), rmRef: v('#wx_rmref', DEFAULTS.rmRef) };
     storage('params', { crop: S.crop, p: S.p });

@@ -47,7 +47,7 @@ export const ddUnit = () => (isF() ? '°F·d' : '°C·d');
 // a temperature, and a temperature difference / degree-days (no 32 offset)
 export function toT(c) { const x = num(c); return x === null ? null : isF() ? x * 1.8 + 32 : x; }
 export function toDD(c) { const x = num(c); return x === null ? null : isF() ? x * 1.8 : x; }
-export function fromT(v) { const x = num(v); return x === null ? null : isF() ? Math.round(((x - 32) / 1.8) * 100) / 100 : x; }
+export function toCelsius(v) { const x = num(v); return x === null ? null : isF() ? Math.round(((x - 32) / 1.8) * 100) / 100 : x; }
 // '35.2 °C' / '95.4 °F'; a threshold drops a trailing .0 ('0 °C', '32 °F', '28.4 °F')
 export function fmtT(c, d) { const x = toT(c); return x === null ? '?' : x.toFixed(d === undefined ? 1 : d) + ' ' + tUnit(); }
 export function fmtTh(c) { const x = toT(c); return x === null ? '?' : String(Math.round(x * 10) / 10) + ' ' + tUnit(); }
