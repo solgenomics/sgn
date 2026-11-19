@@ -119,7 +119,7 @@ input[type="text"] {
     <div class="panel panel-default">
         <div class="panel-body">
 
-            <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the names currently selected in the first column of the summary table to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the names currently selected in the first column of the summary table to a new or existing list</i>'&>
             <br>
             <p><em><span id="selected_row_count">0</span> row(s) selected.</em></p>
             <div style="text-align:right" id="names_to_list_menu"></div>
@@ -180,6 +180,9 @@ input[type="text"] {
 (function(){
     var d3 = d3v4;
     var draw_histogram = stackedObservationPhenotypeHistogram.draw;
+    // The Histogram links in the summary table call this function from their
+    // onclick attribute, which only sees global names.
+    globalThis.trait_summary_hist_change = trait_summary_hist_change;
 
     jQuery(document).ready(function () {
         var type = "<% $trial_stock_type %>";
@@ -545,7 +548,7 @@ input[type="text"] {
                         },
                         error: function(response) {
                             jQuery("#working_modal").modal("hide");
-                            alert('An error occured retrieving trait histogram data.');
+                            alert('An error occurred retrieving trait histogram data.');
                         }
                     });
                 } else {
@@ -626,7 +629,7 @@ input[type="text"] {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occured retrieving trait histogram data.');
+                alert('An error occurred retrieving trait histogram data.');
             }
         });
     }
