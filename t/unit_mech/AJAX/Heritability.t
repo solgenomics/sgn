@@ -64,8 +64,9 @@ ok( -e "static/".$rdata->{h2CsvTable}, "csv table file created");
 my $test_basic_h2_file = csv(in => "static/".$rdata->{h2CsvTable});
 
 is(@$test_basic_h2_file[1]->[1], 'dry matter content percentage', "check value of row name in a table");
-# the block effect is blockNumber as a factor (it was replicate as a numeric covariate), hence these values
-is(@$test_basic_h2_file[1]->[5], '43.887', "check value of Vres fresh.root.weight in a table");
+# Trials 139 and 141 reuse block numbers. The model fits the blocks within each trial.
+# Column 5 of these CSV rows is residual variance, rounded to three decimal places.
+is(@$test_basic_h2_file[1]->[5], '25.402', 'dry matter residual variance across the two trials');
 
 # run test for dataset with outliers but with false outliers parameter
 my $outliers_included_dataset_id = 1;
@@ -78,7 +79,7 @@ ok($rdata_full_set->{h2CsvTable}, "h2CsvTable returned");
 
 my $test_included_h2_file = csv(in => "static/".$rdata_full_set->{h2CsvTable});
 is(@$test_included_h2_file[2]->[1], 'fresh root weight', "check value of row name in a table");
-is(@$test_included_h2_file[2]->[5], '15.476', "check value of Heritability fresh.root.weight in a table");
+is(@$test_included_h2_file[2]->[5], '15.057', 'fresh root weight residual variance including outliers');
 
 # run test for dataset with outliers but with false outliers parameter
 my $outliers_excluded_dataset_id = 1;
@@ -99,7 +100,7 @@ ok( -e "static/".$rdata_excluded_set->{h2CsvTable}, "csv table file created");
 # check if values are changed for set with outliers excluded
 my $test_excluded_h2_file = csv(in => "static/".$rdata_excluded_set->{h2CsvTable});
 is(@$test_excluded_h2_file[2]->[1], 'fresh root weight', "check value of row name in a table");
-is(@$test_excluded_h2_file[2]->[5], '8.994', "check value of Heritability fresh.root.weight in a table");
+is(@$test_excluded_h2_file[2]->[5], '8.858', 'fresh root weight residual variance excluding outliers');
 
 # remove changes to the database
 #
