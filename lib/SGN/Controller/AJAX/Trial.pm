@@ -1206,6 +1206,12 @@ sub upload_trial_file_POST : Args(0) {
 
     #print STDERR Dumper $parsed_data;
 
+    # Trait and treatment values are verified inside the trial transaction, so a bad value refuses the whole upload.
+    # They are stored after it commits: StorePhenotypes links the new values to the upload record through the metadata
+    # and phenome schemas, whose separate database connections cannot see rows from the uncommitted chado transaction.
+    my $store_phenotypes;
+    my $value_error;
+
     my $coderef = sub {
 
         my %trial_info_hash = (
@@ -1281,13 +1287,79 @@ sub upload_trial_file_POST : Args(0) {
             my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $save->{'trial_id'} });
             $trial->set_entry_numbers(\%entry_numbers_prop);
         }
+
+        # verify trait and treatment values, if any, against the new plots
+        if ($parsed_data->{'treatment_design'} && $save->{'trial_id'}) {
+            my $temp_basedir = $c->config->{tempfiles_subdir};
+            my $site_basedir = getcwd();
+            if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+                mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+            }
+            my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+            my $phenostore_data_hash = {};
+            my %phenostore_stocks = ();
+            my %phenostore_traits = ();
+
+            my $time = DateTime->now();
+            my $pheno_timestamp = $time->ymd()."_".$time->hms();
+
+            my $treatment_design = $parsed_data->{'treatment_design'};
+            foreach my $plot (keys(%{$treatment_design})) {
+                $phenostore_stocks{$plot} = 1;
+                foreach my $trait (keys(%{$treatment_design->{$plot}})) {
+                    $phenostore_traits{$trait} = 1;
+                    # The collection date is the timestamp given in the cell, if any; it is not the upload time
+                    my ($value, $collect_timestamp) = @{$treatment_design->{$plot}->{$trait}};
+                    $phenostore_data_hash->{$plot}->{$trait} = [
+                        $value,
+                        $collect_timestamp,
+                        $user_name,
+                        '',''
+                    ];
+                }
+            }
+
+            $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $temp_basedir,
+                dbhost => $c->config->{dbhost},
+                dbuser => $c->config->{dbuser},
+                dbname => $c->config->{dbname},
+                dbpass => $c->config->{dbpass},
+                temp_file_nd_experiment_id => $tempfile,
+                bcs_schema => $chado_schema,
+                metadata_schema => $metadata_schema,
+                phenome_schema => $phenome_schema,
+                user_id => $user_id,
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => [keys(%phenostore_traits)],
+                values_hash => $phenostore_data_hash,
+                metadata_hash =>{
+                    archived_file => 'none',
+                    archived_file_type => 'new trial upload with treatments',
+                    operator => $user_name,
+                    date => $pheno_timestamp
+                }
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                $value_error = $verified_error;
+                die "Invalid trait/treatment values: $verified_error\n";
+            }
+        }
     };
 
     try {
         $chado_schema->txn_do($coderef);
     } catch {
         print STDERR "Transaction Error: $_\n";
-        $save->{'error'} = $_;
+        $save->{'error'} = $value_error ? "The trial was not saved because some trait/treatment values are invalid: $value_error" : $_;
+        # The transaction was rolled back, so the trial no longer exists
+        delete $save->{'trial_id'};
     };
 
     if ($save->{'trial_id'}) {
@@ -1306,76 +1378,13 @@ sub upload_trial_file_POST : Args(0) {
         $trial_activity_obj->parent_id($trial_id);
         my $activity_prop_id = $trial_activity_obj->store();
 
-        # save treatments if any
-        if ($parsed_data->{'treatment_design'}) {
-            my $temp_basedir = $c->config->{tempfiles_subdir};
-            my $site_basedir = getcwd();
-            if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
-                mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
-            }
-            my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
-
-            my $phenostore_data_hash = {};
-            my %phenostore_stocks = ();
-            my %phenostore_treatments = ();
-
-            my $time = DateTime->now();
-            my $pheno_timestamp = $time->ymd()."_".$time->hms();
-
-            my $treatment_design = $parsed_data->{'treatment_design'};
-            foreach my $plot (keys(%{$treatment_design})) {
-                $phenostore_stocks{$plot} = 1;
-                foreach my $treatment (keys(%{$treatment_design->{$plot}})) {
-                    $phenostore_treatments{$treatment} = 1;
-                    # The collection date is the timestamp given in the cell, if any; it is not the upload time
-                    my ($value, $collect_timestamp) = @{$treatment_design->{$plot}->{$treatment}};
-                    $phenostore_data_hash->{$plot}->{$treatment} = [
-                        $value,
-                        $collect_timestamp,
-                        $user_name,
-                        '',''
-                    ];
-                }
-            }
-
-            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
-                basepath => $temp_basedir,
-                dbhost => $c->config->{dbhost},
-                dbuser => $c->config->{dbuser},
-                dbname => $c->config->{dbname},
-                dbpass => $c->config->{dbpass},
-                temp_file_nd_experiment_id => $tempfile,
-                bcs_schema => $chado_schema,
-                metadata_schema => $metadata_schema,
-                phenome_schema => $phenome_schema,
-                user_id => $user_id,
-                stock_list => [keys(%phenostore_stocks)],
-                trait_list => [keys(%phenostore_treatments)],
-                values_hash => $phenostore_data_hash,
-                metadata_hash =>{
-                    archived_file => 'none',
-                    archived_file_type => 'new trial upload with treatments',
-                    operator => $user_name,
-                    date => $pheno_timestamp
-                }
-            });
-
-            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-
-            if ($verified_warning) {
-                warn $verified_warning;
-            }
-            if ($verified_error) {
-                print STDERR "$verified_error\n";
-                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $verified_error\n" };
-                return;
-            }
-
+        # store the trait and treatment values verified in the transaction
+        if ($store_phenotypes) {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
                 print STDERR "$stored_phenotype_error\n";
-                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $stored_phenotype_error\n" };
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue storing its trait/treatment values: $stored_phenotype_error\n" };
                 return;
             }
         }

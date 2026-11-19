@@ -135,6 +135,7 @@ finish("User not found in database for username $username!") if !$sp_person_id;
 # Create and Save Trials
 my %all_designs = %{$parsed_data};
 my %saved_trials;
+my $value_error; # set when trait/treatment values refuse the upload
 my $coderef = sub {
 
     my $phenotime = DateTime->now();
@@ -278,6 +279,10 @@ my $coderef = sub {
         }
     }
 
+    # Trait and treatment values are verified and stored in the same transaction as the trials
+    # (all schemas here share one database handle), so a bad value refuses the whole upload
+    return if !@phenostore_stocks;
+
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath => $temp_basedir,
         dbhost => $dbhost,
@@ -301,13 +306,15 @@ my $coderef = sub {
         push @warnings, $verified_warning;
     }
     if ($verified_error) {
-        push @errors, $verified_error
+        $value_error = "The trials were not saved because some trait/treatment values are invalid: $verified_error";
+        die "$value_error\n";
     }
 
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
     if ($stored_phenotype_error) {
-        push @errors, $verified_error
+        $value_error = "The trials were not saved because their trait/treatment values could not be stored: $stored_phenotype_error";
+        die "$value_error\n";
     }
 
 };
@@ -315,7 +322,8 @@ my $coderef = sub {
 try {
     $chado_schema->txn_do($coderef);
 } catch {
-    push @errors, $_;
+    # txn_do wraps the exception text, so the message for invalid values is reported as it was set
+    push @errors, $value_error || $_;
 };
 
 finish();
