@@ -57,7 +57,6 @@ if(isNumeric == "FALSE"){
 
 #checkning number of locations
 szloc <- length(unique(pheno$locationName))
-szreps <- length(unique(pheno$replicate))
 szyr <- length(unique(pheno$studyYear))
 
 library(lmerTest)
@@ -88,84 +87,20 @@ tryCatch({ for(i in 6:ncol(pheno)){
     } else {
       traitData$blockNumber <- 1
     }
-    if (szreps > 1){
-      if (szloc == 1){
-        if (szyr == 1){
-          model <- lmer(get(outcome)~(1|germplasmName)+blockNumber,
-                        na.action = na.exclude,
-                        data=traitData)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = 0
-          resvar = variance [2, "vcov"]
-        }else{
-          model <- lmer(get(outcome) ~ (1|germplasmName) + blockNumber + studyYear,
-                        na.action = na.exclude,
-                        data=traitData)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = 0
-          resvar = variance [2, "vcov"]
-        }
-      }else if (szloc > 1) {
-        if (szyr == 1){
-          model <- lmer(get(outcome) ~ (1|germplasmName) + blockNumber + (1|locationName),
-                        na.action = na.exclude,
-                        data=traitData)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = variance [2, "vcov"]
-          resvar = variance [3, "vcov"]
-        }else{
-          model <- lmer(get(outcome) ~ (1|germplasmName) + blockNumber + (1|locationName) + studyYear,
-                        na.action = na.exclude,
-                        data=traitData)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = variance [2, "vcov"]
-          resvar = variance [3, "vcov"]
-        }
-      }
-    }else if (szreps == 1){
-      if (szloc ==1){
-        if (szyr == 1){
-          model <- lmer(get(outcome)~(1|germplasmName) + blockNumber,
-                        na.action = na.exclude,
-                        data=traitData)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = 0
-          resvar = variance [2, "vcov"]
-        }else{
-          model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + blockNumber,
-                        na.action = na.exclude,
-                        data=traitData)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = 0
-          resvar = variance [2, "vcov"]
-        }
-      }else if (szloc > 1){
-        if (szyr ==1){
-          model <- lmer(get(outcome)~(1|germplasmName)+ (1|locationName) +  blockNumber,
-                        na.action = na.exclude,
-                        data=traitData)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = variance [2, "vcov"]
-          resvar = variance [3, "vcov"]
-        }else{
-          model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + (1|locationName) + blockNumber,
-                        na.action = na.exclude,
-                        data=traitData)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = variance [2, "vcov"]
-          resvar = variance [3, "vcov"]
-        }
-      }
+    formula <- get(outcome) ~ (1 | germplasmName) + blockNumber
+    if (szloc > 1) {
+      formula <- update(formula, . ~ . + (1 | locationName))
     }
-    
+    if (szyr > 1) {
+      formula <- update(formula, . ~ . + studyYear)
+    }
+    model <- lmer(formula, na.action = na.exclude, data = traitData)
+    variance <- as.data.frame(VarCorr(model))
+    components <- setNames(variance$vcov, variance$grp)
+    gvar <- components[["germplasmName"]]
+    envar <- if (szloc > 1) components[["locationName"]] else 0
+    resvar <- components[["Residual"]]
+
     H2 = append(H2, gvar/ (gvar + (envar) + (resvar)))
     H2nw = format(round(H2[j], 4), nsmall = 4)
     her = append(her, round(as.numeric(H2nw), digits =3))

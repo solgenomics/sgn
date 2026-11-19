@@ -73,6 +73,28 @@ subtest 'h2_blup separates identically numbered blocks of different trials' => s
     cmp_ok($estimate // 0, '>', 0.9, 'the difference between trials is absorbed by the study-specific blocks') or diag($csv, $stderr);
 };
 
+subtest 'genetic variance keeps its label when locations outnumber genotypes' => sub {
+    my $pheno = "$directory/many_locations.txt";
+    my %out = map { $_ => "$directory/locations_$_" } qw(h2.json h2.csv error.txt);
+    my @lines = (join("\t", qw(studyYear locationName germplasmName blockNumber replicate), 'trait a|CO_000:0000001'));
+    for my $site (1 .. 6) {
+        for my $geno (1 .. 3) {
+            for my $rep (1, 2) {
+                push @lines, join("\t", 2025, "L$site", "G$geno", 1, $rep,
+                    100 * $geno + $site + $noise[($site + 3 * $geno + $rep) % @noise]);
+            }
+        }
+    }
+    write_file($pheno, join("\n", @lines)."\n");
+    my ($stdout, $stderr);
+    ok(run([$rscript, 'R/heritability/h2_blup_rscript.R', $pheno, 'trait.a', @out{qw(h2.json h2.csv error.txt)}],
+        '<', \undef, '>', \$stdout, '2>', \$stderr), 'script completes') or diag($stderr);
+    my $csv = -e $out{'h2.csv'} ? read_file($out{'h2.csv'}) : '';
+    my ($h2, $genetic, $location) = $csv =~ /^"\d+","trait a",([\d.]+),([\d.]+),([\d.]+),/m;
+    cmp_ok($h2 // 0, '>', 0.99, 'the dominant genotype effect gives high heritability') or diag($csv, $stderr);
+    cmp_ok($genetic // 0, '>', 100 * ($location // 0), 'Vg and Ve correspond to the fitted groups');
+};
+
 subtest 'h2_rscript.R' => sub {
     my @packages = qw(ltm rjson data.table phenoAnalysis dplyr na.tools lmerTest tibble);
     my $check = 'quit(status = !all(sapply(c('.join(',', map { "'$_'" } @packages).'), requireNamespace, quietly = TRUE)))';

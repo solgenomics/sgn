@@ -553,6 +553,25 @@ scenario 'seedlots: the seed transactions follow the packets' => sub {
     is_deeply([ $plan->{errors}, $plan->{seedlots}, $plan->{warnings} ], [ [], [], [] ], 'the same file again: nothing to change, no notes') or diag(explain $plan);
 };
 
+scenario 'mixed planting transactions must be reviewed before a correction' => sub {
+    my $id = $plot{4};
+    my $old = linked_stock($id, 'plot_of');
+    my $new = $old eq 'test_accession2' ? 'test_accession1' : 'test_accession2';
+    my $first = seedlot_with_seed($old);
+    my $second = seedlot_with_seed($new);
+    plant_from($_, $id) for ($first, $second);
+    my $changes = [{plot_id => $id, new_stock_id => stock_id($new)}];
+    my $options = {seedlots => 'follow', rename_plots => 'none'};
+    my $ac = $change->();
+    my $before = planted_from($id);
+    my $plan = $ac->plan($changes, $options);
+    like(join(' ', @{$plan->{errors}}), qr/multiple planting transactions/, 'preview identifies the ambiguous plot');
+    is_deeply($plan->{seedlots}, [], 'no packet is moved automatically');
+    dies_with(sub { $ac->apply($changes, $options) }, qr/multiple planting transactions/, 'apply rejects the same correction');
+    is(linked_stock($id, 'plot_of'), $old, 'plot accession is unchanged');
+    is(planted_from($id), $before, 'both planting records remain');
+};
+
 scenario 'seedlots: two packets of the accession as near: the plan says which one it took' => sub {
     # plots 4 and 6 have test_accession1, plot 5 test_accession2, each planted from the seedlot of its accession
     $schema->resultset('Stock::StockRelationship')->search({ subject_id => $plot{$_}, type_id => $t{plot_of} })->update({ object_id => $acc{1} }) for (4, 6);

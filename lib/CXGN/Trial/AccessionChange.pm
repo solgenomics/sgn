@@ -1421,6 +1421,9 @@ sub _plan_seedlots {
             } else {
                 $want{$plot_id} = { seedlot_id => $s->{seedlot_id}, seedlot_name => $name };
             }
+        } elsif (defined($name) && @{$own{$plot_id} || []} > 1
+                && $holds->($seedlot{$name}{content_id}, $state->{stock_id})) {
+            $want{$plot_id} = { seedlot_id => $seedlot{$name}{seedlot_id}, seedlot_name => $name };
         } elsif ($changed{$plot_id}) {
             $want{$plot_id} = { content_id => $state->{stock_id} };
         }
@@ -1437,10 +1440,17 @@ sub _plan_seedlots {
     my (@free, @need);
     foreach my $plot_id (sort { $by_number->($a, $b) } keys %want) {
         my $own = $own{$plot_id} || [];
-        next if grep { $fits->($_, $want{$plot_id}) } @$own;
+        my @unmatched = grep { !$fits->($_, $want{$plot_id}) } @$own;
+        next if @$own && !@unmatched;
+        if (@$own > 1) {
+            my $lots = join(', ', map { $_->{seedlot_name} } @$own);
+            push @{$plan->{errors}}, "Plot $units->{$plot_id}->{plot_name} has multiple planting transactions ($lots). Review the planting records before correcting this plot.";
+            next;
+        }
         push @free, @$own;
         push @need, $plot_id if $want{$plot_id};
     }
+    return if @{$plan->{errors}};
     my $distance = sub {
         my ($m, $n) = map { $units->{$_}->{plot_number} } @_;
         return (defined($m) && defined($n) && $m =~ /^\d+$/ && $n =~ /^\d+$/) ? abs($m - $n) : 0;
