@@ -125,7 +125,7 @@ $locations_by_program_json
                                 <td>cross_unique_id</td>
                                 <td>operator_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>description</td>
                                 <td>box_name</td>
                             </tr>
@@ -138,7 +138,7 @@ $locations_by_program_json
                         <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                         <li>amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
                             <br/><b>AND/OR</b><br/>
-                            weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                            weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
                         </li>
                         <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>

@@ -64,9 +64,9 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_num: seedlot_name must not contain spaces or slashes.";
         }
 
-        if (!$amount || $amount eq '') {
+        if (!defined $amount || $amount eq '') {
             $amount = 'NA';
-        } elsif (!$weight || $weight eq '') {
+        } elsif (!defined $weight || $weight eq '') {
             $weight = 'NA';
         }
 
@@ -198,9 +198,9 @@ sub _parse_with_plugin {
             }
         }
 
-        if (!$amount || $amount eq '') {
+        if (!defined $amount || $amount eq '') {
             $amount = 'NA';
-        } elsif (!$weight || $weight eq '') {
+        } elsif (!defined $weight || $weight eq '') {
             $weight = 'NA';
         }
 
