@@ -25,8 +25,17 @@ my $loc_id = $loc->nd_geolocation_id;
 my ($old_lat, $old_lon, $old_alt) = ($loc->latitude, $loc->longitude, $loc->altitude);
 $loc->update({ latitude => -22.70, longitude => -47.62, altitude => 580 });
 
+# johndoe is the submitter of this test; earlier tests (Roles.t) may have removed that role
+my $dbh = $schema->storage->dbh;
+my ($submitter_role_id) = $dbh->selectrow_array("SELECT sp_role_id FROM sgn_people.sp_roles WHERE name = 'submitter'");
+my ($john_id) = $dbh->selectrow_array("SELECT sp_person_id FROM sgn_people.sp_person WHERE username = 'johndoe'");
+my ($john_is_submitter) = $dbh->selectrow_array('SELECT COUNT(*) FROM sgn_people.sp_person_roles WHERE sp_person_id = ? AND sp_role_id = ?', undef, $john_id, $submitter_role_id);
+$dbh->do('INSERT INTO sgn_people.sp_person_roles (sp_person_id, sp_role_id) VALUES (?, ?)', undef, $john_id, $submitter_role_id) if !$john_is_submitter;
+
 END {
     local $?;
+    eval { $dbh->do('DELETE FROM sgn_people.sp_person_roles WHERE sp_person_id = ? AND sp_role_id = ?', undef, $john_id, $submitter_role_id) if $john_id && !$john_is_submitter; 1 }
+        or diag("could not restore the roles of johndoe: $@");
     eval { $schema->storage->dbh->do('DELETE FROM local_weather_station WHERE nd_geolocation_id = ?', undef, $loc_id) if $loc_id; 1 }
         or diag("could not delete the test stations: $@");
     eval { $loc->update({ latitude => $old_lat, longitude => $old_lon, altitude => $old_alt }) if $loc; 1 }
