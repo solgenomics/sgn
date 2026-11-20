@@ -63,7 +63,6 @@ Chris Simoes
 .wx-pill-warn { background: #fef3c7; color: #92400e; }
 .wx-net { display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
 .wx-net-local { background: #1d6fa5; color: #fff; }
-.wx-local-box { border: 1px solid #cfe2f1; background: #f2f8fc; border-radius: 8px; padding: 6px 8px; margin-bottom: 6px; }
 .wx-table tr.wx-sep td { background: #f2f8fc; color: #164e74; font-weight: 600; font-size: 12px; }
 .wx-net-airport { background: #e0f2fe; color: #075985; }
 .wx-net-inmet { background: #dcfce7; color: #14532d; }
@@ -95,7 +94,13 @@ Chris Simoes
 .wx-unit { display: inline-flex; border: 1px solid var(--wx-border); border-radius: 6px; overflow: hidden; }
 .wx-unit button { border: 0; background: #fff; padding: 4px 10px; font-size: 12.5px; }
 .wx-unit button.on { background: var(--wx-accent); color: #fff; }
-.wx-st-chosen b { display: block; font-size: 14px; }
+.wx-row { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; align-items: start; margin-bottom: 8px; }
+.wx-row:last-child { margin-bottom: 0; }
+.wx-lab { font-size: 12px; color: var(--wx-muted); padding-top: 6px; }
+.wx-row > select.form-control { width: 100%; }
+.wx-st-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--wx-muted); }
+.wx-st-temp { margin-top: 8px; font-size: 12px; color: var(--wx-muted); }
+.wx-st-temp select { width: 100%; margin-top: 2px; }
 .wx-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
 .wx-stat { background: #fff; border: 1px solid var(--wx-border); border-radius: 10px; padding: 10px 12px; }
 .wx-stat .v { font-size: 22px; font-weight: 600; color: #111827; line-height: 1.15; }
@@ -155,7 +160,6 @@ Chris Simoes
 .wx-find-status.empty, .wx-find-status.stale { display: block; background: #fffbeb; color: #92400e; border-left-color: #f59e0b; }
 .wx-find-status.err { display: block; background: #fef2f2; color: #991b1b; border-left-color: #ef4444; }
 .wx-find-status a { font-weight: 600; cursor: pointer; white-space: nowrap; }
-.wx-find-status .wx-sub { display: block; opacity: .85; }
 .wx-note .glyphicon { margin-right: 3px; }
 .wx-flags { display: flex; flex-wrap: wrap; gap: 4px; }
 .wx-flag { display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 11px; font-weight: 600; white-space: nowrap; }
@@ -245,40 +249,49 @@ Chris Simoes
 
         <div class="wx-steps">
           <div class="wx-step" id="wx_step1">
-            <div class="wx-step-t"><b>1</b> Distance range</div>
+            <div class="wx-step-t"><b>1</b> Search area</div>
             <div class="wx-inline">
-              <input type="number" class="form-control input-sm" id="wx_range" min="1" step="1" style="width:90px" />
+              <input type="number" class="form-control input-sm" id="wx_range" min="1" step="1" style="width:80px" />
               <span class="wx-unit" id="wx_unit"><button type="button" data-unit="km">km</button><button type="button" data-unit="mi">miles</button></span>
               <button class="btn btn-primary btn-sm" id="wx_find"><span class="glyphicon glyphicon-search"></span> Find stations</button>
             </div>
             <div class="wx-find-status" id="wx_find_status" role="status" aria-live="polite"></div>
-            <p class="wx-note" id="wx_range_note"></p>
           </div>
           <div class="wx-step" id="wx_step2">
             <div class="wx-step-t"><b>2</b> Weather station</div>
-            <div id="wx_chosen" class="wx-st-chosen"><span class="wx-muted">Find the stations, then choose one in the list or on the map.</span></div>
+            <div id="wx_chosen"><span class="wx-muted wx-small">Find the stations first.</span></div>
           </div>
           <div class="wx-step" id="wx_step3">
             <div class="wx-step-t"><b>3</b> Season and crop</div>
-            <div class="wx-inline" style="margin-bottom:6px">
-              <select class="form-control input-sm" id="wx_trial" style="max-width:100%"><option value="">Use the season of a trial...</option></select>
+            <div class="wx-row">
+              <span class="wx-lab">Period</span>
+              <div>
+                <div class="wx-segs" id="wx_presets" style="margin:0 0 5px">
+                  <button class="wx-seg" data-preset="30">30 days</button>
+                  <button class="wx-seg on" data-preset="90">90 days</button>
+                  <button class="wx-seg" data-preset="180">6 months</button>
+                  <button class="wx-seg" data-preset="year">This year</button>
+                  <button class="wx-seg" data-preset="lastyear">Last year</button>
+                </div>
+                <div class="wx-inline">
+                  <input type="text" class="form-control input-sm wx-date" id="wx_start" title="Start (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
+                  <span class="wx-muted">to</span>
+                  <input type="text" class="form-control input-sm wx-date" id="wx_end" title="End (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
+                  <button class="btn btn-primary btn-sm" id="wx_apply">Apply</button>
+                </div>
+              </div>
             </div>
-            <div class="wx-segs" id="wx_presets" style="margin-top:0">
-              <button class="wx-seg" data-preset="30">30 days</button>
-              <button class="wx-seg on" data-preset="90">90 days</button>
-              <button class="wx-seg" data-preset="180">6 months</button>
-              <button class="wx-seg" data-preset="year">This year</button>
-              <button class="wx-seg" data-preset="lastyear">Last year</button>
+            <div class="wx-row">
+              <span class="wx-lab">or trial</span>
+              <select class="form-control input-sm" id="wx_trial"><option value="">Use the season of a trial...</option></select>
             </div>
-            <div class="wx-inline">
-              <input type="text" class="form-control input-sm wx-date" id="wx_start" title="Start (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
-              <span class="wx-muted">to</span>
-              <input type="text" class="form-control input-sm wx-date" id="wx_end" title="End (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
-              <button class="btn btn-primary btn-sm" id="wx_apply"><span class="glyphicon glyphicon-ok"></span> Apply</button>
-            </div>
-            <div class="wx-inline" style="margin-top:6px">
-              <label class="wx-small" style="margin:0;font-weight:normal">Crop <select class="form-control input-sm" id="wx_crop"></select></label>
-              <label class="wx-small" style="margin:0;font-weight:normal">planted <input type="text" class="form-control input-sm wx-date" id="wx_planting" title="Planting date (YYYY-MM-DD): the crop stages start here" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" /></label>
+            <div class="wx-row">
+              <span class="wx-lab">Crop</span>
+              <div class="wx-inline">
+                <select class="form-control input-sm" id="wx_crop"></select>
+                <span class="wx-muted wx-small">planted</span>
+                <input type="text" class="form-control input-sm wx-date" id="wx_planting" title="Planting date (YYYY-MM-DD): the crop stages start here" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
+              </div>
             </div>
           </div>
         </div>
