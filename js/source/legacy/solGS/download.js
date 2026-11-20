@@ -58,16 +58,18 @@ solGS.download = {
     createTrainingPopDownloadLinks: function (res) {
         var genoFiles = res.training_pop_raw_geno_file;
         var phenoFiles = res.training_pop_raw_pheno_file;
+        var dataSetType = solGS.getTrainingPopArgs().data_set_type || '';
+        var isCombined = dataSetType.match(/combined/);
         var genoFileLink = '';
         var cnt = 1;
 
         genoFiles.forEach(function (genoFile) {
             var genoFileName = genoFile.split("/").pop();
-            var popIdMatch = genoFileName.match(/genotype_data_(\d+)-GP-1/);
+            var popIdMatch = genoFileName.match(/genotype_data_(\d+)-GP-\d+/);
             var popId = popIdMatch ? popIdMatch[1] : '';
             var genoLinkName = "Genotype data";
 
-            if (genoFiles.length > 1) { genoLinkName = genoLinkName + "-" + popId; }
+            if (isCombined) { genoLinkName = genoLinkName + "-" + popId; }
             if (cnt > 1) { genoFileLink += ' | '; }
 
             genoFileLink +=
@@ -84,7 +86,7 @@ solGS.download = {
             var phenoLinkName = "Phenotype data";
             var popIdMatch = phenoFileName.match(/phenotype_data_(\d+)/);
             var popId = popIdMatch ? popIdMatch[1] : '';
-            if (phenoFiles.length > 1) { phenoLinkName = phenoLinkName + "-" + popId; }
+            if (isCombined) { phenoLinkName = phenoLinkName + "-" + popId; }
             if (cnt > 1) { phenoFileLink += ' | '; }
 
             phenoFileLink +=
