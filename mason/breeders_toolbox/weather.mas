@@ -99,6 +99,7 @@ Chris Simoes
 .wx-lab { font-size: 12px; color: var(--wx-muted); padding-top: 6px; }
 .wx-row > select.form-control { width: 100%; }
 .wx-st-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--wx-muted); }
+.wx-default { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--wx-border); font-size: 12px; color: #374151; }
 .wx-st-temp { margin-top: 8px; font-size: 12px; color: var(--wx-muted); }
 .wx-st-temp select { width: 100%; margin-top: 2px; }
 .wx-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }

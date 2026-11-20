@@ -266,9 +266,9 @@ function renderHead() {
         '<span><span class="glyphicon glyphicon-leaf"></span><a href="/search/trials?location_id=' + l.id + '">' + l.trials + ' trials</a></span>',
     ].filter(Boolean).join('');
     const linked = l.station
-        ? '<div class="wx-small wx-muted" style="text-align:right">Weather station of this location<br><b style="color:#111827">' + esc(l.station.station_id) + '</b> ' + esc(l.station.name)
+        ? '<div class="wx-small wx-muted" style="text-align:right">Default weather station<br><b style="color:#111827">' + esc(l.station.station_id) + '</b> ' + esc(l.station.name)
           + '<br>saved' + (l.station.saved_by_name ? ' by ' + esc(l.station.saved_by_name) : '') + ' ' + esc(l.station.saved_date || '') + '</div>'
-        : '<div class="wx-small wx-muted">No weather station saved yet</div>';
+        : '<div class="wx-small wx-muted">No default weather station yet</div>';
     const upload = S.cfg.can_upload
         ? '<div style="margin-top:6px;text-align:right"><button type="button" class="btn btn-default btn-xs" data-wx-upload-location-id="' + esc(l.id) + '" data-wx-upload-location-name="' + esc(l.name)
           + '" title="Upload a CSV or Excel file with the observations of the weather station of this farm"><span class="glyphicon glyphicon-upload"></span> Upload local station data</button></div>'
@@ -603,7 +603,8 @@ function stationSelectHtml() {
         + (S.station ? '' : '<option value="">Choose a weather station...</option>')
         + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (best(x) ? ' style="font-weight:bold"' : '')
             + (stationKey(x) === stationKey(S.station) ? ' selected' : '') + (readable(x) ? '' : ' disabled') + '>'
-            + esc((best(x) ? '✔ ' : '') + label(x) + ': ' + dataTypes(x).join(', ') + (best(x) ? ' (most data)' : '') + note(x)) + '</option>').join('')
+            + esc((best(x) ? '✔ ' : '') + label(x) + ': ' + dataTypes(x).join(', ') + (best(x) ? ' (most data)' : '') + note(x)
+                + (stationKey(x) === savedKey() ? ' - default' : '')) + '</option>').join('')
         + '</select>';
 }
 
@@ -613,25 +614,11 @@ function renderChosen() {
         $('#wx_chosen').html(stationSelectHtml());
         return;
     }
-    const linkedKey = S.loc.station ? S.loc.station.network + ':' + S.loc.station.station_id : '';
-    const isLinked = linkedKey === stationKey(s);
-    const sameRange = S.loc.station && Number(S.loc.station.range) === Number(S.range) && S.loc.station.unit === S.unit
-        && (S.loc.station.temp_station_id || '') === ((s.rain_only && S.tempStation) ? String(S.tempStation.id).toUpperCase() : '');
-    const canSave = S.cfg.can_save;
-    let btn = '';
-    if (canSave && (!isLinked || !sameRange)) {
-        btn = '<button class="btn btn-success btn-xs" id="wx_save" title="Save as the weather station of ' + esc(S.loc.name) + '"><span class="glyphicon glyphicon-floppy-disk"></span> '
-            + (isLinked ? 'Save changes' : 'Save for this location') + '</button>';
-    }
-    else if (isLinked) {
-        btn = '<span class="wx-pill wx-pill-st"><span class="glyphicon glyphicon-ok"></span> saved</span>'
-            + (canSave ? ' <button class="btn btn-link btn-xs" id="wx_clear" style="padding:0 2px">remove</button>' : '');
-    }
     const inRange = !S.stations.length || S.stations.some(x => stationKey(x) === stationKey(s));
     const where = isOwnLocal(s) ? 'at this location'
         : dist(s.distance_km) + (s.direction ? ' ' + esc(s.direction) : '');
-    const meta = '<span>' + where + (num(s.elev) !== null ? ' · elev. ' + Math.round(s.elev) + ' m' : '')
-        + (inRange ? '' : ' · <span style="color:#92400e">outside the range</span>') + '</span>';
+    const meta = '<div class="wx-st-meta"><span>' + where + (num(s.elev) !== null ? ' · elev. ' + Math.round(s.elev) + ' m' : '')
+        + (inRange ? '' : ' · <span style="color:#92400e">outside the range</span>') + '</span></div>';
     let temp = '';
     if (s.rain_only) {
         const opts = S.stations.filter(measuresTemp);
@@ -641,7 +628,36 @@ function renderChosen() {
             + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (stationKey(x) === stationKey(S.tempStation) ? ' selected' : '') + '>' + esc(dist(x.distance_km) + ' · ' + (NET_NAMES[x.network] || x.network) + ' ' + x.id + ' ' + x.name) + '</option>').join('')
             + '</select></div>';
     }
-    $('#wx_chosen').html(stationSelectHtml() + '<div class="wx-st-meta">' + meta + (btn ? '<span>' + btn + '</span>' : '') + '</div>' + temp);
+    $('#wx_chosen').html(stationSelectHtml() + meta + temp + defaultHtml(s));
+}
+
+// the default weather station of the research location: opened with the page and used on its trial pages
+function savedKey() { return S.loc.station ? S.loc.station.network + ':' + S.loc.station.station_id : ''; }
+function defaultHtml(s) {
+    const d = S.loc.station;
+    const isLinked = savedKey() === stationKey(s);
+    const tempNow = (s.rain_only && S.tempStation) ? String(S.tempStation.id).toUpperCase() : '';
+    const same = isLinked && Number(d.range) === Number(S.range) && d.unit === S.unit && (d.temp_station_id || '') === tempNow;
+    const canSave = S.cfg.can_save;
+    const two = !!tempNow;
+    const savedName = d ? (NET_NAMES[d.network] || d.network) + ' ' + (d.network === 'local' ? (d.name || '') : d.station_id)
+        + (d.temp_station_id ? ' + temperature from ' + d.temp_station_id : '') : '';
+    let text, btn = '';
+    if (same) {
+        text = '<span class="glyphicon glyphicon-ok" style="color:var(--wx-green)"></span> ' + (two ? 'These are' : 'This is') + ' the default of <b>' + esc(S.loc.name) + '</b>';
+        if (canSave) btn = '<button class="btn btn-link btn-xs" id="wx_clear" style="padding:0">remove</button>';
+    }
+    else {
+        text = !d ? '<b>' + esc(S.loc.name) + '</b> has no default station yet'
+            : isLinked ? 'Default of <b>' + esc(S.loc.name) + '</b>: this station, saved with ' + ((d.temp_station_id || '') !== tempNow ? 'another temperature station' : 'another search area')
+            : 'Default of <b>' + esc(S.loc.name) + '</b>: ' + esc(savedName);
+        if (canSave) {
+            btn = '<button class="btn btn-success btn-xs" id="wx_save"><span class="glyphicon glyphicon-floppy-disk"></span> '
+                + (isLinked ? 'Update the default' : d ? 'Replace with ' + (two ? 'the selected ones' : 'the selected one') : 'Make ' + (two ? 'them' : 'it') + ' the default') + '</button>';
+        }
+    }
+    return '<div class="wx-default" title="The default weather station opens automatically for ' + esc(S.loc.name) + ' and is used on the trial pages of this location.'
+        + (canSave ? '' : ' Only curators and submitters can change it.') + '"><span>' + text + '</span>' + (btn ? '<span>' + btn + '</span>' : '') + '</div>';
 }
 
 function saveStation() {
@@ -657,7 +673,7 @@ function saveStation() {
     }).then(r => {
         S.loc.station = r.station;
         s.saved = true;
-        flash('success', '<b>' + esc(s.id) + '</b> is now the weather station of ' + esc(S.loc.name) + '.');
+        flash('success', '<b>' + esc(s.id) + '</b> is now the default weather station of ' + esc(S.loc.name) + '.');
         renderHead(); renderChosen(); renderLocations();
     }).catch(e => { flash('danger', esc(e.message)); $('#wx_save').prop('disabled', false); });
 }
