@@ -228,18 +228,15 @@ sub run_prerequisite_jobs {
         my $type = reftype $pre_jobs;
 
         if ( reftype $pre_jobs eq 'HASH' ) {
-
-            my $submitted_priority_jobs;
-            foreach my $rank ( sort keys %$pre_jobs ) {
+            foreach my $rank ( sort { $a <=> $b } keys %$pre_jobs ) {
                 my $js = $pre_jobs->{$rank};
 
-                $submitted_priority_jobs = $self->submit_jobs($js);
+                my $submitted_priority_jobs = $self->submit_jobs($js);
+                $remaining_jobs = $self->wait_till_jobs_end($submitted_priority_jobs);
             }
-            $remaining_jobs = $self->wait_till_jobs_end($submitted_priority_jobs);
-        }
-        else {
+        } else {
             if ( reftype($pre_jobs) eq 'SCALAR' ) {
-                $pre_jobs = [$pre_jobs];
+                $pre_jobs = [$pre_jobs];git statu
             }
 
             my $submitted_jobs = $self->submit_jobs($pre_jobs);
