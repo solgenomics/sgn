@@ -22,6 +22,7 @@ POST params:
 
 use Moose;
 use Data::Dumper;
+use HTML::Entities qw(encode_entities);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -100,15 +101,16 @@ sub file_search_POST : Args(0) {
     my @return;
     foreach (@$result) {
         my @line;
+        # File names, comments and user names are stored as typed: send them as text.
         if ($params->{html_select_box}) {
-            push @line, "<input type='checkbox' name='".$params->{html_select_box}."' value='".$_->{file_id}."'>";
+            push @line, "<input type='checkbox' name='".encode_entities($params->{html_select_box})."' value='".$_->{file_id}."'>";
         }
         push @line, (
-            "<a href='/breeders/phenotyping/download/".$_->{file_id}."' >".$_->{basename}."</a>",
-            $_->{filetype},
-            $_->{comment},
+            "<a href='/breeders/phenotyping/download/".$_->{file_id}."' >".encode_entities($_->{basename} // '')."</a>",
+            encode_entities($_->{filetype} // ''),
+            encode_entities($_->{comment} // ''),
             $_->{sp_person_id}
-                ? "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{sp_person_id}."' >".$_->{username}."</a>"
+                ? "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{sp_person_id}."' >".encode_entities($_->{username} // '')."</a>"
                 : '',
             $_->{create_date},
         );
