@@ -88,6 +88,13 @@ has 'FEC_batch' => (
     is => 'rw',
 );
 
+has 'active_and_obsoleted_transformants' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_active_and_obsoleted_transformants',
+);
+
 sub get_active_transformations_in_project {
     my $self = shift;
     my $schema = $self->schema();
@@ -728,6 +735,33 @@ sub get_basic_transformation_info {
     return \@transformation_info;
 
 }
+
+
+sub _get_active_and_obsoleted_transformants {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformant_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
+        where stock_relationship.object_id = ? ORDER BY stock.stock_id ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($transformant_of_type_id, $transformation_stock_id);
+
+    my @transformants = ();
+    while (my ($stock_id,  $stock_name) = $h->fetchrow_array()){
+        push @transformants, [$stock_id,  $stock_name]
+    }
+
+    $self->transformants(\@transformants);
+}
+
 
 
 ###
