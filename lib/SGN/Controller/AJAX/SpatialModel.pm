@@ -7,7 +7,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use List::Util qw | any |;
@@ -26,6 +26,7 @@ use namespace::autoclean;
 use Storable qw(retrieve);
 use Storable qw(store);
 use POSIX qw(strftime);
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -107,7 +108,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     #print STDERR "temppath: $temppath\n";
 
     my $pheno_filepath = $tempfile . "_phenotype.txt"; # create the phenotype file path
-    
+
 
     print STDERR "pheno_filepath: $pheno_filepath\n";
 
@@ -134,7 +135,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     print STDERR "FIELDS: ".Dumper(\@file_traits);
 
-    foreach my $t (@file_traits) { 
+    foreach my $t (@file_traits) {
 	    $t = make_R_trait_name($t);
     }
     #later i will replace the R trait name with the original trait name so save both so that it can remember the original trait name
@@ -147,7 +148,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     #save the trait hash to a perl storable file to be retrieved later
     my $trait_hash_file = $pheno_filepath.".clean.trait_hash";
     store \%trait_hash, $trait_hash_file; #syntax error here because store is not defined, need to use Storable qw(retrieve);
-    
+
 
     my $si_traits = join(",", @file_traits);
 
@@ -163,7 +164,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
         my @f = split /\t/;
         print $CLEAN join("\t",@f[0..$last_index]), "\n";
     }
-    
+
     my $cxgn_tools_run_config = {
         backend => $c->config->{backend},
         submit_host=>$c->config->{cluster_host},
@@ -254,7 +255,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
         push @data_original, \@data_original_row;
     }
     @data = @data_original;
-    
+
 
     print STDERR "FORMATTED DATA: ".Dumper(\@data);
 
@@ -291,9 +292,15 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     # Get the data and other required variables from the stash
     # my $data = $c->stash->{rest}->{data};
     my $pheno_filepath = $c->req->param("pheno_filepath");
-    my $headers = $c->req->param("headers");   
+    my $headers = $c->req->param("headers");
     my $phenotype_file = $c->req->param("phenotype_file");
     print STDERR "PHENOTYPE FILE: $phenotype_file\n";
+    # Only the cleaned phenotype file that generate_results wrote and sent back.
+    my $spatial_dir = $c->config->{cluster_shared_tempdir} . "/spatial_model_files";
+    if (!defined($phenotype_file) || $phenotype_file !~ m{\A\Q$spatial_dir\E/spatial_model_download_[A-Za-z0-9_]+_phenotype\.txt\.clean\z} || !-f $phenotype_file) {
+        $c->stash->{rest} = { error => "Unknown phenotype file." };
+        return;
+    }
     # Convert the data and headers to a format suitable for passing to the second R script
     my $data_string = join("\n", map { join("\t", @$_) } @$dataTableData);
     my $headers_string = join(",", map { $_->{title} } @$headers);
@@ -314,16 +321,19 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         # don't block and wait if the cluster looks full
         max_cluster_jobs => 1_000_000_000,
     });
-    
+
+    # Every argument is quoted: values come from the request, and the job runs the command in bash.
     $cmd->run_cluster(
-	    "Rscript ",
+	    "Rscript",
+        shell_quote(
         $c->config->{basepath} . "/R/Spatial_Correction.R",
         $phenotype_file,
-        $phenotype_file.".spatial_correlation_summary", 
+        $phenotype_file.".spatial_correlation_summary",
         $include_rc_random,
         $genotype_as_random,
         $nseg_degree,
-        "'".$headers_string."'",
+        $headers_string,
+        ),
 	);
 
     while ($cmd->alive) {
@@ -352,7 +362,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my $accessions = {}; # keeps list of unique accessions
     my $nested_data = {}; # formats the result data for saving the analysis
     my $projectprop_data = {}; # Stores adjustments only, for saving as projectprop
-        # needs to have 
+        # needs to have
     my $analysis_design = {}; # retains the trial layout data for analysis submission
     my @data; # formats for the datatable
 
@@ -400,10 +410,10 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
             }
             push @data, [$plot, $accession, $traits[$i / 3], $original, $corrected, $adjustment ];
             $nested_data->{$plot}->{$traits[$i / 3]} = [
-                $corrected, 
-                strftime("%Y-%m-%dT%H:%M:%S", localtime), 
-                $c->user->get_object()->get_first_name().' '.$c->user->get_object()->get_last_name(), 
-                '', 
+                $corrected,
+                strftime("%Y-%m-%dT%H:%M:%S", localtime),
+                $c->user->get_object()->get_first_name().' '.$c->user->get_object()->get_last_name(),
+                '',
                 ''
             ];
             $projectprop_data->{$plot}->{$traits_to_id->{$traits[$i / 3]}} = $adjustment;
@@ -429,7 +439,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     # print STDERR "FORMATTED DATA: ".Dumper($projectprop_data);
 
     # print STDERR Dumper $nested_data;
-    
+
     my $basename = basename("$phenotype_file.spatially_corrected");
 
     copy("$phenotype_file.spatially_corrected", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/$basename");
@@ -486,7 +496,7 @@ sub result_file_to_hash {
 
         #$html .= "<tr><td>".join("</td><td>", $accession_name)."</td>";
 
-        for (my $k=0; $k<@value_cols; $k++) { 
+        for (my $k=0; $k<@value_cols; $k++) {
           #print STDERR "adding  $values[$k] to column $value_cols[$k]\n";
           $html .= "<td>".($values[$k])."</td>";
         }
@@ -537,7 +547,7 @@ sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustmen
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $trial = $schema->resultset('Project::Project')->find({
-        project_id => $trial_id, 
+        project_id => $trial_id,
     });
 
     if (!$trial) {
@@ -548,7 +558,7 @@ sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustmen
     my $spatial_adjustments_cvtermid = SGN::Model::Cvterm->get_cvterm_row($schema, 'spatially_corrected_trait_adjustments_json', 'project_property')->cvterm_id();
 
     my $row_to_overwrite = $schema->resultset('Project::Projectprop')->find({
-        project_id => $trial_id, 
+        project_id => $trial_id,
         type_id => $spatial_adjustments_cvtermid
     });
 
@@ -562,7 +572,7 @@ sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustmen
             value=>$spatial_adjustments
         });
     };
-    
+
     if ($@) {
         $c->stash->{rest} = {error => "An error occurred saving spatial corrections to this trial. It may still be saved as a standalone analysis. \n $@ \n"};
         return;
@@ -571,7 +581,7 @@ sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustmen
 
 
     $c->stash->{rest} = {success => 1};
-    
+
 }
 
 sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adjustments') Args(1) {
@@ -583,7 +593,7 @@ sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adj
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $trial = $schema->resultset('Project::Project')->find({
-        project_id => $trial_id, 
+        project_id => $trial_id,
     });
 
     if (!$trial) {
@@ -605,7 +615,7 @@ sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adj
     if (!$spatial_adjustments_json) {
         $c->stash->{rest} = {data => "", message => "No spatial corrections associated with this trial.\n"};
         return;
-    } 
+    }
 
     $c->stash->{rest} = {data => $spatial_adjustments_json};
     return;
@@ -620,7 +630,7 @@ sub get_spatial_adjusted_traits: Path('/ajax/spatial_model/get_spatial_adjusted_
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $trial = $schema->resultset('Project::Project')->find({
-        project_id => $trial_id, 
+        project_id => $trial_id,
     });
 
     if (!$trial) {
@@ -642,7 +652,7 @@ sub get_spatial_adjusted_traits: Path('/ajax/spatial_model/get_spatial_adjusted_
     if (!$spatial_adjustments_exists) {
         $c->stash->{rest} = {error => "No spatial corrections associated with this trial.\n"};
         return;
-    } 
+    }
 
     my $traits = {};
 

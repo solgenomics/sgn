@@ -275,7 +275,7 @@ sub search {
         push @where_clause, "year in ($year_sql)";
     }
     if ($self->data_level ne 'all') {
-        push @where_clause, "observationunit_type_name = '".$self->data_level."'"; #ONLY plot or plant or subplot or tissue_sample
+        push @where_clause, "observationunit_type_name = ".$schema->storage->dbh()->quote($self->data_level); #ONLY plot or plant or subplot or tissue_sample
     } else {
         push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample' OR observationunit_type_name = 'analysis_instance')"; #plots AND plants AND subplots AND tissue_samples AND analysis_instance
     }

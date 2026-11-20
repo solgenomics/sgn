@@ -6,7 +6,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 # use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
@@ -114,6 +114,10 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     }
     if ($validate_file == 1){
         push @success_status, "File valid: $upload_original_name.";
+    } elsif (!$validate_file->{'error'} && $validate_file->{'warning'}) {
+        # File is valid but has warnings (e.g. negative spectral values) to show the user
+        push @success_status, "File valid: $upload_original_name.";
+        push @warning_status, $validate_file->{'warning'};
     } else {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
@@ -186,6 +190,11 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+    if ($cmd_status != 0) {
+        push @error_status, "Error filtering and aggregating NIRS spectra (outlier detection failed).";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
 
     my $parsed_file_agg = $parser->parse($validate_type, $output_csv_filepath, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file_agg) {
@@ -333,6 +342,10 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     }
     if ($validate_file == 1){
         push @success_status, "File valid: $upload_original_name.";
+    } elsif (!$validate_file->{'error'} && $validate_file->{'warning'}) {
+        # File is valid but has warnings (e.g. negative spectral values), which were already shown on verify
+        push @success_status, "File valid: $upload_original_name.";
+        push @warning_status, $validate_file->{'warning'};
     } else {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
@@ -400,6 +413,11 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+    if ($cmd_status != 0) {
+        push @error_status, "Error filtering and aggregating NIRS spectra (outlier detection failed).";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
 
     my %parsed_data_agg;
 

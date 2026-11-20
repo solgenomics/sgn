@@ -158,8 +158,8 @@ $stock_id
                     success: function(r) {
                         if (r.error) { alert(r.error); }
                         else {
-                            jQuery('#stock_additional_uploaded_files_table').DataTable().clear().draw();
                             alert("The file has been obsoleted.");
+                            display_stock_additional_upload_files();
                         }
                     },
                     error: function(r) {  alert("An error occurred!") }

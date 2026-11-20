@@ -57,7 +57,7 @@ jQuery( document ).ready( function() {
                 }
                 jQuery('#working_modal').modal("hide");
             }).fail(function() {
-                reportVerifyResult({ "error": ["Error ocurred during EXIF verification."]});
+                reportVerifyResult({ "error": ["Error occurred during EXIF verification."]});
                 jQuery('#working_modal').modal("hide");
             });
         } else if (type == 'images_with_barcodes') {
@@ -83,7 +83,7 @@ jQuery( document ).ready( function() {
                 jQuery('#working_modal').modal("hide");
 
             }).fail(function() {
-                reportVerifyResult({ "error": ["Error ocurred during barcode scan"]});
+                reportVerifyResult({ "error": ["Error occurred during barcode scan"]});
                 jQuery('#working_modal').modal("hide");
             });
         } else { // verify associated phenotypes format
@@ -108,6 +108,22 @@ jQuery( document ).ready( function() {
 
     jQuery('#upload_images_submit_store').click( function() {
         var type = jQuery('#upload_images_file_format').val();
+        if (type == 'images_with_associated_phenotypes') {
+            storeImages(type, null);
+            return;
+        }
+        // resolve (or create) the collection before uploading anything, so a
+        // bad collection name stops the upload instead of stranding the images
+        // the error handler is passed to then() rather than catch(), so an
+        // error thrown inside storeImages is not reported as a collection error
+        prepareUploadCollection().then(function(uploadCollection) {
+            storeImages(type, uploadCollection);
+        }, function(error) {
+            jQuery('#upload_images_status').html(formatMessage(error, 'error'));
+        });
+    });
+
+    function storeImages(type, uploadCollection) {
         if (type == 'images') {
             var imageFiles = document.getElementById('upload_images_file_input').files;
             //console.log("imageFiles", imageFiles);
@@ -138,7 +154,7 @@ jQuery( document ).ready( function() {
                 loadAllImages(imageFiles, imageData).done(function(result) {
                     // console.log("Result from promise is: "+JSON.stringify(result));
                     jQuery('#progress_modal').modal('hide');
-                    reportStoreResult(result);
+                    finishImageUpload(result, uploadCollection);
                 })
                 .fail(function(error) {
                     console.log(error);
@@ -177,7 +193,7 @@ jQuery( document ).ready( function() {
                     loadAllImages(imageFiles, imageData).done(function(result) {
                         // console.log("Result from promise is: "+JSON.stringify(result));
                         jQuery('#progress_modal').modal('hide');
-                        reportStoreResult(result);
+                        finishImageUpload(result, uploadCollection);
                     })
                     .fail(function(error) {
                         console.log(error);
@@ -212,8 +228,8 @@ jQuery( document ).ready( function() {
 
             loadAllImages(imageFiles, imageData).done(function(result) {
                 jQuery('#progress_modal').modal('hide');
-                reportStoreResult(result);
-            }); 
+                finishImageUpload(result, uploadCollection);
+            });
         } else { // store associated phenotypes format
             jQuery('#working_modal').modal("show");
             var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
@@ -233,8 +249,85 @@ jQuery( document ).ready( function() {
                 jQuery('#working_modal').modal("hide");
             });
         }
-    });
+    }
 });
+
+
+// Returns a promise for the collection chosen in the upload dialog:
+// { collection_id, name } for an existing or newly created collection, or
+// null when the images should not be added to a collection.
+function prepareUploadCollection() {
+    var mode = jQuery('#upload_images_collection_mode').val();
+
+    if (mode == 'existing') {
+        var collectionId = jQuery('#upload_images_collection_id').val();
+        if (!collectionId) {
+            return Promise.reject('Please select a collection to add the images to.');
+        }
+        return Promise.resolve({
+            collection_id: collectionId,
+            name: jQuery('#upload_images_collection_id option:selected').text()
+        });
+    }
+
+    if (mode == 'new') {
+        var name = jQuery.trim(jQuery('#upload_images_collection_name').val());
+        if (!name) {
+            return Promise.reject('Please enter a name for the new collection.');
+        }
+        // the request failure handler is the second argument to then(), so it
+        // only handles a failed request, not the error thrown for response.error
+        return Promise.resolve(jQuery.ajax({
+            url: '/ajax/collection/create',
+            method: 'POST',
+            data: {
+                name: name,
+                description: jQuery('#upload_images_collection_description').val(),
+                collection_type: 'image'
+            }
+        })).then(function(response) {
+            if (response.error) { throw response.error; }
+            return { collection_id: response.collection_id, name: name };
+        }, function() {
+            throw 'An error occurred creating the collection.';
+        });
+    }
+
+    return Promise.resolve(null);
+}
+
+
+// Adds every image stored in this upload to the chosen collection, then
+// reports the upload result with the collection outcome appended.
+function finishImageUpload(result, uploadCollection) {
+    if (!uploadCollection || !result.image_ids || result.image_ids.length < 1) {
+        reportStoreResult(result);
+        return;
+    }
+
+    var collectionLink = "<a href='/collection/" + uploadCollection.collection_id + "'>" +
+        jQuery('<div>').text(uploadCollection.name).html() + "</a>";
+
+    jQuery.ajax({
+        url: '/ajax/collection/add_items',
+        method: 'POST',
+        data: {
+            collection_id: uploadCollection.collection_id,
+            item_type: 'image',
+            item_ids_json: JSON.stringify(result.image_ids)
+        }
+    }).done(function(response) {
+        if (response.error) {
+            result.error.push("Images were stored, but could not be added to collection " + collectionLink + ": " + response.error);
+        } else {
+            result.success.push("Added " + response.items_added + " image(s) to collection " + collectionLink);
+        }
+        reportStoreResult(result);
+    }).fail(function() {
+        result.error.push("Images were stored, but an error occurred adding them to collection " + collectionLink);
+        reportStoreResult(result);
+    });
+}
 
 
 function showImagePreview(imageFiles) {
@@ -276,86 +369,103 @@ function reportVerifyResult(result) {
 }
 
 function verifyExifData(result) {
-    const successMessages =[];
+    const successMessages = [];
     const errorMessages = [];
     const finalSuccessMessage = [];
+    const validFilenames = [];
+    const invalidFilenames = [];
     let exifFiles = 0;
     let nonExifFiles = 0;
-    //console.log("image data", result.images[0].exif);
 
     result.images.forEach((img, index) => {
         const imgName = img.filename || `Image ${index + 1}`;
         const exif = img.exif || {};
+        const imgErrors = [];
 
-        if (result.images[index].status === "no_exif") {
+        if (img.status === "no_exif") {
             errorMessages.push(`${imgName} does not have EXIF data`);
+            invalidFilenames.push(imgName);
             nonExifFiles++;
             return;
         } else {
             exifFiles++;
         }
 
-        const hasObsUnit = exif.observation_unit && exif.observation_unit.observation_unit_db_id;
-        const hasObsVar = exif.observation_variable && exif.observation_variable.observation_variable_name;
-        const obsVariableName = exif.observation_variable.observation_variable_name;
+        const obsUnit = exif.observation_unit;
+        const obsVar = exif.observation_variable;
+        const hasObsUnit = obsUnit && obsUnit.observation_unit_db_id;
+        const hasObsVar = obsVar && obsVar.observation_variable_name;
         const hasTimestamp = exif.timestamp;
         const hasCvtermId = exif.cvterm_id;
-        const stockName = exif.stock_name;
-        
+        const stockName = exif.stock_name; 
+        let traitName = obsVar.observation_variable_name;
+
         if (hasObsUnit) {
-            successMessages.push(`${imgName}: ObservationUnitDbId: ${exif.observation_unit.observation_unit_db_id}`);
+            successMessages.push(`${imgName}: ObservationUnitDbId: ${obsUnit.observation_unit_db_id}`);
         } else {
-            errorMessages.push(`${imgName}: Missing ObservationUnitDbId`);
+            imgErrors.push(`${imgName}: Missing ObservationUnitDbId`);
         }
 
-        if (hasObsVar) {
-            successMessages.push(`${imgName}: Observation Variable: ${exif.observation_variable.observation_variable_name}`);
+        // Specific: field missing entirely vs. present but empty/not found
+        if (!obsVar) {
+            imgErrors.push(`${imgName}: No trait field found in EXIF data`);
+        } else if (!hasObsVar && !obsVar.external_db_id) {
+            imgErrors.push(`${imgName}: Trait field is present but is missing both a trait ID and trait name`);
         } else {
-            errorMessages.push(`${imgName}: Missing Observation Variable Name`);
+            successMessages.push(`${imgName}: Observation Variable: ${obsVar.observation_variable_name || obsVar.external_db_id}`);
+            if (!hasCvtermId) {
+                if (img.trait_lookup_type === "id") {
+                    imgErrors.push(`${imgName}: Trait ID "${img.trait_lookup_value}" does not exist in the database`);
+                } else if (img.trait_lookup_type === "name" || img.trait_lookup_type === "synonym") {
+                    imgErrors.push(`${imgName}: Trait name "${img.trait_lookup_value}" does not exist in the database`);
+                } else {
+                    imgErrors.push(`${imgName}: Associated trait does not exist in the database`);
+                }
+            } else if (img.trait_lookup_type === "synonym") {
+                traitName = img.trait_matched_name;
+                successMessages.push(`${imgName}: Trait name "${img.trait_lookup_value}" matched via synonym to "${img.trait_matched_name}"`);
+            }
         }
 
         if (hasTimestamp) {
             successMessages.push(`${imgName}: Timestamp: ${exif.timestamp}`);
         } else {
-            errorMessages.push(`${imgName}: Missing Timestamp`);
+            imgErrors.push(`${imgName}: Missing Timestamp`);
         }
 
-        if (!hasCvtermId) {
-            errorMessages.push(`${imgName} associated trait ${obsVariableName} does not exist in the database`);
+        if (img.stock_exists === "false") {
+            imgErrors.push(`${imgName}: ObservationUnitDbId ${obsUnit.observation_unit_db_id} does not exist in the database`);
+        } else if (hasObsUnit && !stockName) {
+            imgErrors.push(`${imgName}: Stock associated with ObservationUnitDbId ${obsUnit.observation_unit_db_id} could not be found`);
         }
 
-        if (result.images[index].stock_exists === "false") {
-            errorMessages.push(`${imgName}: ObservationUnitDbId ${exif.observation_unit.observation_unit_db_id} does not exist in the database`);
-        } else if (!stockName) {
-            errorMessages.push(`${imgName} Stock ${stockName} does not exist in the database`);
-        }
-
-        if (errorMessages.length === 0) {
-            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${exif.stock_name} Associated trait: ${obsVariableName}. Ready to store image`);
+        if (imgErrors.length === 0) {
+            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${stockName}. Associated trait: ${traitName}. Ready to store image`);
+            validFilenames.push(imgName);
+        } else {
+            errorMessages.push(...imgErrors);
+            invalidFilenames.push(imgName);
         }
     });
 
-    let validExif;
     if (errorMessages.length === 0) {
         jQuery('#upload_images_submit_store').attr('disabled', false);
         jQuery('#upload_images_status').html(
             formatMessage(finalSuccessMessage, "success")
         );
-        return true;
-    } else if (exifFiles > 0 && nonExifFiles > 0) {
-        errorMessages.push("Please load files all containing EXIF data or with the same file naming pattern");
-        validExif = errorMessages;
-    } else if (errorMessages.length > 0 && successMessages.length > 0) {
-        validExif = errorMessages;
-    } else {
-        return false;
+        return { valid: true, validFilenames: validFilenames, invalidFilenames: invalidFilenames };
     }
 
-    jQuery('#upload_images_submit_store').attr('disbled', true);
+    if (exifFiles > 0 && nonExifFiles > 0) {
+        errorMessages.push("Please load files all containing EXIF data or with the same file naming pattern");
+    }
+
+    jQuery('#upload_images_submit_store').attr('disabled', true);
     jQuery('#upload_images_status').html(
         formatMessage(errorMessages, "error")
     );
-    return validExif;
+
+    return { valid: false, validFilenames: validFilenames, invalidFilenames: invalidFilenames, errorMessages: errorMessages };
 }
 
 function parseExifData(exifData, imageFiles) {
@@ -601,7 +711,7 @@ function submitAssociatedPhenotypes (phenoFile, zipFile, url) {
 
 
 function loadAllImages(imageFiles, imageData){
-    return loadImagesSequentially(imageFiles, imageData, {"success":[],"error":[]} );
+    return loadImagesSequentially(imageFiles, imageData, {"success":[],"error":[],"image_ids":[]} );
 }
 
 
@@ -613,6 +723,7 @@ function loadImagesSequentially(imageFiles, imageData, uploadStatus){
         if (response.result) {
             var msg = "Successfly uploaded image "+response.result.data[0].imageFileName;
             uploadStatus.success.push(msg);
+            uploadStatus.image_ids.push(response.result.data[0].imageDbId);
         } else {
             // console.log("handling response errors: "+JSON.stringify(response.metadata.status));
             response.metadata.status.forEach(function(msg) {

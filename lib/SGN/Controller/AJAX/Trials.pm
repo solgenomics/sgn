@@ -8,7 +8,7 @@ use CXGN::Trial::Folder;
 use Data::Dumper;
 use Carp;
 use File::Path qw(make_path);
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Slurp qw | read_file |;
 use SGN::Model::Cvterm;
 
@@ -60,6 +60,11 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $priv_check;
     if ($treetype eq "phenotyping_trial" || $treetype eq "transformation_trial" || $treetype eq "tracking_trial") {
 	$priv_check = "trials";
+
+    my $dir = File::Spec->catdir($c->config->{static_content_path}, "folder");
+    eval { make_path($dir) };
+    if ($@) {
+        print STDERR "Couldn't create $dir: $@";
     }
 
     if ($treetype eq "genotyping_trial" || $treetype eq "genotyping_project") {
@@ -215,7 +220,8 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
 
     print STDERR "WORKING WITH BREEDING PROGRAMS 2: ".Dumper(\@breeding_programs);
 
-    my $dir = catdir($c->config->{static_content_path}, "folder");
+    my $dir = File::Spec->catdir($c->config->{static_content_path}, "folder");
+
     eval { make_path($dir) };
     if ($@) {
         print STDERR "Couldn't create $dir: $@";

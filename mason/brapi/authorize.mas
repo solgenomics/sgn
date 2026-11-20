@@ -18,8 +18,8 @@
 </div> -->
 
 <div class="row center">
-    <p>Hello <b><% $user_name %></b>!</p>
-    <p><b><% $client_id %></b> would like to access <b><% $database_name %></b> through your account. Use the buttons below to authorize or deny this request.</p><br>
-    <button class="btn btn-success" onclick="window.location.replace('<% $authorize_url %>')">Authorize Access</button>
-    <button class="btn btn-danger" onclick="window.location.replace('<% $deny_url %>')">Deny Access</button>
+    <p>Hello <b><% $user_name |h %></b>!</p>
+    <p><b><% $client_id |h %></b> would like to access <b><% $database_name |h %></b> through your account. Use the buttons below to authorize or deny this request.</p><br>
+    <a class="btn btn-success" href="<% $authorize_url |h %>">Authorize Access</a>
+    <a class="btn btn-danger" href="<% $deny_url |h %>">Deny Access</a>
 </div>

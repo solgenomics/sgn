@@ -6,7 +6,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
@@ -18,6 +18,7 @@ use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
 use Cwd qw(cwd);
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -37,7 +38,7 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $traits = $ds->retrieve_traits();
-    
+
     $c->tempfiles_subdir("stability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"stability_files/trait_XXXXX");
     my $temppath = $c->config->{basepath}."/".$tempfile;
@@ -59,7 +60,7 @@ sub get_method: Path('/ajax/Stability/get_method') : {
     my $method_1 = $c->req->param('method_id');
     print STDERR Dumper($method_1);
     $method_id = $method_1;
-    print "The vairable method_id is $method_id \n";
+    print "The variable method_id is $method_id \n";
 }
 
 my $imput_id;
@@ -140,7 +141,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     );
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
-    
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
@@ -175,8 +176,8 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
     };
-    my $cmd_str = join(" ",(
-        "Rscript ",
+    # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
+    my $cmd_str = join(" ", "Rscript", shell_quote(
         $c->config->{basepath} . "/R/stability/ammi_script.R",
         $pheno_filepath,
         $trait_id,
@@ -228,7 +229,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     #         $job_record->generate_finish_timestamp_cmd()
     # );
 
-    # while ($cmd->alive) { 
+    # while ($cmd->alive) {
 	# sleep(1);
     # }
 
@@ -262,7 +263,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 
     my $jsonSummaryBasename = basename($jsonSummary);
     my $jsonSummary_response = "/documents/tempfiles/stability_files/" . $jsonSummaryBasename;
-    
+
 
     $c->stash->{rest} = {
         myMessage => $messageFile_response,
@@ -274,4 +275,3 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 }
 
 1
-

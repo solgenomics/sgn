@@ -5,6 +5,7 @@ use warnings;
 
 use Mail::Sendmail;
 use Email::Send::SMTP::Gmail;
+use Encode ();
 use Data::Dumper;
 
 use CXGN::Apache::Request;
@@ -56,6 +57,14 @@ sub send_email {
     $mailto  ||= 'sgn-bugs@sgn.cornell.edu';
 
     $body .= $request_info;
+
+    # Encode any decoded/wide-character text (e.g. non-ASCII web form input)
+    # to UTF-8 bytes so it can't crash the send with "Wide character in print".
+    # Strings that are already bytes are left alone.
+    $subject = Encode::encode( 'UTF-8', $subject, Encode::FB_DEFAULT ) if utf8::is_utf8($subject);
+    $body    = Encode::encode( 'UTF-8', $body,    Encode::FB_DEFAULT ) if utf8::is_utf8($body);
+    $subject =~ tr/\r\n//d;    # keep a bad value from breaking the headers
+
     print STDERR "$subject\n\n$body";
 
     if ( $vhost_conf->get_conf('disable_emails') ) {
@@ -137,23 +146,27 @@ sub send_email {
 sub _send_email_with_optional_attachment {
     my ( $mail, $from, $to, $subject, $body, $attachment ) = @_;
 
-    if ( $attachment && -e $attachment ) {
-        $mail->send(
-            -from        => $from,
-            -to          => $to,
-            -subject     => $subject,
-            -body        => $body,
-            -attachments => $attachment,
-        );
-    }
-    else {
-        $mail->send(
-            -from    => $from,
-            -to      => $to,
-            -subject => $subject,
-            -body    => $body,
-        );
-    }
+    my $ok = eval {
+        if ( $attachment && -e $attachment ) {
+            $mail->send(
+                -from        => $from,
+                -to          => $to,
+                -subject     => $subject,
+                -body        => $body,
+                -attachments => $attachment,
+            );
+        }
+        else {
+            $mail->send(
+                -from    => $from,
+                -to      => $to,
+                -subject => $subject,
+                -body    => $body,
+            );
+        }
+        1;
+    };
+    print STDERR "CXGN::Contact: error sending email: $@\n" if !$ok;
 
     return;
 }

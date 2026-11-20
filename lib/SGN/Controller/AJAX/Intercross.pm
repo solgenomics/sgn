@@ -22,7 +22,7 @@ use Data::Dumper;
 use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use Digest::MD5;
 use List::MoreUtils qw /any /;
 use List::MoreUtils 'none';
@@ -40,7 +40,6 @@ use CXGN::List::Validate;
 use CXGN::List;
 use Carp;
 use File::Path qw(make_path);
-use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
 use JSON;
 use SGN::Model::Cvterm;
@@ -118,9 +117,9 @@ sub create_parents_file_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory_name = "intercross_parents";
-    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
+    my $archived_file_name = File::Spec->catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
     my $archive_path = $c->config->{archive_path};
-    my $file_destination =  catfile($archive_path, $archived_file_name);
+    my $file_destination =  File::Spec->catfile($archive_path, $archived_file_name);
     print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
 
     my $dir = $c->tempfiles_subdir('/download');
@@ -152,12 +151,12 @@ sub create_parents_file_POST : Args(0) {
         mkdir $archive_path;
     }
 
-    if (! -d catfile($archive_path, $user_id)) {
-        mkdir (catfile($archive_path, $user_id));
+    if (! -d File::Spec->catfile($archive_path, $user_id)) {
+        mkdir (File::Spec->catfile($archive_path, $user_id));
     }
 
-    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
-        mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    if (! -d File::Spec->catfile($archive_path, $user_id,$subdirectory_name)) {
+        mkdir (File::Spec->catfile($archive_path, $user_id, $subdirectory_name));
     }
 
     my $md_row = $metadata_schema->resultset("MdMetadata")->create({
@@ -276,9 +275,9 @@ sub create_intercross_wishlist_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory_name = "intercross_wishlist";
-    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
+    my $archived_file_name = File::Spec->catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
     my $archive_path = $c->config->{archive_path};
-    my $file_destination =  catfile($archive_path, $archived_file_name);
+    my $file_destination =  File::Spec->catfile($archive_path, $archived_file_name);
 
     my $dir = $c->tempfiles_subdir('/download');
     my $rel_file = $c->tempfile( TEMPLATE => 'download/intercross_wishlistXXXXX');
@@ -309,12 +308,12 @@ sub create_intercross_wishlist_POST : Args(0) {
         mkdir $archive_path;
     }
 
-    if (! -d catfile($archive_path, $user_id)) {
-        mkdir (catfile($archive_path, $user_id));
+    if (! -d File::Spec->catfile($archive_path, $user_id)) {
+        mkdir (File::Spec->catfile($archive_path, $user_id));
     }
 
-    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
-        mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    if (! -d File::Spec->catfile($archive_path, $user_id,$subdirectory_name)) {
+        mkdir (File::Spec->catfile($archive_path, $user_id, $subdirectory_name));
     }
 
     my $md_row = $metadata_schema->resultset("MdMetadata")->create({

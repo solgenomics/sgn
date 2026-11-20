@@ -127,7 +127,7 @@ $default_seedlot_material_type => undef
 
                 <div id="seedlot_transaction_from_seedlot">
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Taken From Existing Seedlot:<br/><small>Only showing seedlots with matching content</small></label>
+                        <label class="col-sm-3 control-label">Taken From Existing Seedlot or the Same Accession/Cross:<br/><small>Only showing seedlots with matching content</small></label>
                         <div class="col-sm-9" >
                             <div id="seedlot_transaction_seedlot_div"></div>
                         </div>
@@ -475,7 +475,7 @@ $default_seedlot_material_type => undef
   jQuery(document).ready(function () {
 
     jQuery('#add_seedlot_transaction_button').click( function() {
-        get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1', 'seedlot_id':'<% $seedlot_id %>', 'exclude_self': '1' });
+        get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1', 'seedlot_id':'<% $seedlot_id %>', 'exclude_self': '1', 'include_contents': '1'});
         get_select_box('seedlots', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1', 'seedlot_id':'<% $seedlot_id %>' });
         get_select_box('breeding_programs', 'transaction_new_seedlot_breeding_program_div', { 'name' : 'transaction_new_seedlot_breeding_program_id', 'id' : 'transaction_new_seedlot_breeding_program_id' });
         jQuery('#add_seedlot_transaction_dialog').modal('show')

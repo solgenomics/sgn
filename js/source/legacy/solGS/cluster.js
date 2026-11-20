@@ -687,11 +687,18 @@ solGS.cluster = {
       downloadLinks += " | " + kclusterVariancesLink + " | " + elbowLink;
     }
 
-    var clusterPlotDiv = this.clusterPlotDiv.replace(/#/, '');
-    var plotId = res.file_id;;
-    var clusterDownloadLinkId = `download_${clusterPlotDiv}_${plotId}`;
-    var clusterPlotDownload =
-      `<a href='#'  onclick='event.preventDefault();' id='${clusterDownloadLinkId}'>Cluster plot</a>`;
+    var clusterPlotDownload;
+
+    if (clusterPlotFileName.match(/k-means/i)) {
+      var clusterPlotDiv = this.clusterPlotDiv.replace(/#/, "");
+      var plotId = res.file_id;
+      var clusterDownloadLinkId = `download_${clusterPlotDiv}_${plotId}`;
+      clusterPlotDownload =
+        `<a href="#" onclick="event.preventDefault();" id="${clusterDownloadLinkId}">Cluster plot</a>`;
+    } else {
+      clusterPlotDownload =
+        `<a href="${res.cluster_plot}" download="${clusterPlotFileName}">Cluster plot</a>`;
+    }
 
     downloadLinks += " | " + clusterPlotDownload;
 
@@ -787,7 +794,15 @@ solGS.cluster = {
       'pageLength': 5,
       'rowId': function (a) {
         return a[8]
-      }
+      },
+      columnDefs: [
+        {
+            targets: [1, 2, 3, 4, 5, 6, 7],
+            orderable: false
+        }
+    ],
+
+    order: [[0, "asc"]]
     });
 
     table.rows.add(data).draw();
@@ -810,17 +825,17 @@ solGS.cluster = {
 
   },
 
-  getClusterPops: function () {
-    var list = new solGSList();
-    var lists = list.getLists(["accessions", "plots", "trials"]);
-    lists = list.addDataStrAttr(lists);
-    lists = list.addDataTypeAttr(lists, "");
+  getClusterPops: function (source, ownership) {
+    if (source === "list") {
+      var list = new solGSList();
+      var lists = list.getLists(["accessions", "plots", "trials"], ownership);
+      lists = list.addDataStrAttr(lists);
+      return list.addDataTypeAttr(lists, "");
+    }
 
-    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"], ownership);
     datasets = solGS.dataset.addDataTypeAttr(datasets, "Clustering");
-    clusterPops = [lists, datasets];
-
-    return clusterPops.flat();
+    return datasets;
 
   },
 
@@ -1196,7 +1211,16 @@ jQuery(document).ready(function () {
     var clusterPlotId = linkId.replace(/download_/, "");
 
     if (clusterPlotId.match(/cluster_plot_/)) {
-      saveSvgAsPng(document.getElementById(`#${clusterPlotId}`), `${clusterPlotId}.png`, { scale: 2});
+        var clusterPlot = document.getElementById(clusterPlotId);
+        var clusterSvg = null;
+        
+        if (clusterPlot) {
+            clusterSvg = clusterPlot.querySelector("svg");
+        }
+
+        if (clusterSvg) {
+            saveSvgAsPng(clusterSvg, `${clusterPlotId}.png`, { scale: 2});
+        }
     }
   });
 
@@ -1454,17 +1478,13 @@ jQuery(document).ready(function () {
 jQuery(document).ready(function () {
   if (location.pathname.match(/cluster\/analysis/)) {
 
-    clusterPopsDataDiv = solGS.cluster.clusterPopsDataDiv;
-    var tableId = 'cluster_pops_table';
-    var clusterPopsTable = solGS.cluster.createTable(tableId)
-    jQuery(clusterPopsDataDiv).append(clusterPopsTable).show();
-
-    var clusterPops = solGS.cluster.getClusterPops()
-    var clusterPopsRows = solGS.cluster.getClusterPopsRows(clusterPops);
-
-    solGS.cluster.displayClusterPopsTable(tableId, clusterPopsRows)
- 
-    jQuery("#create_new_list_dataset").show();
+    solGS.dataTableTabs.initialize({
+      prefix: "cluster",
+      createTable: function (tableId) { return solGS.cluster.createTable(tableId); },
+      getPopulations: function (source, ownership) { return solGS.cluster.getClusterPops(source, ownership); },
+      getRows: function (populations) { return solGS.cluster.getClusterPopsRows(populations); },
+      displayTable: function (tableId, rows) { solGS.cluster.displayClusterPopsTable(tableId, rows); }
+    });
     
   }
 });

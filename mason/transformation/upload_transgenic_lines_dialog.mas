@@ -1,0 +1,184 @@
+<%args>
+$breeding_program_name
+</%args>
+
+<div class="modal fade" id="upload_transgenic_lines_dialog" name="upload_transgenic_lines_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransgenicLinesDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="reset" class="close" id="upload_transgenic_lines_dismiss_button_1" name="upload_transgenic_lines_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicLinesDialog">Upload Transgenic Lines</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="transgenic_lines_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transgenic_lines_form" name="upload_transgenic_lines_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="transgenic_lines_upload_file" id="transgenic_lines_upload_file" encoding="multipart/form-data" />
+                                <input name="project_breeding_program_name" id="project_breeding_program_name" type="hidden" value="<% $breeding_program_name %>">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="upload_transgenic_lines_dismiss_button_2" name="upload_transgenic_lines_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_transgenic_lines_submit" id="upload_transgenic_lines_submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transgenic_lines_saved_dialog_message" name="transgenic_lines_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="transgenicLinesSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transgenicLinesSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The transgenic lines were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_transgenic_lines_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_transgenic_lines_error_display" name="upload_transgenic_lines_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTransgenicLinesErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicLinesErrorDialog">Upload Transgenic Lines Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transgenic_lines_upload_spreadsheet_info_dialog" name="transgenic_lines_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransgenicLinesInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicLinesInfoDialog">Upload Template Information For Transgenic Lines</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>transformation_identifier</td>
+                                <td>transgenic_line_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>transformation_identifier (must exist in the database). Multiple transformation identifiers can be included in the same spreadsheet.</li>
+                        <li>transgenic_line_name (must NOT exist in the database)</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Transgenic Lines", optional_column => 0 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_transgenic_lines_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_transgenic_lines_link').click(function() {
+        jQuery("#upload_transgenic_lines_dialog").modal("show");
+    });
+
+    jQuery('#upload_transgenic_lines_spreadsheet_format_info').click(function(){
+        jQuery("#transgenic_lines_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+
+    jQuery("#upload_transgenic_lines_submit").click(function(){
+        if (transgenic_lines_upload_file === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: "/ajax/transformation/upload_transgenic_lines",
+            type: 'POST',
+            data: new FormData(jQuery("#upload_transgenic_lines_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error_string) {
+                    jQuery("#upload_transgenic_lines_error_display tbody").html('');
+                    jQuery("#upload_transgenic_lines_error_display tbody").append(response.error_string);
+                    jQuery("#upload_transgenic_lines_error_display").modal("show");
+                    return;
+                }
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                if (response.success) {
+                    jQuery('#upload_transgenic_lines_dialog').modal('hide');
+                    jQuery('#transgenic_lines_saved_dialog_message').modal("show");
+                }
+            }
+        });
+    });
+
+    jQuery("#dismiss_transgenic_lines_saved_dialog").click(function(){
+        location.reload();
+    });
+
+    jQuery('#transgenic_lines_upload_spreadsheet_format_info').click(function() {
+        jQuery("#transgenic_lines_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("[name='upload_transgenic_lines_dismiss_button']").click(function() {
+        jQuery('#upload_transgenic_lines_dialog').modal('hide');
+        jQuery('#transgenic_lines_upload_file').val('');
+    });
+
+
+});
+
+</script>

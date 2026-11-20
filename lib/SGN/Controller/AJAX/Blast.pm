@@ -11,10 +11,11 @@ use Tie::UrlEncoder; our %urlencode;
 use File::Temp qw | tempfile |;
 use File::Basename qw | basename |;
 use File::Copy qw | copy |;
-use File::Spec qw | catfile |;
+use File::Spec;
 use File::Slurp qw | read_file write_file |;
 use File::NFSLock qw | uncache |;
 use CXGN::Tools::Run;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 use CXGN::Job;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
@@ -877,7 +878,7 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
     my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
     my $blastdb_path = File::Spec->catfile($c->config->{blast_db_path}, $bdb->file_base());
 
-    my $grepcmd = "grep -i \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";
+    my $grepcmd = "grep -i -- " . shell_quote($input_string) . " " . shell_quote($blastdb_path) . " | sed 's/>//' | cut -d ' ' -f 1";
     my $output_seq = `$grepcmd`;
     my $output_seqs;
 

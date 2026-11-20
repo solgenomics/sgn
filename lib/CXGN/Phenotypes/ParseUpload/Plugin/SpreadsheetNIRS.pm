@@ -1,7 +1,8 @@
 package CXGN::Phenotypes::ParseUpload::Plugin::SpreadsheetNIRS;
 
-# Validate Returns %validate_result = (
-#   error => 'error message'
+# Validate Returns 1 if the file is valid, otherwise %validate_result = (
+#   error => 'error message'      # file is not valid
+#   warning => 'warning message'  # file is valid but the user should be warned (e.g. negative spectral values)
 #)
 
 # Parse Returns %parsed_result = (
@@ -112,6 +113,8 @@ sub validate {
                   );
 
     my @samples;
+    my $negative_value_count = 0;
+    my %samples_with_negative_values;
     while (my $line = <$fh>) {
         my @fields;
         if ($csv->parse($line)) {
@@ -124,13 +127,26 @@ sub validate {
         push @samples, $sample_name;
 
         foreach (@fields) {
-            if (not $_=~/^[+]?\d+\.?\d*$/){
+            if (not $_=~/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/){
                 $parse_result{'error'}= "It is not a real value for wavelength. Must be a numeric value: '$_'";
                 return \%parse_result;
+            }
+            # Negative spectral values are allowed (e.g. after baseline correction), but are flagged as a warning
+            if ($_ < 0) {
+                $negative_value_count++;
+                $samples_with_negative_values{$sample_name}++;
             }
         }
     }
     close $fh;
+
+    if ($negative_value_count > 0) {
+        my @negative_samples = sort keys %samples_with_negative_values;
+        my $max_samples_shown = 20;
+        my $samples_string = join ', ', @negative_samples[0 .. ($#negative_samples < $max_samples_shown-1 ? $#negative_samples : $max_samples_shown-1)];
+        $samples_string .= ", ... (".(scalar(@negative_samples) - $max_samples_shown)." more)" if scalar(@negative_samples) > $max_samples_shown;
+        $parse_result{'warning'} = "The file contains $negative_value_count negative spectral value(s) in ".scalar(@negative_samples)." sample(s): $samples_string. Negative values are allowed and will be stored, but please make sure they are expected for your data.";
+    }
 
     my $samples_validator = CXGN::List::Validate->new();
     my @samples_missing = @{$samples_validator->validate($schema, $data_level, \@samples)->{'missing'}};
@@ -165,6 +181,11 @@ sub validate {
             $parse_result{'error'} = "The following wavelengths are not in the database for the selected protocol: ".join(',',@wavelengths_not_in_protocol);
             return \%parse_result;
         }
+    }
+
+    # Valid file, but with warnings to show the user (e.g. negative spectral values)
+    if ($parse_result{'warning'}) {
+        return \%parse_result;
     }
 
     return 1;

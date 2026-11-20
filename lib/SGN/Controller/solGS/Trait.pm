@@ -5,7 +5,7 @@ use namespace::autoclean;
 
 use URI::FromHash 'uri';
 use File::Path qw / make_path /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file/;
 use File::Copy;

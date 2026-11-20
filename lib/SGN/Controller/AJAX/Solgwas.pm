@@ -7,7 +7,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
@@ -21,6 +21,7 @@ use CXGN::Dataset::File;
 use CXGN::Tools::Run;
 use CXGN::Job;
 use Cwd qw(cwd);
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -436,7 +437,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         print $filehandle_out $line;
     }
     close $filehandle;
-    close $filehandle_out;    
+    close $filehandle_out;
 
 #
 # # Hardcoded number of markers to be selected - make this selectable by user?
@@ -485,8 +486,8 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # my $cmd = CXGN::Tools::Run->new(
     #     $cxgn_tools_run_config
     # );
-    my $cmd_str = join(" ",(
-        "Rscript ",
+    # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
+    my $cmd_str = join(" ", "Rscript", shell_quote(
         $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
         $pheno_filepath,
         $geno_filepath2,

@@ -14,7 +14,7 @@ use CXGN::Trial::TrialLayout;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Temp qw | tempfile |;
-use File::Spec::Functions;
+use File::Spec;
 use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
 
@@ -70,8 +70,8 @@ sub field_book :Path("/fieldbook") Args(0) {
 
     	 #   my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
     	  #  if ( $file_metadata->create_person_id() eq $user_id) {
-		#my $file_destination =  catfile($file_row->dirname, $file_row->basename);
-		my $file_destination =  catfile($dirname, $basename);
+		#my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
+		my $file_destination =  File::Spec->catfile($dirname, $basename);
     	      #push @projects, [ $row->project_id, $row->name, $row->description, $file_row->dirname,$file_row->basename, $file_row->file_id];
 	      push @file_metadata, [ $dirname, $basename, $file_id, $comment ] ;
     	      push @layout_files, $file_destination;
@@ -158,7 +158,7 @@ sub trial_field_book_download : Path('/fieldbook/trial_download/') Args(1) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
     print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;
@@ -174,7 +174,7 @@ sub tablet_trait_file_download : Path('/fieldbook/trait_file_download/') Args(1)
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
     print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;

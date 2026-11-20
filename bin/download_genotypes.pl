@@ -23,6 +23,7 @@ perl bin/download_genotypes.pl -h [dbhost] -d [dbname] -i [infile] -o [outfile] 
  -t cluster shared temp dir
  -c cache root dir
  -b basepath
+ -r backend runner (Slurm, Tsp, etc)
  
 =head1 AUTHOR
 
@@ -42,9 +43,9 @@ use CXGN::DB::InsertDBH;
 use CXGN::Dataset::File;
 use CXGN::List;
 
-our ($opt_h, $opt_d, $opt_p, $opt_i, $opt_o, $opt_q, $opt_t, $opt_c, $opt_b, $opt_f);
+our ($opt_h, $opt_d, $opt_p, $opt_i, $opt_o, $opt_q, $opt_t, $opt_c, $opt_b, $opt_f, $opt_r);
 
-getopts("h:d:p:i:o:q:t:c:b:f:");
+getopts("h:d:p:i:o:q:t:c:b:f:r:");
 
 my $dbhost = $opt_h;
 my $dbname = $opt_d;
@@ -56,6 +57,7 @@ my $cluster_shared_tempdir = $opt_t || '/tmp';
 my $cluster_host = $opt_c || 'localhost';
 my $format = $opt_f || "vcf";
 my $basepath = $opt_b || '/home/production/cxgn/sgn';
+my $backend = $opt_r || 'Tsp';
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
@@ -122,13 +124,13 @@ $ds->genotyping_protocols([ $protocol_id ]);
 
 if ($format eq "vcf") { 
     my $fh = $ds->retrieve_genotypes_vcf($protocol_id, $out_file, '/tmp',
-					 $cluster_shared_tempdir, 'Slurm',
+					 $cluster_shared_tempdir, $backend,
 					 $cluster_host, $web_cluster_queue,
 					 $basepath, 1);
 }
 elsif ($format eq "dosage") {
     my $fh = $ds->retrieve_genotypes($protocol_id, $out_file, '/tmp',
-				     $cluster_shared_tempdir, 'Slurm',
+				     $cluster_shared_tempdir, $backend,
 				     $cluster_host, $web_cluster_queue,
 				     $basepath, 1);
 }

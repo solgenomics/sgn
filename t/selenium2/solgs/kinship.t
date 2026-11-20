@@ -37,20 +37,18 @@ my $accessions_dt = $solgs_data->load_accessions_dataset();
 my $accessions_dt_name = $accessions_dt->{dataset_name};
 my $accessions_dt_id = 'dataset_' . $accessions_dt->{dataset_id};
 
-print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
-print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
-
-print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 
 remove_tree($cache_dir, {safe => 1});
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
     sleep(2);
+    
+    ######### kinship analysis homepage #########
     $d->get_ok('/kinship/analysis', 'kinship home page');
     sleep(5);
 
+    $d->select_datatable_tab('kinship_private_lists');
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -- accesions list')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
@@ -67,6 +65,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
+    $d->select_datatable_tab('kinship_private_lists');
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -- trials list')->click();
     sleep(4);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
@@ -85,6 +84,7 @@ $d->while_logged_in_as("submitter", sub {
     remove_tree($cache_dir, {safe => 1});
     sleep(3);
 
+    $d->select_datatable_tab('kinship_private_lists');
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -queue- accessions list')->click();
     sleep(2);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -97,7 +97,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(10);
-    
+
+    $d->select_datatable_tab('kinship_private_lists');
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -check queued- accessions list')->click();
     sleep(2);
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
@@ -111,6 +112,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
+    $d->select_datatable_tab('kinship_private_datasets');
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -- accessions dataset')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
@@ -121,6 +123,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
+    $d->select_datatable_tab('kinship_private_datasets');
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship --trials dataset')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
@@ -133,7 +136,8 @@ $d->while_logged_in_as("submitter", sub {
 
     remove_tree($cache_dir, {safe => 1});
     sleep(3);
-    
+
+    $d->select_datatable_tab('kinship_private_datasets');
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -queue- accessions dataset')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -147,6 +151,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
+    $d->select_datatable_tab('kinship_private_datasets');
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -queued- accessions dataset')->click();
     sleep(5);
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
@@ -157,7 +162,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
     sleep(3);
 
-    ####### trials page #######
+    ####### kinship analysis in trial detail page #######
     $d->get_ok('/breeders/trial/139', 'trial detail home page');
     sleep(5);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
@@ -184,6 +189,8 @@ $d->while_logged_in_as("submitter", sub {
 
     remove_tree($cache_dir, {safe => 1});
     sleep(3);
+
+    ####### kinship analysis in the solGS GS prediction pipeline #######
 
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
@@ -276,9 +283,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "Genomic estimated breeding values")]', 'xpath', 'collapse Genomic estimated breeding values')->click();
     sleep(2);
 
-    # my $analysis_tools = $d->find_element('Kinship', 'partial_link_text', 'toogle analysis tools');
-    # my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
-    # sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();

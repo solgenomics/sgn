@@ -377,7 +377,14 @@ sub _validate_with_plugin {
     close($F);
 
     my $stock_type = $self->get_observation_unit_type_name;
-    my $validate_type = $stock_type.'s';
+    my $validate_type;
+    if ($stock_type eq 'tissue_sample_or_accession') {
+        $validate_type = 'tissue_samples_or_accessions';
+    } elsif ($stock_type eq 'stocks') {
+        $validate_type = 'stocks';
+    } else {
+        $validate_type = $stock_type.'s';
+    }
 
     if ($sample_name_header eq 'SampleName') {
         my @all_sample_names = keys %seen_sample_names;

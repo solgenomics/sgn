@@ -149,7 +149,7 @@ $stock_id
         success: function(response) {
           if (response.error) { alert(response.error); }
           else {
-            alert("The parent has been added. ["+response.error+"]");
+            alert("The parent has been added.");
             jQuery("#add_parent_dialog").modal("hide");
             document.location.reload(); // reload the entire page, because pedigree info is in several places.
           }

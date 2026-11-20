@@ -15,6 +15,14 @@ use JSON::XS;
 use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Chado::Stock;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
+use SGN::Model::Cvterm;
+use CXGN::Trait::Treatment;
+use CXGN::UploadFile;
+use CXGN::Phenotypes::ParseUpload;
+use CXGN::Phenotypes::StorePhenotypes;
+use DateTime;
+use JSON::Any;
 use LWP::UserAgent;
 local $Data::Dumper::Indent = 0;
 
@@ -43,9 +51,10 @@ is_deeply($response, {'data' => [['<a href="/cvterm/70741/view">dry matter conte
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/phenotypes?display=plots&group_by_accession=1');
 $response = decode_json $mech->content;
 my @response = @{$response->{data}};
-my @last_n = @response[-4..-1];
-#print STDERR Dumper \@last_n;
-is_deeply(\@last_n, [['<a href="/stock/38881/view">UG120004</a>','<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','5.25','2.51','8.00','3.88','73.87%',2,'0%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/stock/38880/view">UG120003</a>','<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','5.25','4.50','6.00','1.06','20.21%',2,'0%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/stock/38879/view">UG120002</a>','<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','6.25','3.00','9.50','4.60','73.54%',2,'0%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/stock/38878/view">UG120001</a>','<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','20.00','12.00','28.00','11.31','56.57%',2,'0%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>']], "check plots accessions");
+my @four_rows = @response[0..3];
+is_deeply(\@four_rows, [['<a href="/stock/39251/view">UG130145</a>','<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','26.80','26.80','26.80',undef,0,1,'0%','<span class="glyphicon glyphicon-stats"></span>'],['<a href="/stock/39250/view">UG130144</a>','<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','16.30','16.30','16.30',undef,0,1,'0%','<span class="glyphicon glyphicon-stats"></span>'],['<a href="/stock/39249/view">UG130143</a>','<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','23.70','23.70','23.70',undef,0,1,'0%','<span class="glyphicon glyphicon-stats"></span>'],['<a href="/stock/39248/view">UG130140</a>','<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','27.80','27.80','27.80',undef,0,1,'50.00%','<span class="glyphicon glyphicon-stats"></span>']], "check plots accessions");
+
+
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/phenotypes_fully_uploaded');
 $response = decode_json $mech->content;
@@ -144,7 +153,7 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/accession
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 my @accessions = @{$response->{accessions}->[0]};
-@last_n = @accessions[-4..-1];
+#@last_n = @accessions[-4..-1];
 #print STDERR Dumper \@last_n;
 is_deeply($response, {'accessions' => [[{'stock_type' => 'accession','accession_name' => 'test_accession1','relationship_type' => 'plot_of','stock_id' => 38840,'organism' => 'Solanum lycopersicum'},{'organism' => 'Solanum lycopersicum','stock_id' => 38841,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession2'},{'relationship_type' => 'plot_of','stock_id' => 38842,'accession_name' => 'test_accession3','stock_type' => 'accession','organism' => 'Solanum lycopersicum'},{'stock_id' => 38843,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession4','organism' => 'Solanum lycopersicum'},{'organism' => 'Solanum lycopersicum','stock_id' => 38844,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession5'}]]});
 
@@ -195,6 +204,74 @@ $mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_
 $response = decode_json $mech->content;
 is_deeply($response, {success => 1});
 
+# Change Accessions (replace_stock) must update the cached layout, the plot names and the accession pages.
+# test_accession3 is swapped for a temporary accession that is in no other trial, then swapped back.
+my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+my $accession3 = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession3' });
+my $accession3_id = $accession3->stock_id();
+my $temp_stock = $schema->resultset('Stock::Stock')->create({ uniquename => 'replace_stock_temp_accession', name => 'replace_stock_temp_accession', type_id => $accession_type_id, organism_id => $accession3->organism_id() });
+my $temp_stock_id = $temp_stock->stock_id();
+
+# give one plot a name that contains its accession name, and another one a
+# name that contains it twice (only the first occurrence is replaced)
+my $named_plot = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_trial23' });
+$named_plot->update({ uniquename => 'test_trial23_test_accession3', name => 'test_trial23_test_accession3' });
+my $twice_named_plot = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_trial24' });
+$twice_named_plot->update({ uniquename => 'test_accession3_test_trial24_test_accession3', name => 'test_accession3_test_trial24_test_accession3' });
+
+my $plot_accessions = sub {
+    my $design = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' })->get_design();
+    return { map { $_->{plot_name} => $_->{accession_name} } values %$design };
+};
+my $plot_reps = sub {
+    my $design = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' })->get_design();
+    return { map { $_->{plot_name} => $_->{rep_number} } values %$design };
+};
+my $stock_trials = sub {
+    my $stock_id = shift;
+    $mech->get_ok("http://localhost:3010/stock/$stock_id/datatables/trials");
+    return join(' ', map { $_->[0] } @{decode_json($mech->content)->{data}});
+};
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/refresh_cache'); # the layout cache must know the new plot name
+like($stock_trials->($accession3_id), qr/>test_trial</, "test_trial is listed in the Experiment Usage of the old accession");
+unlike($stock_trials->($temp_stock_id), qr/>test_trial</, "test_trial is not listed in the Experiment Usage of the new accession yet");
+
+# a plot name that is already taken by another plot stops the replacement before anything changes
+my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+my $taken_stock = $schema->resultset('Stock::Stock')->create({ uniquename => 'test_trial23_replace_stock_temp_accession', name => 'test_trial23_replace_stock_temp_accession', type_id => $plot_type_id, organism_id => $accession3->organism_id() });
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_stock', ['old_stock_id' => $accession3_id, 'new_stock' => 'replace_stock_temp_accession', 'trial_stock_type' => 'accession']);
+like(decode_json($mech->content)->{error}, qr/already exists/, "replace_stock refuses a plot name that already exists");
+is($plot_accessions->()->{'test_trial23_test_accession3'}, 'test_accession3', "nothing was changed after the refused replace_stock");
+$taken_stock->delete();
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_stock', ['old_stock_id' => $accession3_id, 'new_stock' => 'replace_stock_temp_accession', 'trial_stock_type' => 'accession']);
+$response = decode_json $mech->content;
+is_deeply($response, {success => 1}, "replace_stock succeeds");
+my $layout_after = $plot_accessions->();
+is($layout_after->{'test_trial210'}, 'replace_stock_temp_accession', "layout shows the new accession after replace_stock");
+is($layout_after->{'test_trial23_replace_stock_temp_accession'}, 'replace_stock_temp_accession', "layout shows the renamed plot with the new accession");
+ok(!exists $layout_after->{'test_trial23_test_accession3'}, "layout no longer has the old plot name");
+is($layout_after->{'replace_stock_temp_accession_test_trial24_test_accession3'}, 'replace_stock_temp_accession', "only the first occurrence of the old accession name is replaced in a plot name");
+my $reps_after = $plot_reps->();
+is_deeply([ @$reps_after{'test_trial23_replace_stock_temp_accession', 'replace_stock_temp_accession_test_trial24_test_accession3', 'test_trial210'} ], [1, 2, 3], "replicates of the new accession are rebuilt by plot number");
+
+$mech->get_ok('http://localhost:3010/ajax/html/select/plots_from_trial?trial_id='.$trial_id);
+like(decode_json($mech->content)->{select}, qr/>test_trial23_replace_stock_temp_accession</, "plots table of the trial page shows the renamed plot");
+unlike($stock_trials->($accession3_id), qr/>test_trial</, "test_trial is no longer listed in the Experiment Usage of the old accession");
+like($stock_trials->($temp_stock_id), qr/>test_trial</, "test_trial is listed in the Experiment Usage of the new accession");
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_stock', ['old_stock_id' => $temp_stock_id, 'new_stock' => 'test_accession3', 'trial_stock_type' => 'accession']);
+is_deeply(decode_json($mech->content), {success => 1}, "swapping back succeeds");
+my $layout_restored = $plot_accessions->();
+is($layout_restored->{'test_trial23_test_accession3'}, 'test_accession3', "plot name and accession are restored after swapping back");
+is($layout_restored->{'test_accession3_test_trial24_test_accession3'}, 'test_accession3', "plot name with the accession name twice is restored after swapping back");
+$named_plot->discard_changes();
+$named_plot->update({ uniquename => 'test_trial23', name => 'test_trial23' });
+$twice_named_plot->discard_changes();
+$twice_named_plot->update({ uniquename => 'test_trial24', name => 'test_trial24' });
+$temp_stock->delete();
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/refresh_cache');
+
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/get_management_regime');
 $response = decode_json $mech->content;
 is_deeply(decode_json $response->{data}, [
@@ -208,6 +285,107 @@ is_deeply(decode_json $response->{data}, [
     }
 ], "verify correct management regime");
 
+# create a treatment here, then delete it at end of test
+my $test_treatment = CXGN::Trait::Treatment->new({
+    bcs_schema => $schema,
+    name => 'test treatment',
+    definition => 'A dummy treatment object to run fixture tests.',
+    format => 'numeric'
+});
+
+my $exp_treatment_root_term = encode_json(['Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000']);
+
+$test_treatment->store($exp_treatment_root_term); #this will be EXPERIMENT_TREATMENT:0000002
+
+#now lets put the fake treatment on the trial
+
+# $trial_id was reassigned to test_trial above, so get the Kasese trial id again
+my $kasese_trial_id = $schema->resultset('Project::Project')->find({name=>'Kasese solgs trial'})->project_id();
+
+# The upload file has a single trait column named after the treatment cvterm created
+# just above (EXPERIMENT_TREATMENT:0000002), with a binary value for each plot.
+my $treatment_file = "t/data/trial/Kasese_solgs_treatment_upload.xlsx";
+my $treatment_time = DateTime->now();
+my $treatment_timestamp = $treatment_time->ymd()."_".$treatment_time->hms();
+
+my $treatment_uploader = CXGN::UploadFile->new({
+    tempfile => $treatment_file,
+    subdirectory => 'spreadsheet_phenotype_upload',
+    archive_path => '/tmp',
+    archive_filename => "Kasese_solgs_treatment_upload.xlsx",
+    timestamp => $treatment_timestamp,
+    user_id => 41, #janedoe in fixture
+    user_role => 'curator'
+});
+
+my $archived_treatment_file = $treatment_uploader->archive();
+my $treatment_md5 = $treatment_uploader->get_md5($archived_treatment_file);
+ok($archived_treatment_file, "archive treatment upload file");
+ok($treatment_md5, "get md5 of archived treatment upload file");
+
+my $treatment_parser = CXGN::Phenotypes::ParseUpload->new();
+my $treatment_validate = $treatment_parser->validate('phenotype spreadsheet simple generic', $archived_treatment_file, 0, 'plots', $schema);
+ok($treatment_validate == 1, "check that treatment upload file validates");
+
+my $parsed_treatment_file = $treatment_parser->parse('phenotype spreadsheet simple generic', $archived_treatment_file, 0, 'plots', $schema);
+ok($parsed_treatment_file, "check that treatment upload file parses");
+
+# the trait column must be the treatment term created above
+is_deeply($parsed_treatment_file->{'variables'}, ['EXPERIMENT_TREATMENT:0000002'], "check treatment parsed from upload file");
+
+my %treatment_metadata = (
+    'archived_file' => $archived_treatment_file,
+    'archived_file_type' => 'spreadsheet phenotype file',
+    'operator' => 'janedoe',
+    'date' => $treatment_timestamp
+);
+
+my $store_treatments = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+    bcs_schema=>$schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>$parsed_treatment_file->{'units'},
+    trait_list=>$parsed_treatment_file->{'variables'},
+    values_hash=>$parsed_treatment_file->{'data'},
+    has_timestamps=>0,
+    metadata_hash=>\%treatment_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
+);
+
+my ($treatment_verified_warning, $treatment_verified_error) = $store_treatments->verify();
+ok(!$treatment_verified_error, "check that treatment upload verifies");
+
+my ($treatment_store_error, $treatment_store_success) = $store_treatments->store();
+ok(!$treatment_store_error, "check that treatment upload stores");
+
+# make sure both treatment levels made it in, not just the truthy one
+my $treatment_cvterm_id = $test_treatment->cvterm_id();
+my $treatment_value_q = "SELECT phenotype.value, count(*) FROM phenotype JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment_project.project_id = ? AND phenotype.cvalue_id = ? GROUP BY phenotype.value ORDER BY phenotype.value";
+my $treatment_value_h = $schema->storage->dbh()->prepare($treatment_value_q);
+$treatment_value_h->execute($kasese_trial_id, $treatment_cvterm_id);
+
+my %stored_treatment_values;
+while (my ($value, $count) = $treatment_value_h->fetchrow_array()) {
+    $stored_treatment_values{$value} = $count;
+}
+
+is_deeply(\%stored_treatment_values, {'0' => 346, '1' => 346}, "check stored treatment values");
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$kasese_trial_id.'/phenotypes?display=plots&group_by_treatments=1', "get phenotypes grouped by treatments for trial $kasese_trial_id");
+$response = decode_json $mech->content;
+@response = @{$response->{data}};
+
+my $treatment_cvterm = $schema->resultset('Cv::Cvterm')->find( { name => 'test treatment' } );
+my $treatment_id = $treatment_cvterm->cvterm_id();
+
+is_deeply([@response[0..3]], [[qq{<a href="/cvterm/$treatment_id/view">test treatment|EXPERIMENT_TREATMENT:0000002=0</a>},'<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','24.95','16.30','39.90','5.07','20.32%',252,'27.17%','<span class="glyphicon glyphicon-stats"></span>'],[qq{<a href="/cvterm/$treatment_id/view">test treatment|EXPERIMENT_TREATMENT:0000002=1</a>},'<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','25.08','16.30','35.40','5.06','20.18%',212,'38.73%','<span class="glyphicon glyphicon-stats"></span>'],[qq{<a href="/cvterm/$treatment_id/view">test treatment|EXPERIMENT_TREATMENT:0000002=0</a>},'<a href="/cvterm/70666/view">fresh root weight|CO_334:0000012</a>','5.74','0.04','30.50','5.30','92.45%',255,'26.30%','<span class="glyphicon glyphicon-stats"></span>'],[qq{<a href="/cvterm/$treatment_id/view">test treatment|EXPERIMENT_TREATMENT:0000002=1</a>},'<a href="/cvterm/70666/view">fresh root weight|CO_334:0000012</a>','6.12','0.04','38.76','5.45','89.02%',214,'38.15%','<span class="glyphicon glyphicon-stats"></span>']], "check phenotypes grouped by treatments");
 
 #$treatment_project->delete_field_layout();
 #$treatment_project->delete_project_entry();

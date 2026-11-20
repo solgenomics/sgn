@@ -24,9 +24,11 @@ module.exports = {
         path: path.resolve(__dirname, "build/"),
         publicPath: '/js',
         filename: '[name].min.js',
-        chunkFilename: `chunk.[chunkhash].js`,
-        library: ["jsMod","[name]"],
-        libraryTarget: "umd"
+	chunkFilename: `chunk.[chunkhash].js`,
+        library: {
+	    name: ["jsMod","[name]"],
+            type: "umd"
+	}
     },
     // Set up babel and JSAN processing
     module: {
@@ -59,15 +61,12 @@ module.exports = {
     // Chunks and Minimization settings
     optimization: {
         minimize: true,
-        namedChunks: true,
-        minimizer: [new TerserPlugin({
-            'sourceMap': true,
-            'parallel': 4,
-        })],
-        runtimeChunk: {
+	chunkIds: "deterministic",
+        minimizer: [new TerserPlugin({})],
+	runtimeChunk: {
             name: 'runtime'
         },
-        splitChunks: {
+	splitChunks: {
             cacheGroups: {
                 default: false,
                 shared: {

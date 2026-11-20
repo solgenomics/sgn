@@ -192,6 +192,12 @@ $propagation_type => undef
 $date => undef
 $logged_in_name => undef
 
+#specific to family page
+$family_id => undef
+$family_type => undef
+$family_name => undef
+$family_type_string => undef
+
 #Specific to dataset detail page
 $dataset_id => undef
 $dataset_name => undef
@@ -367,7 +373,7 @@ $is_dataset_public => 0
                                 <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, vector_related_genes => $vector_related_genes, number_of_insertions => $number_of_insertions &>
 % } #End related_transformation_info_section
 % if ($info_section_id eq 'control_transgenic_lines_section'){
-                                <& /transformation/control_transformants_section.mas, control_id => $control_id &>
+                                <& /transformation/control_transformants_section.mas, transformation_id => $transformation_id &>
 % } #End control_transgenic_lines_section
 % if ($info_section_id eq 'transformation_update_status_section'){
                                 <& /transformation/transformation_update_status_section.mas, identifier_id => $identifier_id, identifier_name => $identifier_name, material_id => $material_id, material_name => $material_name, updated_status_type => $updated_status_type, program_name => $program_name, stock_type_page => $stock_type_page, user_role => $user_role &>
@@ -566,6 +572,26 @@ $is_dataset_public => 0
 % if ($info_section_id eq 'intercross_section'){
                                 <& /breeders_toolbox/cross/intercross_file_info.mas, trial_id => $trial_id  &>
 %} #End intercross_section
+
+% if ($info_section_id eq 'family_parents_section'){
+                                <& /breeders_toolbox/cross/family_parents.mas, family_id => $family_id, family_type => $family_type  &>
+%} #End family_parents_section
+
+% if ($info_section_id eq 'crosses_in_family_section'){
+                                <& /breeders_toolbox/cross/crosses_in_family.mas, family_id => $family_id, family_name => $family_name, family_type_string => $family_type_string &>
+%} #End crosses_in_family_section
+
+% if ($info_section_id eq 'progenies_from_family_section'){
+                                <& /breeders_toolbox/cross/progenies_from_family.mas, family_id => $family_id &>
+%} #End progenies_from_family_section
+
+% if ($info_section_id eq 'family_delete_section'){
+                                <& /breeders_toolbox/cross/family_deletion.mas, family_id => $family_id &>
+%} #End family_deletion_section
+
+
+
+
 
 % if ($info_section_id eq 'progeny_search_section'){
                                 <& /search/cross/progeny_search_section.mas &>

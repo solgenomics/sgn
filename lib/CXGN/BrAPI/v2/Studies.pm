@@ -710,7 +710,14 @@ sub _search {
 			$folder_name = $_->{breeding_program_name};
 		}
 
-		my $trial_type = $_->{trial_type} ne 'misc_trial' ? $_->{trial_type} : $_->{trial_type_value};
+		# studyType is the human-readable project type. A trial with no project_type
+		# prop has both fields undef, so studyType stays undef (JSON null). A
+		# 'misc_trial' carries its user-entered label in trial_type_value; every
+		# other type uses the cvterm name directly.
+		my $trial_type;
+		if (defined $_->{trial_type}) {
+			$trial_type = $_->{trial_type} eq 'misc_trial' ? $_->{trial_type_value} : $_->{trial_type};
+		}
 
 		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
 			bcs_schema => $schema,

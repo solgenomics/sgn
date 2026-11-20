@@ -136,6 +136,19 @@ sub _search {
         %plant_parents = $self->_get_plants_plot_parent(\@plant_ids);
     }
     print STDERR "ObservationUnits call Checkpoint 3: ".DateTime->now()."\n";
+
+    # One external-reference query for the whole page instead of one per unit. An empty id list
+    # would drop the WHERE clause and read every stock's references, so it is skipped outright.
+    my @page_stock_ids = map { $_->{obsunit_stock_id} } @$data;
+    my $external_references_by_unit = @page_stock_ids
+        ? CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            table_name => 'stock',
+            table_id_key => 'stock_id',
+            id => \@page_stock_ids
+        })->search()
+        : {};
+
     foreach my $obs_unit (@$data){
 
         ## Formatting observations
@@ -264,15 +277,8 @@ sub _search {
 
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
-        #Get external references
-        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->bcs_schema,
-            table_name => 'stock',
-            table_id_key => 'stock_id',
-            id => qq|$obs_unit->{obsunit_stock_id}|
-        });
-        my $external_references = $references->search();
-        my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
+        #Get external references, already fetched for the whole page above
+        my $formatted_external_references = $external_references_by_unit->{$obs_unit->{obsunit_stock_id}} || [];
 
         if ($obs_unit->{family_stock_id}) {
             $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
@@ -289,7 +295,7 @@ sub _search {
         }
 
         push @data_window, {
-            externalReferences => @formatted_external_references,
+            externalReferences => $formatted_external_references,
             additionalInfo => $additional_info,
             germplasmDbId => $obs_unit->{germplasm_stock_id} ? qq|$obs_unit->{germplasm_stock_id}| : undef,
             germplasmName => $obs_unit->{germplasm_uniquename} ? qq|$obs_unit->{germplasm_uniquename}| : undef,
