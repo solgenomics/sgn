@@ -29,16 +29,26 @@
 
 
           <div class="col-12 col-md-3">
+
+
+
             <div class="git-version">
               <p>
-                <strong>Version</strong>
+
                 <br />
 % if($isGit == 0) {
+                <strong>Version</strong>
                 <span class="git-version-commit"><a href="https://github.com/solgenomics/sgn/commits/<% $commit %>"><% $commit %></a></span>&nbsp;
                 <span class="git-version-tag"><a href="https://github.com/solgenomics/sgn/commits/<% $tag %>"><% $tag %></a></span>
-% } else {
+% } elsif ($m->comp_exists('/VERSION.mas')) {
+            <strong>Version</strong>
             <& /VERSION.mas &>
 % }
+% elsif (defined( $ENV{VERSION} )) {
+   <strong>Version</strong>
+   <% $ENV{VERSION} %>
+% }
+
                 <br />
                 <span class="git-version-updated"><% $updated %></span>
 		<br /><br />
