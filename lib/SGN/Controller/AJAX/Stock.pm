@@ -1493,14 +1493,10 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
 	return;
     }
 
-<<<<<<< HEAD
+
     #if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
     if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "pedigrees")) {
 	$c->stash->{rest} = { error => "Log in is required, or insufficent privileges, for removing parents" };
-=======
-    if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
-	$c->stash->{rest} = { error => "Log in is required, or insufficient privileges, for removing parents" };
->>>>>>> master
 	return;
     }
 
