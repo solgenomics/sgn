@@ -8,10 +8,12 @@ use Data::Dumper;
 use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
+use CXGN::Pedigree::Upload;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use utf8;
 use JSON;
+use HTML::Entities qw(encode_entities);
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -31,41 +33,15 @@ has 'schema' => (
 sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $self = shift;
     my $c = shift;
-    my $session_id = $c->req->param("sgn_session_id");
-    my $user_id;
-    my $user_name;
-    my $user_role;
-
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload pedigrees!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else {
-        if (!$c->user()){
-            $c->stash->{rest} = {error=>'You must be logged in to upload pedigrees!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
-
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload pedigrees'};
-        $c->detach();
-    }
+    my $actor = CXGN::Pedigree::Upload->authorize($c);
+    return unless $actor;
+    my ($user_id, $user_name, $user_role) = @{$actor}{qw(id name role)};
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'pedigree_upload';
     my $upload = $c->req->upload('pedigrees_uploaded_file');
+    if (!$upload) { $c->stash->{rest} = {error => 'Select a pedigree file to upload.'}; return; }
     my $upload_tempfile  = $upload->tempname;
     my $upload_original_name  = $upload->filename();
 
@@ -109,7 +85,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
             $parse_errors = $parser->get_parse_errors();
             my $error_messages = $parse_errors->{'error_messages'};
             foreach my $error_string (@$error_messages){
-                $return_error .= $error_string."<br>";
+                $return_error .= encode_entities($error_string)."<br>";
             }
         }
         $c->stash->{rest} = {error_string => $return_error};
@@ -126,7 +102,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $pedigree_info = '';
     if ($pedigree_check) {
         foreach my $pedigree (@$pedigree_check){
-            $pedigree_info .= $pedigree."<br>";
+            $pedigree_info .= encode_entities($pedigree)."<br>";
         }
         $c->stash->{rest} = {error => $pedigree_info, pedigree_data => $pedigree_string };
     } else {
@@ -135,38 +111,24 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
 }
 
-sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
-    my $self = shift;
-    my $c = shift;
-    my $pedigree_data = $c->req->param('pedigree_data');
-    my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-
-    my $pedigree_hash = decode_json $pedigree_data;
-    my $file_pedigree_info = $pedigree_hash->{'pedigrees'};
-
-    my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ schema => $schema });
-
-    my $generated_pedigrees = $pedigrees->generate_pedigrees($file_pedigree_info);
-
-    my $add = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => $generated_pedigrees });
+sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0) {
+    my ($self, $c) = @_;
+    my $actor = CXGN::Pedigree::Upload->authorize($c);
+    return unless $actor;
     my $error;
-
-    my $return = $add->add_pedigrees($overwrite_pedigrees);
-
-    if (!$return){
-        $error = "The pedigrees were not stored";
-    }
-    if ($return->{error}){
-        $error = $return->{error};
-    }
-
-    if ($error){
-        $c->stash->{rest} = { error => $error };
-        $c->detach();
-    }
-    $c->stash->{rest} = { success => 1 };
+    eval {
+        my $rows = CXGN::Pedigree::Upload->pedigree_rows($c->req->param('pedigree_data'));
+        my $overwrite = CXGN::Pedigree::Parentage->overwrite_flag($c->req->param('overwrite_pedigrees'));
+        my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $actor->{id});
+        my $factory = CXGN::Pedigree::AddPedigrees->new(schema => $schema);
+        my $pedigrees = $factory->generate_pedigrees($rows);
+        my @source_rows = map {$_->{_row}} @$rows;
+        my $result = CXGN::Pedigree::AddPedigrees->new(schema => $schema, pedigrees => $pedigrees,
+            source_rows => \@source_rows)->add_pedigrees($overwrite);
+        die $result->{error} if $result->{error};
+    };
+    $error = $@;
+    $c->stash->{rest} = $error ? {error => "$error"} : {success => 1};
 }
 
 
@@ -185,16 +147,24 @@ sub get_full_pedigree_GET {
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->req->param('stock_id');
+    if (!defined($stock_id) || $stock_id !~ /^[1-9][0-9]*$/) {
+        $c->stash->{rest} = {error => 'A valid stock ID is required.'}; return;
+    }
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $root = eval {$schema->resultset('Stock::Stock')->find($stock_id)};
+    if (!$root) {$c->stash->{rest} = {error => 'The stock was not found.'}; return}
     my @queue = ($stock_id);
+    my %seen;
     my $nodes = [];
     while (@queue){
         my $node = pop @queue;
+        next if $seen{$node}++;
         my $relationships = _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $node);
+        next unless $relationships;
         if ($relationships->{parents}->{mother}){
             push @queue, $relationships->{parents}->{mother};
         }
@@ -231,7 +201,9 @@ sub get_relationships_POST {
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $nodes = [];
     while (@{$stock_ids}){
-        push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, (shift @{$stock_ids}));
+        my $node = _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, (shift @{$stock_ids}));
+        if (!$node) {$c->stash->{rest} = {error => 'A requested stock was not found.'}; return}
+        push @{$nodes}, $node;
     }
     $c->stash->{rest} = $nodes;
 }
@@ -242,7 +214,10 @@ sub _get_relationships {
     my $father_cvterm = shift;
     my $accession_cvterm = shift;
     my $stock_id = shift;
-    my $name = $schema->resultset("Stock::Stock")->find({stock_id=>$stock_id})->uniquename();
+    return unless defined($stock_id) && !ref($stock_id) && $stock_id =~ /^[1-9][0-9]*$/;
+    my $row = eval {$schema->resultset('Stock::Stock')->find({stock_id => $stock_id})};
+    return unless $row;
+    my $name = $row->uniquename;
     my $parents = _get_pedigree_parents($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $stock_id);
     my $children = _get_pedigree_children($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $stock_id);
     return {

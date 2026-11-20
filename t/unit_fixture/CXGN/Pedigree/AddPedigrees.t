@@ -43,7 +43,13 @@ ok($pedigree2->set_male_parent($male_parent2), "Set a male parent for a pedigree
 
 # unknown male parent
 #
-ok(my $pedigree3 = Bio::GeneticRelationships::Pedigree->new(name => "XG120251", cross_type => "open"),"Create pedigree object");
+# One requested pedigree per resolved accession: the open case needs its own
+# child rather than overwriting the earlier biparental case in the same batch.
+my $open_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id;
+my $open_child = $schema->resultset('Stock::Stock')->create({
+    name => 'pedigree_fixture_open', uniquename => 'pedigree_fixture_open', type_id => $open_type,
+});
+ok(my $pedigree3 = Bio::GeneticRelationships::Pedigree->new(name => 'pedigree_fixture_open', cross_type => 'open'), 'Create pedigree object');
 ok(my $female_parent3 = Bio::GeneticRelationships::Individual->new(name => 'XG120287'),"Create individual for pedigree");
 ok(my $male_parent3 = Bio::GeneticRelationships::Individual->new(name => 'XG120261'),"Create individual for pedigree");
 ok($pedigree3->set_female_parent($female_parent3), "Set a female parent for a pedigree");

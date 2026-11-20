@@ -27,6 +27,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -65,6 +66,7 @@ sub add_progeny {
 
     #add all progeny in a single transaction
     my $coderef = sub {
+        CXGN::Pedigree::Parentage->lock($chado_schema);
 
         my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
 
@@ -137,6 +139,7 @@ sub add_progeny {
                 });
             }
         }
+        CXGN::Pedigree::Parentage->assert_acyclic($chado_schema, \@added_stock_ids);
     };
 
     #try to add all crosses in a transaction

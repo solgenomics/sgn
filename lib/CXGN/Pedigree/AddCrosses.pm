@@ -32,6 +32,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 use Data::Dumper;
 use File::Basename qw | basename dirname|;
 use CXGN::UploadFile;
@@ -114,6 +115,7 @@ sub add_crosses {
 
     #add all crosses in a single transaction
     my $coderef = sub {
+        CXGN::Pedigree::Parentage->lock($chado_schema);
 
         #get cvterms for parents
         my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
@@ -344,6 +346,7 @@ sub add_crosses {
             print STDERR "CROSS IDENTIFIER =".Dumper($cross_identifier)."\n";
         }
 
+        CXGN::Pedigree::Parentage->assert_acyclic($chado_schema, \@added_stock_ids);
     };
 
     #try to add all crosses in a transaction
