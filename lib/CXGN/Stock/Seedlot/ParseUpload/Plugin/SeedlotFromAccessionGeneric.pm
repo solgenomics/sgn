@@ -106,9 +106,7 @@ sub _validate_with_plugin {
     });
 
     while (my $r = $rs->next) {
-        if ( $r->type->name ne 'seedlot' ) {
-            push @error_messages, "Seedlot name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
-        }
+        push @error_messages, "Seedlot name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
     }
 
     if (scalar(@accession_source_pairs) >=1) {
