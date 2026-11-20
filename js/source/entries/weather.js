@@ -32,7 +32,7 @@ let $;
 const API = '/ajax/weather';
 const KM_PER_MI = 1.609344;
 const COLORS = { tmax: '#eb6834', tmin: '#2a78d6', rain: '#2a78d6', et0: '#eb6834', gdd: '#1baf7a', dew: '#1baf7a', temp: '#eb6834' };
-const NET_NAMES = { airport: 'Airport', synop: 'National service', cocorahs: 'CoCoRaHS', ideam: 'IDEAM', inmet: 'INMET', ana: 'ANA', cemaden: 'CEMADEN' };
+const NET_NAMES = { local: 'Uploaded', airport: 'Airport', synop: 'National service', cocorahs: 'CoCoRaHS', ideam: 'IDEAM', inmet: 'INMET', ana: 'ANA', cemaden: 'CEMADEN' };
 const RAIN_NETS = ['synop', 'cocorahs', 'ideam', 'inmet', 'ana', 'cemaden'];
 const TEMP_NETS = ['airport', 'synop', 'inmet'];
 const STRESS_ROWS = [
@@ -49,7 +49,7 @@ const S = {
     tab: 'season', preset: '90', start: '', end: '', planting: '', plantingSet: false, trials: [], trialsAll: [],
     daily: null, dailyKey: '', seq: 0, cache: {}, autoPicked: false, skipped: [], silent: {},
     crop: '', p: Object.assign({}, DEFAULTS),
-    trialRows: null, years: null, locRows: null, locPick: {},
+    trialRows: null, years: null, locRows: null, locPick: {}, localStations: [],
     map: null, mapLayers: null,
 };
 const chartXY = (sel, pts, series, opt) => chartXYBase($, sel, pts, series, opt);
@@ -94,6 +94,7 @@ function autoCandidates() {
     const ok = s => s.ready && !(S.silent || {})[stationKey(s) + '|' + S.start + '|' + S.end];
     const list = [];
     const add = s => { if (s && !list.includes(s)) list.push(s); };
+    S.stations.filter(s => isOwnLocal(s) && ok(s)).forEach(add);    // the stations of the farm itself first
     S.stations.filter(s => measuresRain(s) && ok(s)).forEach(add);
     S.stations.filter(s => ok(s) && (s.network !== 'airport' || s.latest)).forEach(add);
     S.stations.filter(ok).forEach(add);
@@ -104,8 +105,9 @@ function hasObservations(r) {
     return (r.days || []).some(d => num(d.tmax) !== null || num(d.tmin) !== null || num(d.rain) !== null || num(d.rain_hours));
 }
 
-function measuresRain(s) { return s && RAIN_NETS.includes(s.network) && s.ready; }
-function measuresTemp(s) { return s && TEMP_NETS.includes(s.network) && s.ready && !s.rain_only; }
+// uploaded stations (network 'local') say what they measure; the others are known by their network
+function measuresRain(s) { return s && (s.network === 'local' ? !!s.has_rain : RAIN_NETS.includes(s.network)) && s.ready; }
+function measuresTemp(s) { return s && (s.network === 'local' ? !!s.has_temp : TEMP_NETS.includes(s.network)) && s.ready && !s.rain_only; }
 function plainStation(s) {
     return s ? { network: s.network, id: s.id, name: s.name, lat: s.lat, lon: s.lon, elev: s.elev, distance_km: s.distance_km, direction: s.direction, rain_only: s.rain_only, ready: s.ready, approx_position: s.approx_position, history_hours: s.history_hours } : null;
 }
@@ -117,6 +119,62 @@ function ago(epoch) {
     return m < 60 ? m + ' min ago' : m < 48 * 60 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' days ago';
 }
 function stationKey(st) { return st ? st.network + ':' + st.id : ''; }
+
+// ---------------------------------------------------------------- uploaded stations of the location (network 'local')
+// shown on their own, at once (no search needed); the public stations are found by the search of step 1
+const isOwnLocal = s => !!s && s.network === 'local' && S.loc && String(s.location_id) === String(S.loc.id);
+function kmBetween(lat1, lon1, lat2, lon2) {
+    const r = Math.PI / 180;
+    const a = Math.sin((lat2 - lat1) * r / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin((lon2 - lon1) * r / 2) ** 2;
+    return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+function toLocalStation(s) {
+    const d = hasCoords(S.loc) && num(s.lat) !== null && num(s.lon) !== null ? kmBetween(Number(S.loc.lat), Number(S.loc.lon), Number(s.lat), Number(s.lon)) : 0;
+    return Object.assign({}, s, {
+        network: 'local', ready: 1, rain_only: s.has_temp ? 0 : 1, rain_amounts: s.has_rain, distance_km: Math.round(d * 10) / 10, direction: '',
+        measures: [s.has_temp && 'temperature', s.has_rain && 'rain', s.has_radiation && 'radiation', s.has_rh && 'humidity', s.has_wind && 'wind'].filter(Boolean),
+    });
+}
+// the uploaded stations of the location join the list of stations (the search may not have run yet)
+function mergeLocal() {
+    S.localStations.forEach(s => {
+        const i = S.stations.findIndex(x => stationKey(x) === stationKey(s));
+        if (i < 0) S.stations.unshift(s);
+        else if (!S.stations[i].location_id) S.stations[i].location_id = s.location_id;
+    });
+}
+function loadLocalStations() {
+    const seq = S.seq;
+    return call('GET', API + '/local_stations', { location_id: S.loc.id }).then(r => {
+        if (seq !== S.seq) return;
+        S.localStations = (r.stations || []).filter(x => x.days).map(toLocalStation);
+        mergeLocal();
+        if (!S.station && S.localStations.length) {
+            S.station = S.localStations[0];
+            S.autoPicked = true;
+            renderChosen();
+            stationChanged();
+        }
+        else {
+            // the station saved for the location may be one of them: complete it (what it measures, dates)
+            const same = S.station && S.localStations.find(x => stationKey(x) === stationKey(S.station));
+            if (same) Object.assign(S.station, same);
+            renderChosen();
+        }
+    }).catch(() => {});
+}
+function localBlockHtml() {
+    const own = S.stations.filter(isOwnLocal);
+    const near = S.stations.filter(x => x.network === 'local' && !isOwnLocal(x));
+    const btn = x => '<button type="button" class="wx-seg' + (stationKey(x) === stationKey(S.station) ? ' on' : '') + '" data-choose="' + esc(stationKey(x)) + '" title="'
+        + esc((x.measures || []).join(', ') + (x.first ? ' · ' + x.first + ' to ' + x.last : '')) + '">' + esc(x.name)
+        + (isOwnLocal(x) ? '' : ' · ' + esc(x.location_name || '') + ' · ' + dist(x.distance_km)) + '<span class="wx-count">' + (x.days || 0) + ' d</span></button>';
+    let html = '<div class="wx-local-box"><div class="wx-small"><b>Stations of this location</b></div>';
+    html += own.length ? '<div class="wx-segs" style="margin:3px 0 0">' + own.map(btn).join('') + '</div>'
+        : '<div class="wx-small wx-muted">None uploaded' + (S.cfg.can_upload ? ': <a href="#" data-wx-upload-location-id="' + esc(S.loc.id) + '" data-wx-upload-location-name="' + esc(S.loc.name) + '">add a station of the farm</a>' : '') + '.</div>';
+    if (near.length) html += '<div class="wx-small" style="margin-top:4px"><b>Uploaded stations nearby</b></div><div class="wx-segs" style="margin:3px 0 0">' + near.map(btn).join('') + '</div>';
+    return html + '</div><div class="wx-small" style="margin:6px 0 2px"><b>Public stations</b></div>';
+}
 function storage(key, val) {
     try {
         if (val === undefined) return JSON.parse(window.localStorage.getItem('wx_' + key));
@@ -177,8 +235,8 @@ function selectLocation(id) {
         lon: l.station.temp_lon, elev: l.station.temp_elev, distance_km: l.station.temp_distance_km, ready: 1,
     } : null;
     S.compare = null;
-    S.autoPicked = false; S.skipped = []; S.silent = {};
-    if (S.station && !TEMP_NETS.includes(S.station.network)) S.station.rain_only = 1;
+    S.autoPicked = false; S.skipped = []; S.silent = {}; S.localStations = [];
+    if (S.station && !TEMP_NETS.includes(S.station.network) && S.station.network !== 'local') S.station.rain_only = 1;
     S.station && (S.station.ready = 1);
     S.range = num(l.station && l.station.range) || S.cfg.range;
     S.unit = (l.station && l.station.unit) || storage('unit') || S.cfg.unit;
@@ -199,6 +257,7 @@ function selectLocation(id) {
     $('#wx_station_table').empty();
     $('#wx_season, #wx_trials, #wx_years').empty();
     loadTrials();
+    loadLocalStations();
     if (!hasCoords(l)) {
         $('#wx_station_table').html(alertHtml('warning', 'This location has no latitude and longitude. Add them in Manage &rsaquo; <a href="/breeders/locations">Locations</a> to find the weather stations around it.'));
         drawMap();
@@ -222,8 +281,12 @@ function renderHead() {
         ? '<div class="wx-small wx-muted" style="text-align:right">Weather station of this location<br><b style="color:#111827">' + esc(l.station.station_id) + '</b> ' + esc(l.station.name)
           + '<br>saved' + (l.station.saved_by_name ? ' by ' + esc(l.station.saved_by_name) : '') + ' ' + esc(l.station.saved_date || '') + '</div>'
         : '<div class="wx-small wx-muted">No weather station saved yet</div>';
+    const upload = S.cfg.can_upload
+        ? '<div style="margin-top:6px;text-align:right"><button type="button" class="btn btn-default btn-xs" data-wx-upload-location-id="' + esc(l.id) + '" data-wx-upload-location-name="' + esc(l.name)
+          + '" title="Upload a CSV or Excel file with the observations of the weather station of this farm"><span class="glyphicon glyphicon-upload"></span> Upload local station data</button></div>'
+        : '';
     $('#wx_head').html('<div class="wx-head-main"><div><h3>' + esc(l.name) + (l.abbreviation ? ' <small>' + esc(l.abbreviation) + '</small>' : '')
-        + '</h3><div class="wx-head-meta">' + meta + '</div></div>' + linked + '</div>');
+        + '</h3><div class="wx-head-meta">' + meta + '</div></div><div>' + linked + upload + '</div></div>');
 }
 
 function loadTrials() {
@@ -238,6 +301,14 @@ function loadTrials() {
             + S.trials.map(t => '<option value="' + t.id + '">' + esc(t.name) + ' · ' + esc(t.planting) + ' → ' + esc(t.harvest || 'no harvest date') + '</option>').join(''))
             .prop('disabled', !S.trials.length)
             .attr('title', none ? none + ' trial(s) of this location have no planting date' : '');
+        // opened from a trial page (?trial_id=): use the season of that trial
+        if (S.pendingTrial) {
+            const t = S.trials.find(x => String(x.id) === String(S.pendingTrial));
+            const any = S.trialsAll.find(x => String(x.id) === String(S.pendingTrial));
+            S.pendingTrial = null;
+            if (t) { $('#wx_trial').val(t.id); useTrialSeason(t); }
+            else if (any) flash('info', esc(any.name) + ' has no planting date: choose the dates of its season in step 3.');
+        }
     }).catch(() => {});
 }
 
@@ -320,6 +391,7 @@ function findStations() {
         setFindBusy(false);
         findStatus(kind, html);
         S.stations = r.stations || [];
+        mergeLocal();
         if (S.station) {
             const same = S.stations.find(s => stationKey(s) === stationKey(S.station));
             if (same) S.station = Object.assign(same, { saved: S.station.saved });
@@ -372,7 +444,7 @@ function renderStations() {
     }
     const elev = num(S.loc.elev);
     const inmetOff = list.some(s => s.network === 'inmet' && !s.ready);
-    const rows = list.map(s => {
+    const rowOf = s => {
         const m = s.latest || {};
         const de = elev !== null && num(s.elev) !== null ? Math.round(s.elev - elev) : null;
         let now;
@@ -391,13 +463,16 @@ function renderStations() {
         else if (s.network === 'cocorahs') {
             now = '<span class="wx-muted">volunteer rain gauge, read every morning</span>';
         }
+        else if (s.network === 'local') {
+            now = '<span class="wx-muted">uploaded data · ' + esc(s.first || '') + ' to ' + esc(s.last || '') + ' (' + (s.days || 0) + ' days)</span>';
+        }
         else if (s.network === 'ideam') {
             now = '<span class="wx-muted">automatic rain gauge' + (s.last ? ' · last value ' + esc(String(s.last).slice(0, 16).replace('T', ' ')) : '') + '</span>';
         }
         else {
             now = s.ready ? '<span class="wx-muted">' + esc(s.status || '') + '</span>' : '<span class="wx-muted" title="Set inmet_api_token in the configuration">needs INMET token</span>';
         }
-        const measures = s.network === 'airport' ? 'temp · rain hours' + (s.country === 'US' ? ' · rain' : '') : s.network === 'inmet' ? 'temp · rain · radiation' : s.network === 'synop' ? 'temp · rain (when sent)' : 'rain';
+        const measures = s.network === 'local' ? (s.measures || []).join(' · ') : s.network === 'airport' ? 'temp · rain hours' + (s.country === 'US' ? ' · rain' : '') : s.network === 'inmet' ? 'temp · rain · radiation' : s.network === 'synop' ? 'temp · rain (when sent)' : 'rain';
         const on = stationKey(s) === stationKey(S.station);
         return '<tr class="' + (on ? 'on' : '') + '" data-skey="' + esc(stationKey(s)) + '">'
             + '<td>' + netLabel(s.network) + '</td>'
@@ -407,7 +482,12 @@ function renderStations() {
             + '<td>' + now + '</td>'
             + '<td class="n">' + (on ? '<span class="wx-pill wx-pill-st"><span class="glyphicon glyphicon-ok"></span> chosen</span>'
                 : '<button class="btn btn-default btn-xs" data-choose="' + esc(stationKey(s)) + '"' + (s.ready ? '' : ' disabled') + '>Choose</button>') + '</td></tr>';
-    }).join('');
+    };
+    // uploaded stations (of the location first) in their own section, then the public stations
+    const sep = t => '<tr class="wx-sep"><td colspan="6">' + t + '</td></tr>';
+    const up = list.filter(x => x.network === 'local').sort((a, b) => (isOwnLocal(b) - isOwnLocal(a)) || (a.distance_km - b.distance_km));
+    const pub = list.filter(x => x.network !== 'local');
+    const rows = (up.length ? sep('Uploaded stations') + up.map(rowOf).join('') + (pub.length ? sep('Public stations') : '') : '') + pub.map(rowOf).join('');
     $('#wx_station_table').html((inmetOff ? alertHtml('info', 'INMET stations are listed, but reading their data needs a free INMET token: ask INMET for one and set <code>inmet_api_token</code> in sgn_local.conf.') : '')
         + (list.some(s => s.approx_position) ? '<p class="wx-note">≈ CEMADEN does not publish the position of its gauges: the distance is to the centre of their municipality.</p>' : '')
         + '<div class="wx-table-wrap"><table class="table table-condensed table-hover wx-table"><thead><tr><th>Network</th><th>Station</th><th class="n">Distance</th><th class="n">Elevation (vs. location)</th><th>Now</th><th></th></tr></thead><tbody>'
@@ -510,6 +590,7 @@ function stationChanged() {
 // ---------------------------------------------------------------- step 2: chosen station
 // the data a station gives (from its network: no request needed)
 function dataTypes(x) {
+    if (x.network === 'local') return (x.measures && x.measures.length) ? x.measures : ['rain'];
     if (x.network === 'inmet') return ['temperature', 'rain', 'radiation', 'humidity', 'wind'];
     if (x.network === 'synop') return ['temperature', 'rain', 'humidity', 'wind'];
     if (x.network === 'airport') return x.country === 'US' ? ['temperature', 'rain', 'humidity', 'wind'] : ['temperature', 'humidity', 'wind'];
@@ -519,15 +600,16 @@ const isSilent = x => !!(S.silent || {})[stationKey(x) + '|' + S.start + '|' + S
 
 // drop-down of the stations found, nearest first; the readable one(s) with the most data types are highlighted
 function stationSelectHtml() {
-    const opts = S.stations.slice();
-    if (S.station && !opts.some(x => stationKey(x) === stationKey(S.station))) opts.unshift(S.station);
-    if (!opts.length) return '';
+    const opts = S.stations.filter(x => x.network !== 'local');
+    const pub = S.station && S.station.network !== 'local';
+    if (pub && !opts.some(x => stationKey(x) === stationKey(S.station))) opts.unshift(S.station);
+    if (!opts.length) return '<div class="wx-small wx-muted" style="margin-bottom:6px">' + (S.lastFind ? 'None within the range.' : 'Press Find stations (step 1).') + '</div>';
     const usable = opts.filter(x => x.ready && !isSilent(x));
     const most = usable.length ? Math.max(...usable.map(x => dataTypes(x).length)) : 0;
     const best = x => x.ready && !isSilent(x) && dataTypes(x).length === most && most > 1;
     const note = x => (!x.ready ? ' - not readable' : isSilent(x) ? ' - no data for these dates' : x.network === 'airport' && !x.latest ? ' - no recent report' : '');
     return '<select class="form-control input-sm" id="wx_station_select" style="width:100%;margin-bottom:6px" title="Nearest first. ✔ = the most types of data">'
-        + (S.station ? '' : '<option value="">Choose a weather station...</option>')
+        + (pub ? '' : '<option value="">' + (S.station ? 'Or choose a public station...' : 'Choose a weather station...') + '</option>')
         + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (best(x) ? ' style="font-weight:bold"' : '')
             + (stationKey(x) === stationKey(S.station) ? ' selected' : '') + (x.ready ? '' : ' disabled') + '>'
             + esc((best(x) ? '✔ ' : '') + dist(x.distance_km) + ' · ' + (NET_NAMES[x.network] || x.network) + ' ' + stationLabel(x)
@@ -538,7 +620,7 @@ function stationSelectHtml() {
 function renderChosen() {
     const s = S.station;
     if (!s) {
-        $('#wx_chosen').html(stationSelectHtml() + '<span class="wx-muted">' + (S.stations.length ? 'Choose a station above, in the list or on the map.' : 'Find the stations, then choose one in the list or on the map.') + '</span>');
+        $('#wx_chosen').html(localBlockHtml() + stationSelectHtml() + '<span class="wx-muted">' + (S.stations.length ? 'Choose a station above, in the list or on the map.' : 'Find the stations, then choose one in the list or on the map.') + '</span>');
         return;
     }
     const linkedKey = S.loc.station ? S.loc.station.network + ':' + S.loc.station.station_id : '';
@@ -568,7 +650,7 @@ function renderChosen() {
             + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (stationKey(x) === stationKey(S.tempStation) ? ' selected' : '') + '>' + esc((NET_NAMES[x.network] || x.network) + ' ' + x.id + ' · ' + x.name + ' · ' + dist(x.distance_km)) + '</option>').join('')
             + '</select></div>';
     }
-    $('#wx_chosen').html(stationSelectHtml() + '<b>' + netLabel(s.network) + ' ' + esc(s.id) + '</b>'
+    $('#wx_chosen').html(localBlockHtml() + stationSelectHtml() + '<b>' + netLabel(s.network) + ' ' + esc(s.network === 'local' ? '' : s.id) + '</b>'
         + '<div>' + esc(s.name) + '</div>'
         + '<div class="wx-small wx-muted">' + dist(s.distance_km) + (s.direction ? ' ' + esc(s.direction) : '') + (num(s.elev) !== null ? ' · ' + Math.round(s.elev) + ' m' : '') + '</div>'
         + (inRange ? '' : '<div class="wx-small" style="color:#92400e">Outside the current range</div>')
@@ -1381,7 +1463,7 @@ function compareCandidates() {
     // the 2 nearest of each network first (so every source is compared), then the nearest others
     const all = S.stations.filter(measuresRain);
     const pick = [];
-    RAIN_NETS.forEach(n => all.filter(s => s.network === n).slice(0, 2).forEach(s => pick.push(s)));
+    ['local'].concat(RAIN_NETS).forEach(n => all.filter(s => s.network === n).slice(0, 2).forEach(s => pick.push(s)));
     all.forEach(s => { if (pick.length < max && !pick.includes(s)) pick.push(s); });
     const rain = pick.slice(0, Math.max(max, pick.length)).sort((a, b) => a.distance_km - b.distance_km);
     // stations that measure rain but cannot be read here (INMET without token): shown so the user knows they exist
@@ -1409,7 +1491,7 @@ function loadCompare() {
         if (i >= S.compare.rows.length) return Promise.resolve();
         const row = S.compare.rows[i++];
         if (row.state !== 'loading') return next();
-        return getDaily(row.st).then(r => { row.state = 'ok'; row.r = r; })
+        return fetchDaily(row.st, S.start, S.end).then(r => { row.state = 'ok'; row.r = r; })
             .catch(e => { row.state = 'error'; row.error = e.message; })
             .then(() => { if (seq === S.seq && S.compare && S.compare.key === key) renderCompare(); return next(); });
     };
@@ -1536,6 +1618,21 @@ function renderParams() {
 // ---------------------------------------------------------------- events
 function bind() {
     $(document)
+        // the upload dialog (mason/breeders_toolbox/weather/upload_dialog.mas) stored or deleted a local station
+        .on('weather:uploaded', function (e, r) {
+            if (!S.loc) return;
+            if (r && r.deleted) {
+                const gone = 'local:' + String(r.deleted).toUpperCase();
+                if (S.station && stationKey(S.station).toUpperCase() === gone) S.station = null;
+                if (S.tempStation && stationKey(S.tempStation).toUpperCase() === gone) S.tempStation = null;
+                if (S.loc.station && (S.loc.station.network + ':' + S.loc.station.station_id).toUpperCase() === gone) { S.loc.station = null; renderHead(); renderLocations(); }
+            }
+            S.daily = null; S.dailyKey = ''; S.trialRows = null; S.years = null; S.locRows = null; S.compare = null;
+            S.stations = S.stations.filter(x => !isOwnLocal(x));
+            S.localStations = [];
+            loadLocalStations();
+            if (hasCoords(S.loc)) findStations();
+        })
         .on('input', '#wx_lsearch', function () { S.lsearch = $(this).val(); renderLocations(); })
         .on('change', '#wx_ltype', function () { S.ltype = $(this).val(); renderLocations(); })
         .on('click', '.wx-seg[data-lfilter]', function () { S.lfilter = $(this).data('lfilter'); renderLocations(); })
@@ -1667,6 +1764,8 @@ export function init() {
         return loadLocations();
     }).then(() => {
         const m = window.location.search.match(/[?&]location_id=(\d+)/);
+        const tm = window.location.search.match(/[?&]trial_id=(\d+)/);
+        if (m && tm) S.pendingTrial = tm[1];
         const first = (m && S.locations.find(l => String(l.id) === m[1])) || S.locations.find(l => l.station);
         if (first) selectLocation(first.id);
         else $('#wx_empty').show();

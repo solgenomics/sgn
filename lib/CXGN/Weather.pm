@@ -65,7 +65,7 @@ use Moose;
 use utf8;
 use LWP::UserAgent;
 use JSON;
-use Encode qw(decode);
+use Encode qw(decode encode);
 use Digest::MD5 qw(md5_hex);
 use File::Path qw(make_path);
 use File::Spec;
@@ -1096,8 +1096,9 @@ sub station_daily {
         my @t = gmtime($h->{time} + $off * 3600);
         my $date = sprintf('%04d-%02d-%02d', $t[5] + 1900, $t[4] + 1, $t[3]);
         next if $date lt $start || $date gt $end;
-        my $d = $day{$date} ||= { date => $date, n => 0, t => [], rh => [], wind => [], hourset => {} };
+        my $d = $day{$date} ||= { date => $date, n => 0, t => [], rh => [], wind => [], hourset => {}, hours_seen => {} };
         $d->{n}++;
+        $d->{hours_seen}{ floor($h->{time} / 3600) } = 1;
         push @{$d->{t}}, $h->{temp_c} if defined $h->{temp_c};
         $d->{tmax} = $h->{tmax_c} if defined $h->{tmax_c} && (!defined $d->{tmax} || $h->{tmax_c} > $d->{tmax});
         $d->{tmin} = $h->{tmin_c} if defined $h->{tmin_c} && (!defined $d->{tmin} || $h->{tmin_c} < $d->{tmin});
@@ -1132,7 +1133,9 @@ sub station_daily {
         my $rh = $mean->($d->{rh});
         my $wind = $mean->($d->{wind});
         my $rs = ($d->{rad_n} && $d->{rad_n} >= 10) ? $d->{rad} : undef;
-        my $complete = $d->{n} >= 16;    # enough hours to trust max/min
+        # enough of the day observed to trust max/min: 16 distinct hours, whatever the
+        # interval (a 10-minute station sends 16 records in under 3 hours)
+        my $complete = keys(%{$d->{hours_seen}}) >= 16;
         my $doy = _doy($date);
         my ($et0, $method);
         if ($complete && defined $rs && defined $rh && defined $wind) {
@@ -1183,7 +1186,16 @@ sub _ana_records {
     my $xml = $self->get_raw("$ANA/DadosHidrometeorologicos?codEstacao=$id&dataInicio=" . $fmt->($start) . '&dataFim=' . $fmt->($end),
         $recent ? 'archive_recent' : 'archive');
     if ($xml =~ m{<Error>\s*([^<]+)</Error>}i || $xml =~ m{<MensagemErro>\s*([^<]+)<}i) {
-        die "ANA: $1\n" if $1 !~ /^\s*$/;
+        # ANA answers in Portuguese (UTF-8): the page gets a standard English message, the log the original
+        my $msg = _utf8($1);
+        $msg =~ s/^\s+|\s+$//g;
+        if ($msg ne '') {
+            # "Sem dados para esta estação ... no período solicitado": no data is not an error, the
+            # station simply sent nothing for these dates (the page says so and may try another one)
+            return [] if $msg =~ /sem dados|nenhum dado|n\x{e3}o h\x{e1} dados/i;
+            warn "ANA error for station $id ($start to $end): " . encode('UTF-8', $msg) . "\n";
+            die "The ANA service could not give the data of station $id for these dates. Try again later or choose another station.\n";
+        }
     }
     my @rows;
     while ($xml =~ m{<DadosHidrometereologicos\b[^>]*>(.*?)</DadosHidrometereologicos>}gs) {

@@ -10,7 +10,9 @@ Weather for breeding. Research stations (Breedbase locations) on the left;
 for the chosen one: 1 the distance range (km or miles, default from the configuration),
 2 the weather station (real observing stations within the range: airports,
 national weather service (SYNOP) stations, CoCoRaHS, IDEAM, INMET, ANA and
-CEMADEN rain gauges; a rain gauge is paired with a station for temperature),
+CEMADEN rain gauges, and the stations of research farms whose data users
+upload as CSV / Excel: /breeders_toolbox/weather/upload_dialog.mas; a rain
+gauge is paired with a station for temperature),
 3 the season (dates, crop, planting date or the season of a trial). Tabs:
 Season (stress by crop stage, stress calendar, aligned charts, tables),
 Trials (environmental covariates of each trial), Past years (was the season
@@ -60,6 +62,9 @@ Chris Simoes
 .wx-pill-none { background: #eef0f3; color: #4b5563; }
 .wx-pill-warn { background: #fef3c7; color: #92400e; }
 .wx-net { display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.wx-net-local { background: #1d6fa5; color: #fff; }
+.wx-local-box { border: 1px solid #cfe2f1; background: #f2f8fc; border-radius: 8px; padding: 6px 8px; margin-bottom: 6px; }
+.wx-table tr.wx-sep td { background: #f2f8fc; color: #164e74; font-weight: 600; font-size: 12px; }
 .wx-net-airport { background: #e0f2fe; color: #075985; }
 .wx-net-inmet { background: #dcfce7; color: #14532d; }
 .wx-net-ana { background: #ede9fe; color: #5b21b6; }
@@ -204,7 +209,7 @@ Chris Simoes
     <div>
       <h2><span class="glyphicon glyphicon-grain"></span> Weather for breeding</h2>
       <p>Characterize the environment of your trials with the observations of real weather stations: water deficit, heat and frost by crop stage, the environmental covariates of each trial, how the season compares with past years and with your other locations.</p>
-      <p class="wx-hero-src">Observed data only (no model, no forecast). Free sources: national weather services (WMO SYNOP via OGIMET), airports (Iowa Environmental Mesonet), CoCoRaHS (USA), IDEAM (Colombia), INMET, ANA and CEMADEN (Brazil).</p>
+      <p class="wx-hero-src">Observed data only (no model, no forecast). Free sources: national weather services (WMO SYNOP via OGIMET), airports (Iowa Environmental Mesonet), CoCoRaHS (USA), IDEAM (Colombia), INMET, ANA and CEMADEN (Brazil), plus the data of your own farm stations (upload a CSV / Excel file).</p>
     </div>
   </div>
 
@@ -420,6 +425,8 @@ Chris Simoes
     </div>
   </div>
 </div>
+
+<& /breeders_toolbox/weather/upload_dialog.mas, allow_file_locations => 1 &>
 
 <script>
   jQuery(function() { window.jsMod['weather'].init(); });

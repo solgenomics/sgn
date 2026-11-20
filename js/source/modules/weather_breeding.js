@@ -176,9 +176,12 @@ export function summarize(days, rainReported, p) {
     const dry = rainReported ? longestDry(days, p.dry) : null;
     const withData = days.filter(d => !d.missing && d.complete).length;
     const gddDays = days.filter(d => d.gdd !== null && d.gdd !== undefined);
-    // a water balance needs rain on (almost) every day: missing days are not dry days
+    // a water balance needs rain and ET0 on (almost) every day: missing days are neither dry
+    // nor without evaporation. It is the sum over the days that have both.
     const rainCoverage = days.length ? rainv.length / days.length : 0;
-    const balanceOk = rainReported && et0v.length && rainCoverage >= 0.8;
+    const et0Coverage = days.length ? et0v.length / days.length : 0;
+    const both = days.filter(d => num(d.rain) !== null && num(d.et0) !== null);
+    const balanceOk = rainReported && rainCoverage >= 0.8 && et0Coverage >= 0.8 && both.length > 0;
     return {
         days: days.length,
         withData,
@@ -190,7 +193,10 @@ export function summarize(days, rainReported, p) {
         dry,
         rainHours: sum(vals('rain_hours')),
         et0: et0v.length ? sum(et0v) : null,
-        balance: balanceOk ? sum(rainv) - sum(et0v) : null,
+        // rain and ET0 of the days that have both (for the balance and the rain / ET0 ratio)
+        rainBoth: balanceOk ? sum(both.map(d => num(d.rain))) : null,
+        et0Both: balanceOk ? sum(both.map(d => num(d.et0))) : null,
+        balance: balanceOk ? sum(both.map(d => num(d.rain))) - sum(both.map(d => num(d.et0))) : null,
         rainCoverage,
         tmax: mean(tx), tmin: mean(tn),
         absMax: tx.length ? Math.max(...tx) : null, absMin: tn.length ? Math.min(...tn) : null,
@@ -227,17 +233,20 @@ export function cropStages(days, rainReported, p, cropKey) {
 // stress found in a stage (or a season), most serious first
 export function stageIssues(s, p) {
     const out = [];
-    if (s.rain !== null && s.et0 && s.rainCoverage >= 0.8) {
-        const ratio = s.rain / s.et0;
-        if (ratio < 0.5) out.push({ level: 'bad', kind: 'water', text: 'water deficit', detail: 'rain ' + s.rain.toFixed(0) + ' mm vs ET0 ' + s.et0.toFixed(0) + ' mm' });
-        else if (ratio < 0.8) out.push({ level: 'warn', kind: 'water', text: 'some water deficit', detail: 'rain ' + s.rain.toFixed(0) + ' mm vs ET0 ' + s.et0.toFixed(0) + ' mm' });
+    // only with rain and ET0 on >= 80% of the days, compared over the days that have both
+    const paired = s.balance !== null && s.et0Both > 0;
+    if (paired) {
+        const ratio = s.rainBoth / s.et0Both;
+        const detail = 'rain ' + s.rainBoth.toFixed(0) + ' mm vs ET0 ' + s.et0Both.toFixed(0) + ' mm';
+        if (ratio < 0.5) out.push({ level: 'bad', kind: 'water', text: 'water deficit', detail });
+        else if (ratio < 0.8) out.push({ level: 'warn', kind: 'water', text: 'some water deficit', detail });
     }
     if (s.dry && s.dry.days >= p.dry) out.push({ level: s.dry.days >= p.dry * 2 ? 'bad' : 'warn', kind: 'dry', text: 'dry spell of ' + s.dry.days + ' days', detail: s.dry.start + ' to ' + s.dry.end });
     // getters: the temperatures are written in the unit shown at the time they are read
     if (s.heat) out.push({ level: s.heat >= 3 ? 'bad' : 'warn', kind: 'heat', text: s.heat + ' heat-stress day' + (s.heat > 1 ? 's' : ''), get detail() { return 'max ≥ ' + fmtTh(p.heat) + ' (highest ' + fmtT(s.absMax) + ')'; } });
     if (s.frost) out.push({ level: 'bad', kind: 'frost', text: s.frost + ' frost day' + (s.frost > 1 ? 's' : ''), get detail() { return 'min ≤ ' + fmtTh(p.frost) + ' (lowest ' + fmtT(s.absMin) + ')'; } });
     if (s.heavy) out.push({ level: 'warn', kind: 'wet', text: s.heavy + ' day' + (s.heavy > 1 ? 's' : '') + ' of heavy rain', detail: '≥ ' + p.heavy + ' mm (max ' + (s.maxRain !== null ? s.maxRain.toFixed(0) : '?') + ' mm): waterlogging, lodging, disease' });
-    if (s.rain !== null && s.et0 && s.rainCoverage >= 0.8 && s.rain / s.et0 > 2 && s.rain > 100) out.push({ level: 'warn', kind: 'wet', text: 'very wet', detail: 'rain ' + s.rain.toFixed(0) + ' mm, twice the ET0' });
+    if (paired && s.rainBoth / s.et0Both > 2 && s.rainBoth > 100) out.push({ level: 'warn', kind: 'wet', text: 'very wet', detail: 'rain ' + s.rainBoth.toFixed(0) + ' mm, twice the ET0' });
     const order = { bad: 0, warn: 1 };
     return out.sort((a, b) => order[a.level] - order[b.level]);
 }

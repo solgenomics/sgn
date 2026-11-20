@@ -1,0 +1,411 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/weather/upload_dialog.mas - local weather stations: add stations, load their data
+
+=head1 DESCRIPTION
+
+Dialog for the weather stations of research farms (the location must exist in
+the database). Two tabs, each with its own template and a "Check file" step
+before anything is stored:
+
+  Load data      observations of an existing station (curators and submitters)
+  Add stations   new stations of the location, or new position / description of existing ones (curators)
+
+Used by the Weather page and by the Weather section of the trial page. Include
+it once per page; any element with data-wx-upload-location-id (and
+data-wx-upload-location-name) opens it for that location. With
+allow_file_locations => 1 the user may also take the locations from the
+location_name column of the file. After something is stored the event
+'weather:uploaded' is triggered on document with the server answer.
+
+Endpoints: /ajax/weather/upload, /ajax/weather/upload_stations,
+/ajax/weather/upload_template, /ajax/weather/local_stations,
+/ajax/weather/delete_local_station.
+
+=head1 AUTHOR
+
+Chris Simoes
+
+=cut
+
+</%doc>
+
+<%args>
+$allow_file_locations => 0
+</%args>
+
+<%init>
+my $resolution = $c->config->{weather_upload_resolution} // 'daily';
+$resolution = $resolution eq 'subdaily' ? 'subdaily' : 'daily';
+</%init>
+
+<style>
+#wx_upload_dialog .modal-content { border: 0; border-radius: 10px; overflow: hidden; }
+#wx_upload_dialog .modal-header { background: linear-gradient(120deg, #164e74 0%, #1d6fa5 60%, #3d8fc4 100%); color: #fff; border: 0; padding: 16px 20px; }
+#wx_upload_dialog .modal-header .close { color: #fff; opacity: .85; text-shadow: none; }
+#wx_upload_dialog .modal-title { font-weight: 600; }
+#wx_upload_dialog .wx-up-sub { margin: 4px 0 0; font-size: 13px; opacity: .9; }
+#wx_upload_dialog .modal-body { padding: 16px 20px; background: #f7f9fb; }
+#wx_upload_dialog .wx-up-loc { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+#wx_upload_dialog .wx-up-loc-name { font-size: 15px; font-weight: 600; color: #164e74; }
+#wx_upload_dialog .nav-tabs { border-bottom: 2px solid #1d6fa5; }
+#wx_upload_dialog .nav-tabs > li > a { color: #1d6fa5; font-weight: 600; border-radius: 6px 6px 0 0; }
+#wx_upload_dialog .nav-tabs > li.active > a, #wx_upload_dialog .nav-tabs > li.active > a:hover, #wx_upload_dialog .nav-tabs > li.active > a:focus { background: #1d6fa5; color: #fff; border-color: #1d6fa5; }
+#wx_upload_dialog .wx-up-pane { background: #fff; border: 1px solid #dfe3e8; border-top: 0; border-radius: 0 0 8px 8px; padding: 14px 16px; }
+#wx_upload_dialog .wx-up-step { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+#wx_upload_dialog .wx-up-step:last-of-type { border-bottom: 0; }
+#wx_upload_dialog .wx-up-n { flex: 0 0 28px; height: 28px; border-radius: 50%; background: #1d6fa5; color: #fff; font-weight: 700; text-align: center; line-height: 28px; }
+#wx_upload_dialog .wx-up-step.done .wx-up-n { background: #2b7a4b; }
+#wx_upload_dialog .wx-up-body { flex: 1; min-width: 0; }
+#wx_upload_dialog .wx-up-t { font-weight: 600; margin-bottom: 4px; }
+#wx_upload_dialog .wx-up-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+#wx_upload_dialog .wx-up-cols { font-size: 12px; margin: 6px 0 0; }
+#wx_upload_dialog .wx-up-cols td { padding: 1px 10px 1px 0; vertical-align: top; }
+#wx_upload_dialog .wx-up-cols code { white-space: nowrap; }
+#wx_upload_dialog .wx-up-msg { margin-top: 10px; }
+#wx_upload_dialog .wx-up-msg ul { margin: 4px 0 0; padding-left: 18px; max-height: 220px; overflow-y: auto; }
+#wx_upload_dialog .wx-up-msg table { background: #fff; margin: 6px 0 0; font-size: 12px; }
+#wx_upload_dialog .wx-up-list { background: #fff; border: 1px solid #dfe3e8; border-radius: 8px; padding: 6px 10px; margin-top: 6px; }
+#wx_upload_dialog .wx-up-list table { margin: 0; }
+#wx_upload_dialog .wx-up-list td, #wx_upload_dialog .wx-up-list th { font-size: 12px; }
+#wx_upload_dialog .wx-up-h { margin: 16px 0 0; font-weight: 600; color: #164e74; }
+</style>
+
+<div class="modal fade" id="wx_upload_dialog" tabindex="-1" role="dialog" aria-labelledby="wx_upload_title">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="wx_upload_title"><span class="glyphicon glyphicon-cloud-upload"></span> Local weather stations</h4>
+        <p class="wx-up-sub">Observations of the weather stations of your research farms. They are stored in Breedbase and shown on the Weather page next to the public stations.</p>
+      </div>
+      <div class="modal-body">
+        <div class="wx-up-loc">
+          <span class="glyphicon glyphicon-map-marker" style="color:#1d6fa5"></span>
+          <span class="wx-up-loc-name" id="wx_up_location_label"></span>
+% if ($allow_file_locations) {
+          <label class="checkbox-inline small" style="margin-left:auto"><input type="checkbox" id="wx_up_file_locations" /> locations from the <code>location_name</code> column (several locations in one file)</label>
+% }
+        </div>
+
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="active"><a href="#" data-wx-up-tab="data"><span class="glyphicon glyphicon-tint"></span> Load data</a></li>
+          <li id="wx_up_tab_stations_li" style="display:none"><a href="#" data-wx-up-tab="stations"><span class="glyphicon glyphicon-plus"></span> Add stations</a></li>
+        </ul>
+
+        <!-- ============================================================ load data -->
+        <div class="wx-up-pane" id="wx_up_pane_data">
+          <div class="wx-up-step" id="wx_up_s1">
+            <div class="wx-up-n">1</div>
+            <div class="wx-up-body">
+              <div class="wx-up-t">Station</div>
+              <select class="form-control input-sm" id="wx_up_station_select"></select>
+              <div class="help-block small" id="wx_up_station_help" style="margin-bottom:0"></div>
+            </div>
+          </div>
+          <div class="wx-up-step">
+            <div class="wx-up-n">2</div>
+            <div class="wx-up-body">
+              <div class="wx-up-t">Template</div>
+              <div class="wx-up-actions">
+                <button type="button" class="btn btn-primary btn-sm wx-up-template" data-kind="data" data-res="daily"><span class="glyphicon glyphicon-download-alt"></span> Data template<% $resolution eq 'subdaily' ? ' (daily)' : '' %></button>
+% if ($resolution eq 'subdaily') {
+                <button type="button" class="btn btn-primary btn-sm wx-up-template" data-kind="data" data-res="subdaily"><span class="glyphicon glyphicon-download-alt"></span> Data template (hourly / 15-min)</button>
+% }
+              </div>
+              <details style="margin-top:6px">
+                <summary class="small"><b>Columns and units</b></summary>
+                <table class="wx-up-cols">
+                  <tr><td><code>location_name</code> <span class="label label-primary">required</span></td><td>a location that exists in Breedbase (filled in the template)</td></tr>
+                  <tr><td><code>station_name</code> <span class="label label-primary">required</span></td><td>an existing station: the one of step 1 (filled in the template)</td></tr>
+                  <tr><td><code>date</code> <span class="label label-primary">required</span></td><td>YYYY-MM-DD</td></tr>
+% if ($resolution eq 'subdaily') {
+                  <tr><td><code>time</code></td><td>HH:MM, local time of the station (hourly / 15-minute records)</td></tr>
+                  <tr><td><code>temp</code></td><td>air temperature of the record, &deg;C</td></tr>
+% }
+                  <tr><td><code>tmax</code>, <code>tmin</code>, <code>tmean</code></td><td>air temperature of the day, &deg;C</td></tr>
+                  <tr><td><code>rain_mm</code></td><td>rain, mm</td></tr>
+                  <tr><td><code>rh</code></td><td>mean relative humidity, %</td></tr>
+                  <tr><td><code>wind_ms</code></td><td>mean wind speed at 2 m, m/s</td></tr>
+                  <tr><td><code>radiation_mj</code> / <code>radiation_wm2</code></td><td>solar radiation of the day, MJ/m&sup2; / mean irradiance, W/m&sup2;</td></tr>
+                </table>
+                <p class="small text-muted" style="margin:6px 0 0">Leave a cell empty when a value was not measured; only the columns you have are needed (rain alone is fine).
+% if ($resolution eq 'subdaily') {
+                  Records are summarized per day; a day with less than 80% of its records is left empty.
+% } else {
+                  One row per day: summarize hourly records per day first.
+% }
+                </p>
+              </details>
+            </div>
+          </div>
+          <div class="wx-up-step">
+            <div class="wx-up-n">3</div>
+            <div class="wx-up-body">
+              <div class="wx-up-t">File <span class="small text-muted" style="font-weight:normal">CSV, XLS or XLSX</span></div>
+              <input type="file" id="wx_up_file" accept=".csv,.xlsx,.xls" />
+            </div>
+          </div>
+          <div class="wx-up-step" id="wx_up_s4">
+            <div class="wx-up-n">4</div>
+            <div class="wx-up-body">
+              <div class="wx-up-t">Check, then load</div>
+              <div class="wx-up-actions">
+                <button type="button" class="btn btn-info btn-sm" id="wx_up_check"><span class="glyphicon glyphicon-check"></span> Check file</button>
+                <button type="button" class="btn btn-primary btn-sm" id="wx_up_submit" disabled><span class="glyphicon glyphicon-upload"></span> Load data</button>
+              </div>
+              <div class="wx-up-msg" id="wx_up_msg"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ add stations (curators) -->
+        <div class="wx-up-pane" id="wx_up_pane_stations" style="display:none">
+          <div class="wx-up-step">
+            <div class="wx-up-n">1</div>
+            <div class="wx-up-body">
+              <div class="wx-up-t">Stations template</div>
+              <button type="button" class="btn btn-primary btn-sm wx-up-template" data-kind="stations"><span class="glyphicon glyphicon-download-alt"></span> Stations template</button>
+              <table class="wx-up-cols">
+                <tr><td><code>location_name</code> <span class="label label-primary">required</span></td><td>a location that exists in Breedbase (filled in the template)</td></tr>
+                <tr><td><code>station_name</code> <span class="label label-primary">required</span></td><td>unique in the location, e.g. "Farm station", "Rain gauge field 3"</td></tr>
+                <tr><td><code>station_latitude</code>, <code>station_longitude</code> <span class="label label-primary">required</span></td><td>position of the station, decimal degrees (e.g. -22.70123)</td></tr>
+                <tr><td><code>station_elevation</code> <span class="label label-primary">required</span></td><td>metres above sea level</td></tr>
+                <tr><td><code>description</code> <span class="label label-primary">required</span></td><td>model, what it measures, where it is</td></tr>
+              </table>
+              <p class="small text-muted" style="margin:6px 0 0">A station already there (same location and name) gets the position and description of the file.</p>
+            </div>
+          </div>
+          <div class="wx-up-step">
+            <div class="wx-up-n">2</div>
+            <div class="wx-up-body">
+              <div class="wx-up-t">File <span class="small text-muted" style="font-weight:normal">CSV, XLS or XLSX</span></div>
+              <input type="file" id="wx_up_st_file" accept=".csv,.xlsx,.xls" />
+            </div>
+          </div>
+          <div class="wx-up-step">
+            <div class="wx-up-n">3</div>
+            <div class="wx-up-body">
+              <div class="wx-up-t">Check, then add</div>
+              <div class="wx-up-actions">
+                <button type="button" class="btn btn-info btn-sm" id="wx_up_st_check"><span class="glyphicon glyphicon-check"></span> Check file</button>
+                <button type="button" class="btn btn-primary btn-sm" id="wx_up_st_submit" disabled><span class="glyphicon glyphicon-plus"></span> Add stations</button>
+              </div>
+              <div class="wx-up-msg" id="wx_up_st_msg"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wx-up-h"><span class="glyphicon glyphicon-list"></span> Stations of <span id="wx_up_loc_name2"></span></div>
+        <div id="wx_up_list" class="wx-up-list"><span class="text-muted small">Loading...</span></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(function ($) {
+  var cur = { id: null, name: '', canCreate: false, stations: [] };
+  var esc = function (s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); };
+  var errMsg = function (x) { return (x && x.responseJSON && x.responseJSON.error) || (x && x.statusText) || 'The request failed.'; };
+  var list = function (items) { return items && items.length ? '<ul>' + items.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul>' : ''; };
+  var busy = function (msg) { return '<div class="alert alert-info"><span class="glyphicon glyphicon-refresh"></span> ' + esc(msg) + '</div>'; };
+  var fileLocations = function () { return $('#wx_up_file_locations').is(':checked'); };
+
+  function showTab(tab) {
+    $('#wx_upload_dialog .nav-tabs [data-wx-up-tab]').each(function () { $(this).parent().toggleClass('active', $(this).data('wx-up-tab') === tab); });
+    $('#wx_up_pane_data').toggle(tab === 'data');
+    $('#wx_up_pane_stations').toggle(tab === 'stations');
+  }
+
+  // ---------------------------------------------------------------- stations of the location
+  function stationChanged() {
+    $('#wx_up_s1').toggleClass('done', !!$('#wx_up_station_select').val());
+    $('#wx_up_station_help').text($('#wx_up_station_select').val() ? 'New days are added; days already stored are replaced.' : '');
+    resetCheck();
+  }
+  function fillStations() {
+    var prev = $('#wx_up_station_select').val();
+    var st = cur.stations;
+    if (!st.length) {
+      $('#wx_up_station_select').html('<option value="">No station yet</option>').prop('disabled', true);
+      $('#wx_up_station_help').html('<span class="text-warning">' + esc(cur.name) + ' has no weather station yet. '
+        + (cur.canCreate ? 'Add it first in the <a href="#" data-wx-up-tab="stations">Add stations</a> tab.' : 'Ask a curator to add it.') + '</span>');
+      $('#wx_up_s1').removeClass('done');
+      return;
+    }
+    $('#wx_up_station_select').html(st.map(function (s) {
+      return '<option value="' + esc(s.name) + '">' + esc(s.name) + (s.days ? ' (' + s.days + ' days, ' + esc(s.first) + ' to ' + esc(s.last) + ')' : ' (no data yet)') + '</option>';
+    }).join('')).prop('disabled', false);
+    if (prev && st.some(function (s) { return s.name === prev; })) $('#wx_up_station_select').val(prev);
+    stationChanged();
+  }
+
+  function loadList() {
+    $('#wx_up_list').html('<span class="text-muted small">Loading...</span>');
+    $.getJSON('/ajax/weather/local_stations', { location_id: cur.id }).done(function (r) {
+      cur.stations = r.stations || [];
+      cur.canCreate = !!r.can_create;
+      $('#wx_up_tab_stations_li').toggle(cur.canCreate);
+      fillStations();
+      if (!cur.stations.length) { $('#wx_up_list').html('<span class="text-muted small">None yet.</span>'); return; }
+      var measures = function (s) {
+        return [s.has_temp ? 'temperature' : '', s.has_rain ? 'rain' : '', s.has_rh ? 'humidity' : '', s.has_wind ? 'wind' : '', s.has_radiation ? 'radiation' : '']
+          .filter(Boolean).join(', ') || '–';
+      };
+      $('#wx_up_list').html('<table class="table table-condensed"><thead><tr><th>Station</th><th>Data</th><th>From</th><th>To</th><th>Days</th><th>Last upload</th><th></th></tr></thead><tbody>'
+        + cur.stations.map(function (s) {
+          return '<tr><td><b>' + esc(s.name) + '</b></td><td>' + esc(measures(s)) + '</td><td>' + esc(s.first || '–') + '</td><td>' + esc(s.last || '–') + '</td><td>' + s.days + '</td>'
+            + '<td>' + esc(s.last_upload || '–') + (s.uploaded_by ? '<br><span class="text-muted">station by ' + esc(s.uploaded_by) + '</span>' : '') + '</td>'
+            + '<td>' + (s.can_delete ? '<button type="button" class="btn btn-link btn-xs text-danger" title="Delete the station and its data" data-wx-up-delete="' + esc(s.id) + '" data-name="' + esc(s.name) + '"><span class="glyphicon glyphicon-trash"></span></button>' : '') + '</td></tr>';
+        }).join('') + '</tbody></table>');
+    }).fail(function (x) { $('#wx_up_list').html('<span class="text-danger small">' + esc(errMsg(x)) + '</span>'); });
+  }
+
+  function open(id, name) {
+    cur = { id: id, name: name || '', canCreate: false, stations: [] };
+    $('#wx_up_location_label').text(cur.name);
+    $('#wx_up_loc_name2').text(cur.name);
+    $('#wx_up_file_locations').prop('checked', false);
+    $('#wx_up_station_select').html('<option value="">Loading...</option>');
+    $('#wx_up_file, #wx_up_st_file').val('');
+    $('#wx_up_msg, #wx_up_st_msg').empty();
+    $('#wx_up_submit, #wx_up_st_submit').prop('disabled', true);
+    showTab('data');
+    $('#wx_upload_dialog').modal('show');
+    loadList();
+  }
+
+  // ---------------------------------------------------------------- load data: check, then load
+  function resetCheck() { $('#wx_up_submit').prop('disabled', true); $('#wx_up_s4').removeClass('done'); }
+  function dataForm(check) {
+    var file = $('#wx_up_file')[0].files[0];
+    if (!file) { $('#wx_up_msg').html('<div class="alert alert-warning">Choose a file (step 3).</div>'); return null; }
+    if (!fileLocations() && !$('#wx_up_station_select').val()) { $('#wx_up_msg').html('<div class="alert alert-warning">Choose a station (step 1).</div>'); return null; }
+    var fd = new FormData();
+    fd.append('weather_file', file);
+    if (!fileLocations()) fd.append('location_id', cur.id);
+    if (!fileLocations()) fd.append('station_name', $('#wx_up_station_select').val() || '');
+    if (check) fd.append('check_only', 1);
+    return fd;
+  }
+  function post(url, fd) { return $.ajax({ url: url, type: 'POST', data: fd, processData: false, contentType: false, dataType: 'json' }); }
+  function errorsHtml(r) { return '<div class="alert alert-danger"><b>' + esc(r.error) + '</b>' + list(r.errors) + list(r.warnings) + '</div>'; }
+
+  $('#wx_up_check').on('click', function () {
+    var fd = dataForm(true);
+    if (!fd) return;
+    resetCheck();
+    var $b = $(this).prop('disabled', true);
+    $('#wx_up_msg').html(busy('Checking the file...'));
+    post('/ajax/weather/upload', fd).done(function (r) {
+      if (r.error) { $('#wx_up_msg').html(errorsHtml(r)); return; }
+      var rows = (r.stations || []).map(function (s) {
+        return '<tr><td>' + esc(s.name) + '</td><td>' + esc(s.location_name) + '</td><td>' + esc(s.first) + ' to ' + esc(s.last) + '</td><td class="text-right">' + s.days + '</td>'
+          + '<td class="text-right text-success">' + s.new_days + '</td><td class="text-right' + (s.replaced_days ? ' text-warning' : '') + '">' + s.replaced_days + '</td></tr>';
+      }).join('');
+      $('#wx_up_msg').html('<div class="alert alert-success"><span class="glyphicon glyphicon-ok"></span> <b>The file is correct</b> (' + r.rows + ' rows' + (r.resolution === 'subdaily' ? ', summarized per day' : '')
+        + '). Nothing is stored yet: press <b>Load data</b>.'
+        + '<table class="table table-condensed table-bordered"><thead><tr><th>Station</th><th>Location</th><th>Dates</th><th class="text-right">Days</th><th class="text-right">New</th><th class="text-right">Replaced</th></tr></thead><tbody>'
+        + rows + '</tbody></table>' + list(r.warnings) + '</div>');
+      $('#wx_up_submit').prop('disabled', false);
+      $('#wx_up_s4').addClass('done');
+    }).fail(function (x) { $('#wx_up_msg').html('<div class="alert alert-danger">' + esc(errMsg(x)) + '</div>'); })
+      .always(function () { $b.prop('disabled', false); });
+  });
+
+  $('#wx_up_submit').on('click', function () {
+    var fd = dataForm(false);
+    if (!fd) return;
+    var $b = $(this).prop('disabled', true);
+    $('#wx_up_msg').html(busy('Loading the data...'));
+    post('/ajax/weather/upload', fd).done(function (r) {
+      if (r.error) { $('#wx_up_msg').html(errorsHtml(r)); return; }
+      $('#wx_up_msg').html('<div class="alert alert-success"><span class="glyphicon glyphicon-ok"></span> <b>Stored.</b><ul>' + (r.stations || []).map(function (s) {
+        return '<li>' + esc(s.name) + ' (' + esc(s.location_name) + '): ' + s.inserted + ' new day' + (s.inserted === 1 ? '' : 's')
+          + (s.replaced ? ', ' + s.replaced + ' replaced' : '') + ', ' + esc(s.first) + ' to ' + esc(s.last) + '</li>';
+      }).join('') + '</ul>' + list(r.warnings) + '</div>');
+      $('#wx_up_file').val('');
+      resetCheck();
+      loadList();
+      $(document).trigger('weather:uploaded', [r]);
+    }).fail(function (x) { $('#wx_up_msg').html('<div class="alert alert-danger">' + esc(errMsg(x)) + '</div>'); $b.prop('disabled', false); });
+  });
+
+  // ---------------------------------------------------------------- add stations: check, then add
+  function stationsForm(check) {
+    var file = $('#wx_up_st_file')[0].files[0];
+    if (!file) { $('#wx_up_st_msg').html('<div class="alert alert-warning">Choose a file (step 2).</div>'); return null; }
+    var fd = new FormData();
+    fd.append('stations_file', file);
+    if (!fileLocations()) fd.append('location_id', cur.id);
+    if (check) fd.append('check_only', 1);
+    return fd;
+  }
+  $('#wx_up_st_check').on('click', function () {
+    var fd = stationsForm(true);
+    if (!fd) return;
+    $('#wx_up_st_submit').prop('disabled', true);
+    var $b = $(this).prop('disabled', true);
+    $('#wx_up_st_msg').html(busy('Checking the file...'));
+    post('/ajax/weather/upload_stations', fd).done(function (r) {
+      if (r.error) { $('#wx_up_st_msg').html(errorsHtml(r)); return; }
+      var pos = function (s) { return esc(s.lat) + ', ' + esc(s.lon) + ' · ' + esc(s.elev) + ' m'; };
+      $('#wx_up_st_msg').html('<div class="alert alert-success"><span class="glyphicon glyphicon-ok"></span> <b>The file is correct.</b> Nothing is stored yet: press <b>Add stations</b>.'
+        + '<table class="table table-condensed table-bordered"><thead><tr><th>Station</th><th>Location</th><th>Position</th><th>Description</th><th></th></tr></thead><tbody>'
+        + (r.stations || []).map(function (s) {
+          return '<tr><td>' + esc(s.name) + '</td><td>' + esc(s.location_name) + '</td><td>' + pos(s) + '</td><td>' + esc(s.description || '') + '</td>'
+            + '<td>' + (s.exists ? '<span class="label label-warning">update</span>' : '<span class="label label-success">new</span>') + '</td></tr>';
+        }).join('') + '</tbody></table>' + list(r.warnings) + '</div>');
+      $('#wx_up_st_submit').prop('disabled', false);
+    }).fail(function (x) { $('#wx_up_st_msg').html('<div class="alert alert-danger">' + esc(errMsg(x)) + '</div>'); })
+      .always(function () { $b.prop('disabled', false); });
+  });
+  $('#wx_up_st_submit').on('click', function () {
+    var fd = stationsForm(false);
+    if (!fd) return;
+    var $b = $(this).prop('disabled', true);
+    $('#wx_up_st_msg').html(busy('Adding the stations...'));
+    post('/ajax/weather/upload_stations', fd).done(function (r) {
+      if (r.error) { $('#wx_up_st_msg').html(errorsHtml(r)); return; }
+      $('#wx_up_st_msg').html('<div class="alert alert-success"><span class="glyphicon glyphicon-ok"></span> <b>' + r.created + ' station' + (r.created === 1 ? '' : 's') + ' added'
+        + (r.updated ? ', ' + r.updated + ' updated' : '') + '.</b> Now load their data in the <a href="#" data-wx-up-tab="data">Load data</a> tab.' + list(r.warnings) + '</div>');
+      $('#wx_up_st_file').val('');
+      loadList();
+      $(document).trigger('weather:uploaded', [r]);
+    }).fail(function (x) { $('#wx_up_st_msg').html('<div class="alert alert-danger">' + esc(errMsg(x)) + '</div>'); $b.prop('disabled', false); });
+  });
+
+  // ---------------------------------------------------------------- events
+  $(document).on('click', '[data-wx-upload-location-id]', function (e) {
+    e.preventDefault();
+    open($(this).attr('data-wx-upload-location-id'), $(this).attr('data-wx-upload-location-name'));
+  });
+  $('#wx_upload_dialog')
+    .on('click', '[data-wx-up-tab]', function (e) { e.preventDefault(); showTab($(this).data('wx-up-tab')); })
+    .on('change', '#wx_up_station_select', stationChanged)
+    .on('change', '#wx_up_file', function () { resetCheck(); $('#wx_up_msg').empty(); })
+    .on('change', '#wx_up_st_file', function () { $('#wx_up_st_submit').prop('disabled', true); $('#wx_up_st_msg').empty(); })
+    .on('change', '#wx_up_file_locations', function () { resetCheck(); $('#wx_up_st_submit').prop('disabled', true); })
+    .on('click', '.wx-up-template', function (e) {
+      e.preventDefault();
+      var kind = $(this).data('kind');
+      window.location = '/ajax/weather/upload_template?kind=' + encodeURIComponent(kind) + '&resolution=' + encodeURIComponent($(this).data('res') || 'daily')
+        + '&location_id=' + encodeURIComponent(cur.id || '') + (kind === 'data' ? '&station_name=' + encodeURIComponent($('#wx_up_station_select').val() || '') : '');
+    })
+    .on('click', '[data-wx-up-delete]', function () {
+      var id = $(this).attr('data-wx-up-delete');
+      if (!window.confirm('Delete the station ' + $(this).attr('data-name') + ' and all its uploaded data?')) return;
+      $.post('/ajax/weather/delete_local_station', { station_id: id }).done(function (r) {
+        if (r.error) { $('#wx_up_msg').html('<div class="alert alert-danger">' + esc(r.error) + '</div>'); return; }
+        loadList();
+        $(document).trigger('weather:uploaded', [{ deleted: id, location_id: cur.id }]);
+      }).fail(function (x) { $('#wx_up_msg').html('<div class="alert alert-danger">' + esc(errMsg(x)) + '</div>'); });
+    });
+});
+</script>
