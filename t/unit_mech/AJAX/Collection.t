@@ -229,6 +229,46 @@ is($row->{username}, 'janedoe', 'search returns the creator username');
 
 ok(!(grep { $_->{collection_id} == $alpha_id } @$result), 'type filter excludes image collections');
 
+# loosely matched names are bound after the other clauses, so the values must line up with the type clause
+#
+($result, $total) = CXGN::Collection::Search->new({
+    bcs_schema           => $schema,
+    name_list            => ['TestCollection Alpha'],
+    collection_type_list => ['image'],
+})->search();
+
+ok((grep { $_->{collection_id} == $alpha_id } @$result), 'name search combined with collection_type finds the collection');
+
+($result, $total) = CXGN::Collection::Search->new({
+    bcs_schema           => $schema,
+    name_list            => ['TestCollection Alpha'],
+    description_list     => ['alpha image'],
+    creator_username_list => ['janedoe'],
+    collection_type_list => ['image'],
+})->search();
+
+ok((grep { $_->{collection_id} == $alpha_id } @$result), 'name, description and creator search combined with collection_type finds the collection');
+
+# "contains file" search
+#
+$cobj->add_files($alpha_id, [ $fixture_file_id ]);
+
+($result, $total) = CXGN::Collection::Search->new({
+    bcs_schema     => $schema,
+    file_name_list => ['cass_phenotypes'],
+})->search();
+
+ok((grep { $_->{collection_id} == $alpha_id } @$result), 'contains-file search finds the collection holding the file');
+
+($result, $total) = CXGN::Collection::Search->new({
+    bcs_schema     => $schema,
+    file_name_list => ['no_such_file_name'],
+})->search();
+
+ok(!(grep { $_->{collection_id} == $alpha_id } @$result), 'contains-file search does not match other file names');
+
+$cobj->remove_files($alpha_id, [ $fixture_file_id ]);
+
 # CXGN::File::Search filters
 #
 my ($files, $files_total) = CXGN::File::Search->new({ bcs_schema => $schema })->search();
