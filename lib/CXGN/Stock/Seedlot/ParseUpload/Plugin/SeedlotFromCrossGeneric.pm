@@ -63,7 +63,9 @@ sub _validate_with_plugin {
 
         if (!defined $amount || $amount eq '') {
             $amount = 'NA';
-        } elsif (!defined $weight || $weight eq '') {
+        }
+
+        if (!defined $weight || $weight eq '') {
             $weight = 'NA';
         }
 
@@ -164,7 +166,9 @@ sub _parse_with_plugin {
 
         if (!defined $amount || $amount eq '') {
             $amount = 'NA';
-        } elsif (!defined $weight || $weight eq '') {
+        }
+
+        if (!defined $weight || $weight eq '') {
             $weight = 'NA';
         }
 
