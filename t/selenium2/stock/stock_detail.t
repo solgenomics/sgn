@@ -108,7 +108,7 @@ sub add_parents {
         my $error = wait_for(sub { $t->find_element('add_parent_error', 'id')->get_text() });
         like($error, $expected_error, 'invalid pair displays an error without saving');
     } else {
-        accept_alert_like(qr/The parents have been added/, 'both parents saved');
+        accept_alert_like(qr/The parents have been saved/, 'both parents saved');
     }
 }
 
