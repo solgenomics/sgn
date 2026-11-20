@@ -81,8 +81,11 @@ sub default :Path('build') {
             $c->res->headers->header('SourceMap' => $sourcemap_name);
         }
         $c->res->headers->last_modified( $modtime );
-        $c->res->headers->content_type( "application/javascript" );
-        $c->res->body(join("",read_file($full_file)));
+        # the bundle on disk is already UTF-8 bytes: send it as is, otherwise
+        # Catalyst encodes it a second time (· becomes Â·, ° becomes Â°)
+        $c->clear_encoding;
+        $c->res->headers->content_type( "application/javascript; charset=utf-8" );
+        $c->res->body(join("",read_file($full_file, binmode => ':raw')));
         $c->res->headers->remove_header('content-length');
     }
 }
