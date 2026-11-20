@@ -7,7 +7,11 @@ SGN::Controller::AJAX::Weather - backend of the Weather page (/breeders/weather)
 
 Observed weather of real stations near the research stations (Breedbase
 locations): airports, national weather service stations (SYNOP), CoCoRaHS
-(USA), IDEAM (Colombia), INMET, ANA and CEMADEN (Brazil). See CXGN::Weather.
+(USA), IDEAM (Colombia), INMET, ANA and CEMADEN (Brazil), DWD (Germany), JMA
+AMeDAS (Japan), ECCC (Canada), USDA SCAN, ISU, CoAgMet and AZMet (USA), SMN
+(Mexico), INTA (Argentina), SILO (Australia), IMS (Israel), regional councils
+(New Zealand), and with free keys AEMET (Spain), Meteo-France and DMC (Chile).
+See CXGN::Weather.
 Plus the stations of research farms whose data users upload (network 'local',
 see CXGN::Weather::Local).
 
@@ -30,11 +34,18 @@ Configuration (sgn.conf / sgn_local.conf):
   weather_station_range         200       default search range
   weather_station_range_unit    km        km or mi
   weather_station_max_range_km  500       largest range a user can ask for
-  weather_station_networks      airport,synop,cocorahs,ideam,inmet,ana,cemaden
+  weather_station_networks      airport,synop,cocorahs,ideam,inmet,ana,cemaden,dwd,jma,eccc,scan,isusm,
+                                coagmet,azmet,conagua,inta,silo,ims,hilltop,aemet,meteofrance,dmc
   weather_station_role          curator,submitter   roles that may link stations
   weather_max_days              400       longest date range of a daily request
   weather_upload_resolution     daily     daily = uploads with one row per day only; subdaily = also hourly / 15-min rows
   inmet_api_token                         free INMET token (Brazilian stations)
+  aemet_api_key                           free AEMET key (Spain)
+  meteofrance_api_key                     free Meteo-France API key (France)
+  dmc_api_key                             free DMC key of Chile, written e-mail:token
+  silo_username                           e-mail address of the site admin, asked by SILO (Australia)
+  weather_hilltop_servers                 Hilltop servers of New Zealand councils (default: the known ones)
+  Every key may list several keys separated by commas: the next one is used when one is refused.
   weather_cache_dir                       default: <tmp>/breedbase_weather_cache
 
 =head1 AUTHOR
@@ -64,7 +75,8 @@ __PACKAGE__->config(
     map => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
 );
 
-my $PROP = 'weather_station';    # nd_geolocationprop holding the linked station (JSON)
+my $PROP = 'weather_station';
+my $DEFAULT_NETWORKS = 'airport,synop,cocorahs,ideam,inmet,ana,cemaden,dwd,jma,eccc,scan,isusm,coagmet,azmet,conagua,inta,silo,ims,hilltop,aemet,meteofrance,dmc';    # nd_geolocationprop holding the linked station (JSON)
 
 sub _fail {
     my ($c, $msg, $status) = @_;
@@ -84,7 +96,18 @@ sub _conf {
 
 sub _weather {
     my $c = shift;
-    my %args = (inmet_token => _conf($c, 'inmet_api_token', undef));
+    # the free key of each network that needs one: <network>_api_key (INMET: inmet_api_token)
+    my %keys;
+    foreach my $k (keys %{$c->config}) {
+        my ($n) = $k =~ /^(\w+?)_api_key$/ or next;
+        my $v = _conf($c, $k, undef);
+        $keys{$n} = $v if defined $v;
+    }
+    $keys{inmet} //= _conf($c, 'inmet_api_token', undef);
+    $keys{silo} //= _conf($c, 'silo_username', undef);
+    my %args = (api_keys => \%keys);
+    my $hilltop = _conf($c, 'weather_hilltop_servers', undef);
+    $args{hilltop_servers} = $hilltop if $hilltop;
     my $dir = _conf($c, 'weather_cache_dir', undef);
     $args{cache_dir} = $dir if $dir;
     return CXGN::Weather->new(\%args);
@@ -93,7 +116,8 @@ sub _weather {
 # the networks of the configuration, plus the uploaded stations (always on)
 sub _networks {
     my $c = shift;
-    my @n = grep { /^(airport|synop|cocorahs|ideam|inmet|ana|cemaden)$/ } split /\s*,\s*/, _conf($c, 'weather_station_networks', 'airport,synop,cocorahs,ideam,inmet,ana,cemaden');
+    my $known = _weather($c)->networks();
+    my @n = grep { $known->{$_} } split /\s*,\s*/, _conf($c, 'weather_station_networks', $DEFAULT_NETWORKS);
     return [ (@n ? @n : 'airport'), $CXGN::Weather::Local::NETWORK ];
 }
 
@@ -293,6 +317,7 @@ sub save_station :Path('/ajax/weather/save_station') Args(0) {
         distance_km => $num->($p->{distance_km}),
         range => $num->($p->{range}) // _conf($c, 'weather_station_range', 200) + 0,
         unit => ($p->{unit} // '') eq 'mi' ? 'mi' : 'km',
+        rain_only => $p->{rain_only} ? 1 : 0,
         temp_network => undef,
         saved_by => $c->user->get_object->get_sp_person_id,
         saved_by_name => join(' ', grep { $_ } $c->user->get_object->get_first_name, $c->user->get_object->get_last_name),

@@ -170,11 +170,19 @@ function longestDry(days, threshold) {
     return { days: best, end: bestEnd, start: bestEnd ? addDays(bestEnd, -(best - 1)) : null, over: best >= (threshold || Infinity) };
 }
 
+// a day is observed when the station measured it: complete records, or max and min temperature,
+// or rain (a station that sends only temperatures, or only rain, still observes the day).
+// The water balance has its own rule (rain and ET0 on at least 80% of the days).
+export function observedDay(d) {
+    if (!d || d.missing) return false;
+    return !!d.complete || (num(d.tmax) !== null && num(d.tmin) !== null) || num(d.rain) !== null;
+}
+
 export function summarize(days, rainReported, p) {
     const vals = k => days.map(d => num(d[k])).filter(v => v !== null);
     const tx = vals('tmax'), tn = vals('tmin'), et0v = vals('et0'), rainv = vals('rain');
     const dry = rainReported ? longestDry(days, p.dry) : null;
-    const withData = days.filter(d => !d.missing && d.complete).length;
+    const withData = days.filter(observedDay).length;
     const gddDays = days.filter(d => d.gdd !== null && d.gdd !== undefined);
     // a water balance needs rain and ET0 on (almost) every day: missing days are neither dry
     // nor without evaporation. It is the sum over the days that have both.
@@ -269,7 +277,7 @@ export function stressDays(days, rainReported, p) {
         frost: num(d.tmin) !== null && d.tmin <= p.frost,
         dry: !!inDry[d.date],
         heavy: rainReported && num(d.rain) !== null && d.rain >= p.heavy,
-        missing: !!d.missing || !d.complete,
+        missing: !observedDay(d),
     }));
 }
 

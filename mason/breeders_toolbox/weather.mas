@@ -16,7 +16,7 @@ gauge is paired with a station for temperature),
 3 the season (dates, crop, planting date or the season of a trial). Tabs:
 Season (stress by crop stage, stress calendar, aligned charts, tables),
 Trials (environmental covariates of each trial), Past years (was the season
-normal? for maize the RM zone), Locations (environments of several locations) and Data sources
+normal? for maize the RM zone), Comparison (environments of several locations, its own dates) and Data sources
 (map, stations, which rain source to trust). Observed data only.
 Code: js/source/entries/weather.js; endpoints /ajax/weather/*.
 
@@ -61,7 +61,7 @@ Chris Simoes
 .wx-pill-st { background: var(--wx-accent-soft); color: var(--wx-accent); }
 .wx-pill-none { background: #eef0f3; color: #4b5563; }
 .wx-pill-warn { background: #fef3c7; color: #92400e; }
-.wx-net { display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.wx-net { background: #eef0f3; color: #374151; display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
 .wx-net-local { background: #1d6fa5; color: #fff; }
 .wx-table tr.wx-sep td { background: #f2f8fc; color: #164e74; font-weight: 600; font-size: 12px; }
 .wx-net-airport { background: #e0f2fe; color: #075985; }
@@ -71,6 +71,8 @@ Chris Simoes
 .wx-net-cocorahs { background: #fce7f3; color: #9d174d; }
 .wx-net-ideam { background: #fef9c3; color: #854d0e; }
 .wx-net-cemaden { background: #ffedd5; color: #9a3412; }
+.wx-net-dwd { background: #e5e7eb; color: #1f2937; }
+.wx-net-jma { background: #fee2e2; color: #991b1b; }
 .wx-loading { padding: 16px; color: var(--wx-muted); }
 .wx-spin { animation: wx-spin 1s linear infinite; display: inline-block; }
 @keyframes wx-spin { to { transform: rotate(360deg); } }
@@ -303,7 +305,7 @@ Chris Simoes
           <button class="wx-tab on" data-tab="season"><span class="glyphicon glyphicon-grain"></span> Season</button>
           <button class="wx-tab" data-tab="trials"><span class="glyphicon glyphicon-leaf"></span> Trials</button>
           <button class="wx-tab" data-tab="years"><span class="glyphicon glyphicon-stats"></span> Past years</button>
-          <button class="wx-tab" data-tab="locations"><span class="glyphicon glyphicon-globe"></span> Locations</button>
+          <button class="wx-tab" data-tab="locations"><span class="glyphicon glyphicon-globe"></span> Comparison</button>
           <button class="wx-tab" data-tab="sources"><span class="glyphicon glyphicon-map-marker"></span> Data sources <span class="badge" id="wx_n_stations"></span></button>
           <button class="wx-tab" data-tab="concepts"><span class="glyphicon glyphicon-education"></span> Concepts</button>
           <span class="wx-tunit-switch" title="Temperature unit of the whole page and of the CSV files">Temperature

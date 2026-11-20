@@ -11,7 +11,7 @@
  *   Season       stress by crop stage, stress calendar, aligned charts, tables
  *   Trials       environmental covariates of each trial of the location (G x E)
  *   Past years   the same dates in the previous years: was this season normal?
- *   Locations    the environments of several locations for the same dates
+ *   Comparison   the environments of several locations for the same dates (its own dates)
  *   Data sources map, stations and the comparison of the rain sources
  *   Concepts     how GDD, ET0, water balance, stages and maize RM are calculated
  * Temperatures are kept in °C; the °C / °F switch changes only what is shown.
@@ -32,9 +32,10 @@ let $;
 const API = '/ajax/weather';
 const KM_PER_MI = 1.609344;
 const COLORS = { tmax: '#eb6834', tmin: '#2a78d6', rain: '#2a78d6', et0: '#eb6834', gdd: '#1baf7a', dew: '#1baf7a', temp: '#eb6834' };
-const NET_NAMES = { local: 'Uploaded', airport: 'Airport', synop: 'National service', cocorahs: 'CoCoRaHS', ideam: 'IDEAM', inmet: 'INMET', ana: 'ANA', cemaden: 'CEMADEN' };
-const RAIN_NETS = ['synop', 'cocorahs', 'ideam', 'inmet', 'ana', 'cemaden'];
-const TEMP_NETS = ['airport', 'synop', 'inmet'];
+const NET_NAMES = { local: 'Uploaded', airport: 'Airport', synop: 'National service', cocorahs: 'CoCoRaHS', ideam: 'IDEAM', inmet: 'INMET', ana: 'ANA', cemaden: 'CEMADEN', dwd: 'DWD', jma: 'JMA AMeDAS' };
+const RAIN_NETS = ['synop', 'cocorahs', 'ideam', 'inmet', 'ana', 'cemaden', 'dwd', 'jma'];
+// networks with temperature (stations of mixed networks say rain_only when they have none)
+const TEMP_NETS = ['airport', 'synop', 'inmet', 'dwd', 'jma'];
 const STRESS_ROWS = [
     { key: 'heat', label: 'Heat', color: '#e34948' },
     { key: 'frost', label: 'Frost', color: '#6250d6' },
@@ -49,7 +50,7 @@ const S = {
     tab: 'season', preset: '90', start: '', end: '', planting: '', plantingSet: false, trials: [], trialsAll: [],
     daily: null, dailyKey: '', seq: 0, cache: {}, autoPicked: false, skipped: [], silent: {},
     crop: '', p: Object.assign({}, DEFAULTS),
-    trialRows: null, years: null, locRows: null, locPick: {}, localStations: [],
+    trialRows: null, years: null, locRows: null, locPick: {}, localStations: [], chosen: {}, cmp: null,
     map: null, mapLayers: null,
 };
 const chartXY = (sel, pts, series, opt) => chartXYBase($, sel, pts, series, opt);
@@ -83,9 +84,15 @@ function dist(km) {
     if (x === null) return '–';
     return S.unit === 'mi' ? (x / KM_PER_MI).toFixed(x / KM_PER_MI < 10 ? 1 : 0) + ' mi' : x.toFixed(x < 10 ? 1 : 0) + ' km';
 }
-function netLabel(n) { return '<span class="wx-net wx-net-' + esc(n) + '">' + esc(NET_NAMES[n] || n) + '</span>'; }
+function netName(n) { return NET_NAMES[n] || netConf(n).short || n; }
+// the networks of the configuration with rain / temperature (new networks say it in /config)
+const isRainNet = n => RAIN_NETS.includes(n) || !!netConf(n).rain;
+const isTempNet = n => TEMP_NETS.includes(n) || !!netConf(n).temp;
+function netConf(n) { return (S.cfg && S.cfg.networks && S.cfg.networks[n]) || {}; }
+function netLabel(n) { return '<span class="wx-net wx-net-' + esc(n) + '">' + esc(netName(n)) + '</span>'; }
 function stationLabel(s) {
     if (!s) return '';
+    if (s.network === 'hilltop') return s.name || s.id;    // council sites: internal ids, the name says it
     return s.network === 'cemaden' ? (s.code || s.id) + ' ' + String(s.name || '').replace(/^.*\(/, '(') : s.id + ' ' + (s.name || '');
 }
 // stations the page may pick by itself, best first: rain gauges, then stations reporting now, then any;
@@ -106,8 +113,8 @@ function hasObservations(r) {
 }
 
 // uploaded stations (network 'local') say what they measure; the others are known by their network
-function measuresRain(s) { return s && (s.network === 'local' ? !!s.has_rain : RAIN_NETS.includes(s.network)) && s.ready; }
-function measuresTemp(s) { return s && (s.network === 'local' ? !!s.has_temp : TEMP_NETS.includes(s.network)) && s.ready && !s.rain_only; }
+function measuresRain(s) { return s && (s.network === 'local' ? !!s.has_rain : Array.isArray(s.measures) ? s.measures.includes('rain') : isRainNet(s.network)) && s.ready; }
+function measuresTemp(s) { return s && (s.network === 'local' ? !!s.has_temp : Array.isArray(s.measures) ? s.measures.includes('temperature') : isTempNet(s.network)) && s.ready && !s.rain_only; }
 function plainStation(s) {
     return s ? { network: s.network, id: s.id, name: s.name, lat: s.lat, lon: s.lon, elev: s.elev, distance_km: s.distance_km, direction: s.direction, rain_only: s.rain_only, ready: s.ready, approx_position: s.approx_position, history_hours: s.history_hours } : null;
 }
@@ -224,7 +231,10 @@ function selectLocation(id) {
     } : null;
     S.compare = null;
     S.autoPicked = false; S.skipped = []; S.silent = {}; S.localStations = [];
-    if (S.station && !TEMP_NETS.includes(S.station.network) && S.station.network !== 'local') S.station.rain_only = 1;
+    if (S.station && ((!isTempNet(S.station.network) && S.station.network !== 'local') || l.station.rain_only)) S.station.rain_only = 1;
+    // the stations used for this location earlier in this session (chosen or suggested, maybe not saved)
+    const mem = S.chosen[l.id];
+    if (mem && mem.st) { S.station = Object.assign({}, mem.st); S.tempStation = mem.t ? Object.assign({}, mem.t) : null; }
     S.station && (S.station.ready = 1);
     S.range = num(l.station && l.station.range) || S.cfg.range;
     S.unit = (l.station && l.station.unit) || storage('unit') || S.cfg.unit;
@@ -362,7 +372,7 @@ function findStations() {
             const byNet = {};
             list.forEach(s => { byNet[s.network] = (byNet[s.network] || 0) + 1; });
             kind = 'done';
-            const detail = Object.keys(byNet).map(n => byNet[n] + ' ' + (NET_NAMES[n] || n)).join(', ') + ' · updated ' + clockNow() + ' (' + secs() + ' s)'
+            const detail = Object.keys(byNet).map(n => byNet[n] + ' ' + netName(n)).join(', ') + ' · updated ' + clockNow() + ' (' + secs() + ' s)'
                 + (nWarn ? ' · ' + nWarn + ' source' + (nWarn === 1 ? '' : 's') + ' did not answer' : '');
             html = '<span title="' + esc(detail) + '"><span class="glyphicon glyphicon-ok"></span> <b>' + list.length + ' station' + (list.length === 1 ? '' : 's') + '</b> within ' + esc(label)
                 + (nWarn ? ' <span class="glyphicon glyphicon-warning-sign"></span>' : '') + '</span> · <a data-goto-tab="sources">map</a>';
@@ -416,7 +426,7 @@ function renderNetFilter() {
     if (nets.length < 2) { $('#wx_netfilter').empty(); S.netFilter = 'all'; return; }
     const count = n => S.stations.filter(s => n === 'all' || s.network === n).length;
     $('#wx_netfilter').html(['all'].concat(nets).map(n => '<button class="wx-seg' + (S.netFilter === n ? ' on' : '') + '" data-net="' + n + '">'
-        + (n === 'all' ? 'All' : NET_NAMES[n] || n) + '<span class="wx-count">' + count(n) + '</span></button>').join(''));
+        + (n === 'all' ? 'All' : netName(n)) + '<span class="wx-count">' + count(n) + '</span></button>').join(''));
 }
 
 function renderStations() {
@@ -427,7 +437,7 @@ function renderStations() {
         return;
     }
     const elev = num(S.loc.elev);
-    const inmetOff = list.some(s => s.network === 'inmet' && !s.ready);
+    const keyOff = [...new Set(list.filter(s => !s.ready && s.network !== 'local').map(s => s.network))];
     const rowOf = s => {
         const m = s.latest || {};
         const de = elev !== null && num(s.elev) !== null ? Math.round(s.elev - elev) : null;
@@ -450,17 +460,20 @@ function renderStations() {
         else if (s.network === 'local') {
             now = '<span class="wx-muted">uploaded data · ' + esc(s.first || '') + ' to ' + esc(s.last || '') + ' (' + (s.days || 0) + ' days)</span>';
         }
+        else if (s.network !== 'ideam' && s.network !== 'inmet' && Array.isArray(s.measures) && s.ready) {
+            now = '<span class="wx-muted">' + (s.rain_only ? 'rain gauge' : 'climate station') + ' · daily values' + (s.since ? ' since ' + esc(String(s.since).slice(0, 4)) : '') + '</span>';
+        }
         else if (s.network === 'ideam') {
             now = '<span class="wx-muted">automatic rain gauge' + (s.last ? ' · last value ' + esc(String(s.last).slice(0, 16).replace('T', ' ')) : '') + '</span>';
         }
         else {
-            now = s.ready ? '<span class="wx-muted">' + esc(s.status || '') + '</span>' : '<span class="wx-muted" title="Set inmet_api_token in the configuration">needs INMET token</span>';
+            now = s.ready ? '<span class="wx-muted">' + esc(s.status || '') + '</span>' : '<span class="wx-muted" title="Set ' + esc(netConf(s.network).key_config || '') + ' in the configuration">needs a ' + esc(netName(s.network)) + ' key</span>';
         }
-        const measures = s.network === 'local' ? (s.measures || []).join(' · ') : s.network === 'airport' ? 'temp · rain hours' + (s.country === 'US' ? ' · rain' : '') : s.network === 'inmet' ? 'temp · rain · radiation' : s.network === 'synop' ? 'temp · rain (when sent)' : 'rain';
+        const measures = (s.network === 'local' || Array.isArray(s.measures)) ? (s.measures || []).join(' · ') : s.network === 'airport' ? 'temp · rain hours' + (s.country === 'US' ? ' · rain' : '') : s.network === 'inmet' ? 'temp · rain · radiation' : s.network === 'synop' ? 'temp · rain (when sent)' : 'rain';
         const on = stationKey(s) === stationKey(S.station);
         return '<tr class="' + (on ? 'on' : '') + '" data-skey="' + esc(stationKey(s)) + '">'
             + '<td>' + netLabel(s.network) + '</td>'
-            + '<td><b>' + esc(s.network === 'cemaden' ? s.code || s.id : s.id) + '</b> ' + esc(s.network === 'cemaden' ? String(s.name).replace(/^.*\(/, '(') : s.name) + (s.state ? ' <span class="wx-muted">' + esc(s.state) + '</span>' : '') + '<div class="wx-small wx-muted">' + measures + '</div></td>'
+            + '<td><b>' + esc(s.network === 'cemaden' ? s.code || s.id : s.network === 'hilltop' ? '' : s.id) + '</b> ' + esc(s.network === 'cemaden' ? String(s.name).replace(/^.*\(/, '(') : s.name) + (s.state ? ' <span class="wx-muted">' + esc(s.state) + '</span>' : '') + '<div class="wx-small wx-muted">' + measures + '</div></td>'
             + '<td class="n">' + (s.approx_position ? '<span title="Position not published: distance to the centre of the municipality">≈ </span>' : '') + dist(s.distance_km) + ' <span class="wx-muted wx-small">' + esc(s.direction) + '</span></td>'
             + '<td class="n">' + (num(s.elev) !== null ? Math.round(s.elev) + ' m' : '–') + (de !== null ? ' <span class="wx-muted wx-small">(' + (de > 0 ? '+' : '') + de + ')</span>' : '') + '</td>'
             + '<td>' + now + '</td>'
@@ -472,7 +485,8 @@ function renderStations() {
     const up = list.filter(x => x.network === 'local').sort((a, b) => (isOwnLocal(b) - isOwnLocal(a)) || (a.distance_km - b.distance_km));
     const pub = list.filter(x => x.network !== 'local');
     const rows = (up.length ? sep('Uploaded stations') + up.map(rowOf).join('') + (pub.length ? sep('Public stations') : '') : '') + pub.map(rowOf).join('');
-    $('#wx_station_table').html((inmetOff ? alertHtml('info', 'INMET stations are listed, but reading their data needs a free INMET token: ask INMET for one and set <code>inmet_api_token</code> in sgn_local.conf.') : '')
+    $('#wx_station_table').html(keyOff.map(n => alertHtml('info', esc(netName(n)) + ' stations are listed, but reading their data needs a free key: get one at '
+        + (netConf(n).key_url ? '<a href="' + esc(netConf(n).key_url) + '" target="_blank" rel="noopener">' + esc(netConf(n).key_url) + '</a>' : 'the provider') + ' and set <code>' + esc(netConf(n).key_config || n + '_api_key') + '</code> in sgn_local.conf.')).join('')
         + (list.some(s => s.approx_position) ? '<p class="wx-note">≈ CEMADEN does not publish the position of its gauges: the distance is to the centre of their municipality.</p>' : '')
         + '<div class="wx-table-wrap"><table class="table table-condensed table-hover wx-table"><thead><tr><th>Network</th><th>Station</th><th class="n">Distance</th><th class="n">Elevation (vs. location)</th><th>Now</th><th></th></tr></thead><tbody>'
         + rows + '</tbody></table></div>');
@@ -574,7 +588,7 @@ function stationChanged() {
 // ---------------------------------------------------------------- step 2: chosen station
 // the data a station gives (from its network: no request needed)
 function dataTypes(x) {
-    if (x.network === 'local') return (x.measures && x.measures.length) ? x.measures : ['rain'];
+    if (x.network === 'local' || Array.isArray(x.measures)) return (x.measures && x.measures.length) ? x.measures : ['rain'];
     if (x.network === 'inmet') return ['temperature', 'rain', 'radiation', 'humidity', 'wind'];
     if (x.network === 'synop') return ['temperature', 'rain', 'humidity', 'wind'];
     if (x.network === 'airport') return x.country === 'US' ? ['temperature', 'rain', 'humidity', 'wind'] : ['temperature', 'humidity', 'wind'];
@@ -598,7 +612,7 @@ function stationSelectHtml() {
     const note = x => (!readable(x) ? ' - not readable' : isSilent(x) ? ' - no data for these dates' : x.network === 'airport' && !x.latest ? ' - no recent report' : '');
     const label = x => isOwnLocal(x) ? 'Farm station · ' + x.name
         : x.network === 'local' ? dist(x.distance_km) + ' · Uploaded · ' + x.name + (x.location_name ? ' (' + x.location_name + ')' : '')
-        : dist(x.distance_km) + ' · ' + (NET_NAMES[x.network] || x.network) + ' ' + stationLabel(x);
+        : dist(x.distance_km) + ' · ' + netName(x.network) + ' ' + stationLabel(x);
     return '<select class="form-control input-sm" id="wx_station_select" style="width:100%" title="Nearest first. ✔ = the most types of data">'
         + (S.station ? '' : '<option value="">Choose a weather station...</option>')
         + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (best(x) ? ' style="font-weight:bold"' : '')
@@ -625,7 +639,7 @@ function renderChosen() {
         if (S.tempStation && !opts.some(x => stationKey(x) === stationKey(S.tempStation))) opts.unshift(S.tempStation);
         temp = '<div class="wx-st-temp">Rain gauge only: temperature and ET0 from'
             + '<select class="form-control input-sm" id="wx_temp_station"><option value="">(none)</option>'
-            + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (stationKey(x) === stationKey(S.tempStation) ? ' selected' : '') + '>' + esc(dist(x.distance_km) + ' · ' + (NET_NAMES[x.network] || x.network) + ' ' + x.id + ' ' + x.name) + '</option>').join('')
+            + opts.map(x => '<option value="' + esc(stationKey(x)) + '"' + (stationKey(x) === stationKey(S.tempStation) ? ' selected' : '') + '>' + esc(dist(x.distance_km) + ' · ' + netName(x.network) + ' ' + x.id + ' ' + x.name) + '</option>').join('')
             + '</select></div>';
     }
     $('#wx_chosen').html(stationSelectHtml() + meta + temp + defaultHtml(s));
@@ -640,7 +654,7 @@ function defaultHtml(s) {
     const same = isLinked && Number(d.range) === Number(S.range) && d.unit === S.unit && (d.temp_station_id || '') === tempNow;
     const canSave = S.cfg.can_save;
     const two = !!tempNow;
-    const savedName = d ? (NET_NAMES[d.network] || d.network) + ' ' + (d.network === 'local' ? (d.name || '') : d.station_id)
+    const savedName = d ? netName(d.network) + ' ' + (d.network === 'local' ? (d.name || '') : d.station_id)
         + (d.temp_station_id ? ' + temperature from ' + d.temp_station_id : '') : '';
     let text, btn = '';
     if (same) {
@@ -665,7 +679,7 @@ function saveStation() {
     $('#wx_save').prop('disabled', true);
     call('POST', API + '/save_station', {
         location_id: S.loc.id, network: s.network, station_id: s.id, name: s.name, lat: s.lat, lon: s.lon,
-        elev: s.elev, distance_km: s.distance_km, range: S.range, unit: S.unit,
+        elev: s.elev, distance_km: s.distance_km, range: S.range, unit: S.unit, rain_only: s.rain_only ? 1 : 0,
         ...(s.rain_only && S.tempStation ? {
             temp_network: S.tempStation.network, temp_station_id: S.tempStation.id, temp_name: S.tempStation.name, temp_lat: S.tempStation.lat,
             temp_lon: S.tempStation.lon, temp_elev: S.tempStation.elev, temp_distance_km: S.tempStation.distance_km,
@@ -777,7 +791,7 @@ function applyDates() {
     if (n > S.cfg.max_days) { flash('warning', 'The period has ' + n + ' days; the limit is ' + S.cfg.max_days + ' days.'); return; }
     if (pl < a || pl > b) { pl = a; S.plantingSet = false; }
     S.start = a; S.end = b; S.planting = pl;
-    S.years = null; S.locRows = null;
+    S.years = null;
     renderDates();
     $('#wx_flash').empty();
     showTab(S.tab === 'trials' ? 'season' : S.tab);
@@ -847,6 +861,7 @@ function loadSeason() {
     if (needStation('#wx_season')) return;
     if (!S.start) return;
     const s = S.station, t = s.rain_only ? S.tempStation : null;
+    rememberChoice();
     const key = [stationKey(s), stationKey(t), S.start, S.end].join('|');
     if (S.daily && S.dailyKey === key) { renderSeason(); return; }
     const seq = S.seq;
@@ -885,7 +900,7 @@ function alternativesHtml() {
     const alts = S.stations.filter(x => x.ready && stationKey(x) !== stationKey(S.station)).slice(0, 4);
     if (!alts.length) return '';
     return '<div class="wx-inline" style="margin-top:8px">Try: ' + alts.map(x => '<button class="btn btn-default btn-xs" data-choose="' + esc(stationKey(x)) + '">'
-        + esc((NET_NAMES[x.network] || x.network) + ' ' + stationLabel(x) + ' · ' + dist(x.distance_km)) + '</button>').join(' ') + '</div>';
+        + esc(netName(x.network) + ' ' + stationLabel(x) + ' · ' + dist(x.distance_km)) + '</button>').join(' ') + '</div>';
 }
 
 function stageBands(stages) {
@@ -1359,49 +1374,116 @@ function downloadYears() {
 }
 
 // ---------------------------------------------------------------- Locations: environments of the trial network
+// stations used for the open location (Season tab): kept per location for this session, so the
+// Locations comparison uses exactly the same stations as the Season tab
+function rememberChoice() {
+    if (!S.loc || !S.station) return;
+    S.chosen[S.loc.id] = { st: S.station, t: S.station.rain_only ? S.tempStation : null };
+}
+const sameStation = (a, b) => (!a && !b) || (!!a && !!b && stationKey(a).toUpperCase() === stationKey(b).toUpperCase());
+
+// the station(s) of a location for the comparison: the open location uses the stations on the page,
+// the others the stations used for them earlier in this session, else their saved station
 function savedPair(l) {
+    const saved = l.station ? savedPairOf(l) : null;
+    const open = S.loc && String(l.id) === String(S.loc.id) && S.station;
+    const mem = open ? { st: S.station, t: S.station.rain_only ? S.tempStation : null } : S.chosen[l.id];
+    if (mem && mem.st) {
+        const notSaved = !saved || !sameStation(mem.st, saved.st) || !sameStation(mem.t, saved.t);
+        return { st: mem.st, t: mem.t || null, current: notSaved };
+    }
+    return saved;
+}
+
+function savedPairOf(l) {
     const s = l.station;
-    const st = { network: s.network, id: s.station_id, name: s.name, lat: s.lat, lon: s.lon, elev: s.elev, distance_km: s.distance_km, ready: 1, rain_only: !['airport', 'synop', 'inmet'].includes(s.network) };
+    const st = { network: s.network, id: s.station_id, name: s.name, lat: s.lat, lon: s.lon, elev: s.elev, distance_km: s.distance_km, ready: 1, rain_only: !!s.rain_only || !isTempNet(s.network) };
     const t = s.temp_station_id ? { network: s.temp_network, id: s.temp_station_id, name: s.temp_name, lat: s.temp_lat, lon: s.temp_lon, elev: s.temp_elev, ready: 1 } : null;
     return { st, t };
 }
 
+// the dates of the Comparison tab: its own, copied from step 3 the first time
+function cmpDates() {
+    if (!S.cmp && S.start) S.cmp = { start: S.start, end: S.end, planting: S.planting || S.start };
+    return S.cmp || {};
+}
+
+// reads and checks the dates typed in the Comparison tab; returns false (and says why) when they are not valid
+function readCmpDates() {
+    const a = $('#wx_cmp_start').val(), b = $('#wx_cmp_end').val();
+    let pl = $('#wx_cmp_planting').val() || a;
+    if (!isIsoDate(a) || !isIsoDate(b)) { flash('warning', 'Comparison: write the start and end dates as YYYY-MM-DD.'); return false; }
+    if (a > b) { flash('warning', 'Comparison: the start date must be before the end date.'); return false; }
+    const n = daysBetween(a, b);
+    if (n > S.cfg.max_days) { flash('warning', 'Comparison: the period has ' + n + ' days; the limit is ' + S.cfg.max_days + ' days.'); return false; }
+    if (!isIsoDate(pl) || pl < a || pl > b) pl = a;
+    S.cmp = { start: a, end: b, planting: pl };
+    return true;
+}
+
 function renderLocationsTab() {
     if (!S.start) return;
-    const linked = S.locations.filter(l => l.station);
+    const D = cmpDates();
+    const linked = S.locations.filter(l => l.station || (S.loc && String(l.id) === String(S.loc.id) && S.station) || S.chosen[l.id]);
     if (!linked.length) {
         $('#wx_locs').html('<div class="wx-empty-card"><span class="glyphicon glyphicon-globe"></span><h4>No location has a weather station yet</h4><p>Save a station for each location (step 2) to compare their environments here.</p></div>');
         return;
     }
     if (!Object.keys(S.locPick).length) linked.slice(0, 8).forEach(l => { S.locPick[l.id] = true; });
     if (S.loc && S.loc.station) S.locPick[S.loc.id] = true;
-    const picks = linked.map(l => '<label class="wx-lpick"><input type="checkbox" data-lpick="' + l.id + '"' + (S.locPick[l.id] ? ' checked' : '') + ' /> ' + esc(l.name)
-        + ' <span class="wx-muted wx-small">' + esc(l.station.station_id) + '</span></label>').join('');
+    if (S.loc && S.station) S.locPick[S.loc.id] = true;
+    const picks = linked.map(l => { const p = savedPair(l); return '<label class="wx-lpick"><input type="checkbox" data-lpick="' + l.id + '"' + (S.locPick[l.id] ? ' checked' : '') + ' /> ' + esc(l.name)
+        + ' <span class="wx-muted wx-small">' + esc(stationLabel(p.st).split(' ')[0]) + (p.t ? ' + ' + esc(p.t.id) : '') + (p.current ? ' (not saved)' : '') + '</span></label>'; }).join('');
     const withoutN = S.locations.filter(l => !l.station && hasCoords(l)).length;
+    const dateIn = (id, v, label) => '<label class="wx-small">' + label + '<br><input type="text" class="form-control input-sm" id="' + id + '" value="' + esc(v || '') + '" placeholder="YYYY-MM-DD" style="width:120px" /></label> ';
     $('#wx_locs').html('<div class="wx-card"><h4><span class="glyphicon glyphicon-globe"></span> Compare the environments of your locations</h4>'
-        + '<p class="wx-small wx-muted">Same dates for all (' + fmtDate(S.start) + ' to ' + fmtDate(S.end) + '), planting ' + fmtDate(S.planting || S.start) + ', each location with its saved weather station. '
-        + (withoutN ? withoutN + ' location(s) with coordinates have no station saved yet.' : '') + '</p>'
+        + '<p class="wx-small wx-muted">The same dates for every ticked location, each with its weather station (the stations used on its Season tab in this session, otherwise its saved station). '
+        + (withoutN ? withoutN + ' location(s) with coordinates have no station yet.' : '') + '</p>'
+        + '<div class="wx-cmp-dates" style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:8px">'
+        + dateIn('wx_cmp_start', D.start, 'Start') + dateIn('wx_cmp_end', D.end, 'End') + dateIn('wx_cmp_planting', D.planting, 'Planting')
+        + '<a href="#" id="wx_cmp_step3" class="wx-small" style="margin-bottom:6px">use the dates of step 3</a></div>'
         + '<div class="wx-lpicks">' + picks + '</div>'
         + '<button class="btn btn-primary btn-sm" id="wx_locs_go"><span class="glyphicon glyphicon-play"></span> Compare</button></div>'
         + '<div id="wx_locs_result"></div>');
+    if ($.fn.daterangepicker) {
+        $('#wx_cmp_start, #wx_cmp_end, #wx_cmp_planting').each(function () {
+            $(this).daterangepicker({ singleDatePicker: true, showDropdowns: true, autoUpdateInput: false, locale: { format: 'YYYY-MM-DD' } })
+                .on('apply.daterangepicker', function (e, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD')).trigger('change'); });
+        });
+    }
     if (S.locRows && S.locRows.key === locKey()) renderLocRows();
+    else if (S.locRows) $('#wx_locs_result').html('<p class="wx-note"><span class="glyphicon glyphicon-info-sign"></span> The stations, dates or locations changed since the last comparison: press Compare to run it again.</p>');
 }
 
-function locKey() { return [Object.keys(S.locPick).filter(k => S.locPick[k]).sort().join(','), S.start, S.end, S.planting, S.crop, JSON.stringify(S.p)].join('|'); }
+// what a comparison depends on: the ticked locations with their stations, the dates and the crop settings
+function locKey() {
+    const ids = Object.keys(S.locPick).filter(k => S.locPick[k]).sort();
+    const stations = ids.map(id => {
+        const l = S.locations.find(x => String(x.id) === String(id));
+        if (!l || !(l.station || (S.loc && String(l.id) === String(S.loc.id) && S.station) || S.chosen[l.id])) return id + ':-';
+        const p = savedPair(l);
+        return id + ':' + stationKey(p.st) + (p.t ? '+' + stationKey(p.t) : '');
+    });
+    const D = cmpDates();
+    return [stations.join(','), D.start, D.end, D.planting, S.crop, JSON.stringify(S.p)].join('|');
+}
 
 function loadLocRows() {
+    if (!readCmpDates()) return;
+    const D = cmpDates();
     const key = locKey();
     const ids = Object.keys(S.locPick).filter(k => S.locPick[k]);
     if (!ids.length) { flash('warning', 'Tick at least one location.'); return; }
-    const rows = S.locations.filter(l => l.station && ids.includes(String(l.id))).map(l => Object.assign({ l, state: 'loading', highlight: S.loc && l.id === S.loc.id }, savedPair(l)));
+    const rows = S.locations.filter(l => (l.station || (S.loc && String(l.id) === String(S.loc.id) && S.station) || S.chosen[l.id]) && ids.includes(String(l.id)))
+        .map(l => Object.assign({ l, state: 'loading', highlight: S.loc && l.id === S.loc.id }, savedPair(l)));
     S.locRows = { key, rows };
     renderLocRows();
     let i = 0;
     const next = () => {
         if (!S.locRows || S.locRows.key !== key || i >= rows.length) return Promise.resolve();
         const row = rows[i++];
-        return fetchPair(row.st, row.t, S.start, S.end, row.l.id).then(r => {
-            const A = analysis(r, S.start, S.end, S.planting);
+        return fetchPair(row.st, row.t, D.start, D.end, row.l.id).then(r => {
+            const A = analysis(r, D.start, D.end, D.planting);
             row.cov = covariates(A.days, A.rep, S.p, S.crop);
             row.rep = A.rep;
             row.state = 'ok';
@@ -1415,8 +1497,10 @@ function renderLocRows() {
     const rows = S.locRows.rows;
     const ok = rows.filter(r => r.state === 'ok' && r.cov.coverage >= 0.2);
     const loadingN = rows.filter(r => r.state === 'loading').length;
-    const table = covTable(rows, r => '<td><b>' + esc(r.l.name) + '</b><div class="wx-small wx-muted">' + esc(stationLabel(r.st)) + (r.t ? ' + ' + esc(r.t.id) : '') + '</div></td>', '<th>Location (station)</th>');
-    $('#wx_locs_result').html('<div class="wx-card"><div class="wx-card-head"><h4>Environments ' + fmtDate(S.start) + ' to ' + fmtDate(S.end) + '</h4>'
+    const table = covTable(rows, r => '<td><b>' + esc(r.l.name) + '</b><div class="wx-small wx-muted">' + esc(stationLabel(r.st)) + (r.t ? ' + ' + esc(r.t.id) : '') + (r.current ? ' (used on this page, not saved)' : '')
+        + (r.st.rain_only && !r.t ? '<div class="wx-warn-txt">rain gauge without a temperature station: open the location and save one for temperatures, GDD and RM</div>' : '') + '</div></td>', '<th>Location (station)</th>');
+    const D = cmpDates();
+    $('#wx_locs_result').html('<div class="wx-card"><div class="wx-card-head"><h4>Environments ' + fmtDate(D.start) + ' to ' + fmtDate(D.end) + ', planting ' + fmtDate(D.planting) + '</h4>'
         + '<span>' + (loadingN ? '<span class="wx-muted wx-small"><span class="glyphicon glyphicon-refresh wx-spin"></span> reading ' + loadingN + ' more... </span>' : '')
         + '<button class="btn btn-default btn-xs" id="wx_locs_csv"' + (loadingN ? ' disabled' : '') + '><span class="glyphicon glyphicon-download-alt"></span> CSV</button></span></div>'
         + (ok.length > 1 ? '<div class="wx-grid2"><div><div class="wx-sub">Rain (mm)</div><div id="wx_lc_rain"></div></div>'
@@ -1454,9 +1538,10 @@ function rmZonesCard(ok) {
 
 function downloadLocs() {
     const ok = S.locRows.rows.filter(r => r.state === 'ok');
-    csvDownload('location_environments_' + S.start + '_' + S.end + '.csv',
+    const D = cmpDates();
+    csvDownload('location_environments_' + D.start + '_' + D.end + '.csv',
         ['location_id', 'location', 'station', 'temperature_station', 'start', 'end', 'planting'].concat(covariateColumns().map(c => c[1])),
-        ok.map(r => [r.l.id, r.l.name, stationLabel(r.st), r.t ? r.t.network + ' ' + r.t.id : '', S.start, S.end, S.planting || S.start].concat(covRow(r.cov))));
+        ok.map(r => [r.l.id, r.l.name, stationLabel(r.st), r.t ? r.t.network + ' ' + r.t.id : '', D.start, D.end, D.planting].concat(covRow(r.cov))));
 }
 
 // ---------------------------------------------------------------- Compare: rain of every nearby source for the same dates
@@ -1465,11 +1550,11 @@ function compareCandidates() {
     // the 2 nearest of each network first (so every source is compared), then the nearest others
     const all = S.stations.filter(measuresRain);
     const pick = [];
-    ['local'].concat(RAIN_NETS).forEach(n => all.filter(s => s.network === n).slice(0, 2).forEach(s => pick.push(s)));
+    ['local'].concat([...new Set(all.map(s => s.network))].filter(n => n !== 'local')).forEach(n => all.filter(s => s.network === n).slice(0, 2).forEach(s => pick.push(s)));
     all.forEach(s => { if (pick.length < max && !pick.includes(s)) pick.push(s); });
     const rain = pick.slice(0, Math.max(max, pick.length)).sort((a, b) => a.distance_km - b.distance_km);
     // stations that measure rain but cannot be read here (INMET without token): shown so the user knows they exist
-    S.stations.filter(s => RAIN_NETS.includes(s.network) && !s.ready).slice(0, 2).forEach(s => rain.push(s));
+    S.stations.filter(s => isRainNet(s.network) && !s.ready).slice(0, 2).forEach(s => rain.push(s));
     rain.sort((a, b) => a.distance_km - b.distance_km);
     const air = $('#wx_cmp_air').is(':checked') ? S.stations.filter(s => s.network === 'airport' && s.ready).slice(0, 2) : [];
     if (S.station && !rain.concat(air).some(x => stationKey(x) === stationKey(S.station)) && S.station.ready) rain.unshift(S.station);
@@ -1486,7 +1571,7 @@ function loadCompare() {
     const key = cands.map(stationKey).join(',') + '|' + S.start + '|' + S.end;
     if (S.compare && S.compare.key === key) { renderCompare(); return; }
     const seq = S.seq;
-    S.compare = { key, rows: cands.map(st => (st.ready ? { st, state: 'loading' } : { st, state: 'error', error: 'measures rain, but its data needs a free INMET token (inmet_api_token in sgn_local.conf)' })) };
+    S.compare = { key, rows: cands.map(st => (st.ready ? { st, state: 'loading' } : { st, state: 'error', error: 'measures rain, but its data needs a free key (' + (netConf(st.network).key_config || st.network + '_api_key') + ' in sgn_local.conf)' })) };
     renderCompare();
     let i = 0;
     const next = () => {
@@ -1553,7 +1638,7 @@ function renderCompare() {
     const rows = C.rows.map(row => {
         const st = row.st;
         const on = stationKey(st) === stationKey(S.station);
-        const name = '<td>' + netLabel(st.network) + ' <b>' + esc(st.network === 'cemaden' ? st.code || st.id : st.id) + '</b> ' + esc(st.network === 'cemaden' ? String(st.name).replace(/^.*\(/, '(') : st.name) + '</td>'
+        const name = '<td>' + netLabel(st.network) + ' <b>' + esc(st.network === 'cemaden' ? st.code || st.id : st.network === 'hilltop' ? '' : st.id) + '</b> ' + esc(st.network === 'cemaden' ? String(st.name).replace(/^.*\(/, '(') : st.name) + '</td>'
             + '<td class="n">' + (st.approx_position ? '≈ ' : '') + dist(st.distance_km) + '</td>';
         const span = allDays.length * showDays + 4 + (showCommon ? 1 : 0);
         if (row.state === 'loading') return '<tr>' + name + '<td colspan="' + span + '"><span class="glyphicon glyphicon-refresh wx-spin"></span> reading...</td></tr>';
@@ -1691,11 +1776,12 @@ function bind() {
         .on('click', '#wx_csv', downloadDaily)
         .on('click', '#wx_cov_csv', downloadSeasonCov)
         .on('click', '#wx_trials_csv', downloadTrials)
+        .on('change', '[data-lpick]', function () { S.locPick[$(this).data('lpick')] = $(this).is(':checked'); })
         .on('click', '#wx_years_go', loadYears)
         .on('click', '#wx_years_again', () => { S.years = null; renderYearsIntro(); })
         .on('click', '#wx_years_csv', downloadYears)
-        .on('change', '[data-lpick]', function () { S.locPick[$(this).data('lpick')] = $(this).is(':checked'); })
         .on('click', '#wx_locs_go', loadLocRows)
+        .on('click', '#wx_cmp_step3', e => { e.preventDefault(); S.cmp = null; renderLocationsTab(); })
         .on('click', '#wx_locs_csv', downloadLocs)
         .on('change', '#wx_station_select', function () { const k = String($(this).val() || ''); if (k && k !== stationKey(S.station)) chooseStation(k); })
         .on('change', '#wx_temp_station', function () {
