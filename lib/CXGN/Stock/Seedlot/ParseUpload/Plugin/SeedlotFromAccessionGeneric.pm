@@ -101,9 +101,10 @@ sub _validate_with_plugin {
         }
     }
 
-    my $rs = $schema->resultset("Stock::Stock")->search({
-        'uniquename' => { -in => $seen_seedlot_names }
-    });
+    my $rs = $schema->resultset("Stock::Stock")->search(
+        {'uniquename' => { -in => $seen_seedlot_names }},
+        { order_by => 'uniquename'},
+    );
 
     while (my $r = $rs->next) {
         push @error_messages, "Seedlot name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
