@@ -28,8 +28,6 @@ my $rs = $f->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search({
 
 my $max_nd_experiment_id = $rs->get_column('nd_experiment_id')->max();
 
-print STDERR "MAX ND EXPERIMENT ID = $max_nd_experiment_id\n";
-
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = JSON::XS->new->decode($mech->content);
 print STDERR Dumper $response;
