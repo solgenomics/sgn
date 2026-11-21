@@ -75,6 +75,21 @@ userResponse <- userResponse[!userResponse == "X50_sprout_emergence_time_estimat
 ###################################################################
 # 4. Function for checking quality of data
 ###################################################################
+# The values for shapiro.test(), which takes at most 5000: all of them, or 5000 drawn with a fixed seed, so the
+# same trial gives the same answer every time. The random numbers of the rest of the script are not moved.
+normality_values <- function(values, limit = 5000) {
+    if (length(values) <= limit) {
+        return(values)
+    }
+    had_seed <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+    if (had_seed) {
+        old_seed <- get(".Random.seed", envir = globalenv(), inherits = FALSE)
+    }
+    on.exit(if (had_seed) assign(".Random.seed", old_seed, envir = globalenv()) else rm(".Random.seed", envir = globalenv()))
+    set.seed(5000)
+    sample(values, limit)
+}
+
 check_quality <- function(data, phenotype, replicate) {
     ###################################################################
     # Check the percentage of missing data
@@ -104,6 +119,8 @@ check_quality <- function(data, phenotype, replicate) {
         missing_data = nas,
         skewness = skewness,
         shapiro_val = NA,
+        normality_tested = 0,
+        normality_of = 0,
         outliers = 0,
         unique_count = 0,
         replicate_count = 0))
@@ -119,7 +136,11 @@ check_quality <- function(data, phenotype, replicate) {
         shapiro_val$p.value <- NA
     } else {
         skewness <- skewness(no_na) # install.packages("moments")
-        shapiro_val <- shapiro.test(no_na) # install.packages("stats")
+        # shapiro.test() takes 3 to 5000 values and stops the script beyond that; a larger trait is tested on a sample
+        shapiro_val <- tryCatch(shapiro.test(normality_values(no_na)), error = function(e) {
+            write(paste("Normality test failed: ", conditionMessage(e)), stderr())
+            data.frame(p.value = NA)
+        })
     }
     ###################################################################
     # Check the presence of outliers
@@ -139,6 +160,8 @@ check_quality <- function(data, phenotype, replicate) {
         missing_data = nas,
         skewness = skewness,
         shapiro_val = shapiro_val$p.value,
+        normality_tested = min(length(no_na), 5000),
+        normality_of = length(no_na),
         outliers = outliers,
         unique_count = unique_count,
         replicate_count = replicate_count
@@ -179,7 +202,7 @@ for (i in 1:length(userResponse)) {
         spatial_correction_needed <- "NO"
     } else {
         write(paste("Trait: ", userResponse[i]), stderr())
-        if (quality_summary$shapiro_val < 0.05) {
+        if (isTRUE(quality_summary$shapiro_val < 0.05)) {
             quality <- "good but not normally distributed"
             spatial_correction_needed <- "YES"
         } else if (quality_summary$skewness > 1 || quality_summary$skewness < -1) {
@@ -189,6 +212,10 @@ for (i in 1:length(userResponse)) {
         } else {
             quality <- "good data"
             spatial_correction_needed <- "YES"
+        }
+        if (quality_summary$normality_tested < quality_summary$normality_of) {
+            quality <- paste0(quality, " (normality tested on ", quality_summary$normality_tested, " of ",
+                              quality_summary$normality_of, " values drawn at random)")
         }
 
         ###################################################################
