@@ -129,6 +129,7 @@ $t->while_logged_in_as("submitter", sub {
 
   # MOVE CHILD FOLDER (F2) FROM PARENT (F1) FOLDER AND DELETE PARENT (F1)
   $t->find_element_ok("move_folder_dialog_link", "id", "find 'move folder' link and click")->click();
+  sleep(2); # the dialog loads its folder list by AJAX; clicking an option before it is there kills the test
 
   $t->find_element_ok("move_folder_id", "id","find move folder select and open it");
   $t->find_element_ok("option[title='$folder_child_name']", "css","pass child folder : $folder_child_name as folder name")->click();

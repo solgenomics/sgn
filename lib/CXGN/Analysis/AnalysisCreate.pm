@@ -197,6 +197,14 @@ has 'analysis_statistical_ontology_term' => (
     is => 'rw',
 );
 
+# Optional: a statistical ontology term per trait name, for analyses where the
+# traits were not all computed the same way. Traits not listed here use
+# analysis_statistical_ontology_term.
+has 'analysis_statistical_ontology_term_by_trait' => (
+    isa => 'HashRef|Undef',
+    is => 'rw',
+);
+
 has 'analysis_precomputed_design_optional' => (
     isa => 'HashRef[HashRef]|Undef',
     is => 'rw',
@@ -352,6 +360,7 @@ sub store {
     my $is_analysis_result_stock_type = $self->is_analysis_result_stock_type();
     my $analysis_trait_names = $self->analysis_trait_names();
     my $analysis_statistical_ontology_term = $self->analysis_statistical_ontology_term();
+    my $analysis_statistical_ontology_term_by_trait = $self->analysis_statistical_ontology_term_by_trait() || {};
     my $analysis_precomputed_design_optional = $self->analysis_precomputed_design_optional();
     my $analysis_result_values = $self->analysis_result_values();
     my $analysis_result_values_type = $self->analysis_result_values_type();
@@ -377,6 +386,12 @@ sub store {
     my $user_id = $self->user_id();
     my $user_name = $self->user_name();
     my $user_role = $self->user_role();
+
+    # Check every trait and statistical term before anything is written.
+    if ($analysis_to_save_boolean eq 'yes') {
+        $self->_resolve_trait_ids();
+        $self->_resolve_statistical_term_ids();
+    }
 
     # print Dumper $analysis_model_type;
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
@@ -411,19 +426,14 @@ sub store {
     my $saved_analysis_id;
     if ($analysis_to_save_boolean eq 'yes') {
 
-        my %trait_id_map;
-
-        foreach my $trait_name (@$analysis_trait_names) {
-
-        	my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $trait_name)->cvterm_id();
-            $trait_id_map{$trait_name} = $trait_cvterm_id;
-        }
+        my %trait_id_map = %{ $self->_resolve_trait_ids() };
+        my %stat_id_map = %{ $self->_resolve_statistical_term_ids() };
         my @trait_ids = values %trait_id_map;
 
-        my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
+        my %unique_stat_ids = map { $_ => 1 } values %stat_id_map;
         my $categories = {
             object => [],
-            attribute => [$stat_cvterm_id],
+            attribute => [ keys %unique_stat_ids ],
             method => [],
             unit => [],
             trait => \@trait_ids,
@@ -464,19 +474,35 @@ sub store {
 	       my $new_terms = $onto->store_composed_term(\%new_trait_names);
 	   }
 
+        # Analysis results are not measurements of the trait, so they are stored
+        # under a post-composed trait: the trait plus the statistical term (and
+        # time terms, if any). Missing composed traits are created here.
         my %composed_trait_map;
-        while (my($trait_name, $trait_id) = each %trait_id_map) {
-            my $components = [$trait_id, $stat_cvterm_id];
-            if (exists($analysis_result_trait_compose_info_time->{$trait_name})) {
-                foreach (@{$analysis_result_trait_compose_info_time->{$trait_name}}) {
-                    my $time_cvterm_id = $time_term_map{$_};
-                    push @$components, $time_cvterm_id;
-                }
-            }
-            my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, $components);
-            my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $composed_cvterm_id, 'extended');
-            $composed_trait_map{$trait_name} = $composed_trait_name ? $composed_trait_name : $trait_name;
+        my $onto = CXGN::Onto->new( { schema => $bcs_schema } );
+        my $delimiter = defined($composable_cvterm_delimiter) && $composable_cvterm_delimiter ne '' ? $composable_cvterm_delimiter : '|';
+        foreach my $trait_name (@$analysis_trait_names) {
+            my $trait_id = $trait_id_map{$trait_name};
+            my $stat_id = $stat_id_map{$trait_name};
+            my @time_ids = map { $time_term_map{$_} } @{ $analysis_result_trait_compose_info_time->{$trait_name} || [] };
 
+            # Results that are themselves statistics (e.g. principal component
+            # scores) or that already include this statistical term are stored as they are.
+            my $trait_extended_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $trait_id, 'extended') // '';
+            my %trait_components = map { $_ => 1 } @{ SGN::Model::Cvterm->get_components_from_trait($bcs_schema, $trait_id) };
+            if ($trait_extended_name =~ /\|SGNSTAT:\d+$/ || ($trait_components{$stat_id} && !@time_ids)) {
+                $composed_trait_map{$trait_name} = $trait_name;
+                next;
+            }
+
+            my $components = [ $trait_id, $stat_id, @time_ids ];
+            my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, $components);
+            if (!$composed_cvterm_id) {
+                my $composed_name = join $delimiter, map { SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $_, 'concise') } ($trait_id, @time_ids, $stat_id);
+                $onto->store_composed_term({ $composed_name => join(',', @$components) });
+                $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, $components);
+            }
+            die "Could not create the post-composed trait for \"$trait_name\". The results were not stored under the original trait.\n" if !$composed_cvterm_id;
+            $composed_trait_map{$trait_name} = SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $composed_cvterm_id, 'extended');
         }
         my @composed_trait_names = values %composed_trait_map;
 
@@ -647,6 +673,38 @@ if ($analysis_model_file) {
 }
 
     return { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
+}
+
+# trait name => cvterm_id; dies if a trait is not in the database
+sub _resolve_trait_ids {
+    my $self = shift;
+    my %ids;
+    foreach my $trait_name (@{ $self->analysis_trait_names() || [] }) {
+        my $row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema(), $trait_name);
+        die "The trait \"$trait_name\" is not in the database.\n" if !$row;
+        $ids{$trait_name} = $row->cvterm_id();
+    }
+    return \%ids;
+}
+
+# trait name => cvterm_id of its statistical ontology term; dies if a term is
+# missing or not in the database
+sub _resolve_statistical_term_ids {
+    my $self = shift;
+    my $by_trait = $self->analysis_statistical_ontology_term_by_trait() || {};
+    my %ids;
+    my %cache;
+    foreach my $trait_name (@{ $self->analysis_trait_names() || [] }) {
+        my $term = $by_trait->{$trait_name} || $self->analysis_statistical_ontology_term();
+        die "No statistical ontology term was given for \"$trait_name\".\n" if !$term;
+        if (!exists $cache{$term}) {
+            my $row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema(), $term);
+            die "The statistical ontology term \"$term\" is not in the database.\n" if !$row;
+            $cache{$term} = $row->cvterm_id();
+        }
+        $ids{$trait_name} = $cache{$term};
+    }
+    return \%ids;
 }
 
 sub store_analysis_result_stock_names {

@@ -131,6 +131,16 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
         return;
     }
 
+    # an analysis used as evidence of a decision meeting cannot be deleted
+    require SGN::Controller::AJAX::ScriptFactory;
+    my $meetings = SGN::Controller::AJAX::ScriptFactory::meetings_using_analysis($schema, $c->stash->{trial_id});
+    if (@$meetings) {
+        my $names = join(', ', map { "\"$_->{name}\"" } @$meetings);
+        $c->stash->{rest} = { error => "This analysis is evidence in the decision meeting(s) $names, so it cannot be deleted" .
+            ((grep { $_->{saved} } @$meetings) ? ' (the decisions are saved: the evidence is a permanent record).' : '. Remove it from the meeting first.') };
+        return;
+    }
+
     my $error = "";
 
     if ($datatype eq 'phenotypes') {

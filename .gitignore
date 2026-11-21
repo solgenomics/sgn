@@ -53,3 +53,8 @@ docs/*
 !docs/r_markdown_docs/
 !docs/r_markdown_docs/**
 .idea/
+
+# BLUPF90+ (free for research only, not distributed with Breedbase): its
+# folder is mounted at bin/blupf90/ by docker for the Analysis Pipeline
+/bin/blupf90/
+/bin/blupf90+
