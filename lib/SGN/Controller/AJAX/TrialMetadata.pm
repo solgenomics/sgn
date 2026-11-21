@@ -2763,6 +2763,12 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
 sub remove_filler_plots : Chained('trial') PathPart('remove_fillers') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => $message };
+        return;
+    }
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $trial = $c->stash->{trial};

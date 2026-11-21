@@ -134,7 +134,12 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 <script>
 
+% # The list goes into the script as a JSON value, not inside a quoted string:
+% # an apostrophe or "</script>" in a program name must stay data.
 % my $breeding_program_json = encode_json($breeding_programs);
+% $breeding_program_json =~ s/</\\u003c/g;
+% $breeding_program_json =~ s/>/\\u003e/g;
+% $breeding_program_json =~ s/&/\\u0026/g;
 
 
 jQuery(document).ready( function() { 
@@ -145,7 +150,7 @@ jQuery(document).ready( function() {
         draw_overview_charts();
     });
 
-    var breeding_programs = JSON.parse('<% $breeding_program_json %>');
+    var breeding_programs = <% $breeding_program_json %>;
 
     //   alert(JSON.stringify(breeding_programs));
 
@@ -439,7 +444,7 @@ function trait_summary_hist_display_change(program_id, start_date, end_date, inc
                     },
                     error: function(response) {
                         jQuery("#working_modal").modal("hide");
-                        alert('An error occured retrieving trait histogram data.');
+                        alert('An error occurred retrieving trait histogram data.');
                     }
                 });
             } else {
@@ -480,7 +485,7 @@ function trait_summary_hist_change(program_id, value) {
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
-            alert('An error occured retrieving trait histogram data.');
+            alert('An error occurred retrieving trait histogram data.');
         }
     });
 }
