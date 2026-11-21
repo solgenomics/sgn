@@ -95,6 +95,17 @@ my @FORMULA_VARS = qw(accession trial location year rep block row col rowN colN 
 # ---------------------------------------------------------------------------
 sub short_trait { my $x = shift // ''; $x =~ s/\|.*$//; return $x; }
 sub cov_name { my $x = short_trait(shift); $x =~ s/[^A-Za-z0-9]+/_/g; return "cov_$x"; }
+
+# does covariate $vn adjust $trait (a measurement-occasion pseudo trait
+# short@oK|... counts as its trait)? Never the trait itself.
+sub cov_applies {
+    my ($self, $vn, $trait) = @_;
+    (my $b = $trait) =~ s/\@o\d+//;
+    return 0 if $vn eq cov_name($b);
+    my $t = ($self->{cov_targets} || {})->{$vn};
+    return 1 if !$t;
+    return (grep { $_ eq $b } @$t) ? 1 : 0;
+}
 sub is_num { my $v = shift; return defined($v) && $v =~ /^\s*-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?\s*$/ ? 1 : 0; }
 sub num { my $v = shift; return is_num($v) ? $v + 0 : undef; }
 sub opt { my ($h, $k, $def) = @_; return $def if ref($h) ne 'HASH' || !defined($h->{$k}); my $v = $h->{$k}; return $def if ref($v) eq 'ARRAY' && !@$v; return $v; }
@@ -608,6 +619,19 @@ sub _covariates {
     $self->{cov_vars} = \@vars;
     $self->{cov_label} = \%label;
     $self->step("Covariates: ", join(', ', map { $label{$_} } @vars)) if @vars;
+    # traits each covariate adjusts (recipe.covariate_traits: covariate ->
+    # traits, chosen in the covariate dialog); a covariate not listed there
+    # adjusts every analysed trait (as the R engine)
+    my $ct = opt($self->recipe, 'covariate_traits', {});
+    $ct = {} if ref($ct) ne 'HASH';
+    my %targets;
+    foreach my $vn (@vars) {
+        my ($key) = grep { ($self->match_trait($_) // '') eq $self->{cov_full}->{$vn} } sort keys %$ct;
+        next if !defined $key;
+        $targets{$vn} = [ uniq(map { $self->match_trait($_) // $_ } list($ct->{$key})) ];
+        $self->step("Covariate $label{$vn} adjusts ", (@{ $targets{$vn} } ? join(', ', map { short_trait($_) } @{ $targets{$vn} }) : 'no trait'));
+    }
+    $self->{cov_targets} = \%targets;
 }
 
 # ---------------------------------------------------------------------------
@@ -913,12 +937,14 @@ sub _advanced {
     $f90->max_rounds(int($rounds)) if defined($rounds) && $rounds =~ /^\d+$/ && $rounds >= 10 && $rounds <= 100000;
     my $conv = $a->{f90_conv};
     $f90->conv_crit(sprintf('%.3g', $conv)) if defined($conv) && $conv =~ /^[\d.]+(?:[eE]-?\d+)?$/ && $conv > 0 && $conv < 1e-2;
-    my $method = $pick->('f90_method', qw(ai em_ai em));
-    if ($method eq 'em_ai') {
-        my $em = $a->{f90_em_rounds};
-        $f90->em_rounds(defined($em) && $em =~ /^\d+$/ && $em > 0 && $em < $f90->max_rounds ? int($em) : 10);
-    }
-    $f90->em_rounds($f90->max_rounds) if $method eq 'em';
+    # REML algorithm chosen per fit by CXGN::BLUPF90: AI-REML (fast), EM-REML
+    # only for stage 2 with the stage-1 errors as known residual variances
+    # (AI-REML oscillated there), and EM-REML refits when AI-REML does not
+    # settle. Saved scripts with an algorithm of their own get this choice.
+    my $method = 'auto';
+    $f90->em_rounds($CXGN::BLUPF90::EM_START);
+    $self->warn_msg("BLUPF90+ chooses the REML algorithm of each model itself (AI-REML; EM-REML in stage 2 with known stage-1 errors and when AI-REML does not settle); the algorithm setting of this script was not used.")
+        if defined($a->{f90_method}) && $a->{f90_method} ne '' && $a->{f90_method} ne 'ai';
     my @r_only;
     my $resid = $pick->('residual', qw(homogeneous trial));
     my $tw = $pick->('time_within', qw(cs ar1 exp us));
@@ -937,8 +963,8 @@ sub _advanced {
     $self->{adv_gxe} = $gxe;
     my @set = (($gxe ne 'cs' ? "genotype x trial $gxe" : ()), ($resid ne 'homogeneous' ? 'one residual variance per trial' : ()),
                ($tw ne 'cs' ? "time within plot $tw" : ()), ($tg ne 'default' ? "genotype in time $tg" : ()), ($f90->max_rounds != $CXGN::BLUPF90::MAX_ROUNDS ? 'max. rounds ' . $f90->max_rounds : ()),
-               ($f90->conv_crit ne '1e-9' ? 'convergence ' . $f90->conv_crit : ()), ($method ne 'ai' ? "method $method" . ($method eq 'em_ai' ? ' (' . $f90->em_rounds . ' EM rounds)' : '') : ()));
-    $self->{advanced_used} = { gxe => $gxe, residual => $resid, time_within => $tw, time_genotype => $tg, f90_method => $method, f90_maxrounds => $f90->max_rounds, f90_conv => $f90->conv_crit, ($method eq 'em_ai' ? (f90_em_rounds => $f90->em_rounds) : ()) } if @set;
+               ($f90->conv_crit ne '1e-9' ? 'convergence ' . $f90->conv_crit : ()));
+    $self->{advanced_used} = { gxe => $gxe, residual => $resid, time_within => $tw, time_genotype => $tg, f90_method => $method, f90_maxrounds => $f90->max_rounds, f90_conv => $f90->conv_crit } if @set;
     $self->step("Advanced settings: ", join(', ', @set)) if @set;
 }
 
@@ -1320,6 +1346,7 @@ sub expand_repeated {
     # COV_DAYS days); measurements without one are left out (counted)
     my (@drop, @tv);
     foreach my $vn (@{ $self->{cov_vars} || [] }) {
+        next if !$self->cov_applies($vn, $trait);
         my $cf = $self->{cov_full}->{$vn} or next;
         my $cl = $self->{rep_long}->{$cf};
         next if !$cl || !@$cl || !defined($e->{$vn});
@@ -1372,13 +1399,13 @@ sub _stage1_plan {
     my ($self, $d, $info, $trait) = @_;
     my @keep = grep { defined $d->{y}->[$_] } 0 .. nrow($d) - 1;
     $d = subset($d, \@keep);
-    my @cv = grep { my $c = $_; $c ne cov_name($trait) && !$self->{mt_skip_cov}->{$trait}->{$c} && (grep { defined } @{$d->{$c}}) > 0.5 * nrow($d) && n_levels(@{$d->{$c}}) > 1 } @{$self->{cov_vars}};
+    my @cv = grep { my $c = $_; $self->cov_applies($c, $trait) && !$self->{mt_skip_cov}->{$trait}->{$c} && (grep { defined } @{$d->{$c}}) > 0.5 * nrow($d) && n_levels(@{$d->{$c}}) > 1 } @{$self->{cov_vars}};
     if (@cv) {
         my @cc = grep { my $i = $_; !grep { !defined $d->{$_}->[$i] } @cv } 0 .. nrow($d) - 1;
         $self->warn_msg("Stage 1, $info->{trial} / ", short_trait($trait), ": ", nrow($d) - @cc, " plot(s) without a covariate value were left out.") if @cc < nrow($d);
         $d = subset($d, \@cc);
     }
-    foreach my $c (grep { my $x = $_; $x ne cov_name($trait) && !$self->{mt_skip_cov}->{$trait}->{$x} && !grep { $_ eq $x } @cv } @{$self->{cov_vars}}) {
+    foreach my $c (grep { my $x = $_; $self->cov_applies($x, $trait) && !$self->{mt_skip_cov}->{$trait}->{$x} && !grep { $_ eq $x } @cv } @{$self->{cov_vars}}) {
         $self->warn_once("cov $info->{trial} $c", "Stage 1, $info->{trial}: covariate $self->{cov_label}->{$c} is missing or constant in this trial and was not used there.");
     }
     my $rep_all = ($self->{rep_mode}->{$trait} // '') eq 'all';
@@ -1646,6 +1673,15 @@ sub _stage2 {
             else { $self->warn_once("res_off $why", "Stage 2: one residual variance per trial was not used ($why); one residual variance was fitted."); $self->adv_unused('residual', 'trial', $why); }
         }
         my $known = ($st_kind || $ge_on) ? 1 : 0;
+        # default (as the R engine): a genotype x trial variance next to the
+        # stage-1 errors as known residual variances (Moehring & Piepho 2009),
+        # instead of G x E and error as one residual scaled by 1/SE^2
+        my $ge_cs = 0;
+        if (!$known && $n_tr > 1 && $weighted) {
+            my %na; $na{ $_->{accession} }++ for @m;
+            if (grep { $_ > 1 } values %na) { $ge_cs = 1; $known = 1; }
+            else { $self->warn_once('gecs_off', "Stage 2: no genotype x trial variance was fitted (no accession is in more than one trial); the stage-1 means were weighted by 1/SE^2, so genotype x trial and stage-1 error form one residual scaled by the stage-1 precision."); }
+        }
         my %md = (accession => [ map { $_->{accession} } @m ], trial => [ map { $_->{trial} } @m ], y => [ map { $_->{value} } @m ],
                   check => [ map { $chk->{ $_->{accession} } ? 'check' : 'test' } @m ]);
         my (%mo, %fa); for (0 .. $self->{n} - 1) { $mo{ $d->{accession}->[$_] } //= $d->{mother}->[$_]; $fa{ $d->{accession}->[$_] } //= $d->{father}->[$_]; }
@@ -1691,8 +1727,10 @@ sub _stage2 {
             $self->warn_once("ix2 $ix->{label} $why", "Stage 2: interaction $ix->{label} not used ($why).");
             $self->adv_unused('interaction', $ix->{label}, $why, ($why =~ /single-stage model/ ? (strategy => 'single_stage') : ()));
         }
-        my $fml = "y ~ " . join(' + ', @terms);
-        my $spec = eval { $self->model_spec(\%md, $fml, $grandom, ($known ? [ map { 1 / $_**2 } @se ] : [ map { $_ / $mw } @w ]), "stage2_" . short_trait($t)) };
+        my $fml_w = "y ~ " . join(' + ', @terms);
+        my $w_norm = [ map { $_ / $mw } @w ];
+        my $fml = $ge_cs ? "$fml_w + (1|accession:trial)" : $fml_w;
+        my $spec = eval { $self->model_spec(\%md, $fml, $grandom, ($known ? [ map { 1 / $_**2 } @se ] : $w_norm), "stage2_" . short_trait($t)) };
         if (!$spec) {
             (my $e = $@) =~ s/\s+$//;
             $self->warn_msg("Stage 2, ", short_trait($t), ": the model could not be fitted ($e).");
@@ -1701,20 +1739,38 @@ sub _stage2 {
         }
         if ($known) {
             $spec->{known_resid} = 1;
+            # the default (ge_cs) has its (1|accession:trial) term in the formula
             if ($st_kind) {
                 $spec->{gxe} = { kind => $st_kind, by => 'trial' };
                 $fml = join(' + ', "y ~ " . ($st_kind eq 'cs_het' ? 'cs' : $st_kind) . "(0 + trial | accession)", grep { $_ ne '(1|accession)' } split(/\s*\+\s*/, ($fml =~ s/^\s*y\s*~\s*//r)));
             }
-            else {
+            elsif ($ge_on) {
                 $spec->{ge_by} = 'trial';
                 $fml .= ' + diag(0 + trial | accession:trial)';
             }
         }
         push @specs, $spec;
-        push @ctx, { t => $t, res => \%res, md => \%md, fml => $fml, n_tr => $n_tr, weighted => $weighted, st_kind => $st_kind, ge_on => $ge_on };
+        push @ctx, { t => $t, res => \%res, md => \%md, fml => $fml, n_tr => $n_tr, weighted => $weighted, st_kind => $st_kind, ge_on => $ge_on,
+                     ge_cs => $ge_cs, fml_w => $fml_w, w_norm => $w_norm };
     }
     $self->step("Stage 2: fitting ", scalar(@specs), " model(s) with BLUPF90+") if @specs;
     my $fits = $self->fit_many(\@specs);
+    # the default model could not be fitted: the weighted model instead
+    my @retry = grep { $fits->[$_]->{error} && $ctx[$_]->{ge_cs} } 0 .. $#specs;
+    my @retry_specs;
+    foreach my $k (@retry) {
+        my $c = $ctx[$k];
+        $self->warn_msg("Stage 2, ", short_trait($c->{t}), ": the model with a genotype x trial variance and the stage-1 errors as known residuals could not be fitted ($fits->[$k]->{error}); the weighted model (weights = 1/SE^2) was fitted instead.");
+        my $sp = eval { $self->model_spec($c->{md}, $c->{fml_w}, $grandom, $c->{w_norm}, "stage2_" . short_trait($c->{t}) . "_weighted") };
+        next if !$sp;
+        @$c{qw(fml ge_cs)} = ($c->{fml_w}, 0);
+        $specs[$k] = $sp;
+        push @retry_specs, $k;
+    }
+    if (@retry_specs) {
+        my $f2 = $self->fit_many([ @specs[@retry_specs] ]);
+        $fits->[ $retry_specs[$_] ] = $f2->[$_] for 0 .. $#retry_specs;
+    }
     for my $k (0 .. $#specs) {
         my ($c, $f) = ($ctx[$k], $fits->[$k]);
         my ($t, $res, $md) = ($c->{t}, $c->{res}, $c->{md});
@@ -1741,12 +1797,12 @@ sub _stage2 {
                 $gxt_part += $vc->{$kk} * mean(map { 1 / scalar(keys %$_) } values %al);
             }
             # G x E + error: with one variance per trial, their means
-            my $ge_err = $vc->{Residual} + ($c->{ge_on} ? $vc->{'accession:trial'} // 0 : 0);
+            my $ge_err = $vc->{Residual} + ($vc->{'accession:trial'} // 0);
             $res->{var_ge} = $ge_err + sum(0, map { $vc->{$_} } @gxt);
             my $den = $res->{var_g} + $gxt_part + $ge_err / $e_bar;
             $res->{h2} = $den > 0 ? $res->{var_g} / $den : undef;
         }
-        else { $res->{var_ge} = $vc->{Residual} + ($c->{ge_on} ? $vc->{'accession:trial'} // 0 : 0); }
+        else { $res->{var_ge} = $vc->{Residual} + ($vc->{'accession:trial'} // 0); }
         $self->_report_structure($t, $f, $res, 'trial') if $f->{structure};
         if (my $gb = $f->{ge_by}) {
             push @{$self->{variance_components}}, { trait => short_trait($t), component => "accession:trial, trial $_", variance => $gb->{$_} } for sort keys %$gb;
@@ -1860,7 +1916,7 @@ sub _multi_trait_setup {
         my @cy;
         foreach my $vn (@rep_cov) {
             my $cf = $self->{cov_full}->{$vn};
-            next if $cf eq $t;
+            next if !$self->cov_applies($vn, $t);
             my $co = $self->_occasions($cf);
             next if $co->{n} < 1;
             push @cy, { vn => $vn, full => $cf, occ => $co };
@@ -1919,7 +1975,7 @@ sub _software {
                  "$_->{trait} (" . $plural->($m->{n_occasions} // 0, 'date') . (@{ $m->{covariates} || [] } ? ' + dates of ' . join(', ', @{ $m->{covariates} }) : '') . ")" } @mt) .
                  " (G0 (x) " . ({ pedigree => 'A', genomic => 'G', single_step => 'H' }->{ $self->{gen_model} // '' } // 'I') . ", R0 (x) I)" if @mt;
     return [
-        @parts ? { name => 'BLUPF90+', version => $self->{f90}->program_version // '', used_for => 'Fitted ' . join(' and ', @parts) . ' by sparse AI-REML.',
+        @parts ? { name => 'BLUPF90+', version => $self->{f90}->program_version // '', used_for => 'Fitted ' . join(' and ', @parts) . ' by sparse REML (AI-REML; EM-REML in stage 2 with known stage-1 errors and when AI-REML did not settle).',
                    reference => 'Misztal I, Tsuruta S, Lourenco D, Masuda Y, Aguilar I, Legarra A, Vitezica Z (2018). Manual for BLUPF90 family of programs. University of Georgia, Athens, USA.' } : (),
     ];
 }
@@ -2195,7 +2251,7 @@ sub _single_stage {
                 $add->("(1|accession:$v)", n_levels(@{$d->{$v}}) > 1, "accession x $self->{tf}->{$v}->{name} (one level in the data)", $v);
             }
             foreach my $cv (@{$self->{cov_vars}}) {
-                next if $cv eq cov_name($t);
+                next if !$self->cov_applies($cv, $t);    # not chosen for this trait, or the trait itself
                 my $ok = (grep { defined } @{$d->{$cv}}) > 0.5 * nrow($d) && n_levels(@{$d->{$cv}}) > 1;
                 my %lv; $lv{ $d->{trial}->[$_] }->{ $d->{$cv}->[$_] // '' } = 1 for 0 .. nrow($d) - 1;
                 my $held = $ok && $env eq 'fixed' && $n_tr > 1 && !grep { keys(%$_) > 1 } values %lv;
@@ -2843,6 +2899,7 @@ sub _output {
         treatments => \@trt,
         repeated => { time => $self->{rep_time}, gxtime => $self->{rep_gxtime} ? $TRUE : $FALSE, traits => $self->{repeated_info} },
         covariates => [ map { $self->{cov_label}->{$_} } @{$self->{cov_vars}} ],
+        covariate_traits => (%{ $self->{cov_targets} || {} } ? { map { $self->{cov_label}->{$_} => [ map { short_trait($_) } @{ $self->{cov_targets}->{$_} } ] } keys %{ $self->{cov_targets} } } : undef),
         multi_trait => $self->{multi_trait},
         ($self->{variance_structures} ? (variance_structures => $self->{variance_structures}) : ()),
         ($self->{adv_unused} ? (advanced_unused => $self->{adv_unused}) : ()),

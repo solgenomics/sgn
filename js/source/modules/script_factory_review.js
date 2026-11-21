@@ -147,7 +147,10 @@ export function reviewModel(recipe, ctx) {
     // 5. covariates that nearly repeat the trait
     const covs = arr(recipe.covariates);
     const close = [];
+    // only the trait / covariate pairs the model uses (covariate dialog)
+    const covOnly = recipe.covariate_traits || {};
     arr(recipe.traits).forEach(t => covs.forEach(c => {
+        if (covOnly[c] && arr(covOnly[c]).indexOf(t) < 0) return;
         const r = ctx.corr && ctx.corr[t] && ctx.corr[t][c];
         if (c !== t && r !== undefined && r !== null && Math.abs(r) >= 0.9) close.push({ t: t, c: c, r: r });
     }));
@@ -159,7 +162,11 @@ export function reviewModel(recipe, ctx) {
             text: close.map(x => short(x.c) + ' and ' + short(x.t) + ' (r = ' + x.r.toFixed(2) + ')').join('; ') + ' move together on almost every plot. ' +
                 'Used as a covariate, it can explain away part of the genetic differences you want to measure, not only the plot-to-plot noise.',
             fix: 'Leave ' + drop.map(short).join(', ') + ' out as covariate.',
-            apply: r => { r.covariates = arr(r.covariates).filter(c => drop.indexOf(c) < 0); if (r.single) r.single.covariates = arr(r.single.covariates).filter(c => drop.indexOf(c) < 0); }
+            apply: r => {
+                r.covariates = arr(r.covariates).filter(c => drop.indexOf(c) < 0);
+                if (r.single) r.single.covariates = arr(r.single.covariates).filter(c => drop.indexOf(c) < 0);
+                if (r.covariate_traits) { drop.forEach(c => { delete r.covariate_traits[c]; }); if (!Object.keys(r.covariate_traits).length) delete r.covariate_traits; }
+            }
         });
     }
 
@@ -289,7 +296,7 @@ export function reviewResults(res, recipe, hasRowcol, avail) {
         });
     }
 
-    const approx = arr(res && res.warnings).map(String).filter(m => /still changing after a refit with/.test(m));
+    const approx = arr(res && res.warnings).map(String).filter(m => /still changing after/.test(m));
     if (approx.length) {
         f.push({
             id: 'convergence_approx', level: 'note',
@@ -298,6 +305,29 @@ export function reviewResults(res, recipe, hasRowcol, avail) {
                 'This usually means a replicate, block or row effect is close to zero in those trials; the genotype values are then little affected, only that variance is imprecise. ' +
                 'The details are under Convergence notes in the analysis log.',
             fix: '', apply: null
+        });
+    }
+
+    // stage 1 with more field terms than the trials can separate: many trial /
+    // trait fits whose REML needed refits or did not settle (BLUPF90+), or
+    // whose spatial model could not be used (SpATS failed or gave implausible
+    // means, R engine)
+    const s1fits = s1.filter(x => x.model).length;
+    const hard = {};
+    arr(res && res.warnings).map(String).forEach(m => {
+        const mm = m.match(/^Stage 1, (.+?): .*(did not settle|still changing|diverged)/) || m.match(/^SpATS could not be fitted for (.+?) \(/);
+        if (mm) hard[mm[1]] = true;
+    });
+    const hardKeys = Object.keys(hard);
+    if (two && s1fits && hardKeys.length >= 3 && hardKeys.length / s1fits >= 0.1) {
+        f.push({
+            id: 'stage1_overparam', level: 'look',
+            title: 'The stage-1 model may be over-parameterized for some trials',
+            text: 'In ' + hardKeys.length + ' of ' + s1fits + ' trial / trait fits of stage 1 (for example ' + hardKeys.slice(0, 3).join(', ') + (hardKeys.length > 3 ? '...' : '') + ') ' +
+                'the variance estimates needed extra refits to settle, or the spatial model could not be used. This usually means the model has more field terms than these trials can tell apart: ' +
+                'row and column effects and the spatial surface describe the same variation. The genotype values are usually little affected, but the run takes longer and some variances (and H²) are less stable.',
+            fix: canLighten ? 'Compare with the design model in stage 1 (no spatial surface) and check the rankings.' : '',
+            apply: canLighten ? lighter : null
         });
     }
 

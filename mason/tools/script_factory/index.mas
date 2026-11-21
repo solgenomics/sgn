@@ -261,7 +261,7 @@ $license_json =~ s/</\\u003c/g;
               <span class="sf-option-text">The whole analysis in R, with free and open-source packages, when BLUPF90+ cannot be used: mixed models with lme4, spatial models with SpATS, multi-trait models of repeated measurements with glmmTMB, and pedigree (A), genomic (G) and single-step (H) relationship matrices with AGHmatrix. Required for custom formulas with random slopes.</span></label>
             <label class="sf-option sf-option-sm" id="sf_engine_f90"><input type="radio" name="sf_engine" value="blupf90" />
               <span class="sf-option-title">BLUPF90+</span>
-              <span class="sf-option-text">The whole analysis runs without R: Breedbase (Perl) writes the models for BLUPF90+ (Fortran, sparse AI-REML; Misztal et al.) and fits the models of all trials and traits in parallel. Much faster on large multi-environment datasets and pedigrees; needed for pedigree (A matrix) models. Row &times; column trials get row / column effects and linear trends instead of SpATS (R only); custom formulas take random intercepts only. Parameter and data files are downloadable with the results.</span></label>
+              <span class="sf-option-text">The whole analysis runs without R: Breedbase (Perl) writes the models for BLUPF90+ (Fortran, sparse AI/EM-REML; Misztal et al.) and fits the models of all trials and traits in parallel. Much faster on large multi-environment datasets and pedigrees; needed for pedigree (A matrix) models. Row &times; column trials get row / column effects and linear trends instead of SpATS (R only); custom formulas take random intercepts only. Parameter and data files are downloadable with the results.</span></label>
           </div>
           <div id="sf_engine_note"></div>
           <div class="sf-adv-row">
@@ -300,7 +300,7 @@ $license_json =~ s/</\\u003c/g;
             <div class="col-sm-6">
               <label class="sf-label">Weighting of stage 1 means</label>
               <select class="form-control" id="sf_stage2_weighting">
-                <option value="inverse_se2">1 / SE&sup2; (Smith et al., 2001)</option>
+                <option value="inverse_se2">Known stage-1 errors (SE&sup2;) + genotype &times; trial variance (M&ouml;hring &amp; Piepho, 2009)</option>
                 <option value="none">Unweighted</option>
               </select>
             </div>
@@ -416,7 +416,7 @@ $license_json =~ s/</\\u003c/g;
         <div class="sf-card" id="sf_cov_card">
           <h3>Covariates</h3>
           <p class="sf-help">Fixed linear effect of another trait measured on the same plots (e.g. stand count, or NDVI). <b>Two stages:</b> in the stage 1 model of every trial where the covariate varies (SpATS or design model), so the trial means are adjusted before stage 2.
-            <b>Single stage:</b> in the model (in a written formula a selected covariate is available by the name shown in brackets). A trait measured several times per plot enters with the value per plot chosen under <i>Repeated measurements</i>. A trait is never used as a covariate of itself.</p>
+            <b>Single stage:</b> in the model (in a written formula a selected covariate is available by the name shown in brackets). A trait measured several times per plot enters with the value per plot chosen under <i>Repeated measurements</i>. A trait is never used as a covariate of itself. Each covariate adjusts all analysed traits unless you choose some of them (the link next to it).</p>
           <div id="sf_single_covariates" class="sf-cov-list"></div>
         </div>
 
@@ -739,6 +739,27 @@ $license_json =~ s/</\\u003c/g;
 </div>
 
 <!-- ===================== advanced settings modal ===================== -->
+<div class="modal fade" id="sf_cov_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title"><span class="glyphicon glyphicon-random"></span>&nbsp; Traits adjusted for <span id="sf_cov_modal_name"></span></h4>
+      </div>
+      <div class="modal-body">
+        <p class="sf-help">The covariate enters the models of the traits checked here (stage 1 in two stages, the single-stage model otherwise). The other traits are analysed without it. A trait is never adjusted for itself.</p>
+        <p><a href="#" id="sf_cov_all">Check all</a> &middot; <a href="#" id="sf_cov_none">Uncheck all</a></p>
+        <div id="sf_cov_traits" class="sf-cov-traits"></div>
+        <p class="sf-help" id="sf_cov_formula_note" style="display:none">A written single-stage formula uses the covariates it names for every trait; this choice applies to the builder and to two-stage analyses.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="sf_cov_save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="sf_adv_modal" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -828,17 +849,9 @@ $license_json =~ s/</\\u003c/g;
           </div>
         </div>
         <div class="row" id="sf_adv_fit_f90">
-          <div class="col-sm-3">
+          <div class="col-sm-6">
             <label class="sf-label">REML algorithm</label>
-            <select class="form-control input-sm sf-adv-opt" id="sf_adv_f90_method">
-              <option value="ai">AI-REML (default)</option>
-              <option value="em_ai">EM-REML first, then AI-REML</option>
-              <option value="em">EM-REML only</option>
-            </select>
-          </div>
-          <div class="col-sm-3">
-            <label class="sf-label">EM-REML rounds first</label>
-            <input type="number" class="form-control input-sm sf-adv-opt" id="sf_adv_f90_em_rounds" min="1" step="1" placeholder="10" />
+            <p class="form-control-static">Automatic: AI-REML; EM-REML in stage 2 (known stage-1 errors) and when AI-REML does not settle</p>
           </div>
           <div class="col-sm-3">
             <label class="sf-label">Maximum rounds</label>
@@ -1144,6 +1157,8 @@ table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-cov-list label { margin: 0; padding: 3px 10px; border: 1px solid #d1d5db; border-radius: 14px; font-weight: normal; cursor: pointer; font-size: 12px; }
 .sf-cov-list label.on { background: #e8f3ec; border-color: #2b7a4b; color: #1f5c38; }
 .sf-cov-list label.dis { opacity: .45; cursor: not-allowed; }
+.sf-cov-list .sf-cov-edit { margin-left: 6px; font-size: 11px; }
+.sf-cov-traits label { display: block; font-weight: normal; margin: 2px 0; }
 .sf-cov-list input { display: none; }
 .sf-rep-table td { vertical-align: middle !important; }
 .sf-geno-block { margin-top: 10px; padding: 8px 10px; border: 1px solid #d6e4f0; border-radius: 6px; background: #f7fbff; }

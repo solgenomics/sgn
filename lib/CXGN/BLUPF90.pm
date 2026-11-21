@@ -84,6 +84,10 @@ use CXGN::BLUPF90::Stats qw(var mean);
 our $DENSE_MAX = 60;       # max. fixed covariate columns for exact BLUE standard errors
 our $MAX_ROUNDS = 200;
 our $EM_ROUNDS = 50;    # EM-REML rounds before AI-REML when a fit is refitted
+# EM-REML rounds that start every AI-REML fit of the Analysis Pipeline: from
+# the default starting values AI-REML often set some variances to zero in its
+# first step and stayed there (slow, and at a worse likelihood)
+our $EM_START = 5;
 
 has 'bin_dir' => (is => 'rw', isa => 'Maybe[Str]');
 has 'keep_dir' => (is => 'rw', isa => 'Str', default => sub { File::Spec->tmpdir() . "/blupf90_$$" });
@@ -560,7 +564,7 @@ sub prepare {
         # log(residual variance) = a0 + a_k (level k); zero starting values
         # would stay zero, so they start slightly away from it
         push @par, 'OPTION hetres_pos ' . join(' ', @hr_pos), 'OPTION hetres_pol ' . join(' ', sprintf('%.6g', log($v0)), ('0.05') x @hr_pos);
-        push @notes, "EM-REML is not available with one residual variance per $spec->{hetres}->{by}; AI-REML was used" if $self->em_rounds > 0;
+        push @notes, "EM-REML is not available with one residual variance per $spec->{hetres}->{by}; AI-REML was used" if $self->em_only;
     }
     push @par, 'OPTION method VCE' if $vce;
     # YAMS (sparse supernodal factorization) pays off on large and pedigree models only
@@ -571,8 +575,14 @@ sub prepare {
         push @par, "OPTION SNP_file $snp", sprintf('OPTION minfreq %.4g', $genomic->{minfreq} // 0.05), sprintf('OPTION callrate %.4g', $genomic->{callrate} // 0.90);
     }
     push @par, 'OPTION sol se', 'OPTION missing -999999999', 'OPTION residual';
-    push @par, ($hr ? grep { !/EM-REML/ } $self->_reml_options() : $self->_reml_options()) if $vce;
-    push @par, "OPTION EM-REML $EM_ROUNDS" if $known && $vce && $self->em_rounds == 0 && !$csh;
+    # EM-REML only for this fit: when asked for (em_only), and with known
+    # residual variances (OPTION constant_var), where AI-REML of blupf90+
+    # oscillated between the optimum and far worse likelihoods. No EM-REML
+    # with one residual variance per level (hetres); otherwise the EM-REML
+    # start rounds of _reml_options.
+    my $em_mode = ($vce && !$hr && !$csh && ($self->em_only || $known)) ? 1 : 0;
+    push @par, (($hr || $em_mode) ? grep { !/EM-REML/ } $self->_reml_options() : $self->_reml_options()) if $vce;
+    push @par, 'OPTION EM-REML ' . $self->max_rounds if $em_mode;
     # cs_het: one EM-REML round per run (f90_em.par), the final run solves the
     # equations at the estimates (f90.par)
     if ($csh) {
@@ -614,6 +624,7 @@ sub prepare {
                              ($unit ? (unit => { first => $unit->{first}, K => $unit->{K}, n_by => $unit->{n_by} }) : ()) }) : ()),
         ($unit ? (unit => { first => $unit->{first}, K => $unit->{K}, labels => $unit->{labels}, eps => $eps }) : ()),
         known_resid => $known,
+        em_mode => $em_mode,
     };
 }
 
@@ -649,15 +660,20 @@ sub run {
         # one residual variance per level: AI-REML of the log-linear residual
         # model needs good starting values, taken from the same model with one
         # residual variance (f90_start.par) fitted first
-        if ($job->{hetres} && -e 'f90_start.par') {
+        if ($job->{hetres} && -e 'f90_start.par' && !$job->{refit}) {
             system('bash', '-c', _command($prog, 'f90_start.par', 'blupf90_start.out'));
             _warm_start('f90.par', 'blupf90_start.out');
             unlink(grep { -e } qw(solutions yhat_residual pev_pec_bf90));
         }
-        if ($job->{cs_het}) { $self->_fit_cs_het($job, $prog); }
-        else { system('bash', '-c', $cmd); }
+        if ($job->{cs_het} && !$job->{refit}) { $self->_fit_cs_het($job, $prog); }
+        else {
+            system('bash', '-c', $cmd);
+            _stop_at_em_convergence($prog) if ($job->{em_mode} || $job->{em_only}) && !$job->{hetres};
+        }
         chdir($cwd);
-        if (open(my $T, '>', "$job->{dir}/elapsed.txt")) { printf $T "%.3f\n", time() - $t0; close($T); }
+        # a refit adds its time to the first fit's
+        my $before = $job->{refit} && -e "$job->{dir}/elapsed.txt" ? (_read_lines("$job->{dir}/elapsed.txt"))[0] + 0 : 0;
+        if (open(my $T, '>', "$job->{dir}/elapsed.txt")) { printf $T "%.3f\n", $before + time() - $t0; close($T); }
         $pm->finish(0);
     }
     $pm->wait_all_children;
@@ -679,6 +695,69 @@ sub _write_pedigree {
     close($P);
     _write_lines("$wd/inbreeding.txt", "code\tid\tF", map { ($_ + 1) . "\t$ped->{id}->[$_]\t" . sprintf('%.6f', $F->[$_]) } 0 .. $#{$ped->{id}});
     return { mean => mean(@$F) // 0, max => max(@$F, 0), capped => $capped };
+}
+
+# EM-REML only (em_rounds >= max_rounds)
+sub em_only { my $self = shift; return $self->em_rounds >= $self->max_rounds ? 1 : 0; }
+
+# blupf90+ (2.x) goes on with AI-REML once EM-REML converges before its
+# EM-REML rounds ("At round: k Converge in fewer rounds than EM-REML rounds"),
+# and AI-REML can then oscillate far from the optimum: EM-REML only means
+# stopping at that round. The estimates of round k start one more EM-REML
+# round (the final solutions); without them the fit is run again up to round
+# k. Runs in the fit folder (f90.par, blupf90.out; the EM-REML run is kept
+# as blupf90_em.out).
+sub _stop_at_em_convergence {
+    my $prog = shift;
+    my @out = _read_lines('blupf90.out');
+    my ($k) = map { /At round:\s*(\d+)\s+Converge in fewer rounds than EM-REML rounds/ ? $1 : () } @out;
+    return if !$k;
+    my @par = grep { !/^OPTION (maxrounds|EM-REML)\b/ } _read_lines('f90.par');
+    my @warm = _par_with_round_estimates(\@par, \@out, $k);
+    _write_lines('f90.par', @warm ? (@warm, 'OPTION EM-REML 1', 'OPTION maxrounds 1') : (@par, "OPTION EM-REML $k", "OPTION maxrounds $k"));
+    rename('blupf90.out', 'blupf90_em.out');
+    unlink(grep { -e } qw(solutions yhat_residual pev_pec_bf90));
+    system('bash', '-c', _command($prog));
+}
+
+# f90.par lines with the variances blupf90+ printed after EM-REML round k
+# ("new r", then one "new G" per RANDOM_GROUP, in the order of f90.par);
+# empty when the printout does not match the parameter file
+sub _par_with_round_estimates {
+    my ($par, $out, $k) = @_;
+    my ($start) = grep { $out->[$_] =~ /^\s*round\s+$k\s*$/ } 0 .. $#$out;
+    return () if !defined $start;
+    my ($r, @G, $cur);
+    for my $i ($start + 1 .. $#$out) {
+        my $l = $out->[$i];
+        if ($l =~ /^\s*new r\s*$/) { $r = []; $cur = $r; next; }
+        if ($l =~ /^\s*new G\s*$/) { push @G, []; $cur = $G[-1]; next; }
+        (my $v = $l) =~ s/^\s+|\s+$//g;
+        next if $v eq '';
+        # the round ends at the first line that is not a number
+        last if $v !~ /^-?[\d.][\d.eE+\- ]*$/;
+        return () if !$cur;
+        push @$cur, join(' ', map { sprintf('%.10g', $_ + 0) } split /\s+/, $v);
+    }
+    return () if !$r || !@$r;
+    my @new;
+    my $g = 0;
+    for (my $i = 0; $i <= $#$par; $i++) {
+        my $l = $par->[$i];
+        push @new, $l;
+        my $is_r = $l =~ /^RANDOM_RESIDUAL/ ? 1 : 0;
+        next if !$is_r && $l ne '(CO)VARIANCES';
+        my $block = $is_r ? $r : $G[$g++];
+        return () if !$block;
+        # the old block: its numeric lines
+        my $n = 0;
+        $n++ while $i + $n + 1 <= $#$par && $par->[$i + $n + 1] =~ /^\s*-?[\d.][\d.eE+\- ]*\s*$/;
+        return () if $n != @$block;
+        push @new, @$block;
+        $i += $n;
+    }
+    return () if $g != @G;
+    return @new;
 }
 
 # shell command that runs blupf90+ in the current folder
@@ -1063,35 +1142,55 @@ sub _round_limit {
     my @delta = map { /In round\s+\d+\s+convergence=\s*(\S+)/ ? $1 + 0 : () } @$out;
     my $last = @delta ? $delta[-1] : undef;
     if (defined($last) && $last < $STABLE_DELTA) {
-        return sprintf("AI-REML reached the %d-round limit with the estimates already settled (last convergence value %.1e); the results are reliable", $self->max_rounds, $last);
+        return sprintf("%s reached the %d-round limit with the estimates already settled (last convergence value %.1e); the results are reliable",
+                       (($job->{em_only} || $job->{em_mode}) ? 'EM-REML' : 'AI-REML'), ($job->{em_refit} ? 2 : 1) * $self->max_rounds, $last);
     }
     if (!$job->{em_refit} && !$job->{hetres}) {
-        $self->_refit_em($job);
+        $self->_prepare_refit($job, $job->{em_mode});
         return;
     }
+    # AI-REML still oscillating after the EM-REML start (seen with known
+    # residual variances, OPTION constant_var: AI-REML steps jumping between
+    # the optimum and far worse likelihoods): EM-REML only, which cannot
+    # move away from the optimum
+    if ($job->{em_refit} && !$job->{em_only} && !$job->{hetres}) {
+        $self->_prepare_refit($job, 1);
+        return;
+    }
+    return sprintf("estimates still changing after %d EM-REML rounds (%slast convergence value %s); the variance estimates of this fit are approximate",
+                   2 * $self->max_rounds, ($job->{em_mode} ? '' : 'EM-REML only, after AI-REML did not settle; '), defined($last) ? sprintf('%.1e', $last) : 'unknown') if $job->{em_only};
     return sprintf("estimates still changing after %d AI-REML rounds (last convergence value %s; no EM-REML refit with one residual variance per level); the variance estimates of this fit are approximate",
                    $self->max_rounds, defined($last) ? sprintf('%.1e', $last) : 'unknown') if $job->{hetres};
     return sprintf("estimates still changing after a refit with %d EM-REML rounds first (%d rounds in all, last convergence value %s); a variance component is probably close to zero, so the variance estimates of this fit are approximate",
                    $EM_ROUNDS, 2 * $self->max_rounds, defined($last) ? sprintf('%.1e', $last) : 'unknown');
 }
 
-# Refit a job in its folder with EM-REML rounds before AI-REML (steadier
-# near zero variances and from poor starting values)
-sub _refit_em {
-    my ($self, $job) = @_;
+# Prepare a refit of a job in its folder with EM-REML rounds before AI-REML
+# (steadier near zero variances and from poor starting values), or with
+# EM-REML only. run() fits it; fit_all() runs the refits of a batch in
+# parallel, fit() and fit_mt() right away (_refit_result).
+sub _prepare_refit {
+    my ($self, $job, $em_only) = @_;
     my $wd = $job->{dir};
     my @par = grep { !/^OPTION (maxrounds|EM-REML)\b/ } _read_lines("$wd/f90.par");
     my $em = $self->em_rounds > $EM_ROUNDS ? $self->em_rounds : $EM_ROUNDS;
-    $em = 2 * $self->max_rounds if $self->em_rounds >= $self->max_rounds;    # EM-REML only
+    $em = 2 * $self->max_rounds if $em_only || $self->em_only;    # EM-REML only
     _write_lines("$wd/f90.par", @par, "OPTION EM-REML $em", 'OPTION maxrounds ' . (2 * $self->max_rounds));
     rename("$wd/blupf90.out", "$wd/blupf90_ai-reml.out");
     unlink("$wd/solutions");
-    my $prog = $self->program() or return;
-    my $cwd = File::Spec->rel2abs('.');
-    chdir($wd);
-    system('bash', '-c', _command($prog));
-    chdir($cwd);
     $job->{em_refit} = 1;
+    $job->{em_only} = 1 if $em_only;
+    $job->{refit} = 1;
+    $job->{done} = 0;
+}
+
+# after _prepare_refit: in a batch (fit_all) the job waits for the parallel
+# refits; otherwise it is refitted and read now
+sub _refit_result {
+    my ($self, $job) = @_;
+    return { _pending_refit => 1 } if $self->{_defer_refits};
+    $self->run([$job]);
+    return $self->read($job);
 }
 
 # AI-REML that diverged (it can stop early with absurd estimates and report
@@ -1203,14 +1302,25 @@ sub read {
         foreach my $g (grep { $_ && $_->{G} } $job->{gxe}, $job->{rr_plot}, $job->{ge}, $job->{unit}) { $chk{"_g$_"} = $g->{G}->[$_][$_] for 0 .. $#{ $g->{G} }; }
         if (_diverged(\%chk, $job->{y})) {
             die "the variance estimates diverged (AI-REML with one residual variance per level, no EM-REML possible): the model is probably over-parameterised for these data\n" if $job->{hetres};
-            if (!$job->{em_refit}) { $self->_refit_em($job); $job->{diverged_refit} = 1; delete $_->{G} for grep { $_ } $job->{gxe}, $job->{rr_plot}, $job->{ge}, $job->{unit}; return $self->read($job); }
+            # refits: EM-REML first, then EM-REML only (it cannot run away
+            # from the likelihood optimum as AI-REML steps can)
+            if (!$job->{em_refit} || !$job->{em_only}) {
+                $self->_prepare_refit($job, $job->{em_refit} ? 1 : $job->{em_mode});
+                $job->{diverged_refit} = 1;
+                delete $_->{G} for grep { $_ } $job->{gxe}, $job->{rr_plot}, $job->{ge}, $job->{unit};
+                return $self->_refit_result($job);
+            }
             die "the variance estimates diverged (AI-REML and EM-REML): the model is probably over-parameterised for these data\n";
         }
         my $limit = $job->{em_refit} ? 2 * $self->max_rounds : $self->max_rounds;
         if ($rounds >= $limit) {
             my $note = $self->_round_limit($job, \@out);
-            return $self->read($job) if !defined($note);    # refitted with EM-REML first
+            return $self->_refit_result($job) if !defined($note);    # refitted with EM-REML first
             push @notes, $note;
+        }
+        elsif ($job->{em_only}) {
+            push @notes, $job->{em_mode} ? "EM-REML did not converge in " . $self->max_rounds . " rounds; refitted with up to " . (2 * $self->max_rounds) . " rounds, which converged"
+                                        : "AI-REML did not settle, also after $EM_ROUNDS EM-REML rounds first; refitted with EM-REML only, which converged";
         }
         elsif ($job->{diverged_refit}) {
             push @notes, "AI-REML diverged from its starting values; refitted with $EM_ROUNDS EM-REML rounds first, which converged";
@@ -1539,7 +1649,16 @@ sub fit_all {
     my ($self, $specs) = @_;
     my @jobs = map { my $s = $_; my $j = eval { $self->prepare($s) }; $j // { error => ($@ || 'model could not be prepared') } } @$specs;
     $self->run([ grep { !$_->{error} } @jobs ]);
-    return [ map { my $j = $_; $j->{error} ? { error => _clean($j->{error}) } : (eval { $self->read($j) } // { error => _clean($@) }) } @jobs ];
+    # fits that need a refit (AI-REML that did not settle or diverged) are
+    # refitted together, in parallel, then read again (at most two refits)
+    local $self->{_defer_refits} = 1;
+    my $read = sub { my $j = shift; $j->{error} ? { error => _clean($j->{error}) } : (eval { $self->read($j) } // { error => _clean($@) }) };
+    my @res = map { $read->($_) } @jobs;
+    while (my @p = grep { $res[$_]->{_pending_refit} } 0 .. $#jobs) {
+        $self->run([ @jobs[@p] ]);
+        $res[$_] = $read->($jobs[$_]) for @p;
+    }
+    return \@res;
 }
 
 sub uniq_keys { my %s; return grep { !$s{$_}++ } @_; }

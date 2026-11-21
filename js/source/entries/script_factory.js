@@ -56,6 +56,8 @@ const state = {
     zoneLists: null,        // {own, pub} accession lists, read once
     designOverrides: {},    // trial -> design
     singleCov: {},          // full trait -> true, covariates (stage 1 models and single-stage model)
+    covTraits: {},          // covariate -> [traits it adjusts]; none = every analysed trait (covariate dialog)
+    covEditing: null,       // covariate open in the covariate dialog
     repeated: {},           // full trait -> value per plot of a trait measured several times per plot (mean | first | last | max | min | sum | auc | slope | all)
     trt: null,              // {use: {name: true}, gxt: {name: true}} treatments in the models; null = defaults of the dataset
     pendingRecipe: null,    // recipe loaded before a dataset
@@ -220,6 +222,7 @@ function buildBaseRecipe() {
         stage2: { genotype: $('#sf_stage2_genotype').val(), weighting: $('#sf_stage2_weighting').val() },
         single: singleRecipe(),
         covariates: Object.keys(state.singleCov),
+        ...(covTraitsRecipe() ? { covariate_traits: covTraitsRecipe() } : {}),
         repeated: repeatedRecipe(),
         treatments: treatmentRecipe(),
         index: index,
@@ -294,6 +297,8 @@ function applyRecipe(r) {
     state.advanced = cleanAdvanced(r.advanced);
     state.interactions = ixClean(r.interactions);
     // covariates: shared by both strategies since version 1.7 (single.covariates before)
+    state.covTraits = {};
+    Object.keys(r.covariate_traits || {}).forEach(c => { state.covTraits[matchTrait(c) || c] = arr(r.covariate_traits[c]).map(t => matchTrait(t) || t); });
     if (r.covariates) {
         state.singleCov = {};
         arr(r.covariates).forEach(t => { const m = matchTrait(t) || t; state.singleCov[m] = true; });
@@ -1619,13 +1624,14 @@ function renderModelPreview() {
     if (two) {
         const random = $('#sf_stage2_genotype').val() === 'random';
         const w = $('#sf_stage2_weighting').val() === 'inverse_se2';
-        const covs = Object.keys(state.singleCov).map(covName);
+        const covs = Object.keys(state.singleCov).map(c => covName(c) + covOnlyText(c));
         const repAll = repeatedAllTraits();
         txt = '# Stage 1 (per trial, per trait)\n' +
             (state.dataset ? state.dataset.trials.map(t => '  ' + t.trial + ':  ' + trialModel(t).text).join('\n') : '') +
             (covs.length ? '\n  covariates in every stage 1 model (where they vary): + ' + covs.join(' + ') : '') +
             (repAll.length ? '\n  ' + repAll.map(shortTrait).join(', ') + ' (all measurements, design model): + ' + repeatedTerms(false).join(' + ') : '') +
-            '\n\n# Stage 2 (across trials)\n  BLUE_ij ~ trial_j + ' + (random ? '(1|accession_i)' : 'accession_i') + stage2Extra(random) + ' + e_ij' + (w ? ',  weights = 1 / SE_ij^2' : '') +
+            '\n\n# Stage 2 (across trials)\n  BLUE_ij ~ trial_j + ' + (random ? '(1|accession_i)' : 'accession_i') + stage2Extra(random) +
+            (w ? ' + (1|accession_i:trial_j) + e_ij,  Var(e_ij) = SE_ij^2 (known stage-1 error)' : ' + e_ij') +
             '\n  -> ' + valueText(random);
     } else {
         renderSingleHints();
@@ -1646,7 +1652,7 @@ function renderModelPreview() {
     if (g.model === 'genomic') txt += '\n# accession ~ N(0, G s2g): G = genomic relationship (VanRaden) from ' + (g.protocol_name || 'the genotyping protocol') + ' (MAF > ' + g.minfreq + ', call rate > ' + g.callrate + ')';
     if (g.model === 'single_step') txt += '\n# accession ~ N(0, H s2g): H = pedigree A + genomic G from ' + (g.protocol_name || 'the genotyping protocol') + ' (single-step)';
     const eng = effectiveEngine();
-    txt += '\n# engine: ' + (eng === 'blupf90' ? 'BLUPF90+ without R (Breedbase CXGN::BLUPF90, blupf90+ AI-REML; independent models in parallel)' + (two ? '; row x column trials get a SpATS-like P-spline surface' : '')
+    txt += '\n# engine: ' + (eng === 'blupf90' ? 'BLUPF90+ without R (Breedbase CXGN::BLUPF90, blupf90+ AI/EM-REML; independent models in parallel)' + (two ? '; row x column trials get a SpATS-like P-spline surface' : '')
         : 'R (lme4' + (two ? ' / SpATS' : '') + (['pedigree', 'genomic', 'single_step'].indexOf(g.model) >= 0 ? '; relationship matrix with AGHmatrix' : '') + ')');
     const advTxt = advPreview();
     if (advTxt) txt += '\n# advanced settings: ' + advTxt;
@@ -1662,16 +1668,15 @@ function renderModelPreview() {
 // the recipe (recipe.advanced); with none, the recipe is the basic one.
 // ---------------------------------------------------------------------------
 const ADV_DEFAULTS = { gxe: 'cs', residual: 'homogeneous', time_within: 'cs', time_genotype: 'default', method: 'REML', optimizer: 'default', max_iter: '',
-    f90_method: 'ai', f90_em_rounds: '', f90_maxrounds: '', f90_conv: '' };
-const ADV_KEYS = { lme4: ['gxe', 'residual', 'time_within', 'time_genotype', 'method', 'optimizer', 'max_iter'], blupf90: ['gxe', 'residual', 'time_within', 'time_genotype', 'f90_method', 'f90_em_rounds', 'f90_maxrounds', 'f90_conv'] };
-const ADV_NUMERIC = ['max_iter', 'f90_em_rounds', 'f90_maxrounds'];
+    f90_maxrounds: '', f90_conv: '' };
+const ADV_KEYS = { lme4: ['gxe', 'residual', 'time_within', 'time_genotype', 'method', 'optimizer', 'max_iter'], blupf90: ['gxe', 'residual', 'time_within', 'time_genotype', 'f90_maxrounds', 'f90_conv'] };
+const ADV_NUMERIC = ['max_iter', 'f90_maxrounds'];
 const ADV_LABEL = {
     gxe: { cs_het: 'G×E heterogeneous compound symmetry', diag: 'G×E diagonal', us: 'G×E unstructured' },
     residual: { trial: 'one residual variance per trial' },
     time_within: { ar1: 'AR(1) within plots', exp: 'exponential time correlation within plots', us: 'unstructured covariance within plots' },
     time_genotype: { slope: 'random regression of the genotype in time', us: 'unstructured genetic covariance among occasions' },
     method: { ML: 'ML' }, optimizer: { bobyqa: 'optimizer bobyqa', Nelder_Mead: 'optimizer Nelder-Mead', nlminbwrap: 'optimizer nlminb' },
-    f90_method: { em_ai: 'EM-REML then AI-REML', em: 'EM-REML only' }
 };
 const REL_MODELS = ['pedigree', 'genomic', 'single_step'];
 
@@ -1720,7 +1725,6 @@ function advRecipe() {
     const out = {};
     ADV_KEYS[eng].forEach(k => {
         if (a[k] === undefined || advBlocked(k, String(a[k]))) return;
-        if (k === 'f90_em_rounds' && a.f90_method !== 'em_ai') return;
         out[k] = a[k];
     });
     return Object.keys(out).length ? out : null;
@@ -1733,7 +1737,6 @@ function advDescribe(a) {
         if (ADV_LABEL[k] && ADV_LABEL[k][v]) parts.push(ADV_LABEL[k][v]);
         else if (k === 'max_iter') parts.push('max. ' + v + ' iterations');
         else if (k === 'f90_maxrounds') parts.push('max. ' + v + ' rounds');
-        else if (k === 'f90_em_rounds') parts.push(v + ' EM-REML rounds');
         else if (k === 'f90_conv') parts.push('convergence ' + v);
     });
     return parts.join(', ');
@@ -1946,7 +1949,6 @@ function advRefreshDialog() {
     });
     $('#sf_adv_fit_r').toggle(eng === 'lme4');
     $('#sf_adv_fit_f90').toggle(eng === 'blupf90');
-    $('#sf_adv_f90_em_rounds').prop('disabled', $('#sf_adv_f90_method').val() !== 'em_ai');
     const gxe = $('#sf_adv_gxe').val();
     const two = radio('sf_strategy') === 'two_stage';
     $('#sf_adv_gxe_help').html(
@@ -1972,7 +1974,7 @@ function advRefreshDialog() {
         (tg === 'slope' ? 'Random regression: <code>us(1 + time | accession)</code>, time scaled 0-1 over the season; the value of an accession is its predicted value at the mean measurement time. ' : '') +
         (tg === 'us' ? 'Unstructured over occasions: <code>us(0 + occasion | accession)</code>; the value is the mean over the occasions (for a full multi-trait model choose <i>multi-trait</i> under Repeated measurements). ' : ''));
     $('#sf_adv_fit_help').html(eng === 'blupf90'
-        ? 'Applies to every BLUPF90+ fit of the run. EM-REML is slower but steadier near zero variances; AI-REML that reaches the round limit is still checked and refitted as in the basic analysis.'
+        ? 'Applies to every BLUPF90+ fit of the run. The REML algorithm is chosen per model: AI-REML (fast); EM-REML for stage 2 with the stage-1 errors as known residuals, where AI-REML oscillates; a fit whose AI-REML does not settle is refitted with EM-REML first, then with EM-REML only.'
         : 'Applies to the stage-2 / single-stage model. ML estimates are needed to compare models with different fixed effects (likelihood ratio tests); REML gives unbiased variance components. The optimizer and iterations help when a model does not converge.');
 }
 
@@ -1985,7 +1987,6 @@ function advReadDialog() {
         if (ADV_NUMERIC.indexOf(k) >= 0 && v !== '' && !(Number(v) >= 1)) v = '';
         a[k] = v;
     });
-    if (a.f90_method !== 'em_ai') a.f90_em_rounds = '';
     return cleanAdvanced(a);
 }
 
@@ -2198,7 +2199,7 @@ function currentChoice(key) {
         case 'genotype': return two ? $('#sf_stage2_genotype').val() : $('#sf_single_genotype').val();
         case 'genetic': return $('#sf_gen_model').val();
         case 'check': return $('#sf_check').val();
-        case 'covariates': return Object.keys(state.singleCov).sort().join('|');
+        case 'covariates': return Object.keys(state.singleCov).sort().map(c => c + (covTraitsRecipe() && covTraitsRecipe()[c] ? '>' + covTraitsRecipe()[c].slice().sort().join(',') : '')).join('|');
         case 'repeated': { const o = {}; datasetRepeated().filter(x => x.n_repeated_units > 0).forEach(x => { o[x.trait] = { how: repeatedChoice(x.trait) }; }); return repeatedKey(o); }
         case 'treatments': { const t = treatmentRecipe(); return [t.use.slice().sort().join('|'), t.gxt.slice().sort().join('|')].join(';'); }
     }
@@ -2366,7 +2367,7 @@ function singleBuilderFormula() {
         }
         add('(1|accession:' + g + ')', n > 1, 'accession x ' + g + ' (one ' + g + ')');
     });
-    r.covariates.forEach(t => terms.push(covName(t)));
+    r.covariates.forEach(t => terms.push(covName(t) + covOnlyText(t)));
     const tr = treatmentRecipe();
     datasetTreatments().forEach(f => {
         const nLv = f.levels.length;
@@ -2465,13 +2466,47 @@ function renderSingleHints() {
     hint('gxe', D.n_trials + ' trial(s), ' + D.n_locations + ' location(s), ' + D.n_years + ' year(s)');
 }
 
+// traits a covariate adjusts: those chosen in the covariate dialog among the
+// analysed traits, or null for every analysed trait (the default)
+function covTargets(c) {
+    const all = state.traits.filter(t => t !== c);
+    const sel = state.covTraits[c];
+    if (!sel) return null;
+    const keep = all.filter(t => sel.indexOf(t) >= 0);
+    return keep.length === all.length ? null : keep;
+}
+function covTargetsText(c) {
+    const k = covTargets(c);
+    return '&rarr; ' + (!k ? 'all traits' : k.length ? k.map(t => esc(shortTrait(t))).join(', ') : 'no trait');
+}
+function covOnlyText(c) {
+    const k = covTargets(c);
+    return !k ? '' : ' (only for ' + (k.length ? k.map(shortTrait).join(', ') : 'no trait') + ')';
+}
+// recipe.covariate_traits: only the covariates limited to some traits
+function covTraitsRecipe() {
+    const out = {};
+    Object.keys(state.singleCov).forEach(c => { const k = covTargets(c); if (k) out[c] = k; });
+    return Object.keys(out).length ? out : null;
+}
+function openCovDialog(c) {
+    state.covEditing = c;
+    const k = covTargets(c);
+    const traits = state.traits.filter(t => t !== c);
+    $('#sf_cov_modal_name').text(shortTrait(c));
+    $('#sf_cov_traits').html(traits.length ? traits.map(t => '<label title="' + esc(t) + '"><input type="checkbox" value="' + esc(t) + '"' + (!k || k.indexOf(t) >= 0 ? ' checked' : '') + ' /> ' + esc(shortTrait(t)) + '</label>').join('')
+        : '<p class="sf-muted">Choose the traits to analyse first (step 1); until then the covariate adjusts every analysed trait.</p>');
+    $('#sf_cov_formula_note').toggle(radio('sf_strategy') !== 'two_stage' && radio('sf_single_mode') === 'custom');
+    $('#sf_cov_modal').modal('show');
+}
+
 function renderSingleCovariates() {
     if (!state.dataset) { $('#sf_single_covariates').html('<span class="sf-muted">load a dataset</span>'); return; }
     $('#sf_single_covariates').html(state.dataset.traits.map(t => {
         const on = !!state.singleCov[t.name];
         return '<label class="' + (on ? 'on' : '') + '" title="' + esc(t.name) + '"><input type="checkbox" value="' + esc(t.name) + '"' + (on ? ' checked' : '') + ' />' +
             (on ? '<span class="glyphicon glyphicon-ok"></span> ' : '') + esc(t.short) +
-            (repeatedInfo(t.name) ? ' <small>(' + esc(repeatedChoice(t.name) === 'all' ? 'plot mean' : REP_SHORT[repeatedChoice(t.name)]) + ')</small>' : '') + (on ? ' <code>' + esc(covName(t.name)) + '</code>' : '') +
+            (repeatedInfo(t.name) ? ' <small>(' + esc(repeatedChoice(t.name) === 'all' ? 'plot mean' : REP_SHORT[repeatedChoice(t.name)]) + ')</small>' : '') + (on ? ' <code>' + esc(covName(t.name)) + '</code> <a href="#" class="sf-cov-edit" data-cov="' + esc(t.name) + '" title="Choose the traits this covariate adjusts">' + covTargetsText(t.name) + '</a>' : '') +
             (COV_HINT.test(t.short) ? '<span class="sf-suggested">suggested</span>' : '') + '</label>';
     }).join(''));
 }
@@ -3767,13 +3802,29 @@ export function init(options) {
         ta.focus(); ta.selectionStart = ta.selectionEnd = a + v.length;
         $(ta).trigger('input');
     });
+    $('#sf_single_covariates').on('click', '.sf-cov-edit', function(e) { e.preventDefault(); e.stopPropagation(); openCovDialog($(this).data('cov')); });
+    $('#sf_cov_all, #sf_cov_none').on('click', function(e) { e.preventDefault(); $('#sf_cov_traits input').prop('checked', this.id === 'sf_cov_all'); });
+    $('#sf_cov_save').on('click', () => {
+        const c = state.covEditing;
+        if (c && $('#sf_cov_traits input').length) {
+            const keep = $('#sf_cov_traits input:checked').map(function() { return $(this).val(); }).get();
+            if (keep.length === $('#sf_cov_traits input').length) delete state.covTraits[c]; else state.covTraits[c] = keep;
+        }
+        $('#sf_cov_modal').modal('hide');
+        renderSingleCovariates();
+        renderPipeline();
+        renderModelPreview();
+    });
     $('#sf_single_covariates').on('change', 'input', function() {
         const t = $(this).val();
-        if ($(this).is(':checked')) state.singleCov[t] = true; else delete state.singleCov[t];
+        const on = $(this).is(':checked');
+        if (on) state.singleCov[t] = true; else { delete state.singleCov[t]; delete state.covTraits[t]; }
         renderSingleCovariates();
         renderRepeated();
         renderPipeline();
         renderModelPreview();
+        // a new covariate: choose the traits it adjusts (Cancel keeps all)
+        if (on && state.traits.filter(x => x !== t).length > 1) openCovDialog(t);
     });
     $('#sf_repeated').on('change', '.sf-rep-summary', function() {
         state.repeated[$(this).data('trait')] = $(this).val();

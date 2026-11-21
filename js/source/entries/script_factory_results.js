@@ -1439,7 +1439,9 @@ function renderModel() {
             '<p class="sfd-help">G (VanRaden) is built, tuned to the pedigree relationships of the genotyped accessions and blended (0.95 G + 0.05 A22) by BLUPF90+. ' +
             (gi.matrix === 'H' ? 'Single-step: accessions without genotypes are related to the others through the pedigree.' : 'Accessions without genotypes are treated as unrelated.') + ' Values are genomic breeding values (GEBVs).</p>';
     }
-    if (arr(R.covariates).length) h += '<p><b>Covariates:</b> ' + arr(R.covariates).map(esc).join(', ') + (R.strategy === 'two_stage' ? ' (fixed effects of the stage 1 models)' : ' (fixed effects)') + '</p>';
+    const covOnly = R.covariate_traits || {};
+    if (arr(R.covariates).length) h += '<p><b>Covariates:</b> ' + arr(R.covariates).map(c => esc(c) + (covOnly[c] ? ' (only for ' + (arr(covOnly[c]).length ? arr(covOnly[c]).map(esc).join(', ') : 'no trait') + ')' : '')).join(', ') +
+        (R.strategy === 'two_stage' ? ' (fixed effects of the stage 1 models)' : ' (fixed effects)') + '</p>';
     h += '<h4>Trials</h4>' + table(R.trials, [{ k: 'trial', l: 'Trial' }, { k: 'location', l: 'Location' }, { k: 'year', l: 'Year' }, { k: 'design', l: 'Design' },
         { k: 'spatial_layout', l: 'Row/col', f: v => v ? 'yes' : '' }, { k: 'n_plots', l: 'Plots', f: v => v }, { k: 'n_accessions', l: 'Accessions', f: v => v },
         { k: 'factors_not_used', l: 'Not used as model factor', f: v => esc(v || '') }]);
