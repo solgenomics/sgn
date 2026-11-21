@@ -65,13 +65,15 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 INSERT INTO cv (name) SELECT 'job_type' WHERE NOT EXISTS (SELECT 1 FROM cv WHERE name = 'job_type');
 
--- job types autocreated in the 'null' cv (only names used as job types)
+-- job types autocreated in the 'null' cv (names used as job types, and the
+-- types created below: a misplaced one holds the 'autocreated:' dbxref that
+-- creating the term again would reuse, violating cvterm_c2)
 UPDATE cvterm c SET cv_id = jt.cv_id
   FROM cv n, cv jt, dbxref x
  WHERE n.name = 'null' AND jt.name = 'job_type'
    AND c.cv_id = n.cv_id AND x.dbxref_id = c.dbxref_id AND x.accession = 'autocreated:' || c.name
    AND c.name IN (SELECT args->>'job_type' FROM sgn_people.sp_job WHERE args->>'job_type' IS NOT NULL
-                  UNION SELECT 'script_factory_analysis')
+                  UNION SELECT unnest(ARRAY['deletion', 'environment_stratification', 'ontology_indexing', 'phenotypic_analysis', 'script_factory_analysis']))
    AND NOT EXISTS (SELECT 1 FROM cvterm o WHERE o.cv_id = jt.cv_id AND o.name = c.name);
 EOSQL
 

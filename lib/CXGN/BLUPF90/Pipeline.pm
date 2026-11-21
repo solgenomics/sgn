@@ -287,7 +287,11 @@ sub _run {
     $self->{ancestor_values} = [];
     $self->_stage1();
     if ($self->{strategy} eq 'two_stage') { $self->_stage2(); } else { $self->_single_stage(); }
-    die "No model could be fitted. Check the warnings and the trait data.\n" if !@{$self->{genotype_values}};
+    if (!@{$self->{genotype_values}}) {
+        # stage 2 fitted no trait: the stage-1 means per trial are still results
+        die "No model could be fitted. Check the warnings and the trait data.\n" if $self->{strategy} ne 'two_stage' || !@{ $self->{stage1_means} || [] };
+        $self->warn_msg("Stage 2 could not be fitted for any trait (see the warnings above), so there are no genotype values across trials; the stage-1 means of each trial are reported.");
+    }
     $self->_wide();
     $self->_index();
     $self->_zones();
@@ -1589,8 +1593,29 @@ sub _stage2 {
             next;
         }
         my @se = map { $_->{se} } @m;
-        my $se_ok = !grep { !defined($_) || $_ <= 0 } @se;
-        my @w = ($weighting eq 'inverse_se2' && $se_ok) ? map { 1 / $_**2 } @se : (1) x @m;
+        my $has_se = sub { defined($_[0]) && $_[0] > 0 };
+        my $se_ok = !grep { !$has_se->($_) } @se;
+        # stage-1 means without a standard error (as the R engine): the median
+        # standard error of their trial; a trial with none gets the largest
+        # trial median, so it does not outweigh measured trials
+        my @se_given = grep { $has_se->($_) } @se;
+        if ($weighting eq 'inverse_se2' && @se_given && !$se_ok) {
+            my $median = sub { my @s = sort { $a <=> $b } @_; my $n = @s; $n % 2 ? $s[($n - 1) / 2] : ($s[$n / 2 - 1] + $s[$n / 2]) / 2 };
+            my (%by_tr, %miss);
+            foreach my $i (0 .. $#m) {
+                if ($has_se->($se[$i])) { push @{$by_tr{ $m[$i]->{trial} }}, $se[$i]; } else { $miss{ $m[$i]->{trial} }++; }
+            }
+            my $largest = max(map { $median->(@$_) } values %by_tr);
+            my %fill = map { $_ => ($by_tr{$_} ? $median->(@{$by_tr{$_}}) : $largest) } keys %miss;
+            my $n_miss = sum(values %miss);
+            $self->warn_msg("Stage 2, ", short_trait($t), ": $n_miss stage-1 mean(s) had no standard error (trial(s) ", join(', ', sort keys %miss),
+                            "); they were weighted with the median standard error of their trial, or with the largest trial median when their trial has none.");
+            @se = map { $has_se->($se[$_]) ? $se[$_] : $fill{ $m[$_]->{trial} } } 0 .. $#m;
+            $se_ok = 1;
+        }
+        my $weighted = $weighting eq 'inverse_se2' && $se_ok;
+        $self->warn_msg("Stage 2, ", short_trait($t), ": stage 1 gave no standard errors for this trait, so all stage-1 means have the same weight.") if $weighting eq 'inverse_se2' && !$weighted;
+        my @w = $weighted ? map { 1 / $_**2 } @se : (1) x @m;
         my $mw = mean(@w);
         # advanced (as the R engine): a structured genotype x trial covariance,
         # or one genotype x trial variance per trial ('one residual variance
@@ -1686,7 +1711,7 @@ sub _stage2 {
             }
         }
         push @specs, $spec;
-        push @ctx, { t => $t, res => \%res, md => \%md, fml => $fml, n_tr => $n_tr, weighting => $weighting, st_kind => $st_kind, ge_on => $ge_on };
+        push @ctx, { t => $t, res => \%res, md => \%md, fml => $fml, n_tr => $n_tr, weighted => $weighted, st_kind => $st_kind, ge_on => $ge_on };
     }
     $self->step("Stage 2: fitting ", scalar(@specs), " model(s) with BLUPF90+") if @specs;
     my $fits = $self->fit_many(\@specs);
@@ -1740,7 +1765,7 @@ sub _stage2 {
         $res->{model} = "BLUPF90+: $m" . _rel_text($f)
             . ($specs[$k]->{known_resid} ? ', residual = stage-1 SE^2 (known)' . ($c->{ge_on} ? '; one genotype x trial variance per trial' : '')
                                          . ($f->{structure} ? "; $GXE_LABEL{$c->{st_kind}}; value = mean over the trials; H2 = mean reliability" : '')
-               : $c->{weighting} eq 'inverse_se2' ? ', weights = 1/SE^2' : '');
+               : $c->{weighted} ? ', weights = 1/SE^2' : '');
         push @{$self->{ancestor_values}}, map { +{ %$_, trait => $t } } @{ $f->{ancestors} || [] };
         push @gv, map { +{ %$_, trait => $t } } grep { defined $_->{value} } @{$f->{values}};
         push @summary, $res;
@@ -2419,6 +2444,7 @@ sub _index {
     my $cfg = opt($self->recipe, 'index', {});
     $self->{idx_traits} = {};
     return if !opt($cfg, 'enabled', 0);
+    if (!@{$self->{genotype_values}}) { $self->warn_msg("Selection index skipped: there are no genotype values."); return; }
     my %tc;
     my $ct = opt($cfg, 'traits', {});
     foreach my $nm (keys %{ ref($ct) eq 'HASH' ? $ct : {} }) {

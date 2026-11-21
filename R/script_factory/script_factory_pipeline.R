@@ -1700,28 +1700,53 @@ fit_stage1 <- function(d, info, trait) {
     has_rep <- n_levels(d$rep_eff) > 1
     d$rowN <- d$row; d$colN <- d$col
     rc_random <- c(if (nr > 1 && !any(d$row_off)) "row_f", if (nc > 1 && !any(d$col_off)) "col_f")
-    # Candidate specifications: replicate as fixed effect first; when blocks
-    # are aligned with rows/columns the fixed replicate effect is collinear
-    # with the spatial surface, so fall back to replicate as random effect.
+    # Candidate specifications: replicate as fixed effect, then replicate as
+    # random effect. When the replicates are bands of columns or rows, the
+    # fixed replicate (nearly) repeats the linear column / row terms of
+    # PSANOVA: SpATS fits it without an error but the predictions can be far
+    # off, so the random replicate comes first.
     fx <- function(v) if (length(v)) as.formula(paste("~", paste(v, collapse = " + "))) else NULL
     specs <- list(
       list(fixed = fx(c(if (has_rep) "rep_eff", trt_fx, cv_fx)), random = rc_random, label = paste0(if (has_rep) " + rep" else "", trt_lab, cv_lab), rlabel = ""),
       list(fixed = fx(c(trt_fx, cv_fx)), random = c(if (has_rep) "rep_eff", rc_random), label = paste0(trt_lab, cv_lab), rlabel = if (has_rep) " + (1|rep)" else "")
     )
-    if (!has_rep) specs <- specs[1]
+    # share of the plots in columns (rows) held by a single replicate
+    rep_purity <- function(pos) {
+      ok <- !is.na(pos)
+      tb <- table(as.character(pos[ok]), as.character(d$rep_eff[ok]))
+      if (!sum(tb)) 0 else sum(apply(tb, 1, max)) / sum(tb)
+    }
+    rep_aligned <- has_rep && (rep_purity(d$col) >= 0.9 || rep_purity(d$row) >= 0.9)
+    if (!has_rep) specs <- specs[1] else if (rep_aligned) specs <- specs[2:1]
     spats_fit <- function(spec, g_random) {
       random <- if (length(spec$random)) as.formula(paste("~", paste(spec$random, collapse = " + "))) else NULL
       fit_quietly(SpATS::SpATS(response = "y", genotype = "accession", genotype.as.random = g_random,
                     spatial = ~ SpATS::PSANOVA(colN, rowN, nseg = nseg), fixed = spec$fixed, random = random,
                     data = d, control = list(tolerance = 1e-03, monitoring = 0)))
     }
-    fF <- NULL
+    # predictions averaged over the levels of the fixed factors (replicate,
+    # treatments), not at their first level
+    spats_pred <- function(f) tryCatch(predict(f, which = "accession", predFixed = "marginal"), error = function(e) e)
+    # an implausible fit: the accession means far from the level of the plots,
+    # or unrelated to the raw accession means
+    raw_acc <- tapply(d$y, as.character(d$accession), mean)
+    implausible <- function(pr) {
+      v <- pr$predicted.values; s <- sd(d$y)
+      if (!is.finite(s) || s <= 0 || any(!is.finite(v))) return(any(!is.finite(v)))
+      r <- if (length(v) >= 10) suppressWarnings(cor(v, raw_acc[as.character(pr$accession)])) else NA_real_
+      abs(mean(v) - mean(raw_acc)) > s || (is.finite(r) && r < 0.2)
+    }
+    fF <- NULL; pr <- NULL
     for (spec in specs) {
       fF <- spats_fit(spec, FALSE)
-      if (!inherits(fF, "error")) break
+      if (inherits(fF, "error")) next
+      pr <- spats_pred(fF)
+      if (inherits(pr, "error")) { fF <- pr; next }
+      if (!implausible(pr)) break
+      fF <- simpleError(paste0("the predicted accession means (mean ", signif(mean(pr$predicted.values), 4), ") do not agree with the plot data (mean ",
+                               signif(mean(d$y), 4), ") or are unrelated to the raw accession means."))
     }
     if (!inherits(fF, "error")) {
-      pr <- predict(fF, which = "accession")
       means <- data.frame(accession = as.character(pr$accession), value = pr$predicted.values,
                           se = pr$standard.errors, stringsAsFactors = FALSE)
       res$model <- sprintf("SpATS: y ~ accession%s + PSANOVA(col, row, nseg = c(%d, %d))%s%s",
@@ -2122,7 +2147,24 @@ if (strategy == "two_stage") {
       res$h2 <- s1$h2[1]; res$var_g <- s1$var_g[1]
     } else {
       m$accession <- factor(m$accession); m$trial <- factor(m$trial)
-      w <- if (weighting == "inverse_se2" && all(is.finite(m$se)) && all(m$se > 0)) 1 / m$se^2 else rep(1, nrow(m))
+      # stage-1 means without a standard error: the median standard error of
+      # their trial; a trial with none (unreplicated, no error estimate) gets
+      # the largest trial median, so it does not outweigh measured trials
+      se_ok <- is.finite(m$se) & m$se > 0
+      if (weighting == "inverse_se2" && any(se_ok) && !all(se_ok)) {
+        med_tr <- tapply(m$se[se_ok], droplevels(m$trial[se_ok]), median)
+        fill <- unname(med_tr[as.character(m$trial[!se_ok])])
+        fill[!is.finite(fill)] <- max(med_tr, na.rm = TRUE)
+        tr_miss <- sort(unique(as.character(m$trial[!se_ok])))
+        add_warning("Stage 2, ", short_trait(t), ": ", sum(!se_ok), " stage-1 mean(s) had no standard error (trial(s) ", paste(tr_miss, collapse = ", "),
+                    "); they were weighted with the median standard error of their trial, or with the largest trial median when their trial has none.")
+        m$se[!se_ok] <- fill
+        se_ok <- rep(TRUE, nrow(m))
+      }
+      weighted <- weighting == "inverse_se2" && all(se_ok)
+      if (weighting == "inverse_se2" && !weighted)
+        add_warning("Stage 2, ", short_trait(t), ": stage 1 gave no standard errors for this trait, so all stage-1 means have the same weight.")
+      w <- if (weighted) 1 / m$se^2 else rep(1, nrow(m))
       m$w <- w / mean(w)
       m$y <- m$value
       m$check <- ifelse(acc_is_check[as.character(m$accession)], "check", "test")
@@ -2249,7 +2291,7 @@ if (strategy == "two_stage") {
       res$relationship <- f2$relationship
       res$model <- paste0(sub("^y ~", "BLUE ~", fml_txt), if (isTRUE(f2$pedigree)) paste0(", accession ~ N(0, ", f2$relationship, " s2g)"),
                           if (!is.null(ge_by)) paste0(" + diag(0 + trial | accession:trial), residual = stage-1 SE^2 (known); one genotype x trial variance per trial")
-                          else if (weighting == "inverse_se2") ", weights = 1/SE^2" else "")
+                          else if (weighted) ", weights = 1/SE^2" else "")
       if (!is.null(f2$ancestors)) { f2$ancestors$trait <- t; ancestor_values[[length(ancestor_values) + 1]] <- f2$ancestors }
       if (!is.null(f2$structure)) {
         res <- report_structure(t, f2, res, "trial", "stage-1 error (known, mean)")
@@ -2560,7 +2602,12 @@ genotype_values <- if (length(genotype_values)) do.call(rbind, genotype_values) 
 if (length(mt_groups)) {
   traits <- unique(vapply(traits, function(x) { g <- Filter(function(g) x %in% c(g$y, g$c), mt_groups); if (length(g)) g[[1]]$trait else x }, ""))
 }
-if (is.null(genotype_values)) stop("No model could be fitted. Check the warnings and the trait data.")
+if (is.null(genotype_values)) {
+  # stage 2 fitted no trait: the stage-1 means per trial are still results
+  if (strategy != "two_stage" || is.null(stage1_means) || !nrow(stage1_means)) stop("No model could be fitted. Check the warnings and the trait data.")
+  add_warning("Stage 2 could not be fitted for any trait (see the warnings above), so there are no genotype values across trials; the stage-1 means of each trial are reported.")
+  genotype_values <- data.frame(accession = character(), value = numeric(), se = numeric(), trait = character(), stringsAsFactors = FALSE)
+}
 
 # wide table accession x trait
 traits_ok <- unique(genotype_values$trait)
@@ -2598,7 +2645,9 @@ compute_index <- function(mat, cfg_traits, method) {
 }
 
 idx_traits_cfg <- list()
-if (isTRUE(opt(idx_cfg, "enabled", FALSE))) {
+if (isTRUE(opt(idx_cfg, "enabled", FALSE)) && !nrow(genotype_values)) {
+  add_warning("Selection index skipped: there are no genotype values.")
+} else if (isTRUE(opt(idx_cfg, "enabled", FALSE))) {
   cfg_tr <- opt(idx_cfg, "traits", list())
   for (nm in names(cfg_tr)) {
     full <- if (nm %in% traits_ok) nm else traits_ok[short_trait(traits_ok) == short_trait(nm)][1]
