@@ -1699,6 +1699,13 @@ function advBlocked(key, value) {
     const custom = !two && radio('sf_single_mode') === 'custom';
     const rel = REL_MODELS.indexOf(geneticRecipe().model) >= 0;
     const random = two ? $('#sf_stage2_genotype').val() === 'random' : (custom ? true : $('#sf_single_genotype').val() === 'random');
+    // repeated measurements: only for traits set to "All measurements" in a
+    // dataset that has them (not checked before a dataset is loaded, so the
+    // settings of a saved script are kept)
+    if ((key === 'time_within' || key === 'time_genotype') && state.dataset) {
+        if (!datasetRepeated().some(x => x.n_repeated_units > 0)) return 'this dataset has no trait measured more than once per plot';
+        if (!repeatedAllTraits().length) return 'no trait is set to All measurements under Repeated measurements (step 3)';
+    }
     const tmb = key === 'gxe' || key === 'residual' || key === 'time_within' || key === 'time_genotype';
     if (eng === 'lme4' && tmb && !cfg.glmmtmb_available) return 'needs the R package glmmTMB, not installed on this server';
     if (key === 'gxe') {
@@ -1963,8 +1970,14 @@ function advRefreshDialog() {
           (eng === 'blupf90' ? 'BLUPF90+: weights 1/SE&sup2; with the residual held at 1, <code>OPTION constant_var</code>' : 'glmmTMB <code>dispformula = ~ 0 + offset(log(SE))</code>') + '). Not added with a structured genotype &times; environment covariance, which already gives every trial its own genetic variance.'
         : 'Trials differ in precision: each gets its own residual variance (' +
           (eng === 'blupf90' ? 'BLUPF90+: log-linear residual model on the trial dummies, <code>hetres_pos / hetres_pol</code>, AI-REML started from the fit with one residual' : 'glmmTMB <code>dispformula = ~ 0 + trial</code>') + ').');
+    // the whole section is unavailable when no trait can use it
+    const timeWhy = advBlocked('time_within', 'ar1').match(/^(this dataset has no|no trait is set)/) ? advBlocked('time_within', 'ar1') : '';
+    $('#sf_adv_time_within, #sf_adv_time_genotype').prop('disabled', !!timeWhy);
     const tw = $('#sf_adv_time_within').val(), tg = $('#sf_adv_time_genotype').val();
-    $('#sf_adv_time_help').html('Traits measured several times per plot and set to <i>all measurements</i> under <b>Repeated measurements</b> (other traits are not affected). ' +
+    if (timeWhy) {
+        $('#sf_adv_time_help').html('<span class="glyphicon glyphicon-ban-circle"></span> Not available: ' + esc(timeWhy) + '.');
+    }
+    else $('#sf_adv_time_help').html('Traits measured several times per plot and set to <i>all measurements</i> under <b>Repeated measurements</b> (other traits are not affected). ' +
         (tw === 'ar1' ? 'AR(1): <code>ar1(0 + occasion | plot)</code> replaces the plot effect; the occasion is the k-th measurement date of the trial' +
             (eng === 'blupf90' ? ' (BLUPF90+: the correlation &rho; is chosen on the REML likelihood over a grid of values, refined around the best). ' : '. ') : '') +
         (tw === 'exp' ? 'Exponential: <code>exp(0 + days | plot)</code>, correlation &rho;<sup>&Delta;days</sup>, for dates at uneven intervals' +
@@ -2660,6 +2673,19 @@ function anovaFillDialog(a) {
     $('#sf_anova_alpha').val(String(a.alpha));
 }
 
+// how stage 2 uses the stage-1 errors (same choice as the engines): with
+// several trials, a genotype x trial variance next to the stage-1 SE^2 as
+// known residual variances (default with 1/SE^2, and always with a G x E
+// covariance or one residual per trial); a single trial is weighted by 1/SE^2
+function stage2ResidualText(r) {
+    const a = r.advanced || {};
+    const multi = !state.dataset || state.dataset.trials.length > 1;
+    if (multi && a.gxe && a.gxe !== 'cs') return ', ' + ADV_LABEL.gxe[a.gxe] + ', stage-1 SE&sup2; as known residuals';
+    if (multi && a.residual === 'trial') return ', G&times;trial variance per trial, stage-1 SE&sup2; as known residuals';
+    if (r.stage2.weighting !== 'inverse_se2') return ', unweighted';
+    return multi ? ', G&times;trial variance, stage-1 SE&sup2; as known residuals' : ', weighted 1/SE&sup2;';
+}
+
 function renderPipeline() {
     updateStep1Next();
     const r = buildRecipe();
@@ -2680,7 +2706,7 @@ function renderPipeline() {
     if (r.strategy === 'two_stage') {
         items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] + trtChip(r.treatments.use, 'adjusted for ') +
             (r.covariates.length ? '<br/>covariate' + (r.covariates.length > 1 ? 's ' : ' ') + r.covariates.map(t => esc(shortTrait(t))).join(', ') : '') + repeatedChip(r), off: noData });
-        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r), off: noData });
+        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + stage2ResidualText(r) + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r), off: noData });
     } else {
         let d;
         if (r.single.mode === 'custom') {

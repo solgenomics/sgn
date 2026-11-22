@@ -479,6 +479,26 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     my @plot_rows = grep { !defined($level_i) || !defined($_->[$level_i]) || $_->[$level_i] eq '' || lc($_->[$level_i]) eq 'plot' } @$rows;
     my $treatments = _treatment_factors($c, $keys, $idx, \@plot_rows, \@legacy_trt_cols, [ grep { $is_treatment{$_} } @$keys ]);
 
+    my %unit_info;    # plot -> [trial, accession]
+    my $obs_unit_i = $idx->{observationUnitName};
+    foreach my $r (@plot_rows) {
+        my $unit = defined($obs_unit_i) ? $r->[$obs_unit_i] : undef;
+        $unit_info{$unit} = [ $r->[$idx->{studyName} // -1], $r->[$idx->{germplasmName} // -1] ] if defined $unit;
+    }
+
+    # traits measured more than once per plot (all measurements to <token>.repeated.txt).
+    # They are always read from the tables: with the cache as source, the plots of
+    # stale trials are counted (n_stale_units) so the page can say they may differ.
+    my %stale_trial = ($source eq 'cache' && $cache) ? (map { $_ => 1 } @{ $cache->{stale} }) : ();
+    my $repeated = try { _repeated_measurements($schema, $ds, \@trait_cols, \%unit_info, "$tempfile.repeated.txt", \%stale_trial) }
+                   catch { print STDERR "Analysis Pipeline: repeated measurements of dataset $dataset_id not read: $_\n"; [] };
+    # Breedbase leaves values marked as database outliers out of the plot mean
+    # of repeated measurements (a plot with all of them marked gets no value),
+    # so those plots would never reach step 2, where they can be used again or
+    # unmarked: the plot value of these traits is the mean of every measurement
+    try { _fill_repeated_means($pheno_file, "$tempfile.repeated.txt", $keys, $idx, $rows) }
+    catch { print STDERR "Analysis Pipeline: plot means of repeated measurements of dataset $dataset_id not written: $_\n"; };
+
     my @traits;
     foreach my $t (@trait_cols) {
         my $i = $idx->{$t};
@@ -564,22 +584,14 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
 
     # values marked as outliers in Breedbase: step 2 starts with them excluded
     # (only the marked value, never the whole plot)
-    my %unit_info;
-    foreach my $r (@plot_rows) {
-        my $unit = $col->($r, 'observationUnitName');
-        $unit_info{$unit} = [ $col->($r, 'studyName'), $col->($r, 'germplasmName') ] if defined $unit;
-    }
     my $marked = try { _marked_outliers($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info) }
                  catch { print STDERR "Analysis Pipeline: marked outliers of dataset $dataset_id not read: $_\n"; [] };
     # genotyping protocols with genotypes of the dataset's accessions (G and H models)
     my $genotyping = try { _genotyping_protocols($schema, [ map { $_->[0] } @{ $ds->retrieve_accessions() || [] } ]) }
                      catch { print STDERR "Analysis Pipeline: genotyping protocols of dataset $dataset_id not read: $_\n"; [] };
-    # traits measured more than once per plot (all measurements to <token>.repeated.txt).
-    # They are always read from the tables: with the cache as source, the plots of
-    # stale trials are counted (n_stale_units) so the page can say they may differ.
-    my %stale_trial = ($source eq 'cache' && $cache) ? (map { $_ => 1 } @{ $cache->{stale} }) : ();
-    my $repeated = try { _repeated_measurements($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info, "$tempfile.repeated.txt", \%stale_trial) }
-                   catch { print STDERR "Analysis Pipeline: repeated measurements of dataset $dataset_id not read: $_\n"; [] };
+    # only the traits with values in the dataset
+    my %has_values = map { $_->{name} => 1 } @traits;
+    $repeated = [ grep { $has_values{ $_->{trait} } } @$repeated ];
 
     $c->stash->{rest} = {
         token => $token,
@@ -1314,6 +1326,48 @@ sub _repeated_measurements {
     return \@summary;
 }
 
+# Plot value of the traits measured more than once per plot = the mean of
+# every measurement in $rep_file (written by _repeated_measurements),
+# including the values marked as outliers, which Breedbase leaves out of the
+# mean (PhenotypeMatrix::average_observations): marked values are handled in
+# step 2 like any other (excluded, used again or unmarked there). Updates
+# $rows in place and rewrites $pheno_file when a value changes.
+sub _fill_repeated_means {
+    my ($pheno_file, $rep_file, $keys, $idx, $rows) = @_;
+    return 0 if !-s $rep_file;
+    my $unit_i = $idx->{observationUnitName};
+    return 0 if !defined $unit_i;
+    my (%sum, %n);
+    open(my $R, '<', $rep_file) or die "Cannot read the repeated measurements file\n";
+    <$R>;
+    while (my $line = <$R>) {
+        $line =~ s/\r?\n$//;
+        my ($unit, $trait, $value) = split /\t/, $line, -1;
+        next if !defined($trait) || !exists($idx->{$trait}) || !_is_number($value);
+        $sum{$trait}->{$unit} += $value;
+        $n{$trait}->{$unit}++;
+    }
+    close($R);
+    my $changed = 0;
+    foreach my $r (@$rows) {
+        my $unit = $r->[$unit_i];
+        next if !defined $unit;
+        foreach my $trait (keys %n) {
+            my $k = $n{$trait}->{$unit} or next;
+            my $mean = $sum{$trait}->{$unit} / $k;
+            my $i = $idx->{$trait};
+            next if _is_number($r->[$i]) && abs($r->[$i] - $mean) <= 1e-9 * (abs($mean) || 1);
+            $r->[$i] = $mean;
+            $changed++;
+        }
+    }
+    if ($changed) {
+        no warnings 'uninitialized';
+        write_file($pheno_file, join("\t", @$keys) . "\n", map { join("\t", @$_) . "\n" } @$rows);
+    }
+    return $changed;
+}
+
 # Genotyping protocols with genotypes of the given accessions (directly or
 # through their tissue samples): [{protocol_id, name, n_genotyped, n_markers}],
 # most genotyped accessions first.
@@ -1596,12 +1650,18 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     $cmd .= " > " . _shell_quote("$run_base.log") . " 2>&1";
     # genotypes first (its messages start the log)
     $cmd = "$geno_cmd > " . _shell_quote("$run_base.log") . " 2>&1; " . ($cmd =~ s/ > (\S+) 2>&1$/ >> $1 2>&1/r) if $geno_cmd;
+    # exit status of the engine (a process killed by the system, e.g. out of
+    # memory, prints no error: 128 + signal)
+    $cmd .= "; rc=\$?";
     if ($anova) {
         # the results are kept when the step fails
         my ($in, $out) = map { _shell_quote($_) } ("$run_base.model_results.json", "$run_base.results.json");
         $cmd .= "; if [ -s $in ]; then Rscript " . _shell_quote("$basepath/$ANOVA_STEP") . " $in $out >> " . _shell_quote("$run_base.log")
             . " 2>&1 || cp $in $out; rm -f $in; fi";
     }
+    # the analysis has ended (with or without results): /status and the
+    # email read it, so a run that died is not shown as running
+    $cmd .= "; echo \$rc > " . _shell_quote("$run_base.exit");
     write_file("$run_base.recipe.json", encode_json($recipe));
     if ($meta{notify_email}) {
         $cmd .= "; perl -I" . _shell_quote("$basepath/lib") . " " . _shell_quote("$basepath/bin/script_factory_notify.pl")
@@ -1945,6 +2005,25 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
     };
 }
 
+# exit status of the engine written by the job command (<run>.exit), undef
+# while the analysis runs (or for runs submitted before the file existed)
+sub _run_exit_code {
+    my $run_base = shift;
+    return if !-e "$run_base.exit";
+    my $s = try { read_file("$run_base.exit") } catch { '' };
+    return ($s // '') =~ /(\d+)/ ? $1 + 0 : -1;
+}
+
+# explanation of an engine stopped by the system (exit status 128 + signal)
+sub _killed_text {
+    my $code = shift;
+    return '' if !defined($code) || $code < 128;
+    my $sig = $code - 128;
+    my %name = (9 => 'SIGKILL', 15 => 'SIGTERM', 6 => 'SIGABRT', 11 => 'SIGSEGV');
+    return "The analysis process was stopped by the system (signal " . ($name{$sig} // $sig) . ") without an error message"
+        . ($sig == 9 ? ": most often because it ran out of memory. Try fewer traits or trials, a simpler variance structure, or ask the site administrator for more memory." : '.');
+}
+
 sub status : Path('/ajax/script_factory/status') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -1997,7 +2076,13 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
         ($progress = $lines[-1] // '') =~ s/^\[script_factory\]\s*//;
         chomp($progress);
         $halted = grep { /^Execution halted/ } @log;
+        # runs submitted before <run>.exit existed: the email step ran, so the analysis had ended
+        $halted ||= grep { /^Analysis Pipeline: notification for / } @log;
     }
+    # the job command writes the exit status of the engine when the analysis
+    # ends, also when the engine died without an error message
+    my $exit_code = _run_exit_code($run_base);
+    $halted ||= defined($exit_code);
 
     my $done = ($halted || $status eq 'finished' || $status eq 'failed' || $status eq 'timed_out' || $status eq 'canceled');
     if (!$done && !-e $results_file) {
@@ -2018,7 +2103,10 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
     if (!-e $results_file) {
         my $log = -e $log_file ? read_file($log_file) : '';
         my @err = grep { /Error|error|stop|Execution halted/ } split /\n/, $log;
-        my $msg = join("\n", @err[ ($#err > 5 ? $#err - 5 : 0) .. $#err ]) || "The analysis job ended with status '$status' without producing results.";
+        my $msg = join("\n", @err[ ($#err > 5 ? $#err - 5 : 0) .. $#err ]);
+        my $killed = _killed_text($exit_code);
+        $msg = $msg ? "$killed\n\n$msg" : $killed if $killed;
+        $msg ||= "The analysis job ended with status '$status' without producing results.";
         # say where it stopped (last progress line of the pipeline) before the R details
         $msg = "The analysis stopped at: $progress\n\nDetails:\n$msg" if $progress;
         unlink("$run_base.dbconf.json") if -e "$run_base.dbconf.json";

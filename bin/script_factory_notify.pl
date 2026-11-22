@@ -66,9 +66,16 @@ if ($results && $results->{genotype_values}) {
 } else {
     my @log = -e "$run_base.log" ? grep { !/^(CXGN::Contact|Breedbase Analysis Pipeline:)/ } split(/\n/, read_file("$run_base.log")) : ();
     my @tail = @log > 15 ? @log[-15 .. -1] : @log;
+    # exit status of the engine (written by the job command): 128 + signal
+    # when the system stopped it, e.g. out of memory, with no error in the log
+    my ($code) = -e "$run_base.exit" ? (read_file("$run_base.exit") =~ /(\d+)/) : ();
+    my $killed = (defined($code) && $code >= 128)
+        ? "The analysis process was stopped by the system (signal " . ($code - 128) . ")" . ($code == 137 ? ", most often because it ran out of memory." : ".")
+        : '';
     $subject = "Breedbase Analysis Pipeline: $name did not finish";
     $body = join("\n",
         "$name on dataset \"$dataset\" stopped with an error.",
+        ($killed ? ("", $killed) : ()),
         "",
         "Last lines of the log:",
         (map { "  $_" } @tail),
