@@ -78,11 +78,22 @@ sub name_var :Path('/test/') :Args(0) {
 	    print $out_fh join("\n",@seq);
 
 	    # to run Gibbs motifs sampler
-	    my $err = system("$cluster_shared_bindir/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+	    if (!defined($rev_complement)) { $rev_complement = ""; }
+
+	    my @call = ( "$cluster_shared_bindir/Gibbs.linux", $filename."_input.txt",  $widths_of_motifs,  $numbers_of_sites,  "-W", "0.8", "-w", "0.1", "-p", "50", "-j", "5", "-i", "500",  $fragmentation, $rev_complement, "-Z", "-S", "$no_of_seeds", "-C", "0.5", "-y", "-nopt", "-o", $filename."_output" , "-n" );
+
+	    print STDERR "CALLING (joined) ". join(" ", @call);
+	    @call = grep { defined && length } @call;
+	    my $err = system(@call);
 	    print STDOUT "print $err\n";
 	}
 	elsif ($seq_file) {
-	    my $err = system("$cluster_shared_bindir/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+
+	    my @call = ("$cluster_shared_bindir/Gibbs.linux",  $seq_file, $widths_of_motifs, $numbers_of_sites, "-W", "0.8", "-w", "0.1", "-p", "50" , "-j", "5", "-i", "500",  $fragmentation,  $rev_complement, "-Z", "-S", "$no_of_seeds", "-C", "0.5", "-y",  "-nopt", "-o", $filename."_output", "-n");
+	    print STDERR "CALLING (2) (joined) ". join(" ", @call);
+
+	    @call = grep { defined && length } @call;
+	    my $err = system(@call);
 	    print STDOUT "print $err\n";
 	}
 
@@ -281,11 +292,13 @@ sub name_var :Path('/test/') :Args(0) {
 	}
 
         # To run weblogo
-        my $cmd;
+        my @cmd;
         foreach my $filename (@motif_element){
-	    $cmd = "$cluster_shared_bindir/weblogo/seqlogo -F PNG -d 0.5 -T 1 -b -e -B 2 -h 5 -w 18 -y bits -a -M -n -Y -c -f $filename -o ".$filename."_weblogo";
+	    @cmd = ($cluster_shared_bindir."/weblogo/seqlogo", "-F", "PNG", "-d", "0.5", "-T", "1", "-b", "-e", "-B", "2", "-h", "5", "-w", "18", "-y", "bits", "-a", "-M", "-n", "-Y", "-c", "-f",  $filename, "-o", $filename."_weblogo");
+
+	    print "EXECUTING: (joined) : ".join( " ", @cmd)."\n";
 	    push (@logo_image, basename($filename."_weblogo.png"));
-	    my $error = system($cmd);
+	    my $error = system(@cmd);
         }
 
         print STDERR Dumper(\@logo_image);
