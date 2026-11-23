@@ -3,7 +3,7 @@ use strict;
 use Test::More;
 use lib 't/lib';
 use SGN::Test::Fixture;
-use CXGN::Stock::Plot;
+use CXGN::Trial::AccessionChange;
 use Data::Dumper;
 
 my $fix = SGN::Test::Fixture->new();
@@ -123,13 +123,9 @@ ok(my $old_accession = "test_stock_for_fieldmap_trial1");
 ok(my $new_accession = "test_stock_for_fieldmap_trial2");
 ok(my $stock_id = $chado_schema->resultset('Stock::Stock')->find({'uniquename' => $old_accession})->stock_id(), "get stock id");
 
-my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
-  bcs_schema => $chado_schema,
-  trial_id => $trial_id,
-  old_accession_id => $stock_id,
-  new_accession => $new_accession,
-});
-ok(!$replace_accession_fieldmap->replace_trial_stock_fieldMap($new_accession, $stock_id), "replace trial accession");
+my $new_stock_id = $chado_schema->resultset('Stock::Stock')->find({'uniquename' => $new_accession})->stock_id();
+my $accession_change = CXGN::Trial::AccessionChange->new({ schema => $chado_schema, trial_id => $trial_id });
+ok(eval { $accession_change->apply($accession_change->changes_for_stock($stock_id, $new_stock_id), { rename_plots => 'none' }); 1 }, "replace trial accession") or diag($@);
 
 
 my $trial = CXGN::Trial->new( {
@@ -141,21 +137,9 @@ my $trial = CXGN::Trial->new( {
 ok(my @data = $trial->get_plots(), "get plots");
 ok(my $old_plot_id = $data[0]->[0][0]);
 print STDERR Dumper($old_plot_id);
-my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
 my $accession_id = $chado_schema->resultset('Stock::Stock')->find({'uniquename' => $new_accession})->stock_id(), "get stock id";
 
-my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-  bcs_schema => $chado_schema,
-  trial_id => $trial_id,
-
-});
-
-my $plot = CXGN::Stock::Plot->new({
-    schema => $chado_schema,
-    stock_id => $old_plot_id
-});
-#need to find old accession ID for this to work
-ok(!$replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($old_plot_id, $plot->{accessions}->[0], $accession_id, $plot_of_type_id), "replace plot accession");
+ok(eval { $accession_change->apply([ { plot_id => $old_plot_id, new_stock_id => $accession_id } ], { rename_plots => 'none' }); 1 }, "replace plot accession") or diag($@);
 # accessions substitution
 ok(my $plot_1_id = $data[0]->[0][0]);
 ok(my $plot_2_id = $data[0]->[1][0]);
