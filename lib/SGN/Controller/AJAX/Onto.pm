@@ -10,11 +10,10 @@ cache, that the SGN ontology browser relies on. Output is JSON, as a
 list of hashes, that has the following keys: accession, has_children,
 cvterm_name, cvterm_id, and for some functions, parent.
 
-The ontologies that should be displayed must be configured in the configuration file (sgn.conf or sgn_local.conf for SGN). Insert a line of the following format into the conf file:
-
-C<onto_root_namespaces  GO (Gene Ontology), PO (Plant Ontology), SO (Sequence Ontology), PATO (Phenotype and Trait Ontology), SP (Solanaceae Ontology)>
-
-where onto_root_namespaces is the conf key, "GO" the two letter code of the ontology (as it appears in the db database table), and in parenthesis is the human readable name of the ontology.
+The ontologies that are displayed are the CVs marked visible in the cvprop
+table (cvprop type 'cv_visible' with value 1), as returned by
+CXGN::Onto->onto_root_namespaces(). Visibility is managed on the Manage
+Ontologies page.
 
 =head1 AUTHOR
 
@@ -35,6 +34,7 @@ use Data::Dumper;
 use JSON;
 use CXGN::Job;
 use Encode;
+use HTML::Entities qw(encode_entities);
 use Cwd;
 
 use namespace::autoclean;
@@ -503,7 +503,7 @@ sub get_populated_ontologies: Path('/ajax/onto/get_populated_ontologies') Args(0
 
 Public Path: /ajax/onto/get_cv_root_nodes
 
-GET parameters: cv_ids (comma-separated list of cv_ids)
+GET parameters: cv_ids (list of cv_ids, separated by commas and/or whitespace)
 
 Returns the root nodes of the visible cvs among those requested, from
 CXGN::Onto->get_cv_root_nodes(), in the same format as /ajax/onto/roots
@@ -523,18 +523,41 @@ sub get_cv_root_nodes: Path('/ajax/onto/get_cv_root_nodes') Args(0) {
         return;
     }
 
-    my @cv_ids = grep { length } split /\s*,\s*/, ($c->req->param('cv_ids') // '');
-    if (!@cv_ids || grep { !/^\d+$/ } @cv_ids) {
-        $c->stash->{rest} = { error => "cv_ids must be a comma-separated list of cv_ids." };
+    my $cv_ids = $self->_parse_cv_ids($c);
+    if (!$cv_ids || !@$cv_ids) {
+        $c->stash->{rest} = { error => "cv_ids must be a list of cv_ids." };
         return;
     }
+
+    $self->_stash_cv_roots($c, $cv_ids);
+}
+
+# Parses the cv_ids request parameter (cv_ids separated by commas and/or whitespace).
+# Returns an arrayref (empty if the parameter is absent), or undef if any entry is not a number.
+sub _parse_cv_ids {
+    my ($self, $c) = @_;
+    my @cv_ids = grep { length } split /[\s,]+/, ($c->req->param('cv_ids') // '');
+    return undef if grep { !/^\d+$/ } @cv_ids;
+    return \@cv_ids;
+}
+
+# cv_ids of every CV marked visible
+sub _visible_cv_ids {
+    my ($self, $c) = @_;
+    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+    return [ keys %{ $onto->onto_root_namespaces() } ];
+}
+
+# Stashes the browser-format root nodes of the visible cvs among $cv_ids, or an error.
+sub _stash_cv_roots {
+    my ($self, $c, $cv_ids) = @_;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my @roots;
     eval {
         my $onto = CXGN::Onto->new( { schema => $schema } );
-        foreach my $root ($onto->get_cv_root_nodes(\@cv_ids)) {
+        foreach my $root ($onto->get_cv_root_nodes($cv_ids)) {
             my ($cv_id, $name, $cvterm_id) = @$root;
             my $cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
             push @roots, $self->flatten_node($cvterm, undef) if $cvterm;
@@ -543,7 +566,7 @@ sub get_cv_root_nodes: Path('/ajax/onto/get_cv_root_nodes') Args(0) {
     if ($@) {
         my $error = $@;
         $error =~ s/\s+$//;
-        print STDERR "Error in get_cv_root_nodes: $error\n";
+        print STDERR "Error retrieving cv root nodes: $error\n";
         $c->stash->{rest} = { error => $error };
         return;
     }
@@ -782,23 +805,26 @@ sub menu_GET  {
     my $self = shift;
     my $c = shift;
 
-    my $menudata = $c->config->{onto_root_namespaces};
-
-    print STDERR "MENUDATA: $menudata\n";
-    my @menuitems = split ",", $menudata;
-
-    my $menu = '<select class="form-control" name="cv_select">';
-
-    foreach my $mi (@menuitems) {
-	print STDERR "MENU ITEM: $mi\n";
-	if ($mi =~ /\s*(\w+)?\s*(.*)$/) {
-	    my $value = $1;
-	    my $name = $2;
-
-	    $menu .= qq { <option value="$value">$value $name</option>\n };
-	}
+    my $namespaces;
+    eval {
+        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+        $namespaces = $onto->onto_root_namespaces();
+    };
+    if ($@) {
+        my $error = $@;
+        $error =~ s/\s+$//;
+        print STDERR "Error in menu: $error\n";
+        $c->stash->{rest} = { error => $error };
+        return;
     }
 
+    # One option per visible cv (the search is by cv_id), labelled "cv_name (db_name)"
+    my $menu = '<select class="form-control" name="cv_select">';
+    foreach my $cv_id (sort { $namespaces->{$a}->{db_name} cmp $namespaces->{$b}->{db_name}
+                              || lc($namespaces->{$a}->{cv_name}) cmp lc($namespaces->{$b}->{cv_name}) } keys %$namespaces) {
+        my $label = encode_entities("$namespaces->{$cv_id}->{cv_name} ($namespaces->{$cv_id}->{db_name})");
+        $menu .= qq { <option value="$cv_id">$label</option>\n };
+    }
     $menu .= "</select>\n";
     $c->stash->{rest} = [ $menu ];
 
@@ -813,13 +839,14 @@ Public Path: /<ns>/roots
 
 L<Catalyst::Action::REST> action.
 
-Provides the default roots for drawing the ontology browser
+Provides the roots for drawing the ontology browser. Only CVs marked visible
+(cvprop cv_visible = 1) contribute roots.
 
 Query/Body Params:
 
-  nodes: optional, a string with namespace definitions, separated by white
-         space (for example, "PO SP SO"). If not provided, will This overrides the standard
-         namespaces provided when called without arguments.
+  cv_ids: optional, cv_ids separated by commas and/or whitespace
+          (for example, "4 7 8 9"). If not provided, the roots of every
+          visible CV are returned.
 
 =cut
 
@@ -828,49 +855,30 @@ sub roots    : Local : ActionClass('REST') { }
 sub roots_GET {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $namespace = $c->request->param('nodes');
-    my @namespaces = ();
-    my @response_nodes = ();
-    #my $empty_cvterm   = CXGN::Chado::Cvterm->new($c->dbc()->dbh());
-    if (!$namespace) { # should namespaces be db names ? (SO, GO,PO, SP, PATO)
-        @namespaces = (
-            'GO',
-            'PO',
-            'SP',
-            'SO',
-            'PATO',
-	    'CO',
-            );
+    my $cv_ids = $self->_parse_cv_ids($c);
+    if (!$cv_ids) {
+        $c->stash->{rest} = { error => "cv_ids must be a list of cv_ids." };
+        return;
     }
-    else {
-        @namespaces = split /\s+/, $namespace; #split on whitespace
-    }
-    my @roots = ();
-    my $is_rel = 0;
-    foreach my $ns (@namespaces) {
-        $is_rel = 1 if $ns eq 'OBO_REL';
-        my $q = "SELECT cvterm.cvterm_id FROM cvterm
-                 JOIN dbxref USING(dbxref_id) JOIN db USING(db_id)
-                 LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id)
-                 WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= ? AND is_relationshiptype = ? AND db.name= ? ";
-        my $sth = $schema->storage->dbh->prepare($q);
-        $sth->execute(0,$is_rel,$ns);
-        while (my ($cvterm_id) = $sth->fetchrow_array() ) {
-            my $root = $schema->resultset("Cv::Cvterm")->find( { cvterm_id => $cvterm_id } );
-            push @roots, $root;
+
+    if (!@$cv_ids) {
+        eval { $cv_ids = $self->_visible_cv_ids($c); };
+        if ($@) {
+            my $error = $@;
+            $error =~ s/\s+$//;
+            print STDERR "Error in roots: $error\n";
+            $c->stash->{rest} = { error => $error };
+            return;
+        }
+        if (!@$cv_ids) {
+            $c->stash->{rest} = [];
+            return;
         }
     }
-    my @response_list = ();
 
-    foreach my $r (@roots) {
-        my $hashref = $self->flatten_node($r, undef);
-        push @response_list, $hashref;
-    }
-    $c->stash->{rest}= \@response_list;
+    $self->_stash_cv_roots($c, $cv_ids);
 }
-
 
 =head2 match
 
@@ -878,9 +886,12 @@ Public Path: /<ns>/match
 
 L<Catalyst::Action::REST> action.
 
+Searches term names, synonyms and definitions within visible CVs.
+
 Query/Body Params:
 
-  db_name
+  cv_ids: optional, cv_ids separated by commas and/or whitespace. Hidden CVs
+          are ignored. If not provided, all visible CVs are searched.
   term_name
 
 =cut
@@ -890,8 +901,34 @@ sub match    : Local : ActionClass('REST') { }
 sub match_GET {
     my $self = shift;
     my $c    = shift;
-    my $db_name = $c->request->param("db_name");
-    my $term_name = $c->request->param("term_name");
+    my $term_name = $c->request->param("term_name") // '';
+
+    my $requested = $self->_parse_cv_ids($c);
+    if (!$requested) {
+        $c->stash->{rest} = { error => "cv_ids must be a list of cv_ids." };
+        return;
+    }
+
+    my $visible;
+    eval { $visible = $self->_visible_cv_ids($c); };
+    if ($@) {
+        my $error = $@;
+        $error =~ s/\s+$//;
+        print STDERR "Error in match: $error\n";
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my @cv_ids = @$visible;
+    if (@$requested) {
+        my %is_visible = map { $_ => 1 } @$visible;
+        @cv_ids = grep { $is_visible{$_} } @$requested;
+    }
+    if (!@cv_ids) {
+        $c->stash->{rest} = [];
+        return;
+    }
+    my $placeholder = join(',', ('?') x @cv_ids);
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $query = "SELECT distinct cvterm.cvterm_id as cvterm_id  , cv.name as cv_name , cvterm.name as cvterm_name , db.name || ':' || dbxref.accession as accession
@@ -899,10 +936,10 @@ sub match_GET {
                JOIN dbxref USING (db_id ) JOIN cvterm USING (dbxref_id)
                JOIN cv USING (cv_id )
                LEFT JOIN cvtermsynonym USING (cvterm_id )
-               WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0
+               WHERE cv.cv_id IN ($placeholder) AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0
 GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
     my $sth= $schema->storage->dbh->prepare($query);
-    $sth->execute($db_name, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
+    $sth->execute(@cv_ids, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
     my @response_list;
     while  (my $hashref = $sth->fetchrow_hashref ) {
         push @response_list, $hashref;

@@ -39,7 +39,8 @@ sub trait_design_page : Path('/traits/design/') Args(0) {
     if ($editable_ontologies_str == 1) { #every trait ontology is editable
         $c->stash(
             template => '/tools/trait_designer.mas',
-            db_names => join(",",@db_names)
+            db_names => join(",",@db_names),
+            cv_ids   => join(",", $ontology_obj->visible_cv_ids_for_db_names(\@db_names)),
         );
     } else { #need to actually check if trait ontology is editable
         my @editable_ontologies = split(",", $editable_ontologies_str);
@@ -52,7 +53,8 @@ sub trait_design_page : Path('/traits/design/') Args(0) {
         if (scalar(@editable_dbnames > 0)) {
             $c->stash(
                 template => '/tools/trait_designer.mas',
-                db_names => join(",",@editable_dbnames)
+                db_names => join(",",@editable_dbnames),
+                cv_ids   => join(",", $ontology_obj->visible_cv_ids_for_db_names(\@editable_dbnames)),
             );
         } else {
             $c->stash->{template} = '/site/error/permission_denied.mas';

@@ -1,14 +1,14 @@
 
 <%args>
-$root_nodes => undef
-$db_name => undef
+$cv_ids => undef
+$search_cv_ids => undef
 $expand => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Ontology browser" &>
 
 <&| /page/info_section.mas, title=>"Search and browse ontologies", collapsible=>1 &>
-  <& /ontology/browser.mas, root_nodes=>$root_nodes, db_name=>$db_name, expand=>$expand &>
+  <& /ontology/browser.mas, cv_ids=>$cv_ids, search_cv_ids=>$search_cv_ids, expand=>$expand &>
 </&>
 
   

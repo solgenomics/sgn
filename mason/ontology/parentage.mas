@@ -2,6 +2,15 @@
   $accession
   $db_name => undef
 </%args>
+<%init>
+  # the browser works on cv_ids: show the visible cvs of this term's db
+  use CXGN::Onto;
+  my $cv_ids = '';
+  if ($db_name) {
+      my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+      $cv_ids = join(',', $onto->visible_cv_ids_for_db_names([ $db_name ]));
+  }
+</%init>
 
 <input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle('search_results', 'blind'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  " /><br />
 
@@ -15,11 +24,11 @@
 var o;
 
 jQuery('document').ready(function() { 
-o = new CXGN.Onto.Browser('<% $db_name %>');
+o = new CXGN.Onto.Browser();
 
 //o.setUpBrowser();
 
-o.initializeBrowser('<% $db_name %>');
+o.initializeBrowser('<% $cv_ids %>');
 // hide some unused elements
 //document.getElementById('ontology_browser_input').style.display='none';
 //document.getElementById('ontology_term_input').style.display='none';

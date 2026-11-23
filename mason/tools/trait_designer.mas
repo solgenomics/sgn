@@ -1,5 +1,6 @@
 <%args>
     $db_names
+    $cv_ids => ''
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
@@ -151,11 +152,8 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
 
 <br>
 <br>
-% 
-% my $root_nodes = $db_names =~ s/,/ /gr;
-% 
 <&| /page/info_section.mas, title=>"Trait terms", collapsible=>1 &>
-    <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>1 &>
+    <& /ontology/browser.mas, cv_ids=>$cv_ids, expand=>1 &>
 </&>
 
 

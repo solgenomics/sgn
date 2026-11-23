@@ -1,5 +1,6 @@
 <%args>
     $db_name
+    $cv_ids => ''
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
@@ -129,11 +130,8 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
 &nbsp;&nbsp;&nbsp;&nbsp;
 <br>
 <br>
-% 
-% my $root_nodes = $db_name =~ s/,/ /gr; # should just be EXPERIMENT_TREATMENT
-% 
 <&| /page/info_section.mas, title=>"Treatment terms", collapsible=>1 &>
-    <& /ontology/browser.mas, root_nodes=>$root_nodes, db_name => $db_name, expand=>1 &>
+    <& /ontology/browser.mas, cv_ids=>$cv_ids, search_cv_ids=>$cv_ids, expand=>1 &>
 </&>
 
 <script>

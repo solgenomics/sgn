@@ -111,7 +111,7 @@ sub get_variables {
 
 parameters: CV type
 
-returns: Root nodes of CVs matching given CV type (as defined in CVProp)
+returns: Root nodes of CVs matching given CV type (as defined in CVProp). 
 
 Side Effects: none
 
@@ -185,6 +185,76 @@ sub get_cv_root_nodes {
     }
 
     return @results;
+}
+
+=head2 onto_root_namespaces
+
+parameters: none
+
+returns: hashref of all CVs marked visible (cvprop of type cv_visible with
+value 1), in the form cv_id => { db_name => db.name, cv_name => cv.name }.
+
+Replaces the old onto_root_namespaces configuration key.
+
+A CV's db_name is the db that most of its (non-obsolete) terms belong to,
+since a CV's terms can in principle come from more than one db. CVs with
+no terms, or whose terms only belong to the '' or 'null' dbs, are omitted.
+
+Side Effects: none
+
+=cut
+
+sub onto_root_namespaces {
+    my $self = shift;
+    my $schema = $self->schema();
+
+    my $visible_term = $schema->resultset('Cv::Cvterm')->find(
+        { 'me.name' => 'cv_visible', 'cv.name' => 'cv_property' },
+        { join => 'cv' }
+    );
+    if (!$visible_term) {
+        die "The 'cv_visible' term was not found in the 'cv_property' cv. Have the dbpatches been run?\n";
+    }
+
+    my $q = "SELECT DISTINCT ON (cv.cv_id) cv.cv_id, cv.name, db.name
+        FROM cv
+        JOIN cvprop ON(cvprop.cv_id = cv.cv_id AND cvprop.type_id = ?)
+        JOIN cvterm ON(cvterm.cv_id = cv.cv_id)
+        JOIN dbxref USING(dbxref_id)
+        JOIN db USING(db_id)
+        WHERE cvprop.value = '1' AND cvterm.is_obsolete = 0 AND db.name <> '' AND db.name <> 'null'
+        GROUP BY cv.cv_id, cv.name, db.name
+        ORDER BY cv.cv_id, count(*) DESC, db.name";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($visible_term->cvterm_id);
+
+    my %namespaces;
+    while (my ($cv_id, $cv_name, $db_name) = $h->fetchrow_array()) {
+        $namespaces{$cv_id} = { db_name => $db_name, cv_name => $cv_name };
+    }
+
+    return \%namespaces;
+}
+
+=head2 visible_cv_ids_for_db_names
+
+parameters: listref of db names
+
+returns: sorted list of the cv_ids of visible CVs (see onto_root_namespaces)
+whose db_name is one of those given. Lets pages that are configured by db
+name open the ontology browser, which works on cv_ids.
+
+=cut
+
+sub visible_cv_ids_for_db_names {
+    my $self = shift;
+    my $db_names = shift || [];
+
+    my %wanted = map { $_ => 1 } grep { defined && length } @$db_names;
+    my $namespaces = $self->onto_root_namespaces();
+
+    return sort { $a <=> $b } grep { $wanted{ $namespaces->{$_}->{db_name} } } keys %$namespaces;
 }
 
 sub store_composed_term {

@@ -4,6 +4,7 @@ use namespace::autoclean;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 
 use YAML::Any qw/LoadFile/;
+use CXGN::Onto;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -35,10 +36,12 @@ sub trait_search : Path('/search/phenotypes/traits') Args(0) {
     my $self = shift;
     my $c = shift;
     my $db_name = $c->config->{trait_ontology_db_name} || 'SP';
+    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
     $c->stash->{db_name} = $db_name;
     $c->stash(
 	template => '/search/phenotypes/traits.mas',
 	trait_db_name => $db_name,
+	cv_ids => join(',', $onto->visible_cv_ids_for_db_names([ $db_name ])),
 	);
 }
 

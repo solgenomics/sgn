@@ -24,6 +24,7 @@ use Spreadsheet::WriteExcel;
 use Time::Piece;
 
 use CXGN::BrAPI;
+use CXGN::Onto;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -3418,13 +3419,10 @@ sub observationvariable_ontologies_GET {
 	my $c = shift;
 	my ($auth) = _authenticate_user($c);
 
-	#Using code pattern found in SGN::Controller::Ontology->onto_browser
-	my $onto_root_namespaces = $c->config->{onto_root_namespaces};
-	my @namespaces = split ", ", $onto_root_namespaces;
-	foreach my $n (@namespaces) {
-		$n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
-	}
-	#print STDERR Dumper \@namespaces;
+	# db names of the CVs marked visible in cvprop
+	my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+	my %seen;
+	my @namespaces = sort grep { !$seen{$_}++ } map { $_->{db_name} } values %{ $onto->onto_root_namespaces() };
 
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;

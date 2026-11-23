@@ -96,12 +96,11 @@ CXGN.Onto.Browser.prototype = {
     },
 
     // Initialize the browser from root nodes the caller already has (same JSON
-    // format as /ajax/onto/roots), instead of fetching them by db name.
-    // dbName limits text search and the cvterm path rebuild to that ontology.
+    // format as /ajax/onto/roots), instead of fetching them by cv_id.
     // The supplied roots are kept, so "reset view" returns to them.
-    initializeBrowserWithRoots: function(roots, dbName) {
+    initializeBrowserWithRoots: function(roots, cvIds) {
 	this.presetRoots = roots;
-	this.initializeBrowser(dbName);
+	this.initializeBrowser(cvIds);
     },
 
     fetchRoots: function(rootNodes) {
@@ -111,9 +110,10 @@ CXGN.Onto.Browser.prototype = {
 	    return;
 	}
 
+	// rootNodes: cv_ids separated by commas and/or whitespace; empty means all visible cvs
 	jQuery.ajax({ 
 	    url: "/ajax/onto/roots",
-	    data:  { 'nodes' : rootNodes },
+	    data:  { 'cv_ids' : rootNodes || '' },
 	    async: false,
 	    method: 'get',
 	    error: function() {
@@ -183,7 +183,10 @@ CXGN.Onto.Browser.prototype = {
 	this.workingMessage(false);
     },
     
-    renderSearchByName: function( nameSpace ) {
+    // cvIds: cv_ids (separated by commas and/or whitespace) to restrict the text
+    // search to. If empty, a drop-down of all visible cvs is shown instead.
+    renderSearchByName: function( cvIds ) {
+	var nameSpace = String(cvIds || '').replace(/[^0-9]+/g, ',').replace(/^,|,$/g, '');
         if ( !nameSpace ) {
             var s = '<form style="margin-bottom:0" name="SearchByNameForm" onsubmit="javascript:o.getOntologies(this.cv_select.value, this.ontology_term_input.value); return false;" >';
         }  else {
@@ -204,7 +207,7 @@ CXGN.Onto.Browser.prototype = {
 	s += '</td></tr></table>';
 	s += '</div></form>';
 
-	s += this.renderRebuildCvtermpath( nameSpace );
+	s += this.renderRebuildCvtermpath();
 
 	var e = document.getElementById('ontology_term_input');
 	e.innerHTML = s;
@@ -214,17 +217,17 @@ CXGN.Onto.Browser.prototype = {
     // Rendered below the search interface, inside the ontology browser input
     // form table. The designer pages hide that whole table, so they do not get
     // a second copy of the controls they already provide themselves.
-    renderRebuildCvtermpath: function( nameSpace ) {
+    renderRebuildCvtermpath: function() {
 	var options = '<option value="">Select a CV...</option>';
 
-	// Offer the ontologies this browser was opened on, not every ontology in
-	// the site menu. rootNodes is whitespace separated, the same form that
-	// /ajax/onto/roots splits on.
-	var dbNames = nameSpace ? [ nameSpace ] : String(this.getRootNodes() || '').split(/\s+/);
-
-	for (var i=0; i<dbNames.length; i++) {
-	    var db_name = dbNames[i];
-	    if (db_name) {
+	// Cvterm paths are rebuilt per db namespace, so offer the dbs of the
+	// root terms this browser is showing (accessions are "DB:accession").
+	var seen = {};
+	var roots = this.rootnode ? this.rootnode.getChildren() : [];
+	for (var i=0; i<roots.length; i++) {
+	    var db_name = String(roots[i].getAccession() || '').split(':')[0];
+	    if (db_name && !seen[db_name]) {
+		seen[db_name] = true;
 		options += '<option value="' + db_name + '">' + db_name + '</option>';
 	    }
 	}
@@ -530,16 +533,17 @@ CXGN.Onto.Browser.prototype = {
     // names/definitions/synonyms/accessions like the current value 
     // of the ontology input
     //
-    getOntologies: function(db_name, search_string) {
+    // cv_ids: cv_ids (separated by commas and/or whitespace) to search within
+    getOntologies: function(cv_ids, search_string) {
 	this.workingMessage(true);
-        this.setSelected(db_name);
+        this.setSelected(cv_ids);
 	if(search_string.length<3){
 	    alert('The search text must be longer than 2 characters');
 	}
         else{
 	    jQuery.ajax({
 		url: '/ajax/onto/match',
-		data: { 'term_name' : search_string, 'db_name' : db_name },
+		data: { 'term_name' : search_string, 'cv_ids' : cv_ids },
 		async: false,
 		method: 'get',
 		error: function() {

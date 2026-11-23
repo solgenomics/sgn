@@ -26,9 +26,11 @@ sub treatment_design_page : Path('/treatments/design/') Args(0) {
         my @editable_ontologies = split(",", $editable_ontologies_str);
 
         if (grep {$_ eq "EXPERIMENT_TREATMENT"} @editable_ontologies) {
+            my $onto = CXGN::Onto->new({ schema => $schema });
             $c->stash(
                 template => '/tools/treatment_designer.mas',
-                db_name => "EXPERIMENT_TREATMENT"
+                db_name => "EXPERIMENT_TREATMENT",
+                cv_ids  => join(",", $onto->visible_cv_ids_for_db_names([ "EXPERIMENT_TREATMENT" ])),
             );
         } else {
             $c->stash->{template} = '/site/error/permission_denied.mas';

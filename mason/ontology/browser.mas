@@ -8,11 +8,9 @@
 
 The ontology browser is relying on JavaScript and uses AJAX requests to pull in the data. The AJAX requests are handled by a Catalyst controller SGN::Controller::AJAX::Onto. The JavaScript code is in js/CXGN/Tools/Onto.js.
 
-To configure which ontologies should be displayed, insert a line of the following format into the catalysts local conf file (sgn_local.conf on SGN):
-
-C<onto_root_namespaces  GO (Gene Ontology), PO (Plant Ontology), SO (Sequence Ontology), PATO (Phenotype and Trait Ontology), SP (Solanaceae Ontology)>
-
-where onto_root_namespaces is the conf key, "GO" the two letter code of the ontology (as it appears in the db database table), and in parenthesis is the human readable name of the ontology.
+The ontologies displayed are the CVs marked visible in the cvprop table (see
+CXGN::Onto->onto_root_namespaces()); visibility is managed on the Manage
+Ontologies page.
 
 =head1 AUTHOR
 
@@ -23,9 +21,12 @@ Lukas Mueller <lam87@cornell.edu>
 </%doc>
 
 <%args>
-    # comma separated list of root nodes (optional)
-    $root_nodes => undef
-    $db_name => undef
+    # cv_ids whose root terms are shown, separated by commas and/or whitespace
+    # (optional; default is every visible cv). Hidden cvs are always left out.
+    $cv_ids => undef
+    # cv_ids to restrict the text search to (optional; default shows a
+    # drop-down of all visible cvs)
+    $search_cv_ids => undef
     $expand => undef
     # if true, the browser markup is rendered but not initialized; the page
     # must create the global o itself (e.g. o.initializeBrowserWithRoots(...))
@@ -44,7 +45,10 @@ Lukas Mueller <lam87@cornell.edu>
      ]
 &>
 
-% #$root_nodes = 'GO PO SP'; #for testing
+<%init>
+    # only digits and separators reach the inline javascript below
+    $_ = join(',', grep { length } split /[^0-9]+/, ($_ // '')) for ($cv_ids, $search_cv_ids);
+</%init>
 
 <table title="ontology browser input form" cellpadding="0" summary="" border="0"><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td></tr>
 <tr><td><div id="ontology_term_input" >loading...</div></td></tr></table>
@@ -60,11 +64,11 @@ var o;
 
 % if (!$defer_init) {
 jQuery(document).ready( function() { 
-  o = new CXGN.Onto.Browser('<% $root_nodes %>');
+  o = new CXGN.Onto.Browser();
 //  o.setUpBrowser();
-  o.initializeBrowser('<% $root_nodes %>');
+  o.initializeBrowser('<% $cv_ids %>');
   o.renderSearchById();
-  o.renderSearchByName('<% $db_name %>');
+  o.renderSearchByName('<% $search_cv_ids %>');
   var rn = o.rootnode.getChildren();   
   var expand = "<% $expand %>";
   if (expand == 1) {

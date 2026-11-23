@@ -1,6 +1,6 @@
 <%args>
 
-  $db_name => 'SP'
+  $cv_ids => ''
   $search  => 'traits'
 
 </%args>
@@ -18,8 +18,8 @@
 
 
 <& /ontology/browser.mas,
-   root_nodes => $db_name,
-   db_name    => $db_name,
+   cv_ids        => $cv_ids,
+   search_cv_ids => $cv_ids,
    title      => "Search and browse tree of traits",
    expand => 1,
  &>

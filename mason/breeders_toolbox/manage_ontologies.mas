@@ -199,9 +199,9 @@ jQuery(function() {
                 browserContainer.show();
                 // o is the global the ontology browser's inline handlers refer to
                 o = new CXGN.Onto.Browser();
-                o.initializeBrowserWithRoots(response, dbName);
+                o.initializeBrowserWithRoots(response, item.attr('data-cv-ids'));
                 o.renderSearchById();
-                o.renderSearchByName(dbName);
+                o.renderSearchByName(item.attr('data-cv-ids'));
                 o.render();
             },
             error: function(xhr, status, err) {

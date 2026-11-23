@@ -19,16 +19,13 @@ sub onto_browser : Path('/tools/onto') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $root_nodes = $c->config->{onto_root_namespaces};
-    print STDERR $root_nodes, "\n\n";
-    my @namespaces = split ",", $root_nodes;
-    foreach my $n (@namespaces) {
-	$n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
-	print STDERR "Adding node $n\n";
+    # Roots default to every visible cv (see /ajax/onto/roots). An optional
+    # db_name parameter restricts the text search to that db's visible cvs.
+    my $db_name = $c->req->param("db_name");
+    if ($db_name) {
+        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+        $c->stash->{search_cv_ids} = join(",", $onto->visible_cv_ids_for_db_names([ $db_name ]));
     }
-    #$c->stash->{root_nodes} = $c->req->param("root_nodes");
-    $c->stash->{root_nodes} = join " ", @namespaces;
-    $c->stash->{db_name} = $c->req->param("db_name");
     $c->stash->{expand} = $c->req->param("expand");
 
     $c->stash->{template} = '/ontology/standalone.mas';
