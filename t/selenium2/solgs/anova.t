@@ -6,6 +6,7 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
+use File::Path qw /remove_tree/;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -13,7 +14,7 @@ my $f = SGN::Test::Fixture->new();
 my $solgs_data = SGN::Test::solGSData->new({
     'fixture' => $f, 
     'accessions_list_subset' => 60, 
-    'plots_list_subset' => 60,
+    'plots_list_subset' => 160,
     'user_id' => 40,
 });
 
