@@ -38,7 +38,7 @@ my $add_parent = sub {
     my $parent_name = shift;
     my $parent_type = shift;
     my $cross_type = shift // 'biparental';
-    $mech->get_ok("http://localhost:3010/ajax/stock/add_stock_parent?stock_id=$child_id&parent_name=$parent_name&parent_type=$parent_type&cross_type=$cross_type", "add $parent_type parent $parent_name");
+    $mech->post_ok("http://localhost:3010/ajax/stock/add_stock_parent", { stock_id => $child_id, parent_name => $parent_name, parent_type => $parent_type, cross_type => $cross_type }, "add $parent_type parent $parent_name");
     my $decoded = eval { decode_json $mech->content };
     # show the raw body in the test output when it is not a JSON object (for example null)
     return ref($decoded) eq 'HASH' ? $decoded : { body => $mech->content };
