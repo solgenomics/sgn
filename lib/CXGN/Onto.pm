@@ -644,4 +644,41 @@ sub get_children {
     return \@sorted;
 }
 
+=head2 get_populated_ontologies
+
+Retrieves a hash in the form db.name => { cv_id => cv.name };
+A single db can have cvterms in more than one cv, so each db may have several cv children.
+This represents the ontologies in this database with actual cvterms, excluding
+a few specific ontologies found in all breedbase instances that should not be
+shown in the UI. 
+
+=cut
+
+sub get_populated_ontologies {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $schema->storage->dbh;
+
+    my $q = "SELECT DISTINCT db.name, cvterm.cv_id, cv.name FROM db 
+    JOIN dbxref USING (db_id) 
+    JOIN cvterm USING (dbxref_id)
+    JOIN cv     USING (cv_id)
+    WHERE db.name NOT IN ('local','null','species_taxonomy','SGN_ref');"; #this is hardcoded intentionally.
+
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    my $return = {};
+
+    while (my ($db_name, $cv_id, $cv_name) = $h->fetchrow_array()) {
+        $return->{$db_name}->{$cv_id} = $cv_name;
+    }
+
+    if (%{$return}){
+        return $return;
+    } else {
+        die "No ontologies populated with cvterms in this database.\n";
+    }
+}
+
 1;

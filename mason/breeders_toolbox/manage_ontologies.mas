@@ -1,3 +1,176 @@
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
 <& /page/page_title.mas, title=>"Manage Ontologies" &>
+
+<style>
+    #manage_ontologies_tabs > li > a {
+        background-color: #e6e6e6;
+        color: #333;
+    }
+    #manage_ontologies_tabs > li > a:hover {
+        background-color: #d4d4d4;
+    }
+    #manage_ontologies_tabs > li.active > a,
+    #manage_ontologies_tabs > li.active > a:hover,
+    #manage_ontologies_tabs > li.active > a:focus {
+        background-color: #337ab7;
+        color: #fff;
+    }
+
+    /* Compact stacked pills for the ontology list */
+    #manage_ontologies_db_list > li > a {
+        padding: 4px 10px;
+    }
+    #manage_ontologies_db_list > li + li {
+        margin-top: 1px;
+    }
+
+    /* Resizable split layout for the Manage tab */
+    .mo-split {
+        display: flex;
+        height: 70vh;
+        min-height: 400px;
+        border: 1px solid #ccc;
+    }
+    .mo-right {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+    .mo-pane {
+        overflow: auto;
+        padding: 10px;
+        flex: 0 0 auto;
+        min-width: 0;
+        min-height: 0;
+    }
+    .mo-pane-fill {
+        flex: 1 1 auto;
+    }
+    .mo-gutter {
+        flex: 0 0 auto;
+        background-color: #e6e6e6;
+    }
+    .mo-gutter:hover, .mo-gutter.mo-dragging {
+        background-color: #bbb;
+    }
+    .mo-gutter-v {
+        width: 6px;
+        cursor: col-resize;
+    }
+    .mo-gutter-h {
+        height: 6px;
+        cursor: row-resize;
+    }
+</style>
+
+<script>
+jQuery(function() {
+    var MIN_SIZE = 50; // px, smallest a pane can be dragged to
+
+    jQuery('#manage_ontologies_split .mo-gutter').on('mousedown', function(e) {
+        e.preventDefault();
+        var gutter = jQuery(this);
+        var target = jQuery('#' + gutter.data('target'));
+        var container = target.parent();
+        var vertical = gutter.hasClass('mo-gutter-v');
+        var startPos = vertical ? e.pageX : e.pageY;
+        var startSize = vertical ? target.outerWidth() : target.outerHeight();
+        var total = vertical ? container.width() : container.height();
+        var gutterSize = vertical ? gutter.outerWidth() : gutter.outerHeight();
+
+        gutter.addClass('mo-dragging');
+        jQuery('body').css({ 'user-select': 'none', cursor: vertical ? 'col-resize' : 'row-resize' });
+
+        jQuery(document).on('mousemove.moSplit', function(ev) {
+            var delta = (vertical ? ev.pageX : ev.pageY) - startPos;
+            var size = Math.max(MIN_SIZE, Math.min(total - gutterSize - MIN_SIZE, startSize + delta));
+            target.css(vertical ? 'width' : 'height', (size / total * 100) + '%');
+        });
+
+        jQuery(document).on('mouseup.moSplit', function() {
+            jQuery(document).off('.moSplit');
+            gutter.removeClass('mo-dragging');
+            jQuery('body').css({ 'user-select': '', cursor: '' });
+        });
+    });
+
+    // Populate the left pane with the db names of populated ontologies
+    var dbList = jQuery('#manage_ontologies_db_list');
+
+    jQuery.ajax({
+        url: '/ajax/onto/get_populated_ontologies',
+        dataType: 'json',
+        success: function(response) {
+            if (response.error) {
+                dbList.empty();
+                alert('Error retrieving ontologies: ' + response.error + ' Contact a server administrator.');
+                return;
+            }
+
+            // Response is { db_name: { cv_id: cv_name, ... }, ... }: one list item per db,
+            // labelled "db_name (cv_name[, cv_name...])".
+            // Parentheses in cv names are replaced with spaces so they don't clash with the wrapping ones.
+            dbList.empty();
+            jQuery.each(Object.keys(response).sort(), function(i, dbName) {
+                var cvs = response[dbName];
+                var cvIds = Object.keys(cvs);
+                var cvNames = jQuery.map(cvIds, function(cv_id) {
+                    return cvs[cv_id].replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
+                }).sort();
+                var link = jQuery('<a href="#"></a>').text(dbName + ' (' + cvNames.join(', ') + ')');
+                dbList.append(jQuery('<li></li>').attr({ 'data-db-name': dbName, 'data-cv-ids': cvIds.join(',') }).append(link));
+            });
+        },
+        error: function(xhr, status, err) {
+            dbList.empty();
+            alert('Error retrieving ontologies: ' + (err || status) + ' Contact a server administrator.');
+        }
+    });
+
+    dbList.on('click', 'li:not(.disabled) > a', function(e) {
+        e.preventDefault();
+        dbList.children('li').removeClass('active');
+        jQuery(this).parent().addClass('active');
+    });
+});
+</script>
+
+<ul class="nav nav-pills nav-justified" id="manage_ontologies_tabs" style="margin-bottom: 20px">
+    <li class="active">
+        <a data-toggle="tab" href="#manage_ontologies_manage_tab">Manage</a>
+    </li>
+    <li>
+        <a data-toggle="tab" href="#manage_ontologies_upload_download_tab">Upload/Download</a>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade in active" id="manage_ontologies_manage_tab">
+        <div class="mo-split" id="manage_ontologies_split">
+            <div class="mo-pane" id="manage_ontologies_left_pane" style="width: 20%">
+                <ul class="nav nav-pills nav-stacked" id="manage_ontologies_db_list">
+                    <li class="disabled"><a>Loading ontologies...</a></li>
+                </ul>
+            </div>
+            <div class="mo-gutter mo-gutter-v" data-target="manage_ontologies_left_pane"></div>
+            <div class="mo-right">
+                <div class="mo-pane" id="manage_ontologies_top_pane" style="height: 50%">
+% for my $i (1..30) {
+                    <p>Top-right pane placeholder line <% $i %></p>
+% }
+                </div>
+                <div class="mo-gutter mo-gutter-h" data-target="manage_ontologies_top_pane"></div>
+                <div class="mo-pane mo-pane-fill">
+% for my $i (1..30) {
+                    <p>Bottom-right pane placeholder line <% $i %></p>
+% }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="manage_ontologies_upload_download_tab">
+        <p>Pane 2</p>
+    </div>
+</div>

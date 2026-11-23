@@ -469,6 +469,36 @@ sub store_trait_method_scale_observation_variable: Path('/ajax/onto/store_trait_
     $c->stash->{rest} = \%finish;
 }
 
+=head2 get_populated_ontologies
+
+Returns the ontologies that have cvterms loaded in this database, as
+returned by CXGN::Onto->get_populated_ontologies(): a hash in the form
+db.name => { cv_id => cv.name }.
+
+On failure, returns { error => $message }.
+
+=cut
+
+sub get_populated_ontologies: Path('/ajax/onto/get_populated_ontologies') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $ontologies;
+    eval {
+        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+        $ontologies = $onto->get_populated_ontologies();
+    };
+    if ($@) {
+        my $error = $@;
+        $error =~ s/\s+$//;
+        print STDERR "Error in get_populated_ontologies: $error\n";
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    $c->stash->{rest} = $ontologies;
+}
+
 =head2 get_trait_from_exact_components
 
 searches for and returns (if found) a composed trait that contains the exact components supplied
