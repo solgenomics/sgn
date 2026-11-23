@@ -95,7 +95,21 @@ CXGN.Onto.Browser.prototype = {
 	return this.rootNodes;
     },
 
+    // Initialize the browser from root nodes the caller already has (same JSON
+    // format as /ajax/onto/roots), instead of fetching them by db name.
+    // dbName limits text search and the cvterm path rebuild to that ontology.
+    // The supplied roots are kept, so "reset view" returns to them.
+    initializeBrowserWithRoots: function(roots, dbName) {
+	this.presetRoots = roots;
+	this.initializeBrowser(dbName);
+    },
+
     fetchRoots: function(rootNodes) {
+
+	if (this.presetRoots) {
+	    this.buildRootNode(this.presetRoots);
+	    return;
+	}
 
 	jQuery.ajax({ 
 	    url: "/ajax/onto/roots",
@@ -108,24 +122,26 @@ CXGN.Onto.Browser.prototype = {
 	    success: function(response) {
 		if (response.error ) { alert(response.error) ; }
 		else {
-		    var o = this.o;
-		    o.rootnode = new Node(o);
-		    o.rootnode.setName('');
-		    o.rootnode.setAccession('root');
-		    o.rootnode.openNode();
-		    o.rootnode.unHide();
-		    o.rootnode.setHasChildren(true);
-
-		    for (var i=0; i<response.length; i++) {
-			var childNode = new Node(o);
-			
-			o.rootnode.addChild(childNode);
-			childNode.json2node(response[i]);
-		    }
+		    this.o.buildRootNode(response);
 		}
 	    },
 	    context: { o : this }
 	});
+    },
+
+    buildRootNode: function(roots) {
+	this.rootnode = new Node(this);
+	this.rootnode.setName('');
+	this.rootnode.setAccession('root');
+	this.rootnode.openNode();
+	this.rootnode.unHide();
+	this.rootnode.setHasChildren(true);
+
+	for (var i=0; i<roots.length; i++) {
+	    var childNode = new Node(this);
+	    this.rootnode.addChild(childNode);
+	    childNode.json2node(roots[i]);
+	}
     },
     
     fetchMenuItems: function() { 

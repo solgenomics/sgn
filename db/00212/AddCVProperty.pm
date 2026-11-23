@@ -94,7 +94,7 @@ sub patch {
         print STDERR "MARKING CVS IN CVPROP AS VISIBLE...\n";
         $dbh->do(<<'EOSQL', undef, $visible_id, $visible_id);
 INSERT INTO cvprop (cv_id, type_id, value)
-SELECT DISTINCT cp.cv_id, ?, '1'
+SELECT DISTINCT cp.cv_id, ?::int, '1'
 FROM cvprop cp
 WHERE NOT EXISTS (
     SELECT 1 FROM cvprop existing
@@ -106,7 +106,7 @@ EOSQL
         print STDERR "MARKING TRAIT AND TREATMENT ONTOLOGIES AS EDITABLE...\n";
         $dbh->do(<<'EOSQL', undef, $editable_id, $editable_id);
 INSERT INTO cvprop (cv_id, type_id, value)
-SELECT DISTINCT cp.cv_id, ?, '1'
+SELECT DISTINCT cp.cv_id, ?::int, '1'
 FROM cvprop cp
 JOIN cvterm type ON type.cvterm_id = cp.type_id
 JOIN cv type_cv ON type_cv.cv_id = type.cv_id
@@ -123,7 +123,7 @@ EOSQL
         print STDERR "MARKING GO, PO, SO AND PATO CVS AS VISIBLE...\n";
         $dbh->do(<<'EOSQL', undef, $visible_id, $visible_id);
 INSERT INTO cvprop (cv_id, type_id, value)
-SELECT DISTINCT cvterm.cv_id, ?, '1'
+SELECT DISTINCT cvterm.cv_id, ?::int, '1'
 FROM db
 JOIN dbxref ON dbxref.db_id = db.db_id
 JOIN cvterm ON cvterm.dbxref_id = dbxref.dbxref_id

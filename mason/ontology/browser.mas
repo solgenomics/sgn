@@ -27,6 +27,9 @@ Lukas Mueller <lam87@cornell.edu>
     $root_nodes => undef
     $db_name => undef
     $expand => undef
+    # if true, the browser markup is rendered but not initialized; the page
+    # must create the global o itself (e.g. o.initializeBrowserWithRoots(...))
+    $defer_init => 0
 </%args>
 <& /util/import_javascript.mas,
     classes => [
@@ -55,6 +58,7 @@ Lukas Mueller <lam87@cornell.edu>
 
 var o;
 
+% if (!$defer_init) {
 jQuery(document).ready( function() { 
   o = new CXGN.Onto.Browser('<% $root_nodes %>');
 //  o.setUpBrowser();
@@ -70,6 +74,7 @@ jQuery(document).ready( function() {
   }
   o.render();
 });
+% }
 
 
 </script>

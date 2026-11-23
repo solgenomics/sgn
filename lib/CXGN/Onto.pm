@@ -107,6 +107,16 @@ sub get_variables {
       return @sorted;
 }
 
+=head2 get_root_nodes
+
+parameters: CV type
+
+returns: Root nodes of CVs matching given CV type (as defined in CVProp)
+
+Side Effects: none
+
+=cut
+
 sub get_root_nodes {
       my $self = shift;
       my $cv_type = shift;
@@ -131,6 +141,51 @@ sub get_root_nodes {
       return @results;
 }
 
+=head2 get_cv_root_nodes
+
+parameters: CV id(s) listref
+
+returns: List of root nodes matching the CVs supplied [cv_id, root term full name, cvterm_id]
+
+Side Effects: none
+
+=cut
+
+sub get_cv_root_nodes {
+    my $self = shift;
+    my $cv_ids = shift;
+
+    my $schema = $self->schema();
+
+    my $visible_term = $schema->resultset('Cv::Cvterm')->find(
+        { 'me.name' => 'cv_visible', 'cv.name' => 'cv_property' },
+        { join => 'cv' }
+    );
+    if (!$visible_term) {
+        die "The 'cv_visible' term was not found in the 'cv_property' cv. Have the dbpatches been run?\n";
+    }
+
+    my $placeholder = join(',', ('?') x @$cv_ids);
+
+    my $q = "SELECT cv.cv_id, (((db.name::text || ':'::text) || dbxref.accession::text) || ' '::text) || cvterm.name AS name, cvterm.cvterm_id
+        FROM cv
+        JOIN cvprop ON(cvprop.cv_id = cv.cv_id AND cvprop.type_id = ?)
+        JOIN cvterm on(cv.cv_id = cvterm.cv_id)
+        JOIN dbxref USING(dbxref_id)
+        JOIN db USING(db_id)
+        LEFT JOIN cvterm_relationship ON(cvterm.cvterm_id=cvterm_relationship.subject_id)
+        WHERE cvterm_relationship.subject_id IS NULL AND cvterm.is_obsolete= 0 AND cvterm.is_relationshiptype = 0 AND db.name <> '' AND db.name <> 'null' AND cvprop.value = '1' AND cv.cv_id IN ($placeholder)";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($visible_term->cvterm_id, @$cv_ids);
+
+    my @results;
+    while (my ($cv_id, $name, $cvterm_id) = $h->fetchrow_array()) {
+        push @results, [ $cv_id, $name, $cvterm_id ];
+    }
+
+    return @results;
+}
 
 sub store_composed_term {
     my $self = shift;

@@ -25,6 +25,11 @@
         margin-top: 1px;
     }
 
+    /* CV property table in the bottom-right pane */
+    #manage_ontologies_cv_table td {
+        vertical-align: middle;
+    }
+
     /* Resizable split layout for the Manage tab */
     .mo-split {
         display: flex;
@@ -67,6 +72,21 @@
 
 <script>
 jQuery(function() {
+    // The ontology browser loads Prototype.js, which adds hide()/show() to every DOM element.
+    // jQuery calls those as the default action of Bootstrap's 'hide.bs.*'/'show.bs.*' events,
+    // which would hide the Manage/Upload tabs and navbar dropdowns. Shadow them for the
+    // duration of each Bootstrap event so jQuery has nothing to call.
+    if (typeof Prototype !== 'undefined' && Prototype.BrowserFeatures.ElementExtensions) {
+        ['hide', 'show'].forEach(function(method) {
+            ['collapse', 'dropdown', 'modal', 'tooltip', 'popover', 'tab'].forEach(function(plugin) {
+                jQuery(window).on(method + '.bs.' + plugin, function(event) {
+                    event.target[method] = undefined;
+                    setTimeout(function() { delete event.target[method]; }, 0);
+                });
+            });
+        });
+    }
+
     var MIN_SIZE = 50; // px, smallest a pane can be dragged to
 
     jQuery('#manage_ontologies_split .mo-gutter').on('mousedown', function(e) {
@@ -99,6 +119,11 @@ jQuery(function() {
     // Populate the left pane with the db names of populated ontologies
     var dbList = jQuery('#manage_ontologies_db_list');
 
+    // Parentheses in cv names are replaced with spaces so they don't clash with wrapping ones
+    function cleanCvName(name) {
+        return name.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
     jQuery.ajax({
         url: '/ajax/onto/get_populated_ontologies',
         dataType: 'json',
@@ -117,7 +142,7 @@ jQuery(function() {
                 var cvs = response[dbName];
                 var cvIds = Object.keys(cvs);
                 var cvNames = jQuery.map(cvIds, function(cv_id) {
-                    return cvs[cv_id].replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
+                    return cleanCvName(cvs[cv_id]);
                 }).sort();
                 var link = jQuery('<a href="#"></a>').text(dbName + ' (' + cvNames.join(', ') + ')');
                 dbList.append(jQuery('<li></li>').attr({ 'data-db-name': dbName, 'data-cv-ids': cvIds.join(',') }).append(link));
@@ -129,10 +154,141 @@ jQuery(function() {
         }
     });
 
+    // Bottom-right pane: Visible/Editable toggles for each cv in the selected ontology
+    var cvTable = jQuery('#manage_ontologies_cv_table');
+    var cvTableBody = cvTable.children('tbody');
+    var cvTableMessage = jQuery('#manage_ontologies_cv_table_message');
+    var cvRequestCount = 0; // used to ignore responses from superseded clicks
+    var browserContainer = jQuery('#manage_ontologies_browser');
+    var browserMessage = jQuery('#manage_ontologies_browser_message');
+
+    // Builds a Yes/No bootstrap-toggle switch (same widget as the trial upload dialogs).
+    // value is 1, 0, or null; null (no cvprop row yet) is shown as No.
+    function makeToggle(cvId, property, value) {
+        return jQuery('<input type="checkbox" data-toggle="toggle" data-on="Yes" data-off="No">')
+            .attr({ 'data-cv-id': cvId, 'data-property': property })
+            .prop('checked', String(value) === '1');
+    }
+
+    // Top-right pane: ontology browser rooted at the visible cvs' root nodes of a left-pane item.
+    // Called on selection, and again after a visibility change so hidden cvs drop out.
+    var browserRequestCount = 0; // used to ignore responses from superseded loads
+    function loadBrowser(item) {
+        var requestId = ++browserRequestCount;
+        var dbName = item.attr('data-db-name');
+
+        browserContainer.hide();
+        browserMessage.text('Loading ontology browser...').show();
+
+        jQuery.ajax({
+            url: '/ajax/onto/get_cv_root_nodes',
+            data: { cv_ids: item.attr('data-cv-ids') },
+            dataType: 'json',
+            success: function(response) {
+                if (requestId !== browserRequestCount) { return; }
+                if (response.error) {
+                    browserMessage.text('');
+                    alert('Error retrieving ontology root nodes: ' + response.error);
+                    return;
+                }
+                if (response.length === 0) {
+                    browserMessage.text('No visible CVs with root terms in ' + dbName + '.');
+                    return;
+                }
+                browserMessage.hide();
+                browserContainer.show();
+                // o is the global the ontology browser's inline handlers refer to
+                o = new CXGN.Onto.Browser();
+                o.initializeBrowserWithRoots(response, dbName);
+                o.renderSearchById();
+                o.renderSearchByName(dbName);
+                o.render();
+            },
+            error: function(xhr, status, err) {
+                if (requestId !== browserRequestCount) { return; }
+                browserMessage.text('');
+                alert('Error retrieving ontology root nodes: ' + (err || status));
+            }
+        });
+    }
+
     dbList.on('click', 'li:not(.disabled) > a', function(e) {
         e.preventDefault();
+        var item = jQuery(this).parent();
         dbList.children('li').removeClass('active');
-        jQuery(this).parent().addClass('active');
+        item.addClass('active');
+
+        loadBrowser(item);
+
+        var requestId = ++cvRequestCount;
+        cvTable.hide();
+        cvTableBody.empty();
+        cvTableMessage.text('Loading CVs...').show();
+
+        jQuery.ajax({
+            url: '/ajax/cv/get_properties',
+            data: { cv_ids: item.attr('data-cv-ids') },
+            dataType: 'json',
+            success: function(response) {
+                if (requestId !== cvRequestCount) { return; }
+                if (response.error) {
+                    cvTableMessage.text('');
+                    alert('Error retrieving CV properties: ' + response.error);
+                    return;
+                }
+                jQuery.each(response.cvs, function(i, cv) {
+                    var row = jQuery('<tr></tr>');
+                    row.append(jQuery('<td></td>').text(cleanCvName(cv.cv_name)));
+                    row.append(jQuery('<td></td>').append(makeToggle(cv.cv_id, 'visible', cv.cv_visible)));
+                    row.append(jQuery('<td></td>').append(makeToggle(cv.cv_id, 'editable', cv.cv_editable)));
+                    cvTableBody.append(row);
+                });
+                cvTableMessage.hide();
+                cvTable.show();
+                cvTableBody.find('input[type=checkbox]').bootstrapToggle();
+            },
+            error: function(xhr, status, err) {
+                if (requestId !== cvRequestCount) { return; }
+                cvTableMessage.text('');
+                alert('Error retrieving CV properties: ' + (err || status));
+            }
+        });
+    });
+
+    cvTableBody.on('change', 'input[type=checkbox]', function() {
+        var input = jQuery(this);
+        var toggle = input.data('bs.toggle');
+        var property = input.attr('data-property');
+        var value = input.prop('checked') ? 1 : 0;
+
+        // Puts the switch back without firing another change event
+        function revert() {
+            toggle.enable();
+            if (value) { toggle.off(true); } else { toggle.on(true); }
+        }
+
+        toggle.disable();
+        jQuery.ajax({
+            url: property === 'visible' ? '/ajax/cv/set_visibility' : '/ajax/cv/set_editable',
+            type: 'POST',
+            data: { cv_id: input.attr('data-cv-id'), value: value },
+            dataType: 'json',
+            success: function(response) {
+                if (response.error) {
+                    revert();
+                    alert('Error saving ' + property + ' setting: ' + response.error);
+                    return;
+                }
+                toggle.enable();
+                if (property === 'visible') {
+                    loadBrowser(dbList.children('li.active'));
+                }
+            },
+            error: function(xhr, status, err) {
+                revert();
+                alert('Error saving ' + property + ' setting: ' + (err || status));
+            }
+        });
     });
 });
 </script>
@@ -157,15 +313,20 @@ jQuery(function() {
             <div class="mo-gutter mo-gutter-v" data-target="manage_ontologies_left_pane"></div>
             <div class="mo-right">
                 <div class="mo-pane" id="manage_ontologies_top_pane" style="height: 50%">
-% for my $i (1..30) {
-                    <p>Top-right pane placeholder line <% $i %></p>
-% }
+                    <p class="text-muted" id="manage_ontologies_browser_message">Select an ontology on the left to browse it.</p>
+                    <div id="manage_ontologies_browser" style="display: none">
+                        <& /ontology/browser.mas, defer_init => 1 &>
+                    </div>
                 </div>
                 <div class="mo-gutter mo-gutter-h" data-target="manage_ontologies_top_pane"></div>
-                <div class="mo-pane mo-pane-fill">
-% for my $i (1..30) {
-                    <p>Bottom-right pane placeholder line <% $i %></p>
-% }
+                <div class="mo-pane mo-pane-fill" id="manage_ontologies_bottom_pane">
+                    <p class="text-muted" id="manage_ontologies_cv_table_message">Select an ontology on the left to manage its CVs.</p>
+                    <table class="table table-condensed table-hover" id="manage_ontologies_cv_table" style="display: none">
+                        <thead>
+                            <tr><th>CV name</th><th>Visible <span class="glyphicon glyphicon-question-sign" style="color:blue" title="Changes whether this CV is visible in the ontology browser."></span></th><th>Editable <span class="glyphicon glyphicon-question-sign" style="color:blue" title="Changes whether users can add or edit terms on this ontology."></span></th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>

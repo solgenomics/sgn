@@ -499,6 +499,58 @@ sub get_populated_ontologies: Path('/ajax/onto/get_populated_ontologies') Args(0
     $c->stash->{rest} = $ontologies;
 }
 
+=head2 get_cv_root_nodes
+
+Public Path: /ajax/onto/get_cv_root_nodes
+
+GET parameters: cv_ids (comma-separated list of cv_ids)
+
+Returns the root nodes of the visible cvs among those requested, from
+CXGN::Onto->get_cv_root_nodes(), in the same format as /ajax/onto/roots
+(a list of { accession, cvterm_name, cvterm_id, has_children, relationship })
+so they can be handed straight to the ontology browser.
+
+On failure, returns { error => $message }. Requires login.
+
+=cut
+
+sub get_cv_root_nodes: Path('/ajax/onto/get_cv_root_nodes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to view ontology root nodes." };
+        return;
+    }
+
+    my @cv_ids = grep { length } split /\s*,\s*/, ($c->req->param('cv_ids') // '');
+    if (!@cv_ids || grep { !/^\d+$/ } @cv_ids) {
+        $c->stash->{rest} = { error => "cv_ids must be a comma-separated list of cv_ids." };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my @roots;
+    eval {
+        my $onto = CXGN::Onto->new( { schema => $schema } );
+        foreach my $root ($onto->get_cv_root_nodes(\@cv_ids)) {
+            my ($cv_id, $name, $cvterm_id) = @$root;
+            my $cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
+            push @roots, $self->flatten_node($cvterm, undef) if $cvterm;
+        }
+    };
+    if ($@) {
+        my $error = $@;
+        $error =~ s/\s+$//;
+        print STDERR "Error in get_cv_root_nodes: $error\n";
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    $c->stash->{rest} = [ sort { $a->{accession} cmp $b->{accession} } @roots ];
+}
+
 =head2 get_trait_from_exact_components
 
 searches for and returns (if found) a composed trait that contains the exact components supplied
