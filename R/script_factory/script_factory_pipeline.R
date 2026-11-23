@@ -1135,12 +1135,19 @@ fit_tmb <- function(d, fml_txt, genotype_random, acc = NULL, replace = NULL, dis
     if (inherits(s, "error")) stop(conditionMessage(s))
     rt <- s$condList$reTrms
     kr <- which(names(rt$cnms) == "accession")
-    if (length(kr) != 1 || length(rt$cnms[[kr]]) != 1) stop("the accession term was not found")
+    if (length(kr) != 1) stop("the accession term was not found")
+    # a structured term (cs / diag over trials) has K effects per accession,
+    # stored accession by accession: u = (L kron I_K) v, v ~ Sigma kron I, so
+    # Var(u) = A kron Sigma (Sigma: genetic covariance of the trials)
+    rel_k <- length(rt$cnms[[kr]])
+    if (rel_k > 1 && is.null(acc)) stop("the accession term has ", rel_k, " effects per accession")
     rel_lv <- levels(rt$flist[[kr]])
     Lk <- rel_chol(rel_lv)
     idx <- (rt$Gp[kr] + 1):rt$Gp[kr + 1]
     Z <- s$data.tmb$Z
-    Z[, idx] <- Z[, idx, drop = FALSE] %*% Matrix::Matrix(Lk, sparse = TRUE)
+    Lz <- Matrix::Matrix(Lk, sparse = TRUE)
+    if (rel_k > 1) Lz <- Matrix::kronecker(Lz, Matrix::Diagonal(rel_k))
+    Z[, idx] <- Z[, idx, drop = FALSE] %*% Lz
     s$data.tmb$Z <- methods::as(Z, class(s$data.tmb$Z))
     m <- fit_quietly(glmmTMB::fitTMB(s))
   } else m <- fit_quietly(glmmTMB::glmmTMB(as.formula(fml), dispformula = dform, data = d, REML = adv_reml, control = tmb_ctrl()))
@@ -1183,23 +1190,48 @@ fit_tmb <- function(d, fml_txt, genotype_random, acc = NULL, replace = NULL, dis
   ancestors_df <- NULL
   if (genotype_random && !is.null(rel_lv)) {
     ka <- which(grp == "accession")[1]
-    v <- as.numeric(as.matrix(re[[ka]])[rel_lv, 1])
-    u <- as.numeric(Lk %*% v)
+    s <- rel_k
+    # genetic value g = (L kron w') v: w = 1 (one effect per accession) or the
+    # weights of the trials (structured term: mean over the trials)
+    w <- if (s > 1) acc$L else 1
+    if (length(w) != s) stop("the accession term has ", s, " effects per accession, not ", length(w))
+    V <- as.matrix(re[[ka]])[rel_lv, , drop = FALSE]
+    u <- as.numeric(Lk %*% (V %*% w))
     # prediction error covariance of v from the inverse of the random-effect
-    # Hessian (with REML the fixed effects are part of it), then of u = L v
-    Cvv <- tryCatch({
+    # Hessian (with REML the fixed effects are part of it), then of g
+    PEVu <- tryCatch({
       e <- m$obj$env
       H <- e$spHess(e$last.par.best, random = TRUE)
       bi <- which(names(e$last.par.best)[e$random] == "b")
       off <- c(0, cumsum(vapply(rs, function(x) x$blockReps * x$blockSize, numeric(1))))
-      pos <- bi[off[ka] + match(rel_lv, rownames(re[[ka]]))]
+      first <- off[ka] + (match(rel_lv, rownames(re[[ka]])) - 1) * s
+      pos <- bi[as.vector(t(outer(first, seq_len(s), `+`)))]      # accession by accession
       E <- Matrix::sparseMatrix(i = pos, j = seq_along(pos), x = 1, dims = c(nrow(H), length(pos)))
-      as.matrix(Matrix::solve(H, E))[pos, , drop = FALSE] * sc^2
+      Cvv <- as.matrix(Matrix::solve(H, E))[pos, , drop = FALSE] * sc^2
+      Tm <- kronecker(Lk, t(w))
+      Tm %*% Cvv %*% t(Tm)
     }, error = function(e) NULL)
-    PEVu <- if (is.null(Cvv)) NULL else Lk %*% Cvv %*% t(Lk)
     gv <- data.frame(accession = rel_lv, value = mu + u, se = if (is.null(PEVu)) NA_real_ else sqrt(pmax(0, diag(PEVu))), stringsAsFactors = FALSE)
     random$accession <- data.frame(level = rel_lv, solution = u, se = gv$se, stringsAsFactors = FALSE)
-    ancestors_df <- rel_ancestors(rel_lv, u, PEVu, vc[["accession"]], mu)
+    s2g <- vc[["accession"]]
+    if (s > 1) {
+      G <- Reduce(`+`, lapply(Filter(function(x) x$group == "accession", mats), function(x) x$M))
+      labs <- if (!is.null(acc$labels)) acc$labels else rownames(G)
+      dimnames(G) <- list(labs, labs)
+      s2g <- as.numeric(t(w) %*% G %*% w)
+      pev <- if (is.null(PEVu)) rep(NA_real_, length(rel_lv)) else diag(PEVu)
+      rel_acc <- 1 - pev / (s2g * diag(rel_K[rel_lv, rel_lv, drop = FALSE]))
+      ev <- tryCatch(eigen(G, symmetric = TRUE, only.values = TRUE)$values, error = function(e) NULL)
+      if (!is.null(ev) && length(ev) > 1 && max(ev) > 0 && min(ev) < 1e-5 * max(ev)) {
+        notes <- c(grep("^glmmTMB (reports a non positive|did not report convergence)", notes, value = TRUE, invert = TRUE),
+                   paste0("the estimated genetic covariance matrix of the ", length(ev), " trials is singular (rank about ", sum(ev >= 1e-5 * max(ev)),
+                          "): some genetic correlations are close to +/-1, so the estimate lies on the boundary of the parameter space (glmmTMB then reports convergence problems). ",
+                          "The values are usable; a simpler structure (diagonal or heterogeneous compound symmetry) is more stable"))
+      }
+      structure_out <- list(kind = if (is.null(acc$kind)) "" else acc$kind, labels = labs, G = G, L = w, var_value = s2g,
+                            reliability = if (any(is.finite(rel_acc))) mean(pmax(0, rel_acc[is.finite(rel_acc)])) else NA_real_)
+    }
+    ancestors_df <- rel_ancestors(rel_lv, u, PEVu, s2g, mu)
   } else if (genotype_random) {
     ka <- which(grp == "accession")
     if (!length(ka)) stop("the accession term was not found")
@@ -1263,6 +1295,9 @@ gen_model <- opt(gen_cfg, "model", "iid")      # iid | parents | pedigree | geno
 check_opt <- opt(gen_cfg, "check", "auto")     # auto | fixed | none
 if (!gen_model %in% c("iid", "parents", "pedigree", "genomic", "single_step")) gen_model <- "iid"
 REL_LABEL <- c(pedigree = "pedigree (A matrix)", genomic = "genomic (G matrix)", single_step = "single-step (H matrix)")
+# G x E covariances fitted with a relationship matrix by glmmTMB (A kron Sigma);
+# the unstructured one is left to BLUPF90+ (slow, often on the boundary)
+REL_GXE <- c("cs_het", "diag")
 if (gen_model %in% c("parents", "pedigree")) {
   n_known <- if (is.null(pedigree)) 0 else sum(unique(dat$accession) %in% pedigree$accession[!is.na(pedigree$mother) | !is.na(pedigree$father)])
   if (n_known == 0) {
@@ -1427,10 +1462,12 @@ fit_model <- function(d, fml_txt, genotype_random, w = NULL, label = "model", tm
   # relationship matrix (A, G, H) on the accession effect
   use_rel <- genotype_random && !is.null(rel_K) && grepl("\\(1\\s*\\|\\s*accession\\s*\\)", rhs) && all(unique(as.character(d$accession)) %in% rownames(rel_K))
   # advanced variance structures (glmmTMB): tmb = list(acc, replace, disp);
-  # with a relationship only when the accession term stays (1|accession)
+  # with a relationship when the accession term stays (1|accession) or becomes
+  # a heterogeneous compound symmetry / diagonal covariance of the trials
+  # (A kron Sigma, see fit_tmb); not with an unstructured one or in time
   if (!is.null(tmb)) {
     for (v in intersect(c("mother", "father"), all.vars(as.formula(fml_txt)))) d[[v]] <- ifelse(is.na(d[[v]]), "(unknown)", d[[v]])
-    if (!is.null(tmb$acc)) use_rel <- FALSE
+    if (!is.null(tmb$acc) && !(tmb$acc$kind %in% REL_GXE)) use_rel <- FALSE
     fit <- fit_tmb(d, fml_txt, genotype_random, acc = tmb$acc, replace = tmb$replace, disp = tmb$disp, label = label, rel = use_rel)
   }
   if (is.null(fit)) {
@@ -1764,24 +1801,43 @@ fit_stage1 <- function(d, info, trait) {
     has_rep <- n_levels(d$rep_eff) > 1
     d$rowN <- d$row; d$colN <- d$col
     rc_random <- c(if (nr > 1 && !any(d$row_off)) "row_f", if (nc > 1 && !any(d$col_off)) "col_f")
-    # Candidate specifications: replicate as fixed effect, then replicate as
-    # random effect. When the replicates are bands of columns or rows, the
-    # fixed replicate (nearly) repeats the linear column / row terms of
-    # PSANOVA: SpATS fits it without an error but the predictions can be far
-    # off, so the random replicate comes first.
+    # Candidate specifications: replicate as random effect, then replicate as
+    # fixed effect. Replicates laid out in the field (bands of columns or rows,
+    # also overlapping ones) are (nearly) linear in the column / row position,
+    # so a fixed replicate repeats the linear terms of PSANOVA: SpATS fits it
+    # without an error but the predictions can be far off and their SEs much
+    # larger. A random replicate is shrunk where the spatial surface explains
+    # it, so it is always tried first; the fixed replicate is the fallback.
     fx <- function(v) if (length(v)) as.formula(paste("~", paste(v, collapse = " + "))) else NULL
     specs <- list(
-      list(fixed = fx(c(if (has_rep) "rep_eff", trt_fx, cv_fx)), random = rc_random, label = paste0(if (has_rep) " + rep" else "", trt_lab, cv_lab), rlabel = ""),
       list(fixed = fx(c(trt_fx, cv_fx)), random = c(if (has_rep) "rep_eff", rc_random), label = paste0(trt_lab, cv_lab), rlabel = if (has_rep) " + (1|rep)" else "")
     )
-    # share of the plots in columns (rows) held by a single replicate
-    rep_purity <- function(pos) {
-      ok <- !is.na(pos)
-      tb <- table(as.character(pos[ok]), as.character(d$rep_eff[ok]))
-      if (!sum(tb)) 0 else sum(apply(tb, 1, max)) / sum(tb)
+    if (has_rep)
+      specs[[2]] <- list(fixed = fx(c("rep_eff", trt_fx, cv_fx)), random = rc_random, label = paste0(" + rep", trt_lab, cv_lab), rlabel = "")
+    # With the genotype fixed, the fixed part of SpATS is the accessions, the
+    # fixed terms and the linear part of PSANOVA (column, row, column x row).
+    # A plot of an entry planted once only estimates that entry, so the trend
+    # comes from the repeated plots (checks): with too few of them the fixed
+    # part is singular, or uses up every plot and leaves no error, and SpATS
+    # stops ("not of full rank"). Checked here, so the trial goes to the
+    # design model with a note that says why. At least 2 plots must be left
+    # for the error, as for the design model (df_res above).
+    dk <- droplevels(d[!is.na(d$y), , drop = FALSE])
+    spats_estimable <- function(spec) {
+      fx_rhs <- if (is.null(spec$fixed)) "" else paste("+", as.character(spec$fixed)[2])
+      X <- tryCatch(model.matrix(as.formula(paste("~ accession", fx_rhs)), dk), error = function(e) NULL)
+      if (is.null(X)) return(TRUE)   # let SpATS report what is wrong
+      X <- cbind(X, col = dk$colN, row = dk$rowN, col_row = dk$colN * dk$rowN)
+      qr(X)$rank == ncol(X) && nrow(X) - ncol(X) >= 2
     }
-    rep_aligned <- has_rep && (rep_purity(d$col) >= 0.9 || rep_purity(d$row) >= 0.9)
-    if (!has_rep) specs <- specs[1] else if (rep_aligned) specs <- specs[2:1]
+    specs <- Filter(spats_estimable, specs)
+    spats_skip <- if (length(specs)) "" else {
+      n_rep_plots <- nrow(dk) - n_levels(dk$accession)
+      paste0("too few repeated plots for the spatial model: ", nrow(dk), " plots of ", n_levels(dk$accession), " accessions leave ",
+             n_rep_plots, " repeated plot(s), not enough for the column, row and column x row trends",
+             if (length(trt_fx) || length(cv_fx) || has_rep) ", the other fixed terms" else "",
+             " and an error estimate, so the trend cannot be separated from the accessions")
+    }
     spats_fit <- function(spec, g_random) {
       random <- if (length(spec$random)) as.formula(paste("~", paste(spec$random, collapse = " + "))) else NULL
       fit_quietly(SpATS::SpATS(response = "y", genotype = "accession", genotype.as.random = g_random,
@@ -1800,7 +1856,7 @@ fit_stage1 <- function(d, info, trait) {
       r <- if (length(v) >= 10) suppressWarnings(cor(v, raw_acc[as.character(pr$accession)])) else NA_real_
       abs(mean(v) - mean(raw_acc)) > s || (is.finite(r) && r < 0.2)
     }
-    fF <- NULL; pr <- NULL
+    fF <- if (nzchar(spats_skip)) simpleError(spats_skip) else NULL; pr <- NULL
     for (spec in specs) {
       fF <- spats_fit(spec, FALSE)
       if (inherits(fF, "error")) next
@@ -1825,7 +1881,8 @@ fit_stage1 <- function(d, info, trait) {
       res$cv <- 100 * sqrt(res$var_e) / abs(res$mean)
       return(list(summary = res, means = means, resid = data.frame(unit = d$unit, resid = as.numeric(fF$residuals))))
     }
-    add_warning("SpATS could not be fitted for ", info$trial, " / ", short_trait(trait), " (", conditionMessage(fF), " This usually means the field layout confounds the spatial trend with genotypes); the ", info$design_label, " design model was used instead.")
+    if (nzchar(spats_skip)) add_warning("SpATS was not used for ", info$trial, " / ", short_trait(trait), " (", spats_skip, "); the ", info$design_label, " design model was used instead.")
+    else add_warning("SpATS could not be fitted for ", info$trial, " / ", short_trait(trait), " (", conditionMessage(fF), " This usually means the field layout confounds the spatial trend with genotypes); the ", info$design_label, " design model was used instead.")
   } else if (use_spats) {
     add_warning("R package SpATS is not installed; using the design model for ", info$trial, ".")
   }
@@ -2283,7 +2340,7 @@ if (strategy == "two_stage") {
       if (adv_gxe != "cs") {
         why <- if (!genotype_random) "it needs the genotype as random effect"
                else if (n_tr < 2) "there is a single trial"
-               else if (gen_model %in% c("pedigree", "genomic", "single_step")) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model; the BLUPF90+ engine fits it")
+               else if (gen_model %in% c("pedigree", "genomic", "single_step") && !(adv_gxe %in% REL_GXE)) paste0("the R engine fits the unstructured covariance with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model (heterogeneous compound symmetry and diagonal work with it); the BLUPF90+ engine fits it")
                else if (!all(is.finite(m$se) & m$se > 0)) "stage 1 gave no standard error for some trials"
                else ""
         if (why == "") {
@@ -2380,6 +2437,7 @@ if (strategy == "two_stage") {
       if (!is.null(f2$structure)) {
         res <- report_structure(t, f2, res, "trial", "stage-1 error (known, mean)")
         res$model <- paste0("glmmTMB: BLUE ~ ", paste(split_rhs(sub("^\\s*y\\s*~", "", f2$formula)), collapse = " + "),
+                            if (isTRUE(f2$pedigree)) paste0(", accession x trial effects ~ N(0, ", f2$relationship, " kron Sigma)"),
                             ", residual = stage-1 SE^2 (known); ", GXE_LABEL[[adv_gxe]], "; value = mean over the trials; H2 = mean reliability")
       }
     }
@@ -2600,7 +2658,7 @@ if (strategy == "two_stage") {
         why <- if (ss_mode != "builder") "the model is a written formula"
                else if (!genotype_random) "it needs the genotype as random effect"
                else if (n_tr < 2) "there is a single trial"
-               else if (rel_on) paste0("the R engine fits it with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model; the BLUPF90+ engine fits it")
+               else if (rel_on && !(adv_gxe %in% REL_GXE)) paste0("the R engine fits the unstructured covariance with unrelated accessions only, not with the ", REL_LABEL[[gen_model]], " model (heterogeneous compound symmetry and diagonal work with it); the BLUPF90+ engine fits it")
                else ""
         if (why == "") {
           acc1 <- list(term = paste0(c(cs_het = "cs", diag = "diag", us = "us")[[adv_gxe]], "(0 + trial | accession)"), drop = c("(1|accession)", "(1|accession:trial)"),
@@ -2633,7 +2691,7 @@ if (strategy == "two_stage") {
     res$pedigree_used <- isTRUE(f1$pedigree)
     res$relationship <- f1$relationship
     res$model <- pretty_model(paste0(if (!is.null(tmb1)) paste0("glmmTMB: ", f1$formula) else fml_txt,
-                        if (isTRUE(f1$pedigree)) paste0(", accession ~ N(0, ", f1$relationship, " s2g)"),
+                        if (isTRUE(f1$pedigree)) { if (!is.null(f1$structure)) paste0(", accession x trial effects ~ N(0, ", f1$relationship, " kron Sigma)") else paste0(", accession ~ N(0, ", f1$relationship, " s2g)") },
                         if (!is.null(f1$resid_by_trial)) ", one residual variance per trial",
                         if (!is.null(f1$structure)) paste0("; ", if (f1$structure$kind == "slope") "value at the mean measurement time" else if (f1$structure$kind == "occasion") "value = mean over the occasions" else "value = mean over the trials", "; H2 = mean reliability")))
     res$var_e <- unname(vc["Residual"])

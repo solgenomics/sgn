@@ -33,6 +33,7 @@ let META = {};
 let LOCS = {};       // location name -> {latitude, longitude}
 let LOC_IDS = {};    // location name -> Breedbase location id
 let WEATHER = false; // the site has the weather page (/breeders/weather)
+let TRIAL_IDS = {};  // trial name -> Breedbase trial id (weather page of the trial season)
 const D = {};        // derived data
 const S = {          // view state
     trait: null,
@@ -568,12 +569,15 @@ function zoneColor(z) {
     return ZONE_COLORS[Math.max(0, names.indexOf(z)) % ZONE_COLORS.length];
 }
 
-// link to the weather page of a location (greyed out until the site has the page)
-function weatherLink(name) {
+// link to the weather page of a location (greyed out until the site has the page);
+// with a trial, the page opens on the season of that trial (planting -> harvest)
+function weatherLink(name, trial) {
     const id = LOC_IDS[name];
     if (!id) return '';
+    const tid = trial ? TRIAL_IDS[trial] : null;
     const icon = '<span class="glyphicon glyphicon-cloud"></span> Weather';
-    return WEATHER ? '<a href="/breeders/weather?location_id=' + encodeURIComponent(id) + '" target="_blank" title="Weather of this location (stations, season, crop stages)">' + icon + '</a>'
+    return WEATHER ? '<a href="/breeders/weather?location_id=' + encodeURIComponent(id) + (tid ? '&trial_id=' + encodeURIComponent(tid) : '') + '" target="_blank" title="' +
+            (tid ? 'Weather of ' + esc(trial) + ' (season of the trial, stations, crop stages)' : 'Weather of this location (stations, season, crop stages)') + '">' + icon + '</a>'
         : '<span class="sfd-help" style="cursor:not-allowed" title="The weather page is not installed on this site yet">' + icon + '</span>';
 }
 
@@ -616,7 +620,7 @@ function renderMap() {
         const L0 = D.locations[n], v = vals[n];
         const wl = weatherLink(n);
         let h = '<b style="font-size:14px">' + esc(n) + '</b>' + (wl ? ' <small style="margin-left:6px">' + wl + '</small>' : '') + '<table>' +
-            L0.trials.map(x => '<tr><td>' + esc(x.trial) + '</td><td class="sfd-help">' + esc(x.year) + ' &middot; ' + esc(x.design) + ' &middot; ' + esc(x.n_plots) + ' plots</td></tr>').join('') + '</table>' +
+            L0.trials.map(x => '<tr><td>' + esc(x.trial) + '</td><td class="sfd-help">' + esc(x.year) + ' &middot; ' + esc(x.design) + ' &middot; ' + esc(x.n_plots) + ' plots</td><td><small>' + weatherLink(n, x.trial) + '</small></td></tr>').join('') + '</table>' +
             '<div style="margin-top:4px">' + esc(t) + ': mean <b>' + fmt(v.mean) + '</b>' + (v.cv !== null ? ', CV ' + fmt(v.cv, 1) + '%' : '') + (v.h2 !== null ? ', H&sup2; ' + h2Badge(v.h2) : '') + '</div>';
         if (v.zones.length) h += '<div>Zone: ' + v.zones.map(z => '<span class="sfd-zone-chip" style="background:' + zoneColor(z) + '">' + esc(z) + '</span>').join(' ') + '</div>';
         if (S.mapAccession && S.mapColor === 'accession') h += '<div>' + esc(S.mapAccession) + ': ' + (v.accDev === null ? 'not tested here' : (v.accDev >= 0 ? '+' : '') + fmt(v.accDev) + ' vs trial mean') + '</div>';
@@ -725,7 +729,7 @@ function renderField() {
     const nOut = plots.filter(p => D.outlierSet[p.unit + '|' + t]).length;
     const xMark = '<svg width="11" height="11" style="vertical-align:-1px"><path d="M1 1L10 10M10 1L1 10" stroke="#dc2626" stroke-width="1.6"/></svg>';
     const trialInfo = D.trials.find(x => x.trial === tr) || {};
-    const wl = weatherLink(trialInfo.location);
+    const wl = weatherLink(trialInfo.location, tr);
     head.innerHTML = (withRC ? nr + ' rows &times; ' + nc + ' columns, ' : '<b>No row/column coordinates</b>: plots drawn in replicate order. ') + plots.length + ' plots &middot; ' + legend +
         (nOut ? ' &middot; ' + xMark + ' value removed as outlier (' + nOut + ')' : '') +
         (wl ? '<span style="float:right">' + esc(trialInfo.location) + ' &middot; ' + wl + '</span>' : '');
@@ -1814,7 +1818,7 @@ export function init(options) {
                 $('#sfd_message').html('<div class="alert alert-warning">' + esc(r.error) + ' <a href="/tools/script_factory">Go to the Analysis Pipeline</a>.</div>');
                 return;
             }
-            R = r.results; META = r.meta || {}; LOCS = r.locations || {}; LOC_IDS = r.location_ids || {}; WEATHER = !!r.weather_page;
+            R = r.results; META = r.meta || {}; LOCS = r.locations || {}; LOC_IDS = r.location_ids || {}; TRIAL_IDS = r.trial_ids || {}; WEATHER = !!r.weather_page;
             prepare();
             $('#sfd_body').show();
             initControls();

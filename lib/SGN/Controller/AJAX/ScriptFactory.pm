@@ -236,7 +236,13 @@ sub blupf90_license_contact {
 # are stored (storing renames the job to the analysis name, _rename_job).
 # label: e.g. 'suggested model' for the model review's second run.
 sub _job_name {
-    my ($recipe, $mode, $dataset_name, $label) = @_;
+    my ($recipe, $mode, $dataset_name, $label, $stamp) = @_;
+    $label = '' if !defined($label) || $label !~ /^[\w .()-]{1,40}$/;
+    # a run of a saved script: the script's name and the date and time of the run
+    if ($mode ne 'preview' && defined($recipe->{name}) && $recipe->{name} ne '') {
+        my $name = $recipe->{name} . ' ' . ($stamp // _run_stamp()) . ($label ne '' ? " - $label" : '');
+        return length($name) > 200 ? substr($name, 0, 197) . '...' : $name;
+    }
     my $base = $mode eq 'preview' ? 'Analysis Pipeline outlier preview' : 'Analysis Pipeline';
     my $what = $recipe->{name};
     if (!defined($what) || $what eq '') {
@@ -244,9 +250,19 @@ sub _job_name {
         my $traits = @t > 3 ? join(', ', @t[0 .. 2]) . ' +' . (@t - 3) : join(', ', @t);
         $what = join(' ', grep { $_ ne '' } ($dataset_name // ''), ($traits ne '' ? "($traits)" : ''));
     }
-    $label = '' if !defined($label) || $label !~ /^[\w .()-]{1,40}$/;
     my $name = $base . ($what ne '' ? ": $what" : ' run') . ($label ne '' ? " - $label" : '');
     return length($name) > 200 ? substr($name, 0, 197) . '...' : $name;
+}
+
+# date and time of a run (YYYY-MM-DD-HH:MM, server local time) from its
+# creation time (ISO 8601, UTC); now when there is none
+sub _run_stamp {
+    my $iso = shift;
+    my $dt = (defined($iso) && $iso =~ /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/)
+        ? eval { DateTime->new(year => $1, month => $2, day => $3, hour => $4, minute => $5, time_zone => 'UTC') } : undef;
+    $dt ||= DateTime->now();
+    eval { $dt->set_time_zone('local') };
+    return $dt->strftime('%Y-%m-%d-%H:%M');
 }
 
 sub _run_engine {
@@ -1589,6 +1605,9 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
         sp_person_id => $sp_person_id,
         mode => $mode,
         created => DateTime->now()->iso8601(),
+        # date and time of the run in the user's clock (YYYY-MM-DD-HH:MM, sent
+        # by the page): names the run of a saved script in the jobs list
+        stamp => ((scalar($c->req->param('stamp')) // '') =~ /^(\d{4}-\d\d-\d\d-\d\d:\d\d)$/ ? $1 : undef),
         script_name => $recipe->{name} // '',
         dataset_id => (defined($dataset_id) && $dataset_id =~ /^\d+$/) ? $dataset_id : undef,
         dataset_name => scalar($c->req->param('dataset_name')) // '',
@@ -1674,7 +1693,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
             schema => $schema,
             people_schema => $people_schema,
             sp_person_id => $sp_person_id,
-            name => _job_name($recipe, $mode, $meta{dataset_name}, scalar($c->req->param('label'))),
+            name => _job_name($recipe, $mode, $meta{dataset_name}, scalar($c->req->param('label')), $meta{stamp} // _run_stamp($meta{created})),
             job_type => 'script_factory_analysis',
             cmd => $cmd,
             results_page => ($mode eq 'preview' ? '/tools/script_factory' : "/tools/script_factory/results/$run_id"),
@@ -1986,6 +2005,14 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
             $coords{$loc->description()} = { latitude => $lat + 0, longitude => $lon + 0, altitude => $loc->altitude(), location_id => $loc->nd_geolocation_id() };
         }
     }
+    # trial ids: the weather page opens on the season (planting -> harvest) of a trial
+    my %trial_ids;
+    my @trial_names = grep { defined && $_ ne '' } map { $_->{trial} } @{ $results->{trials} || [] };
+    if (@trial_names) {
+        my ($schema) = _schemas($c);
+        my $rs = $schema->resultset("Project::Project")->search({ name => { -in => \@trial_names } });
+        while (my $p = $rs->next()) { $trial_ids{$p->name()} = $p->project_id(); }
+    }
 
     $c->stash->{rest} = {
         run_id => $run_id,
@@ -1999,6 +2026,7 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
         },
         locations => \%coords,
         location_ids => \%location_ids,
+        trial_ids => \%trial_ids,
         # the weather page (/breeders/weather) when this site has it
         weather_page => SGN::Controller::BreedersToolbox->can('weather') ? 1 : 0,
         results => $results,
@@ -3080,7 +3108,7 @@ sub save_recipe : Path('/ajax/script_factory/recipe/save') Args(0) {
         if ($meta && ($meta->{sp_person_id} // -1) == _user_id($c) && !$meta->{stored}) {
             my ($schema, $people_schema) = _schemas($c);
             my $label = ($c->req->param('label') // '') =~ /^[\w .()-]{1,40}$/ ? $c->req->param('label') : '';
-            _rename_job($people_schema, $meta->{job_id}, _user_id($c), "Analysis Pipeline: $name" . ($label ne '' ? " - $label" : ''));
+            _rename_job($people_schema, $meta->{job_id}, _user_id($c), _job_name({ name => $name }, $meta->{mode} // 'run', undef, $label, $meta->{stamp} // _run_stamp($meta->{created})));
             $meta->{script_name} = $name;
             _write_run_meta($c, $run_id, $meta);
         }

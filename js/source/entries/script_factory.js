@@ -106,6 +106,13 @@ function alertBox(type, html) {
     return '<div class="alert alert-' + type + '" style="margin-top:12px">' + html + '</div>';
 }
 
+// date and time of a run in the user's clock (YYYY-MM-DD-HH:MM): the name of a
+// run of a saved script in the user's jobs list is the script's name + this
+function localStamp() {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
 function post(url, data) {
     return new Promise((resolve, reject) => {
         $.ajax({ url: url, type: 'POST', data: data, dataType: 'json' })
@@ -1585,8 +1592,19 @@ function renderDesignTable() {
         ? 'With BLUPF90+: a SpATS-like 2D P-spline surface (one smoothing variance instead of separate row and column smoothing) plus linear trends and row and column effects. Its results agree closely with SpATS.'
         : '2D P-spline surface (Rodr&iacute;guez-&Aacute;lvarez et al., 2018) plus row and column effects.');
     if (!state.dataset) return;
-    let h = '<table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Stage 1 model</th></tr></thead><tbody>';
-    state.dataset.trials.forEach(t => {
+    const s1 = radio('sf_stage1_model');
+    const trials = state.dataset.trials;
+    const spatialAll = trials.length && trials.every(t => trialModel(t).spats);
+    let h = '';
+    if (s1 === 'design') {
+        h += '<p class="sf-help"><span class="glyphicon glyphicon-info-sign"></span> The design sets which effects enter each trial\'s model, but only the effects the trial\'s data can support are used (replicates, blocks, rows and columns that were recorded and can be estimated). Designs that need effects a trial does not have give the same model; effects left out are listed under the model.</p>';
+    } else if (spatialAll) {
+        h += '<p class="sf-help"><span class="glyphicon glyphicon-info-sign"></span> All trials have rows and columns, so the spatial model is used and the design is not needed. Choose <b>Design model</b> above to set the design of each trial.</p>';
+    } else if (trials.some(t => trialModel(t).spats)) {
+        h += '<p class="sf-help"><span class="glyphicon glyphicon-info-sign"></span> Trials with rows and columns use the spatial model, so their design cannot be changed here. The design applies to the trials without rows and columns; choose <b>Design model</b> above to set it for all trials.</p>';
+    }
+    h += '<table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Stage 1 model</th></tr></thead><tbody>';
+    trials.forEach(t => {
         const m = trialModel(t);
         const det = detectDesign(t);
         let opts = '';
@@ -1595,7 +1613,8 @@ function renderDesignTable() {
             opts += '<option value="' + k + '"' + ((state.designOverrides[t.trial] || 'auto') === k ? ' selected' : '') + '>' + label + '</option>';
         });
         h += '<tr><td>' + esc(t.trial) + '<br/><small class="sf-muted">' + esc(t.location) + ' ' + esc(t.year) + '</small></td>' +
-            '<td><select class="form-control input-sm sf-design-override" data-trial="' + esc(t.trial) + '">' + opts + '</select></td>' +
+            '<td><select class="form-control input-sm sf-design-override" data-trial="' + esc(t.trial) + '"' + (m.spats ? ' disabled title="Not used: the spatial model fits the field trend of this trial"' : '') + '>' + opts + '</select>' +
+            (m.spats ? '<small class="sf-muted">not used by the spatial model</small>' : '') + '</td>' +
             '<td><code>' + esc(m.text) + '</code>' + (m.spats ? ' <span class="label label-success">spatial</span>' : '') +
             (m.warn ? ' <span class="label label-warning">unreplicated</span>' : '') + (m.note ? ' <small class="sf-muted">' + esc(m.note) + '</small>' : '') +
             (m.off && m.off.length ? '<br/><small class="sf-warn-text"><span class="glyphicon glyphicon-ban-circle"></span> not used: ' + esc(m.off.join('; ')) + '</small>' : '') + '</td></tr>';
@@ -1711,11 +1730,12 @@ function advBlocked(key, value) {
     if (key === 'gxe') {
         if (!random) return 'needs the genotype as random effect';
         if (custom) return 'not with a written formula';
-        if (rel && eng === 'lme4') return 'R engine: with unrelated accessions only (genetic model: identity)' + (cfg.blupf90_available ? '; the BLUPF90+ engine fits it' : '');
+        // with A, G or H the R engine fits heterogeneous compound symmetry and
+        // diagonal (A kron Sigma); unstructured is slow and often on the boundary
+        if (rel && eng === 'lme4' && value === 'us') return 'R engine: with unrelated accessions only (genetic model: identity); heterogeneous compound symmetry and diagonal work with this genetic model' + (cfg.blupf90_available ? '; the BLUPF90+ engine fits it' : '');
     }
-    if (key === 'residual') {
-        if (two && eng === 'lme4' && rel && random) return 'R engine: with unrelated accessions only (genetic model: identity)' + (cfg.blupf90_available ? '; the BLUPF90+ engine fits it' : '');
-    }
+    // residual per trial: glmmTMB fits it with the relationship matrices too
+    // (fit_tmb replaces Z by Z L), so no rule beyond glmmTMB being installed
     if (key === 'time_genotype') {
         if (two) return 'single stage only';
         if (custom) return 'not with a written formula';
@@ -1941,6 +1961,27 @@ function advFillDialog(a) {
     advRefreshDialog();
 }
 
+// structured G x E with a relationship matrix on the R engine: glmmTMB fits
+// A kron Sigma through the Cholesky factor of A (dense), so large datasets
+// are slow; BLUPF90+ uses the sparse inverse and is much faster
+const REL_GXE_BIG = { accessions: 500, cells: 3000 };
+function relGxeNote(gxe, eng) {
+    const g = geneticRecipe();
+    if (gxe === 'cs' || eng !== 'lme4' || REL_MODELS.indexOf(g.model) < 0) return '';
+    const ds = state.dataset;
+    const nA = ds ? ds.n_accessions : 0, nT = ds ? ds.trials.length : 0;
+    const name = { pedigree: 'A', genomic: 'G', single_step: 'H' }[g.model];
+    let h = ' <br/>With the ' + name + ' matrix the trial effects of an accession follow ' + name + ' &otimes; &Sigma; (glmmTMB, through the Cholesky factor of ' + name + ').';
+    if (ds && (nA > REL_GXE_BIG.accessions || nA * nT > REL_GXE_BIG.cells)) {
+        h += ' <span class="sf-warn-text"><span class="glyphicon glyphicon-warning-sign"></span> ' + nA.toLocaleString('en-US') + ' accessions in ' + nT + ' trials: this is slow in R';
+        h += cfg.blupf90_available
+            ? '; the <b>BLUPF90+</b> engine fits it much faster. BLUPF90+ is free for research and academic use; companies and other commercial users need a licence: please contact ' + linkify(cfg.blupf90_license_contact || 'the BLUPF90 team at the University of Georgia') + '.'
+            : '; BLUPF90+ (not installed on this server) fits it much faster.';
+        h += '</span>';
+    }
+    return h;
+}
+
 function advRefreshDialog() {
     const eng = effectiveEngine();
     $('#sf_adv_engine_label').text(eng === 'blupf90' ? 'BLUPF90+ engine' : 'R engine');
@@ -1964,7 +2005,7 @@ function advRefreshDialog() {
             '; the value of an accession is its mean over the trials (also predicted for trials where it was not tested, through the genetic covariances); H&sup2; is the mean reliability. ' +
             (two ? 'In stage 2 the stage-1 standard errors are used as known residual variances' + (eng === 'blupf90' ? ' (BLUPF90+: weights 1/SE&sup2; with the residual held at 1, <code>OPTION constant_var</code>). ' : '. ') : 'It replaces the genotype &times; trial term of the builder. ') +
             (gxe === 'us' ? 'An unstructured matrix of K trials has K(K+1)/2 parameters: with many trials prefer diagonal or heterogeneous compound symmetry. ' : '') +
-            'The results show the genetic variance of every trial and the genetic correlations between trials.'));
+            'The results show the genetic variance of every trial and the genetic correlations between trials.' + relGxeNote(gxe, eng)));
     $('#sf_adv_residual_help').html($('#sf_adv_residual').val() !== 'trial' ? '' : two
         ? 'Stage 2: the residual of a stage-1 mean is its genotype &times; trial deviation plus its stage-1 error. Each trial gets its own genotype &times; trial variance, <code>diag(0 + trial | accession:trial)</code>, and the stage-1 errors are known residual variances (SE&sup2;) (' +
           (eng === 'blupf90' ? 'BLUPF90+: weights 1/SE&sup2; with the residual held at 1, <code>OPTION constant_var</code>' : 'glmmTMB <code>dispformula = ~ 0 + offset(log(SE))</code>') + '). Not added with a structured genotype &times; environment covariance, which already gives every trial its own genetic variance.'
@@ -2097,6 +2138,18 @@ function stage2Extra(random) {
     return t;
 }
 
+// what the check setting does with the current strategy, genotype effect and data
+function checkInfo(choice, nPlots) {
+    const two = radio('sf_strategy') === 'two_stage';
+    if (!two && radio('sf_single_mode') === 'custom') return '<span class="sf-muted">Written formula: add <code>check</code> to the formula to use it.</span>';
+    const random = two ? $('#sf_stage2_genotype').val() === 'random' : $('#sf_single_genotype').val() !== 'fixed';
+    const marked = nPlots + ' plot(s) of entries marked as check (entry type <i>check</i> in Breedbase)';
+    if (!random) return '<span class="sf-muted"><b>Not used</b>: with the genotype as fixed effect (BLUEs) every entry, check or test, already has its own mean.</span>';
+    if (choice === 'none') return '<b>Not in the model</b>: checks are random accessions like the test entries' + (nPlots ? ' (' + marked + ')' : '') + '.';
+    if (!nPlots) return '<b>Not in the model</b>: no entry of this dataset is marked as check (entry type <i>check</i> in Breedbase)' + (choice === 'fixed' ? ', so the term would have a single level.' : '.');
+    return '<b>In the model</b>: ' + marked + '. Checks and test entries get separate fixed means, so the test entries are not shrunk toward the mean of the checks (usually well-known, higher-yielding varieties).';
+}
+
 function renderGeneticInfo() {
     const ds = state.dataset;
     if (!ds) { $('#sf_pedigree_info, #sf_check_info').html(''); return; }
@@ -2115,7 +2168,7 @@ function renderGeneticInfo() {
     $('#sf_pedigree_info').html(h);
     renderGenoBlock();
     const D = singleData();
-    $('#sf_check_info').html(D.n_check_plots ? D.n_check_plots + ' plot(s) of entries marked as check.' : '<span class="sf-muted">No entry is marked as check in this dataset.</span>');
+    $('#sf_check_info').html(checkInfo(g.check, D.n_check_plots || 0));
 }
 
 // ---------------------------------------------------------------------------
@@ -2863,7 +2916,7 @@ function runAnalysis() {
     startReview(recipe);
 
     const notify = $('#sf_notify').is(':checked') && !!cfg.user_email;
-    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full', dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: notify ? 1 : 0 })
+    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full', dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: notify ? 1 : 0, stamp: localStamp() })
         .then(job => {
             state.job = job;
             $('#sf_run_progress_text').text('Queued. The analysis runs in the background; you can follow it in your jobs list too.' +
@@ -2969,7 +3022,7 @@ function runSuggested() {
     rv.alt = { job: { pending: true }, recipe: rv.suggested, results: null, error: null };
     renderReview();
     post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(rv.suggested), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full',
-        dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: 0, label: 'suggested model' })
+        dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: 0, label: 'suggested model', stamp: localStamp() })
         .then(job => { rv.alt.job = job; renderReview(); return pollJob(job, null); })
         .then(res => { res.run_id = rv.alt.job.run_id; rv.alt.results = res; })
         .catch(e => { rv.alt.error = e.message; })
