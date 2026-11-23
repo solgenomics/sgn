@@ -39,7 +39,8 @@ Configuration (sgn.conf / sgn_local.conf):
   weather_station_role          curator,submitter   roles that may link stations
   weather_max_days              400       longest date range of a daily request
   weather_upload_resolution     daily     daily = uploads with one row per day only; subdaily = also hourly / 15-min rows
-  inmet_api_token                         free INMET token (Brazilian stations)
+  inmet                         0         1 = read INMET stations (Brazil) from the INMET historical files
+                                          (portal.inmet.gov.br/dadoshistoricos, updated monthly, last 5 years)
   aemet_api_key                           free AEMET key (Spain)
   meteofrance_api_key                     free Meteo-France API key (France)
   dmc_api_key                             free DMC key of Chile, written e-mail:token
@@ -96,16 +97,15 @@ sub _conf {
 
 sub _weather {
     my $c = shift;
-    # the free key of each network that needs one: <network>_api_key (INMET: inmet_api_token)
+    # the free key of each network that needs one: <network>_api_key
     my %keys;
     foreach my $k (keys %{$c->config}) {
         my ($n) = $k =~ /^(\w+?)_api_key$/ or next;
         my $v = _conf($c, $k, undef);
         $keys{$n} = $v if defined $v;
     }
-    $keys{inmet} //= _conf($c, 'inmet_api_token', undef);
     $keys{silo} //= _conf($c, 'silo_username', undef);
-    my %args = (api_keys => \%keys);
+    my %args = (api_keys => \%keys, inmet_files => _conf($c, 'inmet', 0) ? 1 : 0);
     my $hilltop = _conf($c, 'weather_hilltop_servers', undef);
     $args{hilltop_servers} = $hilltop if $hilltop;
     my $dir = _conf($c, 'weather_cache_dir', undef);

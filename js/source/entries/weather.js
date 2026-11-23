@@ -467,7 +467,7 @@ function renderStations() {
             now = '<span class="wx-muted">automatic rain gauge' + (s.last ? ' · last value ' + esc(String(s.last).slice(0, 16).replace('T', ' ')) : '') + '</span>';
         }
         else {
-            now = s.ready ? '<span class="wx-muted">' + esc(s.status || '') + '</span>' : '<span class="wx-muted" title="Set ' + esc(netConf(s.network).key_config || '') + ' in the configuration">needs a ' + esc(netName(s.network)) + ' key</span>';
+            now = s.ready ? '<span class="wx-muted">' + esc(s.status || '') + '</span>' : netConf(s.network).off_text ? '<span class="wx-muted">switched off on this site</span>' : '<span class="wx-muted" title="Set ' + esc(netConf(s.network).key_config || '') + ' in the configuration">needs a ' + esc(netName(s.network)) + ' key</span>';
         }
         const measures = (s.network === 'local' || Array.isArray(s.measures)) ? (s.measures || []).join(' · ') : s.network === 'airport' ? 'temp · rain hours' + (s.country === 'US' ? ' · rain' : '') : s.network === 'inmet' ? 'temp · rain · radiation' : s.network === 'synop' ? 'temp · rain (when sent)' : 'rain';
         const on = stationKey(s) === stationKey(S.station);
@@ -485,7 +485,7 @@ function renderStations() {
     const up = list.filter(x => x.network === 'local').sort((a, b) => (isOwnLocal(b) - isOwnLocal(a)) || (a.distance_km - b.distance_km));
     const pub = list.filter(x => x.network !== 'local');
     const rows = (up.length ? sep('Uploaded stations') + up.map(rowOf).join('') + (pub.length ? sep('Public stations') : '') : '') + pub.map(rowOf).join('');
-    $('#wx_station_table').html(keyOff.map(n => alertHtml('info', esc(netName(n)) + ' stations are listed, but reading their data needs a free key: get one at '
+    $('#wx_station_table').html(keyOff.map(n => alertHtml('info', netConf(n).off_text ? esc(netName(n)) + ' stations are listed, but ' + esc(netConf(n).off_text) : esc(netName(n)) + ' stations are listed, but reading their data needs a free key: get one at '
         + (netConf(n).key_url ? '<a href="' + esc(netConf(n).key_url) + '" target="_blank" rel="noopener">' + esc(netConf(n).key_url) + '</a>' : 'the provider') + ' and set <code>' + esc(netConf(n).key_config || n + '_api_key') + '</code> in sgn_local.conf.')).join('')
         + (list.some(s => s.approx_position) ? '<p class="wx-note">≈ CEMADEN does not publish the position of its gauges: the distance is to the centre of their municipality.</p>' : '')
         + '<div class="wx-table-wrap"><table class="table table-condensed table-hover wx-table"><thead><tr><th>Network</th><th>Station</th><th class="n">Distance</th><th class="n">Elevation (vs. location)</th><th>Now</th><th></th></tr></thead><tbody>'
@@ -1553,7 +1553,7 @@ function compareCandidates() {
     ['local'].concat([...new Set(all.map(s => s.network))].filter(n => n !== 'local')).forEach(n => all.filter(s => s.network === n).slice(0, 2).forEach(s => pick.push(s)));
     all.forEach(s => { if (pick.length < max && !pick.includes(s)) pick.push(s); });
     const rain = pick.slice(0, Math.max(max, pick.length)).sort((a, b) => a.distance_km - b.distance_km);
-    // stations that measure rain but cannot be read here (INMET without token): shown so the user knows they exist
+    // stations that measure rain but cannot be read here (switched off, or no key): shown so the user knows they exist
     S.stations.filter(s => isRainNet(s.network) && !s.ready).slice(0, 2).forEach(s => rain.push(s));
     rain.sort((a, b) => a.distance_km - b.distance_km);
     const air = $('#wx_cmp_air').is(':checked') ? S.stations.filter(s => s.network === 'airport' && s.ready).slice(0, 2) : [];
@@ -1571,7 +1571,7 @@ function loadCompare() {
     const key = cands.map(stationKey).join(',') + '|' + S.start + '|' + S.end;
     if (S.compare && S.compare.key === key) { renderCompare(); return; }
     const seq = S.seq;
-    S.compare = { key, rows: cands.map(st => (st.ready ? { st, state: 'loading' } : { st, state: 'error', error: 'measures rain, but its data needs a free key (' + (netConf(st.network).key_config || st.network + '_api_key') + ' in sgn_local.conf)' })) };
+    S.compare = { key, rows: cands.map(st => (st.ready ? { st, state: 'loading' } : { st, state: 'error', error: netConf(st.network).off_text ? 'measures rain, but ' + netConf(st.network).off_text : 'measures rain, but its data needs a free key (' + (netConf(st.network).key_config || st.network + '_api_key') + ' in sgn_local.conf)' })) };
     renderCompare();
     let i = 0;
     const next = () => {

@@ -6,7 +6,7 @@ CXGN::Weather - observed weather from real stations near a research station
 
 =head1 SYNOPSIS
 
-  my $wx = CXGN::Weather->new({ cache_dir => '/tmp/breedbase_weather_cache', inmet_token => $token });
+  my $wx = CXGN::Weather->new({ cache_dir => '/tmp/breedbase_weather_cache', inmet_files => 1 });
 
   # observing stations within 200 km of a location, nearest first
   my $stations = $wx->nearby_stations($lat, $lon, 200, ['airport', 'inmet']);
@@ -27,8 +27,13 @@ amounts in METARs: then the rain amount is left empty and the hours with
 rain observed (RA, DZ, SH, TS codes) are given instead.
 
 =item * inmet: automatic stations of INMET (Brazil). The station list is
-open; the hourly data needs a free token from INMET (config inmet_api_token).
-Gives rain, radiation, humidity and wind, so ET0 is FAO-56 Penman-Monteith.
+open. With inmet_files (config inmet 1) the hourly data comes from the
+INMET historical files (portal.inmet.gov.br/dadoshistoricos): one zip per
+year with a CSV per station, the current year replaced about once a month.
+Only the file of the station is downloaded (HTTP Range requests on the zip),
+about 300 KB per station and year; the last 5 years are read. A token of the
+INMET API (inmet_token) is used instead when given. Gives rain, radiation,
+humidity and wind, so ET0 is FAO-56 Penman-Monteith.
 
 =item * ana: telemetric stations of ANA (Agencia Nacional de Aguas, Brazil),
 rain every 15 minutes, open web service.
@@ -109,6 +114,7 @@ use POSIX qw(floor);
 use Time::Local qw(timegm);
 use Math::Trig qw(deg2rad rad2deg pi);
 use IO::Uncompress::Unzip;
+use IO::Uncompress::RawInflate ();
 
 use constant KM_PER_MILE => 1.609344;
 use constant EARTH_RADIUS_KM => 6371.0088;
@@ -122,6 +128,8 @@ my $IDEAM = 'https://www.datos.gov.co/resource/s54a-sgyg.json';
 my $IDEAM_DATA = 'https://www.datos.gov.co/resource';
 my %IDEAM_SETS = (tmax => 'ccvq-rp9s', tmin => 'afdg-3zpb');
 my $INMET = 'https://apitempo.inmet.gov.br';
+my $INMET_FILES = 'https://portal.inmet.gov.br/uploads/dadoshistoricos';
+my $INMET_YEARS = 5;    # years of INMET historical files read (before the current one)
 my $ANA = 'https://telemetriaws1.ana.gov.br/ServiceANA.asmx';
 my $CEMADEN_LIST = 'https://resources.cemaden.gov.br/graficos/interativo/getJson2.php';
 my $CEMADEN_HOURLY = 'https://resources.cemaden.gov.br/graficos/cemaden/hidro/resources/json/AcumuladoResource.php';
@@ -177,6 +185,8 @@ my %TTL = (
     oscar => 30 * 86400,
     station_list => 6 * 3600,
     inmet_stations => 7 * 86400,
+    inmet_head => 86400,    # date of the yearly INMET zip: a new month is seen within a day
+    inmet_index => 400 * 86400,    # files in one version of a yearly zip (never changes)
     ana_stations => 7 * 86400,
     municipalities => 30 * 86400,
     cemaden_list => 600,
@@ -191,6 +201,8 @@ my %TTL = (
 
 has 'cache_dir' => (isa => 'Maybe[Str]', is => 'ro', default => sub { File::Spec->catdir(File::Spec->tmpdir(), 'breedbase_weather_cache') });
 has 'inmet_token' => (isa => 'Maybe[Str]', is => 'ro');
+# 1 = read INMET stations from the INMET historical files (config inmet)
+has 'inmet_files' => (isa => 'Bool', is => 'ro', default => 0);
 # free keys of the networks that need one: { network => key } (inmet may also come as inmet_token)
 has 'api_keys' => (isa => 'HashRef', is => 'ro', default => sub { {} });
 # Hilltop servers of the New Zealand regional councils (comma list; default: the councils known to publish)
@@ -591,9 +603,9 @@ sub networks {
         inmet => {
             label => 'INMET automatic station',
             source => 'INMET - Instituto Nacional de Meteorologia (Brazil)',
-            note => 'Hourly rain, temperature, humidity, radiation and wind.',
-            ready => $self->api_key('inmet') ? 1 : 0,
-            key_config => 'inmet_api_token', key_url => 'https://portal.inmet.gov.br',
+            note => 'Hourly rain, temperature, humidity, radiation and wind (INMET historical files, updated once a month: the last weeks are not there yet).',
+            ready => $self->_inmet_ready,
+            ($self->_inmet_ready ? () : (off_text => 'reading their data is switched off on this site: set inmet 1 in sgn_local.conf.')),
         },
         ana => {
             label => 'ANA rain gauge',
@@ -863,7 +875,7 @@ sub _inmet_stations {
             lat => _num($s->{VL_LATITUDE}), lon => _num($s->{VL_LONGITUDE}), elev => _num($s->{VL_ALTITUDE}),
             country => 'BR', state => $s->{SG_ESTADO}, status => $s->{CD_SITUACAO},
             since => substr($s->{DT_INICIO_OPERACAO} // '', 0, 10), wmo => $s->{CD_OSCAR},
-            ready => $self->api_key('inmet') ? 1 : 0, has_taf => 0,
+            ready => $self->_inmet_ready, has_taf => 0,
         );
         next if !$st{id} || !defined $st{lat} || !defined $st{lon};
         next if $self->_place(\%st, $lat, $lon) > $range_km;
@@ -2408,11 +2420,19 @@ sub station_daily {
         $note = 'Rain every 10 minutes summed per local day; max/min of the hourly maximum and minimum temperatures. ET0: Hargreaves-Samani.';
     }
     elsif ($network eq 'inmet') {
-        die "INMET data needs a token. Ask INMET for one (free) and set inmet_api_token in the configuration.\n" if !$self->api_key('inmet');
-        # one extra day on each side so the local days are complete
-        $hourly = $self->_inmet_hourly($id, _shift_date($start, -1), _shift_date($end, 1));
+        die "Reading INMET data is switched off on this site: set inmet 1 in the configuration (or give an INMET API token).\n" if !$self->_inmet_ready;
         $source = 'INMET automatic station ' . $id;
         $note = 'Hourly observations of the station summarized per local day. ET0: FAO-56 Penman-Monteith with the measured radiation, humidity and wind.';
+        # one extra day on each side so the local days are complete
+        if ($self->api_key('inmet')) {
+            $hourly = $self->_inmet_hourly($id, _shift_date($start, -1), _shift_date($end, 1));
+        }
+        else {
+            $hourly = $self->_inmet_file_hourly($id, _shift_date($start, -1), _shift_date($end, 1));
+            my $last = $self->{inmet_last};
+            $note .= ' Data: INMET historical files (portal.inmet.gov.br/dadoshistoricos), updated once a month'
+                . ($last ? "; this station's file goes to $last" : '') . '. Only the last ' . $INMET_YEARS . ' years are read.';
+        }
         $wind_height = 10;
     }
     elsif ($network eq 'ana') {
@@ -2647,11 +2667,11 @@ sub _iem_hourly {
 # hourly records of an INMET automatic station (needs the token)
 sub _inmet_hourly {
     my ($self, $id, $start, $end) = @_;
-    die "INMET data needs a token. Ask INMET for one (free) and set inmet_api_token in the configuration.\n" if !$self->api_key('inmet');
+    die "The INMET API needs a token (inmet_token).\n" if !$self->api_key('inmet');
     my $recent = $end ge _iso_days_ago(2);
     my $list = $self->get_json("$INMET/token/estacao/$start/$end/$id/" . $self->api_key('inmet'), $recent ? 'archive_recent' : 'archive');
     if (ref($list) eq 'HASH') {
-        die "INMET refused the request: " . ($list->{message} // $list->{error} // 'check inmet_api_token') . "\n";
+        die "INMET refused the request: " . ($list->{message} // $list->{error} // 'check the INMET token') . "\n";
     }
     my @rows;
     foreach my $r (@$list) {
@@ -2680,6 +2700,239 @@ sub _inmet_hourly {
         };
     }
     return \@rows;
+}
+
+
+# ------------------------------------------------------------ INMET historical files
+# https://portal.inmet.gov.br/dadoshistoricos: one zip per year (about 80 MB, 600+ stations,
+# one CSV each), the current year replaced about once a month, closed years sometimes
+# revised. Only the CSV of the station is downloaded: the zip index (central directory) at
+# the end of the file, then the bytes of that one file (HTTP Range).
+
+sub _inmet_ready {
+    my $self = shift;
+    return ($self->inmet_files || $self->api_key('inmet')) ? 1 : 0;
+}
+
+# hourly records of an INMET station between two dates, from the yearly files
+sub _inmet_file_hourly {
+    my ($self, $id, $start, $end) = @_;
+    die "Unknown INMET station $id.\n" if $id !~ /^[A-Z]\d{3}$/i;
+    my $this_year = substr(_iso_days_ago(0), 0, 4);
+    my $first = $this_year - $INMET_YEARS;
+    my @years = grep { $_ >= $first && $_ <= $this_year } substr($start, 0, 4) .. substr($end, 0, 4);
+    delete $self->{inmet_last};
+    return [] if !@years;
+
+    # the years not in the cache are read at the same time (pages stop at 20 s)
+    my @todo = grep { !$self->_inmet_cached_csv($_, $id) } @years;
+    if (@todo > 1 && $self->cache_dir) {
+        my @pids;
+        foreach my $y (@todo) {
+            my $pid = fork();
+            next if !defined $pid;
+            if (!$pid) {
+                eval { $self->_inmet_csv($y, $id) };
+                POSIX::_exit(0);    # no destructors in the child (database handles of the parent)
+            }
+            push @pids, $pid;
+        }
+        waitpid($_, 0) for @pids;
+    }
+
+    my $from = _epoch_of($start);
+    my $to = _epoch_of($end) + 86400;
+    my @rows;
+    foreach my $y (@years) {
+        my $csv = $self->_inmet_csv($y, $id);
+        foreach my $r (@{_inmet_parse_csv($csv)}) {
+            push @rows, $r if $r->{time} >= $from && $r->{time} < $to;
+        }
+        my $last = _inmet_csv_last($csv);
+        $self->{inmet_last} = $last if $last && (!$self->{inmet_last} || $last gt $self->{inmet_last});
+    }
+    return \@rows;
+}
+
+# version of a yearly zip ("Last-Modified|size"), undef when the year has no file; cached a day
+sub _inmet_head {
+    my ($self, $year) = @_;
+    my $url = "$INMET_FILES/$year.zip";
+    my $cached = $self->_cache_get('inmet_head', $url);
+    return $cached eq '' ? undef : $cached if defined $cached;
+    my $r = $self->ua->head($url);
+    if ($r->code == 404) {
+        $self->_cache_put($self->_cache_file('inmet_head', $url), '');
+        return;
+    }
+    die "The weather service portal.inmet.gov.br did not answer (" . $r->status_line . "). Try again in a few minutes.\n" if !$r->is_success;
+    my $size = $r->header('Content-Length');
+    die "portal.inmet.gov.br did not give the size of $year.zip.\n" if !$size;
+    my $version = ($r->header('Last-Modified') // '') . '|' . $size;
+    $self->_cache_put($self->_cache_file('inmet_head', $url), $version);
+    return $version;
+}
+
+# bytes $from..$to of a file (HTTP Range)
+sub _inmet_range {
+    my ($self, $url, $from, $to) = @_;
+    my $r = $self->ua->get($url, Range => "bytes=$from-$to");
+    die "The weather service portal.inmet.gov.br did not answer (" . $r->status_line . "). Try again in a few minutes.\n" if !$r->is_success;
+    my $body = $r->content // '';
+    $body = substr($body, $from, $to - $from + 1) if $r->code == 200 && length($body) > $to - $from + 1;    # Range ignored
+    die "portal.inmet.gov.br sent a part of the file that could not be read.\n" if length($body) != $to - $from + 1;
+    return $body;
+}
+
+# files of one version of a yearly zip: { name => [method, compressed size, local header offset] }
+sub _inmet_index {
+    my ($self, $year, $version) = @_;
+    my $url = "$INMET_FILES/$year.zip";
+    my $raw = $self->_cache_get('inmet_index', "$url|$version");
+    if (!defined $raw) {
+        my ($size) = $version =~ /\|(\d+)$/;
+        my $tail_len = $size < 65_600 ? $size : 65_600;
+        my $tail = $self->_inmet_range($url, $size - $tail_len, $size - 1);
+        my $eocd = rindex($tail, "PK\x05\x06");
+        die "INMET $year.zip could not be read (no zip index).\n" if $eocd < 0;
+        my ($cd_size, $cd_off) = unpack('V V', substr($tail, $eocd + 12, 8));
+        die "INMET $year.zip is a zip64 file, not supported.\n" if $cd_off == 0xFFFFFFFF;
+        my $cd = $cd_off >= $size - $tail_len
+            ? substr($tail, $cd_off - ($size - $tail_len), $cd_size)
+            : $self->_inmet_range($url, $cd_off, $cd_off + $cd_size - 1);
+        my @lines;
+        my $p = 0;
+        while ($p + 46 <= length($cd) && substr($cd, $p, 4) eq "PK\x01\x02") {
+            my ($method, $csize, $nlen, $elen, $comment_len, $off) = (unpack('v', substr($cd, $p + 10, 2)), unpack('V', substr($cd, $p + 20, 4)),
+                unpack('v v v', substr($cd, $p + 28, 6)), unpack('V', substr($cd, $p + 42, 4)));
+            my $name = substr($cd, $p + 46, $nlen);
+            $name =~ s/[\t\n]/ /g;
+            push @lines, join("\t", $name, $method, $csize, $off);
+            $p += 46 + $nlen + $elen + $comment_len;
+        }
+        die "INMET $year.zip could not be read (empty zip index).\n" if !@lines;
+        $raw = join("\n", @lines);
+        $self->_cache_put($self->_cache_file('inmet_index', "$url|$version"), $raw);
+    }
+    my %files;
+    foreach (split /\n/, $raw) {
+        my ($name, @rest) = split /\t/;
+        $files{$name} = \@rest;
+    }
+    return \%files;
+}
+
+# the cached CSV of a station and year when it is still the current version (or the
+# portal cannot be asked now); undef when it must be downloaded
+sub _inmet_cached_csv {
+    my ($self, $year, $id) = @_;
+    my $file = $self->_cache_file('inmet_csv', "$year|" . uc($id)) or return;
+    return if !-e $file || !open(my $fh, '<:raw', $file);
+    local $/;
+    my $raw = <$fh>;
+    close $fh;
+    my ($version, $csv) = split /\n/, $raw, 2;
+    my $now = eval { $self->_inmet_head($year) };
+    if ($@) { $self->{stale}++; return $csv // ''; }    # portal down: the copy we have
+    return if !defined $now || $now ne $version;
+    return $csv // '';
+}
+
+# the CSV of a station and year ('' when the station has no file that year)
+sub _inmet_csv {
+    my ($self, $year, $id) = @_;
+    my $cached = $self->_inmet_cached_csv($year, $id);
+    return $cached if defined $cached;
+    my $version = $self->_inmet_head($year);
+    return '' if !defined $version;
+    my $url = "$INMET_FILES/$year.zip";
+    my $files = $self->_inmet_index($year, $version);
+    my ($name) = grep { /_\Q$id\E_/i } sort keys %$files;
+    my $csv = '';
+    if ($name) {
+        my ($method, $csize, $off) = @{$files->{$name}};
+        my ($size) = $version =~ /\|(\d+)$/;
+        my $want = $off + 30 + length($name) + 1024 + $csize - 1;
+        my $part = $self->_inmet_range($url, $off, $want < $size ? $want : $size - 1);
+        die "INMET $year.zip: the file of $id could not be read.\n" if substr($part, 0, 4) ne "PK\x03\x04";
+        my ($nlen, $elen) = unpack('v v', substr($part, 26, 4));
+        my $data = substr($part, 30 + $nlen + $elen, $csize);
+        die "INMET $year.zip: the file of $id is incomplete.\n" if length($data) != $csize;
+        if ($method == 8) {
+            my $out;
+            IO::Uncompress::RawInflate::rawinflate(\$data => \$out)
+                or die "INMET $year.zip: the file of $id could not be uncompressed.\n";
+            $csv = $out;
+        }
+        elsif ($method == 0) { $csv = $data; }
+        else { die "INMET $year.zip: compression $method not supported.\n"; }
+    }
+    my $file = $self->_cache_file('inmet_csv', "$year|" . uc($id));
+    $self->_cache_put($file, "$version\n$csv");
+    return $csv;
+}
+
+# accents out, upper case (column names of the INMET files changed over the years)
+sub _inmet_plain {
+    my $t = uc(shift // '');
+    $t =~ tr/ÁÀÃÂÉÊÍÓÔÕÚÇ/AAAAEEIOOOUC/;
+    return $t;
+}
+
+my @INMET_COLUMNS = (
+    [rain_mm => qr/^PRECIPITACAO TOTAL/], [pressure_hpa => qr/^PRESSAO ATMOSFERICA AO NIVEL DA ESTACAO/],
+    [rad_kj => qr/^RADIACAO GLOBAL/], [temp_c => qr/BULBO SECO/], [dewpoint_c => qr/^TEMPERATURA DO PONTO DE ORVALHO/],
+    [tmax_c => qr/^TEMPERATURA MAXIMA NA HORA/], [tmin_c => qr/^TEMPERATURA MINIMA NA HORA/],
+    [rh => qr/^UMIDADE RELATIVA DO AR/], [wind_dir => qr/^VENTO, DIRECAO/], [gust_ms => qr/^VENTO, RAJADA/],
+    [wind_ms => qr/^VENTO, VELOCIDADE/],
+);
+
+# hourly rows of an INMET historical CSV (Latin-1, ';', decimal comma, hours in UTC)
+sub _inmet_parse_csv {
+    my $csv = shift // '';
+    my (%col, @rows);
+    foreach my $line (split /\r?\n/, decode('latin1', $csv)) {
+        my @f = split /;/, $line, -1;
+        if (!%col) {
+            next if ($f[0] // '') !~ /^DATA/i || ($f[1] // '') !~ /^HORA/i;
+            for my $i (2 .. $#f) {
+                my $h = _inmet_plain($f[$i]);
+                foreach my $c (@INMET_COLUMNS) { $col{$c->[0]} //= $i if $h =~ $c->[1]; }
+            }
+            $col{none} = -1 if !%col;
+            next;
+        }
+        my ($y, $m, $d) = ($f[0] // '') =~ /^(\d{4})[-\/](\d\d)[-\/](\d\d)/ or next;
+        my ($hh, $mi) = ($f[1] // '') =~ /^(\d\d):?(\d\d)/ or next;
+        my %r = (time => timegm(0, $mi, $hh, $d, $m - 1, $y));    # UTC
+        foreach my $k (keys %col) {
+            next if $col{$k} < 0;
+            my $v = $f[$col{$k}] // '';
+            $v =~ s/,/./;
+            $v =~ s/^(-?)\./${1}0./;
+            my $n = _num($v);
+            $r{$k} = (defined $n && $n != -9999) ? $n : undef;    # '' and -9999: missing
+        }
+        my $gust = delete $r{gust_ms};
+        $r{gust_kmh} = defined $gust ? sprintf('%.0f', $gust * 3.6) + 0 : undef;
+        $r{wind_kmh} = defined $r{wind_ms} ? sprintf('%.0f', $r{wind_ms} * 3.6) + 0 : undef;
+        $r{raining} = ($r{rain_mm} // 0) > 0 ? 1 : 0;
+        $r{rad_kj} = 0 if defined $r{rad_kj} && $r{rad_kj} < 0;
+        push @rows, \%r;
+    }
+    return \@rows;
+}
+
+# last date of an INMET historical CSV with an observation (YYYY-MM-DD)
+sub _inmet_csv_last {
+    my $csv = shift // '';
+    my $last;
+    foreach my $line (split /\r?\n/, $csv) {
+        my ($y, $m, $d, $rest) = $line =~ /^(\d{4})[-\/](\d\d)[-\/](\d\d);[^;]*;(.*)$/ or next;
+        $rest =~ s/-9999//g;
+        $last = "$y-$m-$d" if $rest =~ /\d/;
+    }
+    return $last;
 }
 
 
