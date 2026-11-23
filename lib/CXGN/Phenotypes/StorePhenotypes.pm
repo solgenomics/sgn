@@ -1698,20 +1698,20 @@ sub _date_comparison_value {
             ($month, $day) = ($second, $first);
         }
         else {
-            return undef;
+            return;
         }
     }
     elsif ($value =~ m/^(\d{4})-(\d{2})-(\d{2})(?:[ T](.+))?$/) {
         ($year, $month, $day, $time) = ($1, $2, $3, $4);
     }
     else {
-        return undef;
+        return;
     }
-    return undef if !_is_calendar_date($year, $month, $day);
+    return if !_is_calendar_date($year, $month, $day);
     my $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
     return $date if !defined($time);
     my $clock = _time_of_day($time);
-    return undef if !defined($clock);
+    return if !defined($clock);
     return $clock eq '00:00:00' ? $date : "$date $clock";
 }
 
@@ -1719,13 +1719,13 @@ sub _date_comparison_value {
 # undef for anything else.
 sub _time_of_day {
     my $time = shift;
-    my ($hour, $minute, $second, $half) = $time =~ m/^(\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:\s*([AaPp][Mm]))?$/ or return undef;
+    my ($hour, $minute, $second, $half) = $time =~ m/^(\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:\s*([AaPp][Mm]))?$/ or return;
     $second //= 0;
     if (defined($half)) {
-        return undef if $hour < 1 || $hour > 12;
+        return if $hour < 1 || $hour > 12;
         $hour = $hour % 12 + (lc($half) eq 'pm' ? 12 : 0);
     }
-    return undef if $hour > 23 || $minute > 59 || $second > 59;
+    return if $hour > 23 || $minute > 59 || $second > 59;
     return sprintf('%02d:%02d:%02d', $hour, $minute, $second);
 }
 
