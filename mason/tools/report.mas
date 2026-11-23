@@ -1,233 +1,264 @@
-<%args>
+<%doc>
 
+=head1 NAME
+
+/tools/report.mas - Report Factory: choose report scripts, give the inputs they take, run them and see the results
+
+=head1 AUTHOR
+
+Chris Simoes <ccs263@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$run_id => ''
+$is_curator => 0
 </%args>
 
-<& /util/import_javascript.mas, classes => [ "calendar.moment_min", "calendar.fullcalendar_min", "jquery.dataTables", "calendar.fullcalendar_gcal_min", "calendar.bootstrap_datepicker_min" ] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'jquery.dataTables', 'CXGN.List'], entries => ['report_factory'] &>
 
-<& /util/import_css.mas, paths => ['/css/datepicker.css'] &>
+<div id="rf-app" class="rf-app">
 
-<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
-
-
-<& /page/page_title.mas, title => "Personalized Report Generator" &>
-
-<div id="mixedmodel_tool">
-</div>
-
-
-<style>
-  .factor {
-  z-index:4;
-  border-style:solid;
-  border-radius:8px;
-  width:200px;
-  height:100;
-  border-color:#337ab7;
-  background-color:#337ab7;
-  color:white;
-  margin:4px
-  }
-  .factor_panel {
-  min-height:100px;
-  height:auto;
-  margin-top:0px;
-  border-style:dotted;
-  border-width:5px;
-  color:grey;
-  background-color:lightyellow;
-  }
-  .factor_interaction_panel {
-  border-style:dotted;
-  border-width:0px;
-  margin-top:20px;
-  height:auto;
-  z-index:1;
-  }
-  .model_bg {
-  margin-left:30px;
-  margin-right:30px;
-  background-color:#DDEEEE;
-  min-height:80px;
-  padding-top:10px;
-  padding-left:10px;
-  padding-bottom:10px;
-  border-radius:8px;
-  }
-
-  /* Input Box Styles */
-  textarea {
-    width: 100%;
-    height: 150px;
-    padding: 10px;
-    font-size: 14px;
-    resize: vertical;
-  }
-  #loading-message {
-    display: none;
-    color: blue;
-    font-weight: bold;
-    margin-top: 15px;
-  }
-
-  #final-message {
-    display: none;
-    color: green;
-    font-weight: bold;
-    margin-top: 15px;
-  }
-
-  .form-section {
-    margin-bottom: 20px;
-  }
-
-  .date-pair {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-  }
-</style>
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personalized Report Generator</title>
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-</head>
-
-<body>
-  <div>
-    <label style="font-size: 18px;">Welcome to the Personalized Report Generator</label>
-
-    <p>This is a <b>CURATOR's</b> tool which allows you to create customized reports based on scripts tailored to the specific instructions of your Breedbase instance. These reports are designed to meet your unique needs and provide detailed insights into your data. If you require a new report type or have specific requirements, please reach out to the Breedbase team for assistance.</p>
-
-    <form>
-      <hr>
-
-      <label style="font-weight: bold;">Available Report Scripts:</label>
-      <div id="available-scripts" style="margin-bottom: 20px;"></div>
-
-      <hr>
-
-      <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
-        <div>
-          <label for="start-date">Start Date:</label><br>
-          <input type="text" id="start-date" name="start-date" placeholder="dd/mm/yyyy">
-        </div>
-
-        <div>
-          <label for="end-date">End Date:</label><br>
-          <input type="text" id="end-date" name="end-date" placeholder="dd/mm/yyyy">
-        </div>
-      </div>
-
-      <hr>
-
-      <label for="email" style="font-weight: bold;">Send Report To (Emails):</label>
-      <textarea id="email-textarea" name="email" placeholder="Enter email addresses separated by new lines (one per line)" required></textarea>
-
-      <small>Please enter each email address on a new line (e.g., email1@example.com, email2@example.com).</small>
-
-      <br><br>
-
-      <button type="submit">Generate Report & Send Report</button>
-    </form>
+  <!-- ===================== header ===================== -->
+  <div class="rf-hero">
+    <div class="rf-hero-text">
+      <h2><span class="glyphicon glyphicon-list-alt"></span> Report Factory</h2>
+      <p>Run the reports prepared for this database. Each report asks only for what it uses: a date range, or a list of trials, accessions or traits. Results open here, ready to explore and download.</p>
+    </div>
   </div>
-  <div id="loading-message" style="display:none; color: blue; font-weight: bold; margin-top: 15px;">
-  Your report was submitted. You’ll receive an email when it’s ready. Feel free to navigate to other pages.
-</div>
 
-<div id="final-message" style="display:none; color: green; font-weight: bold; margin-top: 15px;">
-</div>
+% if (!$is_curator) {
+  <div class="alert alert-info"><span class="glyphicon glyphicon-info-sign"></span> Running reports is a <b>curator</b> tool. You can still open the results of your earlier reports. To get a new report, please contact the database curators.</div>
+% }
 
-</body>
+  <!-- ===================== stepper ===================== -->
+  <ol class="rf-stepper" id="rf_stepper">
+    <li data-step="1" class="active"><span class="rf-step-num">1</span><span class="rf-step-label">Reports</span></li>
+    <li data-step="2"><span class="rf-step-num">2</span><span class="rf-step-label">Inputs</span></li>
+    <li data-step="3"><span class="rf-step-num">3</span><span class="rf-step-label">Run &amp; results</span></li>
+  </ol>
+
+  <div class="row">
+    <div class="col-md-9 rf-main">
+
+      <!-- ===================== step 1 ===================== -->
+      <section class="rf-step" data-step="1">
+        <div class="rf-card">
+          <div class="rf-card-head">
+            <h3>Choose reports</h3>
+            <input type="search" class="form-control input-sm rf-search" id="rf_report_search" placeholder="Filter reports" />
+          </div>
+          <p class="rf-help">Tick one or more reports. The inputs each one takes are read from its script, so the next step only asks for what the chosen reports use.</p>
+          <div id="rf_reports" class="rf-report-grid"><span class="rf-muted"><span class="glyphicon glyphicon-refresh rf-spin"></span> Loading reports...</span></div>
+        </div>
+        <div class="rf-nav"><span></span><button class="btn btn-primary rf-next" data-goto="2" id="rf_step1_next" disabled>Choose a report</button></div>
+      </section>
+
+      <!-- ===================== step 2 ===================== -->
+      <section class="rf-step" data-step="2" style="display:none">
+        <div id="rf_inputs_note"></div>
+
+        <div class="rf-card rf-input" data-input="dates" style="display:none">
+          <div class="rf-card-head"><h3><span class="glyphicon glyphicon-calendar"></span> Date range</h3><span class="rf-usage" data-usage-for="dates"></span></div>
+          <p class="rf-help">Trials created between these dates.</p>
+          <div class="rf-inline-row">
+            <label>From <input type="date" class="form-control input-sm" id="rf_start_date" /></label>
+            <label>To <input type="date" class="form-control input-sm" id="rf_end_date" /></label>
+            <div class="btn-group btn-group-xs rf-presets">
+              <button class="btn btn-default" data-preset="30">Last 30 days</button>
+              <button class="btn btn-default" data-preset="365">Last 12 months</button>
+              <button class="btn btn-default" data-preset="year">This year</button>
+              <button class="btn btn-default" data-preset="clear">Clear</button>
+            </div>
+          </div>
+          <div class="rf-input-msg" id="rf_dates_msg"></div>
+        </div>
+
+        <div class="rf-card rf-input" data-input="trials" style="display:none">
+          <div class="rf-card-head"><h3><span class="glyphicon glyphicon-th"></span> Trial list</h3><span class="rf-usage" data-usage-for="trials"></span></div>
+          <p class="rf-help">Limits the report to the trials of a list. Lists are made in the <a href="/breeders/search" target="_blank">Search Wizard</a> or with the Lists tool.</p>
+          <div class="rf-list-select" id="rf_trials_list"></div>
+          <div class="rf-input-msg" id="rf_trials_msg"></div>
+        </div>
+
+        <div class="rf-card rf-input" data-input="accessions" style="display:none">
+          <div class="rf-card-head"><h3><span class="glyphicon glyphicon-leaf"></span> Accession list</h3><span class="rf-usage" data-usage-for="accessions"></span></div>
+          <p class="rf-help">Limits the report to the accessions of a list.</p>
+          <div class="rf-list-select" id="rf_accessions_list"></div>
+          <div class="rf-input-msg" id="rf_accessions_msg"></div>
+        </div>
+
+        <div class="rf-card rf-input" data-input="traits" style="display:none">
+          <div class="rf-card-head"><h3><span class="glyphicon glyphicon-tags"></span> Trait list</h3><span class="rf-usage" data-usage-for="traits"></span></div>
+          <p class="rf-help">Limits the report to the traits of a list (composed traits are matched by their components too when the report supports it).</p>
+          <div class="rf-list-select" id="rf_traits_list"></div>
+          <div class="rf-input-msg" id="rf_traits_msg"></div>
+        </div>
+
+        <div class="rf-card" id="rf_no_inputs" style="display:none">
+          <h3>No inputs needed</h3>
+          <p class="rf-help">The chosen reports run on the whole database. Go on to run them.</p>
+        </div>
+
+        <div class="rf-card" id="rf_check_card">
+          <h3>Ready to run?</h3>
+          <ul class="rf-checklist" id="rf_checklist"></ul>
+        </div>
+
+        <div class="rf-nav"><button class="btn btn-default rf-next" data-goto="1">Back</button><button class="btn btn-primary rf-next" data-goto="3" id="rf_step2_next">Next</button></div>
+      </section>
+
+      <!-- ===================== step 3 ===================== -->
+      <section class="rf-step" data-step="3" style="display:none">
+        <div class="rf-card rf-run-card" id="rf_run_card">
+          <div class="rf-card-head">
+            <h3>Run</h3>
+          </div>
+          <div class="rf-review" id="rf_review"></div>
+          <div class="rf-inline-row">
+            <label class="rf-label-inline">Name <input type="text" class="form-control input-sm" id="rf_title" maxlength="120" placeholder="Optional name for this report" /></label>
+            <label class="rf-check"><input type="checkbox" id="rf_notify" /> Email me when it is ready <small class="rf-muted" id="rf_email_hint"></small></label>
+          </div>
+          <div class="rf-inline-row">
+            <button class="btn btn-success btn-lg" id="rf_run_btn"><span class="glyphicon glyphicon-play"></span> Run report</button>
+            <span id="rf_run_msg"></span>
+          </div>
+        </div>
+
+        <div id="rf_results"></div>
+
+        <div class="rf-nav"><button class="btn btn-default rf-next" data-goto="2">Back</button><span></span></div>
+      </section>
+
+      <!-- ===================== history ===================== -->
+      <div class="rf-card" id="rf_history_card">
+        <div class="rf-card-head">
+          <h3><span class="glyphicon glyphicon-time"></span> My recent reports</h3>
+          <button class="btn btn-link btn-sm" id="rf_history_refresh"><span class="glyphicon glyphicon-refresh"></span> Refresh</button>
+        </div>
+        <div id="rf_history"><span class="rf-muted">Loading...</span></div>
+      </div>
+    </div>
+
+    <!-- ===================== summary ===================== -->
+    <div class="col-md-3">
+      <div class="rf-summary">
+        <h4>This report</h4>
+        <ul class="rf-flow" id="rf_flow"></ul>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-  $(document).ready(function() {
-    // Initialize datepicker for the start and end date inputs
-    $("#start-date, #end-date").datepicker({
-      dateFormat: "dd/mm/yy", // Use the dd/mm/yyyy format
-      changeMonth: true,
-      changeYear: true
-    });
-
-    // Define the report_scripts variable (semicolon-separated list)
-    var report_scripts = "<% $c->get_conf('report_engine') || 0 %>";
-    
-    // Split the report_scripts string by ";" and add a checkbox for each script
-    var scriptsArray = report_scripts.split(";");
-    scriptsArray.forEach(function(script) {
-      script = script.trim(); // Remove extra whitespace
-      if (script !== "") {
-        // Create checkbox input element
-        var checkbox = $('<input type="checkbox" name="report_script[]" value="' + script + '">');
-        // Create label for the checkbox
-        var label = $('<label></label>').text(" " + script);
-        // Append the checkbox and label to the container
-        $("#available-scripts").append(checkbox).append(label).append("<br>");
-      }
-    });
-
-    $("form").on("submit", function(event) {
-      event.preventDefault(); // Prevent default form submission
-
-      $("#loading-message").show();         // Show "please wait"
-      $("#final-message").hide().text("");  // Clear any previous final message
-
-      // Get start and end dates
-      var startDate = $("#start-date").val();
-      var endDate = $("#end-date").val();
-
-      var emailsText = $("#email-textarea").val();
-      var emails = emailsText.split("\n").map(function(email) {
-        return email.trim();
-      }).filter(function(email) {
-        return email !== "";
-      });
-
-      var selectedScripts = [];
-      $("input[name='report_script[]']:checked").each(function() {
-        selectedScripts.push($(this).val());
-      });
-
-      var formData = {
-        start_date: startDate,
-        end_date: endDate,
-        emails: emails,
-        report_scripts: selectedScripts
-      };
-
-      $.ajax({
-        url: "/ajax/report/generatereport",
-        type: "POST",
-        data: { reportData: JSON.stringify(formData) },
-        dataType: "json",
-        success: function(response) {
-          $("#loading-message").hide();
-          if (response.success) {
-            $("#final-message")
-              .css("color", "green")
-              .text(response.message || "Your report was submitted. You’ll receive an email when it’s ready.")
-              .show();
-          } else {
-            $("#final-message")
-              .css("color", "red")
-              .text("Error: " + (response.error || "Unknown error."))
-              .show();
-          }
-        },
-        error: function(xhr, status, error) {
-          console.error("AJAX Error:", error);
-          $("#loading-message").hide();
-          $("#final-message")
-            .css("color", "red")
-            .text("Error sending report: " + error)
-            .show();
-        }
-      });
-    });
+jQuery(document).ready(function() {
+  window.jsMod['report_factory'].init({
+    run_id: "<% $run_id =~ /^rf_\d{8}_\d{6}_[a-z0-9]{6}$/ ? $run_id : '' %>",
+    is_curator: <% $is_curator ? 1 : 0 %>
   });
+});
 </script>
+
+<style>
+.rf-app { --rf-accent: #1f6f8b; --rf-accent-soft: #e6f2f6; --rf-border: #dfe3e8; --rf-muted: #6b7280; --rf-bg: #f7f9fa; margin-bottom: 40px; }
+.rf-app h3 { font-size: 18px; margin: 0 0 6px 0; font-weight: 600; }
+.rf-app h4 { font-size: 15px; font-weight: 600; margin-top: 16px; }
+.rf-help { color: var(--rf-muted); font-size: 13px; }
+.rf-muted { color: var(--rf-muted); }
+.rf-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 20px 24px; margin: 10px 0 18px; border-radius: 10px; background: linear-gradient(120deg, #17546a 0%, #1f6f8b 55%, #4a93ab 100%); color: #fff; }
+.rf-hero h2 { margin: 0 0 6px; font-weight: 600; color: #fff; }
+.rf-hero p { margin: 0; max-width: 720px; opacity: .92; }
+.rf-stepper { display: flex; list-style: none; padding: 0; margin: 0 0 18px; }
+.rf-stepper li { flex: 1; position: relative; text-align: center; cursor: pointer; padding-top: 4px; color: var(--rf-muted); font-size: 13px; }
+.rf-stepper li:before { content: ''; position: absolute; top: 19px; left: -50%; width: 100%; height: 3px; background: var(--rf-border); z-index: 0; }
+.rf-stepper li:first-child:before { display: none; }
+.rf-stepper li.done:before, .rf-stepper li.active:before { background: var(--rf-accent); }
+.rf-step-num { position: relative; z-index: 1; display: block; margin: 0 auto 6px; width: 32px; height: 32px; line-height: 28px; border-radius: 50%; border: 2px solid var(--rf-border); background: #fff; font-weight: 600; }
+.rf-stepper li.active .rf-step-num { background: var(--rf-accent); border-color: var(--rf-accent); color: #fff; box-shadow: 0 0 0 4px var(--rf-accent-soft); }
+.rf-stepper li.done .rf-step-num { border-color: var(--rf-accent); color: var(--rf-accent); }
+.rf-stepper li.active .rf-step-label { color: #111; font-weight: 600; }
+.rf-card { background: #fff; border: 1px solid var(--rf-border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.rf-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.rf-search { max-width: 220px; }
+.rf-inline-row { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.rf-inline-row label { font-weight: normal; margin: 0; }
+.rf-inline-row input[type=date] { display: inline-block; width: auto; margin-left: 6px; }
+.rf-label-inline input { display: inline-block; width: 280px; margin-left: 6px; }
+.rf-check { font-weight: normal; cursor: pointer; }
+.rf-nav { display: flex; justify-content: space-between; margin: 6px 0 24px; }
+.rf-report-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.rf-report { position: relative; display: block; border: 2px solid var(--rf-border); border-radius: 10px; padding: 12px 14px 12px 38px; cursor: pointer; font-weight: normal; margin: 0; transition: border-color .15s, background .15s; }
+.rf-report input { position: absolute; left: 14px; top: 15px; }
+.rf-report:hover { border-color: #8fbfcf; }
+.rf-report.on { border-color: var(--rf-accent); background: var(--rf-accent-soft); }
+.rf-report.off { opacity: .55; cursor: not-allowed; }
+.rf-report-title { display: block; font-weight: 600; margin-bottom: 3px; }
+.rf-report-text { display: block; font-size: 12.5px; color: #4b5563; margin-bottom: 6px; }
+.rf-report-name { font-family: Menlo, Consolas, monospace; font-size: 11px; color: var(--rf-muted); }
+.rf-chip { display: inline-block; border-radius: 10px; padding: 1px 8px; font-size: 11px; margin: 2px 3px 0 0; background: #eef2f7; color: #374151; }
+.rf-chip-dates { background: #fef3c7; color: #92400e; }
+.rf-chip-trials { background: #dbeafe; color: #1e40af; }
+.rf-chip-accessions { background: #dcfce7; color: #166534; }
+.rf-chip-traits { background: #f3e8ff; color: #6b21a8; }
+.rf-chip-none { background: #f3f4f6; color: var(--rf-muted); }
+.rf-usage { font-size: 12px; }
+.rf-usage .label { margin-left: 4px; font-weight: 500; }
+.rf-input-msg { margin-top: 10px; font-size: 13px; }
+.rf-input-msg .rf-facts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.rf-input-msg .rf-facts span { background: var(--rf-bg); border: 1px solid var(--rf-border); border-radius: 14px; padding: 2px 10px; font-size: 12px; }
+.rf-list-select select { max-width: 420px; }
+.rf-checklist { list-style: none; padding: 0; margin: 6px 0 0; }
+.rf-checklist li { padding: 6px 0; border-top: 1px solid var(--rf-border); font-size: 13px; }
+.rf-checklist li:first-child { border-top: 0; }
+.rf-checklist .ok { color: #2b7a4b; }
+.rf-checklist .bad { color: #b91c1c; }
+.rf-checklist .info { color: var(--rf-muted); }
+.rf-review { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 6px; }
+.rf-review div { background: var(--rf-bg); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+.rf-review b { display: block; font-size: 11px; text-transform: uppercase; color: var(--rf-muted); letter-spacing: .04em; }
+.rf-summary { position: sticky; top: 70px; background: var(--rf-bg); border: 1px solid var(--rf-border); border-radius: 10px; padding: 14px 16px; }
+.rf-summary h4 { margin-top: 0; }
+.rf-flow { list-style: none; padding: 0; margin: 0; }
+.rf-flow li { position: relative; padding: 0 0 14px 22px; font-size: 13px; }
+.rf-flow li:before { content: ''; position: absolute; left: 5px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--rf-accent); }
+.rf-flow li:after { content: ''; position: absolute; left: 9px; top: 16px; bottom: 0; width: 1px; background: #c9d3dc; }
+.rf-flow li:last-child:after { display: none; }
+.rf-flow li.off:before { background: #cbd5e1; }
+.rf-flow li.off { color: var(--rf-muted); }
+.rf-flow b { display: block; }
+.rf-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 12px 0; }
+.rf-stat { background: #fff; border: 1px solid var(--rf-border); border-radius: 10px; padding: 12px 14px; }
+.rf-stat .v { font-size: 24px; font-weight: 600; color: var(--rf-accent); line-height: 1.1; word-break: break-word; }
+.rf-stat .l { font-size: 12px; color: var(--rf-muted); text-transform: uppercase; letter-spacing: .04em; }
+.rf-stat .h { font-size: 11px; color: var(--rf-muted); }
+.rf-result { border-left: 4px solid var(--rf-accent); }
+.rf-result.failed { border-left-color: #b91c1c; }
+.rf-result.running, .rf-result.waiting { border-left-color: #d97706; }
+.rf-result-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+.rf-state { display: inline-block; border-radius: 10px; padding: 1px 9px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.rf-state-finished { background: #dcfce7; color: #166534; }
+.rf-state-failed { background: #fee2e2; color: #991b1b; }
+.rf-state-partial { background: #fef3c7; color: #92400e; }
+.rf-state-running, .rf-state-waiting { background: #ffedd5; color: #9a3412; }
+.rf-files { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.rf-error { white-space: pre-wrap; background: #fef2f2; color: #7f1d1d; border-radius: 8px; padding: 10px 12px; font-family: Menlo, Consolas, monospace; font-size: 12px; }
+.rf-notes { margin: 8px 0; padding-left: 18px; font-size: 13px; color: #374151; }
+.rf-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin: 12px 0; }
+.rf-chart { border: 1px solid var(--rf-border); border-radius: 8px; padding: 10px 12px; }
+.rf-chart h5 { margin: 0 0 8px; font-weight: 600; font-size: 13px; }
+.rf-bar-row { display: grid; grid-template-columns: minmax(80px, 40%) 1fr auto; gap: 8px; align-items: center; font-size: 12px; margin-bottom: 4px; }
+.rf-bar-row .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rf-bar-row .track { background: #eef2f7; border-radius: 3px; height: 12px; }
+.rf-bar-row .bar { background: var(--rf-accent); border-radius: 3px; height: 12px; }
+.rf-bar-row .val { font-variant-numeric: tabular-nums; color: #374151; }
+.rf-tab-content { background: #fff; border: 1px solid #ddd; border-top: 0; padding: 12px; border-radius: 0 0 8px 8px; }
+.rf-table-wrap { overflow-x: auto; }
+.rf-table-wrap table { font-size: 12px; }
+.rf-history td { vertical-align: middle !important; font-size: 13px; }
+.rf-progress { font-size: 14px; }
+.rf-spin { animation: rf-spin 1.2s linear infinite; }
+@keyframes rf-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@media (max-width: 991px) { .rf-summary { position: static; margin-top: 16px; } .rf-step-label { display: none; } }
+</style>
