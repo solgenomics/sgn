@@ -512,7 +512,8 @@ sub rrblup_training_gebvs_file {
     $training_pop_id = $c->stash->{training_pop_id} if !$training_pop_id;
 
     my $type = 'training';
-    my $file_id = $self->gebvs_file_id($c, $type);
+    my $file_id = $self->gebvs_file_id($c, $type,
+        { training_pop_id => $training_pop_id, trait_id => $trait_id, protocol_id => $protocol_id });
 
     my $cache_dir = $self->solgs_cache_dir($c, $training_pop_id);
 
@@ -532,7 +533,8 @@ sub rrblup_training_genetic_values_file {
     my ($self, $c, $training_pop_id, $trait_id, $protocol_id) = @_;
 
     my $type = 'training';
-    my $file_id = $self->gebvs_file_id($c, $type);
+    my $file_id = $self->gebvs_file_id($c, $type,
+        { training_pop_id => $training_pop_id, trait_id => $trait_id, protocol_id => $protocol_id });
 
     $training_pop_id = $c->stash->{training_pop_id} if !$training_pop_id;
 
@@ -553,7 +555,8 @@ sub rrblup_combined_training_gebvs_genetic_values_file {
     my ($self, $c, $training_pop_id, $trait_id, $protocol_id) = @_;
 
     my $type = 'training';
-    my $file_id = $self->gebvs_file_id($c, $type);
+    my $file_id = $self->gebvs_file_id($c, $type,
+        { training_pop_id => $training_pop_id, trait_id => $trait_id, protocol_id => $protocol_id });
 
     $training_pop_id = $c->stash->{training_pop_id} if !$training_pop_id;
 
@@ -578,7 +581,9 @@ sub rrblup_selection_genetic_values_file {
     $c->stash->{selection_pop_id} = $selection_pop_id if $selection_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
 
-    my $file_id = $self->gebvs_file_id($c, $type);
+    my $file_id = $self->gebvs_file_id($c, $type,
+        { training_pop_id => $training_pop_id, selection_pop_id => $selection_pop_id,
+          trait_id => $trait_id, protocol_id => $protocol_id });
     my $cache_dir = $self->solgs_cache_dir($c, $training_pop_id);
 
     my $cache_data = {
@@ -600,7 +605,9 @@ sub rrblup_combined_selection_gebvs_genetic_values_file {
     $c->stash->{selection_pop_id} = $selection_pop_id if $selection_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
 
-    my $file_id = $self->gebvs_file_id($c, $type);
+    my $file_id = $self->gebvs_file_id($c, $type,
+        { training_pop_id => $training_pop_id, selection_pop_id => $selection_pop_id,
+          trait_id => $trait_id, protocol_id => $protocol_id });
     my $cache_dir = $self->solgs_cache_dir($c, $training_pop_id);
 
     my $cache_data = {
@@ -616,17 +623,16 @@ sub rrblup_combined_selection_gebvs_genetic_values_file {
 
 
 sub gebvs_file_id {
-    my ($self, $c, $type) = @_;
+    my ($self, $c, $type, $ids) = @_;
 
-    my $training_pop_id = $c->stash->{training_pop_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-    my $trait_id  = $c->stash->{trait_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $training_pop_id  = $ids->{training_pop_id}  || $c->stash->{training_pop_id};
+    my $selection_pop_id = $ids->{selection_pop_id} || $c->stash->{selection_pop_id};
+    my $trait_id         = $ids->{trait_id}         || $c->stash->{trait_id};
+    my $protocol_id      = $ids->{protocol_id}      || $c->stash->{genotyping_protocol_id};
 
     my $identifier = $training_pop_id;
 
-    if ($type =~ /selection/) 
-    {
+    if ($type =~ /selection/) {
         $identifier = "${identifier}-${selection_pop_id}";
     }
 
@@ -645,7 +651,9 @@ sub rrblup_selection_gebvs_file {
     $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
 
     my $type = 'selection';
-    my $file_id = $self->gebvs_file_id($c, $type);
+    my $file_id = $self->gebvs_file_id($c, $type,
+        { training_pop_id => $training_pop_id, selection_pop_id => $selection_pop_id,
+          trait_id => $trait_id, protocol_id => $protocol_id });
 
     my $cache_dir = $self->solgs_cache_dir($c, $training_pop_id);
 
