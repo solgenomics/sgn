@@ -78,6 +78,12 @@ has 'last_serial_number' => (
     predicate => 'has_last_serial_number',
 );
 
+has 'use_separator' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 1,
+);
+
 #has 'number_of_digits' => (
 #    isa => 'Int',
 #    is => 'rw',
@@ -136,7 +142,8 @@ sub add_info {
     my $last_serial_number = $self->get_last_serial_number();
     my $added_by = $self->get_added_by();
     my $date = $self->get_date();
-
+    my $use_separator = $self->get_use_separator();
+    print STDERR "USE SEPARATOR =".Dumper($use_separator)."\n";
     if ($self->existing_format_name()){
         return {error => "This format name is already used in the database! Please use another format name.\n"};
     }
@@ -150,7 +157,7 @@ sub add_info {
         unless ($attrs{plotNumber} || ($attrs{rowNumber} && $attrs{colNumber}) || ($attrs{accessionName} && $attrs{repNumber})) {
             return {error => "Plot name template must include 'plotNumber', or both 'rowNumber' and 'colNumber', or both 'accessionName' and 'repNumber' to produce globally unique stock names.\n"};
         }
-    } 
+    }
 
     my $name_metadata_cvterm;
     if ($name_type eq 'transformant') {
@@ -166,6 +173,7 @@ sub add_info {
     $name_metadata{'last_serial_number'} = $last_serial_number;
     $name_metadata{'added_by'} = $added_by;
     $name_metadata{'date'} = $date;
+    $name_metadata{'use_separator'} = $use_separator;
 
     my $stored_name_metadata_string;
     my $new_name_metadata_string;
