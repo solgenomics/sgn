@@ -618,7 +618,7 @@ $(document).ready(function($) {
             downloadLabels(design, download_type);
         } else if (label_count >= 1000) {
             //show warning with editable inputs for start and end
-            var message = "You are trying to download "+label_count+ " labels ("+label_count+" "+jQuery('#label_designer_data_level :selected').text()+" x "+design.copies_per_plot+" copy(ies) each). Downloading this many at a time may result in slow speeds. Please use the input boxes below to control how many are downloaded at a time.";
+            var message = "You are trying to download "+label_count+ " labels ("+label_count+" "+jQuery('#label_designer_data_level :selected').text()+" x "+design.copies_per_plot+" copy(ies) each). Downloading this many at a time may result in slow speeds. Please use the input boxes below to control how many are downloaded at a time: for example 1 to 1000, then 1001 to 2000.";
             $("#batch_download_message").text(message);
             $("#d3-batch-download-submit").val(download_type);
             $('#batchDownloadModal').modal('show');
@@ -764,6 +764,9 @@ function downloadLabels (design, download_type) {
             } else {
                 console.log("Got file "+response.filename);
                 enable_ui();
+                if (response.warnings && response.warnings.length) {
+                    alert("The labels were made, with these problems:\n\n" + response.warnings.join("\n\n"));
+                }
                 window.location.href = "/download/" + response.filename;
             }
         },
@@ -799,7 +802,7 @@ function updateFields(data_type, source_id, data_level){
         },
         success: function(response) {
             if (response.error) {
-                alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
+                alert("An error occurred while retrieving the design elements of this trial: " + JSON.stringify(response.error));
                 getDataSourceSelect();
             } else {
                 add_fields = response.fields;
@@ -1241,7 +1244,7 @@ function switchLabelDependentOptions(label) {
         $('#d3-add-type-input').focus();
         enableDrawArea();
     }
-    //set addtional options
+    //set additional options
     document.getElementById("top_margin").value = convertPixelsToPageDimensions(label_sizes[label].top_margin);
     document.getElementById("left_margin").value = convertPixelsToPageDimensions(label_sizes[label].left_margin);
     document.getElementById("horizontal_gap").value = convertPixelsToPageDimensions(label_sizes[label].horizontal_gap);
@@ -1338,8 +1341,26 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
             } else {
                 new_element.call(selectable, true);
             }
+            // The preview shows the longest value of the field. When that value is
+            // empty, or holds characters Code128 cannot encode, preview the field
+            // name instead so the element can still be placed.
+            var preview_text = text;
+            if (type == "Code128" && /[^\x00-\x7F]/.test(text || "")) {
+                alert("\"" + text + "\" cannot be put in a Code128 barcode: Code128 can only hold plain ASCII characters (no accents or non-Latin letters). Labels with such values will have this barcode left blank. Use a QR code for this field instead.");
+                preview_text = "";
+            }
+            if (!preview_text || !/\S/.test(preview_text)) {
+                preview_text = String(field || "").replace(/[^\x00-\x7F]/g, "");
+                if (!/\S/.test(preview_text)) { preview_text = "barcode"; }
+            }
+            var preview_url = "/tools/label_designer/preview?content=" + encodeURIComponent(preview_text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size);
             var img = new Image();
-            img.src = "/tools/label_designer/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size);
+            img.onerror = function() {
+                new_element.remove();
+                enable_ui();
+                alert("The " + type + " barcode preview for \"" + preview_text + "\" could not be made, so the element was not added.");
+            };
+            img.src = preview_url;
             img.onload = function() {
                 var element_width = width || this.width;
                 var element_height = height || this.height;
@@ -1358,7 +1379,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                     "type": type,
                     "width": element_width,
                     "height": element_height,
-                    "href": "/tools/label_designer/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size),
+                    "href": preview_url,
                 });
                 enable_ui();
             }

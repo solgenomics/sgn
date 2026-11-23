@@ -209,22 +209,22 @@ $response = decode_json $mech->content;
 $file = $response->{'filepath'};
 my $file_content = read_file($file);
 #print STDERR "File Content is:\n$file_content";
-$file_content = substr $file_content, 0, 399;
-#print STDERR "Substring File Content is:\n$file_content";
 my $expected_content = '^XA
-^LL254.7^PW407.52
-^FO53.71875,14.1328125^AA,54^FDUG120054^FS
+^LL255^PW408
+^FO54,14^AA,54^FDUG120054^FS
 ^FO40,70^BQ,,4^FDMA,KASESE_TP2013_666^FS
-^FO81,198^BCN,25,N,N,N^FD   Kasese solgs trial^FS
-^FO167.5,110.875^AA,27^FDPlot: 35667^FS
+^FO81,198^BCN,25,N,N,N^FDKasese solgs trial^FS
+^FO168,111^AA,27^FDPlot: 35667^FS
 ^XZ
 ^XA
-^LL254.7^PW407.52
-^FO53.71875,14.1328125^AA,54^FDUG130026^FS
+^LL255^PW408
+^FO54,14^AA,54^FDUG130026^FS
 ^FO40,70^BQ,,4^FDMA,KASESE_TP2013_667^FS
-^FO81,198^BCN,25,N,N,N^FD   Kasese solgs trial^FS
-^FO167.5,110.875^AA,27^FDPlot: 35668^FS
+^FO81,198^BCN,25,N,N,N^FDKasese solgs trial^FS
+^FO168,111^AA,27^FDPlot: 35668^FS
 ^XZ';
+$file_content = substr $file_content, 0, length($expected_content);
+#print STDERR "Substring File Content is:\n$file_content";
 is($file_content, $expected_content, 'download zpl test');
 
 

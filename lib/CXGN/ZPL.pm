@@ -2,6 +2,7 @@
 package CXGN::ZPL;
 
 use Moose;
+use POSIX qw(floor);
 
 has 'font'        => ( is      => 'rw',
 		       isa     => 'Str',
@@ -27,14 +28,16 @@ sub start_sequence {
 
 sub label_format {
     my $self = shift;
-    my $label_length = $self->label_length();
-    my $print_width = $self->print_width();
+    my $label_length = _dots($self->label_length());
+    my $print_width = _dots($self->print_width());
     $self->add("^LL$label_length^PW$print_width");
 }
 
 sub new_element {
     my $self = shift;
     my ($type, $x, $y, $size, $value) = @_;
+    $x = _dots($x);
+    $y = _dots($y);
 
     my %dispatcher = (
         ZebraText => \&text,
@@ -51,21 +54,45 @@ sub code128 {
     my $self = shift;
     my ($x, $y, $size, $value) = @_;
     my $height = $size * 25;
-    $self->add("^FO$x,$y^BCN,$height,N,N,N^FD   $value^FS");
+    $self->add("^FO$x,$y^BCN,$height,N,N,N^FD$value^FS"); # codespell:ignore fo
 }
 
 sub qrcode {
     my $self = shift;
     my ($x, $y, $size, $value) = @_;
     $y = $y - 10; #adjust for 10 dot offset
-    $self->add("^FO$x,$y^BQ,,$size^FDMA,$value^FS");
+    $self->add("^FO$x,$y^BQ,,$size^FDMA,$value^FS"); # codespell:ignore fo
 }
 
 sub text {
     my $self = shift;
+    $self->add($self->text_command(@_));
+}
+
+sub text_command {
+    my $self = shift;
     my ($x, $y, $size, $value) = @_;
+    $x = _dots($x);
+    $y = _dots($y);
     my $font = $self->font();
-    $self->add("^FO$x,$y^$font,$size^FD$value^FS");
+    return "^FO$x,$y^$font,$size^FD$value^FS"; # codespell:ignore fo
+}
+
+# An image field: ^GFA with the image as hex, one bit per dot (1 = black),
+# $bytes_per_row bytes for each row
+sub graphic_command {
+    my $class = shift;
+    my ($x, $y, $bytes_per_row, $hex) = @_;
+    $x = _dots($x);
+    $y = _dots($y);
+    my $total_bytes = length($hex) / 2;
+    return "^FO$x,$y^GFA,$total_bytes,$total_bytes,$bytes_per_row,$hex^FS"; # codespell:ignore fo
+}
+
+# ZPL positions and sizes are whole printer dots
+sub _dots {
+    my $value = shift;
+    return floor($value + 0.5);
 }
 
 sub end_sequence {

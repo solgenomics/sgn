@@ -31,43 +31,65 @@ sub barcode_preview :Path('/tools/label_designer/preview') {
 
     #print STDERR "Content is $content and type is $type and size is $size\n";
 
-    if ($type eq 'Code128') {
+    # a value the barcode cannot hold is answered with 400 and a short reason,
+    # so the designer page can tell the user instead of failing on a 500
+    my $problem;
+    if (!defined($content) || $content !~ /\S/) {
+        $problem = "There is no value to encode.";
+    } elsif ($type eq 'Code128' && $content =~ /[^\x00-\x7F]/) {
+        $problem = "Code128 can only hold plain ASCII characters (no accents or non-Latin letters). Use a QR code for this field.";
+    }
 
-        print STDERR "Creating barcode 128\n";
+    if (!$problem) {
+        eval {
+            if ($type eq 'Code128') {
 
-        my $barcode_object = Barcode::Code128->new();
-        $barcode_object->option("scale", $size);
-        $barcode_object->option("font_align", "center");
-        $barcode_object->option("padding", 5);
-        $barcode_object->option("show_text", 0);
-        $barcode_object->barcode($content);
-        my $barcode = $barcode_object->gd_image();
+                print STDERR "Creating barcode 128\n";
 
-        $c->res->headers->content_type('image/png');
-        $c->res->body($barcode->png());
+                my $barcode_object = Barcode::Code128->new();
+                $barcode_object->option("scale", $size);
+                $barcode_object->option("font_align", "center");
+                $barcode_object->option("padding", 5);
+                $barcode_object->option("show_text", 0);
+                $barcode_object->barcode($content);
+                my $barcode = $barcode_object->gd_image();
 
-    } elsif ($type eq 'QRCode') {
+                $c->res->headers->content_type('image/png');
+                $c->res->body($barcode->png());
 
-        print STDERR "Creating QR Code\n";
+            } elsif ($type eq 'QRCode') {
 
-        $c->tempfiles_subdir('barcode');
-        my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+                print STDERR "Creating QR Code\n";
 
-        my $barcode_generator = CXGN::QRcode->new(
-            text => $content,
-            size => $size,
-            margin => 0,
-            version => 0,
-            level => 'M'
-        );
-        my $barcode_file = $barcode_generator->get_barcode_file($file_location);
+                $c->tempfiles_subdir('barcode');
+                my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-         my $qrcode_path = $c->path_to($uri);
+                my $barcode_generator = CXGN::QRcode->new(
+                    text => $content,
+                    size => $size,
+                    margin => 0,
+                    version => 0,
+                    level => 'M'
+                );
+                my $barcode_file = $barcode_generator->get_barcode_file($file_location);
 
-         $c->res->headers->content_type('image/jpg');
-         my $output = read_file($qrcode_path);
-         $c->res->body($output);
+                my $qrcode_path = $c->path_to($uri);
 
+                $c->res->headers->content_type('image/jpg');
+                my $output = read_file($qrcode_path);
+                $c->res->body($output);
+            }
+            1;
+        } or do {
+            $problem = "The barcode could not be made: $@";
+            $problem =~ s/ at \S+ line \d+.*//s;
+        };
+    }
+
+    if ($problem) {
+        $c->res->status(400);
+        $c->res->headers->content_type('text/plain');
+        $c->res->body($problem);
     }
 
 }

@@ -9,6 +9,8 @@ use Try::Tiny;
 use JSON;
 use Barcode::Code128;
 use CXGN::QRcode;
+use Imager;
+use Imager::Font;
 use CXGN::ZPL;
 use PDF::API2;
 use Sort::Versions;
@@ -28,7 +30,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 # This info is used to provide additional properties for list items of
 # specific types to the label designer.
 # - The first-level hash key defines the list type
-# - The second-level hash key defines the propery name (displayed in the label designer)
+# - The second-level hash key defines the property name (displayed in the label designer)
 #   NOTE: Each list type needs to define (as '_transform') the list transform plugin name used to convert the list item names to database ids
 # - The value of the second-level hash is a subroutine that calculates the
 #   property value(s) for the specified list item(s)
@@ -387,58 +389,61 @@ __PACKAGE__->config(
        my $self = shift;
        my $c = shift;
        my $schema = $c->dbic_schema('Bio::Chado::Schema');
-       my $download_type = $c->req->param("download_type");
+       my $download_type = $c->req->param("download_type") || '';
        my $data_type = $c->req->param("data_type");
        my $data_level = $c->req->param("data_level");
        my $source_id = $c->req->param("source_id");
-       my $source_name = $c->req->param("source_name");
+       my $source_name = $c->req->param("source_name") // '';
        my $design_json = $c->req->param("design_json");
-       # decode json
-       # my $json = JSON->new;
-       #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
-       my $design_params = decode_json($design_json);
-       my $labels_to_download = $design_params->{'labels_to_download'} || undef;
-       my $start_number = $design_params->{'start_number'} || undef;
-       my $end_number = $design_params->{'end_number'} || undef;
-       my $text_alignment = $design_params->{"text_alignment"} || "middle";
 
-       if ($labels_to_download) {
-           $start_number = $start_number || 1;
-           $end_number = $labels_to_download;
+       if ($download_type ne 'pdf' && $download_type ne 'zpl') {
+           $c->stash->{rest} = { error => "Unknown download type. Please choose a PDF or a Zebra printer file." };
+           return;
        }
 
-       if ($start_number) { $start_number--; } #zero index
-       if ($end_number) { $end_number--; } #zero index
+       # Catalyst has usually decoded the parameter to characters already;
+       # decode_json would die on any non-ASCII text in the design then
+       my $design_params = eval {
+           utf8::is_utf8($design_json) ? JSON->new->decode($design_json) : decode_json($design_json);
+       };
+       if (ref($design_params) ne 'HASH') {
+           $c->stash->{rest} = { error => "The label design could not be read. Please reload the page and try again." };
+           return;
+       }
+       my $text_alignment = $design_params->{"text_alignment"} || "middle";
+
+       my ($settings_error, $first_label, $last_label) = _check_label_settings($design_params, $download_type);
+       if ($settings_error) {
+           $c->stash->{rest} = { error => $settings_error };
+           return;
+       }
 
        my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
        my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id, 1);
 
-       my $label_params = $design_params->{'label_elements'};
+       my $label_params = $design_params->{'label_elements'} || [];
 
-       if ($trial_num > 1) {
+       if ($trial_num && $trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
            return;
        }
 
-       my %design = %{$design};
-       if (!$design) {
+       if (ref($design) ne 'HASH') {
            $c->stash->{rest} = { error => "$source_name is not linked to a valid field design. Can't create labels." };
            return;
        }
+       if (!%$design) {
+           $c->stash->{rest} = { error => "$source_name has no items to make labels from." };
+           return;
+       }
 
-       # Create a blank PDF file
-       my $dir = $c->tempfiles_subdir('labels');
-       my $file_prefix = $source_name;
-       $file_prefix =~ s/[^a-zA-Z0-9-_]//g;
-
-       my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".$download_type");
+       my %design = %{$design};
 
        # initialize loop variables
        my $col_num = $design_params->{'start_col'} || 1;
        my $row_num = $design_params->{'start_row'} || 1;
-       my $key_number = 0;
-       my $sort_order_1 = $design_params->{'sort_order_1'};
+       my $sort_order_1 = $design_params->{'sort_order_1'} // '';
        my $sort_order_2 = $design_params->{'sort_order_2'};
        my $sort_order_3 = $design_params->{'sort_order_3'};
        my @sorted_keys;
@@ -506,7 +511,7 @@ __PACKAGE__->config(
             @sorted_keys = sort {
                     ncmp($design->{$a}{trial_name}, $design->{$b}{trial_name}) ||
                     ncmp($design->{$a}{_plot_order}, $design->{$b}{_plot_order}) ||
-                    ncmp($design->{$a}{plot_number}, $design->{$b}{plot_numer}) ||
+                    ncmp($design->{$a}{plot_number}, $design->{$b}{plot_number}) ||
                     ncmp($a, $b)
             } keys %design;
        }
@@ -520,6 +525,53 @@ __PACKAGE__->config(
                     ncmp($a, $b)
             } keys %design;
        }
+
+       # "Limit by Rep" is applied before the range, so Start/End/Total count
+       # only the labels of the selected rep, and {Number} does not skip.
+       my $plot_filter = $design_params->{'plot_filter'};
+       my $filter_by_rep = defined($plot_filter) && $plot_filter ne '' && $plot_filter ne 'all';
+       my @selected_keys = $filter_by_rep
+           ? grep { defined($design{$_}{'rep_number'}) && $design{$_}{'rep_number'} eq $plot_filter } @sorted_keys
+           : @sorted_keys;
+       my $selection_name = $filter_by_rep ? "rep $plot_filter of $source_name" : $source_name;
+
+       if (!@selected_keys) {
+           $c->stash->{rest} = { error => "There are no labels to print for $selection_name." };
+           return;
+       }
+       if ($first_label > @selected_keys) {
+           $c->stash->{rest} = { error => "Start Number $first_label is past the last label: there are ".scalar(@selected_keys)." labels for $selection_name." };
+           return;
+       }
+       my $last_index = (defined($last_label) && $last_label < @selected_keys) ? $last_label - 1 : $#selected_keys;
+       # each entry: [ design key, position in the selected labels (0 = first) ]
+       my @labels_to_print = map { [ $selected_keys[$_], $_ ] } ($first_label - 1) .. $last_index;
+
+       my $copies_per_plot = $design_params->{'copies_per_plot'};
+
+       # what could not be printed as designed, grouped by element and reason
+       my %problems;
+       my @problem_order;
+       my $note_problem = sub {
+           my ($what, $reason, $design_info, $key) = @_;
+           my $group = "$what\t$reason";
+           if (!$problems{$group}) {
+               $problems{$group} = { what => $what, reason => $reason, labels => [] };
+               push @problem_order, $group;
+           }
+           push @{$problems{$group}{labels}}, _label_name($design_info, $key);
+       };
+       my $note_barcode_problem = sub {
+           my ($element, $reason, $design_info, $key) = @_;
+           $note_problem->("The $element->{'type'} barcode \"".($element->{'value'} // '')."\" was left blank", $reason, $design_info, $key);
+       };
+
+       # Create a blank file
+       my $dir = $c->tempfiles_subdir('labels');
+       my $file_prefix = $source_name;
+       $file_prefix =~ s/[^a-zA-Z0-9-_]//g;
+
+       my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".$download_type");
 
        my $qrcode = Imager::QRCode->new(
            margin        => 0,
@@ -535,97 +587,100 @@ __PACKAGE__->config(
 
            print STDERR "Creating the PDF : ".localtime()."\n";
            my $pdf  = PDF::API2->new(-file => $FH);
-           my $page = $pdf->page();
-           my $text = $page->text();
-           my $gfx = $page->gfx();
-           $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
+           my %pdf_fonts; # fonts loaded into this PDF, by name or file
+           my ($page, $text, $gfx);
+           my $start_page = sub {
+               $pdf->finishobjects($page, $gfx, $text) if $page; #flush the page to save memory on big PDFs
+               $page = $pdf->page();
+               $text = $page->text();
+               $gfx = $page->gfx();
+               $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
+           };
+           $start_page->();
 
-           # loop through design hash, sorting via specified field or default
-           foreach my $key (@sorted_keys) {
-               if ($start_number && ($key_number < $start_number)){
-                   $key_number++;
-                   next;
-               }
-               if ($end_number && ($key_number > $end_number)){
-                   last;
-               }
-
+           # loop through the selected labels, in the sorted order
+           foreach my $label (@labels_to_print) {
+               my ($key, $position) = @$label;
                my %design_info = %{$design{$key}};
 
-               if ( $design_params->{'plot_filter'} eq 'all' || $design_params->{'plot_filter'} eq $design_info{'rep_number'}) { # filter by rep if needed
+                    for (my $i=0; $i < $copies_per_plot; $i++) {
+                        # the sheet is full: start a new page only now that there is a label for it
+                        if ($row_num > $design_params->{'number_of_rows'}) {
+                            $start_page->();
+                            $row_num = 1;
+                        }
 
-                    for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
-                        #print STDERR "Working on label num $i\n";
                         my $label_x = $design_params->{'left_margin'} + ($design_params->{'label_width'} + $design_params->{'horizontal_gap'}) * ($col_num-1);
                         my $label_y = $design_params->{'page_height'} - $design_params->{'top_margin'} - ($design_params->{'label_height'} + $design_params->{'vertical_gap'}) * ($row_num-1);
 
                        foreach my $element (@$label_params) {
-                           # print STDERR "Element Dumper\n" . Dumper($element);
                            my %element = %{$element};
                            my $elementx = $label_x + ( $element{'x'} / $conversion_factor );
                            my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
 
-                           my $filled_value = $element{'value'};
-                           $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
+                           my $filled_value = $element{'value'} // '';
+                           $filled_value =~ s/\{(.*?)\}/process_field($1,$position,\%design_info)/ge;
 
                            if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
-                                if ( $element{'type'} eq "Code128" ) {
-                                   # initialize barcode objs
-                                   my $barcode_object = Barcode::Code128->new();
-                                   my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
-                                   open(my $PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
-                                   binmode($PNG);
+                                # one barcode that cannot be made leaves its space blank;
+                                # the other labels are still printed and the user is told
+                                my $problem = _barcode_problem($element{'type'}, $filled_value);
+                                if (!$problem) {
+                                    eval {
+                                        _write_barcode_png($element{'type'}, $filled_value, $element{'size'}, $png_location, $qrcode);
+                                        1;
+                                    } or do {
+                                        $problem = _clean_error($@);
+                                    };
+                                }
+                                if ($problem) {
+                                    $note_barcode_problem->($element, $problem, \%design_info, $key) if $i == 0;
+                                    next;
+                                }
 
-                                   $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
-                                   $barcode_object->barcode($filled_value);
-                                   my $barcode = $barcode_object->gd_image();
-                                   print $PNG $barcode->png();
-                                   close($PNG);
-
-                                    my $image = $pdf->image_png($png_location);
-                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
-                                    my $elementx = $elementx - ($width/2);
-                                    #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
-                                    $gfx->image($image, $elementx, $elementy, $width, $height);
-
-                              } else { #QRCode
-
-                                  my $barcode = $qrcode->plot( $filled_value );
-                                  my $barcode_file = $barcode->write(file => $png_location);
-                                  system("convert $png_location -depth 8 $png_location"); # convert to 8 bit encoding. Won't work with default 16 bit encoding.
-
-                                   my $image = $pdf->image_png($png_location);
-                                   my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                                   my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                                   my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
-                                   my $elementx = $elementx - ($width/2);
-                                   $gfx->image($image, $elementx, $elementy, $width, $height);
-
-                              }
+                                my $image = $pdf->image_png($png_location);
+                                my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                                my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
+                                my $image_y = $elementy - ($height/2); # adjust for img position starting at bottom
+                                my $image_x = $elementx - ($width/2);
+                                $gfx->image($image, $image_x, $image_y, $width, $height);
                            }
                            else { #Text
 
-                                my $font = $pdf->corefont($element{'font'});
                                 my $adjusted_size = $element{'size'} / $conversion_factor;
-                                my $height = $element{'height'} / $conversion_factor;
                                 my $line_spacing = $adjusted_size * 1.2; # padding between lines
 
                                 my @lines = split(/\n/, $filled_value); # Split multiline text
-
-                                # Adjust starting y-position to center the block vertically
-                                my $total_text_height = scalar(@lines) * $line_spacing;
                                 my $start_y = $elementy;
 
                                 foreach my $line (@lines) {
-                                    $text->font($font, $adjusted_size);
-                                    $text->translate($elementx, $start_y);
-                                    if ($text_alignment eq "middle") {
-                                        $text->text_center($filled_value);
-                                    } elsif ($text_alignment eq "left") {
-                                        $text->text($filled_value);
+                                    my ($runs, $missing) = _pdf_text_runs($pdf, $element{'font'}, $line, \%pdf_fonts);
+                                    if (@$missing && $i == 0) {
+                                        my %seen;
+                                        my $chars = join(' ', grep { !$seen{$_}++ } @$missing);
+                                        $note_problem->("The text \"".($element{'value'} // '')."\" was printed without some characters",
+                                            "no installed font has $chars", \%design_info, $key);
+                                    }
+                                    if (@$runs == 1) {
+                                        $text->font($runs->[0][0], $adjusted_size);
+                                        $text->translate($elementx, $start_y);
+                                        if ($text_alignment eq "left") {
+                                            $text->text($runs->[0][1]);
+                                        } else {
+                                            $text->text_center($runs->[0][1]);
+                                        }
+                                    } elsif (@$runs) {
+                                        # characters from more than one font: print the pieces one after another
+                                        my $line_width = 0;
+                                        $line_width += $_->[0]->width($_->[1]) * $adjusted_size for @$runs;
+                                        my $run_x = $text_alignment eq "left" ? $elementx : $elementx - ($line_width / 2);
+                                        foreach my $run (@$runs) {
+                                            $text->font($run->[0], $adjusted_size);
+                                            $text->translate($run_x, $start_y);
+                                            $text->text($run->[1]);
+                                            $run_x += $run->[0]->width($run->[1]) * $adjusted_size;
+                                        }
                                     }
                                     $start_y -= $line_spacing;
                                 }
@@ -638,18 +693,7 @@ __PACKAGE__->config(
                             $col_num = 1;
                             $row_num++;
                         }
-
-                        if ($row_num > $design_params->{'number_of_rows'}) { #create new page and reset row and col num
-                            $pdf->finishobjects($page, $gfx, $text); #flush the page to save memory on big PDFs
-                            $page = $pdf->page();
-                            $text = $page->text();
-                            $gfx = $page->gfx();
-                            $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
-                            $row_num = 1;
-                        }
                     }
-                }
-             $key_number++;
              }
 
            print STDERR "Saving the PDF : ".localtime()."\n";
@@ -658,48 +702,359 @@ __PACKAGE__->config(
        } elsif ($download_type eq 'zpl') {
 
            print STDERR "Generating zpl . . .\n";
+           binmode($FH, ':encoding(UTF-8)');
            my $zpl_obj = CXGN::ZPL->new(
                print_width => $design_params->{'label_width'} * $conversion_factor,
                label_length => $design_params->{'label_height'} * $conversion_factor
            );
            $zpl_obj->start_sequence();
            $zpl_obj->label_format();
+           my @barcode_elements;
+           my @zebra_texts;
            foreach my $element (@$label_params) {
-               my $x = $element->{'x'} - ($element->{'width'}/2);
+               # elements are placed by their top left corner. Text drawn left aligned
+               # already has its left edge at x; everything else is centred on x.
+               my $type = $element->{'type'} // '';
+               my $is_text = $type =~ /Text/;
+               my $x = ($is_text && $text_alignment eq 'left') ? $element->{'x'} : $element->{'x'} - ($element->{'width'}/2);
                my $y = $element->{'y'} - ($element->{'height'}/2);
-               $zpl_obj->new_element($element->{'type'}, $x, $y, $element->{'size'}, $element->{'value'});
-           }
-           $zpl_obj->end_sequence();
-           my $zpl_template = $zpl_obj->render();
-           foreach my $key ( @sorted_keys ) {
-
-               if ($start_number && ($key_number < $start_number)){
-                   $key_number++;
+               if ($type eq 'ZebraText') {
+                   # filled in per label: printer font A, or an image for other scripts
+                   push @zebra_texts, { element => $element, x => $x, y => $y };
+                   $zpl_obj->add("\x{1}ZEBRA_TEXT_$#zebra_texts\x{1}");
                    next;
                }
-               if ($end_number && ($key_number > $end_number)){
-                   last;
-               }
+               $zpl_obj->new_element($type, $x, $y, $element->{'size'}, $element->{'value'});
+               push @barcode_elements, $element if $type eq 'Code128' || $type eq 'QRCode';
+           }
+           my %zpl_fonts; # Imager fonts, by file
 
+           # Font A of the printer only has Latin characters. Text in other
+           # scripts is drawn by the server and sent as an image (^GFA).
+           my $zebra_text_command = sub {
+               my ($index, $design_info, $position, $key) = @_;
+               my $zebra_text = $zebra_texts[$index];
+               my $element = $zebra_text->{element};
+               my $filled_value = $element->{'value'} // '';
+               $filled_value =~ s/\{(.*?)\}/process_field($1,$position,$design_info)/ge;
+
+               if ($filled_value =~ /[^\x00-\xFF]/) {
+                   my $image = _zpl_text_image($filled_value, $element->{'size'}, \%zpl_fonts);
+                   if (@{$image->{missing}}) {
+                       my %seen;
+                       my $chars = join(' ', grep { !$seen{$_}++ } @{$image->{missing}});
+                       $note_problem->("The Zebra text \"".($element->{'value'} // '')."\" was printed without some characters",
+                           "no installed font has $chars", $design_info, $key);
+                   }
+                   if ($image->{hex}) {
+                       my $x = $text_alignment eq 'left' ? $element->{'x'} : $element->{'x'} - ($image->{width} / 2);
+                       my $y = $element->{'y'} - ($image->{height} / 2);
+                       return CXGN::ZPL->graphic_command($x, $y, $image->{bytes_per_row}, $image->{hex});
+                   }
+                   $note_problem->("The Zebra text \"".($element->{'value'} // '')."\" may not print correctly",
+                       "no font is installed on the server to draw it, and the printer's built-in font A only has Latin characters; use a PDF for these labels", $design_info, $key);
+               }
+               return CXGN::ZPL->new->text_command($zebra_text->{x}, $zebra_text->{y}, $element->{'size'}, $filled_value);
+           };
+           $zpl_obj->end_sequence();
+           my $zpl_template = $zpl_obj->render();
+           foreach my $label (@labels_to_print) {
+               my ($key, $position) = @$label;
                my %design_info = %{$design{$key}};
 
-               my $zpl = $zpl_template;
-               $zpl =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
-              for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
-                  print $FH $zpl;
+               # the printer builds the barcodes, so only report the values it cannot encode
+               foreach my $element (@barcode_elements) {
+                   my $filled_value = $element->{'value'} // '';
+                   $filled_value =~ s/\{(.*?)\}/process_field($1,$position,\%design_info)/ge;
+                   my $problem = _barcode_problem($element->{'type'}, $filled_value);
+                   $note_barcode_problem->($element, $problem, \%design_info, $key) if $problem;
                }
-            $key_number++;
-            }
+
+               my $zpl = $zpl_template;
+               $zpl =~ s/\{(.*?)\}/process_field($1,$position,\%design_info)/ge;
+               # after the fields, so a value holding "{...}" is not filled in again
+               $zpl =~ s/\x{1}ZEBRA_TEXT_(\d+)\x{1}/$zebra_text_command->($1, \%design_info, $position, $key)/ge;
+               # ^CI28: the field data of this label is UTF-8
+               $zpl =~ s/^\^XA\n/^XA\n^CI28\n/ if $zpl =~ /[^\x00-\x7F]/;
+               for (my $i=0; $i < $copies_per_plot; $i++) {
+                   print $FH $zpl;
+               }
+           }
        }
 
        close($FH);
+
+       my @warnings = map {
+           my $problem = $problems{$_};
+           my @labels = @{$problem->{labels}};
+           my $shown = join(', ', grep { defined } @labels[0 .. ($#labels < 4 ? $#labels : 4)]);
+           $shown .= ", ..." if @labels > 5;
+           "$problem->{what} on ".scalar(@labels)." label(s) ($shown): $problem->{reason}.";
+       } @problem_order;
+
        print STDERR "Returning with filename . . .\n";
        $c->stash->{rest} = {
            filename => $urlencode{$filename},
-           filepath => $c->config->{basepath}."/".$filename
+           filepath => $c->config->{basepath}."/".$filename,
+           labels => scalar(@labels_to_print) * $copies_per_plot,
+           (@warnings ? (warnings => \@warnings) : ()),
        };
 
    }
+
+# Checks the sheet and range settings of a design before any file is made.
+# Returns an error message, or (undef, first label, last label) where the
+# labels are counted from 1 and the last label is undef for "to the end".
+sub _check_label_settings {
+    my $params = shift;
+    my $download_type = shift;
+
+    my $is_whole = sub { my $v = shift; return defined($v) && $v =~ /^\s*\d+\s*$/; };
+    my $is_positive = sub { my $v = shift; return defined($v) && $v =~ /^\s*(\d+\.?\d*|\.\d+)\s*$/ && $v > 0; };
+    my $is_given = sub { my $v = shift; return defined($v) && $v ne ''; };
+
+    my $copies = $params->{'copies_per_plot'};
+    if (!$is_whole->($copies) || $copies < 1) {
+        return ("Copies per label must be a whole number of 1 or more.");
+    }
+
+    if (!$is_positive->($params->{'label_width'}) || !$is_positive->($params->{'label_height'})) {
+        return ("The label width and height must be larger than 0.");
+    }
+
+    if ($download_type eq 'pdf') {
+        if (!$is_positive->($params->{'page_width'}) || !$is_positive->($params->{'page_height'})) {
+            return ("The page width and height must be larger than 0.");
+        }
+        foreach my $setting (['number_of_columns', 'Number of columns'], ['number_of_rows', 'Number of rows']) {
+            my ($name, $label) = @$setting;
+            if (!$is_whole->($params->{$name}) || $params->{$name} < 1) {
+                return ("$label must be a whole number of 1 or more.");
+            }
+        }
+        foreach my $setting (['start_col', 'Start Column', 'number_of_columns', 'columns'], ['start_row', 'Start Row', 'number_of_rows', 'rows']) {
+            my ($name, $label, $max_name, $unit) = @$setting;
+            my $value = $params->{$name};
+            next if !$is_given->($value);
+            if (!$is_whole->($value) || $value < 1 || $value > $params->{$max_name}) {
+                return ("$label must be between 1 and $params->{$max_name}, the number of $unit on the sheet.");
+            }
+        }
+    }
+
+    my $start = $params->{'start_number'};
+    my $end = $params->{'end_number'};
+    my $total = $params->{'labels_to_download'};
+
+    if ($is_given->($start) && !$is_whole->($start)) {
+        return ("Start Number must be a whole number.");
+    }
+    foreach my $setting ([$end, 'End Number'], [$total, 'Total # to download']) {
+        my ($value, $label) = @$setting;
+        if ($is_given->($value) && (!$is_whole->($value) || $value < 1)) {
+            return ("$label must be a whole number of 1 or more.");
+        }
+    }
+
+    # Start 0 or empty means the first label
+    my $first = ($is_given->($start) && $start > 0) ? $start + 0 : 1;
+    my $last;
+    if ($is_given->($total)) {
+        $last = $first + $total - 1;
+    } elsif ($is_given->($end)) {
+        $last = $end + 0;
+        if ($last < $first) {
+            return ("End Number ($last) is smaller than Start Number ($first).");
+        }
+    }
+    return (undef, $first, $last);
+}
+
+# The PDF core fonts (Courier, Helvetica, Times) only have Latin characters.
+# Other characters are taken from Unicode fonts installed on the server:
+# DejaVu in the style of the chosen font (Latin, Greek, Cyrillic, ...), then
+# Droid Sans Fallback (Chinese, Japanese, Korean). Returns [ file, ttfont options ].
+sub _unicode_font_files {
+    my $core_font = shift // '';
+    my $family = $core_font =~ /^Courier/ ? 'DejaVuSansMono' : $core_font =~ /^Times/ ? 'DejaVuSerif' : 'DejaVuSans';
+    my $bold = $core_font =~ /Bold/;
+    my $slanted = $core_font =~ /Italic|Oblique/;
+    my $slant = $family eq 'DejaVuSerif' ? 'Italic' : 'Oblique';
+    my $style = $bold && $slanted ? "-Bold$slant" : $bold ? '-Bold' : $slanted ? "-$slant" : '';
+    return (
+        [ "/usr/share/fonts/truetype/dejavu/$family$style.ttf" ],
+        [ "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" ],
+        # embedded whole: the PDF::API2 subset loses glyphs with high numbers,
+        # which are most of the Chinese and Japanese characters of this font
+        [ "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf", -nosubset => 1 ],
+    );
+}
+
+# Splits a line of text into pieces that each use one font that has their
+# characters. Returns ([ [font, text], ... ], [ characters no font has ]).
+sub _pdf_text_runs {
+    my ($pdf, $core_font_name, $line, $fonts) = @_;
+    $core_font_name ||= 'Courier';
+    my $core_font = $fonts->{"core:$core_font_name"} //= $pdf->corefont($core_font_name);
+    return ([ [ $core_font, $line ] ], []) if $line !~ /[^\x00-\xFF]/;
+
+    # a font is only added to the PDF when a character needs it
+    my $font_for = sub {
+        my $char = shift;
+        foreach my $candidate (_unicode_font_files($core_font_name)) {
+            my ($file, @options) = @$candidate;
+            if (!exists $fonts->{$file}) {
+                $fonts->{$file} = -r $file ? eval { $pdf->ttfont($file, @options) } : undef;
+            }
+            my $font = $fonts->{$file} or next;
+            return $font if ($font->glyphByUni(ord($char)) // '.notdef') ne '.notdef';
+        }
+        return;
+    };
+
+    my (@runs, @missing);
+    foreach my $char (split //, $line) {
+        my $font = ord($char) <= 0xFF ? $core_font : $font_for->($char);
+        if (!$font) {
+            push @missing, $char;
+            next;
+        }
+        if (@runs && $runs[-1][0] == $font) {
+            $runs[-1][1] .= $char;
+        } else {
+            push @runs, [ $font, $char ];
+        }
+    }
+    return (\@runs, \@missing);
+}
+
+# Draws text for a Zebra printer as a 1-bit image, with the same font
+# fallback as the PDF (one font per character). Returns { hex, bytes_per_row,
+# width, height, missing }: hex is empty when nothing could be drawn, and
+# missing lists the characters no installed font has.
+sub _zpl_text_image {
+    my ($value, $size, $fonts) = @_;
+    $size = 20 if !$size || $size !~ /^\s*\d+(?:\.\d+)?\s*$/ || $size <= 0;
+
+    my $font_for = sub {
+        my $char = shift;
+        foreach my $candidate (_unicode_font_files('Courier')) {
+            my ($file) = @$candidate;
+            if (!exists $fonts->{$file}) {
+                $fonts->{$file} = -r $file ? Imager::Font->new(file => $file, type => 'ft2') : undef;
+            }
+            my $font = $fonts->{$file} or next;
+            return $font if ($font->has_chars(string => $char))[0];
+        }
+        return;
+    };
+
+    my (@lines, @missing);
+    my ($ascent, $descent, $width) = (0, 0, 0);
+    foreach my $line (split /\n/, $value) {
+        my @runs;
+        my $line_width = 0;
+        foreach my $char (split //, $line) {
+            my $font = $font_for->($char);
+            if (!$font) {
+                push @missing, $char;
+                next;
+            }
+            if (@runs && $runs[-1][0] == $font) {
+                $runs[-1][1] .= $char;
+            } else {
+                push @runs, [ $font, $char ];
+            }
+        }
+        foreach my $run (@runs) {
+            my $box = $run->[0]->bounding_box(string => $run->[1], size => $size);
+            $run->[2] = $box->advance_width;
+            $line_width += $box->advance_width;
+            $ascent = $box->global_ascent if $box->global_ascent > $ascent;
+            $descent = $box->global_descent if $box->global_descent < $descent;
+        }
+        $width = $line_width if $line_width > $width;
+        push @lines, \@runs;
+    }
+
+    my $line_height = $ascent - $descent;
+    $width = int($width + 0.999);
+    my $height = $line_height * @lines;
+    return { hex => '', missing => \@missing } if $width < 1 || $height < 1;
+
+    # Imager draws text on colour images only
+    my $image = Imager->new(xsize => $width, ysize => $height, channels => 3);
+    $image->box(filled => 1, color => Imager::Color->new(255, 255, 255));
+    my $baseline = $ascent;
+    foreach my $runs (@lines) {
+        my $x = 0;
+        foreach my $run (@$runs) {
+            $image->string(font => $run->[0], string => $run->[1], x => $x, y => $baseline, size => $size, color => Imager::Color->new(0, 0, 0), aa => 1);
+            $x += $run->[2];
+        }
+        $baseline += $line_height;
+    }
+    $image = $image->convert(preset => 'gray');
+
+    # ^GFA data: one bit per dot, 1 = black, each row padded to whole bytes
+    my $bytes_per_row = int(($width + 7) / 8);
+    my $hex = '';
+    foreach my $row (0 .. $height - 1) {
+        my $bits = join('', map { $_ < 128 ? 1 : 0 } $image->getsamples(y => $row));
+        $bits .= '0' x ($bytes_per_row * 8 - length($bits));
+        $hex .= uc(unpack('H*', pack('B*', $bits)));
+    }
+    return { hex => $hex, bytes_per_row => $bytes_per_row, width => $width, height => $height, missing => \@missing };
+}
+
+# Why a barcode cannot hold a value, or nothing when it can.
+sub _barcode_problem {
+    my $type = shift;
+    my $value = shift;
+
+    if (!defined($value) || $value !~ /\S/) {
+        return "the value is empty, so there is nothing to encode";
+    }
+    if ($type eq 'Code128' && $value =~ /[^\x00-\x7F]/) {
+        return "Code128 can only hold plain ASCII characters (no accents or non-Latin letters); use a QR code for this field";
+    }
+    return;
+}
+
+sub _write_barcode_png {
+    my ($type, $value, $size, $png_location, $qrcode) = @_;
+
+    if ($type eq 'Code128') {
+        my $barcode_object = Barcode::Code128->new();
+        $barcode_object->option("scale", $size, "font_align", "center", "padding", 5, "show_text", 0);
+        $barcode_object->barcode($value);
+        my $png = $barcode_object->gd_image()->png();
+        open(my $PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
+        binmode($PNG);
+        print $PNG $png;
+        close($PNG);
+    } else {
+        my $barcode = $qrcode->plot($value);
+        $barcode->write(file => $png_location) or die $barcode->errstr;
+        system("convert $png_location -depth 8 $png_location"); # convert to 8 bit encoding. Won't work with default 16 bit encoding.
+    }
+}
+
+sub _clean_error {
+    my $error = shift // 'unknown error';
+    $error =~ s/ at \S+ line \d+.*//s;
+    $error =~ s/\s+$//;
+    return $error;
+}
+
+sub _label_name {
+    my $design_info = shift;
+    my $key = shift;
+    foreach my $field (qw(plot_name plant_name subplot_name tissue_sample_name list_item_name identifier)) {
+        return $design_info->{$field} if defined($design_info->{$field}) && $design_info->{$field} ne '';
+    }
+    return $key;
+}
 
 sub process_field {
     my $field = shift;
@@ -714,7 +1069,7 @@ sub process_field {
         my $custom_num =  $start_num + ($increment * $key_number);
         return sprintf("%0${length}d", $custom_num);
     } else {
-        return $design_info{$field};
+        return $design_info{$field} // '';
     }
 }
 
@@ -873,11 +1228,13 @@ sub get_data {
     if ($data_level =~ /batch-/) {  # handle batches of identifiers
         my $match = substr($data_level, 6);
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
-        my @list_data = @{$list_data};
-        # my $json = JSON->new;
-        #my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
-	my $identifier_object = decode_json($list_data[0][1]);
-        my $records = $identifier_object->{'records'};
+        my @list_data = @{$list_data || []};
+        # a missing list, or one that does not hold an identifier batch, gives no design
+        my $identifier_json = @list_data ? $list_data[0][1] : undef;
+        my $identifier_object = defined($identifier_json)
+            ? eval { utf8::is_utf8($identifier_json) ? JSON->new->decode($identifier_json) : decode_json($identifier_json) }
+            : undef;
+        my $records = ref($identifier_object) eq 'HASH' ? $identifier_object->{'records'} : [];
         foreach my $record (@{$records}) {
             my $next_number = $record->{'next_number'};
             if ($next_number eq $match) {
