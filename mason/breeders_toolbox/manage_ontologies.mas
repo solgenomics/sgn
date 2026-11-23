@@ -1,0 +1,3 @@
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+
+<& /page/page_title.mas, title=>"Manage Ontologies" &>

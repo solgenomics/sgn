@@ -606,6 +606,27 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
     $c->stash->{template} = '/breeders_toolbox/view_file.mas';
 }
 
+# Manage ontologies page. Locked behind login. 
+sub manage_ontologies : Path("/breeders/ontologies") Args(0) {
+    my $self =shift;
+    my $c = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if (!($c->user() && $c->user->check_roles('curator'))) {
+        $c->stash->{template} = '/site/error/permission_denied.mas';
+        return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/manage_ontologies.mas';
+}
+
 
 sub make_cross_form :Path("/stock/cross/new") :Args(0) {
     my ($self, $c) = @_;

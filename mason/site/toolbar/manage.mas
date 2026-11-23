@@ -1,48 +1,81 @@
 <li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/breeders/home">Manage</a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
-  <ul class="dropdown-menu">
-    <li><a href="/breeders/manage_roles/">User Roles</a></li>
-    <li><a href="/breeders/manage_programs/">Breeding Programs</a></li>
-    <li><a href="/breeders/locations">Locations</a></li>
-    <li><a href="/tools/report/">Report Factory</a></li>
-    <li><a href="/breeders/meeting/">Decision Meetings</a></li>
+  <ul class="dropdown-menu manage-menu" id="manage-menu">
 
+    <li class="panel manage-group">
+      <a class="manage-group-toggle collapsed" data-toggle="collapse" data-parent="#manage-menu" href="#manage-administration">Administration <span class="caret"></span></a>
+      <ul id="manage-administration" class="collapse list-unstyled manage-sublist">
+        <li><a href="/breeders/manage_roles/">User Roles</a></li>
+        <li><a href="/breeders/manage_programs/">Breeding Programs</a></li>
+        <li><a href="/breeders/locations">Locations</a></li>
+        <li><a href="/tools/report/">Report Factory</a></li>
+        <li><a href="/breeders/meeting/">Decision Meetings</a></li>
+% if ($c->user() && $c->user->check_roles('curator')) {
+        <li><a href="/breeders/ontologies/">Ontologies</a></li>
+% }
+      </ul>
+    </li>
 
-    <li role="separator" class="divider"></li>
-    <li><a href="/breeders/accessions/">Accessions</a></li>
-    <li><a href="/breeders/seedlots/">Seed Lots</a></li>
-    <li><a href="/breeders/crosses/">Crosses</a></li>
-    <li><a href="/breeders/propagations/">Propagations</a></li>
+    <li class="panel manage-group">
+      <a class="manage-group-toggle collapsed" data-toggle="collapse" data-parent="#manage-menu" href="#manage-germplasm">Germplasm <span class="caret"></span></a>
+      <ul id="manage-germplasm" class="collapse list-unstyled manage-sublist">
+        <li><a href="/breeders/accessions/">Accessions</a></li>
+        <li><a href="/breeders/seedlots/">Seed Lots</a></li>
+        <li><a href="/breeders/crosses/">Crosses</a></li>
+        <li><a href="/breeders/propagations/">Propagations</a></li>
+      </ul>
+    </li>
 
-    <li role="separator" class="divider"></li>
-    <li><a href="/order/stocks/view">Order Stocks</a></li>
-    <li><a href="/breeders/activities">Tracking Activities</a></li>
-    <li><a href="/breeders/transformations/">Transformations</a></li>
+    <li class="panel manage-group">
+      <a class="manage-group-toggle collapsed" data-toggle="collapse" data-parent="#manage-menu" href="#manage-orders">Orders &amp; Tracking <span class="caret"></span></a>
+      <ul id="manage-orders" class="collapse list-unstyled manage-sublist">
+        <li><a href="/order/stocks/view">Order Stocks</a></li>
+        <li><a href="/breeders/activities">Tracking Activities</a></li>
+        <li><a href="/breeders/transformations/">Transformations</a></li>
+      </ul>
+    </li>
 
-    <li role="separator" class="divider"></li>
-    <li><a href="/breeders/trials/">Field Trials</a></li>
-    <li><a href="/tools/trialallocation">Trial Allocation</a></li>
-    <li><a href="/fieldbook">Field Book App</a></li>
-    <li><a href="/breeders/phenotyping/">Phenotyping</a></li>
-    <li><a href="/breeders/images/">Images</a></li>
-    <li><a href="/collections/files">Files</a></li>
-    <li><a href="/barcode">Barcodes</a></li>
-    <li><a href="/tools/label_designer">Label Designer</a></li>
+    <li class="panel manage-group">
+      <a class="manage-group-toggle collapsed" data-toggle="collapse" data-parent="#manage-menu" href="#manage-trials">Trials &amp; Phenotyping <span class="caret"></span></a>
+      <ul id="manage-trials" class="collapse list-unstyled manage-sublist">
+        <li><a href="/breeders/trials/">Field Trials</a></li>
+        <li><a href="/tools/trialallocation">Trial Allocation</a></li>
+        <li><a href="/fieldbook">Field Book App</a></li>
+        <li><a href="/breeders/phenotyping/">Phenotyping</a></li>
+        <li><a href="/barcode">Barcodes</a></li>
+        <li><a href="/tools/label_designer">Label Designer</a></li>
+      </ul>
+    </li>
 
-    <li role="separator" class="divider"></li>
-    <li><a href="/breeders/genotyping_projects/">Genotyping Projects</a></li>
-    <li><a href="/breeders/genotyping/">Genotyping Plates</a></li>
-    <li><a href="/breeders/markers/">Marker Allele Lists</a></li>
+    <li class="panel manage-group">
+      <a class="manage-group-toggle collapsed" data-toggle="collapse" data-parent="#manage-menu" href="#manage-genotyping">Genotyping <span class="caret"></span></a>
+      <ul id="manage-genotyping" class="collapse list-unstyled manage-sublist">
+        <li><a href="/breeders/genotyping_projects/">Genotyping Projects</a></li>
+        <li><a href="/breeders/genotyping/">Genotyping Plates</a></li>
+        <li><a href="/breeders/markers/">Marker Allele Lists</a></li>
+      </ul>
+    </li>
 
-    <li role="separator" class="divider"></li>
-    <li><a href="/breeders/download">Download</a></li>
-    <li><a href="/breeders/upload">Upload</a></li>
-    <li><a href="/breeders/identifier_generation">Identifier Generation</a></li>
-<!--    <li><a href="/breeders/odk">ODK Data Collection</a></li>  -->
-    <li><a href="/breeders/file_share_dump">File Share</a></li>
+    <li class="panel manage-group">
+      <a class="manage-group-toggle collapsed" data-toggle="collapse" data-parent="#manage-menu" href="#manage-data">Data &amp; Files <span class="caret"></span></a>
+      <ul id="manage-data" class="collapse list-unstyled manage-sublist">
+        <li><a href="/breeders/download">Download</a></li>
+        <li><a href="/breeders/upload">Upload</a></li>
+        <li><a href="/breeders/identifier_generation">Identifier Generation</a></li>
+<!--        <li><a href="/breeders/odk">ODK Data Collection</a></li>  -->
+        <li><a href="/breeders/file_share_dump">File Share</a></li>
+        <li><a href="/breeders/images/">Images</a></li>
+        <li><a href="/collections/files">Files</a></li>
+      </ul>
+    </li>
 
-    <li role="separator" class="divider"></li>
-    <li><a href="/breeders/nirs">NIRS</a></li>
-    <li><a href="/breeders/transcriptomics">Transcriptomics</a></li>
+    <li class="panel manage-group">
+      <a class="manage-group-toggle collapsed" data-toggle="collapse" data-parent="#manage-menu" href="#manage-highdim">High-dimensional Phenotypes <span class="caret"></span></a>
+      <ul id="manage-highdim" class="collapse list-unstyled manage-sublist">
+        <li><a href="/breeders/nirs">NIRS</a></li>
+        <li><a href="/breeders/transcriptomics">Transcriptomics</a></li>
+      </ul>
+    </li>
+
   </ul>
 </li>

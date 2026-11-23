@@ -70,6 +70,46 @@
     }
   }
 
+  /* Collapsible groups in the Manage menu (.panel is required by Bootstrap's data-parent accordion) */
+  .manage-menu > li.manage-group {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .manage-menu > li.manage-group + li.manage-group {
+    border-top: 1px solid #e5e5e5;
+  }
+  .manage-menu > li > a.manage-group-toggle {
+    padding: 6px 20px;
+    line-height: 16px;
+  }
+  .manage-menu a.manage-group-toggle .caret {
+    transition: transform 0.15s;
+  }
+  .manage-menu a.manage-group-toggle.collapsed .caret {
+    transform: rotate(-90deg);
+  }
+  .manage-sublist {
+    margin: 0;
+    padding-bottom: 4px;
+  }
+  .manage-sublist > li > a {
+    display: block;
+    padding: 3px 20px 3px 32px;
+    font-size: 14px;
+    line-height: 16px;
+    color: #333;
+    white-space: nowrap;
+  }
+  .manage-sublist > li > a:hover,
+  .manage-sublist > li > a:focus {
+    background-color: #f5f5f5;
+    color: #262626;
+    text-decoration: none;
+  }
+
 </style>
 
 <script>
@@ -79,6 +119,13 @@ jQuery(document).ready(function() {
     jQuery(".menu_click_dropdown").removeClass("dropdown-toggle");
     jQuery(".menu_click_dropdown").removeAttr("data-toggle");
   }
+
+  // Keep the Manage dropdown open when a group header is clicked
+  // (Bootstrap closes open dropdowns on any document click).
+  jQuery(document).on("click", ".manage-group-toggle", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  });
 });
 
 </script>
