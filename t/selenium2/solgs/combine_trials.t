@@ -77,46 +77,15 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(2);
-    $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
-    sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('combined trials');
-    sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-	sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(3);
-
-
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
-    sleep(2);
-    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(3);
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
-    sleep(2);
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
-    sleep(5);
-    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(5);
-
-    $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
-    sleep(3);
-    $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
-    sleep(3);
-    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
-    sleep(3);
-    $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
+    $d->find_element_ok('combine_trait_trials', 'id', 'combine trials -- go to combined trials training pop page')->click();
     sleep(20);
 
-# $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
-   # sleep(4);
-
-    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');
+    $d->find_element_ok('Traits acronyms', 'partial_link_text',  'download traits acronyms');
     sleep(3);
-    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
+    is(scalar(@{$d->driver->find_elements('Genotype data', 'partial_link_text')}), 0,
+        'no genotype data download link before data query');
+    is(scalar(@{$d->driver->find_elements('Phenotype data', 'partial_link_text')}), 0,
+        'no phenotype data download link before data query');
     sleep(3);
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
@@ -128,9 +97,15 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(350);
+    sleep(450);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
+
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');
+    sleep(3);
+    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
+    sleep(3);
+
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(40);
 
@@ -294,17 +269,11 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->driver->go_back();
     sleep(5);
-    # $d->driver->go_back();
-	# sleep(10);
-    # $d->driver->go_back();
-	# sleep(10);
-	$d->find_element_ok('Training population 280', 'partial_link_text', 'back to model page')->click();
+
+    my $combo_pops_id = $d->find_element('training_pop_id', 'id')->get_value();
+    $d->get('/solgs/populations/combined/' . $combo_pops_id . '/gp/1', 'combo trials tr pop page');
     sleep(5);
-	$d->find_element_ok('Training population 280', 'partial_link_text', 'back to training pop page')->click();
-	sleep(5);
-
-    #$d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
-
+	
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
     sleep(1);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
