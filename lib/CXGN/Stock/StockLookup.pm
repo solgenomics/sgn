@@ -128,17 +128,17 @@ sub get_synonym_hash_lookup {
 
 sub get_owner_hash_lookup {
     my $self = shift;
-    my $stock_ids;
+    my $stock_ids = shift;
+    return {} if $stock_ids && !@$stock_ids;
     my $where_clause = '';
     print STDERR "StockOwner Start:".localtime."\n";
     if ($stock_ids){
-        my $stock_id_sql = join ',', @$stock_ids;
-        $where_clause = "WHERE stock_id IN ($stock_id_sql)";
+        $where_clause = 'WHERE stock_id = ANY(?)';
     }
     my $schema = $self->get_schema();
     my $q = "SELECT stock_id, sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) $where_clause GROUP BY (stock_id, sp_person_id, username, first_name, last_name) ORDER BY sp_person_id;";
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
+    $h->execute($stock_ids ? ($stock_ids) : ());
     my %result;
     while (my ($stock_id, $sp_person_id, $username, $first_name, $last_name) = $h->fetchrow_array()) {
         push @{$result{$stock_id}}, [$sp_person_id, $username, $first_name, $last_name];
