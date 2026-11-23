@@ -117,6 +117,38 @@ sub register_POST : Args(0) {
     my $first_name  = $c->req->param('first_name');
     my $last_name = $c->req->param('last_name');
 
+    # Apply the same checks as the web signup (/ajax/user/new): this endpoint
+    # takes no login, so without them anyone can create accounts with no rules.
+    if ($c->config->{is_mirror}) {
+        $c->stash->{rest} = { error => "This site is a mirror site and does not support adding users." };
+        return;
+    }
+    my @fail;
+    if (!defined($username) || length($username) < 7) {
+        push @fail, "Username is too short. Username must be 7 or more characters.";
+    } elsif ($username =~ /\s/) {
+        push @fail, "Username must not contain spaces.";
+    } elsif ($username =~ /[<>"'&]/) {
+        push @fail, "Username must not contain any of these characters: < > \" ' &";
+    } elsif (CXGN::People::Login->get_login($dbh, $username)->get_username()) {
+        push @fail, "Username \"$username\" is already in use.";
+    }
+    if (!defined($password) || length($password) < 7) {
+        push @fail, "Password is too short. Password must be 7 or more characters.";
+    }
+    if (defined($password) && defined($username) && $password eq $username) {
+        push @fail, "Password must not be the same as the username.";
+    }
+    if (!defined($email) || $email !~ m/[^\@]+\@[^\@]+/) {
+        push @fail, "Please enter a valid email address.";
+    } elsif (scalar(CXGN::People::Login->get_login_by_email($dbh, $email)) > 0) {
+        push @fail, "The email address \"$email\" is already associated with an account.";
+    }
+    if (@fail) {
+        $c->stash->{rest} = { error => join(" ", @fail) };
+        return;
+    }
+
     my $new_user = CXGN::People::Login->new($dbh);
     $new_user -> set_username($username);
     $new_user -> set_password($password);
