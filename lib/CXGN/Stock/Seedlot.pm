@@ -529,7 +529,8 @@ sub list_seedlots {
             join => \@seedlot_search_joins,
             '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id'],
             '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id'],
-            order_by => {-asc=>'project.name'},
+            # me.stock_id breaks ties so paging is stable regardless of query plan
+            order_by => [ {-asc=>'project.name'}, {-asc=>'me.stock_id'} ],
             #distinct => 1
         }
     );
@@ -1237,7 +1238,7 @@ sub verify_accession_content_source_compatibility {
             $source_accession_id = $accession_source_relationship_rs->object_id();
 
             if ($accession_id ne $source_accession_id){
-                $error .= "The source name: $source_name is not linked to the same accession as the access content: $accession_name"."<br>";
+                $error .= "The source name: $source_name is not linked to the same accession as the seedlot content: $accession_name"."<br>";
             }
         }
     }

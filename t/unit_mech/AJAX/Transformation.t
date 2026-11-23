@@ -117,7 +117,7 @@ my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transf
 my $before_adding_transformation_id = $schema->resultset("Stock::Stock")->search({ type_id => $transformation_type_id })->count();
 my $before_adding_transformation_id_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
-$mech->post_ok('http://localhost:3010/ajax/transformation/add_transformation_identifier', [ 'transformation_identifier' => 'UG1TT1', 'plant_material' => 'UG120001', 'vector_construct' => 'TT1', 'notes' => 'test', 'transformation_project_id' => $project_id]);
+$mech->post_ok('http://localhost:3010/ajax/transformation/add_transformation_identifier', [ 'transformation_identifier' => 'UG1TT1', 'plant_material' => 'UG120001', 'vector_construct' => 'TT1', 'notes' => 'test', 'transformation_project_id' => $project_id, 'FEC_batch' => '15']);
 
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
@@ -131,19 +131,28 @@ is($after_adding_transformation_id, $before_adding_transformation_id + 1);
 my $after_adding_transformation_id_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 is($after_adding_transformation_id_relationship, $before_adding_transformation_id_relationship + 2);
 
-#test editing Notes
+#test editing Notes and FEC batch
 my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
-my $stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformation_stock_id, type_id => $transformation_notes_cvterm_id});
-my $notes = $stockprop_rs->value();
+my $FEC_batch_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'FEC_batch', 'stock_property')->cvterm_id();
+my $notes_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformation_stock_id, type_id => $transformation_notes_cvterm_id});
+my $notes = $notes_stockprop_rs->value();
 is($notes, 'test');
 
-$mech->post_ok('http://localhost:3010/ajax/transformation/update_transformation_metadata', [ 'transformation_stock_id' => $transformation_stock_id, 'new_transformation_notes' => 'test updating notes']);
+my $FEC_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformation_stock_id, type_id => $FEC_batch_cvterm_id});
+my $FEC_batch = $FEC_stockprop_rs->value();
+is($FEC_batch, '15');
+
+$mech->post_ok('http://localhost:3010/ajax/transformation/update_transformation_metadata', [ 'transformation_stock_id' => $transformation_stock_id, 'new_transformation_notes' => 'test updating notes', 'new_FEC_batch' => '16']);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
-my $stockprop_rs_2 = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformation_stock_id, type_id => $transformation_notes_cvterm_id});
-my $updated_notes = $stockprop_rs_2->value();
+my $notes_stockprop_rs_2 = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformation_stock_id, type_id => $transformation_notes_cvterm_id});
+my $updated_notes = $notes_stockprop_rs_2->value();
 is($updated_notes, 'test updating notes');
+
+my $FEC_stockprop_rs_2 = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformation_stock_id, type_id => $FEC_batch_cvterm_id});
+my $updated_FEC_batch = $FEC_stockprop_rs_2->value();
+is($updated_FEC_batch, '16');
 
 #adding control vector
 my $new_control_vector_ = $schema->resultset('Stock::Stock')->create({
@@ -168,7 +177,7 @@ my $control_transformation_stock_id = $control_transformation_rs->stock_id();
 push @all_new_stocks, $control_transformation_stock_id;
 
 #setting control for UG1TT1
-$mech->post_ok('http://localhost:3010/ajax/transformation/set_transformation_control', [ 'transformation_stock_id' => $transformation_stock_id, 'control_stock_id' => $control_transformation_stock_id, 'program_name' => 'test']);
+$mech->post_ok('http://localhost:3010/ajax/transformation/set_transformation_control', [ 'transformation_stock_id' => $transformation_stock_id, 'selected_control_name' => 'UG1TTC', 'program_name' => 'test']);
 
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
@@ -181,9 +190,8 @@ is ($is_a_control, '1');
 
 #retrieve control experiment info for UG1TT1
 my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-my $info = $transformation_obj->get_transformation_info();
-
-my $control_name = $info->[0]->[7];
+my $transformation_controls = $transformation_obj->get_transformation_controls();
+my $control_name = $transformation_controls->[0]->[1];
 is ($control_name, 'UG1TTC');
 
 #test adding transformants (accessions)

@@ -35,6 +35,7 @@ use CXGN::Pedigree::Upload;
 use File::Temp;
 use File::Basename qw | basename dirname|;
 use File::Spec;
+use JSON qw(encode_json);
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -49,6 +50,23 @@ sub _build_schema {
 
 sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
    my ($self, $c) = @_;
+
+   # Adding crosses needs a login and a role in every format, not only the
+   # spreadsheet one: the barcode branch reaches _add_cross as well. Check
+   # before reading the upload.
+   if (!$c->user()) {
+     print STDERR "User not logged in... not adding crosses.\n";
+     $c->res->content_type('application/json');
+     $c->res->body(encode_json({ error => "You need to be logged in to add a cross." }));
+     return;
+   }
+   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+     print STDERR "User does not have sufficient privileges.\n";
+     $c->res->content_type('application/json');
+     $c->res->body(encode_json({ error => "you have insufficient privileges to add a cross." }));
+     return;
+   }
+
    my $upload = $c->req->upload('upload_file');
    my $visible_to_role = $c->req->param('visible_to_role');
    my $format_type = $c->req->param('format_type');
@@ -61,20 +79,9 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
    my @contents = split /\n/, $upload->slurp;
    print STDERR "loading cross file: $tempfile Basename: $basename $format_type $visible_to_role\n";
    $c->stash->{tempfile} = $tempfile;
+
    if ($format_type eq "spreadsheet") {
      print STDERR "is spreadsheet \n";
-
-     if (!$c->user()) {
-       print STDERR "User not logged in... not adding crosses.\n";
-       $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
-       return;
-     }
-
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	print STDERR "User does not have sufficient privileges.\n";
-	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
-	return;
-    }
 
      my $first_line = shift(@contents);
      my @first_row = split /\t/, $first_line;

@@ -68,6 +68,11 @@ my $instance = $instance_id;
 
 var <% $instance %>_ready = false;
 
+// Names are stored as typed: show them as text.
+function <% $instance %>_escape_html(s) {
+    return jQuery('<div>').text(s == null ? '' : s).html();
+}
+
 function <% $instance %>_collection_li(c) {
     var counts;
 % if ($collection_type eq 'file') {
@@ -79,12 +84,12 @@ function <% $instance %>_collection_li(c) {
 % }
     return '<li data-jstree=\'{"type":"collection"}\' id="collection_' + c.collection_id + '">' +
         '<a href="/collection/' + c.collection_id + '">' +
-        c.name + ' <span class="text-muted" style="font-size:11px;">(' + counts + ')</span></a>';
+        <% $instance %>_escape_html(c.name) + ' <span class="text-muted" style="font-size:11px;">(' + counts + ')</span></a>';
 }
 
 function <% $instance %>_project_li(p) {
     var html = '<li data-jstree=\'{"type":"project"}\' id="project_' + p.project_id + '">' +
-        '<a href="/breeders/trial/' + p.project_id + '">' + p.name + '</a><ul>';
+        '<a href="/breeders/trial/' + p.project_id + '">' + <% $instance %>_escape_html(p.name) + '</a><ul>';
     (p.collections || []).forEach(function (c) {
         html += <% $instance %>_collection_li(c);
         html += '</li>';
@@ -95,7 +100,7 @@ function <% $instance %>_project_li(p) {
 
 function <% $instance %>_program_li(p) {
     var html = '<li data-jstree=\'{"type":"breeding_program"}\' id="bp_' + p.program_id + '">' +
-        '<a href="/breeders/program/' + p.program_id + '">' + p.program_name + '</a><ul>';
+        '<a href="/breeders/program/' + p.program_id + '">' + <% $instance %>_escape_html(p.program_name) + '</a><ul>';
     (p.collections || []).forEach(function (c) {
         html += <% $instance %>_collection_li(c);
         html += '</li>';
