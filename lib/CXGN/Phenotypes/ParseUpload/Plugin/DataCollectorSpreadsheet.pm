@@ -16,6 +16,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::DataCollectorSpreadsheet;
 #)
 
 use Moose;
+use CXGN::File::Spreadsheet qw(cell_value);
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
@@ -236,7 +237,7 @@ sub parse {
             my $value_string = '';
 
             if ($worksheet->get_cell($row,$header_column_info{$trait_key})){
-                $value_string = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
+                $value_string = cell_value($worksheet->get_cell($row,$header_column_info{$trait_key}), $excel_obj);
             }
             my ($trait_value, $timestamp) = split /,/, $value_string;
             if (!$timestamp) {
