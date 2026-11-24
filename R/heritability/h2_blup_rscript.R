@@ -23,6 +23,7 @@ cat("study trait is ", study_trait,"\n")
 
 names <- colnames(pheno)
 allTraits <- grep("CO_", names, value = TRUE)
+study_ids <- pheno$studyDbId
 library(dplyr)
 pheno <- pheno[,colnames(pheno) %in% c("locationName", "germplasmName", "studyYear", "blockNumber","replicate", allTraits)]
 names <- colnames(pheno)
@@ -54,14 +55,10 @@ if(isNumeric == "FALSE"){
   message2 <- c()
 }
 
-#checkning number of locations
-szloc <- length(unique(pheno$locationName))
-szreps <- length(unique(pheno$replicate))
-szyr <- length(unique(pheno$studyYear))
 
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
-an.error.occured <- FALSE
+an.error.occurred <- FALSE
 
 H2 = c()
 her = c()
@@ -72,84 +69,52 @@ resp_var = c()
 j = 1
 tryCatch({ for(i in 6:ncol(pheno)){
     outcome = colnames(pheno)[i]    
-    if (szreps > 1){
-      if (szloc == 1){
-        if (szyr == 1){
-          model <- lmer(get(outcome)~(1|germplasmName)+replicate,
-                        na.action = na.exclude,
-                        data=pheno)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = 0
-          resvar = variance [2, "vcov"]
-        }else{
-          model <- lmer(get(outcome) ~ (1|germplasmName) + replicate + studyYear,
-                        na.action = na.exclude,
-                        data=pheno)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = 0
-          resvar = variance [2, "vcov"]
+    observed <- !is.na(pheno[[outcome]])
+    traitData <- pheno[observed, , drop = FALSE]
+    studies <- study_ids[observed]
+    multi_study <- length(unique(na.omit(studies))) > 1
+    if (multi_study) {
+      traitData$blockNumber <- interaction(studies, traitData$blockNumber, drop = TRUE)
+    }
+
+    formula <- get(outcome) ~ (1 | germplasmName)
+    if (length(unique(na.omit(traitData$blockNumber))) > 1) {
+      traitData <- traitData[!is.na(traitData$blockNumber), , drop = FALSE]
+      if (multi_study && length(unique(na.omit(traitData$locationName))) > 1) {
+        traitData <- traitData[!is.na(traitData$locationName), , drop = FALSE]
+        # A separate intercept for every study-block would absorb location means.
+        # Fit sum-to-zero differences between the observed blocks at each location.
+        contrasts_by_site <- lapply(split(seq_len(nrow(traitData)), traitData$locationName, drop = TRUE), function(rows) {
+          blocks <- factor(traitData$blockNumber[rows])
+          if (nlevels(blocks) < 2) return(NULL)
+          columns <- matrix(0, nrow(traitData), nlevels(blocks) - 1)
+          columns[rows, ] <- contr.sum(nlevels(blocks))[as.integer(blocks), , drop = FALSE]
+          columns
+        })
+        block_effects <- do.call(cbind, contrasts_by_site)
+        if (!is.null(block_effects)) {
+          traitData$block_effects <- I(block_effects)
+          formula <- update(formula, . ~ . + block_effects)
         }
-      }else if (szloc > 1) {
-        if (szyr == 1){
-          model <- lmer(get(outcome) ~ (1|germplasmName) + replicate + (1|locationName),
-                        na.action = na.exclude,
-                        data=pheno)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = variance [2, "vcov"]
-          resvar = variance [3, "vcov"]
-        }else{
-          model <- lmer(get(outcome) ~ (1|germplasmName) + replicate + (1|locationName) + studyYear,
-                        na.action = na.exclude,
-                        data=pheno)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = variance [2, "vcov"]
-          resvar = variance [3, "vcov"]
-        }
-      }
-    }else if (szreps == 1){
-      if (szloc ==1){
-        if (szyr == 1){
-          model <- lmer(get(outcome)~(1|germplasmName) + blockNumber,
-                        na.action = na.exclude,
-                        data=pheno)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = 0
-          resvar = variance [2, "vcov"]
-        }else{
-          model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + blockNumber,
-                        na.action = na.exclude,
-                        data=pheno)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = 0
-          resvar = variance [2, "vcov"]
-        }
-      }else if (szloc > 1){
-        if (szyr ==1){
-          model <- lmer(get(outcome)~(1|germplasmName)+ (1|locationName) +  blockNumber,
-                        na.action = na.exclude,
-                        data=pheno)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = variance [2, "vcov"]
-          resvar = variance [3, "vcov"]
-        }else{
-          model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + (1|locationName) + blockNumber,
-                        na.action = na.exclude,
-                        data=pheno)
-          variance = as.data.frame(VarCorr(model))
-          gvar = variance [1,"vcov"]
-          envar = variance [2, "vcov"]
-          resvar = variance [3, "vcov"]
-        }
+      } else if (length(unique(traitData$blockNumber)) > 1) {
+        traitData$blockNumber <- factor(traitData$blockNumber)
+        formula <- update(formula, . ~ . + blockNumber)
       }
     }
-    
+    multi_location <- length(unique(na.omit(traitData$locationName))) > 1
+    if (multi_location) {
+      formula <- update(formula, . ~ . + (1 | locationName))
+    }
+    if (length(unique(na.omit(traitData$studyYear))) > 1) {
+      formula <- update(formula, . ~ . + studyYear)
+    }
+    model <- lmer(formula, na.action = na.exclude, data = traitData)
+    variance <- as.data.frame(VarCorr(model))
+    components <- setNames(variance$vcov, variance$grp)
+    gvar <- components[["germplasmName"]]
+    envar <- if (multi_location) components[["locationName"]] else 0
+    resvar <- components[["Residual"]]
+
     H2 = append(H2, gvar/ (gvar + (envar) + (resvar)))
     H2nw = format(round(H2[j], 4), nsmall = 4)
     her = append(her, round(as.numeric(H2nw), digits =3))
@@ -161,7 +126,7 @@ tryCatch({ for(i in 6:ncol(pheno)){
   }
 
 }, error = function(e) {
-  an.error.occured <<- TRUE
+  an.error.occurred <<- TRUE
   errorMessages <<- c(errorMessages, as.character(e))
 })
 
@@ -184,14 +149,14 @@ tryCatch({
   write.csv(Heritability, file = h2CsvFile)
 
 }, error = function(e) {
-  an.error.occured <<- TRUE
+  an.error.occurred <<- TRUE
   errorMessages <<- c(errorMessages, as.character(e))
 })
 
 errorMessages <- c(errorMessages, as.character(message1))
 errorMessages <- c(errorMessages, as.character(message2))
 
-cat("Was there an error? ", an.error.occured,"\n")
+cat("Was there an error? ", an.error.occurred,"\n")
 if ( length(errorMessages) > 0 ) {
   print(sprintf("Writing Error Messages to file: %s", errorFile))
   print(errorMessages)

@@ -26,6 +26,9 @@ my $sgn_session_id = $response->{access_token};
 print STDERR $sgn_session_id."\n";
 
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_trial'})->project_id();
+# other tests may have left additional files on the trial: count from here
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/get_uploaded_additional_file');
+my $files_before = scalar(@{ decode_json($mech->content)->{files} || [] });
 
 my $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_harvested";
 my $ua = LWP::UserAgent->new;
@@ -67,7 +70,7 @@ ok($message_hash->{file_id});
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/get_uploaded_additional_file');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{files}}), 2);
+is(scalar(@{$response->{files}}) - $files_before, 2);
 
 $f->clean_up_db();
 

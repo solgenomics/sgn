@@ -64,9 +64,11 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_num: seedlot_name must not contain spaces or slashes.";
         }
 
-        if (!$amount || $amount eq '') {
+        if (!defined $amount || $amount eq '') {
             $amount = 'NA';
-        } elsif (!$weight || $weight eq '') {
+        }
+
+        if (!defined $weight || $weight eq '') {
             $weight = 'NA';
         }
 
@@ -99,14 +101,13 @@ sub _validate_with_plugin {
         }
     }
 
-    my $rs = $schema->resultset("Stock::Stock")->search({
-        'uniquename' => { -in => $seen_seedlot_names }
-    });
+    my $rs = $schema->resultset("Stock::Stock")->search(
+        {'uniquename' => { -in => $seen_seedlot_names }},
+        { order_by => 'uniquename'},
+    );
 
     while (my $r = $rs->next) {
-        if ( $r->type->name ne 'seedlot' ) {
-            push @error_messages, "Seedlot name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
-        }
+        push @error_messages, "Seedlot name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
     }
 
     if (scalar(@accession_source_pairs) >=1) {
@@ -198,9 +199,11 @@ sub _parse_with_plugin {
             }
         }
 
-        if (!$amount || $amount eq '') {
+        if (!defined $amount || $amount eq '') {
             $amount = 'NA';
-        } elsif (!$weight || $weight eq '') {
+        }
+
+        if (!defined $weight || $weight eq '') {
             $weight = 'NA';
         }
 

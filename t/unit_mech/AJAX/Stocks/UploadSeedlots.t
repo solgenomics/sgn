@@ -28,8 +28,6 @@ my $rs = $f->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search({
 
 my $max_nd_experiment_id = $rs->get_column('nd_experiment_id')->max();
 
-print STDERR "MAX ND EXPERIMENT ID = $max_nd_experiment_id\n";
-
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = JSON::XS->new->decode($mech->content);
 print STDERR Dumper $response;
@@ -80,7 +78,7 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = JSON::XS->new->decode($message);
-is($message_hash->{'error_string'}, 'The source name: test_trial21 is not linked to the same accession as the access content: test_accession1<br><br>');
+is($message_hash->{'error_string'}, 'Seedlot name already exists in database: seedlot_test1.  The seedlot name must be unique.<br>Seedlot name already exists in database: seedlot_test2.  The seedlot name must be unique.<br>The source name: test_trial21 is not linked to the same accession as the seedlot content: test_accession1<br><br>');
 
 $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_harvested";
 $ua = LWP::UserAgent->new;
