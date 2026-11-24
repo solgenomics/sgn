@@ -179,6 +179,12 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
 sub delete :Path('/ajax/job/delete') Args(1) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to delete jobs.' };
+        return;
+    }
+
     my $sp_job_id = shift;
 
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -204,6 +210,12 @@ sub delete :Path('/ajax/job/delete') Args(1) {
 sub cancel :Path('/ajax/job/cancel') Args(1) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to cancel jobs.' };
+        return;
+    }
+
     my $sp_job_id = shift;
 
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;

@@ -1,7 +1,7 @@
  #SNOPSIS
 
  #runs phenotypic heritability analysis.
- #Heritability coeffiecients are stored in tabular and json formats 
+ #Heritability coefficients are stored in tabular and json formats 
 
  #AUTHOR
  # Christiano Simoes (ccs263@cornell.edu)
@@ -111,15 +111,23 @@ for (i in rangeTraits) {
   missingReplicates$limitRep <- missingReplicates$replicates - missingReplicates$missingData
   missingReplicates <- missingReplicates[missingReplicates$limitRep > 1,]
 
-  # Filtering the dataset
-  phenoData <- phenoData[phenoData$germplasmName %in% missingReplicates$germplasmName,]
+  # Filtering the dataset: a copy for this trait, so the next trait starts from all accessions
+  traitData <- phenoData[phenoData$germplasmName %in% missingReplicates$germplasmName & !is.na(phenoData[[outcome]]),]
    
   
   print(paste0('outcome ', outcome))
   
-  model <- lmer(get(outcome)~ (1|germplasmName) + replicate,
+  # the block effect is the block number, one level per block in which this trait was observed;
+  # the replicate counts the plots of an accession (a single block stays a constant, which lmer
+  # drops from the fixed effects). A plot without a block number is not a block of its own
+  if (length(unique(na.omit(traitData$blockNumber))) > 1) {
+    traitData$blockNumber <- as.factor(traitData$blockNumber)
+  } else {
+    traitData$blockNumber <- 1
+  }
+  model <- lmer(get(outcome)~ (1|germplasmName) + blockNumber,
                 na.action = na.exclude,
-                data=phenoData)
+                data=traitData)
   
   
   # variance = as.data.frame(VarCorr(model))
@@ -156,7 +164,7 @@ traits <- Heritability$trait
 
 heritabilityList <- list(
                      "traits" = toJSON(traits),
-                     "coeffiecients" =heritability2json(Heritability)
+                     "coefficients" =heritability2json(Heritability)
                    )
 
 heritabilityJson <- paste("{",paste("\"", names(heritabilityList), "\":", heritabilityList, collapse=","), "}")

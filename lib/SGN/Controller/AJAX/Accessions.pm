@@ -349,6 +349,16 @@ sub verify_fuzzy_options : Path('/ajax/accession_list/fuzzy_options') : ActionCl
 
 sub verify_fuzzy_options_POST : Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to apply accession list options.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to apply accession list options.' };
+        return;
+    }
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $accession_list_id = $c->req->param('accession_list_id');

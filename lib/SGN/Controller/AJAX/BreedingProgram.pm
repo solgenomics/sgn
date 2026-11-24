@@ -388,6 +388,12 @@ sub add_product_profile : Path('/ajax/breeders/program/add_product_profile') : A
 sub add_product_profile_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to add product profiles.' };
+        return;
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $program_id = $c->req->param('profile_program_id');
     my $product_profile_name = $c->req->param('product_profile_name');
