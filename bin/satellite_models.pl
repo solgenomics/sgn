@@ -31,6 +31,7 @@ use JSON;
 use File::Basename qw(dirname);
 use File::Spec;
 use CXGN::Satellite;
+use CXGN::Satellite::Reference;
 
 my $base = shift or die "usage: satellite_models.pl <run base>\n";
 $| = 1;
@@ -82,8 +83,23 @@ my $ok = eval {
     foreach my $s (@$sites) {
         $i++;
         say_progress("searching the Sentinel-2 images of $s->{name} ($i/" . scalar(@$sites) . ")");
-        $s->{scenes} = sentinel2($s->{bbox}, $req->{dates}{start}, $req->{dates}{end});
-        say_progress(scalar(@{ $s->{scenes} }) . " dates for $s->{name}");
+        my %hidden = map { $_ => 1 } @{ $s->{exclude_scenes} || [] };
+        my @all = @{ sentinel2($s->{bbox}, $req->{dates}{start}, $req->{dates}{end}) };
+        $s->{scenes} = [ grep { !$hidden{ $_->{id} } } @all ];
+        $s->{hidden} = @all - @{ $s->{scenes} };
+        delete $s->{exclude_scenes};
+        say_progress(scalar(@{ $s->{scenes} }) . " dates for $s->{name}" . ($s->{hidden} ? " ($s->{hidden} hidden by you left out)" : ''));
+    }
+    # yield index turned into approximate kg/ha: the public average yield around each location
+    if (($req->{yield}{mode} // '') eq 'index' && $req->{yield}{reference}) {
+        my $refs = CXGN::Satellite::Reference->new({ cache_dir => dirname($base) });
+        my ($year) = ($req->{yield}{season}{end} // '') =~ /^(\d{4})/;
+        foreach my $s (@$sites) {
+            say_progress("regional average yield for $s->{name}");
+            my $r = eval { $refs->lookup({ lon => $s->{center}[0], lat => $s->{center}[1], species => $req->{crop}, country => $s->{country}, year => $year }) } || { error => "$@" };
+            $s->{reference} = $r;
+            say_progress($r->{error} ? "no regional reference for $s->{name}: $r->{error}" : "reference for $s->{name}: $r->{source} $r->{area} $r->{value} kg/ha ($r->{basis})");
+        }
     }
     my $calib = $req->{calibration} || [];
     if (@$calib) {

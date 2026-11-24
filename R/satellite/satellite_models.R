@@ -71,6 +71,7 @@ PX_PER_AREA <- max(20, num(st$pixels_per_area, 300))
 CV_FOLDS <- max(2, num(st$cv_folds, 5))
 MIN_PATCH_HA <- num(st$min_patch_ha, 0.5)
 SMOOTH <- isTRUE(st$smooth %||% TRUE)
+MIN_CONFIDENCE <- min(0.95, max(0, num(st$min_confidence, 50) / 100))   # share of the trees' votes; below: uncertain
 BALANCE <- isTRUE(st$balance %||% TRUE)
 YIELD_MODEL <- st$yield_model %||% "linear"
 PREDICTORS <- unlist(st$predictors %||% list("ndvi_auc", "ndre_max"))
@@ -287,7 +288,10 @@ if (do_map && length(inp$sites)) {
 periods <- seq(season_start, season_end, by = PERIOD_DAYS)
 n_periods <- length(periods)
 period_of <- function(d) findInterval(as.numeric(d), as.numeric(periods))
-need_maps <- do_yield && do_map && nzchar(crop_class)
+# crop map method: "examples" (random forest on drawn examples) or "standard"
+# (a stored crop curve, R/satellite/standards/<crop>.json, matched to every pixel)
+STANDARD <- do_map && identical(inp$crop_map_method, "standard")
+need_maps <- (do_yield && do_map && nzchar(crop_class)) || STANDARD
 
 sites <- inp$sites %||% list()
 site_out <- vector("list", length(sites))
@@ -304,14 +308,14 @@ for (si in seq_along(sites)) {
     want_plots <- do_indices && length(plots) > 0
     want_targets <- do_yield && length(targets) > 0
     if (!do_map && !want_plots && !want_targets) { site_out[[si]] <- list(id = s$id, name = s$name); next }
-    bands <- if (do_map) c("blue", "green", "red", "nir", "rededge1", "swir16")
+    bands <- if (do_map && !STANDARD) c("blue", "green", "red", "nir", "rededge1", "swir16")
              else if (want_plots) c("blue", "red", "nir", "rededge1") else c("red", "nir", "rededge1")
     say("%s: %d x %d pixels, %d dates", label, ncol(tmpl), nrow(tmpl), length(s$scenes))
 
     tcw <- if (want_targets) ring_cells(lapply(targets, function(t) t$ring), tmpl) else list()
     pcw <- if (want_plots) ring_cells(lapply(plots, function(p) p$ring), tmpl) else list()
     acc <- NULL
-    if (do_map) {
+    if (do_map && !STANDARD) {
         acc <- list(sum = array(0, c(n, length(VARS), n_periods)), cnt = array(0L, c(n, length(VARS), n_periods)),
                     mx = rep(-Inf, n), mn = rep(Inf, n), s1 = numeric(n), s2 = numeric(n), k = integer(n))
     }
@@ -322,7 +326,7 @@ for (si in seq_along(sites)) {
     stats <- for_scenes(s$scenes, tmpl, bands, NULL, label, function(r) {
         m <- r$vals
         dates_used <<- c(dates_used, as.character(r$date))
-        if (do_map) {
+        if (do_map && !STANDARD) {
             p <- period_of(r$date)
             if (p >= 1 && p <= n_periods) {
                 for (j in seq_along(VARS)) {
@@ -353,7 +357,7 @@ for (si in seq_along(sites)) {
             }
         }
     })
-    site_out[[si]] <- list(id = s$id, name = s$name, dates_found = length(s$scenes), dates_used = stats$used,
+    site_out[[si]] <- list(id = s$id, name = s$name, dates_found = length(s$scenes), dates_hidden = as.integer(s$hidden %||% 0), dates_used = stats$used,
                            dates_cloudy = stats$skipped, dates_failed = stats$failed, size_m = s$size_m)
     site_data[[si]] <- list(tmpl = tmpl, acc = acc, ndvi = ndvi_dates, ndre = ndre_dates, dates = as.Date(dates_used),
                             tseries = tseries, plots = if (length(prows)) do.call(rbind, prows) else NULL)
@@ -385,7 +389,97 @@ site_features <- function(acc) {
 }
 
 crop_map <- NULL
-if (do_map) {
+if (STANDARD) {
+    # ------------------------------------------------------------ the stored crop curve
+    sfile <- grep("^--file=", commandArgs(FALSE), value = TRUE)
+    script_dir <- if (length(sfile)) dirname(normalizePath(sub("^--file=", "", sfile[1]))) else "R/satellite"
+    stdf <- file.path(script_dir, "standards", paste0(inp$standard %||% "maize", ".json"))
+    std <- fromJSON(stdf)
+    ru <- std$rules
+    say("crop map: matching every pixel to the %s standard curve (%s)", std$crop, basename(stdf))
+    tmpl_at <- function(das) approx(std$das, std$ndvi, das, rule = 2)$y
+    rmax <- max(std$das)
+    ph <- std$phases
+    for (si in seq_along(sites)) {
+        sd <- site_data[[si]]
+        if (is.null(sd$tmpl) || !length(sd$ndvi)) next
+        X <- do.call(cbind, sd$ndvi) / 10000
+        dates <- sd$dates
+        M <- !is.na(X); X0 <- X; X0[!M] <- 0; X2 <- X0^2
+        N <- nrow(X)
+        best <- rep(-Inf, N); b_r <- rep(NA_real_, N); b_rmse <- rep(NA_real_, N); b_sow <- rep(NA_real_, N); b_k <- rep(NA_real_, N); covered <- rep(FALSE, N)
+        sows <- seq(season_start - 60, season_end - 60, by = ru$sow_step_days)
+        for (k in std$cycle_scales) for (s0 in as.list(sows)) {
+            das <- as.numeric(dates - s0) / k
+            inc <- das >= 0 & das <= rmax
+            if (sum(inc) < ru$min_obs) next
+            t <- ifelse(inc, tmpl_at(das), 0)
+            w <- as.numeric(inc)
+            n <- as.vector(M %*% w)
+            sx <- as.vector(X0 %*% w); sxx <- as.vector(X2 %*% w)
+            st <- as.vector(M %*% t); stt <- as.vector(M %*% (t^2)); sxt <- as.vector(X0 %*% t)
+            ok <- n >= ru$min_obs &
+                as.vector(M %*% as.numeric(inc & das <= ph$early[2])) > 0 &
+                as.vector(M %*% as.numeric(inc & das >= ph$plateau[1] & das <= ph$plateau[2])) > 0 &
+                as.vector(M %*% as.numeric(inc & das >= ph$decline[1])) > 0
+            if (!any(ok)) next
+            covered <- covered | ok
+            nn <- pmax(n, 1)
+            rmse <- sqrt(pmax(0, (sxx - 2 * sxt + stt) / nn))
+            cv <- sxt / nn - (sx / nn) * (st / nn)
+            vx <- sxx / nn - (sx / nn)^2; vt <- stt / nn - (st / nn)^2
+            r <- cv / sqrt(pmax(vx * vt, 1e-12))
+            score <- ifelse(ok, r - rmse, -Inf)
+            up <- score > best
+            if (any(up)) {
+                best[up] <- score[up]; b_r[up] <- r[up]; b_rmse[up] <- rmse[up]; b_sow[up] <- as.numeric(s0); b_k[up] <- k
+            }
+        }
+        peak <- suppressWarnings(apply(X, 1, max, na.rm = TRUE)); peak[!is.finite(peak)] <- NA
+        is_crop <- covered & !is.na(b_r) & b_r >= ru$min_r & b_rmse <= ru$max_rmse & !is.na(peak) & peak >= ru$min_peak
+        code <- ifelse(!covered, 3L, ifelse(is_crop, 1L, 2L))
+        r <- sd$tmpl; values(r) <- code
+        if (SMOOTH) { r2 <- focal(r, w = 3, fun = "modal", na.rm = TRUE); r <- r2 }
+        sowr <- sd$tmpl; values(sowr) <- ifelse(is_crop, b_sow, NA)
+        site_data[[si]]$map <- r
+        site_data[[si]]$sow <- sowr
+        site_data[[si]]$cycle <- ifelse(is_crop, b_k, NA)
+        v <- values(r, mat = FALSE)
+        ha <- res(r)[1] * res(r)[2] / 10000
+        site_out[[si]]$classes <- lapply(seq_along(class_ids), function(i) list(id = class_ids[i], name = class_names[i], ha = sum(v == i, na.rm = TRUE) * ha))
+        site_out[[si]]$uncertain_ha <- sum(v == 3L, na.rm = TRUE) * ha
+        site_out[[si]]$unclassified_ha <- 0
+        sw <- b_sow[is_crop]
+        site_out[[si]]$sowing <- if (length(sw)) list(median = as.character(as.Date(median(sw), origin = "1970-01-01")),
+            q10 = as.character(as.Date(quantile(sw, 0.1), origin = "1970-01-01")), q90 = as.character(as.Date(quantile(sw, 0.9), origin = "1970-01-01")),
+            cycle_days = round(median(b_k[is_crop]) * 185)) else NULL
+        vv <- ifelse(is.na(v), 0L, as.integer(v))
+        rl <- rle(vv)
+        site_out[[si]]$map <- list(crs = crs(r, describe = TRUE)$code, xmin = xmin(r), ymax = ymax(r), res = res(r)[1],
+                                   ncol = ncol(r), nrow = nrow(r), rle = as.vector(rbind(rl$values, rl$lengths)))
+        f <- sprintf("%s.site%d.map.tif", out_base, si)
+        writeRaster(r, f, datatype = "INT1U", NAflag = 0, overwrite = TRUE, gdal = c("COMPRESS=DEFLATE"))
+        site_out[[si]]$map_file <- basename(f)
+        # check against the fields given as examples (step-2 field of the crop, drawn areas)
+        labs <- sites[[si]]$labels %||% list()
+        if (length(labs)) {
+            cells <- ring_centre_cells(lapply(labs, function(l) l$ring), sd$tmpl)
+            chk <- lapply(seq_along(labs), function(j) {
+                cl <- cells[[j]]; if (!length(cl)) return(NULL)
+                vals <- v[cl]
+                list(class = as.character(labs[[j]]$class), pixels = length(cl), as_crop = sum(vals == 1L, na.rm = TRUE),
+                     as_other = sum(vals == 2L, na.rm = TRUE), uncertain = sum(vals == 3L | is.na(vals)))
+            })
+            site_out[[si]]$check <- Filter(Negate(is.null), chk)
+        }
+        say("%s: %.1f ha of %s, %.1f ha uncertain", sites[[si]]$name, sum(v == 1L, na.rm = TRUE) * ha, std$crop, site_out[[si]]$uncertain_ha)
+    }
+    crop_map <- list(method = "standard", classes = lapply(seq_along(class_ids), function(i) list(id = class_ids[i], name = class_names[i], trained = TRUE)),
+                     standard = list(crop = std$crop, source = std$source, note = std$note, rules = std$rules, das = std$das, ndvi = std$ndvi, cycle_scales = std$cycle_scales),
+                     accuracy = NULL, uncertain_code = 3L, min_confidence = NA, smoothed = SMOOTH)
+    note("crop map: %s found by its typical season curve (proof of concept, no examples): crops with a similar season (e.g. soybean, sorghum) can be confused with it", std$crop)
+}
+if (do_map && !STANDARD) {
     say("crop map: collecting the drawn examples")
     rows <- list()
     for (si in seq_along(sites)) {
@@ -395,7 +489,7 @@ if (do_map) {
         cells <- ring_centre_cells(lapply(labs, function(l) l$ring), site_data[[si]]$tmpl)
         for (k in seq_along(labs)) {
             cl <- cells[[k]]
-            if (!length(cl)) { note("an example area of %s at %s is smaller than one pixel and was not used", labs[[k]]$class_name %||% labs[[k]]$class, sites[[si]]$name); next }
+            if (!length(cl)) { note("an example area of %s at %s holds no pixel of the area (too small, or outside it) and was not used", class_names[match(as.character(labs[[k]]$class), class_ids)] %||% labs[[k]]$class, sites[[si]]$name); next }
             if (length(cl) > PX_PER_AREA) cl <- sample(cl, PX_PER_AREA)
             rows[[length(rows) + 1]] <- data.frame(area = sprintf("%d_%d", si, k), class = as.character(labs[[k]]$class),
                                                    site_data[[si]]$feat[cl, , drop = FALSE], check.names = FALSE)
@@ -468,7 +562,8 @@ if (do_map) {
             crop_map <- list(classes = lapply(seq_along(class_ids), function(i) list(id = class_ids[i], name = class_names[i], trained = class_ids[i] %in% present)),
                              accuracy = cv, training = list(pixels = nrow(tx), areas = length(area_class), per_class = as.list(table(ty))),
                              importance = unname(lapply(seq_along(imp), function(i) list(feature = imp_label[[i]], value = unname(imp[i])))),
-                             features = length(keep), periods = n_periods, smoothed = SMOOTH)
+                             features = length(keep), periods = n_periods, smoothed = SMOOTH,
+                             uncertain_code = length(class_ids) + 1L, min_confidence = MIN_CONFIDENCE * 100)
             # classify every site
             for (si in seq_along(sites)) {
                 sd <- site_data[[si]]
@@ -479,8 +574,12 @@ if (do_map) {
                 idx <- which(has)
                 for (ch in split(idx, ceiling(seq_along(idx) / 100000))) {
                     if (!length(ch)) next
-                    p <- predict(model, impute(fm[ch, , drop = FALSE]))
-                    cls[ch] <- match(as.character(p), class_ids)
+                    pr <- predict(model, impute(fm[ch, , drop = FALSE]), type = "prob")
+                    best <- max.col(pr, ties.method = "first")
+                    code <- match(colnames(pr)[best], class_ids)
+                    # pixels the forest is not sure about: a land cover without examples, or mixed
+                    code[pr[cbind(seq_len(nrow(pr)), best)] < MIN_CONFIDENCE] <- length(class_ids) + 1L
+                    cls[ch] <- code
                 }
                 r <- sd$tmpl; values(r) <- cls
                 if (SMOOTH) {
@@ -491,6 +590,7 @@ if (do_map) {
                 v <- values(r, mat = FALSE)
                 ha <- res(r)[1] * res(r)[2] / 10000
                 site_out[[si]]$classes <- lapply(seq_along(class_ids), function(i) list(id = class_ids[i], name = class_names[i], ha = sum(v == i, na.rm = TRUE) * ha))
+                site_out[[si]]$uncertain_ha <- sum(v == length(class_ids) + 1L, na.rm = TRUE) * ha
                 site_out[[si]]$unclassified_ha <- sum(is.na(v)) * ha
                 vv <- ifelse(is.na(v), 0L, as.integer(v))
                 rl <- rle(vv)
@@ -509,9 +609,10 @@ if (do_map) {
 
 yield <- NULL
 fields_rows <- list()
+INDEX_MODE <- do_yield && identical(inp$yield$mode, "index")
 if (do_yield) {
-    say("yield: calibration fields")
-    calib <- inp$calibration %||% list()
+    say(if (INDEX_MODE) "yield: relative index (no known yields)" else "yield: calibration fields")
+    calib <- if (INDEX_MODE) list() else inp$calibration %||% list()
     # fields with the same season (same images) and close together are read as
     # one window per date: trials of one location and year cost one read, not one per trial
     ring_ll <- function(r) ring_matrix(r)
@@ -567,12 +668,15 @@ if (do_yield) {
     cal <- if (length(crow)) do.call(rbind, crow) else NULL
     used <- if (!is.null(cal)) cal[cal$used, , drop = FALSE] else NULL
     nused <- if (is.null(used)) 0 else nrow(used)
-    yield <- list(trait = inp$yield$trait %||% "", unit = inp$yield$unit %||% "", per_ha = isTRUE(inp$yield$per_ha),
+    yield <- list(mode = if (INDEX_MODE) "index" else "calibrated",
+                  trait = inp$yield$trait %||% "", unit = inp$yield$unit %||% "", per_ha = isTRUE(inp$yield$per_ha) && !INDEX_MODE,
                   season = list(start = as.character(crop_start), end = as.character(crop_end)),
                   model = YIELD_MODEL, predictors = as.list(PREDICTORS), predictor_labels = as.list(unname(PRED_LABEL[PREDICTORS])),
                   min_fields = MIN_FIELDS, n_calibration = if (is.null(cal)) 0 else nrow(cal), n_used = nused)
     fit <- NULL
-    if (nused < MIN_FIELDS) {
+    if (INDEX_MODE) {
+        # no model: the fields are compared with each other below
+    } else if (nused < MIN_FIELDS) {
         note("yield: %d calibration field(s) usable, at least %d are needed; no yield model", nused, MIN_FIELDS)
     } else {
         X <- as.matrix(used[, PREDICTORS, drop = FALSE]); y <- used$observed
@@ -623,6 +727,8 @@ if (do_yield) {
                 pi <- predict(fit$m, data.frame(x, check.names = FALSE), interval = "prediction", level = LEVEL)
                 lo <- pi[1, "lwr"]; hi <- pi[1, "upr"]
             } else { lo <- est - z * rmse; hi <- est + z * rmse }
+            # a yield is not negative (when no calibration yield is)
+            if (all(y >= 0)) { lo <- max(0, lo); est <- max(0, est) }
             rg <- vapply(PREDICTORS, function(p) { a <- min(X[, p]); b <- max(X[, p]); w <- 0.1 * (b - a); x[1, p] < a - w || x[1, p] > b + w }, TRUE)
             list(estimate = est, lower = lo, upper = hi, extrapolation = any(rg))
         }
@@ -681,6 +787,65 @@ if (do_yield) {
             say("%s: %d %s area(s) of at least %.1f ha", s$name, length(big), class_names[ci], MIN_PATCH_HA)
         }
     }
+    if (INDEX_MODE) {
+        # relative yield index: NDVI area under the season curve, 100 = mean of the fields with enough clear dates
+        ok <- vapply(targets_out, function(t) t$n_dates >= MIN_DATES && !is.na(t$ndvi_auc), TRUE)
+        m <- if (any(ok)) mean(vapply(targets_out[ok], function(t) t$ndvi_auc, 0)) else NA
+        idx <- vapply(seq_along(targets_out), function(i) if (ok[i] && !is.na(m) && m > 0) 100 * targets_out[[i]]$ndvi_auc / m else NA_real_, 0)
+        rk <- rank(-idx, na.last = "keep", ties.method = "min")
+        for (i in seq_along(targets_out)) {
+            targets_out[[i]]$index <- idx[i]
+            targets_out[[i]]$rank <- if (is.na(rk[i])) NA else as.integer(rk[i])
+            if (!ok[i]) targets_out[[i]]$reason <- sprintf("only %d clear date(s)", targets_out[[i]]$n_dates)
+        }
+        # approximate kg/ha from the public average yield of the region (IBGE PAM / FAOSTAT):
+        # the fields sharing a reference are assumed to average like that region
+        if (isTRUE(inp$yield$reference)) {
+            ref_of <- lapply(sites, function(s) s$reference)
+            key_of <- vapply(ref_of, function(r) if (is.null(r) || !is.null(r$error) || is.null(r$value)) "" else paste(r$source, r$level, r$area), "")
+            site_key <- setNames(key_of, vapply(sites, function(s) as.character(s$id), ""))
+            refs_out <- list()
+            for (k in setdiff(unique(key_of), "")) {
+                r <- ref_of[[match(k, key_of)]]
+                members <- which(vapply(targets_out, function(t) identical(site_key[[as.character(t$site_id)]], k), TRUE) & ok)
+                if (!length(members)) next
+                m_k <- mean(vapply(targets_out[members], function(t) t$ndvi_auc, 0))
+                for (i in members) {
+                    targets_out[[i]]$estimate <- as.numeric(r$value) * targets_out[[i]]$ndvi_auc / m_k
+                    targets_out[[i]]$estimate_basis <- "regional"
+                }
+                refs_out[[length(refs_out) + 1]] <- c(r[c("source", "level", "area", "crop", "unit", "value", "basis", "url", "citation")],
+                    list(years = r$years, fields = length(members), sites = as.list(unname(vapply(sites[key_of == k], function(s) s$name, "")))))
+            }
+            for (si in which(key_of == "")) {
+                e <- sites[[si]]$reference$error %||% "no reference"
+                note("yield: no regional average yield for %s (%s); its fields keep the index only", sites[[si]]$name, e)
+            }
+            yield$references <- refs_out
+            if (length(refs_out)) {
+                yield$unit <- "kg/ha"
+                yield$per_ha <- TRUE
+                note("yield: kg/ha are approximate - the regional average yield (%s) scaled by each field's season curve, assuming the fields average like the region; not a calibration, the error is unknown",
+                     paste(unique(vapply(refs_out, function(r) r$source, "")), collapse = ", "))
+            }
+        }
+        yield$index_basis <- "NDVI area under the season curve"
+        yield$index_mean_auc <- m
+        yield$n_indexed <- sum(ok)
+        say("yield index: %d field(s) compared", sum(ok))
+        tot <- list()
+        for (si in seq_along(sites)) {
+            ts <- Filter(function(t) identical(t$site_id, sites[[si]]$id) && !is.na(t$index), targets_out)
+            ha <- sum(vapply(ts, function(t) t$area_ha, 0))
+            te <- Filter(function(t) !is.null(t$estimate), ts)
+            hae <- sum(vapply(te, function(t) t$area_ha, 0))
+            tot[[si]] <- list(site = sites[[si]]$name, site_id = sites[[si]]$id, fields = length(ts), area_ha = ha,
+                              mean_index = if (ha > 0) sum(vapply(ts, function(t) t$index * t$area_ha, 0)) / ha else NA,
+                              mean_yield = if (hae > 0) sum(vapply(te, function(t) t$estimate * t$area_ha, 0)) / hae else NA,
+                              production = if (hae > 0) sum(vapply(te, function(t) t$estimate * t$area_ha, 0)) else NA)
+        }
+        yield$totals <- tot
+    }
     yield$targets <- targets_out
     if (!is.null(fit)) {
         tot <- list()
@@ -696,7 +861,8 @@ if (do_yield) {
     for (t in targets_out) {
         fields_rows[[length(fields_rows) + 1]] <- data.frame(site = t$site, field = t$name, source = t$source, area_ha = round(t$area_ha, 3),
             clear_dates = t$n_dates, ndvi_auc = t$ndvi_auc, ndvi_peak = t$ndvi_max, ndre_peak = t$ndre_max,
-            estimate = t$estimate %||% NA, lower = t$lower %||% NA, upper = t$upper %||% NA, extrapolation = t$extrapolation %||% NA, note = t$reason %||% "")
+            estimate = t$estimate %||% NA, lower = t$lower %||% NA, upper = t$upper %||% NA, extrapolation = t$extrapolation %||% NA,
+            yield_index = t$index %||% NA, rank = t$rank %||% NA, note = t$reason %||% "")
     }
 }
 
@@ -729,7 +895,7 @@ if (length(fields_rows)) write.csv(do.call(rbind, fields_rows), paste0(out_base,
 results <- list(
     version = "1.0", created = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"), seconds = as.numeric(difftime(Sys.time(), t_start, units = "secs")),
     dates = inp$dates, crop = inp$crop, crop_class = crop_class, settings = list(
-        min_scene_clear = MIN_SCENE_CLEAR * 100, min_field_clear = MIN_FIELD_CLEAR * 100, period_days = PERIOD_DAYS, ntree = NTREE,
+        min_scene_clear = MIN_SCENE_CLEAR * 100, min_confidence = MIN_CONFIDENCE * 100, min_field_clear = MIN_FIELD_CLEAR * 100, period_days = PERIOD_DAYS, ntree = NTREE,
         pixels_per_area = PX_PER_AREA, cv_folds = CV_FOLDS, min_patch_ha = MIN_PATCH_HA, smooth = SMOOTH, balance = BALANCE,
         yield_model = YIELD_MODEL, predictors = as.list(PREDICTORS), min_dates = MIN_DATES, min_fields = MIN_FIELDS, level = LEVEL * 100),
     models = inp$models, sites = site_out, crop_map = crop_map, yield = yield, indices = indices,

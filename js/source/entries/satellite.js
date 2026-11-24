@@ -46,7 +46,7 @@ const LOC_TYPES = [['all', 'All'], ['Farm', 'Farms'], ['Field', 'Field stations'
  * below works on S as for one location; useSite() swaps sites.
  */
 const SITE_KEYS = ['loc', 'trials', 'trial', 'trialPlots', 'trialDrawn', 'trialCanEdit', 'trialDirty', 'field', 'point', 'size', 'mode',
-    'farmFields', 'farmCanEdit', 'fieldsDirty', 'scenes', 'info', 'visible', 'area', 'warnings', 'runKey'];
+    'farmFields', 'farmCanEdit', 'fieldsDirty', 'scenes', 'info', 'visible', 'area', 'warnings', 'runKey', 'labels', 'targets', 'hidden', 'useStep2'];
 const S = {
     locations: [], sites: [], cur: -1, typeFilter: 'all',
     loc: null, trials: [], trial: null, trialPlots: null, trialDrawn: null, trialCanEdit: 0, trialDirty: false,
@@ -54,7 +54,12 @@ const S = {
     start: null, end: null, preset: '3m', view: 'rgb', showCloudy: false,
     offered: [], sources: {}, landsatToken: null, tokenFetch: null, warnings: [],
     scenes: [], info: {}, run: 0, abort: null, running: false, visible: [], bigIndex: -1, runKey: null,
-    map: null, layers: null, step: 1, draw: { active: false, pts: [], target: null },
+    map: null, layers: null, step: 1, draw: { active: false, pts: [], target: null, where: 'field' },
+    labels: [], targets: [], hidden: [], useStep2: true, useStep2Labels: true, showHidden: false,
+    // step 5: model, step 6: results
+    models: { crop_map: true, yield: false, indices: false }, crops: [], crop: '', cropOther: '', season: { start: null, end: null },
+    mapMethod: null, yieldMode: null, useReference: true, refs: {}, classes: [], calib: [], calibTrials: new Set(), trialInfo: {}, trialInfoLoading: false, yieldTrait: null, yieldUnit: '', perHa: true,
+    settings: {}, mmap: null, mlayers: null, job: { runId: null, timer: null, results: null, site: 0, status: null },
 };
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -98,26 +103,33 @@ function stepAllowed(n) {
     if (!S.sites.length) return false;
     if (n === 2) return true;
     if (n === 3) return sitesReady();
-    return n === 4 && sitesReady() && !!(S.start && S.end) && chosenSources().length > 0;
+    if (n === 4) return sitesReady() && !!(S.start && S.end) && chosenSources().length > 0;
+    if (n === 5) return sitesReady() && !!(S.start && S.end);
+    return false;
 }
 
 function goStep(n) {
-    if (!stepAllowed(n)) return;
+    if (n === 6 ? !S.job.runId : !stepAllowed(n)) return;
+    if (S.map && $('#sat_map').hasClass('sat-map-full')) toggleFullscreen(S.map, '#sat_map', null, true);
+    if (S.mmap && $('#sat_model_map').hasClass('sat-map-full')) toggleFullscreen(S.mmap, '#sat_model_map', null, true);
     S.step = n;
     $('.sat-pane').hide();
     $(`.sat-pane[data-step="${n}"]`).show();
     renderStepper();
-    if (S.draw.active && n !== 2) cancelDraw();
+    if (S.draw.active && n !== (S.draw.where === 'model' ? 5 : 2)) endDraw();
     renderSiteTabs();
     if (n === 2) drawMap(true);
     if (n === 4) showSiteImages();
+    if (n === 5) enterModel();
+    if (n === 6) renderJob();
     window.scrollTo && window.scrollTo(0, 0);
 }
 
 function renderStepper() {
     $('#sat_stepper li').each(function () {
         const n = +$(this).data('step');
-        $(this).toggleClass('active', n === S.step).toggleClass('done', n < S.step && stepAllowed(n)).toggleClass('off', !stepAllowed(n));
+        const ok = n === 6 ? !!S.job.runId : stepAllowed(n);
+        $(this).toggleClass('active', n === S.step).toggleClass('done', n < S.step && ok).toggleClass('off', !ok);
     });
     $('.sat-pane[data-step="1"] .sat-next').prop('disabled', !S.sites.length);
     $('#sat_to3').prop('disabled', !sitesReady());
@@ -150,6 +162,9 @@ function renderFlow() {
     items.push([chosenSources().length > 0, 'Satellites', chosenSources().map(k => SOURCES[k].name).join(' + ') || 'none chosen']);
     items.push([true, 'View', `${S.view === 'ndvi' ? 'NDVI' : 'True colour'}${S.showCloudy ? ', cloudy dates too' : ''}`]);
     items.push([S.scenes.length > 0, 'Images', S.scenes.length ? `${S.scenes.length} dates, ${S.scenes.filter(sc => isClear(S.info[sc.id])).length} clear` : 'not shown yet']);
+    const mods = MODEL_NAMES.filter(([k]) => S.models[k]).map(([, l]) => l);
+    items.push([mods.length > 0 && S.step >= 5, 'Model', mods.length ? esc(mods.join(', ')) + (S.models.yield || S.models.crop_map ? `<br><span class="sat-muted">${esc(cropLabel())}</span>` : '') : 'none']);
+    items.push([!!S.job.runId, 'Results', S.job.status === 'done' ? 'ready' : S.job.status === 'failed' ? 'the run failed' : S.job.runId ? 'running…' : 'not run yet']);
     $('#sat_flow').html(items.map(([on, title, text]) => `<li class="${on ? '' : 'off'}"><b>${title}</b>${text}</li>`).join(''));
     $('#sat_badge').text(n === 0 ? 'none chosen' : n === 1 ? S.sites[0].loc.name : `${n} locations`);
 }
@@ -166,7 +181,7 @@ function newSite(loc) {
         loc, trials: null, trial: null, trialPlots: null, trialDrawn: null, trialCanEdit: 0, trialDirty: false,
         field: null, point: hasXY(loc) ? { lat: parseFloat(loc.lat), lon: parseFloat(loc.lon) } : null,
         size: 1000, mode: 'point', farmFields: [], farmCanEdit: 0, fieldsDirty: false,
-        scenes: [], info: {}, visible: [], area: null, warnings: [], runKey: null,
+        scenes: [], info: {}, visible: [], area: null, warnings: [], runKey: null, labels: [], targets: [], hidden: [], useStep2: true,
     };
 }
 
@@ -192,7 +207,7 @@ function siteSet(st, values) {
 /** Show another site: a running image search of the current one stops (it runs again when shown). */
 function useSite(i) {
     if (i === S.cur || !S.sites[i]) return;
-    if (S.draw.active) cancelDraw();
+    if (S.draw.active) endDraw();
     if (S.running) { if (S.abort) S.abort.abort(); S.run++; S.running = false; S.runKey = null; busyEnd(P.token); }
     saveSite();
     loadSite(i);
@@ -202,6 +217,7 @@ function useSite(i) {
     renderSiteTabs();
     if (S.step === 2) drawMap(true);
     if (S.step === 4) showSiteImages();
+    if (S.step === 5) { renderModel(); drawModelMap(true); }
 }
 
 function siteArea(st) {
@@ -315,7 +331,8 @@ async function chooseTrial(id) {
             siteSet(st, { trialPlots: f.count ? f : null, trialDrawn: f.drawn ? f.drawn.slice(0, -1) : null, trialCanEdit: f.can_edit ? 1 : 0 });
         } catch (e) { /* no coordinates */ }
         refreshField(st);
-        if (t.planting) setPreset('trial');
+        // the trial's season fills the dates only while they are still the default (never over dates the user chose)
+        if (t.planting && !S.datesTouched) setPreset('trial');
     }
     renderControls();
     if (S.sites[S.cur] === st) drawMap(true);
@@ -323,7 +340,7 @@ async function chooseTrial(id) {
 
 function setMode(m) {
     if (m === 'trial' && !(S.trials || []).length) return;
-    if (S.draw.active) cancelDraw();
+    if (S.draw.active) endDraw();
     S.mode = m;
     if (m !== 'trial') { S.trial = null; S.trialPlots = null; S.trialDrawn = null; S.trialDirty = false; $('#sat_trial').val(''); }
     refreshField();
@@ -367,26 +384,50 @@ function refreshField(st) {
 
 /* ---------- drawing on the map ---------- */
 
-function startDraw(target) {
+/** Drawing on the step-2 map (where 'field': farm / trial fields) or the step-5 map ('model': examples, fields). */
+function drawMapOf(where) { return where === 'model' ? [S.mmap, '#sat_model_map'] : [S.map, '#sat_map']; }
+
+function redrawAfterDraw(where) {
+    if (where === 'model') { renderModel(); drawModelMap(false); } else { renderControls(); drawMap(false); }
+}
+
+/** Leaving a drawing (other step, location, mode, new drawing): kept as finished when it has 3 corners or more, else dropped. */
+function endDraw() {
+    if (S.draw.active && S.draw.pts.length >= 3 && ringHa(S.draw.pts) >= 0.01) finishDraw();
+    else cancelDraw();
+}
+
+function startDraw(target, where) {
+    where = where || 'field';
+    if (S.draw.active) endDraw();
     S.fieldMsg = '';
-    S.draw = { active: true, pts: [], target };
-    if (S.map) { S.map.doubleClickZoom.disable(); $('#sat_map').addClass('sat-drawing'); }
-    renderControls();
-    drawMap(false);
+    S.draw = { active: true, pts: [], target, where };
+    const [m, el] = drawMapOf(where);
+    if (m) { m.doubleClickZoom.disable(); $(el).addClass('sat-drawing'); }
+    redrawAfterDraw(where);
 }
 
 function cancelDraw() {
-    S.draw = { active: false, pts: [], target: null };
-    if (S.map) { S.map.doubleClickZoom.enable(); $('#sat_map').removeClass('sat-drawing'); }
-    renderControls();
-    drawMap(false);
+    const where = S.draw.where;
+    S.draw = { active: false, pts: [], target: null, where: 'field' };
+    const [m, el] = drawMapOf(where);
+    if (m) { m.doubleClickZoom.enable(); $(el).removeClass('sat-drawing'); }
+    redrawAfterDraw(where);
 }
 
 function finishDraw() {
-    const pts = S.draw.pts;
-    if (pts.length < 3) { alert('A field needs at least 3 corners.'); return; }
-    if (ringHa(pts) < 0.01) { alert('This field is smaller than 0.01 ha.'); return; }
-    if (S.draw.target === 'trial') {
+    const pts = S.draw.pts, where = S.draw.where, target = S.draw.target;
+    if (pts.length < 3) { alert('An area needs at least 3 corners.'); return; }
+    if (ringHa(pts) < 0.01) { alert('This area is smaller than 0.01 ha.'); return; }
+    if (where === 'model') {
+        finishModelDraw(target, pts.slice());
+        S.draw = { active: false, pts: [], target: null, where: 'field' };
+        const [m, el] = drawMapOf('model');
+        if (m) { m.doubleClickZoom.enable(); $(el).removeClass('sat-drawing'); }
+        redrawAfterDraw('model');
+        return;
+    }
+    if (target === 'trial') {
         S.trialDrawn = pts.slice(); S.trialDirty = true;
     } else {
         const used = new Set(S.farmFields.map(f => f.name.toLowerCase()));
@@ -395,7 +436,7 @@ function finishDraw() {
         S.farmFields = S.farmFields.concat([{ name: `Field ${k}`, ring: pts.slice() }]);
         S.fieldsDirty = true;
     }
-    S.draw = { active: false, pts: [], target: null };
+    S.draw = { active: false, pts: [], target: null, where: 'field' };
     if (S.map) { S.map.doubleClickZoom.enable(); $('#sat_map').removeClass('sat-drawing'); }
     refreshField();
     renderControls();
@@ -435,7 +476,7 @@ function fieldMsg(html, isError) {
 /** The drawing tools and the list of fields of the current site (step 2). */
 function renderDrawBox() {
     const box = $('#sat_draw_box');
-    const drawing = S.draw.active;
+    const drawing = S.draw.active && S.draw.where === 'field';
     let html = '';
     if (S.mode === 'fields') {
         html += `<div class="sat-draw-head"><b>Production fields of ${esc(S.loc ? S.loc.name : '')}</b>`
@@ -549,7 +590,7 @@ function renderControls() {
     segs('#sat_size', SIZES.map(([v, l]) => [v, l]), S.size, v => { S.size = +v; renderControls(); drawMap(false); });
     const season = trialSeason();
     segs('#sat_presets', [['3m', 'Last 3 months'], ['12m', 'Last 12 months'], ['year', 'This year'],
-        ['trial', 'Trial season', !season, season ? `${season[0]} to ${season[1]} (planting − 15 days to harvest + 15 days)` : 'Choose a trial with a planting date in step 2']], S.preset, setPreset);
+        ['trial', 'Trial season', !season, season ? `${season[0]} to ${season[1]} (planting − 15 days to harvest + 15 days)` : 'Choose a trial with a planting date in step 2']], S.preset, p => { S.datesTouched = true; setPreset(p); });
     options('#sat_view', S.view);
     $('#sat_sources').html(S.offered.length ? S.offered.map(o => {
         const on = !!S.sources[o.id];
@@ -579,18 +620,48 @@ function squareBounds(a) {
     return [[a.lat - dLat, a.lon - dLon], [a.lat + dLat, a.lon + dLon]];
 }
 
+/** A "Full screen" button on a Leaflet map: the map fills the window (drawing fields is easier); Esc or the button returns. */
+function addFullscreen(map, el) {
+    const Ctl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd() {
+            const b = L.DomUtil.create('button', 'sat-full-btn');
+            b.type = 'button';
+            b.textContent = '⤢ Full screen';
+            b.title = 'Show the map on the whole screen (Esc returns)';
+            L.DomEvent.disableClickPropagation(b);
+            L.DomEvent.on(b, 'click', () => toggleFullscreen(map, el, b));
+            return b;
+        },
+    });
+    map.addControl(new Ctl());
+}
+
+function toggleFullscreen(map, el, btn, off) {
+    const $el = $(el);
+    const full = off ? false : !$el.hasClass('sat-map-full');
+    $el.toggleClass('sat-map-full', full);
+    $('body').css('overflow', full ? 'hidden' : '');
+    const b = btn || $el.find('.sat-full-btn')[0];
+    if (b) b.textContent = full ? '⤡ Exit full screen' : '⤢ Full screen';
+    // fit the area to the new size (not while drawing: the view must not jump)
+    setTimeout(() => { map.invalidateSize(); if (map === S.map) drawMap(true); else if (map === S.mmap) drawModelMap(true); }, 50);
+}
+
 function drawMap(fit) {
     // only on the visible step-2 map: Leaflet measures its box when drawing, and a hidden
     // box (size 0) would zoom out to the whole world
     if (!$('#sat_map').is(':visible')) return;
     if (!S.map) {
-        S.map = L.map('sat_map', { scrollWheelZoom: false }).setView([0, 0], 2);
+        // quarter zoom steps: the area fills the map instead of stopping one whole step out
+        S.map = L.map('sat_map', { scrollWheelZoom: false, zoomSnap: 0.25, zoomDelta: 0.5 }).setView([0, 0], 2);
+        addFullscreen(S.map, '#sat_map');
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
         }).addTo(S.map);
         S.layers = L.layerGroup().addTo(S.map);
         S.map.on('click', ev => {
-            if (S.draw.active) {
+            if (S.draw.active && S.draw.where === 'field') {
                 S.draw.pts.push([ev.latlng.lng, ev.latlng.lat]);
                 renderDrawBox();
                 drawMap(false);
@@ -601,7 +672,7 @@ function drawMap(fit) {
             renderControls();
             drawMap(false);
         });
-        S.map.on('dblclick', () => { if (S.draw.active && S.draw.pts.length >= 3) finishDraw(); });
+        S.map.on('dblclick', () => { if (S.draw.active && S.draw.where === 'field' && S.draw.pts.length >= 3) finishDraw(); });
     }
     S.map.invalidateSize();
     S.layers.clearLayers();
@@ -626,7 +697,7 @@ function drawMap(fit) {
         L.circleMarker([parseFloat(st.loc.lat), parseFloat(st.loc.lon)], { radius: 5, color: '#fff', weight: 2, fillColor: '#6b7280', fillOpacity: 1 })
             .bindTooltip(esc(st.loc.name)).addTo(S.layers);
     });
-    if (S.draw.active && S.draw.pts.length) {
+    if (S.draw.active && S.draw.where === 'field' && S.draw.pts.length) {
         const ll = S.draw.pts.map(p => [p[1], p[0]]);
         if (ll.length > 1) L.polyline(ll.concat(ll.length > 2 ? [ll[0]] : []), { color: '#f97316', weight: 2, dashArray: ll.length > 2 ? null : '4 3' }).addTo(S.layers);
         ll.forEach(p => L.circleMarker(p, { radius: 4, color: '#fff', weight: 1, fillColor: '#f97316', fillOpacity: 1 }).addTo(S.layers));
@@ -635,7 +706,7 @@ function drawMap(fit) {
     if (a) {
         const b = squareBounds(a);
         L.rectangle(b, { color: '#22d3ee', weight: 2, fill: false, dashArray: '5 4', interactive: false }).addTo(S.layers);
-        if (fit && !S.draw.active) S.map.fitBounds(L.latLngBounds(b).pad(0.6));
+        if (fit && !S.draw.active) S.map.fitBounds(L.latLngBounds(b).pad(0.15));
     } else if (fit) {
         S.map.setView([0, 0], 2);
     }
@@ -871,6 +942,8 @@ function summary() {
     parts.push(`<b>${clear}</b> clear over the field (≥ ${CLEAR_MIN}% without cloud)`);
     if (out) parts.push(`${out} with the field outside the image`);
     if (err) parts.push(`<span class="text-danger">${err} could not be read</span>`);
+    const hid = S.scenes.filter(isHidden).length;
+    if (hid) parts.push(`${hid} hidden by you`);
     return parts.join(' · ') + warningText();
 }
 
@@ -889,6 +962,7 @@ function drawTimeline() {
             h = 6 + Math.round(info.clearPct / 100 * 26);
             title = `${label}: ${info.clearPct}% of the field without cloud`;
         }
+        if (isHidden(sc)) { color = '#fca5a5'; h = 6; title = `${label}: hidden by you (still cloudy)`; }
         return `<div class="sat-tick${sc.source === 'landsat' ? ' ls' : ''}" data-id="${esc(sc.id)}" title="${esc(title)}" style="left:${x.toFixed(2)}%;height:${h}px;background:${color}"></div>`;
     }).join(''));
     const both = S.scenes.some(sc => sc.source === 'landsat') && S.scenes.some(sc => sc.source !== 'landsat');
@@ -989,19 +1063,28 @@ function paint(target, sc, built, px) {
     ctx.drawImage(canvas, 0, 0, target.width, target.height);
     const g = S.info[sc.id].g;
     const toPx = p => [(p[0] - win.left) / win.res * k, (win.top - p[1]) / win.res * k];
-    ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = Math.max(1, px / 400);
+    // the field / plots: yellow over a dark edge, visible on green and on bare soil
+    const many = g.plots && g.plots.length > 30;   // trial plots: thinner, no fill
+    const w = many ? Math.max(1.2, px / 350) : Math.max(2.5, px / 190);
+    const shape = r => {
+        ctx.beginPath();
+        if (r.length === 1) { const [x, y] = toPx(r[0]); ctx.arc(x, y, Math.max(2.5, w * 1.3), 0, 2 * Math.PI); }
+        else { r.forEach((p, i) => { const [x, y] = toPx(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); }
+    };
+    ctx.lineJoin = 'round';
     if (g.plots) {
         g.plots.forEach(r => {
-            ctx.beginPath();
-            if (r.length === 1) { const [x, y] = toPx(r[0]); ctx.arc(x, y, 1.5, 0, 2 * Math.PI); }
-            else { r.forEach((p, i) => { const [x, y] = toPx(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); }
-            ctx.stroke();
+            shape(r);
+            if (!many && r.length > 2) { ctx.fillStyle = 'rgba(250, 204, 21, 0.12)'; ctx.fill(); }
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.65)'; ctx.lineWidth = w + 2; ctx.stroke();
+            ctx.strokeStyle = '#facc15'; ctx.lineWidth = w; ctx.stroke();
         });
     } else {
         const [x, y] = toPx([g.e, g.n]);
-        const r = Math.max(5, px / 60);
-        ctx.beginPath(); ctx.moveTo(x - r, y); ctx.lineTo(x + r, y); ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); ctx.stroke();
+        const r = Math.max(9, px / 35);
+        const cross = () => { ctx.beginPath(); ctx.moveTo(x - r, y); ctx.lineTo(x + r, y); ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); };
+        cross(); ctx.strokeStyle = 'rgba(0, 0, 0, 0.65)'; ctx.lineWidth = w + 2; ctx.stroke();
+        cross(); ctx.strokeStyle = '#facc15'; ctx.lineWidth = w; ctx.stroke();
     }
     // scale bar
     const barM = S.area.sizeM >= 2000 ? 500 : 100;
@@ -1014,13 +1097,25 @@ function paint(target, sc, built, px) {
     ctx.fillText(`${barM} m`, 12, target.height - 14);
 }
 
+/* images hidden by hand (cloud or haze the scene classification missed): not shown, not used by the models */
+const isHidden = sc => S.hidden.includes(sc.id);
+
+function setHidden(sc, hide) {
+    S.hidden = hide ? S.hidden.concat([sc.id]) : S.hidden.filter(id => id !== sc.id);
+    drawTimeline();
+    renderStats();
+    renderImages();
+}
+
 async function renderImages() {
     const runId = S.run;
     const signal = S.abort ? S.abort.signal : undefined;
-    S.visible = S.scenes.filter(sc => isShown(S.info[sc.id]));
+    S.visible = S.scenes.filter(sc => isShown(S.info[sc.id]) && (S.showHidden || !isHidden(sc)));
+    const nHidden = S.scenes.filter(isHidden).length;
+    $('#sat_hidden_box').html(nHidden ? `<label class="sat-switch sat-small"><input type="checkbox" id="sat_show_hidden"${S.showHidden ? ' checked' : ''} /><span class="sat-slider"></span>Show the ${nHidden} hidden image${nHidden === 1 ? '' : 's'}</label>` : '');
     $('#sat_legend').html(S.view === 'ndvi'
         ? `NDVI <canvas class="sat-ramp" id="sat_ramp" width="180" height="10"></canvas> −0.2 bare soil … 0.9 dense green canopy · grey = cloud / shadow`
-        : (!S.area.fromPlots ? 'Yellow cross: the centre point.' : S.area.kind === 'plots' ? 'Yellow: trial plots.' : S.area.kind === 'farm' ? "Yellow: the farm's fields." : "Yellow: the trial's field.") + ' Click an image to enlarge.');
+        : (!S.area.fromPlots ? 'Yellow cross: the centre point.' : S.area.kind === 'plots' ? 'Yellow: trial plots.' : S.area.kind === 'farm' ? "Yellow: the farm's fields." : "Yellow: the trial's field.") + ' Click an image to enlarge; &times; hides an image that is still cloudy (it is not used by the models).');
     if (S.view === 'ndvi') {
         const c = document.getElementById('sat_ramp').getContext('2d');
         for (let x = 0; x < 180; x++) { const col = ndviColor(-0.2 + 1.1 * x / 179); c.fillStyle = `rgb(${col.join(',')})`; c.fillRect(x, 0, 1, 10); }
@@ -1039,7 +1134,11 @@ async function renderImages() {
     }
     $('#sat_grid').html(S.visible.map((sc, i) => {
         const info = S.info[sc.id];
-        return `<div class="sat-tile" data-i="${i}"><canvas width="10" height="10"></canvas><div class="sat-tile-cap"><span><b>${esc(fmtDate(sc.date))}</b><br><span class="sat-sat${sc.source === 'landsat' ? ' ls' : ''}">${esc(satName(sc))} · ${sc.res || 10} m</span></span><span class="sat-muted">${info.clearPct}% clear${S.view === 'ndvi' ? '<br><span class="sat-ndvi">…</span>' : ''}</span></div></div>`;
+        const hid = isHidden(sc);
+        return `<div class="sat-tile${hid ? ' hid' : ''}" data-i="${i}">`
+            + (hid ? `<button type="button" class="sat-unhide btn btn-default btn-xs" data-i="${i}">Use again</button>`
+                : `<button type="button" class="sat-hide" data-i="${i}" title="Hide: still cloudy (not used by the models)" aria-label="Hide the image of ${esc(fmtDate(sc.date))}">&times;</button>`)
+            + `<canvas width="10" height="10"></canvas><div class="sat-tile-cap"><span><b>${esc(fmtDate(sc.date))}</b><br><span class="sat-sat${sc.source === 'landsat' ? ' ls' : ''}">${esc(satName(sc))} · ${sc.res || 10} m</span></span><span class="sat-muted">${info.clearPct}% clear${S.view === 'ndvi' ? '<br><span class="sat-ndvi">…</span>' : ''}</span></div></div>`;
     }).join(''));
     if (S.view === 'ndvi') { $('#sat_ndvi_block').show(); drawChart(); } else { $('#sat_ndvi_block').hide(); }
     let done = 0;
@@ -1067,7 +1166,7 @@ async function renderImages() {
 }
 
 function drawChart() {
-    const pts = S.visible.map(sc => ({ sc, b: (S.info[sc.id].images || {}).ndvi })).filter(p => p.b && p.b.ndvi !== null)
+    const pts = S.visible.filter(sc => !isHidden(sc)).map(sc => ({ sc, b: (S.info[sc.id].images || {}).ndvi })).filter(p => p.b && p.b.ndvi !== null)
         .sort((p, q) => Date.parse(p.sc.datetime) - Date.parse(q.sc.datetime))
         .map(p => ({ t: Date.parse(p.sc.datetime), v: p.b.ndvi, sc: p.sc }));
     const W = 800, H = 190, L0 = 40, R0 = 10, T0 = 10, B0 = 26;
@@ -1114,11 +1213,887 @@ async function showBig(i) {
     $('#sat_big_title').text(`${fmtDate(sc.date)} — ${S.view === 'ndvi' ? 'NDVI' : 'true colour'}`);
     $('#sat_big_info').text(`${satName(sc)} · ${sc.res || 10} m pixels · ${sc.source === 'landsat' ? 'path/row' : 'tile'} ${sc.tile || ''} · ${info.clearPct}% of the field without cloud`);
     $('#sat_prev').prop('disabled', i === 0); $('#sat_next').prop('disabled', i === S.visible.length - 1);
+    $('#sat_big_hide').text(isHidden(sc) ? 'Use this image again' : 'Hide this image (still cloudy)');
     $('#sat_big_modal').modal('show');
     try {
         const built = await buildImage(sc, S.abort ? S.abort.signal : undefined);
         if (S.bigIndex === i) paint($('#sat_big canvas')[0], sc, built, 860);
     } catch (err) { if (err.name !== 'AbortError') $('#sat_big_info').text('This image could not be read.'); }
+}
+
+/* ---------- step 5: model ---------- */
+
+const MODEL_NAMES = [['crop_map', 'crop map'], ['yield', 'yield'], ['indices', 'plot indices']];
+const COMMON = { 'Zea mays': 'Maize', 'Zea mays subsp. mays': 'Maize', 'Nicotiana tabacum': 'Tobacco', 'Glycine max': 'Soybean', 'Manihot esculenta': 'Cassava',
+    'Oryza sativa': 'Rice', 'Triticum aestivum': 'Wheat', 'Sorghum bicolor': 'Sorghum', 'Saccharum officinarum': 'Sugarcane', 'Phaseolus vulgaris': 'Common bean',
+    'Coffea arabica': 'Coffee', 'Gossypium hirsutum': 'Cotton', 'Solanum tuberosum': 'Potato', 'Ipomoea batatas': 'Sweet potato', 'Musa': 'Banana', 'Dioscorea': 'Yam' };
+const CLASS_PRESETS = [['Other crops', '#f97316'], ['Pasture / grass', '#a3e635'], ['Forest', '#15803d'], ['Bare soil', '#a16207'], ['Water', '#2563eb'], ['Urban / roads', '#dc2626']];
+const CLASS_COLORS = ['#eab308', '#15803d', '#a3e635', '#f97316', '#a16207', '#2563eb', '#dc2626', '#9333ea', '#0891b2', '#db2777', '#4b5563', '#65a30d'];
+const UNCERTAIN_COLOR = '#9ca3af';
+const MIN_CALIB_DEFAULT = 8;
+const PREDICTOR_NAMES = { ndvi_auc: 'NDVI area under the season curve', ndvi_max: 'NDVI peak', ndre_max: 'NDRE (red-edge) peak', peak_day: 'Day of the NDVI peak' };
+// advanced settings: key, label, default, min, max, step, help
+const ADVANCED = [
+    ['Images', [
+        ['min_scene_clear', 'Skip a date with less of the area clear than (%)', 10, 0, 90, 5, 'Mostly cloudy dates are not read at all.'],
+        ['min_field_clear', 'A field / plot value needs this much of it clear (%)', 50, 10, 100, 5, 'Otherwise that date is left out for the field.'],
+    ]],
+    ['Crop map', [
+        ['period_days', 'Period length (days)', 30, 7, 120, 1, 'Images are averaged per period; each period gives features. Shorter = more detail, more gaps from clouds.'],
+        ['ntree', 'Trees in the random forest', 300, 50, 1000, 50, ''],
+        ['pixels_per_area', 'Pixels used per drawn area (at most)', 300, 20, 2000, 10, 'So that a large area does not outweigh the small ones.'],
+        ['cv_folds', 'Cross-validation folds (by drawn area)', 5, 2, 10, 1, 'Limited by the class with the fewest areas.'],
+        ['min_confidence', 'Uncertain below this share of the votes (%)', 50, 0, 95, 5, '0 = every pixel gets a class.'],
+        ['min_patch_ha', 'Smallest area of the crop estimated as a field (ha)', 0.5, 0.05, 100, 0.05, ''],
+        ['smooth', 'Smooth the map (3 x 3 majority)', true],
+        ['balance', 'Balance the classes in training', true],
+    ]],
+    ['Yield', [
+        ['yield_model', 'Model', 'linear', ['linear', 'lasso', 'random_forest'], 'Linear: clear and stable with few fields. Lasso / random forest: need more fields.'],
+        ['predictors', 'Predictors', ['ndvi_auc', 'ndre_max'], Object.keys(PREDICTOR_NAMES), 'Fewer predictors are safer with few calibration fields.'],
+        ['min_fields', 'Calibration fields needed (at least)', MIN_CALIB_DEFAULT, 5, 100, 1, ''],
+        ['min_dates', 'Clear dates needed per field', 4, 1, 30, 1, ''],
+        ['season_days', 'Season length when a trial has no harvest date (days)', 150, 60, 365, 5, 'From the planting date.'],
+        ['level', 'Prediction interval (%)', 90, 50, 99, 1, ''],
+    ]],
+];
+
+const setting = k => {
+    if (S.settings[k] !== undefined) return S.settings[k];
+    for (const [, items] of ADVANCED) for (const it of items) if (it[0] === k) return it[2];
+    return undefined;
+};
+
+function cropLabel() {
+    const c = S.crop === '__other' ? S.cropOther.trim() : S.crop;
+    return COMMON[c] || c || 'the crop';
+}
+
+function cropClassName() { return cropLabel() === 'the crop' ? 'Crop' : cropLabel(); }
+
+function ensureClasses() {
+    if (!S.classes.length) {
+        S.classes = [{ id: 'crop', name: cropClassName(), color: CLASS_COLORS[0] },
+            { id: 'c_forest', name: 'Forest', color: '#15803d' }, { id: 'c_pasture', name: 'Pasture / grass', color: '#a3e635' }];
+    }
+    S.classes[0].name = cropClassName();
+}
+
+const isMaize = () => /^Zea mays\b/.test(cropSpecies() || '');
+/** The crop map method: the stored maize curve (maize only) or drawn examples. */
+function mapMethod() {
+    if (!isMaize()) return 'examples';
+    if (!S.mapMethod) S.mapMethod = 'standard';
+    return S.mapMethod;
+}
+const daysBetween = (a, b) => (Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000;
+// the maize standard (R/satellite/standards/maize.json), for the preview chart
+const MAIZE_STD = { das: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190],
+    ndvi: [0.2, 0.245, 0.384, 0.543, 0.722, 0.866, 0.899, 0.901, 0.889, 0.876, 0.878, 0.87, 0.827, 0.768, 0.671, 0.563, 0.441, 0.327, 0.239, 0.2] };
+
+function standardPreview() {
+    const W = 360, H = 120, L0 = 30, B0 = 22, T0 = 8, R0 = 8;
+    const X = d => L0 + (W - L0 - R0) * d / 190, Y = v => H - B0 - (H - T0 - B0) * v;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:380px;height:auto" role="img" aria-label="Maize standard NDVI curve">`;
+    [0, 0.5, 1].forEach(v => { svg += `<line x1="${L0}" x2="${W - R0}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef0f2" /><text x="${L0 - 4}" y="${Y(v) + 3}" font-size="9" text-anchor="end" fill="#6b7280">${v}</text>`; });
+    [0, 50, 100, 150].forEach(d => { svg += `<text x="${X(d)}" y="${H - 8}" font-size="9" text-anchor="middle" fill="#6b7280">${d}</text>`; });
+    svg += `<polyline fill="none" stroke="#2b7a4b" stroke-width="2.5" points="${MAIZE_STD.das.map((d, i) => `${X(d).toFixed(1)},${Y(MAIZE_STD.ndvi[i]).toFixed(1)}`).join(' ')}" />`;
+    svg += `<text x="${(L0 + W - R0) / 2}" y="${H - 0.5}" font-size="9" text-anchor="middle" fill="#374151">days after sowing</text></svg>`;
+    return svg;
+}
+
+/** All labels / targets of all sites (S holds the current site's copies). */
+function allSites() { saveSite(); return S.sites; }
+
+async function enterModel() {
+    if (!S.season.start) { S.season = { start: S.start, end: S.end }; }
+    if (!candidateTrials().length) defaultYieldMode();
+    ensureClasses();
+    renderModel();
+    drawModelMap(true);
+    loadTrialInfo();
+}
+
+async function loadTrialInfo() {
+    const ids = [...new Set(allSites().flatMap(st => (st.trials || []).map(t => t.id)))].filter(id => !(id in S.trialInfo));
+    if (!ids.length || S.trialInfoLoading) return;
+    S.trialInfoLoading = true;
+    renderModel();
+    try {
+        for (let i = 0; i < ids.length; i += 200) {
+            const { trials } = await getJSON('trial_info', { trial_ids: ids.slice(i, i + 200).join(',') });
+            trials.forEach(t => { S.trialInfo[t.trial_id] = t; });
+        }
+    } catch (err) { $('#sat_calib_trials').html(`<span class="text-danger sat-small">${esc(err.message)}</span>`); }
+    S.trialInfoLoading = false;
+    defaultYieldMode();
+    if (S.step === 5) renderModel();
+}
+
+/** Without any trial with yield values at the locations, the index (no calibration) is the useful default. */
+function defaultYieldMode() {
+    if (S.yieldMode) return;
+    const any = candidateTrials().some(t => { const i = S.trialInfo[t.id]; return i && sameCrop(i.species) && i.traits.length; });
+    S.yieldMode = any || S.calib.length ? 'calibrated' : 'index';
+}
+
+const cropSpecies = () => (S.crop === '__other' ? S.cropOther.trim() : S.crop);
+const sameCrop = sp => !!sp && !!cropSpecies() && (sp === cropSpecies() || sp.startsWith(cropSpecies() + ' ') || cropSpecies().startsWith(sp + ' '));
+
+/** A trial as a calibration field: { ok, why, info, value } for the chosen yield trait. */
+function trialStatus(id) {
+    const t = S.trialInfo[id];
+    if (!t) return { ok: false, why: 'loading…' };
+    if (!sameCrop(t.species)) return { ok: false, why: `other crop (${t.species || 'unknown'})`, info: t };
+    if (!t.plots_with_coordinates && !t.drawn_field) return { ok: false, why: 'no field: draw it in step 2 (A trial)', info: t };
+    if (!t.planting) return { ok: false, why: 'no planting date', info: t };
+    const v = S.yieldTrait && t.traits.find(x => x.id === S.yieldTrait.id);
+    if (!v) return { ok: false, why: S.yieldTrait ? 'no value of the yield trait' : 'choose the yield trait', info: t };
+    return { ok: true, info: t, value: v };
+}
+
+function candidateTrials() {
+    const seen = new Set(), out = [];
+    allSites().forEach(st => (st.trials || []).forEach(t => { if (!seen.has(t.id)) { seen.add(t.id); out.push({ ...t, site: st.loc.name }); } }));
+    return out;
+}
+
+function yieldTraits() {
+    const count = {};
+    candidateTrials().forEach(t => {
+        const info = S.trialInfo[t.id];
+        if (!info || !sameCrop(info.species)) return;
+        info.traits.forEach(x => { count[x.id] = count[x.id] || { id: x.id, name: x.name, n: 0 }; count[x.id].n++; });
+    });
+    return Object.values(count).sort((a, b) => (/yield/i.test(b.name) - /yield/i.test(a.name)) || b.n - a.n || a.name.localeCompare(b.name));
+}
+
+/** Convex hull of [lon, lat] points (monotone chain). */
+function hull(pts) {
+    const p = [...new Map(pts.map(q => [q.join(','), q])).values()].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    if (p.length < 3) return p;
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], up = [];
+    p.forEach(q => { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); });
+    [...p].reverse().forEach(q => { while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); });
+    return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+
+/** The field(s) delimited in step 2, as fields to estimate: farm fields, a trial's drawn field, the area of a trial's plots. */
+function step2Targets(st) {
+    const f = st.field;
+    if (!f) return [];
+    if (f.kind === 'farm') return st.farmFields.map(x => ({ name: x.name, ring: x.ring, step2: true }));
+    if (f.kind === 'drawn') return [{ name: st.trial ? st.trial.name : 'Trial field', ring: f.plots[0], step2: true }];
+    if (f.kind === 'plots') {
+        const h = hull(f.plots.flat());
+        return h.length >= 3 && ringHa(h) >= 0.01 ? [{ name: `${st.trial ? st.trial.name : 'Trial'} (area of the plots)`, ring: h, step2: true }] : [];
+    }
+    return [];
+}
+
+/** Crop-map examples from step 2: the site's field(s), as examples of the crop (a trial of another species is not). */
+function step2Labels(st) {
+    if (!S.useStep2Labels || !S.models.crop_map) return [];
+    const f = st.field;
+    if (!f) return [];
+    if (f.kind !== 'farm' && st.trial) {
+        const info = S.trialInfo[st.trial.id];
+        if (info && info.species && !sameCrop(info.species)) return [];
+    }
+    return step2Targets(st).map(t => ({ class: 'crop', ring: t.ring, name: t.name, auto: true }));
+}
+
+function siteLabels(st) { return (st.labels || []).concat(step2Labels(st)); }
+
+/** Fields to estimate of a site: the step-2 field(s) (unless turned off) and those drawn in step 5. */
+function siteTargets(st) {
+    const own = st.targets || [];
+    const auto = st.useStep2 === false ? [] : step2Targets(st);
+    const seen = new Set(own.map(t => JSON.stringify(t.ring)));
+    return auto.filter(t => !seen.has(JSON.stringify(t.ring))).concat(own);
+}
+
+function calibCount() {
+    const drawn = S.calib.filter(c => c.yield !== '' && isFinite(+c.yield) && c.start && c.end && c.start <= c.end).length;
+    const trials = [...S.calibTrials].filter(id => trialStatus(id).ok).length;
+    return { drawn, trials, total: drawn + trials };
+}
+
+/** Everything the run needs, as a checklist: [ { ok, text } ]. */
+function readiness() {
+    const items = [];
+    const any = MODEL_NAMES.some(([k]) => S.models[k]);
+    items.push({ ok: any, text: any ? `Models: ${MODEL_NAMES.filter(([k]) => S.models[k]).map(([, l]) => l).join(', ')}` : 'Choose at least one model' });
+    const sites = allSites();
+    const nHid = sites.reduce((t, st) => t + (st.hidden || []).length, 0);
+    items.push({ ok: !!(S.start && S.end), text: S.start && S.end ? `Images of ${fmtDate(S.start)} – ${fmtDate(S.end)} (step 3), ${S.sites.length} location${S.sites.length === 1 ? '' : 's'}${nHid ? `; ${nHid} image${nHid === 1 ? '' : 's'} you hid in step 4 left out` : ''}` : 'Choose the dates in step 3' });
+    if (S.models.crop_map && mapMethod() === 'standard') {
+        const len = S.start && S.end ? daysBetween(S.start, S.end) : 0;
+        items.push({ ok: len >= 120, text: len >= 120
+            ? `Crop map: maize standard over ${Math.round(len)} days of images${len < 300 ? ' (a whole year finds summer and off-season maize)' : ''}`
+            : `Crop map: the maize standard needs the dates of step 3 to cover a whole season, at least 4 months (now ${Math.round(len)} days, ${fmtDate(S.start)} – ${fmtDate(S.end)})`,
+            go: len >= 120 ? null : 'year', goText: 'Use the last 12 months' });
+    } else if (S.models.crop_map) {
+        const per = {};
+        sites.forEach(st => siteLabels(st).forEach(l => { per[l.class] = (per[l.class] || 0) + 1; }));
+        const missing = S.classes.filter(k => !per[k.id]);
+        const few = S.classes.filter(k => per[k.id] === 1);
+        items.push({ ok: S.classes.length >= 2 && !missing.length, text: missing.length
+            ? `Crop map: draw examples of ${missing.map(k => k.name).join(', ')}${per.crop ? ` (${cropClassName()} already has ${per.crop}${step2Labels.length !== undefined && sites.some(st => step2Labels(st).length) ? ', from step 2' : ''}; the other classes teach the map what is not ${cropClassName()})` : ''}`
+            : `Crop map: ${S.classes.length} classes with examples` + (few.length ? ` (only 1 area of ${few.map(k => k.name).join(', ')}: the accuracy cannot be measured, draw 2)` : '') });
+    }
+    if (S.models.yield) {
+        const crop = cropSpecies();
+        items.push({ ok: !!crop, text: crop ? `Crop: ${cropLabel()}` : 'Choose the crop' });
+        const okSeason = S.season.start && S.season.end && S.season.start <= S.season.end;
+        items.push({ ok: !!okSeason, text: okSeason ? `Season of the crop: ${fmtDate(S.season.start)} – ${fmtDate(S.season.end)}` : 'Give the season of the crop' });
+        if (S.yieldMode === 'index') {
+            items.push({ ok: true, text: S.useReference
+                ? 'Yield: relative index scaled to approximate kg/ha by the regional average yield (public statistics; no field of known yield)'
+                : 'Yield: relative index, no known yields (fields compared with each other, 100 = average; no kg/ha)' });
+        } else {
+            const c = calibCount(), need = +setting('min_fields');
+            items.push({ ok: c.total >= need, go: c.total < need ? 'calib' : null, text: c.total >= need
+                ? `Calibration: ${c.total} fields with a known yield (${c.drawn} drawn, ${c.trials} trial${c.trials === 1 ? '' : 's'})`
+                : `Calibration: ${c.total} of the ${need} fields with a known yield needed (${c.drawn} drawn, ${c.trials} trial${c.trials === 1 ? '' : 's'}). Add them, or choose "No: relative yield index".` });
+            if (S.calibTrials.size) items.push({ ok: !!S.yieldTrait, text: S.yieldTrait ? `Yield trait: ${S.yieldTrait.name}` : 'Choose the yield trait of the trials' });
+        }
+        const targets = sites.reduce((t, st) => t + siteTargets(st).length, 0);
+        const fromStep2 = sites.reduce((t, st) => t + (st.useStep2 === false ? 0 : step2Targets(st).length), 0);
+        items.push({ ok: targets > 0 || S.models.crop_map, text: targets || S.models.crop_map
+            ? `Fields to estimate: ${targets}${fromStep2 ? ` (${fromStep2} from step 2)` : ''}${S.models.crop_map ? ` + the ${cropLabel()} areas of the crop map` : ''}`
+            : 'Fields to estimate: none. Delimit the field in step 2 (farm fields or a trial), draw one on the map below, or add the crop map' });
+    }
+    if (S.models.indices) {
+        const withPlots = sites.filter(st => st.field && st.field.kind === 'plots');
+        items.push({ ok: withPlots.length > 0, text: withPlots.length ? `Plot indices: ${withPlots.map(st => `${st.trial.name} (${st.field.count} plots)`).join(', ')}` : 'Plot indices need a location whose field (step 2) is a trial with plot coordinates' });
+    }
+    return items;
+}
+
+function renderModel() {
+    if (!$('.sat-pane[data-step="5"]').length) return;
+    ensureClasses();
+    const plotsSites = allSites().filter(st => st.field && st.field.kind === 'plots');
+    $('#sat_models .sat-option').each(function () {
+        const k = $(this).data('v');
+        const off = k === 'indices' && !plotsSites.length;
+        if (off && S.models.indices) S.models.indices = false;
+        $(this).toggleClass('on', !!S.models[k]).toggleClass('disabled', off).find('input').prop('checked', !!S.models[k]).prop('disabled', off);
+    });
+    $('#sat_indices_text').text(plotsSites.length
+        ? `NDVI, NDRE and EVI of every plot on every clear date, stored as phenotypes of ${plotsSites.map(st => st.trial.name).join(', ')}. A 10 m pixel mixes neighbouring plots.`
+        : 'Needs a location whose field (step 2) is a trial with plot GPS coordinates.');
+    // crop
+    const crops = S.crops.map(c => [c.species, `${COMMON[c.species] ? `${COMMON[c.species]} (${c.species})` : c.species}`]);
+    $('#sat_crop').html('<option value="">Choose the crop</option>' + crops.map(([v, l]) => `<option value="${esc(v)}"${v === S.crop ? ' selected' : ''}>${esc(l)}</option>`).join('')
+        + `<option value="__other"${S.crop === '__other' ? ' selected' : ''}>Other…</option>`);
+    $('#sat_crop_other_box').toggle(S.crop === '__other');
+    $('#sat_crop_card').toggle(S.models.yield || S.models.crop_map);
+    $('#sat_season_box, #sat_season_help').toggle(!!S.models.yield);
+    $('#sat_season_start').val(S.season.start || ''); $('#sat_season_end').val(S.season.end || '');
+    // classes
+    $('#sat_classes_box').toggle(!!S.models.crop_map);
+    const method = mapMethod();
+    $('#sat_map_method').toggle(isMaize());
+    options('#sat_map_method', method);
+    $('#sat_examples_box').toggle(method === 'examples');
+    $('#sat_standard_box').toggle(method === 'standard').html(method !== 'standard' ? '' : '<div class="row"><div class="col-sm-6">' + standardPreview() + '</div><div class="col-sm-6 sat-small">'
+        + '<b>Stored maize curve</b> (NDVI by days after sowing), measured with Sentinel-2 on the Breedbase maize trial SB22CMR1PR_Y2M_NZNA02 (Paraná, sown 25 Feb 2022). '
+        + 'Each pixel is compared with it for every sowing date in your dates, the cycle shortened or stretched (about 120 to 200 days); maize when it follows the curve closely. '
+        + '<br><span class="text-warning">Proof of concept: crops with a similar season (soybean, sorghum) can be taken for maize. The dates of step 3 must cover a whole season.</span>'
+        + (allSites().some(st => step2Labels(st).length) ? '<br>Your step-2 field is used to <b>check</b> the map (how much of it is found as maize).' : '') + '</div></div>');
+    const sites = allSites();
+    const count = id => sites.reduce((t, st) => t + siteLabels(st).filter(l => l.class === id).length, 0);
+    const autoN = sites.reduce((t, st) => t + step2Labels(st).length, 0);
+    const here = id => (S.labels || []).filter(l => l.class === id).length;
+    const can2 = sites.some(st => step2Targets(st).length && (st.field.kind === 'farm' || !st.trial || !S.trialInfo[st.trial.id] || !S.trialInfo[st.trial.id].species || sameCrop(S.trialInfo[st.trial.id].species)));
+    $('#sat_step2_labels').html(can2 ? `<label class="sat-switch sat-small"><input type="checkbox" id="sat_use_step2_labels"${S.useStep2Labels ? ' checked' : ''} /><span class="sat-slider"></span>Use the step-2 field(s) as examples of ${esc(cropClassName())}</label>` : '');
+    $('#sat_classes').html(S.classes.map((k, i) => {
+        const n = count(k.id);
+        return `<div class="sat-class-row"><span class="sat-swatch" style="background:${k.color}"></span>`
+            + `<input type="text" class="form-control input-sm sat-class-name" data-i="${i}" value="${esc(k.name)}" maxlength="60" aria-label="Class name"${k.id === 'crop' ? ' disabled title="The crop chosen above"' : ''} />`
+            + `<span class="sat-count${n < 2 ? ' bad' : ''}">${n} area${n === 1 ? '' : 's'}${k.id === 'crop' && autoN ? ` (${autoN} from step 2)` : ''}${S.sites.length > 1 ? ` (${here(k.id)} drawn here)` : ''}</span>`
+            + `<button type="button" class="btn btn-default btn-xs sat-class-draw" data-i="${i}">+ Draw an example</button>`
+            + (k.id === 'crop' ? '' : ` <button type="button" class="btn btn-link btn-xs sat-class-del" data-i="${i}" aria-label="Remove ${esc(k.name)}">remove</button>`) + '</div>';
+    }).join(''));
+    const names = new Set(S.classes.map(k => k.name.toLowerCase()));
+    segs('#sat_class_presets', CLASS_PRESETS.filter(([n]) => !names.has(n.toLowerCase())).map(([n]) => [n, n]).concat([['__custom', 'Other…']]), null, addClass);
+    // yield
+    $('#sat_yield_box').toggle(!!S.models.yield);
+    if (S.models.yield) renderYieldSetup();
+    // site name, draw status, readiness
+    $('#sat_model_site').text(S.loc ? (S.sites.length > 1 ? S.loc.name : '') : '');
+    renderModelDraw();
+    renderReady();
+}
+
+/** The checklist, run button and summary only (typing in a table must not redraw it: the focus would be lost). */
+function renderReady() {
+    const ready = readiness();
+    $('#sat_ready').html(ready.map(r => `<li class="${r.ok ? 'ok' : 'no'}">${esc(r.text)}${r.go ? ` <a href="#" class="sat-go" data-go="${r.go}">${esc(r.goText || 'Go there')}</a>` : ''}</li>`).join(''));
+    $('#sat_run').prop('disabled', !ready.every(r => r.ok) || (S.job.runId && S.job.status === 'running'));
+    const changed = Object.keys(S.settings).filter(k => JSON.stringify(S.settings[k]) !== JSON.stringify(defaultSetting(k)));
+    $('#sat_adv_summary').text(changed.length ? `Advanced settings changed: ${changed.map(advLabel).join(', ')}.` : 'Advanced settings: defaults.');
+    renderFlow();
+}
+
+function renderYieldSetup() {
+    defaultYieldMode();
+    options('#sat_yield_mode', S.yieldMode);
+    $('.sat-min-fields').text(setting('min_fields'));
+    $('#sat_calib_box').toggle(S.yieldMode !== 'index');
+    $('#sat_ref_box').toggle(S.yieldMode === 'index');
+    $('#sat_ref_on').prop('checked', S.useReference);
+    if (S.yieldMode === 'index') renderReferences();
+    const traits = yieldTraits();
+    if (S.yieldTrait && !traits.some(t => t.id === S.yieldTrait.id)) S.yieldTrait = null;
+    if (!S.yieldTrait && traits.length) S.yieldTrait = { id: traits[0].id, name: traits[0].name };
+    $('#sat_yield_trait').html(traits.length
+        ? traits.map(t => `<option value="${t.id}"${S.yieldTrait && S.yieldTrait.id === t.id ? ' selected' : ''}>${esc(t.name)} (${t.n} trial${t.n === 1 ? '' : 's'})</option>`).join('')
+        : `<option value="">${S.trialInfoLoading ? 'Loading the trials…' : `No ${esc(cropLabel())} trial with values at these locations`}</option>`).prop('disabled', !traits.length);
+    $('#sat_yield_unit').val(S.yieldUnit);
+    $('#sat_yield_perha').prop('checked', S.perHa);
+    // calibration trials
+    const trials = candidateTrials();
+    let html = '<div class="sat-label" style="margin-top:10px">Breedbase trials at the selected locations</div>';
+    if (!trials.length) html += '<div class="sat-muted sat-small">No trial at the selected locations: use fields you draw below.</div>';
+    else {
+        html += '<div style="max-height:260px;overflow:auto"><table class="sat-mini-table"><thead><tr><th></th><th>Trial</th><th>Location</th><th>Planting</th><th>Field</th><th class="num">Yield</th><th></th></tr></thead><tbody>'
+            + trials.map(t => {
+                const stt = trialStatus(t.id), info = stt.info || {};
+                const on = S.calibTrials.has(t.id) && stt.ok;
+                const fieldTxt = !info.trial_id ? '' : info.plots_with_coordinates ? `${info.plots_with_coordinates} plots` : info.drawn_field ? 'drawn' : 'none';
+                return `<tr><td><input type="checkbox" class="sat-calib-trial" data-id="${t.id}"${on ? ' checked' : ''}${stt.ok ? '' : ' disabled'} aria-label="Use ${esc(t.name)}" /></td>`
+                    + `<td>${esc(t.name)}</td><td class="sat-muted">${esc(t.site)}</td><td>${esc(info.planting || '')}</td><td>${esc(fieldTxt)}</td>`
+                    + `<td class="num">${stt.value ? stt.value.mean.toFixed(1) : ''}</td><td class="sat-muted sat-small">${stt.ok ? '' : esc(stt.why)}</td></tr>`;
+            }).join('') + '</tbody></table></div>';
+    }
+    $('#sat_calib_trials').html(html);
+    // drawn calibration fields
+    let c = `<div class="sat-label" style="margin-top:10px">Fields you know the yield of <button type="button" class="btn btn-default btn-xs" id="sat_draw_calib" style="margin-left:6px">+ Draw a field</button></div>`;
+    if (S.calib.length) {
+        c += '<table class="sat-mini-table"><thead><tr><th>Name</th><th>Location</th><th class="num">ha</th><th>Yield</th><th>Season start</th><th>Season end</th><th></th></tr></thead><tbody>'
+            + S.calib.map((f, i) => `<tr><td><input type="text" class="form-control input-sm sat-calib-in" data-i="${i}" data-k="name" value="${esc(f.name)}" maxlength="100" aria-label="Name" /></td>`
+                + `<td class="sat-muted">${esc(f.site)}</td><td class="num">${ringHa(f.ring).toFixed(2)}</td>`
+                + `<td><input type="number" step="any" class="form-control input-sm sat-calib-in" data-i="${i}" data-k="yield" value="${esc(f.yield)}" aria-label="Yield" placeholder="${esc(S.yieldUnit || 'yield')}" /></td>`
+                + `<td><input type="date" class="form-control input-sm sat-calib-in" data-i="${i}" data-k="start" value="${esc(f.start)}" aria-label="Season start" /></td>`
+                + `<td><input type="date" class="form-control input-sm sat-calib-in" data-i="${i}" data-k="end" value="${esc(f.end)}" aria-label="Season end" /></td>`
+                + `<td><button type="button" class="btn btn-link btn-xs sat-calib-del" data-i="${i}">delete</button></td></tr>`).join('') + '</tbody></table>';
+    } else {
+        c += '<div class="sat-muted sat-small">Draw fields whose harvested yield you know and type it, with the season of that harvest (any year since 2017).</div>';
+    }
+    $('#sat_calib_fields').html(c);
+    // targets of this site
+    let t = '';
+    saveSite();
+    const st2 = step2Targets(S.sites[S.cur] || S);
+    if (st2.length) {
+        t += `<label class="sat-switch sat-small" style="margin-bottom:6px"><input type="checkbox" id="sat_use_step2"${S.useStep2 !== false ? ' checked' : ''} /><span class="sat-slider"></span>`
+            + `Estimate the field${st2.length === 1 ? '' : 's'} from step 2: ${st2.map(x => esc(x.name)).join(', ')} (${st2.reduce((a, x) => a + ringHa(x.ring), 0).toFixed(1)} ha)</label><br>`;
+    }
+    t += `<button type="button" class="btn btn-default btn-xs" id="sat_draw_target">+ Draw ${st2.length ? 'another' : 'a'} field to estimate</button>`;
+    if (S.targets.length) {
+        t += '<table class="sat-mini-table" style="margin-top:6px"><tbody>' + S.targets.map((f, i) =>
+            `<tr><td><input type="text" class="form-control input-sm sat-target-name" data-i="${i}" value="${esc(f.name)}" maxlength="100" aria-label="Field name" /></td><td class="num sat-muted">${ringHa(f.ring).toFixed(2)} ha</td>`
+            + `<td><button type="button" class="btn btn-link btn-xs sat-target-del" data-i="${i}">delete</button></td></tr>`).join('') + '</tbody></table>';
+    }
+    t += `<div class="sat-small sat-muted" style="margin-top:4px">${S.models.crop_map ? `Every ${esc(cropLabel())} area of at least ${setting('min_patch_ha')} ha found by the crop map is estimated too.` : 'Add the crop map to also estimate every area of the crop it finds.'}</div>`;
+    $('#sat_targets').html(t);
+}
+
+/* public average yield of the region, per location (preview of what the run will use) */
+function refKey(st) { return [st.loc.id, cropSpecies(), (S.season.end || '').slice(0, 4)].join('|'); }
+
+function renderReferences() {
+    if (!S.useReference) { $('#sat_ref_list').html('<span class="sat-muted">Off: the fields get the index only (100 = average), no kg/ha.</span>'); return; }
+    if (!cropSpecies()) { $('#sat_ref_list').html('<span class="sat-muted">Choose the crop first.</span>'); return; }
+    const rows = allSites().map(st => {
+        const k = refKey(st), r = S.refs[k];
+        if (r === undefined) fetchReference(st, k);
+        if (!r) return `<div>${esc(st.loc.name)}: <span class="sat-muted">looking up the regional average yield…</span></div>`;
+        if (r.error) return `<div>${esc(st.loc.name)}: <span class="text-warning">${esc(r.error)}</span> <span class="sat-muted">(its fields keep the index only)</span></div>`;
+        if (r.pending) return `<div>${esc(st.loc.name)}: ${esc(r.crop)}, national average from FAOSTAT <span class="sat-muted">(downloaded when the run starts)</span></div>`;
+        return `<div>${esc(st.loc.name)}: <b>${esc(r.crop)}, ${esc(r.area)}</b> (${esc(r.level)}): <b>${fmt(r.value, 0)} ${esc(r.unit)}</b> · ${esc(r.source)}, ${esc(r.basis)} · <a href="${esc(r.url)}" target="_blank" rel="noopener">source</a></div>`;
+    });
+    $('#sat_ref_list').html(rows.join('') + '<div class="sat-warn" style="margin:6px 0 0">Approximate: it assumes your fields average like the region. Good, irrigated or trial fields can be far above the regional average; the error is unknown. Only fields with a known yield give a real calibration.</div>');
+}
+
+async function fetchReference(st, k) {
+    S.refs[k] = null;   // in progress
+    const a = areaOf(st);
+    let r;
+    try {
+        r = await getJSON('reference', { lon: a ? a.lon : st.loc.lon, lat: a ? a.lat : st.loc.lat, species: cropSpecies(), country: st.loc.country || '', year: (S.season.end || '').slice(0, 4) });
+    } catch (err) { r = { error: err.message }; }
+    S.refs[k] = r;
+    if (S.step === 5 && S.yieldMode === 'index') renderReferences();
+}
+
+function addClass(v) {
+    let name = v, color;
+    if (v === '__custom') {
+        name = (prompt('Name of the class (e.g. Sugarcane, Eucalyptus):') || '').trim();
+        if (!name) return;
+    }
+    if (S.classes.some(k => k.name.toLowerCase() === name.toLowerCase())) { alert(`There is already a class ${name}.`); return; }
+    if (S.classes.length >= 12) { alert('At most 12 classes.'); return; }
+    const preset = CLASS_PRESETS.find(([n]) => n === name);
+    const used = new Set(S.classes.map(k => k.color));
+    color = preset && !used.has(preset[1]) ? preset[1] : (CLASS_COLORS.find(c => !used.has(c)) || '#6b7280');
+    let id = 'c_' + name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 30);
+    while (S.classes.some(k => k.id === id)) id += '_';
+    S.classes.push({ id, name, color });
+    renderModel();
+}
+
+/** True when every corner is inside the square read for the shown location. */
+function insideArea(ring) {
+    const a = area();
+    if (!a) return false;
+    const [[s, w], [n, e]] = squareBounds(a);
+    return ring.every(([lon, lat]) => lon >= w && lon <= e && lat >= s && lat <= n);
+}
+
+function finishModelDraw(target, ring) {
+    if ((target.startsWith('label:') || target === 'target') && !insideArea(ring)) {
+        alert('Draw it inside the dashed square: only the images of that area are read for this location. (Fields with a known yield can be anywhere.)');
+        return;
+    }
+    if (target.startsWith('label:')) {
+        S.labels = S.labels.concat([{ class: target.slice(6), ring }]);
+    } else if (target === 'calib') {
+        S.calib.push({ name: `Calibration ${S.calib.length + 1}`, site: S.loc ? S.loc.name : '', ring, yield: '', start: S.season.start || S.start, end: S.season.end || S.end });
+    } else if (target === 'target') {
+        const used = new Set(S.targets.map(f => f.name.toLowerCase()));
+        let k = S.targets.length + 1;
+        while (used.has(`field ${k}`)) k++;
+        S.targets = S.targets.concat([{ name: `Field ${k}`, ring }]);
+    }
+}
+
+function renderModelDraw() {
+    const d = S.draw;
+    if (!(d.active && d.where === 'model')) { $('#sat_model_draw').hide(); renderModelHint(); return; }
+    let what = 'an area';
+    if (d.target.startsWith('label:')) { const k = S.classes.find(c => c.id === d.target.slice(6)); what = `an example of <b>${esc(k ? k.name : '')}</b>`; }
+    else if (d.target === 'calib') what = 'a field with a known yield';
+    else if (d.target === 'target') what = 'a field to estimate';
+    $('#sat_model_draw').html(`<div class="sat-draw-active" style="margin:0"><b>Drawing ${what}:</b> click its corners on the map (${d.pts.length} so far); double-click the last corner or press Finish.`
+        + ` <button type="button" class="btn btn-primary btn-xs" id="sat_mdraw_finish"${d.pts.length < 3 ? ' disabled' : ''}>Finish</button>`
+        + ` <button type="button" class="btn btn-default btn-xs" id="sat_mdraw_undo"${d.pts.length ? '' : ' disabled'}>Undo corner</button>`
+        + ' <button type="button" class="btn btn-link btn-xs" id="sat_mdraw_cancel">Cancel</button></div>').show();
+    renderModelHint();
+}
+
+function renderModelHint() {
+    $('#sat_model_hint').html(S.draw.active && S.draw.where === 'model' ? 'Click the corners on the map. Esc cancels, Enter finishes.'
+        : 'Dashed square: the area of this location. Click a drawn area to delete it.');
+}
+
+function drawModelMap(fit) {
+    if (!$('#sat_model_map').is(':visible')) return;
+    if (!S.mmap) {
+        S.mmap = L.map('sat_model_map', { scrollWheelZoom: false, zoomSnap: 0.25, zoomDelta: 0.5 }).setView([0, 0], 2);
+        addFullscreen(S.mmap, '#sat_model_map');
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
+        }).addTo(S.mmap);
+        S.mlayers = L.layerGroup().addTo(S.mmap);
+        S.mmap.on('click', ev => {
+            if (!(S.draw.active && S.draw.where === 'model')) return;
+            S.draw.pts.push([ev.latlng.lng, ev.latlng.lat]);
+            renderModelDraw();
+            drawModelMap(false);
+        });
+        S.mmap.on('dblclick', () => { if (S.draw.active && S.draw.where === 'model' && S.draw.pts.length >= 3) finishDraw(); });
+    }
+    S.mmap.invalidateSize();
+    S.mlayers.clearLayers();
+    const poly = (ring, opt, tip, onDelete) => {
+        const pg = L.polygon(ring.map(p => [p[1], p[0]]), opt).addTo(S.mlayers);
+        if (tip) pg.bindTooltip(tip);
+        if (onDelete) pg.on('click', ev => { if (S.draw.active) return; L.DomEvent.stopPropagation(ev); if (confirm(`Delete ${tip.replace(/<[^>]+>/g, '')}?`)) { onDelete(); renderModel(); drawModelMap(false); } });
+        return pg;
+    };
+    if (S.field && S.field.kind !== 'plots') S.field.plots.forEach(r => { if (r.length > 2) poly(r, { color: '#facc15', weight: 1, fill: false, interactive: false }); });
+    if (S.models.crop_map) {
+        const kc = S.classes.find(c => c.id === 'crop');
+        step2Labels(S).forEach(l => poly(l.ring, { color: kc ? kc.color : '#eab308', weight: 2, dashArray: '6 4', fillColor: kc ? kc.color : '#eab308', fillOpacity: 0.35 }, `Example: ${esc(kc ? kc.name : 'crop')} (from step 2)`));
+        if (mapMethod() === 'examples') S.labels.forEach((l, i) => {
+            const k = S.classes.find(c => c.id === l.class) || { name: '?', color: '#999' };
+            poly(l.ring, { color: '#fff', weight: 1, fillColor: k.color, fillOpacity: 0.65 }, `Example: ${esc(k.name)}`, () => { S.labels = S.labels.filter((x, j) => j !== i); });
+        });
+    }
+    if (S.models.yield) {
+        if (S.yieldMode !== 'index') S.calib.forEach((f, i) => { if (f.site === (S.loc && S.loc.name)) poly(f.ring, { color: '#fff', weight: 2, dashArray: '5 4', fillOpacity: 0.1 }, `Calibration: ${esc(f.name)}`, () => { S.calib.splice(i, 1); }); });
+        if (S.useStep2 !== false) step2Targets(S).forEach(f => poly(f.ring, { color: '#22d3ee', weight: 2, dashArray: '6 4', fillOpacity: 0.08 }, `To estimate (step 2): ${esc(f.name)}`));
+        S.targets.forEach((f, i) => poly(f.ring, { color: '#22d3ee', weight: 2, fillOpacity: 0.12 }, `To estimate: ${esc(f.name)}`, () => { S.targets = S.targets.filter((x, j) => j !== i); }));
+    }
+    if (S.draw.active && S.draw.where === 'model' && S.draw.pts.length) {
+        const ll = S.draw.pts.map(p => [p[1], p[0]]);
+        if (ll.length > 1) L.polyline(ll.concat(ll.length > 2 ? [ll[0]] : []), { color: '#f97316', weight: 2, interactive: false }).addTo(S.mlayers);
+        ll.forEach(p => L.circleMarker(p, { radius: 4, color: '#fff', weight: 1, fillColor: '#f97316', fillOpacity: 1, interactive: false }).addTo(S.mlayers));
+    }
+    const a = area();
+    if (a) {
+        const b = squareBounds(a);
+        L.rectangle(b, { color: '#22d3ee', weight: 2, fill: false, dashArray: '5 4', interactive: false }).addTo(S.mlayers);
+        if (fit && !S.draw.active) S.mmap.fitBounds(L.latLngBounds(b).pad(0.15));
+    }
+}
+
+/* advanced settings dialog */
+
+function defaultSetting(k) {
+    for (const [, items] of ADVANCED) for (const it of items) if (it[0] === k) return it[2];
+    return undefined;
+}
+function advLabel(k) {
+    for (const [, items] of ADVANCED) for (const it of items) if (it[0] === k) return it[1].replace(/ \(.*\)$/, '').toLowerCase();
+    return k;
+}
+
+function renderAdvanced() {
+    const show = { Images: true, 'Crop map': S.models.crop_map, Yield: S.models.yield };
+    $('#sat_adv_body').html(ADVANCED.filter(([g]) => show[g]).map(([group, items]) => `<h4 style="margin-top:6px">${esc(group)}</h4><div class="sat-adv-grid">` + items.map(it => {
+        const [k, label] = it;
+        const v = setting(k);
+        if (typeof it[2] === 'boolean') {
+            return `<div><label class="sat-switch"><input type="checkbox" class="sat-adv" data-k="${k}"${v ? ' checked' : ''} /><span class="sat-slider"></span>${esc(label)}</label></div>`;
+        }
+        if (k === 'yield_model') {
+            return `<div><label for="sat_adv_${k}">${esc(label)}</label><select id="sat_adv_${k}" class="form-control input-sm sat-adv" data-k="${k}">`
+                + it[3].map(o => `<option value="${o}"${o === v ? ' selected' : ''}>${{ linear: 'Linear regression', lasso: 'Lasso (shrinks weak predictors)', random_forest: 'Random forest' }[o]}</option>`).join('')
+                + `</select><div class="sat-help">${esc(it[4])}</div></div>`;
+        }
+        if (k === 'predictors') {
+            return `<div><label>${esc(label)}</label>` + it[3].map(o => `<div class="checkbox" style="margin:2px 0"><label style="font-weight:normal"><input type="checkbox" class="sat-adv-pred" value="${o}"${v.includes(o) ? ' checked' : ''} /> ${esc(PREDICTOR_NAMES[o])}</label></div>`).join('')
+                + `<div class="sat-help">${esc(it[4])}</div></div>`;
+        }
+        const [, , , min, max, step, help] = it;
+        return `<div><label for="sat_adv_${k}">${esc(label)}</label><input type="number" id="sat_adv_${k}" class="form-control input-sm sat-adv" data-k="${k}" value="${v}" min="${min}" max="${max}" step="${step}" />`
+            + (help ? `<div class="sat-help">${esc(help)}</div>` : '') + '</div>';
+    }).join('') + '</div>').join(''));
+}
+
+function readAdvanced(el) {
+    const k = $(el).data('k');
+    if ($(el).is(':checkbox')) { S.settings[k] = $(el).prop('checked'); return; }
+    if (k === 'yield_model') { S.settings[k] = $(el).val(); return; }
+    const spec = ADVANCED.flatMap(([, items]) => items).find(it => it[0] === k);
+    let v = parseFloat($(el).val());
+    if (!isFinite(v)) v = spec[2];
+    v = Math.min(spec[4], Math.max(spec[3], v));
+    $(el).val(v);
+    S.settings[k] = v;
+}
+
+/* run */
+
+function runPayload() {
+    const sites = allSites();
+    const settings = {};
+    ADVANCED.forEach(([, items]) => items.forEach(it => { settings[it[0]] = setting(it[0]); }));
+    return {
+        dates: { start: S.start, end: S.end }, crop: cropSpecies(), crop_class: S.models.crop_map ? 'crop' : '',
+        crop_map_method: S.models.crop_map ? mapMethod() : 'examples',
+        models: { ...S.models }, settings,
+        classes: S.models.crop_map && mapMethod() === 'examples' ? S.classes.map(k => ({ id: k.id, name: k.name })) : [],
+        sites: sites.map(st => {
+            const a = areaOf(st);
+            return {
+                id: st.loc.id, name: st.loc.name, center: [a.lon, a.lat], size_m: a.sizeM,
+                labels: !S.models.crop_map ? [] : (mapMethod() === 'standard' ? step2Labels(st) : siteLabels(st)).map(l => ({ class: l.class, ring: l.ring })), targets: S.models.yield ? siteTargets(st).map(x => ({ name: x.name, ring: x.ring })) : [],
+                plots_trial_id: S.models.indices && st.field && st.field.kind === 'plots' ? st.trial.id : null,
+                exclude_scenes: (st.hidden || []).filter(id => /^[A-Za-z0-9_]+$/.test(id)),
+            };
+        }),
+        yield: S.models.yield ? { mode: S.yieldMode === 'index' ? 'index' : 'calibrated', reference: S.yieldMode === 'index' && S.useReference, trait_id: S.yieldTrait ? S.yieldTrait.id : null, trait_name: S.yieldTrait ? S.yieldTrait.name : '', unit: S.yieldUnit, per_ha: S.perHa, season: { ...S.season } } : {},
+        calibration: S.models.yield && S.yieldMode !== 'index' ? S.calib.filter(c => c.yield !== '' && isFinite(+c.yield)).map(c => ({ name: c.name, site: c.site, ring: c.ring, yield: +c.yield, start: c.start, end: c.end })) : [],
+        calibration_trials: S.models.yield && S.yieldMode !== 'index' ? [...S.calibTrials].filter(id => trialStatus(id).ok) : [],
+    };
+}
+
+async function startRun() {
+    $('#sat_run').prop('disabled', true);
+    try {
+        const r = await postJSON('run', { request: JSON.stringify(runPayload()) });
+        S.job = { runId: r.run_id, timer: null, results: null, site: 0, status: 'running', t0: Date.now(), skipped: r.skipped || [], progress: '' };
+        try { localStorage.setItem('sat_last_run', r.run_id); } catch (e) { /* private mode */ }
+        goStep(6);
+    } catch (err) {
+        alert(err.message);
+        renderModel();
+    }
+}
+
+/* ---------- step 6: results ---------- */
+
+function renderJob() {
+    const j = S.job;
+    $('#sat_run_title').text(j.results && j.results.name ? j.results.name : 'Results');
+    if (j.status === 'running') {
+        $('#sat_results').hide();
+        $('#sat_run_error').empty();
+        $('#sat_run_notes').html(j.skipped && j.skipped.length ? `<div class="sat-warn">Calibration trials left out: ${j.skipped.map(esc).join(' ')}</div>` : '');
+        $('#sat_run_progress').show();
+        pollJob();
+    } else if (j.status === 'failed') {
+        $('#sat_run_progress').hide();
+        $('#sat_results').hide();
+        $('#sat_run_error').html(`<div class="alert alert-danger" style="white-space:pre-wrap">${esc(j.error || 'The run failed.')}</div>`);
+    } else if (j.results) {
+        $('#sat_run_progress').hide();
+        renderResults();
+    } else if (j.runId) {
+        j.status = 'running';
+        renderJob();
+    }
+    renderStepper();
+}
+
+function pollJob() {
+    const j = S.job;
+    clearTimeout(j.timer);
+    const tick = async () => {
+        if (S.job !== j) return;
+        let r;
+        try { r = await getJSON('status', { run_id: j.runId }); }
+        catch (err) { j.status = 'failed'; j.error = err.message; renderJob(); return; }
+        const sec = r.seconds || 0;
+        $('#sat_run_elapsed').text(sec < 60 ? `${sec} s` : `${Math.floor(sec / 60)} min ${String(sec % 60).padStart(2, '0')} s`);
+        $('#sat_run_text').text(r.progress ? `Working on the server: ${r.progress}` : 'Starting…');
+        if (r.status === 'running') { j.timer = setTimeout(tick, 3000); return; }
+        if (r.status === 'failed') { j.status = 'failed'; j.error = r.error; renderJob(); return; }
+        try { j.results = await getJSON('results', { run_id: j.runId }); j.status = 'done'; }
+        catch (err) { j.status = 'failed'; j.error = err.message; }
+        renderJob();
+    };
+    $('#sat_run_text').text('Starting…');
+    tick();
+}
+
+const resSite = () => (S.job.results.sites || [])[S.job.site] || {};
+const fmt = (v, d = 1) => (v === null || v === undefined || !isFinite(v) ? '–' : Number(v).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d }));
+const fileUrl = name => `${API}/file?` + new URLSearchParams({ run_id: S.job.runId, name }).toString();
+
+function renderResults() {
+    const R = S.job.results;
+    $('#sat_results').show();
+    $('#sat_run_meta').text(`${fmtDate(R.dates.start)} – ${fmtDate(R.dates.end)} · computed in ${Math.round(R.seconds)} s`);
+    $('#sat_run_notes').html(R.notes && R.notes.length ? `<div class="sat-warn"><b>Notes</b><ul style="margin:4px 0 0 18px;padding:0">${R.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : '');
+    const sites = R.sites || [];
+    $('.sat-res-tabs').html(sites.length > 1 ? sites.map((s, i) => `<button type="button" class="sat-site${i === S.job.site ? ' on' : ''}" data-i="${i}">${esc(s.name)}</button>`).join('') : '');
+    const s = resSite();
+    // tiles
+    const tiles = [[`${s.dates_used ?? '–'}<small style="font-size:13px"> / ${s.dates_found ?? '–'}</small>`, 'dates used / found']];
+    const crop = R.crop_map && s.classes ? s.classes.find(k => k.id === R.crop_class) : null;
+    if (crop) tiles.push([`${fmt(crop.ha)}<small style="font-size:13px"> ha</small>`, `${esc(crop.name)} on the map`]);
+    if (R.crop_map && R.crop_map.accuracy) tiles.push([`${fmt(100 * R.crop_map.accuracy.overall)}<small style="font-size:13px">%</small>`, 'map accuracy']);
+    const tot = R.yield && R.yield.totals ? R.yield.totals.find(t => String(t.site_id) === String(s.id)) : null;
+    const rough = R.yield && R.yield.metrics && R.yield.metrics.r2 < 0.3 ? ', rough' : '';
+    if (R.yield && R.yield.mode === 'index' && tot) {
+        tiles.push([String(tot.fields), 'fields compared (index)']);
+        if (tot.production !== null && tot.production !== undefined) tiles.push([`≈ ${fmt(tot.production / 1000, 1)}<small style="font-size:13px"> t</small>`, 'production, approximate (regional average)']);
+    }
+    if (R.yield && R.yield.mode === 'index') { /* no yield value */ } else if (tot && R.yield.per_ha && tot.production !== null) tiles.push([fmt(tot.production, 0), `production (${esc(R.yield.unit || 'yield')} × ha${rough})`]);
+    else if (tot && tot.mean_yield !== null) tiles.push([fmt(tot.mean_yield), `mean yield${R.yield.unit ? ` (${esc(R.yield.unit)}${rough})` : rough ? ' (rough)' : ''}`]);
+    $('#sat_res_stats').html(tiles.map(([v, l]) => `<div class="sat-stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join(''));
+    // map
+    $('#sat_res_map_card').toggle(!!R.crop_map);
+    if (R.crop_map) renderResultMap(R, s);
+    // yield
+    $('#sat_res_yield_card').toggle(!!R.yield);
+    if (R.yield) renderResultYield(R, s);
+    // indices
+    const withInd = sites.filter(x => x.indices);
+    $('#sat_res_indices_card').toggle(!!(R.models && R.models.indices));
+    $('#sat_res_ind_csv').attr('href', R.indices ? fileUrl('indices.csv') : '#').toggle(!!R.indices);
+    $('#sat_res_indices').html(withInd.length ? withInd.map(x => {
+        const saved = (R.saved_indices || {})[x.indices.trial_id];
+        return `<div style="margin-bottom:8px"><b>${esc(x.indices.trial_name)}</b>: ${x.indices.values} values (${x.indices.plots} plots × up to ${x.indices.dates} dates; NDVI, NDRE, EVI per plot and date) `
+            + (saved ? `<span class="text-success">· stored as phenotypes (${saved.values} values).</span>`
+                : `<button type="button" class="btn btn-primary btn-xs sat-save-ind" data-trial="${x.indices.trial_id}">Store as phenotypes of the trial</button>`)
+            + '<div class="sat-small sat-muted">Traits satellite NDVI / NDRE / EVI (time series, one value per image date). A 10 m pixel is larger than most plots: neighbouring plots share pixels.</div></div>';
+    }).join('') : '<span class="sat-muted">No plot had a clear date.</span>');
+}
+
+function renderResultMap(R, s) {
+    const cm = R.crop_map, classes = cm.classes || [];
+    $('#sat_res_site').text(R.sites.length > 1 ? s.name : '');
+    $('#sat_res_tif').attr('href', s.map_file ? fileUrl(s.map_file.replace(/^.*?\.(site\d+\.map\.tif)$/, '$1')) : '#').toggle(!!s.map_file);
+    const colorOf = {};
+    const std = cm.method === 'standard';
+    classes.forEach((k, i) => { const own = !std && S.classes.find(c => c.id === k.id); colorOf[i + 1] = own ? own.color : std ? (k.id === 'crop' ? '#eab308' : '#475569') : CLASS_COLORS[i % CLASS_COLORS.length]; });
+    colorOf[classes.length + 1] = UNCERTAIN_COLOR;
+    const m = s.map;
+    const cv = document.getElementById('sat_res_canvas');
+    if (m && cv) {
+        cv.width = m.ncol; cv.height = m.nrow;
+        const ctx = cv.getContext('2d'), img = ctx.createImageData(m.ncol, m.nrow);
+        let p = 0;
+        for (let i = 0; i < m.rle.length; i += 2) {
+            const v = m.rle[i], n = m.rle[i + 1];
+            const col = v ? colorOf[v] || '#000000' : null;
+            const rgb = col ? [parseInt(col.slice(1, 3), 16), parseInt(col.slice(3, 5), 16), parseInt(col.slice(5, 7), 16)] : null;
+            for (let k = 0; k < n; k++, p++) {
+                if (!rgb) continue;
+                img.data[p * 4] = rgb[0]; img.data[p * 4 + 1] = rgb[1]; img.data[p * 4 + 2] = rgb[2]; img.data[p * 4 + 3] = 255;
+            }
+        }
+        ctx.putImageData(img, 0, 0);
+    }
+    const ha = k => (s.classes || []).find(x => x.id === k.id);
+    $('#sat_res_legend').html(classes.map((k, i) => `<span><span class="sat-swatch" style="background:${colorOf[i + 1]}"></span>${esc(k.name)}</span>`).join('')
+        + `<span><span class="sat-swatch" style="background:${UNCERTAIN_COLOR}"></span>${std ? 'Uncertain (season not seen: clouds)' : 'Uncertain'}</span><span><span class="sat-swatch" style="background:#1f2937"></span>No clear image</span>`);
+    const total = (s.classes || []).reduce((t, k) => t + k.ha, 0) + (s.uncertain_ha || 0);
+    $('#sat_res_areas').html('<table class="sat-mini-table"><thead><tr><th>Class</th><th class="num">ha</th><th class="num">%</th></tr></thead><tbody>'
+        + classes.map((k, i) => { const h = ha(k) ? ha(k).ha : 0; return `<tr><td><span class="sat-swatch" style="display:inline-block;vertical-align:middle;background:${colorOf[i + 1]}"></span> ${esc(k.name)}${k.trained ? '' : ' <span class="text-warning">(no example)</span>'}</td><td class="num">${fmt(h)}</td><td class="num">${fmt(total ? 100 * h / total : 0)}</td></tr>`; }).join('')
+        + `<tr><td><span class="sat-swatch" style="display:inline-block;vertical-align:middle;background:${UNCERTAIN_COLOR}"></span> ${std ? 'Uncertain (season not seen)' : `Uncertain (below ${fmt(cm.min_confidence, 0)}% of the votes)`}</td><td class="num">${fmt(s.uncertain_ha || 0)}</td><td class="num">${fmt(total ? 100 * (s.uncertain_ha || 0) / total : 0)}</td></tr>`
+        + '</tbody></table>');
+    const a = cm.accuracy;
+    let acc = '';
+    if (std) {
+        acc += `<div class="sat-small"><b>Method:</b> stored ${esc(cm.standard.crop)} curve matched to every pixel (no examples). <span class="text-warning">Proof of concept.</span></div>`;
+        if (s.sowing) acc += `<div style="margin-top:6px"><b>Sowing</b> (estimated from the curve): median ${fmtDate(s.sowing.median)}, most between ${fmtDate(s.sowing.q10)} and ${fmtDate(s.sowing.q90)}; cycle about ${s.sowing.cycle_days} days.</div>`;
+        const chk = (s.check || []).filter(c => c.pixels > 0);
+        if (chk.length) {
+            const px = chk.reduce((t, c) => t + c.pixels, 0), asCrop = chk.reduce((t, c) => t + c.as_crop, 0);
+            acc += `<div style="margin-top:6px"><b>Check with your step-2 field:</b> ${fmt(100 * asCrop / px, 0)}% of its ${px} pixels found as ${esc(cm.standard.crop)}`
+                + ` (${chk.reduce((t, c) => t + c.as_other, 0)} not, ${chk.reduce((t, c) => t + c.uncertain, 0)} uncertain).</div>`;
+        } else {
+            acc += '<div class="sat-muted sat-small" style="margin-top:6px">Accuracy not measured: no field of known maize to check against.</div>';
+        }
+    } else if (a) {
+        const names = a.classes.map(id => (classes.find(k => k.id === id) || { name: id }).name);
+        acc += `<div><b>Accuracy</b> ${fmt(100 * a.overall)}% · kappa ${fmt(a.kappa, 2)} <span class="sat-muted sat-small">(cross-validation, ${a.folds} folds by drawn area, ${a.pixels} pixels)</span></div>`
+            + '<table class="sat-mini-table sat-cm" style="margin-top:6px"><thead><tr><th>drawn \\ mapped</th>' + names.map(n => `<th>${esc(n)}</th>`).join('') + '<th>right</th></tr></thead><tbody>'
+            + a.matrix.map((row, i) => `<tr><th>${esc(names[i])}</th>` + row.map((v, j) => `<td class="${i === j ? 'diag' : ''}">${v}</td>`).join('') + `<td>${fmt(100 * a.producer[i], 0)}%</td></tr>`).join('')
+            + '</tbody></table><div class="sat-help" style="margin-top:4px">Measured only on the drawn areas: land covers you did not draw are not checked (see Uncertain).</div>';
+    } else {
+        acc += '<div class="sat-muted sat-small">Accuracy not measured: draw at least 2 areas of each class.</div>';
+    }
+    if (cm.importance && cm.importance.length) acc += `<div class="sat-small" style="margin-top:8px"><b>Most useful image features:</b> ${cm.importance.slice(0, 6).map(i => esc(i.feature)).join(' · ')}</div>`;
+    $('#sat_res_accuracy').html(acc);
+}
+
+function renderResultIndex(R, s) {
+    const Y = R.yield;
+    let h = `<div class="sat-small sat-muted">Relative yield index (no known yields): ${esc(Y.index_basis || 'season curve')} of each field, 100 = the average of the ${Y.n_indexed || 0} fields with enough clear dates · season ${fmtDate(Y.season.start)} – ${fmtDate(Y.season.end)}</div>`
+        + (Y.references && Y.references.length
+            ? '<div class="sat-warn" style="margin-top:8px"><b>Approximate kg/ha, not a calibration.</b> The regional average yield below is scaled by each field\'s season curve, assuming your fields average like the region. Good, irrigated or trial fields can be far above it; the error cannot be measured without fields of known yield.</div>'
+                + '<table class="sat-mini-table" style="margin:6px 0 10px"><thead><tr><th>Reference</th><th>Area</th><th class="num">kg/ha</th><th>Years</th><th>Used for</th></tr></thead><tbody>'
+                + Y.references.map(r => `<tr><td><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.source)}</a> · ${esc(r.crop)}</td><td>${esc(r.area)} (${esc(r.level)})</td><td class="num">${fmt(r.value, 0)}</td><td class="sat-small">${esc(r.basis)}</td><td class="sat-small">${(r.sites || []).map(esc).join(', ')} (${r.fields} field${r.fields === 1 ? '' : 's'})</td></tr>`).join('')
+                + '</tbody></table>'
+            : '<div class="sat-warn" style="margin-top:8px">An index compares the fields of this run with each other: 120 means a greener, longer season than the average field, which usually means more yield, but it is not a yield in kg/ha and its error cannot be measured without fields of known yield.</div>');
+    const ts = (Y.targets || []).filter(t => String(t.site_id) === String(s.id)).sort((a, b) => (a.rank ?? 1e9) - (b.rank ?? 1e9));
+    h += `<h4>Fields${R.sites.length > 1 ? ` of ${esc(s.name)}` : ''}</h4>`;
+    if (!ts.length) h += '<div class="sat-muted sat-small">No field to estimate here.</div>';
+    else {
+        const est = ts.some(t => t.estimate !== undefined && t.estimate !== null);
+        h += `<div style="max-height:380px;overflow:auto"><table class="sat-mini-table"><thead><tr><th class="num">Rank</th><th>Field</th><th>From</th><th class="num">ha</th><th class="num">Clear dates</th><th class="num">NDVI peak</th><th class="num">Index</th>${est ? '<th class="num">≈ kg/ha</th>' : ''}<th></th></tr></thead><tbody>`
+            + ts.map(t => `<tr><td class="num">${t.rank ?? '–'}</td><td>${esc(t.name)}</td><td class="sat-muted">${t.source === 'map' ? 'crop map' : 'drawn'}</td><td class="num">${fmt(t.area_ha, 2)}</td><td class="num">${t.n_dates}</td>`
+                + `<td class="num">${fmt(t.ndvi_max, 2)}</td><td class="num"><b>${t.index !== null && t.index !== undefined ? fmt(t.index, 0) : '–'}</b></td>`
+                + (est ? `<td class="num">${t.estimate !== undefined && t.estimate !== null ? `≈ ${fmt(t.estimate, 0)}` : '–'}</td>` : '')
+                + `<td class="sat-small sat-muted">${esc(t.reason || '')}</td></tr>`).join('')
+            + '</tbody></table></div>';
+    }
+    const withEst = (Y.totals || []).some(t => t.production !== null && t.production !== undefined);
+    if (Y.totals && (Y.totals.length > 1 || withEst)) {
+        h += `<h4>Per location</h4><table class="sat-mini-table"><thead><tr><th>Location</th><th class="num">Fields</th><th class="num">ha</th><th class="num">Mean index (by area)</th>${withEst ? '<th class="num">≈ kg/ha</th><th class="num">≈ production (t)</th>' : ''}</tr></thead><tbody>`
+            + Y.totals.map(t => `<tr><td>${esc(t.site)}</td><td class="num">${t.fields}</td><td class="num">${fmt(t.area_ha)}</td><td class="num">${fmt(t.mean_index, 0)}</td>`
+                + (withEst ? `<td class="num">${t.mean_yield !== null && t.mean_yield !== undefined ? `≈ ${fmt(t.mean_yield, 0)}` : '–'}</td><td class="num">${t.production !== null && t.production !== undefined ? `≈ ${fmt(t.production / 1000, 1)}` : '–'}</td>` : '') + '</tr>').join('');
+        if (withEst && Y.totals.length > 1) {
+            const p = Y.totals.reduce((a, t) => a + (t.production || 0), 0), ha = Y.totals.reduce((a, t) => a + (t.area_ha || 0), 0);
+            h += `<tr><th>Total</th><th class="num">${Y.totals.reduce((a, t) => a + t.fields, 0)}</th><th class="num">${fmt(ha)}</th><th></th><th></th><th class="num">≈ ${fmt(p / 1000, 1)}</th></tr>`;
+        }
+        h += '</tbody></table>';
+    }
+    $('#sat_res_yield').html(h);
+    $('#sat_res_csv').attr('href', R.fields_file ? fileUrl('fields.csv') : '#').toggle(!!R.fields_file);
+}
+
+function renderResultYield(R, s) {
+    if (R.yield.mode === 'index') { renderResultIndex(R, s); return; }
+    const Y = R.yield, u = Y.unit ? ` (${esc(Y.unit)})` : '';
+    let h = `<div class="sat-small sat-muted">${esc(Y.trait || 'Yield')} · season of the fields estimated ${fmtDate(Y.season.start)} – ${fmtDate(Y.season.end)} · ${esc({ linear: 'linear regression', lasso: 'lasso', random_forest: 'random forest' }[Y.model] || Y.model)} on ${(Y.predictor_labels || []).map(esc).join(' + ')}</div>`;
+    if (Y.metrics) {
+        const m = Y.metrics;
+        h += `<div class="sat-stats" style="margin:10px 0"><div class="sat-stat"><div class="v">${fmt(m.r2, 2)}</div><div class="l">R² (leave one field out)</div></div>`
+            + `<div class="sat-stat"><div class="v">${fmt(m.rmse)}</div><div class="l">error RMSE${u}</div></div><div class="sat-stat"><div class="v">${fmt(m.mae)}</div><div class="l">mean abs. error</div></div>`
+            + `<div class="sat-stat"><div class="v">${m.n}</div><div class="l">calibration fields</div></div></div>`;
+        if (m.r2 < 0.3) h += `<div class="sat-warn">The satellite curve explains little of the yield differences between these calibration fields (R² ${fmt(m.r2, 2)}): treat the estimates as rough.</div>`;
+        h += '<div class="row"><div class="col-sm-5" id="sat_yield_plot"></div><div class="col-sm-7">';
+        if (Y.coefficients && Y.coefficients.length) h += '<table class="sat-mini-table"><thead><tr><th>Term</th><th class="num">Estimate</th><th class="num">SE</th></tr></thead><tbody>'
+            + Y.coefficients.map(c => `<tr><td>${esc(PREDICTOR_NAMES[c.term] || c.term)}</td><td class="num">${fmt(c.estimate, 3)}</td><td class="num">${c.se !== undefined ? fmt(c.se, 3) : ''}</td></tr>`).join('') + '</tbody></table>';
+        h += '</div></div>';
+    } else {
+        h += `<div class="sat-warn">No yield model: ${Y.n_used} of ${Y.n_calibration} calibration fields usable, at least ${Y.min_fields} needed. The fields below show their season index only (not a yield).</div>`;
+    }
+    // estimates
+    const ts = (Y.targets || []).filter(t => String(t.site_id) === String(s.id));
+    h += `<h4>Fields${R.sites.length > 1 ? ` of ${esc(s.name)}` : ''}</h4>`;
+    if (!ts.length) h += '<div class="sat-muted sat-small">No field to estimate here.</div>';
+    else {
+        h += `<div style="max-height:360px;overflow:auto"><table class="sat-mini-table"><thead><tr><th>Field</th><th>From</th><th class="num">ha</th><th class="num">Clear dates</th><th class="num">NDVI peak</th><th class="num">NDVI area</th>${Y.metrics ? `<th class="num">Yield${u}</th><th class="num">${fmt(Y.level * 100, 0)}% interval</th>` : ''}<th></th></tr></thead><tbody>`
+            + ts.map(t => `<tr><td>${esc(t.name)}</td><td class="sat-muted">${t.source === 'map' ? 'crop map' : 'drawn'}</td><td class="num">${fmt(t.area_ha, 2)}</td><td class="num">${t.n_dates}</td><td class="num">${fmt(t.ndvi_max, 2)}</td><td class="num">${fmt(t.ndvi_auc, 0)}</td>`
+                + (Y.metrics ? `<td class="num"><b>${fmt(t.estimate)}</b></td><td class="num sat-muted">${t.lower !== undefined ? `${fmt(t.lower)} – ${fmt(t.upper)}` : ''}</td>` : '')
+                + `<td class="sat-small">${t.extrapolation ? '<span class="text-warning" title="Its season curve is outside the range of the calibration fields">outside calibration</span>' : esc(t.reason || '')}</td></tr>`).join('')
+            + '</tbody></table></div>';
+    }
+    if (Y.totals && Y.totals.length) {
+        h += '<h4>Totals per location</h4><table class="sat-mini-table"><thead><tr><th>Location</th><th class="num">Fields</th><th class="num">ha</th><th class="num">Mean yield</th>' + (Y.per_ha ? '<th class="num">Production</th>' : '') + '</tr></thead><tbody>'
+            + Y.totals.map(t => `<tr><td>${esc(t.site)}</td><td class="num">${t.fields}</td><td class="num">${fmt(t.area_ha)}</td><td class="num">${fmt(t.mean_yield)}</td>` + (Y.per_ha ? `<td class="num">${fmt(t.production, 0)}</td>` : '') + '</tr>').join('');
+        if (Y.totals.length > 1) {
+            const sum = (k) => Y.totals.reduce((a, t) => a + (t[k] || 0), 0);
+            h += `<tr><th>Total</th><th class="num">${sum('fields')}</th><th class="num">${fmt(sum('area_ha'))}</th><th></th>` + (Y.per_ha ? `<th class="num">${fmt(sum('production'), 0)}</th>` : '') + '</tr>';
+        }
+        h += '</tbody></table>';
+    }
+    // calibration fields
+    const cal = Y.calibration || [];
+    if (cal.length) {
+        h += `<details style="margin-top:10px"><summary class="sat-small"><b>Calibration fields (${cal.filter(c => c.used).length} used of ${cal.length})</b></summary><table class="sat-mini-table" style="margin-top:6px"><thead><tr><th>Field</th><th>From</th><th>Season</th><th class="num">Observed${u}</th><th class="num">Predicted (left out)</th><th class="num">Clear dates</th><th></th></tr></thead><tbody>`
+            + cal.map(c => `<tr><td>${esc(c.name)}</td><td class="sat-muted">${c.source === 'trial' ? 'trial' : 'drawn'}</td><td class="sat-small">${esc(c.start)} – ${esc(c.end)}</td><td class="num">${fmt(c.observed)}</td><td class="num">${c.loo !== null && c.loo !== undefined ? fmt(c.loo) : ''}</td><td class="num">${c.n_dates}</td><td class="sat-small text-warning">${esc(c.reason || '')}</td></tr>`).join('')
+            + '</tbody></table></details>';
+    }
+    $('#sat_res_yield').html(h);
+    $('#sat_res_csv').attr('href', R.fields_file ? fileUrl('fields.csv') : '#').toggle(!!R.fields_file);
+    if (Y.metrics) drawYieldPlot(cal.filter(c => c.used && c.loo !== null && c.loo !== undefined), u);
+}
+
+function drawYieldPlot(pts, unit) {
+    if (!pts.length) return;
+    const W = 360, H = 300, L0 = 52, B0 = 40, T0 = 12, R0 = 12;
+    const all = pts.flatMap(p => [p.observed, p.loo]);
+    let lo = Math.min(...all), hi = Math.max(...all);
+    const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+    const X = v => L0 + (W - L0 - R0) * (v - lo) / (hi - lo), Y = v => H - B0 - (H - T0 - B0) * (v - lo) / (hi - lo);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Observed against predicted yield">`;
+    for (let i = 0; i <= 4; i++) {
+        const v = lo + (hi - lo) * i / 4;
+        svg += `<line x1="${L0}" x2="${W - R0}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef0f2" /><text x="${L0 - 6}" y="${Y(v) + 4}" font-size="10" text-anchor="end" fill="#6b7280">${fmt(v, 0)}</text>`
+            + `<text x="${X(v)}" y="${H - B0 + 14}" font-size="10" text-anchor="middle" fill="#6b7280">${fmt(v, 0)}</text>`;
+    }
+    svg += `<line x1="${X(lo)}" y1="${Y(lo)}" x2="${X(hi)}" y2="${Y(hi)}" stroke="#9ca3af" stroke-dasharray="4 3" />`;
+    pts.forEach(p => { svg += `<circle cx="${X(p.observed)}" cy="${Y(p.loo)}" r="4.5" fill="${p.source === 'trial' ? '#2b7a4b' : '#fff'}" stroke="#2b7a4b" stroke-width="1.5"><title>${esc(p.name)}: observed ${fmt(p.observed)}, predicted ${fmt(p.loo)}</title></circle>`; });
+    svg += `<text x="${(L0 + W - R0) / 2}" y="${H - 6}" font-size="11" text-anchor="middle" fill="#374151">observed${esc(unit.replace(/<[^>]+>/g, ''))}</text><text x="12" y="${(T0 + H - B0) / 2}" font-size="11" text-anchor="middle" fill="#374151" transform="rotate(-90 12 ${(T0 + H - B0) / 2})">predicted, field left out</text></svg>`;
+    $('#sat_yield_plot').html(svg + '<div class="sat-help">Each field predicted by a model fitted without it. Dashed: perfect prediction. Filled: trials, open: drawn fields.</div>');
+}
+
+async function saveIndices(trialId, btn) {
+    if (!confirm('Store the satellite NDVI, NDRE and EVI of the plots as phenotypes of this trial? Values already stored for the same plot and date are kept.')) return;
+    $(btn).prop('disabled', true).text('Storing…');
+    try {
+        const r = await postJSON('save_indices', { run_id: S.job.runId, trial_id: trialId });
+        S.job.results.saved_indices = { ...(S.job.results.saved_indices || {}), [trialId]: { values: r.values } };
+        renderResults();
+    } catch (err) {
+        alert(err.message);
+        $(btn).prop('disabled', false).text('Store as phenotypes of the trial');
+    }
 }
 
 /* ---------- start ---------- */
@@ -1159,7 +2134,12 @@ $(async function () {
         renderControls(); drawMap(false);
     });
     $(document).on('keydown', ev => {
-        if (!S.draw.active || S.step !== 2 || $(ev.target).is('input, textarea, select')) return;
+        if (ev.key === 'Escape' && !S.draw.active && $('.sat-map-full').length) {
+            if (S.map && $('#sat_map').hasClass('sat-map-full')) toggleFullscreen(S.map, '#sat_map', null, true);
+            if (S.mmap && $('#sat_model_map').hasClass('sat-map-full')) toggleFullscreen(S.mmap, '#sat_model_map', null, true);
+            return;
+        }
+        if (!S.draw.active || S.step !== (S.draw.where === 'model' ? 5 : 2) || $(ev.target).is('input, textarea, select')) return;
         if (ev.key === 'Escape') cancelDraw();
         if (ev.key === 'Enter' && S.draw.pts.length >= 3) finishDraw();
     });
@@ -1188,9 +2168,117 @@ $(async function () {
         if (S.scenes.length && S.step === 4) renderImages();
     });
     $('#sat_trial').on('change', function () { chooseTrial($(this).val()); });
-    $('#sat_start, #sat_end').on('change', () => { S.start = $('#sat_start').val(); S.end = $('#sat_end').val(); S.preset = null; renderControls(); });
+    $('#sat_start, #sat_end').on('change', () => { S.start = $('#sat_start').val(); S.end = $('#sat_end').val(); S.preset = null; S.datesTouched = true; renderControls(); });
     $('#sat_go').on('click', () => goStep(4));
+    // step 5
+    $('#sat_models').on('click', '.sat-option', function (ev) {
+        ev.preventDefault();
+        if ($(this).hasClass('disabled')) return;
+        const k = $(this).data('v');
+        S.models[k] = !S.models[k];
+        if (S.draw.active && S.draw.where === 'model') cancelDraw();
+        renderModel(); drawModelMap(false);
+        if (k === 'yield' && S.models.yield) loadTrialInfo();
+    });
+    $('#sat_crop').on('change', function () {
+        S.crop = $(this).val();
+        S.calibTrials = new Set([...S.calibTrials].filter(id => trialStatus(id).ok));
+        renderModel();
+    });
+    $('#sat_crop_other').on('input', function () { S.cropOther = $(this).val(); renderModel(); $('#sat_crop_other').focus(); });
+    $('#sat_season_start, #sat_season_end').on('change', () => { S.season = { start: $('#sat_season_start').val(), end: $('#sat_season_end').val() }; renderModel(); });
+    $('#sat_classes').on('click', '.sat-class-draw', function () { startDraw(`label:${S.classes[+$(this).data('i')].id}`, 'model'); });
+    $('#sat_classes').on('click', '.sat-class-del', function () {
+        const k = S.classes[+$(this).data('i')];
+        const n = allSites().reduce((t, st) => t + (st.labels || []).filter(l => l.class === k.id).length, 0);
+        if (n && !confirm(`Remove the class ${k.name} and its ${n} example area${n === 1 ? '' : 's'}?`)) return;
+        S.sites.forEach(st => { st.labels = (st.labels || []).filter(l => l.class !== k.id); });
+        S.labels = S.labels.filter(l => l.class !== k.id);
+        S.classes = S.classes.filter(c => c.id !== k.id);
+        renderModel(); drawModelMap(false);
+    });
+    $('#sat_classes').on('change', '.sat-class-name', function () {
+        const i = +$(this).data('i'), name = String($(this).val()).trim();
+        if (!name || S.classes.some((k, j) => j !== i && k.name.toLowerCase() === name.toLowerCase())) { $(this).val(S.classes[i].name); return; }
+        S.classes[i].name = name; renderReady(); drawModelMap(false);
+    });
+    $('#sat_yield_box').on('change', '#sat_yield_trait', function () {
+        const t = yieldTraits().find(x => String(x.id) === $(this).val());
+        S.yieldTrait = t ? { id: t.id, name: t.name } : null;
+        const m = S.yieldTrait && /\(([^)]+)\)|\b(kg\/ha|t\/ha|g\/plot|kg\/plot)\b/i.exec(S.yieldTrait.name);
+        if (m && !S.yieldUnit) S.yieldUnit = m[1] || m[2];
+        renderModel();
+    });
+    $('#sat_yield_box').on('input', '#sat_yield_unit', function () { S.yieldUnit = $(this).val(); });
+    $('#sat_yield_box').on('change', '#sat_yield_unit', () => renderModel());
+    $('#sat_yield_box').on('change', '#sat_yield_perha', function () { S.perHa = $(this).prop('checked'); renderModel(); });
+    $('#sat_yield_box').on('change', '.sat-calib-trial', function () {
+        const id = +$(this).data('id');
+        if ($(this).prop('checked')) S.calibTrials.add(id); else S.calibTrials.delete(id);
+        renderModel();
+    });
+    $('#sat_yield_box').on('click', '#sat_draw_calib', () => startDraw('calib', 'model'));
+    $('#sat_yield_box').on('change', '#sat_ref_on', function () { S.useReference = $(this).prop('checked'); renderModel(); });
+    $('#sat_yield_mode').on('click', '.sat-option', function (ev) { ev.preventDefault(); S.yieldMode = $(this).data('v'); renderModel(); drawModelMap(false); });
+    $('#sat_ready').on('click', '.sat-go', function (ev) {
+        ev.preventDefault();
+        if ($(this).data('go') === 'year') {
+            S.datesTouched = true;
+            setPreset('12m');
+            renderModel();
+            return;
+        }
+        if ($(this).data('go') === 'calib') {
+            const el = document.getElementById('sat_calib_anchor');
+            if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); $('#sat_calib_box').addClass('sat-flash'); setTimeout(() => $('#sat_calib_box').removeClass('sat-flash'), 1600); }
+        }
+    });
+    $('#sat_yield_box').on('click', '#sat_draw_target', () => startDraw('target', 'model'));
+    $('#sat_map_method').on('click', '.sat-option', function (ev) { ev.preventDefault(); S.mapMethod = $(this).data('v'); if (S.draw.active) endDraw(); renderModel(); drawModelMap(false); });
+    $('#sat_classes_box').on('change', '#sat_use_step2_labels', function () { S.useStep2Labels = $(this).prop('checked'); renderModel(); drawModelMap(false); });
+    $('#sat_yield_box').on('change', '#sat_use_step2', function () { S.useStep2 = $(this).prop('checked'); renderModel(); drawModelMap(false); });
+    $('#sat_yield_box').on('input change', '.sat-calib-in', function () {
+        const i = +$(this).data('i'), k = $(this).data('k');
+        S.calib[i][k] = String($(this).val()).trim();
+        renderReady();
+    });
+    $('#sat_yield_box').on('click', '.sat-calib-del', function () { S.calib.splice(+$(this).data('i'), 1); renderModel(); drawModelMap(false); });
+    $('#sat_yield_box').on('change', '.sat-target-name', function () {
+        const i = +$(this).data('i'), name = String($(this).val()).trim();
+        if (name) S.targets = S.targets.map((t, j) => (j === i ? { ...t, name } : t));
+        else $(this).val(S.targets[i].name);
+        renderReady(); drawModelMap(false);
+    });
+    $('#sat_yield_box').on('click', '.sat-target-del', function () { const i = +$(this).data('i'); S.targets = S.targets.filter((t, j) => j !== i); renderModel(); drawModelMap(false); });
+    $('#sat_model_draw').on('click', '#sat_mdraw_finish', finishDraw);
+    $('#sat_model_draw').on('click', '#sat_mdraw_cancel', cancelDraw);
+    $('#sat_model_draw').on('click', '#sat_mdraw_undo', () => { S.draw.pts.pop(); renderModelDraw(); drawModelMap(false); });
+    $('#sat_adv_open').on('click', () => { renderAdvanced(); $('#sat_adv_modal').modal('show'); });
+    $('#sat_adv_body').on('change', '.sat-adv', function () { readAdvanced(this); renderModel(); });
+    $('#sat_adv_body').on('change', '.sat-adv-pred', () => {
+        const v = $('#sat_adv_body .sat-adv-pred:checked').map((i, e) => e.value).get();
+        if (!v.length) { alert('Keep at least one predictor.'); renderAdvanced(); return; }
+        S.settings.predictors = v; renderModel();
+    });
+    $('#sat_adv_reset').on('click', () => { S.settings = {}; renderAdvanced(); renderModel(); });
+    $('#sat_run').on('click', startRun);
+    // step 6
+    $('#sat_results').on('click', '.sat-res-tabs .sat-site', function () { S.job.site = +$(this).data('i'); renderResults(); });
+    $('#sat_results').on('click', '.sat-save-ind', function () { saveIndices(+$(this).data('trial'), this); });
     $('#sat_grid').on('click', '.sat-tile', function () { showBig(+$(this).data('i')); });
+    $('#sat_grid').on('click', '.sat-hide, .sat-unhide', function (ev) {
+        ev.stopPropagation();
+        const sc = S.visible[+$(this).data('i')];
+        if (sc) setHidden(sc, $(this).hasClass('sat-hide'));
+    });
+    $('#sat_hidden_box').on('change', '#sat_show_hidden', function () { S.showHidden = $(this).prop('checked'); renderImages(); });
+    $('#sat_big_hide').on('click', () => {
+        const sc = S.visible[S.bigIndex];
+        if (!sc) return;
+        const hide = !isHidden(sc);
+        $('#sat_big_modal').modal('hide');
+        setHidden(sc, hide);
+    });
     $('#sat_timeline').on('click', '.sat-tick', function () {
         const i = S.visible.findIndex(sc => sc.id === $(this).data('id'));
         if (i >= 0) showBig(i);
@@ -1210,6 +2298,17 @@ $(async function () {
         $('#sat_sources').html(`<span class="text-danger sat-small">${esc(err.message)}</span>`);
     }
     renderControls();
+    getJSON('crops').then(r => {
+        S.crops = r.crops || [];
+        if (!S.crop && S.crops.length) S.crop = S.crops[0].species;
+        if (S.step === 5) renderModel();
+    }).catch(() => { /* the crop can still be typed */ });
+    // a run to show (link from the jobs list): ?run=sat_...
+    const want = new URLSearchParams(window.location.search).get('run');
+    if (want && /^sat_\d+_\d+$/.test(want)) {
+        S.job = { runId: want, timer: null, results: null, site: 0, status: 'running', skipped: [] };
+        goStep(6);
+    }
     try {
         const { locations } = await getJSON('locations');
         S.locations = locations;

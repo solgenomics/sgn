@@ -1,0 +1,26 @@
+{
+  "crop": "maize",
+  "species": [
+    "Zea mays"
+  ],
+  "version": 1,
+  "das": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190],
+  "ndvi": [0.2, 0.175, 0.245, 0.315, 0.384, 0.457, 0.543, 0.637, 0.722, 0.81, 0.866, 0.89, 0.899, 0.902, 0.901, 0.897, 0.889, 0.881, 0.876, 0.875, 0.878, 0.879, 0.87, 0.851, 0.827, 0.802, 0.768, 0.722, 0.671, 0.617, 0.563, 0.503, 0.441, 0.381, 0.327, 0.281, 0.239, 0.2, 0.2],
+  "ndre": [0.12, 0.081, 0.135, 0.19, 0.242, 0.3, 0.374, 0.459, 0.541, 0.63, 0.694, 0.729, 0.748, 0.757, 0.759, 0.754, 0.742, 0.727, 0.717, 0.713, 0.714, 0.713, 0.697, 0.666, 0.631, 0.595, 0.555, 0.507, 0.458, 0.412, 0.369, 0.326, 0.283, 0.241, 0.203, 0.172, 0.145, 0.119, 0.12],
+  "bare_ndvi": 0.2,
+  "cycle_scales": [0.65, 0.75, 0.85, 1, 1.1],
+  "rules": {
+    "min_r": 0.85,
+    "max_rmse": 0.13,
+    "min_obs": 6,
+    "min_peak": 0.65,
+    "sow_step_days": 5
+  },
+  "phases": {
+    "early": [0, 30],
+    "plateau": [45, 115],
+    "decline": [130, 190]
+  },
+  "source": "NDVI / NDRE of the plots of the Breedbase maize trial SB22CMR1PR_Y2M_NZNA02 (Parana, Brazil, sown 2022-02-25, off-season crop), Sentinel-2 L2A, 41 clear dates, 4 cloud outliers removed, loess smoothed (span 0.25). The cycle is stretched by 0.65-1.1 to cover summer maize of about 120 days up to 190-day winter crops.",
+  "note": "Proof of concept: one reference season. Other maize regions / varieties may follow other curves."
+}
