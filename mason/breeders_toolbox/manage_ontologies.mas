@@ -382,7 +382,7 @@ jQuery(function() {
                 lines.push('No CV is currently assigned ' + cvtype + '.');
             }
             if (previous) {
-                lines.push('"' + cvName + '" will no longer be ' + previousTypes.join(' or ') + '.');
+                lines.push('"' + cvName + '" will no longer be a ' + previousTypes.join(' or ') + '.');
             }
             lines.push('', 'Assign ' + cvtype + ' to "' + cvName + '"?');
             return lines.join('\n');

@@ -69,8 +69,12 @@ sub observation_variable_data_types {
 sub observation_variable_ontologies {
     my $self = shift;
 	my $inputs = shift;
-	my $name_spaces = $inputs->{name_spaces} || [];
+	# Copied (and de-duplicated) so the name spaces added below neither repeat ones the
+	# caller passed, which would return each of their ontologies twice, nor modify the caller's list
+	my %seen_name_space;
+	my $name_spaces = [ grep { !$seen_name_space{$_}++ } @{ $inputs->{name_spaces} || [] } ];
 	my $cvprop_types = $inputs->{cvprop_type_names} || ['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology', 'experiment_treatment_ontology', 'composed_experiment_treatment_ontology'];
+	my $hide_invisible = $inputs->{hide_invisible} || 0;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -84,19 +88,42 @@ sub observation_variable_ontologies {
     my $composable_cv_prop_sql;
     if (scalar(@composable_cv_prop_types)>0) {
         $composable_cv_prop_sql = join ("," , @composable_cv_prop_types);
-        $composable_cv_prop_sql = " cvprop.type_id IN ($composable_cv_prop_sql)";
+        $composable_cv_prop_sql = " AND cvprop.type_id IN ($composable_cv_prop_sql)";
     }
 
     # Add db name spaces for databases tagged as trait_ontology, method_ontology, etc for the cvprop_type_names being queried. This added name spaces onto those taken from onto_root_namespaces conf key. When using the "add ontology web interface", ontologies are tagged with a cvprop type; however, when loading obo file ontologies, the cvprop must be added afterward.
-    my $q1 = "SELECT distinct(db.name) FROM db JOIN dbxref ON(db.db_id = dbxref.db_id) JOIN cvterm ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN cv ON(cvterm.cv_id = cv.cv_id) JOIN cvprop ON(cvprop.cv_id=cv.cv_id) WHERE $composable_cv_prop_sql;";
+    my $q1 = "SELECT distinct(db.name) FROM db 
+	JOIN dbxref ON(db.db_id = dbxref.db_id) 
+	JOIN cvterm ON(cvterm.dbxref_id = dbxref.dbxref_id) 
+	JOIN cv ON(cvterm.cv_id = cv.cv_id) 
+	JOIN cvprop ON(cvprop.cv_id=cv.cv_id) 
+	WHERE true $composable_cv_prop_sql;";
     my $sth1 = $self->bcs_schema->storage->dbh->prepare($q1);
     $sth1->execute();
     while (my ($db_name) = $sth1->fetchrow_array()) {
-        push @$name_spaces, $db_name;
+        push @$name_spaces, $db_name if !$seen_name_space{$db_name}++;
+    }
+
+    # With hide_invisible, leave out cvs marked invisible (a cv_visible cvprop with value 0)
+    my $hide_invisible_sql = "";
+    if ($hide_invisible) {
+        $hide_invisible_sql = " AND NOT EXISTS (
+            SELECT 1 FROM cvprop visible_prop
+            JOIN cvterm visible_term ON(visible_term.cvterm_id = visible_prop.type_id)
+            JOIN cv visible_cv ON(visible_cv.cv_id = visible_term.cv_id)
+            WHERE visible_prop.cv_id = cv.cv_id AND visible_term.name = 'cv_visible'
+            AND visible_cv.name = 'cv_property' AND visible_prop.value = '0')";
     }
 
 	#Using code pattern from SGN::Controller::AJAX::Onto->roots_GET
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) JOIN cv USING(cv_id) JOIN cvprop USING(cv_id) LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=? AND $composable_cv_prop_sql;";
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm 
+	JOIN dbxref USING(dbxref_id) 
+	JOIN db USING(db_id) 
+	JOIN cv USING(cv_id) 
+	JOIN cvprop USING(cv_id) 
+	LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) 
+	WHERE cvterm_relationship.subject_id IS NULL 
+	AND is_obsolete= 0 AND is_relationshiptype = 0 AND db.name=? $composable_cv_prop_sql $hide_invisible_sql;";
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	foreach (@$name_spaces){
 		$sth->execute($_);

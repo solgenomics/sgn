@@ -462,6 +462,7 @@ sub observation_variable_ontologies {
     my $name_spaces = $inputs->{name_spaces};
     my $ontology_id = $inputs->{ontologyDbId};
     my $cvprop_types = $inputs->{cvprop_type_names} || [];
+    my $hide_invisible = $inputs->{hide_invisible} || 0;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -478,6 +479,17 @@ sub observation_variable_ontologies {
         $composable_cv_prop_sql = " AND cvprop.type_id IN ($composable_cv_prop_sql)";
     }
 
+    # With hide_invisible, leave out cvs marked invisible (a cv_visible cvprop with value 0)
+    my $hide_invisible_sql = "";
+    if ($hide_invisible) {
+        $hide_invisible_sql = " AND NOT EXISTS (
+            SELECT 1 FROM cvprop visible_prop
+            JOIN cvterm visible_term ON(visible_term.cvterm_id = visible_prop.type_id)
+            JOIN cv visible_cv ON(visible_cv.cv_id = visible_term.cv_id)
+            WHERE visible_prop.cv_id = cv.cv_id AND visible_term.name = 'cv_visible'
+            AND visible_cv.name = 'cv_property' AND visible_prop.value = '0')";
+    }
+
     #Using code pattern from SGN::Controller::AJAX::Onto->roots_GET
     my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm 
     JOIN dbxref USING(dbxref_id) 
@@ -485,7 +497,7 @@ sub observation_variable_ontologies {
     JOIN cv USING(cv_id) 
     JOIN cvprop USING(cv_id) 
     LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) 
-    WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=? $composable_cv_prop_sql;";
+    WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=? $composable_cv_prop_sql $hide_invisible_sql;";
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
     foreach (@$name_spaces){
         $sth->execute($_);

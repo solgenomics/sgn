@@ -929,7 +929,8 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
 
     my $result = $observation_variables->observation_variable_ontologies({
         cvprop_type_names => $cvprop_type_names,
-        name_spaces => \@name_spaces
+        name_spaces => \@name_spaces,
+        hide_invisible => 1
     });
     #print STDERR Dumper $result;
 
