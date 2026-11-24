@@ -2640,6 +2640,15 @@ sub set_display_image : Path('/ajax/stock/set_display_image') : ActionClass('RES
 sub set_display_image_POST : Args(0) {
     my ($self, $c) = @_;
 
+    if (!$c->user()) {
+        $c->stash->{rest} = { error_string => 'You must be logged in to set the display image.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error_string => 'You must be a curator or submitter to set the display image.' };
+        return;
+    }
+
     my $stock_id = $c->req->param('stock_id');
     my $image_id = $c->req->param('image_id');
 
