@@ -129,7 +129,7 @@
                     <div class="col-md-5">
                         <center>
                             <br><label>Copies per label:</label>
-                            <input class="form-control" id="copies_per_plot" name="copies_per_plot" type="number" value="1" style="max-width: 100%;">
+                            <input class="form-control" id="copies_per_plot" name="copies_per_plot" type="number" min="1" value="1" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -139,7 +139,7 @@
                     <div class="col-md-5">
                         <center>
                             <br><label>Total # to download:</label>
-                            <input class="form-control" id="label_designer_labels_to_download" name="label_designer_labels_to_download" type="number" placeholder="10" style="max-width: 100%;">
+                            <input class="form-control" id="label_designer_labels_to_download" name="label_designer_labels_to_download" type="number" min="1" placeholder="10" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5"></div>
@@ -199,13 +199,13 @@
                     <div class="col-md-5">
                         <center>
                             <br><label>Start Number:</label><br>
-                            <input class="form-control" placeholder="0" type="number" id="label_designer_start_number" style="max-width: 100%;">
+                            <input class="form-control" placeholder="1" min="1" type="number" id="label_designer_start_number" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             <br><label>End Number:</label><br>
-                            <input class="form-control" placeholder="1000" type="number" id="label_designer_end_number" style="max-width: 100%;">
+                            <input class="form-control" placeholder="1000" min="1" type="number" id="label_designer_end_number" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
