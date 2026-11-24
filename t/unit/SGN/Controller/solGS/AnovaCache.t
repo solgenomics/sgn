@@ -30,7 +30,26 @@ my $async = Test::MockObject->new;
 my %controllers = (
     'solGS::Files' => $files, 'solGS::CachedResult' => $cached,
     'solGS::Utils' => $utils, 'solGS::AsyncJob' => $async,
-);
+    );
+
+my $person =  bless {
+    count => 0,
+}, do {
+    package temp_person;
+    sub get_roles { return ['curator', 'submitter' ]; };
+    sub get_sp_person_id { return 41; };
+    __PACKAGE__;
+};
+
+my $user = bless {
+    count => 0,
+}, do {
+    package temp_user;
+    sub get_object { return $person };
+    sub check_roles { return 1; };
+    __PACKAGE__;
+};
+
 my $context = Test::MockObject->new;
 $context->{stash} = {
     trial_id => $trial_id,
@@ -54,6 +73,7 @@ $context->mock(req => sub { $request });
 my $logger = Test::MockObject->new;
 $logger->mock(error => sub { die "Unexpected cache removal error: $_[1]" });
 $context->mock(log => sub { $logger });
+$context->mock(user => sub { $user });
 
 my $raw_file = $anova->trial_phenotype_file($context, $trial_id);
 my $old_content = "unit\tsynthetic_trait\nsynthetic_unit\t1\n";
