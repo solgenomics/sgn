@@ -75,23 +75,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
-    $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
-    sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test Kasese Tr pop');
-    sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-    sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(120);
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(5);
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
-    sleep(5);
-    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(5);
-    $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
+    $d->find_element_ok('Kasese', 'partial_link_text', 'go to training pop page')->click();
     sleep(15);
 
 
@@ -108,7 +92,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(350);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
@@ -200,37 +184,6 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
-    sleep(2);
-    $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
-    sleep(2);
-    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
-    sleep(2);
-    $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
-    sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('combined trials');
-    sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-    sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(5);
-
-
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
-    sleep(2);
-    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(3);
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
-    sleep(2);
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
-    sleep(5);
-    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(5);
-
-    $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
     sleep(3);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(3);
@@ -252,7 +205,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(250);
+    sleep(350);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
@@ -276,7 +229,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
+    sleep(350);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
 
@@ -285,7 +238,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//select[@id="si_pops_select"]/option[contains(text(), "Training population 280")]', 'xpath', 'select trial type tr pop')->click();
+    my $combo_pops_id = $d->find_element('training_pop_id', 'id')->get_value();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[contains(text(), "Training population ' . $combo_pops_id . '")]', 'xpath', 'select combined trials tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);

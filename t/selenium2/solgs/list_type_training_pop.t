@@ -304,23 +304,10 @@ $d->while_logged_in_as("submitter", sub {
     sleep(4);
 
     $d->select_datatable_tab('list_type_training_private_lists');
-    $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'trials list sel pred')->click(); 
+    $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'go to trials list tr pop')->click();
+    sleep(15);
+    $d->find_element_ok('population_traits_list', 'id', 'trials list tr pop traits list');
     sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('trials list tr pop');
-    sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-    sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
-
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(10);
-
-    $d->select_datatable_tab('list_type_training_private_lists');
-    $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'trials list sel pred')->click();
-    sleep(10);
 
 
     # $d->get('/solgs/populations/combined/2804608595/gp/1', 'plots list tr pop page');
@@ -381,23 +368,9 @@ $d->while_logged_in_as("submitter", sub {
     # sleep(5);
 
     $d->select_datatable_tab('list_type_training_private_datasets');
-    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'create trials dataset tr pop')->click();
-    sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('trials dataset tr pop');
-    sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-    sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(250);
-
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(10);
-
-    $d->select_datatable_tab('list_type_training_private_datasets');
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'go to trials dataset tr pop')->click();
-    sleep(5);
+    sleep(15);
+
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -407,7 +380,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
+    sleep(400);
 
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(10);
