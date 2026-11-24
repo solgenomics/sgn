@@ -28,6 +28,30 @@ use SGN::Controller::solGS::clearCache;
 my $f = SGN::Test::Fixture->new;
 END { $f->clean_up_db if $f; }
 my $schema = $f->bcs_schema;
+
+my $user;
+
+
+my $person =  bless {
+    count => 0,
+}, do {
+    package temp_person;
+    sub get_roles { return ['curator', 'submitter' ]; };
+    sub get_sp_person_id { return 41; };
+    __PACKAGE__;
+};
+
+$user = bless {
+    count => 0,
+}, do {
+    package temp_user;
+    sub get_object { return $person };
+    sub check_roles { return 1; };
+    __PACKAGE__;
+};
+
+
+
 my $directory = tempdir(CLEANUP => 1);
 my $name = "anova_fixture_$$";
 # Earlier fixture tests may obsolete shared accessions. Own this test's stock.
@@ -107,18 +131,21 @@ my %controllers = map { my $class = 'SGN::Controller::solGS::'.$_;
 my $async = Test::MockObject->new;
 my $protocol = Test::MockObject->new;
 $protocol->mock(stash_protocol_id => sub { return });
+
 $controllers{'solGS::AsyncJob'} = $async;
 $controllers{'solGS::genotypingProtocol'} = $protocol;
 my %controller_lookup = map { lc($_) => $controllers{$_} } keys %controllers;
 my $context = Test::MockObject->new;
+
 $context->{stash} = {trial_id => $trial_id, training_pop_id => $trial_id,
     solgs_dir => "$directory/solgs/trials", anova_dir => "$directory/anova/trials",
-    analysis_metadata_dir => "$directory/metadata", data_set_type => 'single_population'};
+		     analysis_metadata_dir => "$directory/metadata", data_set_type => 'single_population'};
+
 $context->mock(stash => sub { $context->{stash} });
 make_path($context->stash->{analysis_metadata_dir});
 $context->mock(controller => sub { $controller_lookup{lc($_[1])} or die "Unexpected controller $_[1]" });
 $context->mock(error => sub { [] });
-$context->mock(user => sub { $f->user });
+$context->mock(user => sub { $user});
 $context->mock(dbic_schema => sub {
     return $schema if $_[1] eq 'Bio::Chado::Schema';
     return $f->people_schema if $_[1] eq 'CXGN::People::Schema';

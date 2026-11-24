@@ -35,6 +35,9 @@ sub store_analysis_json : Path('/ajax/analysis/store/json') ActionClass("REST") 
 sub store_analysis_json_POST {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c, undef, 1);
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     print STDERR Dumper $c->req->params();
@@ -69,7 +72,6 @@ sub store_analysis_json_POST {
     my $analysis_model_training_data_file = $c->req->param("analysis_model_training_data_file");
     my $analysis_model_training_data_file_type = $c->req->param("analysis_model_training_data_file_type");
     my $analysis_model_auxiliary_files = $c->req->param("analysis_model_auxiliary_files") ? decode_json $c->req->param("analysis_model_auxiliary_files") : [];
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
         $c->stash->{rest} = {error => "You are trying to save an analysis, but no name was given."};
@@ -130,6 +132,9 @@ sub store_analysis_spreadsheet : Path('/ajax/analysis/store/spreadsheet') Action
 sub store_analysis_spreadsheet_POST {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c, undef, 1);
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     print STDERR Dumper $c->req->params();
@@ -168,7 +173,6 @@ sub store_analysis_spreadsheet_POST {
     my $analysis_model_auxiliary_file_type_2 = $c->req->param("upload_new_analysis_model_auxiliary_file_type_2");
     my $analysis_model_auxiliary_file_3 = $c->req->upload("upload_new_analysis_model_auxiliary_file_3");
     my $analysis_model_auxiliary_file_type_3 = $c->req->param("upload_new_analysis_model_auxiliary_file_type_3");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my @error_status;
 
     my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
@@ -777,12 +781,13 @@ sub analysis_model_delete :Path('/ajax/analysis_model/delete') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my ($user_id, $user_name, $user_role) = _check_user_login($c, 'curator', 1);
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
-    my ($user_id, $user_name, $user_role) = _check_user_login($c, 'curator');
 
     my $model_id = $c->req->param('model_id');
     my $analysis_by_model = CXGN::AnalysisModel::GetModel::get_analyses_by_model($schema, $model_id);
@@ -815,6 +820,7 @@ sub analysis_model_delete :Path('/ajax/analysis_model/delete') Args(0) {
 sub _check_user_login {
     my $c = shift;
     my $role_check = shift;
+    my $check_expiry = shift;
     my $user_id;
     my $user_name;
     my $user_role;
@@ -823,7 +829,7 @@ sub _check_user_login {
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
+        if (!$user_info[0] || ($check_expiry && $user_info[3])){
             $c->stash->{rest} = {error=>'You must be logged in to do this!'};
             $c->detach();
         }

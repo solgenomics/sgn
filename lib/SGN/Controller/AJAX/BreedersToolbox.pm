@@ -277,6 +277,16 @@ sub get_accession_plots_plants :Path('/ajax/breeders/get_accession_plots_plants'
 sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/') Args(1) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to delete phenotype files.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to delete phenotype files.' };
+        return;
+    }
+
     my $file_id = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);

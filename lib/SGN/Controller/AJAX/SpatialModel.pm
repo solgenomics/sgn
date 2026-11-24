@@ -539,6 +539,16 @@ sub make_R_trait_name {
 sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustments') Args(1) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to store spatial adjustments.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to store spatial adjustments.' };
+        return;
+    }
+
     my $trial_id = shift;
 
     my $spatial_adjustments = $c->req->param("spatial_adjustments"); # should be a JSON of plot->trait->adjustment

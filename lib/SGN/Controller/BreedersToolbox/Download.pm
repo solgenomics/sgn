@@ -500,7 +500,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 	    end_date => $phenotype_end_date,
     });
 
-    # print STDERR "Repetitive_measurements option recieved" .$repetitive_measurements  ."\n";
+    # print STDERR "Repetitive_measurements option received" .$repetitive_measurements  ."\n";
     my $error = $download->download();
 
     $c->res->content_type('Application/'.$format);
@@ -1603,6 +1603,12 @@ sub trial_download_log {
 sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/spreadsheet') Args(1) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->detach();
+    }
+
     my $trial_id = shift;
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;

@@ -524,6 +524,16 @@ sub delete_catalog_item : Path('/ajax/catalog/delete') : ActionClass('REST'){ }
 sub delete_catalog_item_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error_string => 'You must be logged in to delete catalog items.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error_string => 'You must be a curator or submitter to delete catalog items.' };
+        return;
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $item_prop_id = $c->req->param('item_prop_id');

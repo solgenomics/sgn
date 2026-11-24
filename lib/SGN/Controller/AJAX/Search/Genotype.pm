@@ -294,6 +294,12 @@ sub pcr_genotyping_data_download : Path('/ajax/pcr_genotyping_data/download') : 
 sub pcr_genotyping_data_download_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You need to be logged in to download genotype data" };
+        return;
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
@@ -324,10 +330,6 @@ sub pcr_genotyping_data_download_POST : Args(0) {
 
 #    print STDERR "TEMPFILE : $tempfile\n";
 
-    if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to download genotype data" };
-        return;
-    }
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();

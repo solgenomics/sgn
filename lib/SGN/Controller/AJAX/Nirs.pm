@@ -35,8 +35,14 @@ sub generate_spectral_plot : Path('/ajax/Nirs/generate_spectral_plot') : ActionC
 sub generate_spectral_plot_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $dbh = $c->dbc->dbh();
+
     my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 0);
+    if (ref($user_id) eq 'HASH') {
+        $c->stash->{rest} = $user_id;
+        return;
+    }
+
+    my $dbh = $c->dbc->dbh();
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
     my $dataset_id = $c->req->param('dataset_id');
@@ -106,8 +112,14 @@ sub generate_results : Path('/ajax/Nirs/generate_results') : ActionClass('REST')
 sub generate_results_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $dbh = $c->dbc->dbh();
+
     my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 'submitter');
+    if (ref($user_id) eq 'HASH') {
+        $c->stash->{rest} = $user_id;
+        return;
+    }
+
+    my $dbh = $c->dbc->dbh();
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
     print STDERR Dumper $c->req->params();
@@ -437,8 +449,14 @@ sub generate_predictions : Path('/ajax/Nirs/generate_predictions') : ActionClass
 sub generate_predictions_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $dbh = $c->dbc->dbh();
+
     my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 'submitter');
+    if (ref($user_id) eq 'HASH') {
+        $c->stash->{rest} = $user_id;
+        return;
+    }
+
+    my $dbh = $c->dbc->dbh();
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
@@ -700,7 +718,7 @@ sub _check_user_login_nirs {
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
+        if (!$user_info[0] || $user_info[3]){
             $c->stash->{rest} = {error=>'You must be logged in to do this!'}; $c->detach();
         }
         $user_id = $user_info[0];

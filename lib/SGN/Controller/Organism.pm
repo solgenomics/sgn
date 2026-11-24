@@ -177,6 +177,11 @@ After adding, redirects to C<view_sol100>.
 sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
     my ( $self, $c ) = @_;
 
+    if (!$c->user()) {
+        $c->res->redirect( '/user/login' );
+        $c->detach();
+    }
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado', $sp_person_id)
                      ->resultset('Organism::Organism')

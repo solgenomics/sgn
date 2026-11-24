@@ -4888,6 +4888,16 @@ sub drone_imagery_save_gps_images : Path('/api/drone_imagery/save_gps_images') :
 sub drone_imagery_save_gps_images_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to save GPS images.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to save GPS images.' };
+        return;
+    }
+
     # print STDERR Dumper $c->req->params();
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
@@ -5377,8 +5387,8 @@ sub _perform_plot_polygon_assign {
         my ($previous_result, $previous_total_count) = $previous_images_search->search();
 
         if (scalar(@$previous_result) == scalar(@found_stock_ids)) {
-            print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occured. Skipping \n";
-            return {warning => "Plot polygon assignment already occured for $assign_plot_polygons_type on project $drone_run_band_project_id."};
+            print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occurred. Skipping \n";
+            return {warning => "Plot polygon assignment already occurred for $assign_plot_polygons_type on project $drone_run_band_project_id."};
         }
     }
 
