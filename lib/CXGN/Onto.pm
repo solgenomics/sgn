@@ -257,6 +257,173 @@ sub visible_cv_ids_for_db_names {
     return sort { $a <=> $b } grep { $wanted{ $namespaces->{$_}->{db_name} } } keys %$namespaces;
 }
 
+# Returns the cvterm row for $composable_cvtype in the 'composable_cvtypes' cv, or dies.
+sub _get_composable_cvtype_term {
+    my $self = shift;
+    my $composable_cvtype = shift;
+
+    if (!defined $composable_cvtype || !length $composable_cvtype) {
+        die "A composable cvtype is required.\n";
+    }
+
+    my $term = $self->schema()->resultset('Cv::Cvterm')->find(
+        { 'me.name' => $composable_cvtype, 'cv.name' => 'composable_cvtypes' },
+        { join => 'cv' }
+    );
+    if (!$term) {
+        die "'$composable_cvtype' is not a cvterm in the 'composable_cvtypes' cv.\n";
+    }
+    return $term;
+}
+
+=head2 get_composable_cvs_of_type
+
+parameters: composable_cvtype (the name of a cvterm in the 'composable_cvtypes'
+cv, e.g. 'trait_ontology')
+
+returns: hashref of cv_id => { cv_name => $cv_name, db_name => $db_name } for
+every cv assigned that type through cvprop (same shape as onto_root_namespaces).
+db_name is the db used by most of the cv's non-obsolete terms, or undef if the
+cv has no such terms.
+
+Dies if the composable_cvtype does not exist in the 'composable_cvtypes' cv.
+
+=cut
+
+sub get_composable_cvs_of_type {
+    my $self = shift;
+    my $composable_cvtype = shift;
+
+    my $type_term = $self->_get_composable_cvtype_term($composable_cvtype);
+
+    my $q = "SELECT cv.cv_id, cv.name, top_db.name
+        FROM cv
+        JOIN cvprop ON(cvprop.cv_id = cv.cv_id AND cvprop.type_id = ?)
+        LEFT JOIN LATERAL (
+            SELECT db.name
+            FROM cvterm
+            JOIN dbxref USING(dbxref_id)
+            JOIN db USING(db_id)
+            WHERE cvterm.cv_id = cv.cv_id AND cvterm.is_obsolete = 0 AND db.name <> '' AND db.name <> 'null'
+            GROUP BY db.name
+            ORDER BY count(*) DESC, db.name
+            LIMIT 1
+        ) top_db ON true";
+
+    my $h = $self->schema()->storage->dbh->prepare($q);
+    $h->execute($type_term->cvterm_id);
+
+    my %cvs;
+    while (my ($cv_id, $cv_name, $db_name) = $h->fetchrow_array()) {
+        $cvs{$cv_id} = { cv_name => $cv_name, db_name => $db_name };
+    }
+
+    return \%cvs;
+}
+
+=head2 assign_composable_cvtype
+
+parameters: cv_id, composable_cvtype (the name of a cvterm in the
+'composable_cvtypes' cv)
+
+Assigns the cv to the composable cvtype by adding a cvprop row
+(cv_id, type_id = the cvtype's cvterm_id).
+
+A cv may only have one composable cvtype, so any other composable cvtype
+cvprop rows on the cv are deleted.
+
+Only 'trait_ontology' may be assigned to more than one cv. For every other
+cvtype, any existing cvprop rows of that type (on any cv) are deleted first, so
+that the given cv is the only one of that type. The delete and insert run in a
+single transaction that is rolled back on error.
+
+Dies if the cv_id does not exist or the composable_cvtype does not exist in the
+'composable_cvtypes' cv.
+
+=cut
+
+sub assign_composable_cvtype {
+    my $self = shift;
+    my $cv_id = shift;
+    my $composable_cvtype = shift;
+    my $schema = $self->schema();
+
+    if (!defined $cv_id || $cv_id !~ /^\d+$/) {
+        die "A valid cv_id is required.\n";
+    }
+    my $cv = $schema->resultset('Cv::Cv')->find({ cv_id => $cv_id });
+    if (!$cv) {
+        die "No cv found with cv_id $cv_id.\n";
+    }
+    my $type_id = $self->_get_composable_cvtype_term($composable_cvtype)->cvterm_id;
+
+    my $composable_type_ids = $schema->resultset('Cv::Cvterm')->search(
+        { 'cv.name' => 'composable_cvtypes' },
+        { join => 'cv' }
+    )->get_column('cvterm_id')->as_query;
+
+    $schema->txn_do(sub {
+        my $cvprop_rs = $schema->resultset('Cv::Cvprop');
+
+        # A cv may only have one composable cvtype: drop any other type it currently has.
+        $cvprop_rs->search({
+            cv_id   => $cv_id,
+            type_id => { -in => $composable_type_ids, '!=' => $type_id },
+        })->delete();
+
+        if ($composable_cvtype ne 'trait_ontology') {
+            $cvprop_rs->search({ type_id => $type_id })->delete();
+        }
+
+        $cvprop_rs->find_or_create(
+            { cv_id => $cv_id, type_id => $type_id, rank => 0 },
+            { key => 'cvprop_c1' }
+        );
+    });
+
+    return 1;
+}
+
+=head2 unassign_composable_cvtype
+
+parameters: cv_id
+
+Removes the cv's composable cvtype by deleting every cvprop row on the cv whose
+type is a cvterm in the 'composable_cvtypes' cv. Does nothing if the cv has no
+composable cvtype.
+
+returns: the number of cvprop rows deleted
+
+Dies if the cv_id does not exist.
+
+=cut
+
+sub unassign_composable_cvtype {
+    my $self = shift;
+    my $cv_id = shift;
+    my $schema = $self->schema();
+
+    if (!defined $cv_id || $cv_id !~ /^\d+$/) {
+        die "A valid cv_id is required.\n";
+    }
+    my $cv = $schema->resultset('Cv::Cv')->find({ cv_id => $cv_id });
+    if (!$cv) {
+        die "No cv found with cv_id $cv_id.\n";
+    }
+
+    my $composable_type_ids = $schema->resultset('Cv::Cvterm')->search(
+        { 'cv.name' => 'composable_cvtypes' },
+        { join => 'cv' }
+    )->get_column('cvterm_id')->as_query;
+
+    my $deleted = $schema->resultset('Cv::Cvprop')->search({
+        cv_id   => $cv_id,
+        type_id => { -in => $composable_type_ids },
+    })->delete();
+
+    return $deleted + 0;
+}
+
 sub store_composed_term {
     my $self = shift;
     my $new_trait_names = shift;

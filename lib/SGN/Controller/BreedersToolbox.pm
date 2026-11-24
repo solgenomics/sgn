@@ -624,6 +624,13 @@ sub manage_ontologies : Path("/breeders/ontologies") Args(0) {
         return;
     }
 
+    # Every composable cvtype (trait_ontology, method_ontology, ...), for the CV type select boxes
+    my @composable_cvtypes = $schema->resultset('Cv::Cvterm')->search(
+        { 'cv.name' => 'composable_cvtypes', 'me.is_obsolete' => 0 },
+        { join => 'cv', order_by => 'me.name' }
+    )->get_column('me.name')->all();
+
+    $c->stash->{composable_cvtypes} = \@composable_cvtypes;
     $c->stash->{template} = '/breeders_toolbox/manage_ontologies.mas';
 }
 

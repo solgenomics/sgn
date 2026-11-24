@@ -883,17 +883,54 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
-    my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
+    my $observation_variables = CXGN::BrAPI::v2::ObservationVariables->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id),
         phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id),
         people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
         page_size => 1000000,
         page => 0,
-        status => []
+        status => [],
+        context => $c
     });
 
-    my $result = $observation_variables->observation_variable_ontologies({cvprop_type_names => $cvprop_type_names});
+    #my @cvprop_type_names = ('trait_ontology', 'composed_trait_ontology');
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    # Derive the db names (name spaces) of the cvs tagged as trait ontologies:
+    # cvterm (cv type name) -> cvprop.type_id -> cvprop.cv_id -> cvterm -> dbxref -> db
+    my $cvprop_type_rs = $schema->resultset("Cv::Cvterm")->search({
+        name => { -in => $cvprop_type_names }
+    });
+    my @cvprop_type_ids = map { $_->cvterm_id() } $cvprop_type_rs->all();
+
+    my $cvprop_rs = $schema->resultset("Cv::Cvprop")->search({
+        type_id => { -in => \@cvprop_type_ids }
+    });
+
+    my @name_spaces;
+    my %seen_name_space;
+    while (my $cvprop = $cvprop_rs->next()) {
+        my $cvterm = $schema->resultset("Cv::Cvterm")->search(
+            { cv_id => $cvprop->cv_id() },
+            { order_by => 'cvterm_id' }
+        )->first();
+        next if !$cvterm;
+
+        my $dbxref = $schema->resultset("General::Dbxref")->find({ dbxref_id => $cvterm->dbxref_id() });
+        next if !$dbxref;
+
+        my $db = $schema->resultset("General::Db")->find({ db_id => $dbxref->db_id() });
+        next if !$db;
+
+        push @name_spaces, $db->name() if !$seen_name_space{$db->name()}++;
+    }
+
+    my $result = $observation_variables->observation_variable_ontologies({
+        cvprop_type_names => $cvprop_type_names,
+        name_spaces => \@name_spaces
+    });
     #print STDERR Dumper $result;
 
     my @ontos;

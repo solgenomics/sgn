@@ -1,3 +1,16 @@
+<%args>
+    $composable_cvtypes => []
+</%args>
+
+<%once>
+    use JSON;
+</%once>
+
+<%init>
+    # Embedded in a <script> block, so keep '</' from closing it
+    (my $composable_cvtypes_json = JSON->new->encode($composable_cvtypes)) =~ s{</}{<\\/}g;
+</%init>
+
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
 <& /page/page_title.mas, title=>"Manage Ontologies" &>
@@ -158,6 +171,10 @@ jQuery(function() {
     var cvTable = jQuery('#manage_ontologies_cv_table');
     var cvTableBody = cvTable.children('tbody');
     var cvTableMessage = jQuery('#manage_ontologies_cv_table_message');
+    var cvPanel = jQuery('#manage_ontologies_cv_panel'); // lock button + table
+    var cvLockButton = jQuery('#manage_ontologies_cv_lock');
+    var cvLocked = true; // toggles start locked to prevent accidental changes
+    var composableCvtypes = <% $composable_cvtypes_json %>; // names of the cvterms in the composable_cvtypes cv
     var cvRequestCount = 0; // used to ignore responses from superseded clicks
     var browserContainer = jQuery('#manage_ontologies_browser');
     var browserMessage = jQuery('#manage_ontologies_browser_message');
@@ -169,6 +186,48 @@ jQuery(function() {
             .attr({ 'data-cv-id': cvId, 'data-property': property })
             .prop('checked', String(value) === '1');
     }
+
+    // Builds the composable cvtype select: "none" plus every type from the server, preselected
+    // with the cv's current type. Choosing "none" unassigns the cv's type.
+    function makeCvtypeSelect(cvId, cvName, cvtype) {
+        var select = jQuery('<select class="form-control input-sm mo-cvtype-select"></select>')
+            .attr({ 'data-cv-id': cvId, 'data-cv-name': cvName });
+        select.append(jQuery('<option value=""></option>').text('none'));
+        jQuery.each(composableCvtypes, function(i, name) {
+            select.append(jQuery('<option></option>').val(name).text(name));
+        });
+        // A cv assigned several types before they were made exclusive: show them, but not as a choice
+        if (cvtype && composableCvtypes.indexOf(cvtype) === -1) {
+            select.append(jQuery('<option disabled></option>').val(cvtype).text(cvtype));
+        }
+        setCvtypeSelectValue(select, cvtype || '');
+        return select;
+    }
+
+    // Selects value and records it as the select's saved value
+    function setCvtypeSelectValue(select, value) {
+        select.val(value).attr('data-current', value);
+    }
+
+    // Enables or disables every toggle and select in the cv table to match the lock state.
+    // Controls with a save in flight stay disabled; they are released when it finishes.
+    function applyCvLock() {
+        cvTableBody.find('input[type=checkbox]').not('.mo-saving').bootstrapToggle(cvLocked ? 'disable' : 'enable');
+        cvTableBody.find('select').not('.mo-saving').prop('disabled', cvLocked);
+    }
+
+    function setCvLock(locked) {
+        cvLocked = locked;
+        cvLockButton.find('.glyphicon')
+            .toggleClass('glyphicon-lock', locked)
+            .toggleClass('glyphicon-pencil', !locked);
+        cvLockButton.find('.mo-lock-label').text(locked ? 'Locked' : 'Unlocked');
+        cvLockButton.toggleClass('btn-default', locked).toggleClass('btn-warning', !locked);
+        cvLockButton.attr('title', locked ? 'Click to unlock the CV settings for editing.' : 'Click to lock the CV settings.');
+        applyCvLock();
+    }
+
+    cvLockButton.on('click', function() { setCvLock(!cvLocked); });
 
     // Top-right pane: ontology browser rooted at the visible cvs' root nodes of a left-pane item.
     // Called on selection, and again after a visibility change so hidden cvs drop out.
@@ -221,7 +280,7 @@ jQuery(function() {
         loadBrowser(item);
 
         var requestId = ++cvRequestCount;
-        cvTable.hide();
+        cvPanel.hide();
         cvTableBody.empty();
         cvTableMessage.text('Loading CVs...').show();
 
@@ -239,18 +298,171 @@ jQuery(function() {
                 jQuery.each(response.cvs, function(i, cv) {
                     var row = jQuery('<tr></tr>');
                     row.append(jQuery('<td></td>').text(cleanCvName(cv.cv_name)));
+                    row.append(jQuery('<td></td>').append(makeCvtypeSelect(cv.cv_id, cleanCvName(cv.cv_name), cv.composable_cvtype)));
                     row.append(jQuery('<td></td>').append(makeToggle(cv.cv_id, 'visible', cv.cv_visible)));
                     row.append(jQuery('<td></td>').append(makeToggle(cv.cv_id, 'editable', cv.cv_editable)));
                     cvTableBody.append(row);
                 });
                 cvTableMessage.hide();
-                cvTable.show();
+                cvPanel.show();
                 cvTableBody.find('input[type=checkbox]').bootstrapToggle();
+                applyCvLock();
             },
             error: function(xhr, status, err) {
                 if (requestId !== cvRequestCount) { return; }
                 cvTableMessage.text('');
                 alert('Error retrieving CV properties: ' + (err || status));
+            }
+        });
+    });
+
+    // Composable type change: look up which cvs currently have the relevant type, confirm with
+    // the user, and only then assign (or, for "none", unassign) it.
+    cvTableBody.on('change', 'select.mo-cvtype-select', function() {
+        var select = jQuery(this);
+        var cvId = select.attr('data-cv-id');
+        var cvName = select.attr('data-cv-name');
+        var previous = select.attr('data-current');
+        var cvtype = select.val();
+        if (cvtype === previous) { return; }
+
+        var unassigning = (cvtype === '');
+        // A cv assigned several types before they were made exclusive has them comma-joined
+        var previousTypes = previous ? previous.split(/\s*,\s*/) : [];
+        var wasTrait = previousTypes.indexOf('trait_ontology') !== -1;
+
+        function release() {
+            select.removeClass('mo-saving').prop('disabled', cvLocked);
+        }
+
+        function cancel() {
+            select.val(previous);
+            release();
+        }
+
+        // Names of the cvs in a get_composable_cvs_of_type response other than this one
+        function otherCvNames(currentCvs) {
+            return jQuery.map(currentCvs, function(info, id) {
+                if (String(id) === String(cvId)) { return null; }
+                return cleanCvName(info.cv_name) + (info.db_name ? ' (' + info.db_name + ')' : '');
+            }).sort();
+        }
+
+        // currentCvs is get_composable_cvs_of_type's { cv_id: { cv_name, db_name } } for the
+        // type being assigned, or for trait_ontology when unassigning a trait ontology
+        function confirmMessage(currentCvs) {
+            var others = otherCvNames(currentCvs);
+            var lines = [];
+
+            if (unassigning) {
+                lines.push('"' + cvName + '" will no longer be ' + previousTypes.join(' or ') + '.');
+                if (wasTrait) {
+                    lines.push(others.length
+                        ? 'After this change, ' + others.length + ' ontolog' + (others.length === 1 ? 'y' : 'ies')
+                            + ' will remain trait_ontology: ' + others.join(', ') + '.'
+                        : 'After this change, no ontology will be a trait_ontology.');
+                }
+                var exclusive = previousTypes.filter(function(t) { return t !== 'trait_ontology'; });
+                if (exclusive.length) {
+                    lines.push('After this change, no ontology will be a ' + exclusive.join(' or ') + '.');
+                }
+                lines.push('', 'Unassign the composable type of "' + cvName + '"?');
+                return lines.join('\n');
+            }
+
+            if (cvtype === 'trait_ontology') {
+                lines.push('"' + cvName + '" will be an additional trait ontology.');
+                lines.push(others.length
+                    ? 'Current trait ontologies: ' + others.join(', ') + '.'
+                    : 'There are no other trait ontologies.');
+            } else if (others.length) {
+                lines.push(cvtype + ' is currently assigned to: ' + others.join(', ') + '.');
+                lines.push('Assigning it to "' + cvName + '" will unassign it from ' + (others.length > 1 ? 'those CVs.' : 'that CV.'));
+            } else {
+                lines.push('No CV is currently assigned ' + cvtype + '.');
+            }
+            if (previous) {
+                lines.push('"' + cvName + '" will no longer be ' + previousTypes.join(' or ') + '.');
+            }
+            lines.push('', 'Assign ' + cvtype + ' to "' + cvName + '"?');
+            return lines.join('\n');
+        }
+
+        // Updates the table after a successful save
+        function saved() {
+            setCvtypeSelectValue(select, cvtype);
+            // Every type except trait_ontology belongs to only one cv, so any other
+            // cv in the table that had it is now unassigned
+            if (!unassigning && cvtype !== 'trait_ontology') {
+                cvTableBody.find('select.mo-cvtype-select').not(select).each(function() {
+                    var other = jQuery(this);
+                    if (other.attr('data-current') === cvtype) {
+                        setCvtypeSelectValue(other, '');
+                    }
+                });
+            }
+            // The legacy multi-type option no longer applies once the type is changed
+            select.children('option:disabled').filter(function() { return this.value !== ''; }).remove();
+            release();
+        }
+
+        function save() {
+            var action = unassigning ? 'unassign' : 'assign';
+            var data = unassigning ? { cv_id: cvId } : { cv_id: cvId, composable_cvtype: cvtype };
+            jQuery('#working_modal').modal('show');
+            jQuery.ajax({
+                url: '/ajax/cv/' + action + '_composable_cvtype',
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.error) {
+                        cancel();
+                        alert('Error saving composable type: ' + response.error);
+                        return;
+                    }
+                    saved();
+                },
+                error: function(xhr, status, err) {
+                    jQuery('#working_modal').modal('hide');
+                    cancel();
+                    alert('Error saving composable type: ' + (err || status));
+                }
+            });
+        }
+
+        function confirmAndSave(currentCvs) {
+            if (confirm(confirmMessage(currentCvs))) {
+                save();
+            } else {
+                cancel();
+            }
+        }
+
+        select.addClass('mo-saving').prop('disabled', true);
+
+        // Unassigning a type other than trait_ontology needs no lookup: nothing will have it after
+        if (unassigning && !wasTrait) {
+            confirmAndSave({});
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/cv/get_composable_cvs_of_type',
+            data: { composable_cvtype: unassigning ? 'trait_ontology' : cvtype },
+            dataType: 'json',
+            success: function(response) {
+                if (response.error) {
+                    cancel();
+                    alert('Error checking composable type: ' + response.error);
+                    return;
+                }
+                confirmAndSave(response.cvs || {});
+            },
+            error: function(xhr, status, err) {
+                cancel();
+                alert('Error checking composable type: ' + (err || status));
             }
         });
     });
@@ -261,12 +473,21 @@ jQuery(function() {
         var property = input.attr('data-property');
         var value = input.prop('checked') ? 1 : 0;
 
+        // Re-enables the switch unless the table was locked while the request was in flight
+        function release() {
+            input.removeClass('mo-saving');
+            if (!cvLocked) { toggle.enable(); }
+        }
+
         // Puts the switch back without firing another change event
+        // (bootstrap-toggle ignores on/off while disabled, so enable first)
         function revert() {
             toggle.enable();
             if (value) { toggle.off(true); } else { toggle.on(true); }
+            release();
         }
 
+        input.addClass('mo-saving');
         toggle.disable();
         jQuery.ajax({
             url: property === 'visible' ? '/ajax/cv/set_visibility' : '/ajax/cv/set_editable',
@@ -279,7 +500,7 @@ jQuery(function() {
                     alert('Error saving ' + property + ' setting: ' + response.error);
                     return;
                 }
-                toggle.enable();
+                release();
                 if (property === 'visible') {
                     loadBrowser(dbList.children('li.active'));
                 }
@@ -321,12 +542,17 @@ jQuery(function() {
                 <div class="mo-gutter mo-gutter-h" data-target="manage_ontologies_top_pane"></div>
                 <div class="mo-pane mo-pane-fill" id="manage_ontologies_bottom_pane">
                     <p class="text-muted" id="manage_ontologies_cv_table_message">Select an ontology on the left to manage its CVs.</p>
-                    <table class="table table-condensed table-hover" id="manage_ontologies_cv_table" style="display: none">
+                    <div id="manage_ontologies_cv_panel" style="display: none">
+                    <div class="clearfix" style="margin-bottom: 5px">
+                        <button type="button" class="btn btn-default btn-sm pull-right" id="manage_ontologies_cv_lock" title="Click to unlock the CV settings for editing."><span class="glyphicon glyphicon-lock"></span> <span class="mo-lock-label">Locked</span></button>
+                    </div>
+                    <table class="table table-condensed table-hover" id="manage_ontologies_cv_table">
                         <thead>
-                            <tr><th>CV name</th><th>Visible <span class="glyphicon glyphicon-question-sign" style="color:blue" title="Changes whether this CV is visible in the ontology browser."></span></th><th>Editable <span class="glyphicon glyphicon-question-sign" style="color:blue" title="Changes whether users can add or edit terms on this ontology."></span></th></tr>
+                            <tr><th>CV name</th><th>Composable type <span class="glyphicon glyphicon-question-sign" style="color:blue" title="The composable cvtype (e.g. trait_ontology, method_ontology) assigned to this CV. Every type except trait_ontology can belong to only one CV, so assigning one unassigns it from any other CV."></span></th><th>Visible <span class="glyphicon glyphicon-question-sign" style="color:blue" title="Changes whether this CV is visible in the ontology browser."></span></th><th>Editable <span class="glyphicon glyphicon-question-sign" style="color:blue" title="Changes whether users can add or edit terms on this ontology."></span></th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
