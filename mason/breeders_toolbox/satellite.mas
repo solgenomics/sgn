@@ -1,0 +1,280 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/satellite.mas - Satellite page (/breeders/satellite)
+
+=head1 DESCRIPTION
+
+Sentinel-2 (10 m, ~every 5 days) and Landsat 8/9 (30 m, ~every 8 days)
+images, free, of the field of a research station or of a trial for a date range, in steps like the Script Factory
+pipeline: 1 location, 2 field (trial plots from their GPS coordinates, or a
+square around a point picked on the map), 3 dates (presets or the trial
+season), satellites and view (true colour or NDVI), 4 images. Each date's cloud cover is
+measured over the field itself; cloudy dates are hidden unless asked. Code:
+js/source/entries/satellite.js (images read in the browser by
+js/source/modules/cog_reader.js); endpoints /ajax/satellite/*.
+
+=head1 AUTHOR
+
+Chris Simoes
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, classes => ['jquery'], entries => ['satellite'] &>
+<& /util/import_css.mas, paths => ['leaflet.css'] &>
+
+<style>
+.sat-app { --sat-accent: #2b7a4b; --sat-accent-soft: #e8f4ec; --sat-border: #dfe3e8; --sat-muted: #6b7280; --sat-bg: #f7f9fa; margin-bottom: 40px; }
+.sat-app h3 { font-size: 18px; margin: 0 0 6px 0; font-weight: 600; }
+.sat-app h4 { font-size: 15px; font-weight: 600; margin: 16px 0 8px; }
+.sat-help { color: var(--sat-muted); font-size: 13px; }
+.sat-muted { color: var(--sat-muted); }
+.sat-small { font-size: 12px; }
+.sat-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 20px 24px; margin: 10px 0 18px; border-radius: 10px; background: linear-gradient(120deg, #1f5f3a 0%, #2b7a4b 55%, #4c9a6a 100%); color: #fff; }
+.sat-hero h2 { margin: 0 0 6px; font-weight: 600; color: #fff; }
+.sat-hero p { margin: 0; max-width: 720px; opacity: .92; }
+.sat-badge { background: rgba(255,255,255,.15); border-radius: 16px; padding: 3px 12px; font-size: 13px; }
+.sat-badge-label { text-transform: uppercase; font-size: 10px; letter-spacing: .08em; opacity: .8; margin-right: 6px; }
+.sat-stepper { display: flex; list-style: none; padding: 0; margin: 0 0 18px; }
+.sat-stepper li { flex: 1; position: relative; text-align: center; cursor: pointer; padding-top: 4px; color: var(--sat-muted); font-size: 13px; }
+.sat-stepper li:before { content: ''; position: absolute; top: 19px; left: -50%; width: 100%; height: 3px; background: var(--sat-border); z-index: 0; }
+.sat-stepper li:first-child:before { display: none; }
+.sat-stepper li.done:before, .sat-stepper li.active:before { background: var(--sat-accent); }
+.sat-step-num { position: relative; z-index: 1; display: block; margin: 0 auto 6px; width: 32px; height: 32px; line-height: 28px; border-radius: 50%; border: 2px solid var(--sat-border); background: #fff; font-weight: 600; }
+.sat-stepper li.active .sat-step-num { background: var(--sat-accent); border-color: var(--sat-accent); color: #fff; box-shadow: 0 0 0 4px var(--sat-accent-soft); }
+.sat-stepper li.done .sat-step-num { border-color: var(--sat-accent); color: var(--sat-accent); }
+.sat-stepper li.active .sat-step-label { color: #111; font-weight: 600; }
+.sat-stepper li.off { opacity: .5; cursor: not-allowed; }
+.sat-card { background: #fff; border: 1px solid var(--sat-border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.sat-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.sat-label { display: block; font-weight: 600; font-size: 13px; margin: 12px 0 4px; }
+.sat-nav { display: flex; justify-content: space-between; margin: 6px 0 24px; }
+.sat-loc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; max-height: 460px; overflow-y: auto; margin-top: 10px; padding: 2px; }
+.sat-loc { display: block; border: 1px solid var(--sat-border); border-radius: 8px; padding: 8px 10px; cursor: pointer; color: #111827; text-decoration: none !important; }
+.sat-loc:hover { border-color: var(--sat-accent); }
+.sat-loc.on { border-color: var(--sat-accent); background: var(--sat-accent-soft); }
+.sat-loc.dis { opacity: .55; }
+.sat-loc small { display: block; color: var(--sat-muted); }
+.sat-loc { position: relative; padding-left: 34px; }
+.sat-loc-check { position: absolute; left: 9px; top: 9px; width: 17px; height: 17px; border: 2px solid #c3ccd5; border-radius: 4px; font-size: 12px; line-height: 13px; text-align: center; color: #fff; }
+.sat-loc.on .sat-loc-check { background: var(--sat-accent); border-color: var(--sat-accent); }
+.sat-selected { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; min-height: 26px; }
+.sat-chip { display: inline-flex; align-items: center; gap: 2px; background: var(--sat-accent-soft); border: 1px solid #b9d8c4; border-radius: 14px; padding: 1px 4px 1px 10px; font-size: 12.5px; }
+.sat-chip-x { border: 0; background: none; font-size: 16px; line-height: 1; color: #4b5563; padding: 0 4px; cursor: pointer; }
+.sat-chip-x:hover { color: #b91c1c; }
+.sat-site-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.sat-site { border: 1px solid var(--sat-border); background: #fff; border-radius: 16px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.sat-site.on { background: var(--sat-accent); border-color: var(--sat-accent); color: #fff; }
+.sat-site.bad span { color: #dc2626; font-weight: 700; }
+.sat-site.on.bad span { color: #fecaca; }
+.sat-draw { background: var(--sat-bg); border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 13px; }
+.sat-draw-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.sat-draw-active { margin-top: 6px; padding: 6px 10px; border-left: 3px solid #f97316; background: #fff7ed; border-radius: 4px; }
+.sat-draw-save { margin-top: 6px; }
+.sat-fields-table { margin: 0; background: transparent; }
+.sat-fields-table td { vertical-align: middle !important; border-top: 0 !important; padding: 2px 6px 2px 0 !important; }
+.sat-fields-table input { max-width: 260px; }
+#sat_map.sat-drawing, #sat_map.sat-drawing .leaflet-interactive { cursor: crosshair !important; }
+.sat-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 10px 0; }
+.sat-option { position: relative; display: block; border: 2px solid var(--sat-border); border-radius: 10px; padding: 12px 14px 12px 38px; cursor: pointer; font-weight: normal; margin: 0; transition: border-color .15s, background .15s; }
+.sat-option input { position: absolute; left: 14px; top: 15px; }
+.sat-option:hover { border-color: #9cc9ac; }
+.sat-option.on { border-color: var(--sat-accent); background: var(--sat-accent-soft); }
+.sat-option.disabled { opacity: .55; cursor: not-allowed; }
+.sat-option-title { display: block; font-weight: 600; margin-bottom: 3px; }
+.sat-option-text { display: block; font-size: 12.5px; color: #4b5563; }
+.sat-subopts { background: var(--sat-bg); border-radius: 8px; padding: 10px 14px; margin-top: 6px; }
+.sat-segs { display: flex; gap: 4px; flex-wrap: wrap; }
+.sat-seg { border: 1px solid var(--sat-border); background: #fff; border-radius: 16px; padding: 3px 11px; font-size: 12.5px; color: #374151; cursor: pointer; }
+.sat-seg:hover { border-color: #9cc9ac; }
+.sat-seg.on { background: var(--sat-accent); border-color: var(--sat-accent); color: #fff; }
+.sat-seg[disabled] { opacity: .45; cursor: not-allowed; }
+.sat-inline-row { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin-top: 8px; }
+.sat-switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; margin: 0; }
+.sat-switch input { display: none; }
+.sat-slider { width: 40px; height: 22px; background: #cbd5e1; border-radius: 22px; position: relative; transition: background .2s; }
+.sat-slider:after { content: ''; position: absolute; width: 18px; height: 18px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: left .2s; }
+.sat-switch input:checked + .sat-slider { background: var(--sat-accent); }
+.sat-switch input:checked + .sat-slider:after { left: 20px; }
+#sat_map { height: 360px; border-radius: 8px; border: 1px solid var(--sat-border); margin-top: 12px; }
+.sat-summary { position: sticky; top: 70px; background: var(--sat-bg); border: 1px solid var(--sat-border); border-radius: 10px; padding: 14px 16px; }
+.sat-summary h4 { margin-top: 0; }
+.sat-flow { list-style: none; padding: 0; margin: 0; }
+.sat-flow li { position: relative; padding: 0 0 14px 22px; font-size: 13px; }
+.sat-flow li:before { content: ''; position: absolute; left: 5px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--sat-accent); }
+.sat-flow li:after { content: ''; position: absolute; left: 9px; top: 16px; bottom: 0; width: 1px; background: #c9d3dc; }
+.sat-flow li:last-child:after { display: none; }
+.sat-flow li.off:before { background: #cbd5e1; }
+.sat-flow li.off { color: var(--sat-muted); }
+.sat-flow b { display: block; }
+.sat-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.sat-stat { background: #fff; border: 1px solid var(--sat-border); border-radius: 10px; padding: 12px 14px; }
+.sat-stat .v { font-size: 24px; font-weight: 600; color: var(--sat-accent); line-height: 1.1; }
+.sat-stat .l { font-size: 12px; color: var(--sat-muted); text-transform: uppercase; letter-spacing: .04em; }
+.sat-status { margin: 0 0 10px; font-size: 13px; color: #374151; min-height: 18px; }
+.sat-progress { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 2px 0 8px; padding: 8px 12px; background: var(--sat-accent-soft); border-radius: 8px; font-size: 13px; color: #1f3d2a; }
+.sat-spin { width: 16px; height: 16px; flex: none; border: 2px solid #b9d8c4; border-top-color: var(--sat-accent); border-radius: 50%; animation: sat-spin .8s linear infinite; }
+.sat-bar { flex: 1 1 160px; position: relative; height: 6px; background: #fff; border-radius: 3px; overflow: hidden; }
+.sat-bar > div { height: 100%; width: 0; background: var(--sat-accent); border-radius: 3px; transition: width .3s; }
+.sat-bar.indet > div { position: absolute; width: 30%; animation: sat-indet 1.2s ease-in-out infinite; }
+#sat_progress_count { color: var(--sat-muted); font-variant-numeric: tabular-nums; }
+#sat_elapsed { min-width: 64px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+@keyframes sat-spin { to { transform: rotate(360deg); } }
+@keyframes sat-indet { from { left: -30%; } to { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .sat-spin, .sat-bar.indet > div { animation-duration: 3s; } }
+.sat-timeline { position: relative; height: 34px; margin: 6px 0 14px; border-bottom: 1px solid var(--sat-border); }
+.sat-tick { position: absolute; bottom: 0; width: 7px; margin-left: -3px; border-radius: 3px 3px 0 0; cursor: pointer; }
+.sat-tick.ls { width: 3px; margin-left: -1px; border-radius: 2px 2px 0 0; }
+.sat-sat { font-size: 11px; color: var(--sat-muted); }
+.sat-sat.ls { color: #1d4ed8; }
+.sat-tl-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--sat-muted); margin-top: -10px; margin-bottom: 4px; }
+.sat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.sat-tile { border: 1px solid var(--sat-border); border-radius: 8px; overflow: hidden; background: var(--sat-bg); cursor: pointer; }
+.sat-tile:hover { border-color: var(--sat-accent); }
+.sat-tile canvas { display: block; width: 100%; aspect-ratio: 1 / 1; background: #e5e7eb; }
+.sat-tile-cap { padding: 6px 8px; font-size: 12px; display: flex; justify-content: space-between; gap: 6px; }
+.sat-tile-cap b { font-weight: 600; }
+.sat-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--sat-muted); margin: 4px 0 10px; }
+.sat-ramp { width: 180px; height: 10px; border-radius: 3px; }
+#sat_chart svg { width: 100%; height: 190px; display: block; }
+#sat_big canvas { width: 100%; height: auto; display: block; border-radius: 6px; background: #e5e7eb; }
+.sat-big-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+</style>
+
+<div class="container-fluid sat-app">
+  <div class="sat-hero">
+    <div>
+      <h2>Satellite images</h2>
+      <p>See the field of a research station or of a trial on any date range: free Sentinel-2 images (European Copernicus program, 10 m pixels, a new image about every 5 days since 2017) and Landsat 8/9 (USGS/NASA, 30 m pixels, about every 8 days since 2013). Clouds are measured over your field, not the whole image.</p>
+    </div>
+    <div><span class="sat-badge"><span class="sat-badge-label">Location</span><span id="sat_badge">none chosen</span></span></div>
+  </div>
+
+  <ol class="sat-stepper" id="sat_stepper">
+    <li data-step="1"><span class="sat-step-num">1</span><span class="sat-step-label">Location</span></li>
+    <li data-step="2"><span class="sat-step-num">2</span><span class="sat-step-label">Field</span></li>
+    <li data-step="3"><span class="sat-step-num">3</span><span class="sat-step-label">Dates &amp; view</span></li>
+    <li data-step="4"><span class="sat-step-num">4</span><span class="sat-step-label">Images</span></li>
+  </ol>
+
+  <div class="row">
+    <div class="col-md-9">
+
+      <div class="sat-pane" data-step="1">
+        <div class="sat-card">
+          <h3>Choose the locations</h3>
+          <div class="sat-help">Breedbase locations: research stations, or farms of a production area. Choose one, or keep adding locations to analyse them together. A location needs latitude/longitude, or you can pick the field on the map in the next step.</div>
+          <div class="sat-inline-row" style="margin-top:10px">
+            <div class="sat-segs" id="sat_loc_types"></div>
+            <input type="search" id="sat_loc_search" class="form-control input-sm" placeholder="Search by name, country, program or type" style="flex:1 1 240px;max-width:420px" />
+          </div>
+          <div id="sat_selected" class="sat-selected"></div>
+          <div id="sat_locations" class="sat-loc-grid"><span class="sat-muted sat-small">Loading…</span></div>
+        </div>
+        <div class="sat-nav"><span></span><button class="btn btn-primary sat-next" data-to="2" disabled>Next: field &rarr;</button></div>
+      </div>
+
+      <div class="sat-pane" data-step="2" style="display:none">
+        <div class="sat-card">
+          <div class="sat-site-tabs" style="display:none"></div>
+          <h3>Which field? <span class="sat-muted" style="font-weight:normal;font-size:14px" id="sat_field_loc"></span></h3>
+          <div class="sat-help">A 10 m pixel (Sentinel-2) or 30 m pixel (Landsat) is larger than a breeding plot: the images show the trial area, not single plots.</div>
+          <div class="sat-options" id="sat_field_mode">
+            <label class="sat-option" data-v="trial"><input type="radio" name="sat_field_mode" value="trial" /><span class="sat-option-title">A trial</span><span class="sat-option-text">The trial's plots from their GPS coordinates; cloud is measured over the plots. The trial season fills the dates.</span></label>
+            <label class="sat-option" data-v="fields"><input type="radio" name="sat_field_mode" value="fields" /><span class="sat-option-title">Farm fields</span><span class="sat-option-text">Draw the production fields of the farm on the map; they are saved with the farm for the next analyses.</span></label>
+            <label class="sat-option" data-v="point"><input type="radio" name="sat_field_mode" value="point" /><span class="sat-option-title">Around a point</span><span class="sat-option-text">A square around the location, or around the point you click on the map.</span></label>
+          </div>
+          <div class="sat-subopts" id="sat_trial_box">
+            <label class="sat-label" for="sat_trial" style="margin-top:0">Trial</label>
+            <select id="sat_trial" class="form-control input-sm"></select>
+          </div>
+          <div class="sat-subopts" id="sat_size_box">
+            <label class="sat-label" style="margin-top:0">Size of the square</label>
+            <div class="sat-segs" id="sat_size"></div>
+          </div>
+          <div class="sat-draw" id="sat_draw_box" style="display:none"></div>
+          <div id="sat_map"></div>
+          <div class="sat-help" id="sat_map_hint" style="margin-top:6px"></div>
+        </div>
+        <div class="sat-nav"><button class="btn btn-default sat-next" data-to="1">&larr; Back</button><button class="btn btn-primary sat-next" data-to="3" id="sat_to3">Next: dates &rarr;</button></div>
+      </div>
+
+      <div class="sat-pane" data-step="3" style="display:none">
+        <div class="sat-card">
+          <h3>Dates</h3>
+          <div class="sat-inline-row">
+            <div><label class="sat-label" for="sat_start">Start</label><input type="date" id="sat_start" class="form-control input-sm" /></div>
+            <div><label class="sat-label" for="sat_end">End</label><input type="date" id="sat_end" class="form-control input-sm" /></div>
+            <div><label class="sat-label">Quick choice</label><div class="sat-segs" id="sat_presets"></div></div>
+          </div>
+          <h4>Satellites</h4>
+          <div class="sat-options" id="sat_sources"><span class="sat-muted sat-small">Loading…</span></div>
+          <h4>View</h4>
+          <div class="sat-options" id="sat_view">
+            <label class="sat-option" data-v="rgb"><input type="radio" name="sat_view" value="rgb" /><span class="sat-option-title">True colour</span><span class="sat-option-text">The field as the eye sees it: soil, canopy, harvest, flooding. About 1 MB per date (Landsat less).</span></label>
+            <label class="sat-option" data-v="ndvi"><input type="radio" name="sat_view" value="ndvi" /><span class="sat-option-title">NDVI (vegetation)</span><span class="sat-option-text">Green canopy index from red and near-infrared, with a curve over time: emergence, canopy closure, senescence. About 2.7 MB per date (Landsat less).</span></label>
+          </div>
+          <div class="sat-inline-row">
+            <label class="sat-switch"><input type="checkbox" id="sat_cloudy" /><span class="sat-slider"></span>Show cloudy dates too</label>
+            <span class="sat-help">A date is clear when at least 80% of the field has no cloud or cloud shadow.</span>
+          </div>
+        </div>
+        <div class="sat-nav"><button class="btn btn-default sat-next" data-to="2">&larr; Back</button><button class="btn btn-primary" id="sat_go">Show images &rarr;</button></div>
+      </div>
+
+      <div class="sat-pane" data-step="4" style="display:none">
+        <div class="sat-site-tabs" style="display:none"></div>
+        <div class="sat-stats" id="sat_stats"></div>
+        <div class="sat-card">
+          <div class="sat-card-head"><h3>Dates <span class="sat-muted" style="font-weight:normal;font-size:14px" id="sat_site_name"></span></h3><span class="sat-help">taller = clearer over the field · click a date to enlarge</span></div>
+          <div class="sat-progress" id="sat_progress" style="display:none"><span class="sat-spin" aria-hidden="true"></span><span id="sat_progress_text" role="status"></span><span id="sat_progress_count"></span><div class="sat-bar"><div></div></div><span id="sat_elapsed" title="time since you clicked Show images"></span></div>
+          <div class="sat-status" id="sat_status"></div>
+          <div class="sat-timeline" id="sat_timeline"></div>
+          <div class="sat-tl-labels" id="sat_tl_labels"></div>
+        </div>
+        <div class="sat-card" id="sat_ndvi_block" style="display:none">
+          <h3>NDVI over time</h3>
+          <div id="sat_chart"></div>
+          <div class="sat-help" id="sat_chart_note"></div>
+        </div>
+        <div class="sat-card">
+          <div class="sat-card-head"><h3>Images</h3>
+            <label class="sat-switch sat-small"><input type="checkbox" id="sat_cloudy4" /><span class="sat-slider"></span>Show cloudy dates</label>
+          </div>
+          <div class="sat-legend" id="sat_legend"></div>
+          <div class="sat-grid" id="sat_grid"></div>
+        </div>
+        <div class="sat-nav"><button class="btn btn-default sat-next" data-to="3">&larr; Change dates or view</button><span></span></div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="sat-summary">
+        <h4>Your choice</h4>
+        <ul class="sat-flow" id="sat_flow"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="sat_big_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="sat_big_title"></h4>
+      </div>
+      <div class="modal-body" id="sat_big">
+        <canvas></canvas>
+        <div class="sat-big-nav">
+          <button class="btn btn-default btn-sm" id="sat_prev">&larr; Earlier</button>
+          <span class="sat-small sat-muted" id="sat_big_info"></span>
+          <button class="btn btn-default btn-sm" id="sat_next">Later &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

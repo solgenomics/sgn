@@ -62,7 +62,9 @@ module.exports = {
     optimization: {
         minimize: true,
 	chunkIds: "deterministic",
-        minimizer: [new TerserPlugin({})],
+        // ascii_only: write non-ASCII characters as \u escapes. The JavaScript controller sends the
+        // bundles through Catalyst, which encodes them to UTF-8 a second time ("—" showed as "â")
+        minimizer: [new TerserPlugin({ terserOptions: { format: { ascii_only: true } } })],
 	runtimeChunk: {
             name: 'runtime'
         },
