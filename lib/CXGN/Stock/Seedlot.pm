@@ -1238,7 +1238,7 @@ sub verify_accession_content_source_compatibility {
             $source_accession_id = $accession_source_relationship_rs->object_id();
 
             if ($accession_id ne $source_accession_id){
-                $error .= "The source name: $source_name is not linked to the same accession as the access content: $accession_name"."<br>";
+                $error .= "The source name: $source_name is not linked to the same accession as the seedlot content: $accession_name"."<br>";
             }
         }
     }

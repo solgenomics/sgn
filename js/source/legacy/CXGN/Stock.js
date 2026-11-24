@@ -65,6 +65,7 @@ function remove_parents(stock_id, parent_id) {
     if (yes) {
 	jQuery.ajax( {
 	    url: '/ajax/stock/parent/remove',
+	    type: 'POST',
 	    data: { 'stock_id' : stock_id, 'parent_id' : parent_id },
 	    success : function(response) {
 		if (response.error) {

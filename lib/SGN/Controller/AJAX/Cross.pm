@@ -1242,6 +1242,16 @@ sub validate_upload_existing_progenies_POST : Args(0) {
 sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_progenies') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to store existing progenies.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to store existing progenies.' };
+        return;
+    }
+
     my $archived_filename_with_path = $c->req->param('archived_file_name');
     my $user_id = $c->req->param('user_id');
 #    print STDERR "ARCHIVED FILE NAME =".Dumper($archived_filename_with_path)."\n";

@@ -474,6 +474,12 @@ sub copy_public_list : Path('/list/public/copy') Args(0) {
 sub sort_list_items : Path('/list/sort') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (my $error = $self->check_user($c, $c->req->param('list_id'))) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
     my $list_id = $c->req->param("list_id");
     my $sort = $c->req->param("sort");
 
@@ -489,6 +495,12 @@ sub sort_list_items : Path('/list/sort') Args(0) {
 sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (my $error = $self->check_user($c, $c->req->param('list_id'))) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $cross_id_list = decode_json($c->req->param("cross_id_list"));
     #print STDERR Dumper $cross_id_list;

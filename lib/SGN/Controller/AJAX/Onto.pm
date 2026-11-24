@@ -272,6 +272,11 @@ sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
   my $self = shift;
   my $c = shift;
 
+  if (!$c->user()) {
+      $c->stash->{rest} = { error => 'You must be logged in to store composed terms.' };
+      return;
+  }
+
   #my @ids = $c->req->param("ids[]");
   #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
 

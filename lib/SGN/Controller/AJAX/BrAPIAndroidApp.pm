@@ -33,9 +33,17 @@ sub new_database : Path('/brapiapp/new_database') : ActionClass('REST') { }
 sub new_database_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my $session_id = $c->req->param('accessToken');
+    my $dbh = $c->dbc->dbh;
+    my @cookie_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+    if (!$cookie_info[0] || $cookie_info[3]) {
+        $c->stash->{rest} = {error => 'User Not Logged In'};
+        return;
+    }
+
     my $name = $c->req->param('databaseName');
     my $url = $c->req->param('databaseURL');
-    my $session_id = $c->req->param('accessToken');
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $previous_name_search = $bcs_schema->resultset('General::Db')->search({name=>$name});
@@ -49,9 +57,7 @@ sub new_database_GET : Args(0) {
         $c->detach();
     }
 
-    my $dbh = $c->dbc->dbh;
-    my $cookie_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-    if ($cookie_info){
+    if ($cookie_info[0]){
 
         my $new_entry = $bcs_schema->resultset('General::Db')->create({
             name=>$name,
@@ -89,13 +95,23 @@ sub remove_database : Path('/brapiapp/remove_database') : ActionClass('REST') { 
 sub remove_database_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
     my $session_id = $c->req->param('accessToken');
+    my $dbh = $c->dbc->dbh;
+    my @cookie_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+    if (!$cookie_info[0] || $cookie_info[3]) {
+        $c->stash->{rest} = {error => 'User Not Logged In'};
+        return;
+    }
+    if ($cookie_info[1] ne 'curator' && $cookie_info[1] ne 'submitter') {
+        $c->stash->{rest} = {error => 'You must be a curator or submitter to remove databases.'};
+        return;
+    }
+
     my $database_name = $c->req->param('databaseName');
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $dbh = $c->dbc->dbh;
-    my $cookie_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-    if ($cookie_info){
+    if ($cookie_info[0]){
         my $db = $bcs_schema->resultset('General::Db')->find({description=>'BrAPI_App_Database_Display', name=>$database_name});
         $db->delete();
         $c->stash->{rest} = {success => 1};
@@ -109,6 +125,12 @@ sub register : Path('/brapiapp/register') : ActionClass('REST') { }
 sub register_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to register accounts.' };
+        return;
+    }
+
     my $dbh = CXGN::DB::Connection->new();
     my $username = $c->req->param('username');
     my $password = $c->req->param('password');
@@ -116,6 +138,38 @@ sub register_POST : Args(0) {
     my $organization = $c->req->param('organization');
     my $first_name  = $c->req->param('first_name');
     my $last_name = $c->req->param('last_name');
+
+    # Apply the same checks as the web signup (/ajax/user/new): this endpoint
+    # takes no login, so without them anyone can create accounts with no rules.
+    if ($c->config->{is_mirror}) {
+        $c->stash->{rest} = { error => "This site is a mirror site and does not support adding users." };
+        return;
+    }
+    my @fail;
+    if (!defined($username) || length($username) < 7) {
+        push @fail, "Username is too short. Username must be 7 or more characters.";
+    } elsif ($username =~ /\s/) {
+        push @fail, "Username must not contain spaces.";
+    } elsif ($username =~ /[<>"'&]/) {
+        push @fail, "Username must not contain any of these characters: < > \" ' &";
+    } elsif (CXGN::People::Login->get_login($dbh, $username)->get_username()) {
+        push @fail, "Username \"$username\" is already in use.";
+    }
+    if (!defined($password) || length($password) < 7) {
+        push @fail, "Password is too short. Password must be 7 or more characters.";
+    }
+    if (defined($password) && defined($username) && $password eq $username) {
+        push @fail, "Password must not be the same as the username.";
+    }
+    if (!defined($email) || $email !~ m/[^\@]+\@[^\@]+/) {
+        push @fail, "Please enter a valid email address.";
+    } elsif (scalar(CXGN::People::Login->get_login_by_email($dbh, $email)) > 0) {
+        push @fail, "The email address \"$email\" is already associated with an account.";
+    }
+    if (@fail) {
+        $c->stash->{rest} = { error => join(" ", @fail) };
+        return;
+    }
 
     my $new_user = CXGN::People::Login->new($dbh);
     $new_user -> set_username($username);

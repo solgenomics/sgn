@@ -294,7 +294,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
         SELECT
             p.project_id,
             (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'),
-            '$trait_operator',
+            ?,
             COALESCE(MAX(pp.rank), 0) + 1  -- Increment rank
         FROM project p
         LEFT JOIN projectprop pp
@@ -309,7 +309,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     # Execute the first query unconditionally
     eval {
         my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
-        $sth_trial->execute();
+        $sth_trial->execute($trait_operator);
     };
 
     my @plot_names  = map { $_->{plotName} } @$outliers_data;
@@ -385,10 +385,17 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
 
 
-    # Retrieve and decode the outliers from the request
+    # Retrieve and decode the outliers from the request: the trial names, either as a
+    # JSON list or as the quoted list /ajax/qualitycontrol/datarestore returns ("'a', 'b'").
     my $outliers_string = $c->req->param('outliers');
-    my $outlier_trials;
-    $outlier_trials = decode_json($outliers_string);
+    my $outlier_trials = eval { decode_json($outliers_string) };
+    my @trial_names = _trial_names($outlier_trials);
+    if (!@trial_names) {
+        $c->res->status(400);
+        $c->stash->{rest} = { error => 'outliers must list the trial names' };
+        return;
+    }
+    my $trial_placeholders = join(', ', ('?') x @trial_names);
 
     # getting trait name
     my $trait = $c->req->param('trait');
@@ -406,9 +413,9 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
             SELECT projectprop.project_id
             FROM projectprop
             JOIN project ON project.project_id = projectprop.project_id
-            WHERE project.name IN ($outlier_trials)
+            WHERE project.name IN ($trial_placeholders)
         )
-        AND projectprop.value LIKE '$trait_like'
+        AND projectprop.value LIKE ?
         AND projectprop.type_id = (
             SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'
         );
@@ -424,9 +431,9 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
             JOIN nd_experiment_project nes ON nes.nd_experiment_id = nep.nd_experiment_id
             JOIN project pr ON pr.project_id = nes.project_id
             WHERE ph.observable_id = (
-                SELECT cvterm_id FROM cvterm WHERE cvterm.name like '$trait_like'
+                SELECT cvterm_id FROM cvterm WHERE cvterm.name like ?
             )
-            AND pr.name IN ($outlier_trials)
+            AND pr.name IN ($trial_placeholders)
         );
     };
 
@@ -436,10 +443,10 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     if ($curator eq 'curator'){
         eval {
             my $sth_trial = $dbh->prepare($trial_clean_sql);
-            $sth_trial->execute();
+            $sth_trial->execute(@trial_names, $trait_like);
 
             my $sth_clean = $dbh->prepare($outliers_clean_sql);
-            $sth_clean->execute();
+            $sth_clean->execute($trait_like, @trial_names);
         };
 
         if ($@) {
@@ -457,5 +464,22 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
 
 }
 
+
+
+# Trial names for restore_outliers: a JSON list of names, or the string of single-quoted
+# SQL literals that data_restore builds ("'a', 'b'", '' inside a name). Anything else -> ().
+sub _trial_names {
+    my ($outliers) = @_;
+    return grep { defined $_ && !ref $_ && length $_ } @$outliers if ref $outliers eq 'ARRAY';
+    return () if !defined $outliers || ref $outliers;
+    my @names;
+    my $text = $outliers;
+    while ($text =~ /\G\s*'((?:[^']|'')*)'\s*(,|\z)/gc) {
+        (my $name = $1) =~ s/''/'/g;
+        push @names, $name;
+        return @names if $2 eq '';
+    }
+    return ();
+}
 
 1;

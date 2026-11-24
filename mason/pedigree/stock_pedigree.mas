@@ -137,7 +137,7 @@ $stock_id
       jQuery.ajax({
         url: '/ajax/stock/add_stock_parent',
         dataType: "json",
-        type: 'GET',
+        type: 'POST',
         async: false,
         data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType+'&cross_type='+cross_type,
         error: function(response) {
@@ -203,7 +203,7 @@ $stock_id
     </label>
     <select class="form-control" style="max-width:12em; display:inline-block;">
         <option selected disabled>Select Trait Type</option>
-        <option>Nominal/Catagorical</option>
+        <option>Nominal/Categorical</option>
         <option>Scale/Numeric</option>
     </select>
     <select class="form-control" style="max-width:10em; display:inline-block;">

@@ -128,16 +128,22 @@ sub download {
             my $cols = $hash{$row};
             foreach my $col (keys %$cols){
                 my $accession = $hash{$row}->{$col};
-                $ws->write($row, $col, $accession);
+                $ws->write_string($row, $col, $accession // '');
             }
         }
     } else {
         my @output_array = @{$output->{output}};
+        # names are text, so that a name like 0101 or 397073.10 is read back as it is (a layout can be uploaded again with Change Accessions)
+        my %name_column = map { $_ => 1 } grep { ($output_array[0]->[$_] // '') =~ /_name$/ } 0 .. $#{ $output_array[0] || [] };
         my $row_num = 0;
         foreach my $l (@output_array){
             my $col_num = 0;
             foreach my $c (@$l){
-                $ws->write($row_num, $col_num, $c);
+                if ($row_num > 0 && $name_column{$col_num} && defined($c)) {
+                    $ws->write_string($row_num, $col_num, $c);
+                } else {
+                    $ws->write($row_num, $col_num, $c);
+                }
                 $col_num++;
             }
             $row_num++;

@@ -35,11 +35,13 @@ sub high_dimensional_phenotypes_nirs_upload_verify : Path('/ajax/highdimensional
 sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+
     print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
     my @warning_status;
@@ -264,10 +266,12 @@ sub high_dimensional_phenotypes_nirs_upload_store : Path('/ajax/highdimensionalp
 sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
     my @warning_status;
@@ -568,11 +572,13 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify : Path('/ajax/high
 sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+
     print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
     my @warning_status;
@@ -749,10 +755,12 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store : Path('/ajax/highd
 sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
     my @warning_status;
@@ -989,11 +997,13 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify : Path('/ajax/highdim
 sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+
     print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
     my @warning_status;
@@ -1199,10 +1209,12 @@ sub high_dimensional_phenotypes_metabolomics_upload_store : Path('/ajax/highdime
 sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
     my @warning_status;
@@ -1479,11 +1491,13 @@ sub high_dimensional_phenotypes_download_file : Path('/ajax/highdimensionalpheno
 sub high_dimensional_phenotypes_download_file_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my $error;
 
     my $dataset_id = $c->req->param('dataset_id');
@@ -1646,11 +1660,13 @@ sub high_dimensional_phenotypes_download_relationship_matrix_file : Path('/ajax/
 sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my $error;
 
     my $dataset_id = $c->req->param('dataset_id');
@@ -1695,7 +1711,7 @@ sub _check_user_login {
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
+        if (!$user_info[0] || $user_info[3]){
             $c->stash->{rest} = {error=>'You must be logged in to do this!'};
             $c->detach();
         }
