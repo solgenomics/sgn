@@ -28,7 +28,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 # This info is used to provide additional properties for list items of
 # specific types to the label designer.
 # - The first-level hash key defines the list type
-# - The second-level hash key defines the propery name (displayed in the label designer)
+# - The second-level hash key defines the property name (displayed in the label designer)
 #   NOTE: Each list type needs to define (as '_transform') the list transform plugin name used to convert the list item names to database ids
 # - The value of the second-level hash is a subroutine that calculates the
 #   property value(s) for the specified list item(s)
@@ -396,7 +396,9 @@ __PACKAGE__->config(
        # decode json
        # my $json = JSON->new;
        #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
-       my $design_params = decode_json($design_json);
+       # Catalyst decodes request parameters to characters; decode_json()
+       # expects UTF-8 octets and dies on non-ASCII text.
+       my $design_params = JSON->new->decode($design_json);
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
        my $start_number = $design_params->{'start_number'} || undef;
        my $end_number = $design_params->{'end_number'} || undef;
@@ -433,6 +435,9 @@ __PACKAGE__->config(
        $file_prefix =~ s/[^a-zA-Z0-9-_]//g;
 
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".$download_type");
+       # ZPL is plain text: write it as UTF-8 (labels with non-ASCII text get ^CI28).
+       # The PDF is binary and written by PDF::API2.
+       binmode($FH, ':encoding(UTF-8)') if $download_type eq 'zpl';
 
        # initialize loop variables
        my $col_num = $design_params->{'start_col'} || 1;
@@ -535,6 +540,7 @@ __PACKAGE__->config(
 
            print STDERR "Creating the PDF : ".localtime()."\n";
            my $pdf  = PDF::API2->new(-file => $FH);
+           my %pdf_fonts;
            my $page = $pdf->page();
            my $text = $page->text();
            my $gfx = $page->gfx();
@@ -586,7 +592,7 @@ __PACKAGE__->config(
                                     my $image = $pdf->image_png($png_location);
                                     my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
                                     my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                    my $elementy = $elementy - ($height/2); # adjust for img position starting at bottom
                                     my $elementx = $elementx - ($width/2);
                                     #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
                                     $gfx->image($image, $elementx, $elementy, $width, $height);
@@ -600,7 +606,7 @@ __PACKAGE__->config(
                                    my $image = $pdf->image_png($png_location);
                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                                   my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                   my $elementy = $elementy - ($height/2); # adjust for img position starting at bottom
                                    my $elementx = $elementx - ($width/2);
                                    $gfx->image($image, $elementx, $elementy, $width, $height);
 
@@ -608,7 +614,7 @@ __PACKAGE__->config(
                            }
                            else { #Text
 
-                                my $font = $pdf->corefont($element{'font'});
+                                my $font = _get_pdf_font($pdf, \%pdf_fonts, $element{'font'}, $filled_value);
                                 my $adjusted_size = $element{'size'} / $conversion_factor;
                                 my $height = $element{'height'} / $conversion_factor;
                                 my $line_spacing = $adjusted_size * 1.2; # padding between lines
@@ -623,9 +629,9 @@ __PACKAGE__->config(
                                     $text->font($font, $adjusted_size);
                                     $text->translate($elementx, $start_y);
                                     if ($text_alignment eq "middle") {
-                                        $text->text_center($filled_value);
+                                        $text->text_center($line);
                                     } elsif ($text_alignment eq "left") {
-                                        $text->text($filled_value);
+                                        $text->text($line);
                                     }
                                     $start_y -= $line_spacing;
                                 }
@@ -685,6 +691,9 @@ __PACKAGE__->config(
 
                my $zpl = $zpl_template;
                $zpl =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
+               # ^CI28: the field data is UTF-8. Plain ASCII labels print the same
+               # in every code page, so they are left unchanged.
+               $zpl =~ s/^\^XA\n/^XA\n^CI28\n/gm if $zpl =~ /[^\x00-\x7F]/;
               for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
                   print $FH $zpl;
                }
@@ -700,6 +709,39 @@ __PACKAGE__->config(
        };
 
    }
+
+# TrueType equivalents (metric-compatible) of the PDF core fonts offered by the
+# label designer. The core fonts only have Latin-1 glyphs, so text with other
+# characters (Cyrillic, en dash, ...) is drawn with these instead.
+my $LABEL_TTF_DIR = '/usr/share/fonts/truetype/liberation';
+my %LABEL_TTF_FILES = (
+    'Courier'               => 'LiberationMono-Regular.ttf',
+    'Courier-Bold'          => 'LiberationMono-Bold.ttf',
+    'Courier-Oblique'       => 'LiberationMono-Italic.ttf',
+    'Courier-BoldOblique'   => 'LiberationMono-BoldItalic.ttf',
+    'Helvetica'             => 'LiberationSans-Regular.ttf',
+    'Helvetica-Bold'        => 'LiberationSans-Bold.ttf',
+    'Helvetica-Oblique'     => 'LiberationSans-Italic.ttf',
+    'Helvetica-BoldOblique' => 'LiberationSans-BoldItalic.ttf',
+    'Times'                 => 'LiberationSerif-Regular.ttf',
+    'Times-Bold'            => 'LiberationSerif-Bold.ttf',
+    'Times-Italic'          => 'LiberationSerif-Italic.ttf',
+    'Times-BoldItalic'      => 'LiberationSerif-BoldItalic.ttf',
+);
+
+sub _get_pdf_font {
+    my ($pdf, $cache, $font_name, $text) = @_;
+
+    my $ttf_file = $LABEL_TTF_FILES{$font_name} || $LABEL_TTF_FILES{'Helvetica'};
+    my $ttf_path = "$LABEL_TTF_DIR/$ttf_file";
+    if (defined $text && $text =~ /[^\x00-\xFF]/ && -e $ttf_path) {
+        $cache->{"ttf:$ttf_path"} ||= $pdf->ttfont($ttf_path);
+        return $cache->{"ttf:$ttf_path"};
+    }
+
+    $cache->{"core:$font_name"} ||= $pdf->corefont($font_name);
+    return $cache->{"core:$font_name"};
+}
 
 sub process_field {
     my $field = shift;
@@ -843,7 +885,8 @@ sub get_trial_design {
                 @detail_hash{@keys} = @{$outer_array[$i]};
 
                 $detail_hash{'brief_management_regime'} = _format_management_regime($trial_management_regime);
-                $detail_hash{'full_management_regime'} = $trial_management_regime ? encode_json($trial_management_regime) : '';
+                # to_json() returns characters, like every other value in this hash
+                $detail_hash{'full_management_regime'} = $trial_management_regime ? to_json($trial_management_regime) : '';
                 $detail_hash{'entry_number'} = $entry_numbers ? $entry_numbers->{$detail_hash{accession_id}} : undef;
                 $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
 

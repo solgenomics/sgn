@@ -3431,7 +3431,8 @@ sub observationvariable_ontologies_GET {
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
 	my $brapi_package_result = $brapi_module->observation_variable_ontologies({
 		name_spaces => \@namespaces,
-		ontologyDbId => $clean_inputs->{ontologyDbId}
+		ontologyDbId => $clean_inputs->{ontologyDbId},
+		include_tagged_ontologies => 1, # v2 only; v1 always does this
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }

@@ -3,6 +3,7 @@ package CXGN::BrAPI::v2::ObservationVariables;
 use Moose;
 use Data::Dumper;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 use Try::Tiny;
 use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
@@ -281,7 +282,7 @@ sub get_query {
 
         my $additional_info;
         if (defined $additional_info_string) {
-            $additional_info = decode_json $additional_info_string;
+            $additional_info = decode_stored_json($additional_info_string);
         }
         #TODO: This is running many queries each time, can make one big query above if need be
         # Retrieve the trait, which retrieves its scales and methods
@@ -456,11 +457,23 @@ sub update {
     return CXGN::BrAPI::JSONResponse->return_success($response, $pagination, undef, $self->status(), "Variable was updated.");
 }
 
+# composable_cvtypes that mark a cv as an ontology of variables or their parts
+# (same list as the BrAPI v1 ontologies call)
+my @TAGGED_ONTOLOGY_TYPES = qw(
+    trait_ontology method_ontology unit_ontology composed_trait_ontology
+    object_ontology attribute_ontology time_ontology
+    experiment_treatment_ontology composed_experiment_treatment_ontology
+);
+
 sub observation_variable_ontologies {
     my $self = shift;
     my $inputs = shift;
     my $name_spaces = $inputs->{name_spaces};
-    my $ontology_id = $inputs->{ontologyDbId};
+    # ontologyDbId comes from clean_inputs as an arrayref (empty when the
+    # parameter is absent); other callers may pass a single id.
+    my $ontology_ids = $inputs->{ontologyDbId};
+    my %ontology_id_filter = map { $_ => 1 } grep { defined $_ && $_ ne '' }
+        (ref($ontology_ids) eq 'ARRAY' ? @$ontology_ids : ($ontology_ids));
     my $cvprop_types = $inputs->{cvprop_type_names} || [];
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -478,6 +491,26 @@ sub observation_variable_ontologies {
         $composable_cv_prop_sql = " AND cvprop.type_id IN ($composable_cv_prop_sql)";
     }
 
+    # Like BrAPI v1, also list the ontologies tagged (cvprop) as trait, method,
+    # unit, treatment, ... ontologies, not only those named in the
+    # onto_root_namespaces conf key. Ontologies added through the web interface
+    # are tagged this way.
+    if ($inputs->{include_tagged_ontologies}) {
+        my @tagged_type_ids = grep { defined } map {
+            my $row = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $_, 'composable_cvtypes');
+            $row ? $row->cvterm_id() : undef;
+        } @TAGGED_ONTOLOGY_TYPES;
+        if (@tagged_type_ids) {
+            my $placeholders = join(',', ('?') x @tagged_type_ids);
+            my $tagged_db_names = $self->bcs_schema->storage->dbh->selectcol_arrayref(
+                "SELECT DISTINCT db.name FROM db JOIN dbxref USING(db_id) JOIN cvterm USING(dbxref_id) JOIN cvprop USING(cv_id) WHERE cvprop.type_id IN ($placeholders)",
+                undef, @tagged_type_ids
+            );
+            my %seen = map { $_ => 1 } @{$name_spaces || []};
+            $name_spaces = [ @{$name_spaces || []}, grep { !$seen{$_}++ } @$tagged_db_names ];
+        }
+    }
+
     #Using code pattern from SGN::Controller::AJAX::Onto->roots_GET
     my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm 
     JOIN dbxref USING(dbxref_id) 
@@ -490,11 +523,11 @@ sub observation_variable_ontologies {
     foreach (@$name_spaces){
         $sth->execute($_);
         while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $dbxref_accession, $dbxref_version, $dbxref_description, $cv_id, $cv_name, $cv_definition) = $sth->fetchrow_array()) {
-            if ( $ontology_id &&  $ontology_id ne $db_id) { next; }
+            if (%ontology_id_filter && !$ontology_id_filter{$db_id}) { next; }
             my $info = {};
             if($dbxref_description){
                 # dbxref.description is free text; only use it when it holds a JSON object
-                my $decoded = eval { decode_json($dbxref_description) };
+                my $decoded = eval { decode_stored_json($dbxref_description) };
                 $info = $decoded if ref($decoded) eq 'HASH';
             }
             push @available, {
