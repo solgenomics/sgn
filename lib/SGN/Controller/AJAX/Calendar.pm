@@ -209,7 +209,7 @@ sub drag_or_resize_event_POST {
 
 =head2 /ajax/calendar/edit_event
 
- Usage: When an event is editted using the edit_event_form
+ Usage: When an event is edited using the edit_event_form
  Desc:
  Return JSON example:
  Args: edit_event_start, edit_event_end, edit_event_description, edit_event_url, edit_event_projectprop_id, edit_event_project_select, edit_event_type_select
@@ -243,7 +243,17 @@ sub edit_event_POST {
     if ($params->{edit_event_url} eq '') {$params->{edit_event_url} = '#';}
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$params->{edit_event_project_select}, type_id=>$params->{edit_event_type_select}, value=>[$format_start, $format_end, $params->{edit_event_description}, $params->{edit_event_url}] })) {
+    my $event_row = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['projectprop_id', 'project_id', 'type_id', 'value']);
+    if (!$event_row) {
+        $c->stash->{rest} = {error => 1,};
+        return;
+    }
+
+    #Keep the event's current project and type when the form does not offer them.
+    my $project_id = $params->{edit_event_project_select} || $event_row->project_id;
+    my $type_id = $params->{edit_event_type_select} || $event_row->type_id;
+
+    if (my $update_rs = $event_row->update({project_id=>$project_id, type_id=>$type_id, value=>[$format_start, $format_end, $params->{edit_event_description}, $params->{edit_event_url}] })) {
 	   $c->stash->{rest} = {status => 1,};
     } else {
 	   $c->stash->{rest} = {error => 1,};
@@ -251,7 +261,7 @@ sub edit_event_POST {
 }
 
 
-#When a day is clicked or when an event is being editted, this function is called to populate the add_event project name and property type dropdowns.
+#When a day is clicked or when an event is being edited, this function is called to populate the add_event project name and property type dropdowns.
 sub day_click_personal : Path('/ajax/calendar/dayclick/personal') : ActionClass('REST') { }
 sub day_click_personal_GET { 
     my $self = shift;
@@ -277,7 +287,7 @@ sub day_click_personal_GET {
 	}
     }
 
-    my @calendar_projectprop_names = (['project_planting_date', 'project_property'], ['project_harvest_date', 'project_property'], ['Fertilizer Event', 'calendar'], ['Meeting Event', 'calendar'], ['Planning Event', 'calendar'], ['Presentation Event', 'calendar'], ['Phenotyping Event', 'calendar'], ['Genotyping Event', 'calendar'] );
+    my @calendar_projectprop_names = (['project_planting_date', 'project_property'], ['project_harvest_date', 'project_property'], ['project_second_harvest_date', 'project_property', 'optional'], ['Fertilizer Event', 'calendar'], ['Meeting Event', 'calendar'], ['Planning Event', 'calendar'], ['Presentation Event', 'calendar'], ['Phenotyping Event', 'calendar'], ['Genotyping Event', 'calendar'] );
  
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my @projectprop_types;
@@ -285,7 +295,7 @@ sub day_click_personal_GET {
         my $term = SGN::Model::Cvterm->get_cvterm_row($schema, $_->[0], $_->[1] );
         if ($term) {
             push(@projectprop_types, {cvterm_id=>$term->cvterm_id(), cvterm_name=>$term->name() });
-        } else {
+        } elsif (!$_->[2]) {
             push(@projectprop_types, {cvterm_id=>'', cvterm_name=>'Error: Missing cvterm '.$_->[0].' : '.$_->[1].' in database.'});
         }
     }

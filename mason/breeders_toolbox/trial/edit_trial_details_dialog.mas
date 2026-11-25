@@ -12,6 +12,10 @@ $transplanting_date
 $harvest_date
 $trial_description
 $field_size
+$show_field_number => 0
+$field_number => undef
+$show_second_harvest_date => 0
+$second_harvest_date => undef
 $plot_width
 $plot_length
 $field_trial_is_planned_to_be_genotyped
@@ -97,6 +101,27 @@ $field_trial_is_planned_to_cross
                       </div>
                     </div>
                 </div>
+% if ($show_second_harvest_date) {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_trial_second_harvest_date">Second Harvest Date: </label>
+                    <div class="col-sm-8">
+                        <div class="input-group">
+                            <span class="input-group-btn"><button class="btn btn-default" id="clear_second_harvest_date" type="button">Clear</button></span>
+                            <input class="form-control" id="edit_trial_second_harvest_date" title="second_harvest_date" type="text" value="<% $second_harvest_date |h %>"/>
+                        </div>
+                    </div>
+                </div>
+% }
+% if ($show_field_number) {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_trial_field_number">Field Number: </label>
+                    <div class="col-sm-8">
+                        <div class="input-group">
+                            <input class="form-control" id="edit_trial_field_number" title="field_number" type="text" value="<% $field_number |h %>"/>
+                        </div>
+                    </div>
+                </div>
+% }
                 <div class="form-group">
                     <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
                     <div class="col-sm-8">
