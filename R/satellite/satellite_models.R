@@ -366,7 +366,8 @@ SEASON_NAME <- c(season = "season", other = "season outside the country's season
 for (cfg in SITE_SEASONS) for (n in names(cfg)) SEASON_NAME[[n]] <- cfg[[n]]$label %||% n
 SEASON_MODE <- inp$yield$season_mode %||% "dates"
 
-PRED_LABEL <- c(ndvi_auc = "NDVI area under the season curve", ndvi_max = "NDVI peak", ndre_max = "NDRE peak", peak_day = "day of the NDVI peak")
+PRED_LABEL <- c(ndvi_auc = "NDVI area under the season curve", ndvi_max = "NDVI peak", ndre_max = "NDRE peak", peak_day = "day of the NDVI peak",
+                trial = "source: trial vs regional statistics (level shift)")
 
 # ---------------------------------------------------------------- sites
 
@@ -952,7 +953,7 @@ if (do_yield) {
                                  observed = as.numeric(cf$yield), start = as.character(start), end = as.character(end), t(f[c("n_dates", FEATS_ALL)]),
                                  used = is.null(reason), reason = reason %||% "", kind = as.character(cf$kind %||% "field"),
                                  field_from = as.character(cf$field_from %||% (if (identical(cf$source, "drawn")) "drawn" else "")),
-                                 location = as.character(cf$location$name %||% ""), season = as.character(cf$season %||% ""), year = as.integer(cf$year %||% NA),
+                                 location = as.character(cf$location$name %||% ""), season = as.character(cf$season %||% ""), season_label = as.character(cf$season_label %||% ""), year = as.integer(cf$year %||% NA),
                                  crop_ha = if (is.null(rr)) NA_real_ else rr$crop_ha, sampled_ha = if (is.null(rr)) NA_real_ else rr$sampled_ha,
                                  planted_ha = as.numeric(cf$planted_ha %||% NA), outliers_removed = as.integer(cf$outliers_removed %||% NA),
                                  values_n = as.integer(cf$n %||% NA), stringsAsFactors = FALSE)
@@ -987,7 +988,8 @@ if (do_yield) {
     bq <- function(x) sprintf("`%s`", x)
     fit_one <- function(type, X, y, g = NULL) {
         d <- data.frame(y = y, X, check.names = FALSE)
-        if (type == "linear1") return(list(type = type, cols = colnames(X)[1], m = lm(reformulate(bq(colnames(X)[1]), "y"), data = d)))
+        # the NDVI area only (plus the source level when regional statistics and trials are combined)
+        if (type == "linear1") { cc <- c(colnames(X)[1], intersect("trial", colnames(X))); return(list(type = type, cols = cc, m = lm(reformulate(bq(cc), "y"), data = d))) }
         if (type == "linear") return(list(type = type, m = lm(reformulate(bq(colnames(X)), "y"), data = d)))
         if (type %in% c("ridge", "elastic_net", "lasso")) {
             suppressPackageStartupMessages(library(glmnet))
@@ -1025,12 +1027,14 @@ if (do_yield) {
             stop("unknown model ", fm$type))
     }
     fit <- NULL
+    SOURCE_TERM <- FALSE
     z <- qnorm((1 + LEVEL) / 2)
     if (INDEX_MODE) {
         # no model: the fields are compared with each other below
     } else if (SAVED_MODE) {
         sm <- readRDS(inp$yield$saved_model$file)
         fit <- sm$fit; X <- sm$X; y <- sm$y; PREDICTORS <- sm$predictors; YIELD_MODEL <- sm$model
+        SOURCE_TERM <- "trial" %in% colnames(X)
         rmse <- sm$metrics$rmse
         yield$model <- sm$model; yield$predictors <- as.list(PREDICTORS); yield$predictor_labels <- as.list(unname(PRED_LABEL[PREDICTORS]))
         yield$metrics <- sm$metrics; yield$coefficients <- sm$coefficients; yield$level <- LEVEL; yield$ranges <- sm$ranges
@@ -1043,6 +1047,15 @@ if (do_yield) {
         note("yield: %d calibration field(s) usable, at least %d are needed; no yield model", nused, MIN_FIELDS)
     } else {
         X <- as.matrix(used[, PREDICTORS, drop = FALSE]); y <- used$observed
+        # regional statistics and trials together: their yields are at different levels (municipal
+        # average of all the maize vs trial plots), so the source is a term of every model: the
+        # curve-to-yield relation is learnt from both, each source keeps its own level, and the
+        # fields estimated get the regional (commercial) level
+        SOURCE_TERM <- any(used$kind == "region") && any(used$kind != "region")
+        if (SOURCE_TERM) {
+            X <- cbind(X, trial = as.numeric(used$kind != "region"))
+            say("yield: regional statistics (%d) and trials (%d) combined, with the source as a term (level shift)", sum(used$kind == "region"), sum(used$kind != "region"))
+        }
         # groups: location and year of each calibration field; >= 3 -> leave one location-year out
         grp <- paste(ifelse(nzchar(used$site), used$site, used$name), substr(used$start, 1, 4))
         by_group <- length(unique(grp)) >= 3 && length(unique(grp)) < nused
@@ -1097,13 +1110,26 @@ if (do_yield) {
         }
         cal$loo <- NA_real_; cal$loo[cal$used] <- loo
         yield$metrics <- list(r2 = r2, rmse = rmse, mae = mae, bias = mean(err), n = nused, observed_mean = mean(y), cv = cv_label)
+        # validation per source (regional statistics / trials)
+        src_of <- ifelse(used$kind == "region", "regional", "trials")
+        yield$metrics_by_source <- lapply(unique(src_of), function(k) {
+            w <- src_of == k; e <- err[w]
+            list(source = k, n = sum(w), rmse = sqrt(mean(e^2)), mae = mean(abs(e)), bias = mean(e), observed_mean = mean(y[w]),
+                 r2 = if (sum(w) > 2 && var(y[w]) > 0) 1 - sum(e^2) / sum((y[w] - mean(y[w]))^2) else NA)
+        })
+        yield$source_term <- SOURCE_TERM
+        if (SOURCE_TERM) {
+            b <- Filter(function(x) identical(x$term, "trial"), coefs %||% list())
+            note("yield: regional statistics and trials combined with the source as a term%s; estimates are at the regional (commercial fields) level",
+                 if (length(b)) sprintf(" (trials %+.0f %s vs the regional level at the same season curve)", b[[1]]$estimate, yield$unit %||% "") else "")
+        }
         yield$predictor_labels <- as.list(unname(PRED_LABEL[if (YIELD_MODEL == "linear1") PREDICTORS[1] else PREDICTORS]))
         yield$coefficients <- coefs
         yield$level <- LEVEL
         yield$ranges <- lapply(PREDICTORS, function(p) list(predictor = p, min = min(X[, p]), max = max(X[, p])))
         say("yield: %s R2 %.2f, RMSE %.3g (%d fields)", cv_label, r2, rmse, nused)
         # the trained model, to save as a Breedbase analysis model and use again without calibrating
-        saveRDS(list(fit = fit, X = X, y = y, predictors = PREDICTORS, model = YIELD_MODEL, metrics = yield$metrics, coefficients = coefs,
+        saveRDS(list(fit = fit, X = X, y = y, predictors = PREDICTORS, model = YIELD_MODEL, metrics = yield$metrics, coefficients = coefs, source_term = SOURCE_TERM,
                      ranges = yield$ranges, level = LEVEL, trait = yield$trait, unit = yield$unit, crop = inp$crop, season_mode = SEASON_MODE,
                      calibration = lapply(seq_len(nrow(used)), function(i) list(name = used$name[i], source = used$source[i], observed = used$observed[i], start = used$start[i], end = used$end[i])),
                      created = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"), R = R.version.string),
@@ -1112,7 +1138,8 @@ if (do_yield) {
     }
     if (!is.null(fit)) {
         predict_target <- function(f) {
-            x <- matrix(f[PREDICTORS], nrow = 1, dimnames = list(NULL, PREDICTORS))
+            # combined sources: fields are estimated at the regional level (trial = 0)
+            x <- matrix(c(f[PREDICTORS], if (SOURCE_TERM) 0), nrow = 1, dimnames = list(NULL, c(PREDICTORS, if (SOURCE_TERM) "trial")))
             est <- pred_one(fit, x)
             if (fit$type %in% c("linear", "linear1")) {
                 pi <- predict(fit$m, data.frame(x, check.names = FALSE), interval = "prediction", level = LEVEL)
@@ -1127,7 +1154,7 @@ if (do_yield) {
     yield$calibration <- if (is.null(cal)) list() else lapply(seq_len(nrow(cal)), function(i) {
         r <- cal[i, ]
         list(id = r$id, name = r$name, source = r$source, site = r$site, observed = r$observed, start = r$start, end = r$end,
-             kind = r$kind, field_from = r$field_from, location = r$location, season = r$season, year = r$year,
+             kind = r$kind, field_from = r$field_from, location = r$location, season = r$season, season_label = r$season_label, year = r$year,
              crop_ha = r$crop_ha, sampled_ha = r$sampled_ha, planted_ha = r$planted_ha, outliers_removed = r$outliers_removed, values_n = r$values_n,
              n_dates = r$n_dates, ndvi_auc = r$ndvi_auc, ndvi_max = r$ndvi_max, ndre_max = r$ndre_max, peak_day = r$peak_day,
              used = r$used, reason = r$reason, loo = if ("loo" %in% names(cal)) r$loo else NA,

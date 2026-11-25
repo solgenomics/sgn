@@ -94,7 +94,8 @@ my $ok = eval {
     }
     # yield index turned into approximate kg/ha: the public average yield around each location
     if (($req->{yield}{mode} // '') eq 'index' && $req->{yield}{reference}) {
-        my $refs = CXGN::Satellite::Reference->new({ cache_dir => dirname($base) });
+        my $st = $req->{statistics} || {};
+        my $refs = CXGN::Satellite::Reference->new({ cache_dir => dirname($base), providers => $st->{providers} || [], nass_key => $st->{nass_key} });
         my ($year) = ($req->{yield}{season}{end} // '') =~ /^(\d{4})/;
         foreach my $s (@$sites) {
             say_progress("regional average yield for $s->{name}");
@@ -145,7 +146,7 @@ my $ok = eval {
         }
     }
     my $input = { %$req };
-    delete @{$input}{qw(stac_url max_days)};
+    delete @{$input}{qw(stac_url max_days statistics)};    # the NASS key never reaches R
     open my $out, '>', "$base.input.json" or die "Cannot write $base.input.json: $!\n";
     print $out encode_json($input);
     close $out;

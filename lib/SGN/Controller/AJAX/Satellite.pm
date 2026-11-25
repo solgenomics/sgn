@@ -41,6 +41,14 @@ Configuration (sgn.conf, all optional):
                                PlanetScope 3 m images (paid). Prepared only: PlanetScope is
                                offered once its search is written (see CXGN::Satellite).
   satellite_max_days     731     longest date range of a search
+  satellite_regional_statistics  (empty = fao)  public yield statistics used to train
+                               models and as the regional reference of the yield index: a
+                               comma separated list in order of preference, FAOSTAT always the
+                               last fallback: ibge (Brazil, municipalities), nass (USA,
+                               counties), eurostat (Europe, NUTS 2), harveststat (Sub-Saharan
+                               Africa, admin units), fao (national)
+  satellite_nass_api_key       (empty)  USDA NASS Quick Stats key, needed by nass (free,
+                               quickstats.nass.usda.gov/api)
 
 =head1 AUTHOR
 
@@ -365,6 +373,19 @@ sub _season_names {
     return grep { /^[A-Za-z][A-Za-z0-9_-]{0,39}$/ } map { s/^\s+|\s+$//gr } split /,/, ($c->config->{available_seasons} // '');
 }
 
+# the regional statistics of the site (sgn.conf satellite_regional_statistics: a comma separated list
+# of ibge, nass, eurostat, harveststat, fao, in order of preference; FAOSTAT is always the fallback)
+sub _stat_providers {
+    my $c = shift;
+    return [ grep { /^(ibge|nass|eurostat|harveststat|fao)$/ } map { lc s/^\s+|\s+$//gr } split /,/, ($c->config->{satellite_regional_statistics} // '') ];
+}
+
+sub _reference {
+    my ($c, $timeout) = @_;
+    return CXGN::Satellite::Reference->new({ cache_dir => _work_dir($c), timeout => $timeout // 18, providers => _stat_providers($c),
+        nass_key => $c->config->{satellite_nass_api_key} });
+}
+
 sub _valid_run { my $r = shift // ''; return $r =~ /^sat_\d+_\d+$/ }
 
 sub _meta {
@@ -501,6 +522,7 @@ sub run :Path('/ajax/satellite/run') Args(0) {
     # the site's crop seasons (sgn.conf available_seasons): names of the seasons found, split of long periods
     $req->{season_names} = [ _season_names($c) ];
     $req->{stac_url} = $c->config->{satellite_stac_url} if $c->config->{satellite_stac_url};
+    $req->{statistics} = { providers => _stat_providers($c), nass_key => $c->config->{satellite_nass_api_key} };
 
     my @names = map { $_->{name} } @{ $req->{sites} };
     my $label = join(' + ', grep { $req->{models}{$_} } qw(crop_map yield indices));
@@ -739,7 +761,7 @@ sub reference :Path('/ajax/satellite/reference') Args(0) {
     return _fail($c, 'No coordinates.') if ($lon // '') !~ /^-?\d+(\.\d+)?$/ || ($lat // '') !~ /^-?\d+(\.\d+)?$/;
     my $year = ($r->param('year') // '') =~ /^(\d{4})$/ ? $1 : undef;
     my $res = try {
-        CXGN::Satellite::Reference->new({ cache_dir => _work_dir($c), timeout => 12 })->lookup({
+        _reference($c, 12)->lookup({
             lon => $lon + 0, lat => $lat + 0, species => scalar $r->param('species'), country => scalar $r->param('country'), year => $year, no_download => 1 })
     } catch { +{ error => "$_" } };
     $c->stash->{rest} = $res;
@@ -877,13 +899,39 @@ CXGN::Satellite::Reference regional_yields).
 sub train_regions :Path('/ajax/satellite/train_regions') Args(0) {
     my ($self, $c) = @_;
     return if !_login($c);
-    my $ref = CXGN::Satellite::Reference->new({ cache_dir => _work_dir($c), timeout => 18 });
-    my @ufs = grep { /^\d+$/ } split /,/, ($c->req->param('ufs') // '');
-    if (!@ufs) { $c->stash->{rest} = { states => $ref->brazil_states }; return }
+    my $ref = _reference($c);
+    my $providers = $ref->provider_list;
+    my $p = $c->req->param('provider') // '';
+    my ($prov) = grep { $_->{id} eq $p } @$providers;
+    ($prov) = grep { $_->{available} } @$providers if !$prov;
+    return _fail($c, $prov->{why} ? "$prov->{label}: $prov->{why}" : 'Unknown source.') if !$prov || !$prov->{available};
+    # large files (HarvestStat, FAOSTAT, NUTS boundaries): downloaded in the background the first time
+    if (!$ref->ready($prov->{id})) {
+        my $lib = $c->config->{basepath} . '/lib';
+        my $code = 'use CXGN::Satellite::Reference; CXGN::Satellite::Reference->new({ cache_dir => $ARGV[0], timeout => 600 })->prepare($ARGV[1])';
+        my $flag = _work_dir($c) . "/reference/preparing_$prov->{id}";
+        if (!-e $flag || -M $flag > 0.02) {
+            make_path(_work_dir($c) . '/reference');
+            write_file($flag, time());
+            my $cmd = 'perl -I' . _shell_quote($lib) . ' -e ' . _shell_quote($code) . ' ' . _shell_quote(_work_dir($c)) . ' ' . _shell_quote($prov->{id})
+                . '; rm -f ' . _shell_quote($flag);
+            system('setsid nohup sh -c ' . _shell_quote($cmd) . ' > /dev/null 2>&1 < /dev/null &');
+        }
+        $c->stash->{rest} = { providers => $providers, provider => $prov->{id}, pending => 1,
+            message => "Downloading the $prov->{label} data the first time (a few minutes); try again shortly." };
+        return;
+    }
+    my @units = grep { /^[A-Za-z0-9]{1,6}$/ } split /,/, ($c->req->param('units') // $c->req->param('ufs') // '');
+    if (!@units) {
+        my $list = try { $ref->units($prov->{id}) } catch { $c->stash->{rest} = { error => "$prov->{label}: $_" }; undef } or return;
+        $c->stash->{rest} = { providers => $providers, provider => $prov->{id}, units => $list, states => $list };
+        return;
+    }
     my @years = grep { /^\d{4}$/ } split /,/, ($c->req->param('years') // '');
-    return _fail($c, 'At most 6 states at a time.') if @ufs > 6;
+    my $max = $prov->{units_max} // 6;
+    return _fail($c, "At most $max at a time.") if @units > $max;
     return _fail($c, 'At most 8 years.') if @years > 8;
-    my $res = try { $ref->regional_yields({ species => scalar $c->req->param('species'), uf_codes => \@ufs, years => \@years }) } catch { +{ error => "$_" } };
+    my $res = try { $ref->regional_yields({ provider => $prov->{id}, species => scalar $c->req->param('species'), units => \@units, years => \@years }) } catch { +{ error => "$_" } };
     $c->stash->{rest} = $res;
 }
 
@@ -902,16 +950,20 @@ sub train_run :Path('/ajax/satellite/train_run') Args(0) {
     return if !_login($c);
     return _fail($c, 'Use POST to start a run.') if $c->req->method ne 'POST';
     my $in = _json_param($c, 'request') or return _fail($c, 'The request is not valid.');
-    my $ref = CXGN::Satellite::Reference->new({ cache_dir => _work_dir($c), timeout => 18 });
+    my $ref = _reference($c);
     my $r = ref $in->{regions} eq 'HASH' ? $in->{regions} : {};
-    my %want = map { $_ => 1 } grep { /^\d+\|\d{4}\|[a-z]+$/ } @{ ref $r->{keys} eq 'ARRAY' ? $r->{keys} : [] };
+    my %want = map { $_ => 1 } grep { /^[A-Za-z0-9]{1,12}\|\d{4}\|[a-z0-9_]{1,40}$/ } @{ ref $r->{keys} eq 'ARRAY' ? $r->{keys} : [] };
     my @rows;
     if (%want) {
-        my $res = try { $ref->regional_yields({ species => $in->{crop}, uf_codes => $r->{ufs}, years => $r->{years} }) } catch { +{ error => "$_" } };
+        my ($prov) = grep { $_->{id} eq ($r->{provider} // 'ibge') && $_->{available} } @{ $ref->provider_list };
+        return _fail($c, 'This source of regional statistics is not set up on this site.') if !$prov;
+        my $res = try { $ref->regional_yields({ provider => $prov->{id}, species => $in->{crop}, units => $r->{units} || $r->{ufs}, years => $r->{years} }) } catch { +{ error => "$_" } };
         return _fail($c, $res->{error}) if $res->{error};
-        @rows = grep { $want{"$_->{mun_code}|$_->{year}|$_->{season}"} } @{ $res->{rows} };
-        $in->{trait_name} = "Grain yield, IBGE PAM municipal average" if !@{ $in->{calibration_trials} || [] } && !$in->{dataset_id};
+        @rows = grep { $want{"$_->{code}|$_->{year}|$_->{season}"} } @{ $res->{rows} };
+        $in->{trait_name} = "Grain yield, $prov->{label} regional average" if !$in->{dataset_id};
         $in->{unit} = 'kg/ha';
+        $in->{region_provider} = $prov->{id};
+        $in->{region_provider_label} = $prov->{label};
     }
     $in->{region_rows} = \@rows;
     if (($in->{dataset_id} // '') =~ /^\d+$/) {
@@ -923,9 +975,14 @@ sub train_run :Path('/ajax/satellite/train_run') Args(0) {
         return _fail($c, 'Choose the trait of the dataset to train on.') if ($in->{trait_id} // '') !~ /^\d+$/ || !$traits{ $in->{trait_id} };
         $in->{trait_name} = $traits{ $in->{trait_id} } if !@rows;
         $in->{calibration_trials} = \@trials;
-        # trials not validated for the trait: the page asks to remove outliers or to continue as they are
-        return _fail($c, 'Some trials are not validated for this trait: choose to remove the outliers or to continue with the values as they are.')
-            if ($in->{outliers} // '') !~ /^(remove|keep|validated)$/;
+        # outliers: removed (only when every trial is validated for the trait in Phenotype Quality Control) or kept
+        return _fail($c, 'Choose to remove the outliers or to continue with the values as they are.') if ($in->{outliers} // '') !~ /^(remove|keep)$/;
+        if ($in->{outliers} eq 'remove') {
+            my $run = CXGN::Satellite::Run->new({ schema => _schema($c) });
+            (my $short = $traits{ $in->{trait_id} }) =~ s/\|.*//;
+            my @not = grep { my $t = $_; !grep { $_ eq $short } @{ $run->validated_traits($t) } } @trials;
+            return _fail($c, scalar(@not) . ' trial(s) of the dataset are not validated for this trait: validate them in Phenotype Quality Control (/tools/qualitycontrol) to remove the outliers, or continue with the values as they are.') if @not;
+        }
         $in->{dataset_outliers} = $ds->outliers() || [];
     }
     my ($req, $err) = try { CXGN::Satellite::Run->new({ schema => _schema($c) })->build_training_request($in, $ref) } catch { (undef, "$_") };

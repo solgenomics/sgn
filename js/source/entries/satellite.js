@@ -586,8 +586,8 @@ function renderControls() {
     else if (S.field && S.field.kind === 'plots') hint = `Yellow: the ${S.field.count} plots of this trial (from their GPS coordinates). Only the area of the plots is analysed; cloud is measured there.`;
     else if (S.field) hint = `Yellow: the field${S.field.count === 1 ? '' : 's'}. Only ${S.field.count === 1 ? 'it is' : 'they are'} analysed; cloud is measured over ${S.field.count === 1 ? 'it' : 'them'} only.`;
     else if (S.mode === 'trial' && !S.trial) hint = 'Choose a trial.';
-    else if (S.mode === 'trial') hint = 'No plot coordinates and no field drawn: <b>click the map on the field</b> to centre the square on it, or draw the field. Cloud is measured over the whole square.';
-    else if (a) hint = 'Red: the location. Blue square: the area analysed. <b>Click the map on the field</b> to move it, or draw the field to analyse exactly it. Cloud is measured over the whole square.';
+    else if (S.mode === 'trial') hint = 'No plot coordinates and no field drawn: <b>draw the trial\'s field</b> on the map. Without it, the area around the location is analysed and cloud is measured over all of it.';
+    else if (a) hint = 'The map opens on the region of the location. <b>Draw the fields</b> to analyse exactly them; without fields, the area around the location is analysed and cloud is measured over all of it.';
     else if (S.loc) hint = '<b>This location has no latitude/longitude.</b> Click the map on the field, or add them in Manage &gt; Locations.';
     $('#sat_map_hint').html(hint);
     renderStepper();
@@ -648,20 +648,12 @@ function drawMap(fit) {
                 drawMap(false);
                 return;
             }
-            if (!S.loc || S.field) return;   // the area is set by the plots / fields
-            S.point = { lat: ev.latlng.lat, lon: ev.latlng.lng };
-            renderControls();
-            drawMap(false);
         });
         S.map.on('dblclick', () => { if (S.draw.active && S.draw.where === 'field' && S.draw.pts.length >= 3) finishDraw(); });
     }
     S.map.invalidateSize();
     S.layers.clearLayers();
-    const loc = S.loc;
-    if (loc && isFinite(parseFloat(loc.lat))) {
-        L.circleMarker([parseFloat(loc.lat), parseFloat(loc.lon)], { radius: 6, color: '#fff', weight: 2, fillColor: '#dc2626', fillOpacity: 1 })
-            .bindTooltip(esc(loc.name)).addTo(S.layers);
-    }
+    // no marker and no square: the map opens on the region, the breeder knows the fields
     if (S.field) {
         const names = S.field.kind === 'farm' ? S.farmFields.map(f => f.name) : [];
         S.field.plots.forEach((r, i) => {
@@ -672,12 +664,6 @@ function drawMap(fit) {
             }
         });
     }
-    // other selected locations, for orientation
-    S.sites.forEach((st, i) => {
-        if (i === S.cur || !hasXY(st.loc)) return;
-        L.circleMarker([parseFloat(st.loc.lat), parseFloat(st.loc.lon)], { radius: 5, color: '#fff', weight: 2, fillColor: '#6b7280', fillOpacity: 1 })
-            .bindTooltip(esc(st.loc.name)).addTo(S.layers);
-    });
     if (S.draw.active && S.draw.where === 'field' && S.draw.pts.length) {
         const ll = S.draw.pts.map(p => [p[1], p[0]]);
         if (ll.length > 1) L.polyline(ll.concat(ll.length > 2 ? [ll[0]] : []), { color: '#f97316', weight: 2, dashArray: ll.length > 2 ? null : '4 3' }).addTo(S.layers);
@@ -686,8 +672,6 @@ function drawMap(fit) {
     const a = area();
     if (a) {
         const b = squareBounds(a);
-        // the square is the selected area only when no field is delimited
-        if (!S.field) L.rectangle(b, { color: '#22d3ee', weight: 2, fill: false, interactive: false }).addTo(S.layers);
         if (fit && !S.draw.active) S.map.fitBounds(L.latLngBounds(b).pad(0.15));
     } else if (fit) {
         S.map.setView([0, 0], 2);
@@ -1247,7 +1231,7 @@ const CLASS_PRESETS = [['Other crops', '#f97316'], ['Pasture / grass', '#a3e635'
 const CLASS_COLORS = ['#eab308', '#15803d', '#a3e635', '#f97316', '#a16207', '#2563eb', '#dc2626', '#9333ea', '#0891b2', '#db2777', '#4b5563', '#65a30d'];
 const UNCERTAIN_COLOR = '#9ca3af';
 const MIN_CALIB_DEFAULT = 8;
-const PREDICTOR_NAMES = { ndvi_auc: 'NDVI area under the season curve', ndvi_max: 'NDVI peak', ndre_max: 'NDRE (red-edge) peak', peak_day: 'Day of the NDVI peak' };
+const PREDICTOR_NAMES = { ndvi_auc: 'NDVI area under the season curve', ndvi_max: 'NDVI peak', ndre_max: 'NDRE (red-edge) peak', peak_day: 'Day of the NDVI peak', trial: 'Source: trials vs regional statistics (level shift)' };
 // advanced settings: key, label, default, min, max, step, help
 const YIELD_MODEL_LABELS = { auto: 'Automatic (compare and choose)', linear1: 'Linear (NDVI area only)', linear: 'Linear regression', ridge: 'Ridge regression', pls: 'PLS (1 component)',
     elastic_net: 'Elastic net', lasso: 'Lasso', gam: 'GAM (smooth)', mixed: 'Mixed model (location-year effect)', mars: 'MARS', random_forest: 'Random forest', svm: 'SVM regression' };
@@ -1776,7 +1760,7 @@ function renderModelDraw() {
 
 function renderModelHint() {
     $('#sat_model_hint').html(S.draw.active && S.draw.where === 'model' ? 'Click the corners on the map. Esc cancels, Enter finishes.'
-        : (S.field ? 'Dashed cyan: the fields analysed. Click a drawn area to delete it.' : 'Blue square: the area analysed. Click a drawn area to delete it.'));
+        : (S.field ? 'Dashed cyan: the fields analysed. Click a drawn area to delete it.' : 'No field delimited: the area around the location is analysed. Click a drawn area to delete it.'));
 }
 
 function drawModelMap(fit) {
@@ -1826,7 +1810,6 @@ function drawModelMap(fit) {
     const a = area();
     if (a) {
         const b = squareBounds(a);
-        if (!S.field) L.rectangle(b, { color: '#22d3ee', weight: 2, fill: false, interactive: false }).addTo(S.mlayers);
         if (fit && !S.draw.active) S.mmap.fitBounds(L.latLngBounds(b).pad(0.15));
     }
 }

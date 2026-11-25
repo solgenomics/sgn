@@ -314,16 +314,6 @@ sub trait_values {
     return [ map { { id => $_->[0] + 0, value => $_->[1] + 0, outlier => ($_->[2] ? 1 : 0) } } @{ $rows || [] } ];
 }
 
-# Tukey fences: values beyond 1.5 interquartile ranges from the quartiles
-sub _tukey_keep {
-    my @v = sort { $a <=> $b } @_;
-    return (-9**9**9, 9**9**9) if @v < 4;
-    my $q = sub { my $p = shift; my $h = ($#v) * $p; my $l = int($h); return $v[$l] + ($h - $l) * (($v[$l + 1] // $v[$l]) - $v[$l]) };
-    my ($q1, $q3) = ($q->(0.25), $q->(0.75));
-    my $iqr = $q3 - $q1;
-    return ($q1 - 1.5 * $iqr, $q3 + 1.5 * $iqr);
-}
-
 # square ring of size_m metres around a point
 sub _square {
     my ($lon, $lat, $size_m) = @_;
@@ -335,10 +325,11 @@ sub _square {
 =head2 trial_calibration
 
 Args: trial id, trait cvterm id, settings (season_days, location_field_m),
-options { exclude_ids => { phenotype_id => 1 } (outliers stored with the
-dataset), remove_outliers => 1 (Tukey fences within the trial, unless the
-trial is validated for the trait) }. Values marked as outliers in Phenotype
-Quality Control are always left out; the trial's yield is the mean of the rest.
+options { remove_outliers => 1, exclude_ids => { phenotype_id => 1 } }:
+with remove_outliers, the values marked as outliers in Phenotype Quality
+Control and those stored with the dataset (exclude_ids) are left out (the page
+offers it only when every trial is validated for the trait); otherwise every
+value is used. The trial's yield is the mean of the values kept.
 { id, name, source => 'trial', field_from (drawn | plots | location), ring,
 yield, n, start, end } or { error }. A trial with no field of its own (no
 drawn field, no plot coordinates) is placed by a square around its location's
@@ -356,15 +347,11 @@ sub trial_calibration {
     my ($t) = grep { $_->{id} == $trait_id } @{ $info->{traits} };
     return { error => "$info->{name}: no value of the yield trait." } if !$t;
     return { error => "$info->{name}: no planting date." } if !$info->{planting};
-    # the trait's values without outliers
+    # the trait's values, without the outliers when asked
     my $values = $self->trait_values($trial_id, $trait_id);
     my $trait_short = (split /\|/, $t->{name})[0];
     my $validated = grep { $_ eq $trait_short } @{ $self->validated_traits($trial_id) };
-    my @keep = grep { !$_->{outlier} && !($opt->{exclude_ids} || {})->{ $_->{id} } } @$values;
-    if ($opt->{remove_outliers} && !$validated) {
-        my ($lo, $hi) = _tukey_keep(map { $_->{value} } @keep);
-        @keep = grep { $_->{value} >= $lo && $_->{value} <= $hi } @keep;
-    }
+    my @keep = $opt->{remove_outliers} ? (grep { !$_->{outlier} && !($opt->{exclude_ids} || {})->{ $_->{id} } } @$values) : @$values;
     my $removed = @$values - @keep;
     return { error => "$info->{name}: every value of the trait is an outlier." } if !@keep;
     my $mean = 0; $mean += $_->{value} for @keep; $mean /= @keep;
@@ -611,21 +598,22 @@ sub build_training_request {
         return (undef, 'Regional statistics train on the areas where the crop is found by its stored season curve, which exists only for maize (Zea mays).')
             if $crop !~ /^Zea mays\b/;
         return (undef, 'No reference source.') if !$reference;
-        # sowing windows of the Brazilian crop seasons (R/satellite/standards/seasons.json): the PAM year is the harvest year
-        my %sow = (summer => [ -1, '08-01', -1, '12-31' ], safrinha => [ 0, '01-01', 0, '04-30' ]);
+        my $provider = $in->{region_provider} // 'ibge';
+        # each row brings the sowing window of its season (given by the source, or the summer of its hemisphere)
         foreach my $r (@rows) {
-            my $w = $sow{ $r->{season} // '' } or do { push @skipped, "$r->{name} $r->{year}: no sowing window for season $r->{season}."; next };
-            my $sow_a = sprintf('%04d-%s', $r->{year} + $w->[0], $w->[1]);
-            my $sow_b = sprintf('%04d-%s', $r->{year} + $w->[2], $w->[3]);
+            my ($sow_a, $sow_b) = @{ $r->{sow} || [] };
+            if (!$sow_a || !$sow_b) { push @skipped, "$r->{name} $r->{year}: no sowing window for its season."; next }
             my $start = _add_days($sow_a, -30);
             my $end = _add_days($sow_b, 200);
             $end = $today if $end gt $today;
             if ($start lt '2017-01-01') { push @skipped, "$r->{name} $r->{year} $r->{season}: before the Sentinel-2 images used here (2017)."; next }
-            my $pts = try { $reference->sample_squares($r->{mun_code}, $settings->{samples_per_region}, $settings->{sample_size_m}, $r->{mun_code} + $r->{year}) } || [];
-            if (!@$pts) { push @skipped, "$r->{name}: no sample square fits inside the municipality."; next }
+            my $seed = $r->{year} + unpack('%32C*', $r->{code});
+            my $pts = try { $reference->sample_squares($provider, $r->{code}, $settings->{samples_per_region}, $settings->{sample_size_m}, $seed) } || [];
+            if (!@$pts) { push @skipped, "$r->{name}: no sample square fits inside the region (or its boundary is unknown)."; next }
+            (my $cid = "$r->{code}_$r->{year}_$r->{season}") =~ s/[^A-Za-z0-9_]/_/g;
             push @calib, {
-                id => "ibge_$r->{mun_code}_$r->{year}_$r->{season}", name => "$r->{name} $r->{season} $r->{year}", source => 'ibge', kind => 'region',
-                site => $r->{name}, mun_code => $r->{mun_code} + 0, year => $r->{year} + 0, season => $r->{season},
+                id => "${provider}_$cid", name => "$r->{name} " . ($r->{season_label} // $r->{season}) . " $r->{year}", source => $provider, kind => 'region',
+                site => $r->{name}, region_code => $r->{code}, year => $r->{year} + 0, season => $r->{season}, season_label => $r->{season_label},
                 yield => $r->{yield} + 0, planted_ha => ($r->{planted_ha} // 0) + 0, start => $start, end => $end, sow => [ $sow_a, $sow_b ],
                 squares => [ map { { center => $_, size_m => $settings->{sample_size_m} + 0 } } @$pts ],
             };
@@ -633,7 +621,7 @@ sub build_training_request {
     }
     if (@trial_ids) {
         my $trait_id = ($in->{trait_id} // '') =~ /^\d+$/ ? $in->{trait_id} : return (undef, 'Choose the trait of the trials to train on.');
-        # outliers: the dataset's stored ones and Tukey fences in trials not validated (Phenotype Quality Control)
+        # outliers: those marked in Phenotype Quality Control and those stored with the dataset (only when every trial is validated)
         my %opt = (remove_outliers => ($in->{outliers} // '') eq 'remove' ? 1 : 0,
                    exclude_ids => { map { $_ => 1 } grep { /^\d+$/ } @{ ($in->{outliers} // '') eq 'remove' ? ($in->{dataset_outliers} || []) : [] } });
         foreach my $tid (@trial_ids) {
@@ -650,13 +638,14 @@ sub build_training_request {
     my ($start) = sort map { $_->{start} } @calib;
     my ($end) = reverse sort map { $_->{end} } @calib;
     my $regions = grep { ($_->{kind} // '') eq 'region' } @calib;
+    my $stat_label = $in->{region_provider_label} // 'regional statistics';
     return ({
         train => JSON::true, dates => { start => $start, end => $end }, crop => $crop, crop_class => '',
         crop_map_method => 'none', ($regions ? (standard => 'maize') : ()),
         models => { crop_map => JSON::false, yield => JSON::true, indices => JSON::false },
         settings => $settings, classes => [], sites => [],
         calibration => \@calib, calibration_skipped => \@skipped,
-        yield => { mode => 'calibrated', trait => substr($in->{trait_name} // ($regions ? 'Grain yield (IBGE PAM)' : ''), 0, 200),
+        yield => { mode => 'calibrated', trait => substr($in->{trait_name} // ($regions ? "Grain yield ($stat_label)" : ''), 0, 200),
                    unit => substr($in->{unit} // 'kg/ha', 0, 40), per_ha => ($in->{per_ha} // 1) ? JSON::true : JSON::false,
                    season => { start => $start, end => $end }, season_mode => 'detected', map_areas => JSON::false },
     }, undef);

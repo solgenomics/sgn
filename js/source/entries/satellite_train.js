@@ -4,10 +4,12 @@
  * chosen in any analysis ("Use a trained model").
  *
  * Training data (they can be combined):
- *  - regional public statistics (IBGE PAM, Brazil): the yield of each municipality, year and
- *    crop season (maize: 1st crop = summer, 2nd crop = safrinha, table 839); the run finds the
- *    crop in a few squares inside each municipality with the stored maize curve and learns
- *    the municipality's yield from the season curve of that maize;
+ *  - regional public statistics, from the sources the site set (sgn.conf
+ *    satellite_regional_statistics: IBGE (Brazil, municipalities; maize summer / safrinha),
+ *    USDA NASS (USA, counties), Eurostat (Europe, NUTS 2), HarvestStat Africa (admin units),
+ *    FAOSTAT (national, always available)): the yield of each region, year and season; the run
+ *    finds the crop in a few squares inside each region with the stored maize curve, sown in
+ *    the season's window, and learns the region's yield from the season curve of that maize;
  *  - a Breedbase dataset of trials with the trait to train on: each trial's field comes from
  *    its plot coordinates or a field drawn for it; a trial without them is placed by its
  *    location's coordinates (often the town's: warned, checked by the run, and how to fix it).
@@ -23,7 +25,8 @@ const COMMON = { 'Zea mays': 'Maize', 'Nicotiana tabacum': 'Tobacco', 'Glycine m
 const SEASONS = { summer: 'Summer (1st crop)', safrinha: 'Safrinha (2nd crop)', year: 'Whole year' };
 const MODEL_LABELS = { auto: 'Automatic (compare and choose)', linear1: 'Linear (NDVI area only)', linear: 'Linear regression', ridge: 'Ridge regression', pls: 'PLS (1 component)',
     elastic_net: 'Elastic net', lasso: 'Lasso', gam: 'GAM (smooth)', mixed: 'Mixed model (location-year effect)', mars: 'MARS', random_forest: 'Random forest', svm: 'SVM regression' };
-const PREDICTOR_NAMES = { ndvi_auc: 'NDVI area under the season curve', ndvi_max: 'NDVI peak', ndre_max: 'NDRE (red-edge) peak', peak_day: 'Day of the NDVI peak' };
+const PREDICTOR_NAMES = { ndvi_auc: 'NDVI area under the season curve', ndvi_max: 'NDVI peak', ndre_max: 'NDRE (red-edge) peak', peak_day: 'Day of the NDVI peak',
+    trial: 'Source: trials vs regional statistics (level shift)' };
 // setting: [ label, default, min, max, step, help ]
 const SETTINGS = {
     samples_per_region: ['Sample squares per municipality', 3, 1, 10, 1, 'Where the maize of each municipality is looked for. More squares: closer to the municipality\'s average, longer run.'],
@@ -38,7 +41,7 @@ const SETTINGS = {
 
 const T = {
     step: 1, crops: [], crop: '', useIbge: true, useDataset: false,
-    states: [], ufs: new Set(), years: new Set(), regions: null, regionsKey: '', regionsLoading: false, regionsError: '', picked: new Set(), cropName: '',
+    providers: [], provider: '', units: [], unitsPending: '', ufs: new Set(), years: new Set(), regions: null, regionsKey: '', regionsLoading: false, regionsError: '', picked: new Set(), cropName: '',
     datasets: null, dsId: '', dsInfo: {}, dsTrait: '', outliers: '', settings: {}, model: 'auto', name: '',
     job: { runId: null, status: null }, runs: null,
 };
@@ -68,11 +71,20 @@ async function postJSON(path, params) {
 const isMaize = () => /^Zea mays\b/.test(T.crop);
 const cropLabel = () => COMMON[T.crop] || T.crop || 'the crop';
 const setting = k => (k in T.settings ? T.settings[k] : SETTINGS[k][1]);
-const regionKey = r => `${r.mun_code}|${r.year}|${r.season}`;
+const regionKey = r => `${r.code}|${r.year}|${r.season}`;
+const prov = () => T.providers.find(p => p.id === T.provider) || { label: 'regional statistics', level: 'region', unit_label: 'Region', units_max: 6 };
+const levelPlural = () => ({ municipality: 'municipalities', county: 'counties', country: 'countries' }[prov().level] || `${prov().level}s`);
 
 /* ---------- steps ---------- */
 
+/** What step 1 still lacks: the texts of its unmet checklist items (empty when complete). */
+function step1Missing() {
+    return readiness().filter(r => !r.ok && /step 1|Choose the crop|Dataset|trait|Outliers|Regional/.test(r.text)).map(r => r.text.replace(/ \(step 1\)/, ''));
+}
+
 function goStep(n) {
+    // settings and training only once the training data (step 1) are complete
+    if (n > 1 && step1Missing().length) { n = 1; renderStep1Nav(true); }
     T.step = n;
     $('.sat-pane').hide();
     $(`.sat-pane[data-step="${n}"]`).show();
@@ -97,15 +109,19 @@ function renderCrops() {
 
 function renderSources() {
     if (!isMaize() && T.useIbge) T.useIbge = false;
+    // one source, or both (combined with the source as a model term)
+    const cur = T.useIbge && T.useDataset ? 'both' : T.useIbge ? 'ibge' : T.useDataset ? 'dataset' : '';
     $('#tr_sources .sat-option').each(function () {
         const k = $(this).data('v');
-        const on = k === 'ibge' ? T.useIbge : T.useDataset;
-        const off = k === 'ibge' && !isMaize();
+        const on = k === cur;
+        const off = (k === 'ibge' || k === 'both') && !isMaize();
         $(this).toggleClass('on', on).toggleClass('disabled', off).find('input').prop('checked', on).prop('disabled', off);
     });
+    $('#tr_src_name').text(T.providers.length ? `(${T.providers.filter(p => p.available).map(p => p.label).join(', ')})` : '');
     $('#tr_ibge_text').html(isMaize()
-        ? 'The yield of each municipality, year and crop season published by IBGE (PAM). The run finds the maize inside each municipality with the stored maize curve and learns the yield from its season curve. No trial needed.'
-        : `Needs the crop's stored season curve to find it inside the municipalities: only maize has one${T.crop ? ` (not ${esc(cropLabel())})` : ''}.`);
+        ? `The published yield of each ${esc(prov().level)}, year and season (${esc(T.providers.filter(p => p.available).map(p => p.label).join(', ') || 'the site\'s sources')}). The run finds the maize inside each region with the stored maize curve and learns the yield from its season curve. No trial needed.`
+        : `Needs the crop's stored season curve to find it inside the regions: only maize has one${T.crop ? ` (not ${esc(cropLabel())})` : ''}.`);
+    $('#tr_both_box').toggle(cur === 'both');
     $('#tr_ibge_box').toggle(T.useIbge);
     $('#tr_ds_box').toggle(T.useDataset);
     if (T.useIbge) renderIbge();
@@ -114,21 +130,54 @@ function renderSources() {
 }
 
 function renderIbge() {
-    $('#tr_states').html(T.states.map(s => `<button type="button" class="sat-seg${T.ufs.has(s.code) ? ' on' : ''}" data-uf="${s.code}" title="${esc(s.name)}">${esc(s.uf)}</button>`).join(''));
+    const P = prov();
+    const avail = T.providers.filter(p => p.available);
+    $('#tr_provider_box').toggle(T.providers.length > 1);
+    segs('#tr_provider', T.providers.map(p => [p.id, p.label + (p.available ? '' : ' (not set up)')]), T.provider);
+    $('#tr_regions_title').text(`Regional statistics: ${levelPlural()} (${P.label})`);
+    $('#tr_units_label').text(`${P.unit_label === 'State' ? 'States' : 'Countries'} (up to ${P.units_max})`);
+    $('#tr_provider_note').html((T.provider === 'fao'
+        ? '<div class="sat-warn"><b>FAOSTAT is national:</b> one yield per country and year, the average of the whole country. A model learns little from it inside one country; it needs several countries or many years. Sample squares are drawn anywhere in the country, where the maize is often sparse: raise the number of squares in the settings.</div>' : '')
+        + (T.unitsPending ? `<div class="sat-small sat-muted">${esc(T.unitsPending)} <a href="#" id="tr_units_retry">Try again</a></div>` : '')
+        + (avail.length ? '' : '<div class="sat-warn">No source of regional statistics is available on this site.</div>'));
+    $('#tr_states').html(T.units.map(s => `<button type="button" class="sat-seg${T.ufs.has(String(s.code)) ? ' on' : ''}" data-uf="${esc(s.code)}" title="${esc(s.name)}">${esc(T.units.length > 40 ? s.name : s.uf)}</button>`).join(''));
     $('#tr_years').html(YEARS.map(y => `<button type="button" class="sat-seg${T.years.has(y) ? ' on' : ''}" data-year="${y}">${y}</button>`).join(''));
-    const key = [[...T.ufs].sort().join(','), [...T.years].sort().join(','), T.crop].join('|');
+    const key = [T.provider, [...T.ufs].sort().join(','), [...T.years].sort().join(','), T.crop].join('|');
     const stale = T.regions && T.regionsKey !== key;
     $('#tr_regions_load').prop('disabled', !T.ufs.size || !T.years.size || T.regionsLoading)
-        .text(T.regionsLoading ? 'Reading IBGE…' : stale ? 'Show the municipalities again (changed)' : 'Show the municipalities');
+        .text(T.regionsLoading ? `Reading ${P.label}…` : stale ? `Show the ${levelPlural()} again (changed)` : `Show the ${levelPlural()}`);
     renderRegions();
+}
+
+/** The units (states, countries) of a source; the first time a large source is downloaded in the background. */
+function applyUnits(r) {
+    T.providers = r.providers || T.providers;
+    T.provider = r.provider || T.provider;
+    T.unitsPending = r.pending ? r.message : '';
+    T.units = r.units || [];
+    const ok = new Set(T.units.map(u => String(u.code)));
+    T.ufs = new Set([...T.ufs].filter(c => ok.has(c)));
+}
+
+async function loadUnits(p) {
+    T.provider = p; T.regions = null; T.picked = new Set(); T.units = []; T.unitsPending = 'Loading…';
+    renderIbge();
+    try { applyUnits(await getJSON('train_regions', { provider: p })); }
+    catch (err) { T.unitsPending = err.message; }
+    renderSources(); renderReady();
+}
+
+function segs(sel, items, current) {
+    $(sel).html(items.map(([v, l]) => `<button type="button" class="sat-seg${v === current ? ' on' : ''}" data-v="${esc(v)}">${esc(l)}</button>`).join(''));
 }
 
 async function loadRegions() {
     T.regionsLoading = true; T.regionsError = '';
     renderIbge();
-    const key = [[...T.ufs].sort().join(','), [...T.years].sort().join(','), T.crop].join('|');
+    const key = [T.provider, [...T.ufs].sort().join(','), [...T.years].sort().join(','), T.crop].join('|');
     try {
-        const r = await getJSON('train_regions', { species: T.crop, ufs: [...T.ufs].join(','), years: [...T.years].join(',') });
+        const r = await getJSON('train_regions', { provider: T.provider, species: T.crop, units: [...T.ufs].join(','), years: [...T.years].join(',') });
+        if (r.pending) throw new Error(r.message);
         T.regions = r.rows; T.regionsKey = key; T.regionsMeta = r;
         const keep = new Set(T.regions.map(regionKey));
         T.picked = new Set([...T.picked].filter(k => keep.has(k)));
@@ -143,21 +192,21 @@ function renderRegions() {
     const box = $('#tr_regions');
     if (T.regionsError) { box.html(`<div class="sat-small text-danger">${esc(T.regionsError)}</div>`); return; }
     if (!T.regions) { box.html('<div class="sat-small sat-muted">Choose states and years, then show their municipalities.</div>'); return; }
-    if (!T.regions.length) { box.html(`<div class="sat-small sat-muted">IBGE has no ${esc(cropLabel())} yield for these states and years.</div>`); return; }
+    if (!T.regions.length) { box.html(`<div class="sat-small sat-muted">${esc(prov().label)} has no ${esc(cropLabel())} yield for these choices and years.</div>`); return; }
     const n = T.picked.size;
     const minutes = Math.round(n * setting('samples_per_region') * 1.6 * Math.pow(setting('sample_size_m') / 2000, 2));
-    let h = `<div class="sat-inline-row" style="margin:6px 0"><span class="sat-small"><b>${n}</b> of ${T.regions.length} municipality-seasons chosen${n ? ` · about ${minutes < 60 ? `${minutes} min` : `${(minutes / 60).toFixed(1)} h`} of images to read` : ''}</span>`
+    let h = `<div class="sat-inline-row" style="margin:6px 0"><span class="sat-small"><b>${n}</b> of ${T.regions.length} ${esc(prov().level)}-seasons chosen${n ? ` · about ${minutes < 60 ? `${minutes} min` : `${(minutes / 60).toFixed(1)} h`} of images to read` : ''}</span>`
         + '<span class="sat-segs">' + [[10, 'Top 10'], [20, 'Top 20'], [40, 'Top 40'], [0, 'None']].map(([k, l]) => `<button type="button" class="sat-seg tr-top" data-n="${k}">${l}</button>`).join('') + '</span></div>'
-        + '<div class="sat-help">Sorted by how much of the municipality is planted with the crop: the maize of a municipality where it covers a large share is easy to find, and the published yield is mostly that maize.'
-        + (T.regionsMeta && T.regionsMeta.seasons ? ' Maize is published per crop season (1st crop = summer, 2nd crop = safrinha), so each season is learnt with its own yield.' : '') + '</div>';
-    h += '<div style="max-height:340px;overflow:auto;margin-top:6px"><table class="sat-mini-table"><thead><tr><th></th><th>Municipality</th><th>Season</th><th class="num">Year</th><th class="num">Planted ha</th><th class="num">Share of the area</th><th class="num">Yield kg/ha</th></tr></thead><tbody>'
+        + '<div class="sat-help">Sorted by how much of the region is planted with the crop (when the source gives the area): the maize of a region where it covers a large share is easy to find, and the published yield is mostly that maize.'
+        + (T.regionsMeta && T.regionsMeta.seasons ? ' The yield is published per season, so each season is learnt with its own yield.' : ' The source gives no season: the summer (main) season of its hemisphere is assumed.') + '</div>';
+    h += '<div style="max-height:340px;overflow:auto;margin-top:6px"><table class="sat-mini-table"><thead><tr><th></th><th>${esc(prov().level.charAt(0).toUpperCase() + prov().level.slice(1))}</th><th>Season</th><th class="num">Year</th><th class="num">Planted ha</th><th class="num">Share of the area</th><th class="num">Yield kg/ha</th></tr></thead><tbody>'
         + T.regions.map(r => {
             const k = regionKey(r);
             return `<tr><td><input type="checkbox" class="tr-region" data-k="${esc(k)}"${T.picked.has(k) ? ' checked' : ''} aria-label="Use ${esc(r.name)} ${esc(r.season)} ${r.year}" /></td>`
-                + `<td>${esc(r.name)}</td><td>${esc(SEASONS[r.season] || r.season)}</td><td class="num">${r.year}</td><td class="num">${fmt(r.planted_ha, 0)}</td>`
+                + `<td>${esc(r.name)}</td><td title="sown ${esc((r.sow || []).join(' to '))}">${esc(r.season_label || SEASONS[r.season] || r.season)}</td><td class="num">${r.year}</td><td class="num">${fmt(r.planted_ha, 0)}</td>`
                 + `<td class="num">${r.share !== null && r.share !== undefined ? `${fmt(100 * r.share, 1)}%` : ''}</td><td class="num">${fmt(r.yield, 0)}</td></tr>`;
         }).join('') + '</tbody></table></div>';
-    if (T.regionsMeta) h += `<div class="sat-help" style="margin-top:4px">Source: <a href="${esc(T.regionsMeta.url)}" target="_blank" rel="noopener">${esc(T.regionsMeta.citation)}</a>. The yield is the municipality's average over all its fields of the crop.</div>`;
+    if (T.regionsMeta) h += `<div class="sat-help" style="margin-top:4px">Source: <a href="${esc(T.regionsMeta.url)}" target="_blank" rel="noopener">${esc(T.regionsMeta.citation)}</a>. The yield is the region's average over all its fields of the crop.</div>`;
     box.html(h);
 }
 
@@ -199,23 +248,24 @@ function validation(info) {
     return { trait, n: fields.length, validated: ok.length, notValidated: fields.filter(f => !(f.validated || []).includes(trait)) };
 }
 
-/** Outliers of the trait: nothing to ask when every trial is validated; otherwise remove them, or continue as they are. */
+/** Outliers of the trait: removing them needs every trial validated in Phenotype Quality Control;
+ *  otherwise validate them there, or continue with the values as they are. */
 function outlierBox(info) {
     if (!T.dsTrait || !info.fields) return '';
     const v = validation(info);
-    let h = '<div class="sat-label" style="margin-top:10px">Outliers</div>';
-    if (v.n && !v.notValidated.length) {
-        T.outliers = 'validated';
-        return h + `<div class="sat-small text-success">✓ All ${v.n} trials are validated for ${esc(v.trait)} (Phenotype Quality Control): the values marked there as outliers are left out.</div>`;
-    }
-    if (T.outliers === 'validated') T.outliers = '';
-    h += `<div class="sat-warn"><b>${v.notValidated.length} of ${v.n} trial${v.n === 1 ? '' : 's'} ${v.notValidated.length === 1 ? 'is' : 'are'} not validated for ${esc(v.trait)}</b>: ${v.notValidated.length === 1 ? 'its' : 'their'} values were not checked for outliers `
-        + '(<a href="/tools/qualitycontrol" target="_blank" rel="noopener">Phenotype Quality Control</a>). One wrong plot value moves a trial\'s mean, and the model learns from those means.'
-        + '<div style="margin-top:6px"><label class="sat-small" style="display:block;font-weight:normal"><input type="radio" name="tr_outliers" value="remove"' + (T.outliers === 'remove' ? ' checked' : '') + ' /> '
-        + `<b>Remove outliers from the dataset</b>: ${info.outliers ? `the ${info.outliers} outlier${info.outliers === 1 ? '' : 's'} stored with the dataset, and ` : ''}in each trial not validated, plot values beyond 1.5 interquartile ranges from the quartiles (Tukey), before the trial means</label>`
-        + '<label class="sat-small" style="display:block;font-weight:normal"><input type="radio" name="tr_outliers" value="keep"' + (T.outliers === 'keep' ? ' checked' : '') + ' /> '
-        + '<b>Continue with the values as they are</b></label></div>'
-        + '<div class="sat-small sat-muted">Values already marked as outliers in Phenotype Quality Control are always left out.</div></div>';
+    const all = v.n > 0 && !v.notValidated.length;
+    if (!all && T.outliers === 'remove') T.outliers = '';
+    if (all && !T.outliers) T.outliers = 'remove';
+    const radio = (val, label, off) => `<label class="sat-small" style="display:block;font-weight:normal${off ? ';opacity:.55' : ''}"><input type="radio" name="tr_outliers" value="${val}"${T.outliers === val ? ' checked' : ''}${off ? ' disabled' : ''} /> ${label}</label>`;
+    let h = '<div class="sat-label" style="margin-top:10px">Outliers</div>'
+        + `<div class="${all ? 'sat-small' : 'sat-warn'}">${all
+            ? `<span class="text-success">✓ All ${v.n} trials are validated for ${esc(v.trait)} in Phenotype Quality Control.</span>`
+            : `<b>${v.notValidated.length} of ${v.n} trial${v.n === 1 ? '' : 's'} ${v.notValidated.length === 1 ? 'is' : 'are'} not validated for ${esc(v.trait)}</b> in Phenotype Quality Control, so the outliers cannot be removed yet.`}`
+        + '<div style="margin-top:6px">'
+        + radio('remove', `<b>Remove outliers</b>: the values marked as outliers in Phenotype Quality Control${info.outliers ? ` and the ${info.outliers} stored with the dataset` : ''}${all ? '' : ' (needs every trial validated)'}`, !all)
+        + `<div class="sat-small" style="margin:2px 0 4px 20px"><a href="/tools/qualitycontrol" target="_blank" rel="noopener">Open Phenotype Quality Control</a> to validate the trials${all ? '' : `: ${v.notValidated.slice(0, 6).map(f => esc(f.name)).join(', ')}${v.notValidated.length > 6 ? ', …' : ''}`}; then choose the dataset again here.</div>`
+        + radio('keep', '<b>Continue as it is</b>: every value of the trait is used')
+        + '</div></div>';
     return h;
 }
 
@@ -264,19 +314,19 @@ function readiness() {
     items.push({ ok: !!T.crop, text: T.crop ? `Crop: ${cropLabel()}` : 'Choose the crop (step 1)' });
     if (!T.useIbge && !T.useDataset) items.push({ ok: false, text: 'Choose the training data (step 1): regional statistics and/or a dataset' });
     if (T.useIbge) {
-        items.push({ ok: T.picked.size > 0, text: T.picked.size ? `Regional statistics: ${T.picked.size} municipality-season${T.picked.size === 1 ? '' : 's'} (IBGE), ${setting('samples_per_region')} square${setting('samples_per_region') === 1 ? '' : 's'} of ${fmt(setting('sample_size_m') / 1000, 1)} km each` : 'Regional statistics: choose the municipalities (step 1)' });
+        items.push({ ok: T.picked.size > 0, text: T.picked.size ? `Regional statistics: ${T.picked.size} ${prov().level}-season${T.picked.size === 1 ? '' : 's'} (${prov().label}), ${setting('samples_per_region')} square${setting('samples_per_region') === 1 ? '' : 's'} of ${fmt(setting('sample_size_m') / 1000, 1)} km each` : `Regional statistics: choose the ${levelPlural()} (step 1)` });
     }
     if (T.useDataset) {
         const info = T.dsId ? T.dsInfo[T.dsId] : null;
         items.push({ ok: !!(info && info.ok), text: !T.dsId ? 'Dataset: choose one (step 1)' : !info ? 'Dataset: reading…' : info.error ? `Dataset: ${info.error}` : info.ok ? `Dataset "${info.name}": ${info.trials.length} trials` : `Dataset "${info.name}" is not usable: ${info.problems.join('; ')}` });
         if (info && info.ok) items.push({ ok: !!T.dsTrait, text: T.dsTrait ? `Trait to train on: ${traitName((info.traits.find(t => String(t.id) === String(T.dsTrait)) || {}).name)}` : 'Choose the trait to train on (step 1)' });
         if (info && info.ok && T.dsTrait && info.fields) {
-            items.push({ ok: !!T.outliers, text: { validated: 'Outliers: every trial is validated for the trait', remove: 'Outliers: removed (dataset outliers + Tukey fences in trials not validated)',
-                keep: 'Outliers: some trials not validated, continuing with the values as they are' }[T.outliers] || 'Outliers: some trials are not validated for the trait: remove the outliers, or continue as they are (step 1)' });
+            items.push({ ok: !!T.outliers, text: { remove: 'Outliers: removed (marked in Phenotype Quality Control, every trial validated)',
+                keep: 'Outliers: none removed, every value is used' }[T.outliers] || 'Outliers: some trials are not validated for the trait: validate them in Phenotype Quality Control, or continue as it is (step 1)' });
         }
         const loc = ((info && info.fields) || []).filter(f => f.field === 'location').length;
         if (loc) items.push({ ok: true, warn: true, text: `${loc} trial${loc === 1 ? '' : 's'} placed only by the location's coordinates: checked by the run, left out where no crop grows (see step 1 for the fix)` });
-        if (T.useIbge && T.dsTrait) items.push({ ok: true, warn: true, text: 'Regional statistics are in kg/ha: the trait of the trials must be in kg/ha too' });
+        if (T.useIbge && T.dsTrait) items.push({ ok: true, warn: true, text: 'Both sources: combined with the source as a model term (each keeps its own yield level); the trait of the trials must be grain yield in kg/ha, like the regional statistics' });
     }
     const n = (T.useIbge ? T.picked.size : 0) + (T.useDataset && T.dsInfo[T.dsId] && T.dsInfo[T.dsId].ok ? T.dsInfo[T.dsId].trials.length : 0);
     items.push({ ok: n >= setting('min_fields'), text: n >= setting('min_fields') ? `Up to ${n} items of known yield (at least ${setting('min_fields')} must pass the checks)` : `${n} items of known yield; at least ${setting('min_fields')} are needed` });
@@ -284,7 +334,16 @@ function readiness() {
     return items;
 }
 
+/** The step-1 Next button: off, with what is missing, until the training data are complete. */
+function renderStep1Nav(flash) {
+    const miss = step1Missing();
+    $('#tr_next1').prop('disabled', miss.length > 0);
+    $('#tr_step1_missing').text(miss.length ? `Still needed: ${miss.join('; ')}` : '');
+    if (flash && miss.length) $('#tr_step1_missing')[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function renderReady() {
+    renderStep1Nav();
     const items = readiness();
     $('#tr_ready').html(items.map(r => `<li class="${r.ok ? (r.warn ? 'ok' : 'ok') : 'no'}">${r.warn ? '<span class="text-warning">⚠</span> ' : ''}${esc(r.text)}</li>`).join(''));
     $('#tr_run').prop('disabled', !items.every(r => r.ok) || T.job.status === 'running');
@@ -294,7 +353,7 @@ function renderReady() {
 
 /** The model name: the one typed, or a suggestion from the crop and the training data. */
 function suggestedName() {
-    const src = [T.useIbge && T.picked.size ? 'IBGE regional' : '', T.useDataset && T.dsInfo[T.dsId] && T.dsInfo[T.dsId].name ? T.dsInfo[T.dsId].name : ''].filter(Boolean).join(' + ');
+    const src = [T.useIbge && T.picked.size ? `${prov().label} regional` : '', T.useDataset && T.dsInfo[T.dsId] && T.dsInfo[T.dsId].name ? T.dsInfo[T.dsId].name : ''].filter(Boolean).join(' + ');
     return `${cropLabel()} yield - ${src || 'training'} - ${new Date().toISOString().slice(0, 10)}`;
 }
 const modelName = () => (T.name.trim() || suggestedName());
@@ -302,7 +361,7 @@ const modelName = () => (T.name.trim() || suggestedName());
 function payload() {
     return {
         name: modelName(), crop: T.crop, settings: { ...T.settings, yield_model: T.model },
-        regions: T.useIbge ? { ufs: [...T.ufs], years: [...T.years], keys: [...T.picked] } : null,
+        regions: T.useIbge ? { provider: T.provider, units: [...T.ufs], years: [...T.years], keys: [...T.picked] } : null,
         dataset_id: T.useDataset ? T.dsId : '', trait_id: T.useDataset ? T.dsTrait : '', outliers: T.useDataset ? T.outliers : '',
     };
 }
@@ -404,6 +463,12 @@ function renderResults() {
         h += '<div class="row" style="margin-top:10px"><div class="col-sm-6" id="tr_plot"></div><div class="col-sm-6">';
         if (Y.coefficients && Y.coefficients.length) h += '<table class="sat-mini-table"><thead><tr><th>Term</th><th class="num">Estimate</th><th class="num">SE</th></tr></thead><tbody>'
             + Y.coefficients.map(c => `<tr><td>${esc(PREDICTOR_NAMES[c.term] || c.term)}</td><td class="num">${fmt(c.estimate, 3)}</td><td class="num">${c.se !== undefined ? fmt(c.se, 3) : ''}</td></tr>`).join('') + '</tbody></table>';
+        if ((Y.metrics_by_source || []).length > 1) {
+            h += '<div class="sat-label" style="margin-top:4px">Validation per source</div><table class="sat-mini-table"><thead><tr><th>Source</th><th class="num">Items</th><th class="num">Mean observed</th><th class="num">RMSE</th><th class="num">Bias</th><th class="num">R²</th></tr></thead><tbody>'
+                + Y.metrics_by_source.map(m => `<tr><td>${m.source === 'regional' ? 'Regional statistics' : 'Trials'}</td><td class="num">${m.n}</td><td class="num">${fmt(m.observed_mean, 0)}</td><td class="num">${fmt(m.rmse, 0)}</td><td class="num">${fmt(m.bias, 0)}</td><td class="num">${fmt(m.r2, 2)}</td></tr>`).join('')
+                + '</tbody></table>';
+            if (Y.source_term) h += '<div class="sat-help">Both sources in one model, the source as a term: estimates of analysed fields are at the regional (commercial) level.</div>';
+        }
         const groups = {};
         cal.filter(c => c.used && c.loo !== null && c.loo !== undefined).forEach(c => { const k = c.site || c.name; groups[k] = groups[k] || []; groups[k].push(c.loo - c.observed); });
         const rows = Object.entries(groups).map(([k, e]) => [k, e.length, e.reduce((a, x) => a + x, 0) / e.length, Math.sqrt(e.reduce((a, x) => a + x * x, 0) / e.length)]).sort((a, b) => b[3] - a[3]);
@@ -415,13 +480,13 @@ function renderResults() {
     }
     const used = cal.filter(c => c.used).length;
     h += `<h4>Training data (${used} used of ${cal.length})</h4><div style="max-height:380px;overflow:auto"><table class="sat-mini-table"><thead><tr><th>Item</th><th>From</th><th>Season</th><th class="num">Observed${u}</th><th class="num">Predicted (left out)</th><th class="num">Crop found</th><th class="num">Clear dates</th><th class="num">NDVI peak</th><th></th></tr></thead><tbody>`
-        + cal.map(c => `<tr${c.used ? '' : ' class="sat-muted"'}><td>${esc(c.name)}</td><td class="sat-small">${c.kind === 'region' ? 'IBGE' : c.field_from === 'location' ? `<span class="text-warning">trial, location point</span>` : c.field_from === 'plots' ? 'trial, plot GPS' : c.field_from === 'drawn' ? 'trial, drawn field' : esc(c.source)}</td>`
-            + `<td class="sat-small">${c.kind === 'region' ? esc(SEASONS[c.season] || c.season) + ' ' + esc(c.year) : `${esc(c.start)} – ${esc(c.end)}`}</td><td class="num">${fmt(c.observed, 0)}${c.outliers_removed ? `<br><span class="sat-small sat-muted" title="Plot values left out as outliers">${c.outliers_removed} outlier${c.outliers_removed === 1 ? '' : 's'} out</span>` : ''}</td><td class="num">${c.loo !== null && c.loo !== undefined ? fmt(c.loo, 0) : ''}</td>`
+        + cal.map(c => `<tr${c.used ? '' : ' class="sat-muted"'}><td>${esc(c.name)}</td><td class="sat-small">${c.kind === 'region' ? esc((T.providers.find(p => p.id === c.source) || { label: c.source }).label) : c.field_from === 'location' ? `<span class="text-warning">trial, location point</span>` : c.field_from === 'plots' ? 'trial, plot GPS' : c.field_from === 'drawn' ? 'trial, drawn field' : esc(c.source)}</td>`
+            + `<td class="sat-small">${c.kind === 'region' ? esc(c.season_label || SEASONS[c.season] || c.season) + ' ' + esc(c.year) : `${esc(c.start)} – ${esc(c.end)}`}</td><td class="num">${fmt(c.observed, 0)}${c.outliers_removed ? `<br><span class="sat-small sat-muted" title="Plot values left out as outliers">${c.outliers_removed} outlier${c.outliers_removed === 1 ? '' : 's'} out</span>` : ''}</td><td class="num">${c.loo !== null && c.loo !== undefined ? fmt(c.loo, 0) : ''}</td>`
             + `<td class="num">${c.crop_ha !== null && c.crop_ha !== undefined ? `${fmt(c.crop_ha, 1)} ha` : ''}</td><td class="num">${c.n_dates ?? ''}</td><td class="num">${fmt(c.ndvi_max, 2)}</td><td class="sat-small text-warning">${esc(c.reason || '')}</td></tr>`).join('')
         + '</tbody></table></div>';
     if ((R.calibration_skipped || []).length) h += `<details style="margin-top:6px"><summary class="sat-small">${R.calibration_skipped.length} left out before the run</summary><ul class="sat-small">${R.calibration_skipped.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>`;
     if ((R.notes || []).length) h += `<details style="margin-top:6px"${R.notes.some(n => /location/.test(n)) ? ' open' : ''}><summary class="sat-small"><b>Notes (${R.notes.length})</b></summary><ul class="sat-small">${R.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></details>`;
-    if (cal.some(c => c.kind === 'region')) h += '<div class="sat-help" style="margin-top:6px">Regional items: the observed yield is the municipality\'s published average (IBGE PAM) for that crop season; the satellite curve is the mean of the maize found in the sample squares. Fields better or worse than their municipality are not in the training data, so the model is regional: it ranks fields well when they differ like municipalities do.</div>';
+    if (cal.some(c => c.kind === 'region')) h += '<div class="sat-help" style="margin-top:6px">Regional items: the observed yield is the region\'s published average for that season; the satellite curve is the mean of the maize found in the sample squares. Fields better or worse than their municipality are not in the training data, so the model is regional: it ranks fields well when they differ like municipalities do.</div>';
     // save
     if (R.can_save_model) {
         h += R.saved_model_entry
@@ -498,15 +563,18 @@ function renderRuns() {
 function bind() {
     $('#tr_stepper').on('click', 'li', function () { goStep(+$(this).data('step')); });
     $(document).on('click', '.tr-next', function () { goStep(+$(this).data('to')); if (+$(this).data('to') === 2) renderSettings(); });
-    $('#tr_crop').on('change', function () { T.crop = this.value; T.regions = null; T.picked = new Set(); if (isMaize()) T.useIbge = true; renderSources(); renderReady(); });
+    $('#tr_crop').on('change', function () { T.crop = this.value; T.regions = null; T.picked = new Set(); if (!isMaize()) { T.useIbge = false; T.useDataset = true; } else if (!T.useDataset) T.useIbge = true; renderSources(); renderReady(); });
     $('#tr_sources').on('click', '.sat-option', function (e) {
         e.preventDefault();
         if ($(this).hasClass('disabled')) return;
         const k = $(this).data('v');
-        if (k === 'ibge') T.useIbge = !T.useIbge; else T.useDataset = !T.useDataset;
+        T.useIbge = k === 'ibge' || k === 'both';
+        T.useDataset = k === 'dataset' || k === 'both';
         renderSources(); renderReady();
     });
-    $('#tr_states').on('click', '.sat-seg', function () { const c = +$(this).data('uf'); if (T.ufs.has(c)) T.ufs.delete(c); else if (T.ufs.size < 6) T.ufs.add(c); renderIbge(); });
+    $('#tr_states').on('click', '.sat-seg', function () { const c = String($(this).attr('data-uf')); if (T.ufs.has(c)) T.ufs.delete(c); else if (T.ufs.size < (prov().units_max || 6)) T.ufs.add(c); renderIbge(); });
+    $('#tr_provider').on('click', '.sat-seg', function () { const p = String($(this).attr('data-v')); if (p !== T.provider) loadUnits(p); });
+    $('#tr_ibge_box').on('click', '#tr_units_retry', e => { e.preventDefault(); loadUnits(T.provider); });
     $('#tr_years').on('click', '.sat-seg', function () { const y = +$(this).data('year'); if (T.years.has(y)) T.years.delete(y); else if (T.years.size < 8) T.years.add(y); renderIbge(); });
     $('#tr_regions_load').on('click', loadRegions);
     $('#tr_regions').on('change', '.tr-region', function () { const k = $(this).data('k'); if (this.checked) T.picked.add(k); else T.picked.delete(k); renderRegions(); renderReady(); });
@@ -535,7 +603,7 @@ async function init() {
     try {
         const [c, st] = await Promise.all([getJSON('crops'), getJSON('train_regions')]);
         T.crops = c.crops; T.crop = c.preferred || (c.crops[0] || {}).species || '';
-        T.states = st.states;
+        applyUnits(st);
     } catch (err) { $('#tr_sources_msg').html(`<span class="text-danger sat-small">${esc(err.message)}</span>`); }
     [thisYear - 1, thisYear - 2, thisYear - 3].forEach(y => T.years.add(y));
     T.useIbge = isMaize(); T.useDataset = !isMaize();

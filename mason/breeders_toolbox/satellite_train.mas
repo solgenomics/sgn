@@ -7,7 +7,9 @@
 =head1 DESCRIPTION
 
 Training a yield model apart from the analysis of an area: 1 training data
-(IBGE regional statistics by municipality, year and crop season, and / or a
+(regional statistics by region, year and crop season: IBGE, USDA NASS,
+Eurostat, HarvestStat Africa or FAOSTAT, as set in sgn.conf
+satellite_regional_statistics; and / or a
 Breedbase dataset of trials), 2 settings, 3 train (background job) and
 validate (models compared, observed vs predicted, error by place), then save
 it as a Breedbase analysis model, used later on /breeders/satellite. Code:
@@ -50,24 +52,37 @@ Chris Simoes
         </div>
         <div class="sat-card">
           <h3>Known yields to learn from</h3>
-          <div class="sat-help">Choose one or both; they are combined in one training.</div>
-          <div class="sat-options sat-checks" id="tr_sources">
-            <label class="sat-option" data-v="ibge"><input type="checkbox" /><span class="sat-option-title">Regional statistics (IBGE, Brazil)</span><span class="sat-option-text" id="tr_ibge_text"></span></label>
-            <label class="sat-option" data-v="dataset"><input type="checkbox" /><span class="sat-option-title">Breedbase trials (a dataset)</span><span class="sat-option-text">Trials of the crop with the trait to learn (e.g. grain yield). Each trial needs its field: plot GPS coordinates, a field drawn for it, or at least correct coordinates on its location.</span></label>
+          <div class="sat-help">Choose one source, or both combined.</div>
+          <div class="sat-options" id="tr_sources">
+            <label class="sat-option" data-v="ibge"><input type="radio" name="tr_source" /><span class="sat-option-title">Regional statistics <span id="tr_src_name" style="font-weight:normal"></span></span><span class="sat-option-text" id="tr_ibge_text"></span></label>
+            <label class="sat-option" data-v="dataset"><input type="radio" name="tr_source" /><span class="sat-option-title">Breedbase trials (a dataset)</span><span class="sat-option-text">Trials of the crop with the trait to learn (e.g. grain yield). Each trial needs its field: plot GPS coordinates, a field drawn for it, or at least correct coordinates on its location.</span></label>
+            <label class="sat-option" data-v="both"><input type="radio" name="tr_source" /><span class="sat-option-title">Both</span><span class="sat-option-text" id="tr_both_text">Regional statistics and trials in one model, each source with its own yield level (see below).</span></label>
+          </div>
+          <div class="sat-subopts" id="tr_both_box" style="display:none;margin-top:8px">
+            <b>How the two are combined</b>
+            <ul class="sat-small" style="margin:4px 0 0 0;padding-left:18px">
+              <li>They measure yield at different levels: a municipality's published yield is the <b>average of all its commercial maize</b>; a trial's yield is the mean of its plots, usually well above it (better management, plot borders, adjusted moisture). Pooled as if they were the same, the model would mix the two levels and be wrong for both.</li>
+              <li>So the <b>source is a term of the model</b> (a level shift): how the season curve (NDVI area, red-edge peak&hellip;) turns into yield is learnt from both together, and each source keeps its own level. The results show the shift found (e.g. "trials +1,400 kg/ha at the same curve").</li>
+              <li>Every model compared gets the term, and the validation still leaves out one location-year at a time; its errors are also shown <b>per source</b>.</li>
+              <li>The fields of an analysis are estimated at the <b>regional level</b> (commercial fields), not at the trial level.</li>
+              <li>The trait of the trials must be <b>grain yield in kg/ha</b>, like the regional statistics (same moisture basis, if possible).</li>
+            </ul>
           </div>
           <div id="tr_sources_msg"></div>
         </div>
         <div class="sat-card" id="tr_ibge_box" style="display:none">
-          <h3>Regional statistics: municipalities</h3>
-          <div class="sat-label">States (up to 6)</div>
+          <h3 id="tr_regions_title">Regional statistics</h3>
+          <div id="tr_provider_box" style="display:none"><div class="sat-label">Source</div><div class="sat-segs" id="tr_provider" style="flex-wrap:wrap"></div></div>
+          <div id="tr_provider_note"></div>
+          <div class="sat-label" id="tr_units_label">States</div>
           <div class="sat-segs" id="tr_states" style="flex-wrap:wrap"></div>
           <div class="sat-label">Harvest years (up to 8)</div>
           <div class="sat-segs" id="tr_years" style="flex-wrap:wrap"></div>
-          <div style="margin-top:10px"><button type="button" class="btn btn-default btn-sm" id="tr_regions_load">Show the municipalities</button></div>
+          <div style="margin-top:10px"><button type="button" class="btn btn-default btn-sm" id="tr_regions_load">Show the regions</button></div>
           <div id="tr_regions" style="margin-top:8px"></div>
         </div>
         <div class="sat-card" id="tr_ds_box" style="display:none"></div>
-        <div class="sat-nav"><span></span><button class="btn btn-primary tr-next" data-to="2">Next: settings &rarr;</button></div>
+        <div class="sat-nav"><span class="sat-small text-danger" id="tr_step1_missing"></span><button class="btn btn-primary tr-next" id="tr_next1" data-to="2">Next: settings &rarr;</button></div>
       </div>
 
       <div class="sat-pane" data-step="2" style="display:none">
@@ -85,7 +100,7 @@ Chris Simoes
           <h3>Ready?</h3>
           <ul class="sat-check-list" id="tr_ready"></ul>
           <div class="sat-inline-row" style="margin-top:8px"><div style="flex:1;max-width:520px"><label class="sat-label" for="tr_name">Model name</label><input type="text" id="tr_name" class="form-control input-sm" maxlength="120" /><div class="sat-help">The training and the model you save from it carry this name; it is how you find the model later in an analysis (Use a trained model).</div></div></div>
-          <div class="sat-help" style="margin-top:6px">Reading a season of images takes about 1–2 minutes per sample square: a training with many municipalities runs for hours. It runs in the background.</div>
+          <div class="sat-help" style="margin-top:6px">Reading a season of images takes about 1–2 minutes per sample square: a training with many regions runs for hours. It runs in the background.</div>
           <div id="tr_run_error" style="margin-top:8px"></div>
           <div class="sat-nav" style="margin-top:8px"><button class="btn btn-default tr-next" data-to="2">&larr; Settings</button>
             <span style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end">
