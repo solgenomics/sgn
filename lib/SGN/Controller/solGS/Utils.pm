@@ -195,8 +195,34 @@ sub abbreviate_term {
 	}
     }
 
-    return $acronym;
+    return _r_column_name($acronym);
 
+}
+
+# R scripts read the acronyms as column names. R rewrites a name with other
+# characters than letters, digits, dots and underscores, a leading digit or
+# underscore, or a reserved word (GMC_P[0001198] becomes GMC_P.0001198.), and
+# then the trait column is not found (#6527). A name that R keeps does not
+# change. In another name, other characters become an underscore; letters of
+# other alphabets stay. In a string that is not decoded, bytes outside ASCII
+# stay as they are.
+my %R_RESERVED = map { $_ => 1 } qw(if else repeat while function for in next break
+    TRUE FALSE NULL Inf NaN NA NA_integer_ NA_real_ NA_complex_ NA_character_);
+
+sub _r_column_name {
+    my ($name) = @_;
+
+    return $name if !defined($name) || $name eq '';
+
+    my $letter = utf8::is_utf8($name) ? '\p{L}' : 'A-Za-z\x80-\xFF';
+    return $name if $name =~ /^(?:[$letter]|\.(?![0-9]))[${letter}0-9._]*\z/ && !$R_RESERVED{$name};
+
+    $name =~ s/[^${letter}0-9._]+/_/g;
+    $name =~ s/^_+|_+\z//g;
+    $name = 'X' . $name if $name eq '' || $name =~ /^(?:[0-9]|\.[0-9])/;
+    $name .= '_' if $R_RESERVED{$name};
+
+    return $name;
 }
 
 
