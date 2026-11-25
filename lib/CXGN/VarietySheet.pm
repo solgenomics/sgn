@@ -126,6 +126,158 @@ sub decision_meetings {
     } } @$rows ];
 }
 
+=head2 meeting_selections($schema, \%filters)
+
+Accessions selected in decision meetings (decision 'advance' or 'jump'), ONE row
+per accession (its latest matching decision), filtered and paged in SQL so it
+scales to any number of meetings. Saved meetings give their saved decisions;
+meetings not saved yet give their draft decisions (meeting_json.draft_decisions,
+keyed "accession\tprogram"), marked draft => 1.
+
+Filters: q (accession or meeting name), program, from / to (meeting date
+YYYY-MM-DD), meeting_id, no_profile (only accessions without a profile),
+stages (arrayref: keep decisions whose new stage, e.g. ON-26-Y5 -> Y5, is one
+of them), page (1..), page_size (default 25, max 100), with_programs (also
+return the programs that have selections, for the filter).
+
+Returns { rows => [{ stock_id, accession, decision, previous_stage, new_stage,
+program, draft, meeting_id, meeting_name, date, saved, n_meetings,
+profiles => [{ variety_sheet_id, status, commercial_name }] }],
+total, page, page_size, programs => [...] (only with with_programs) }.
+
+=cut
+
+# every advance/jump decision: saved ones, or drafts of meetings not saved yet
+# (same "saved" rule as the Decision Meeting page); binds: meeting_json type, accession type
+sub _selection_sql {
+    return <<'SQL';
+      WITH m AS (
+        SELECT DISTINCT ON (pp.project_id) pp.project_id AS meeting_id, p.name AS project_name, pp.value::jsonb AS j
+          FROM projectprop pp JOIN project p ON p.project_id = pp.project_id
+         WHERE pp.type_id = ? AND pp.value LIKE '{%'
+         ORDER BY pp.project_id, pp.projectprop_id DESC),
+      mm AS (
+        SELECT meeting_id, j,
+               coalesce(nullif(j->>'meeting_name', ''), project_name) AS meeting_name,
+               CASE WHEN j->>'date' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN substr(j->>'date', 1, 10) ELSE '' END AS mdate,
+               (   lower(coalesce(j->>'saved', '')) IN ('1', 'true') OR lower(coalesce(j->>'is_saved', '')) IN ('1', 'true')
+                OR lower(coalesce(j->>'meeting_saved', '')) IN ('1', 'true') OR lower(coalesce(j->>'decisions_saved', '')) IN ('1', 'true')
+                OR coalesce(j->>'saved_at', '') <> ''
+                OR lower(coalesce(j->>'saved_status', j->>'status', '')) IN ('successfully', 'saved')) AS saved
+          FROM m),
+      d AS (
+        SELECT mm.meeting_id, mm.meeting_name, mm.mdate, mm.saved, e->>'stock_id' AS sid, e->>'accession' AS acc,
+               lower(e->>'decision') AS decision, coalesce(e->>'previous_stage', '') AS previous_stage,
+               coalesce(e->>'new_stage', '') AS new_stage, coalesce(e->>'breeding_program', '') AS program, false AS draft
+          FROM mm, jsonb_array_elements(CASE WHEN jsonb_typeof(mm.j->'accessions') = 'array' THEN mm.j->'accessions' ELSE '[]'::jsonb END) e
+         WHERE jsonb_typeof(e) = 'object' AND lower(e->>'decision') IN ('advance', 'jump')
+        UNION ALL
+        SELECT mm.meeting_id, mm.meeting_name, mm.mdate, mm.saved, NULL, split_part(x.k, E'\t', 1),
+               lower(x.v->>'decision'), '', coalesce(x.v->>'new_stage', ''), split_part(x.k, E'\t', 2), true
+          FROM mm, jsonb_each(CASE WHEN jsonb_typeof(mm.j->'draft_decisions') = 'object' THEN mm.j->'draft_decisions' ELSE '{}'::jsonb END) AS x(k, v)
+         WHERE NOT mm.saved AND jsonb_typeof(x.v) = 'object' AND lower(x.v->>'decision') IN ('advance', 'jump')),
+      r AS (
+        SELECT d.*, coalesce(s1.stock_id, s2.stock_id) AS stock_id, coalesce(s1.uniquename, s2.uniquename) AS accession
+          FROM d
+          LEFT JOIN stock s1 ON s1.stock_id = (CASE WHEN d.sid ~ '^[0-9]{1,9}$' THEN d.sid::int END) AND s1.is_obsolete = 'f'
+          LEFT JOIN stock s2 ON s1.stock_id IS NULL AND s2.uniquename = d.acc AND s2.type_id = ? AND s2.is_obsolete = 'f')
+SQL
+}
+
+sub meeting_selections {
+    my ($class, $schema, $f) = @_;
+    $f ||= {};
+    my $json_type = _cvterm_id($schema, 'meeting_json', 'project_property');
+    my $acc_type = _cvterm_id($schema, 'accession', 'stock_type');
+    my $page_size = ($f->{page_size} // '') =~ /^\d+$/ && $f->{page_size} > 0 ? ($f->{page_size} > 100 ? 100 : $f->{page_size} + 0) : 25;
+    my $page = ($f->{page} // '') =~ /^\d+$/ && $f->{page} > 0 ? $f->{page} + 0 : 1;
+    return { rows => [], total => 0, page => 1, page_size => $page_size, programs => [] } unless $json_type && $acc_type;
+    my $dbh = $schema->storage->dbh();
+    my $base = _selection_sql();
+    my @base_bind = ($json_type, $acc_type);
+
+    my @w = ('r.stock_id IS NOT NULL');
+    my @b;
+    if (length($f->{q} // '')) {
+        my $q = $f->{q};
+        $q =~ s/([\\%_])/\\$1/g;
+        push @w, '(r.accession ILIKE ? OR r.meeting_name ILIKE ?)';
+        push @b, "%$q%", "%$q%";
+    }
+    if (length($f->{program} // '')) { push @w, 'r.program = ?'; push @b, $f->{program}; }
+    if (($f->{from} // '') =~ /^\d{4}-\d{2}-\d{2}$/) { push @w, "r.mdate <> '' AND r.mdate >= ?"; push @b, $f->{from}; }
+    if (($f->{to} // '') =~ /^\d{4}-\d{2}-\d{2}$/) { push @w, "r.mdate <> '' AND r.mdate <= ?"; push @b, $f->{to}; }
+    if (($f->{meeting_id} // '') =~ /^\d+$/) { push @w, 'r.meeting_id = ?'; push @b, $f->{meeting_id}; }
+    push @w, 'NOT EXISTS (SELECT 1 FROM phenome.variety_sheet v WHERE v.stock_id = r.stock_id)' if $f->{no_profile};
+    my @stages = grep { length } map { my $x = uc($_ // ''); $x =~ s/^\s+|\s+$//g; $x } @{ $f->{stages} || [] };
+    if (@stages) { push @w, "upper(regexp_replace(r.new_stage, '^.*-', '')) = ANY(?)"; push @b, \@stages; }
+    my $where = join(' AND ', @w);
+
+    my $rows = $dbh->selectall_arrayref(
+        "$base,
+         f AS (SELECT r.* FROM r WHERE $where),
+         n AS (SELECT stock_id AS n_stock_id, count(DISTINCT meeting_id) AS n_meetings FROM f GROUP BY stock_id),
+         one AS (SELECT DISTINCT ON (f.stock_id) f.*, n.n_meetings FROM f JOIN n ON n.n_stock_id = f.stock_id
+                  ORDER BY f.stock_id, f.mdate DESC, f.meeting_id DESC, f.draft)
+         SELECT stock_id, accession, decision, previous_stage, new_stage, program, draft, meeting_id, meeting_name, mdate, saved, n_meetings,
+                count(*) OVER () AS total
+           FROM one ORDER BY mdate DESC, meeting_id DESC, lower(accession)
+          LIMIT ? OFFSET ?",
+        { Slice => {} }, @base_bind, @b, $page_size, ($page - 1) * $page_size);
+
+    my $programs = $f->{with_programs}
+        ? $dbh->selectcol_arrayref("$base SELECT DISTINCT program FROM r WHERE program <> '' AND stock_id IS NOT NULL ORDER BY 1", undef, @base_bind)
+        : undef;
+
+    my %profiles;
+    if (@$rows) {
+        my $p = $dbh->selectall_arrayref(
+            "SELECT stock_id, variety_sheet_id, status, commercial_name FROM phenome.variety_sheet WHERE stock_id = ANY(?) ORDER BY modified_date DESC",
+            undef, [ map { $_->{stock_id} } @$rows ]);
+        push @{ $profiles{ $_->[0] } }, { variety_sheet_id => $_->[1] + 0, status => $_->[2], commercial_name => $_->[3] } for @$p;
+    }
+    my $total = @$rows ? $rows->[0]{total} + 0 : 0;
+    for my $r (@$rows) {
+        delete $r->{total};
+        $r->{date} = delete $r->{mdate};
+        $r->{$_} += 0 for qw(stock_id meeting_id n_meetings);
+        $r->{$_} = $r->{$_} ? 1 : 0 for qw(draft saved);
+        $r->{profiles} = $profiles{ $r->{stock_id} } || [];
+    }
+    return { rows => $rows, total => $total, page => $page, page_size => $page_size, ($programs ? (programs => $programs) : ()) };
+}
+
+=head2 selection_meetings($schema, $q)
+
+Meetings with at least one selected accession, newest first, for the meeting
+search box: [{ meeting_id, meeting_name, date, saved, n_selected }] (max 20).
+
+=cut
+
+sub selection_meetings {
+    my ($class, $schema, $q) = @_;
+    my $json_type = _cvterm_id($schema, 'meeting_json', 'project_property');
+    my $acc_type = _cvterm_id($schema, 'accession', 'stock_type');
+    return [] unless $json_type && $acc_type;
+    my @w = ('r.stock_id IS NOT NULL');
+    my @b;
+    if (length($q // '')) {
+        $q =~ s/([\\%_])/\\$1/g;
+        push @w, 'r.meeting_name ILIKE ?';
+        push @b, "%$q%";
+    }
+    my $rows = $schema->storage->dbh->selectall_arrayref(
+        _selection_sql() . " SELECT meeting_id, meeting_name, mdate AS date, bool_or(saved) AS saved, count(DISTINCT stock_id) AS n_selected
+           FROM r WHERE " . join(' AND ', @w) . "
+          GROUP BY meeting_id, meeting_name, mdate ORDER BY mdate DESC, meeting_id DESC LIMIT 20",
+        { Slice => {} }, $json_type, $acc_type, @b);
+    for my $m (@$rows) {
+        $m->{$_} += 0 for qw(meeting_id n_selected);
+        $m->{saved} = $m->{saved} ? 1 : 0;
+    }
+    return $rows;
+}
+
 =head2 pedigree($schema, $stock_id)
 
 Parents and grandparents (two generations) with the cross type.
@@ -258,6 +410,7 @@ sub traits {
             label => _suggest_label($name, $def), unit => _suggest_unit($name, $def), trials => $ntrials + 0, observations => $nobs + 0,
             numeric => ($nnum >= $nobs * 0.8 ? 1 : 0),
             direction => _suggest_direction($name, $def),
+            direction_known => _direction_known($name, $def),
             kind => _suggest_kind($name, $def),
             %{ $scale{$id} || {} },
         };
@@ -302,16 +455,132 @@ sub _suggest_unit {
     return exists $map{lc $u} ? $map{lc $u} : $u;
 }
 
+my $LOWER_IS_BETTER = qr/sev|disease|incid|lodg|scab|rot|blight|rust|spot|damage|virus|mildew|wilt|shatter|moisture|moist|gmoi|defect|days to|maturity date|dtm|aflatox|mycotox|pest|insect|nematode|lesion|infect/;
+my $HIGHER_IS_BETTER = qr/yield|\byld\b|^yld|_yld|^gy_|marketable|production|kg\/ha|t\/ha|bu\/a|cwt|dry matter|starch|protein|oil content|brix|resist|toleran|survival|vigou?r|germination/;
+
 sub _suggest_direction {
     my $t = lc(join ' ', grep { defined } @_);
-    return 'lower' if $t =~ /sev|disease|incid|lodg|scab|rot|blight|rust|spot|damage|virus|mildew|wilt|shatter|moisture|moist|gmoi|defect|days to|maturity date|dtm|aflatox|mycotox|pest|insect|nematode|lesion|infect/;
+    return 'lower' if $t =~ $LOWER_IS_BETTER;
     return 'higher';
+}
+
+# 1 when the name says which way is better (yield up, disease down ...); 0 for descriptive
+# traits (height, flowering time, kernel weight, 1-9 aspect scores ...) that should be
+# described, not judged against a check
+sub _direction_known {
+    my $t = lc(join ' ', grep { defined } @_);
+    return ($t =~ $LOWER_IS_BETTER || $t =~ $HIGHER_IS_BETTER) ? 1 : 0;
 }
 
 sub _suggest_kind {
     my $t = lc(join ' ', grep { defined } @_);
     return 'disease' if $t =~ /sev|disease|incid|scab|rot|blight|rust|spot|virus|mildew|wilt|nematode|lesion|infect|resist/;
     return 'agronomic';
+}
+
+=head2 trait_importance($schema, $stock_id)
+
+Ranks the traits of an accession by how much they matter, from the data alone
+(no configuration):
+
+  coverage  share of the accession's trials that measured the trait
+  routine   share of all entries of those trials measured for it (a trait the
+            program records on everything, not a special subset)
+  analysed  share of the stored analyses holding the accession that include it
+            (breeders analyse what they select on); 'decided' when such an
+            analysis was linked to a decision meeting about the accession
+  yield     the name or definition reads like yield / production
+  housekeeping penalty for plot size, stand counts, dates, notes
+
+Returns [{ trait_id, name, score (0..1), coverage, routine, analysed, decided,
+yield, housekeeping, reasons => [plain-language strings] }] sorted by score.
+
+=cut
+
+sub trait_importance {
+    my ($class, $schema, $stock_id, $traits) = @_;
+    my $dbh = $schema->storage->dbh();
+    $traits ||= $class->traits($schema, $stock_id);
+    return [] unless @$traits;
+    my $units = _in_list(_field_unit_type_ids($schema));
+
+    # trials of the accession, and per trait: trials and entries measured in them
+    my $trials = $dbh->selectcol_arrayref(
+        "SELECT DISTINCT m.trial_id FROM materialized_phenoview m JOIN stock s ON s.stock_id=m.stock_id
+          WHERE m.accession_id=? AND m.trait_id IS NOT NULL AND s.type_id IN ($units)", undef, $stock_id);
+    my $n_trials = scalar @$trials;
+    my (%entries, $all_entries);
+    if (@$trials) {
+        my $tin = _in_list(@$trials);
+        my $rows = $dbh->selectall_arrayref(
+            "SELECT m.trait_id, count(DISTINCT m.accession_id) FROM materialized_phenoview m JOIN stock s ON s.stock_id=m.stock_id
+              WHERE m.trial_id IN ($tin) AND m.trait_id IS NOT NULL AND s.type_id IN ($units) GROUP BY 1");
+        $entries{ $_->[0] } = $_->[1] for @$rows;
+        ($all_entries) = $dbh->selectrow_array(
+            "SELECT count(DISTINCT m.accession_id) FROM materialized_phenoview m JOIN stock s ON s.stock_id=m.stock_id
+              WHERE m.trial_id IN ($tin) AND m.trait_id IS NOT NULL AND s.type_id IN ($units)");
+    }
+
+    # traits of the stored analyses holding the accession (matched by id, or by name without a |suffix)
+    my $base = sub { my $n = lc(shift // ''); $n =~ s/\|.*$//; $n =~ s/^\s+|\s+$//g; $n };
+    my $analyses = $class->analyses_with_accession($schema, $stock_id);
+    my (%in_analysis, %decided);
+    if (@$analyses) {
+        my $type = _cvterm_id($schema, 'analysis_instance', 'stock_type');
+        my $ain = _in_list(map { $_->{analysis_id} } @$analyses);
+        my $rows = $dbh->selectall_arrayref(
+            "SELECT DISTINCT m.trial_id, m.trait_id, c.name FROM materialized_phenoview m JOIN stock s ON s.stock_id=m.stock_id AND s.type_id=?
+               JOIN cvterm c ON c.cvterm_id=m.trait_id WHERE m.trial_id IN ($ain)", undef, $type);
+        my %meeting_analyses;
+        for my $m (@{ $class->decision_meetings($schema, $stock_id) }) {
+            my ($json) = $dbh->selectrow_array(
+                "SELECT pp.value FROM projectprop pp WHERE pp.project_id=? AND pp.type_id=? ORDER BY pp.projectprop_id DESC LIMIT 1",
+                undef, $m->{meeting_id}, _cvterm_id($schema, 'meeting_json', 'project_property'));
+            my $d = eval { decode_json($json // '') };
+            next unless ref $d eq 'HASH' && ref $d->{related_analyses} eq 'ARRAY';
+            $meeting_analyses{ $_->{analysis_id} } = 1 for grep { ref $_ eq 'HASH' && ($_->{analysis_id} // '') =~ /^\d+$/ } @{ $d->{related_analyses} };
+        }
+        for my $r (@$rows) {
+            my ($aid, $tid, $tname) = @$r;
+            for my $key ("id:$tid", 'name:' . $base->($tname)) {
+                $in_analysis{$key}{$aid} = 1;
+                $decided{$key} = 1 if $meeting_analyses{$aid};
+            }
+        }
+    }
+    my $n_analyses = scalar @$analyses;
+
+    my $YIELD = qr/yield|\byld\b|^yld|_yld|production|marketable|kg\/ha|t\/ha|bu\/a|cwt|grain weight|fresh root weight|tuber weight|biomass/i;
+    my $HOUSE = qr/plot (length|width|size|area)|\bplot\b|stand count|(^|_)p?stand(_|$)|plant count|number of plants|plants per plot|row|replicate|\bblock\b|planting date|harvest date|sowing date|\bdate\b|notes?\b|comment|emergence count|plant stand|plot_?(id|number)/i;
+
+    my @out;
+    for my $t (grep { $_->{numeric} } @$traits) {
+        my $text = join(' ', grep { defined } $t->{name}, $t->{definition});
+        my $cov = $n_trials ? $t->{trials} / $n_trials : 0;
+        my $routine = $all_entries ? ($entries{ $t->{trait_id} } || 0) / $all_entries : 0;
+        my %aset = (%{ $in_analysis{"id:$t->{trait_id}"} || {} }, %{ $in_analysis{'name:' . $base->($t->{name})} || {} });
+        my $an = $n_analyses ? scalar(keys %aset) / $n_analyses : 0;
+        my $dec = ($decided{"id:$t->{trait_id}"} || $decided{'name:' . $base->($t->{name})}) ? 1 : 0;
+        my $yield = $text =~ $YIELD ? 1 : 0;
+        my $house = ($t->{name} =~ $HOUSE && !$yield) ? 1 : 0;
+        my $score = $n_analyses
+            ? 0.30 * $cov + 0.15 * $routine + 0.30 * $an + 0.10 * $dec + 0.15 * $yield
+            : 0.55 * $cov + 0.30 * $routine + 0.15 * $yield;
+        $score *= 0.35 if $house;
+        $score *= 0.4 if $t->{trials} < 2;
+        my @why;
+        push @why, "measured in $t->{trials} of $n_trials trials" if $n_trials;
+        push @why, sprintf('recorded on %d%% of the entries of those trials', 100 * $routine + 0.5) if $all_entries;
+        push @why, sprintf('in %d of %d stored analyses', scalar(keys %aset), $n_analyses) if $n_analyses && %aset;
+        push @why, 'used in a decision meeting' if $dec;
+        push @why, 'yield-type trait' if $yield;
+        push @why, 'looks like a field-management record' if $house;
+        push @out, {
+            trait_id => $t->{trait_id}, name => $t->{name}, score => _r($score, 3), coverage => _r($cov, 2), routine => _r($routine, 2),
+            analysed => _r($an, 2), decided => $dec, yield => $yield, housekeeping => $house, reasons => \@why,
+        };
+    }
+    return [ sort { $b->{score} <=> $a->{score} || $a->{name} cmp $b->{name} } @out ];
 }
 
 =head2 analyses_with_accession($schema, $stock_id)
@@ -597,6 +866,7 @@ sub list_sheets {
     if ($f->{stock_id}) { push @w, 'v.stock_id=?'; push @b, $f->{stock_id}; }
     if ($f->{published}) { push @w, "v.status='published'"; }
     if ($f->{visible_to}) { push @w, "(v.status='published' OR v.sp_person_id=?)"; push @b, $f->{visible_to}; }
+    if (defined $f->{owner}) { push @w, 'v.sp_person_id=?'; push @b, $f->{owner}; }
     my $where = @w ? 'WHERE ' . join(' AND ', @w) : '';
     my $rows = $schema->storage->dbh->selectall_arrayref(
         "SELECT v.variety_sheet_id, v.stock_id, s.uniquename AS accession_name, v.commercial_name, v.status, v.sp_person_id,

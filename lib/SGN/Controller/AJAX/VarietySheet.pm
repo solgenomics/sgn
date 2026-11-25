@@ -45,6 +45,13 @@ sub _can_edit {
     return $self->_is_curator($c);
 }
 
+# sgn_local.conf: variety_profile_public 1 = profiles can be published as public web pages.
+# Off by default: profiles are kept in Breedbase for curators only (they print / save a PDF to send).
+sub _public {
+    my ($self, $c) = @_;
+    return ($c->config->{variety_profile_public} // '') =~ /^\s*(1|yes|true|on)\s*$/i ? 1 : 0;
+}
+
 # sgn_local.conf: variety_profile_require_meeting 1
 sub _require_meeting {
     my ($self, $c) = @_;
@@ -83,7 +90,10 @@ sub _json_body {
         seek($fh, 0, 0) if ref $fh;
         $raw = ref $fh ? <$fh> : $fh;
     }
-    my $d = eval { decode_json($raw // '') };
+    # form fields arrive already decoded into characters (×, –, accents ...); a raw body arrives as UTF-8 bytes
+    $raw //= '';
+    my $d = eval { utf8::is_utf8($raw) ? JSON::XS->new->decode($raw) : decode_json($raw) }
+         // eval { JSON::XS->new->decode($raw) };
     $self->_fail($c, 'Invalid request data.') unless ref $d eq 'HASH';
     return $d;
 }
@@ -128,6 +138,7 @@ sub accession_summary : Path('/ajax/variety_sheet/accession_summary') Args(0) {
     $r->{images} = $self->_images($c, $schema, $stock_id);
     $r->{can_edit} = $self->_can_edit($c);
     $r->{require_meeting} = $self->_require_meeting($c);
+    $r->{public_profiles} = $self->_public($c);
     # meeting decisions and comments are internal: only the editors (curators) get them
     $r->{meetings} = [] unless $r->{can_edit};
     $r->{can_save_names} = ($c->user() && (any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'breeder' } $c->user->roles())) ? 1 : 0;
@@ -161,6 +172,65 @@ sub _images {
                         url => $medium, url_large => $large, stock_id => $sid + 0, stock_name => $sname, own => $own ? 1 : 0 };
     }
     return \@images;
+}
+
+=head2 /ajax/variety_sheet/meeting_selections
+
+Accessions advanced or jumped in decision meetings (saved decisions, or draft
+decisions of meetings not saved yet), one row per accession, filtered and paged:
+q, program, from, to (YYYY-MM-DD), meeting_id, no_profile (1/0),
+release_only (1/0: only new stages listed in the config key
+variety_profile_stages, e.g. "PRECOMMERCIAL,COMMERCIAL"), page, page_size,
+with_programs (1: also the list of programs, for the filter).
+Also returns release_stages (the config list, empty when not set).
+Decisions are internal: curators only.
+
+=cut
+
+sub _release_stages {
+    my ($self, $c) = @_;
+    return [ grep { length } map { my $x = $_; $x =~ s/^\s+|\s+$//g; $x } split /,/, ($c->config->{variety_profile_stages} // '') ];
+}
+
+sub meeting_selections : Path('/ajax/variety_sheet/meeting_selections') Args(0) {
+    my ($self, $c) = @_;
+    $self->_require_editor($c);
+    my $p = $c->req->params;
+    my $stages = $self->_release_stages($c);
+    my $r = CXGN::VarietySheet->meeting_selections($self->_schema($c), {
+        q => $p->{q}, program => $p->{program}, from => $p->{from}, to => $p->{to}, meeting_id => $p->{meeting_id},
+        no_profile => ($p->{no_profile} // '') eq '1', stages => (($p->{release_only} // '') eq '1' ? $stages : []),
+        page => $p->{page}, page_size => $p->{page_size}, with_programs => ($p->{with_programs} // '') eq '1',
+    });
+    $r->{release_stages} = $stages;
+    $c->stash->{rest} = $r;
+}
+
+=head2 /ajax/variety_sheet/selection_meetings?q=
+
+Meetings with selected accessions, newest first (max 20), for the meeting
+search box. Curators only.
+
+=cut
+
+sub selection_meetings : Path('/ajax/variety_sheet/selection_meetings') Args(0) {
+    my ($self, $c) = @_;
+    $self->_require_editor($c);
+    $c->stash->{rest} = { meetings => CXGN::VarietySheet->selection_meetings($self->_schema($c), $c->req->param('q')) };
+}
+
+=head2 /ajax/variety_sheet/trait_importance?stock_id=
+
+The accession's traits ranked by importance, from the data alone (see
+CXGN::VarietySheet::trait_importance). Used by "Build the profile for me".
+
+=cut
+
+sub trait_importance : Path('/ajax/variety_sheet/trait_importance') Args(0) {
+    my ($self, $c) = @_;
+    my ($stock_id) = _int_list($c->req->param('stock_id'));
+    $self->_fail($c, 'stock_id is required.') unless $stock_id;
+    $c->stash->{rest} = { traits => CXGN::VarietySheet->trait_importance($self->_schema($c), $stock_id) };
 }
 
 =head2 /ajax/variety_sheet/check_name?name=&stock_id=
@@ -231,12 +301,13 @@ sub list : Path('/ajax/variety_sheet/list') Args(0) {
     my $f = { stock_id => $stock_id };
     if (!$self->_is_curator($c)) {
         my $pid = $self->_person_id($c);
-        if ($pid) { $f->{visible_to} = $pid } else { $f->{published} = 1 }
+        if (!$self->_public($c)) { $f->{owner} = $pid // -1 }
+        elsif ($pid) { $f->{visible_to} = $pid } else { $f->{published} = 1 }
     }
     my $rows = CXGN::VarietySheet->list_sheets($self->_schema($c), $f);
     my $pid = $self->_person_id($c) // -1;
     $_->{can_edit} = $self->_is_curator($c) for @$rows;
-    $c->stash->{rest} = { sheets => $rows };
+    $c->stash->{rest} = { sheets => $rows, public_profiles => $self->_public($c) };
 }
 
 =head2 GET /ajax/variety_sheet/get?sheet_id=
@@ -251,8 +322,8 @@ sub get_sheet : Path('/ajax/variety_sheet/get') Args(0) {
     $self->_fail($c, 'Variety profile not found.') unless $row;
     my $pid = $self->_person_id($c) // -1;
     my $own = ($row->{sp_person_id} // -2) == $pid;
-    $self->_fail($c, 'This variety profile is a draft that belongs to another user.')
-        unless $row->{status} eq 'published' || $own || $self->_is_curator($c);
+    $self->_fail($c, 'Only curators can open this variety profile.')
+        unless ($row->{status} eq 'published' && $self->_public($c)) || $own || $self->_is_curator($c);
     $row->{can_edit} = $self->_is_curator($c);
     CXGN::VarietySheet->strip_hidden($row) unless $row->{can_edit};
     $c->stash->{rest} = $row;
@@ -277,10 +348,10 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     my $sheet = $d->{sheet};
     $self->_fail($c, 'stock_id is required.') unless $stock_id;
     $self->_fail($c, 'Sheet content is missing.') unless ref $sheet eq 'HASH';
-    my $status = ($d->{status} // '') eq 'published' ? 'published' : 'draft';
+    my $status = (($d->{status} // '') eq 'published' && $self->_public($c)) ? 'published' : 'draft';
     my $name = $sheet->{commercial_name} // '';
     $name =~ s/^\s+|\s+$//g;
-    $self->_fail($c, 'A commercial name is required.') unless length $name;
+    # no commercial name yet: the profile is saved under the accession name
     $self->_fail($c, 'The commercial name is too long (max 100 characters).') if length($name) > 100;
     $sheet->{commercial_name} = $name;
     $self->_fail($c, 'Link this profile to at least one decision meeting before publishing it.')
@@ -306,7 +377,7 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     # commercial name on the accession
     my @name_messages;
     my $opts = $d->{name_options} || {};
-    if ($opts->{released_variety_name} || $opts->{synonym}) {
+    if (length $name && ($opts->{released_variety_name} || $opts->{synonym})) {
         my $check = CXGN::VarietySheet->check_name($schema, $name, $stock_id);
         if (@{ $check->{conflicts} }) {
             $self->_fail($c, "The name '$name' is already used by " . join(', ', map { "$_->{name} (as $_->{as})" } @{ $check->{conflicts} })
@@ -335,9 +406,9 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     $sheet->{stock_id} = $stock_id + 0;
     $sheet->{accession_name} = $accession_name;
     my $id = CXGN::VarietySheet->save_sheet($schema, {
-        sheet_id => $sheet_id, stock_id => $stock_id, sp_person_id => $pid, commercial_name => $name, status => $status, sheet => $sheet });
+        sheet_id => $sheet_id, stock_id => $stock_id, sp_person_id => $pid, commercial_name => (length $name ? $name : $accession_name), status => $status, sheet => $sheet });
 
-    $c->stash->{rest} = { success => 1, sheet_id => $id + 0, status => $status, url => "/variety_sheet/$id", messages => \@name_messages };
+    $c->stash->{rest} = { success => 1, sheet_id => $id + 0, status => $status, url => "/variety_sheet/$id", messages => \@name_messages, public_profiles => $self->_public($c) };
 }
 
 =head2 POST /ajax/variety_sheet/delete  (sheet_id)

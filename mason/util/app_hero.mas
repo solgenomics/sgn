@@ -1,0 +1,33 @@
+<%doc>
+
+=head1 NAME
+
+/util/app_hero.mas - green hero banner of an app page (see /util/app_layout.mas)
+
+=head1 ARGS
+
+title, text (plain text, escaped), icon (glyphicon class, optional).
+The component content (when called with <&| &>) goes on the right: buttons.
+
+=cut
+
+</%doc>
+<%args>
+$title
+$text => ''
+$icon => ''
+</%args>
+<%init>
+my $buttons = $m->content;
+</%init>
+<div class="bb-hero">
+  <div>
+    <h2><% $icon ? qq{<span class="glyphicon } . $m->interp->apply_escapes($icon, 'h') . qq{"></span> } : '' %><% $title |h %></h2>
+% if (length $text) {
+    <p><% $text |h %></p>
+% }
+  </div>
+% if ($buttons =~ /\S/) {
+  <span class="bb-hero-btns"><% $buttons %></span>
+% }
+</div>

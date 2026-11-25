@@ -3,17 +3,23 @@
 
 <%init>
 my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
+my $public = ($c->config->{variety_profile_public} // '') =~ /^\s*(1|yes|true|on)\s*$/i ? 1 : 0;
 </%init>
 
+<& /util/app_layout.mas &>
 <& /util/import_javascript.mas, classes => ['jquery'], entries => ['variety_sheet'] &>
 <& /tools/variety_sheet/sheet_css.mas &>
 
-<& /page/page_title.mas, title => "Variety Profiles" &>
-
+<div class="bb-app">
+  <&| /util/app_hero.mas, title => 'Variety Profiles', icon => 'glyphicon-th-large',
+      text => $public ? 'Commercial profiles of the varieties released from the breeding programs. Published profiles are public web pages that can be printed as a PDF.'
+                      : 'Commercial profiles of the varieties released from the breeding programs, kept in Breedbase for the curators. Print one or save it as a PDF to send it.' &>
 % if ($is_curator) {
-<p><a class="btn btn-primary" href="/tools/variety_sheet"><span class="glyphicon glyphicon-plus"></span> New variety profile</a></p>
+    <a class="btn btn-default btn-lg" href="/tools/variety_sheet"><span class="glyphicon glyphicon-plus"></span> New variety profile</a>
 % }
-<div id="variety_sheet_list"><span class="text-muted">Loading…</span></div>
+  </&>
+  <div id="variety_sheet_list"><span class="text-muted">Loading…</span></div>
+</div>
 
 <script>
   jQuery(function () { window.jsMod['variety_sheet'].initList('#variety_sheet_list'); });

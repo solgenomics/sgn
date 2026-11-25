@@ -49,12 +49,15 @@ sub view :Path('/variety_sheet') :Args(1) {
     my $pid = $c->user ? $c->user->get_object()->get_sp_person_id() : -1;
     my $curator = $c->user && $c->user->check_roles('curator');
     my $own = $row && ($row->{sp_person_id} // -2) == $pid;
-    if (!$row || ($row->{status} ne 'published' && !$own && !$curator)) {
-        $c->stash->{message} = 'This variety profile does not exist or has not been published.';
+    my $public = ($c->config->{variety_profile_public} // '') =~ /^\s*(1|yes|true|on)\s*$/i ? 1 : 0;
+    if (!$row || (!($row->{status} eq 'published' && $public) && !$own && !$curator)) {
+        $c->stash->{message} = $c->user ? 'This variety profile does not exist, or only curators can open it.'
+            : 'Variety profiles are for curators: <a href="/user/login?goto_url=/variety_sheet/' . ($sheet_id =~ /^\d+$/ ? $sheet_id : '') . '">log in</a> to open it.';
         $c->stash->{template} = '/generic_message.mas';
         return;
     }
     $row->{can_edit} = $curator ? 1 : 0;
+    $row->{public_profiles} = $public;
     CXGN::VarietySheet->strip_hidden($row) unless $row->{can_edit};
     # embedded in a <script> block: escape characters that could close it
     my $json = JSON::XS->new->ascii->canonical->encode($row);
