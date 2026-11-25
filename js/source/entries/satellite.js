@@ -58,7 +58,7 @@ const S = {
     labels: [], targets: [], hidden: [], useStep2: true, useStep2Labels: true, showHidden: false,
     // step 5: model, step 6: results
     models: { crop_map: true, yield: false, indices: false }, crops: [], crop: '', cropOther: '', season: { start: null, end: null },
-    mapMethod: null, yieldMode: null, useReference: true, refs: {}, classes: [], calib: [], calibTrials: new Set(), trialInfo: {}, trialInfoLoading: false, yieldTrait: null, yieldUnit: '', perHa: true,
+    seasonMode: 'detected', seasonNames: [], savedModels: null, savedModelId: null, ana: { start: null, end: null }, anaPreset: 'images', runsList: null, mapMethod: null, mapAreas: null, yieldMode: null, useReference: true, refs: {}, classes: [], calib: [], trialInfo: {}, trialInfoLoading: false, yieldUnit: '', perHa: true,
     settings: {}, mmap: null, mlayers: null, job: { runId: null, timer: null, results: null, site: 0, status: null },
 };
 
@@ -121,7 +121,7 @@ function goStep(n) {
     if (n === 2) drawMap(true);
     if (n === 4) showSiteImages();
     if (n === 5) enterModel();
-    if (n === 6) renderJob();
+    if (n === 6) { renderJob(); if (S.runsList === null) loadRuns(); else renderRuns(); }
     window.scrollTo && window.scrollTo(0, 0);
 }
 
@@ -142,7 +142,7 @@ function fieldText(st) {
     const km = a ? `${(a.sizeM / 1000).toFixed(1)} km square` : '';
     if (f && f.kind === 'plots') return `${esc(st.trial.name)}: ${f.count} plots`;
     if (f && f.kind === 'drawn') return `${esc(st.trial.name)}: drawn field${st.trialDirty ? ' (not saved)' : ''}`;
-    if (f && f.kind === 'farm') return `${f.count} field${f.count === 1 ? '' : 's'}, ${f.ha.toFixed(1)} ha${st.fieldsDirty ? ' (not saved)' : ''}`;
+    if (f && f.kind === 'farm') return `${f.count} field${f.count === 1 ? '' : 's'}, ${f.ha.toFixed(1)} ha`;
     if (st.mode === 'trial' && !st.trial) return 'choose a trial';
     if (st.mode === 'trial') return `${esc(st.trial.name)}: ${km} around the point`;
     return a ? km : 'no coordinates: click the map';
@@ -282,7 +282,7 @@ function toggleLocation(id) {
 function removeSite(i) {
     const st = S.sites[i];
     if (!st) return;
-    if ((st.fieldsDirty || st.trialDirty) && !confirm(`${st.loc.name} has fields drawn but not saved. Remove it anyway?`)) return;
+    if (st.trialDirty && !confirm(`${st.loc.name} has a trial field drawn but not saved. Remove it anyway?`)) return;
     if (i === S.cur && S.running) { if (S.abort) S.abort.abort(); S.run++; S.running = false; busyEnd(P.token); }
     saveSite();
     S.sites.splice(i, 1);
@@ -296,13 +296,10 @@ function removeSite(i) {
 
 /** Trials and saved farm fields of a new site. */
 async function loadSiteData(st) {
-    const [trials, fields] = await Promise.all([
-        getJSON('trials', { location_id: st.loc.id }).then(r => r.trials).catch(() => []),
-        getJSON('location_fields', { location_id: st.loc.id }).catch(() => ({ fields: [], can_edit: 0 })),
-    ]);
+    // farm fields are drawn for each analysis (not kept with the location)
+    const trials = await getJSON('trials', { location_id: st.loc.id }).then(r => r.trials).catch(() => []);
     if (!S.sites.includes(st)) return;
-    const farm = (fields.fields || []).map(f => ({ name: f.name, ring: f.ring.slice(0, -1) }));
-    siteSet(st, { trials, farmFields: farm, farmCanEdit: fields.can_edit ? 1 : 0, mode: farm.length ? 'fields' : st.mode });
+    siteSet(st, { trials });
     refreshField(st);
     if (S.sites[S.cur] === st) { renderTrialSelect(); if (S.step === 2) drawMap(true); }
     renderControls();
@@ -443,18 +440,6 @@ function finishDraw() {
     drawMap(false);
 }
 
-async function saveFarmFields() {
-    const st = S.sites[S.cur];
-    $('#sat_fields_save').prop('disabled', true);
-    try {
-        const r = await postJSON('location_fields', { location_id: st.loc.id, fields: JSON.stringify(S.farmFields.map(f => ({ name: f.name, ring: f.ring }))) });
-        siteSet(st, { farmFields: r.fields.map(f => ({ name: f.name, ring: f.ring.slice(0, -1) })), fieldsDirty: false });
-        refreshField(st);
-        fieldMsg(`Saved ${r.fields.length} field${r.fields.length === 1 ? '' : 's'} with ${esc(st.loc.name)}.`);
-    } catch (err) { fieldMsg(esc(err.message), true); }
-    renderControls();
-}
-
 async function saveTrialField(remove) {
     const st = S.sites[S.cur], t = S.trial;
     try {
@@ -488,12 +473,7 @@ function renderDrawBox() {
                 + `<td><button type="button" class="btn btn-link btn-xs sat-field-del" data-i="${i}" aria-label="Delete ${esc(f.name)}">delete</button></td></tr>`).join('')
                 + '</tbody></table>';
         } else if (!drawing) {
-            html += '<div class="sat-muted sat-small">No field drawn for this farm yet: the analysis uses the square around its point. Draw the farm\'s fields to analyse exactly them (they are saved with the farm for next time).</div>';
-        }
-        if (S.fieldsDirty) {
-            html += S.farmCanEdit
-                ? '<div class="sat-draw-save"><span class="text-warning">Not saved yet.</span> <button type="button" class="btn btn-primary btn-xs" id="sat_fields_save">Save fields with the farm</button></div>'
-                : '<div class="sat-small text-warning">These fields are used in this analysis; saving them with the farm needs the submitter or curator role.</div>';
+            html += '<div class="sat-muted sat-small">No field drawn yet: the analysis uses the square around the location. Draw the fields to analyse exactly them (for this analysis).</div>';
         }
     } else if (S.mode === 'trial' && S.trial && !S.trialPlots) {
         html += `<div class="sat-draw-head"><b>Field of ${esc(S.trial.name)}</b>`;
@@ -553,6 +533,7 @@ function setPreset(p) {
     const end = today();
     let range;
     if (p === '3m') range = [addDays(end, -91), end];
+    else if (p === '6m') range = [addDays(end, -182), end];
     else if (p === '12m') range = [addDays(end, -365), end];
     else if (p === 'year') range = [end.slice(0, 4) + '-01-01', end];
     else if (p === 'trial') range = trialSeason();
@@ -581,16 +562,16 @@ function renderControls() {
     const a = area();
     options('#sat_field_mode', S.mode, { trial: !(S.trials || []).length });
     $('#sat_field_mode .sat-option[data-v="fields"] .sat-option-text').text(S.farmFields.length
-        ? `${S.farmFields.length} field${S.farmFields.length === 1 ? '' : 's'} drawn for this location (${S.farmFields.reduce((t, f) => t + ringHa(f.ring), 0).toFixed(1)} ha). Draw, rename or delete fields.`
-        : 'Draw the production fields of the farm on the map; they are saved with the farm for the next analyses.');
+        ? `${S.farmFields.length} field${S.farmFields.length === 1 ? '' : 's'} drawn (${S.farmFields.reduce((t, f) => t + ringHa(f.ring), 0).toFixed(1)} ha). Draw, rename or delete fields.`
+        : 'Draw the fields of the farm on the map, for this analysis.');
     $('#sat_field_loc').text(S.loc ? S.loc.name : '');
     $('#sat_trial_box').toggle(S.mode === 'trial');
     $('#sat_size_box').toggle(!S.field);
     renderDrawBox();
     segs('#sat_size', SIZES.map(([v, l]) => [v, l]), S.size, v => { S.size = +v; renderControls(); drawMap(false); });
     const season = trialSeason();
-    segs('#sat_presets', [['3m', 'Last 3 months'], ['12m', 'Last 12 months'], ['year', 'This year'],
-        ['trial', 'Trial season', !season, season ? `${season[0]} to ${season[1]} (planting − 15 days to harvest + 15 days)` : 'Choose a trial with a planting date in step 2']], S.preset, p => { S.datesTouched = true; setPreset(p); });
+    segs('#sat_presets', [['3m', 'Last 3 months'], ['6m', 'Last 6 months'], ['year', 'This year (YTD)'], ['12m', 'Last 12 months'],
+        ['trial', 'Trial season', !season, season ? `${season[0]} to ${season[1]} (planting − 15 days to harvest + 15 days)` : 'Choose a trial with a planting date in step 2']], S.preset, p => { S.datesTouched = true; setPreset(p); datesChanged(true); });
     options('#sat_view', S.view);
     $('#sat_sources').html(S.offered.length ? S.offered.map(o => {
         const on = !!S.sources[o.id];
@@ -602,11 +583,11 @@ function renderControls() {
     $('#sat_cloudy, #sat_cloudy4').prop('checked', S.showCloudy);
     let hint = '';
     if (S.draw.active) hint = '<b>Click the corners of the field</b> on the map.';
-    else if (S.field && S.field.kind === 'plots') hint = `Yellow: the ${S.field.count} plots of this trial (from their GPS coordinates). Dashed square: the area shown, the plots + ${FIELD_MARGIN} m.`;
-    else if (S.field) hint = `Yellow: the field${S.field.count === 1 ? '' : 's'}. Dashed square: the area shown, the field${S.field.count === 1 ? '' : 's'} + ${FIELD_MARGIN} m. Cloud is measured over the field${S.field.count === 1 ? '' : 's'}.`;
+    else if (S.field && S.field.kind === 'plots') hint = `Yellow: the ${S.field.count} plots of this trial (from their GPS coordinates). Only the area of the plots is analysed; cloud is measured there.`;
+    else if (S.field) hint = `Yellow: the field${S.field.count === 1 ? '' : 's'}. Only ${S.field.count === 1 ? 'it is' : 'they are'} analysed; cloud is measured over ${S.field.count === 1 ? 'it' : 'them'} only.`;
     else if (S.mode === 'trial' && !S.trial) hint = 'Choose a trial.';
     else if (S.mode === 'trial') hint = 'No plot coordinates and no field drawn: <b>click the map on the field</b> to centre the square on it, or draw the field. Cloud is measured over the whole square.';
-    else if (a) hint = 'Red: the location. Dashed square: the area shown. <b>Click the map on the field</b> to move it. Cloud is measured over the whole square.';
+    else if (a) hint = 'Red: the location. Blue square: the area analysed. <b>Click the map on the field</b> to move it, or draw the field to analyse exactly it. Cloud is measured over the whole square.';
     else if (S.loc) hint = '<b>This location has no latitude/longitude.</b> Click the map on the field, or add them in Manage &gt; Locations.';
     $('#sat_map_hint').html(hint);
     renderStepper();
@@ -705,7 +686,8 @@ function drawMap(fit) {
     const a = area();
     if (a) {
         const b = squareBounds(a);
-        L.rectangle(b, { color: '#22d3ee', weight: 2, fill: false, dashArray: '5 4', interactive: false }).addTo(S.layers);
+        // the square is the selected area only when no field is delimited
+        if (!S.field) L.rectangle(b, { color: '#22d3ee', weight: 2, fill: false, interactive: false }).addTo(S.layers);
         if (fit && !S.draw.active) S.map.fitBounds(L.latLngBounds(b).pad(0.15));
     } else if (fit) {
         S.map.setView([0, 0], 2);
@@ -726,13 +708,27 @@ function sceneGeom(scene, a) {
     const utm = utmOfEpsg(scene.epsg);
     if (!utm) throw new Error(`Unexpected projection EPSG:${scene.epsg}`);
     const [e, n] = latLonToUtm(a.lat, a.lon, utm.zone, utm.south);
-    let plots = null, box = null;
+    let plots = null, box = null, polys = null;
     if (S.field) {
         plots = S.field.plots.map(r => r.map(p => latLonToUtm(p[1], p[0], utm.zone, utm.south)));
         const all = plots.flat();
         box = [Math.min(...all.map(p => p[0])), Math.min(...all.map(p => p[1])), Math.max(...all.map(p => p[0])), Math.max(...all.map(p => p[1]))];
+        // the outlines clouds are measured in: each field, or the area around all the trial plots
+        polys = S.field.kind === 'plots' ? [hull(all)] : plots;
+        polys = polys.filter(r => r.length >= 3);
     }
-    return { e, n, utm, plots, box };
+    return { e, n, utm, plots, box, polys };
+}
+
+/** True when the point (UTM) is inside one of the outlines (ray casting). */
+function insidePolys(polys, px, py) {
+    return polys.some(r => {
+        let c = false;
+        for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+            if ((r[i][1] > py) !== (r[j][1] > py) && px < (r[j][0] - r[i][0]) * (py - r[i][1]) / ((r[j][1] - r[i][1]) || 1e-12) + r[i][0]) c = !c;
+        }
+        return c;
+    });
 }
 
 /** Pixel rectangle of the field (plots bounding box or the whole window) in a window. */
@@ -776,18 +772,26 @@ async function analyse(scene, a, signal) {
     const mask = new Uint8Array(win.w * win.h);
     for (let i = 0; i < mask.length; i++) mask[i] = toCode(r.data[i]);
     const [x0, y0, x1, y1] = fieldRect(win, g);
-    let total = 0, valid = 0, cloud = 0;
-    for (let y = y0; y < y1; y++) {
+    // only the pixels inside the fields count (clouds outside them are ignored); a field
+    // smaller than one pixel falls back to the pixels under its box
+    const polys = g.polys && g.polys.length ? g.polys : null;
+    const inPoly = (px, py) => insidePolys(polys, px, py);
+    let total = 0, valid = 0, cloud = 0, usedPolys = false;
+    for (let pass = 0; pass < 2 && !total; pass++) {
+      usedPolys = pass === 0 && !!polys;
+      for (let y = y0; y < y1; y++) {
         for (let x = x0; x < x1; x++) {
+            if (pass === 0 && polys && !inPoly(win.left + (x + 0.5) * win.res, win.top - (y + 0.5) * win.res)) continue;
             const m = mask[y * win.w + x];
             total++;
             if (m === M_NODATA) continue;
             valid++;
             if (m === M_CLOUD) cloud++;
         }
+      }
     }
     return {
-        g, mask, maskWin: win,
+        g, mask, maskWin: win, usedPolys,
         validPct: total ? Math.round(100 * valid / total) : 0,
         clearPct: valid ? Math.round(100 * (valid - cloud) / valid) : 0,
     };
@@ -801,10 +805,15 @@ function runKey() {
     return JSON.stringify([area(), S.field ? S.field.plots : null, S.start, S.end, chosenSources()]);
 }
 
-/** Step 4 for the site shown: its images, searched when not done yet for the current choices. */
-function showSiteImages() {
+/**
+ * Step 4 for the site shown: the images already loaded for the current choices, or (load) a new
+ * search. Images are only searched on a quick choice or the Load images button, never on opening the step.
+ */
+function showSiteImages(load) {
     renderSiteTabs();
+    renderAna();
     $('#sat_site_name').text(S.sites.length > 1 && S.loc ? S.loc.name : '');
+    $('#sat_load').removeClass('btn-primary').addClass('btn-default');
     if (S.runKey === runKey() && S.scenes.length) {
         busyEnd(P.token);
         drawTimeline();
@@ -812,7 +821,13 @@ function showSiteImages() {
         renderImages();
         return;
     }
-    run();
+    if (load) { run(); return; }
+    // nothing loaded for these choices yet: ask
+    if (S.running) { if (S.abort) S.abort.abort(); S.run++; S.running = false; busyEnd(P.token); }
+    S.scenes = []; S.info = {}; S.visible = [];
+    $('#sat_grid').empty(); $('#sat_timeline').empty(); $('#sat_tl_labels').empty(); $('#sat_legend').empty(); $('#sat_ndvi_block').hide(); $('#sat_stats').empty();
+    status(`Choose a quick choice above, or set the dates and press <b>Load images</b>${S.start && S.end ? ` (now ${fmtDate(S.start)} – ${fmtDate(S.end)})` : ''}.`);
+    $('#sat_load').removeClass('btn-default').addClass('btn-primary');
 }
 
 async function run() {
@@ -1029,7 +1044,8 @@ async function buildImage(sc, signal) {
                 const ux = win.left + (x + 0.5) * win.res, uy = win.top - (y + 0.5) * win.res;
                 const sx = Math.floor((ux - sw.left) / sw.res), sy = Math.floor((sw.top - uy) / sw.res);
                 const m = (sx >= 0 && sy >= 0 && sx < sw.w && sy < sw.h) ? info.mask[sy * sw.w + sx] : M_NODATA;
-                const inField = x >= fx0 && x < fx1 && y >= fy0 && y < fy1;
+                // the field's NDVI: only the pixels inside the field(s), as the cloud cover
+                const inField = x >= fx0 && x < fx1 && y >= fy0 && y < fy1 && (!info.usedPolys || insidePolys(g.polys, ux, uy));
                 if (inField) fieldPix++;
                 if (!dr || !dn) continue;   // nodata
                 if (m !== M_CLEAR) {
@@ -1200,7 +1216,7 @@ function drawChart() {
     svg += '</svg>';
     $('#sat_chart').html(svg);
     const mixed = pts.some(p => p.sc.source === 'landsat') && pts.some(p => p.sc.source !== 'landsat');
-    $('#sat_chart_note').html(`Mean NDVI of the cloud-free pixels over ${!S.area.fromPlots ? 'the whole square' : S.area.kind === 'plots' ? 'the trial plots (bounding box)' : S.area.kind === 'farm' ? "the farm's fields (bounding box)" : "the trial's field (bounding box)"}; a date counts when at least half of them are clear. ${pts.length} point${pts.length === 1 ? '' : 's'}.`
+    $('#sat_chart_note').html(`Mean NDVI of the cloud-free pixels over ${!S.area.fromPlots ? 'the whole square' : S.area.kind === 'plots' ? 'the area of the trial plots' : S.area.kind === 'farm' ? "the farm's fields" : "the trial's field"} (nothing outside it); a date counts when at least half of them are clear. ${pts.length} point${pts.length === 1 ? '' : 's'}.`
         + (mixed ? ' Filled dots: Sentinel-2 (10 m); open dots: Landsat (30 m). The two sensors give close but not identical NDVI, and a 30 m pixel mixes more of the field edges.' : ''));
 }
 
@@ -1233,6 +1249,9 @@ const UNCERTAIN_COLOR = '#9ca3af';
 const MIN_CALIB_DEFAULT = 8;
 const PREDICTOR_NAMES = { ndvi_auc: 'NDVI area under the season curve', ndvi_max: 'NDVI peak', ndre_max: 'NDRE (red-edge) peak', peak_day: 'Day of the NDVI peak' };
 // advanced settings: key, label, default, min, max, step, help
+const YIELD_MODEL_LABELS = { auto: 'Automatic (compare and choose)', linear1: 'Linear (NDVI area only)', linear: 'Linear regression', ridge: 'Ridge regression', pls: 'PLS (1 component)',
+    elastic_net: 'Elastic net', lasso: 'Lasso', gam: 'GAM (smooth)', mixed: 'Mixed model (location-year effect)', mars: 'MARS', random_forest: 'Random forest', svm: 'SVM regression' };
+const MAP_MODEL_LABELS = { auto: 'Automatic (compare and choose)', random_forest: 'Random forest', svm: 'SVM (radial)', nnet: 'Neural network', tree: 'Decision tree' };
 const ADVANCED = [
     ['Images', [
         ['min_scene_clear', 'Skip a date with less of the area clear than (%)', 10, 0, 90, 5, 'Mostly cloudy dates are not read at all.'],
@@ -1245,11 +1264,12 @@ const ADVANCED = [
         ['cv_folds', 'Cross-validation folds (by drawn area)', 5, 2, 10, 1, 'Limited by the class with the fewest areas.'],
         ['min_confidence', 'Uncertain below this share of the votes (%)', 50, 0, 95, 5, '0 = every pixel gets a class.'],
         ['min_patch_ha', 'Smallest area of the crop estimated as a field (ha)', 0.5, 0.05, 100, 0.05, ''],
+        ['map_model', 'Classifier', 'auto', Object.keys(MAP_MODEL_LABELS), 'Automatic: random forest, SVM, neural network and decision tree are compared by cross-validation by drawn area; the best kappa is used.'],
         ['smooth', 'Smooth the map (3 x 3 majority)', true],
         ['balance', 'Balance the classes in training', true],
     ]],
     ['Yield', [
-        ['yield_model', 'Model', 'linear', ['linear', 'lasso', 'random_forest'], 'Linear: clear and stable with few fields. Lasso / random forest: need more fields.'],
+        ['yield_model', 'Model', 'auto', Object.keys(YIELD_MODEL_LABELS), 'Automatic: every model suited to the number of fields is compared by cross-validation; the simplest one within one standard error of the best is used (complex models overfit few fields).'],
         ['predictors', 'Predictors', ['ndvi_auc', 'ndre_max'], Object.keys(PREDICTOR_NAMES), 'Fewer predictors are safer with few calibration fields.'],
         ['min_fields', 'Calibration fields needed (at least)', MIN_CALIB_DEFAULT, 5, 100, 1, ''],
         ['min_dates', 'Clear dates needed per field', 4, 1, 30, 1, ''],
@@ -1279,6 +1299,50 @@ function ensureClasses() {
     S.classes[0].name = cropClassName();
 }
 
+/** New dates in step 4 (load: a quick choice or the Load images button); the analysis period follows them. */
+function datesChanged(load) {
+    S.ana = { start: null, end: null };
+    S.anaPreset = 'images';
+    if (S.step === 4) showSiteImages(load);
+}
+
+/* ---------- analysis period (models): the images' dates, adjustable in step 5 ---------- */
+
+const anaDates = () => ({ start: S.ana.start || S.start, end: S.ana.end || S.end });
+
+function renderAna() {
+    const a = anaDates();
+    $('#sat_ana_start5').val(a.start || '');
+    $('#sat_ana_end5').val(a.end || '');
+    if (S.step === 5) renderModel();
+}
+
+/* ---------- earlier analyses ---------- */
+
+async function loadRuns() {
+    try { S.runsList = (await getJSON('runs')).runs; } catch (err) { S.runsList = []; $('.sat-runs').html(`<span class="text-danger sat-small">${esc(err.message)}</span>`); return; }
+    renderRuns();
+}
+
+function renderRuns() {
+    // trainings are opened on their own page
+    const l = S.runsList && S.runsList.filter(r => r.kind !== 'train');
+    if (!l) { $('.sat-runs').html('<span class="sat-muted sat-small">Loading…</span>'); return; }
+    $('.sat-runs').html(l.length ? '<table class="sat-mini-table"><tbody>' + l.map(r => {
+        const when = r.created ? new Date(r.created * 1000).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '';
+        const st = { done: '<span class="text-success">ready</span>', failed: '<span class="text-danger">failed</span>', running: '<span class="text-warning">running…</span>' }[r.status] || '';
+        return `<tr${r.run_id === S.job.runId ? ' style="background:var(--sat-accent-soft)"' : ''}><td>${esc(r.name || r.run_id)}${r.model_used ? ` <span class="sat-small">· model: <b>${esc(r.model_used)}</b></span>` : ''}${r.model_saved && r.model_saved !== r.model_used ? ` <span class="sat-small">· saved as model <b>${esc(r.model_saved)}</b></span>` : ''}<br><span class="sat-muted sat-small">${esc(when)}${r.dates ? ` · images ${esc(r.dates.start)} – ${esc(r.dates.end)}` : ''}</span></td><td>${st}</td>`
+            + `<td><button type="button" class="btn btn-default btn-xs sat-run-open" data-id="${esc(r.run_id)}">Open</button></td></tr>`;
+    }).join('') + '</tbody></table>' : '<span class="sat-muted sat-small">No analysis yet.</span>');
+}
+
+function openRun(id) {
+    const r = (S.runsList || []).find(x => x.run_id === id);
+    if (r && r.kind === 'train') { location.href = `/breeders/satellite/train?run=${encodeURIComponent(id)}`; return; }
+    S.job = { runId: id, timer: null, results: null, site: 0, status: 'running', skipped: [] };
+    goStep(6);
+}
+
 const isMaize = () => /^Zea mays\b/.test(cropSpecies() || '');
 /** The crop map method: the stored maize curve (maize only) or drawn examples. */
 function mapMethod() {
@@ -1306,8 +1370,10 @@ function standardPreview() {
 function allSites() { saveSite(); return S.sites; }
 
 async function enterModel() {
-    if (!S.season.start) { S.season = { start: S.start, end: S.end }; }
-    if (!candidateTrials().length) defaultYieldMode();
+    if (!S.season.start) { S.season = { ...anaDates() }; }
+    renderAna();
+    if (S.runsList === null) loadRuns(); else renderRuns();
+    defaultYieldMode();
     ensureClasses();
     renderModel();
     drawModelMap(true);
@@ -1324,49 +1390,30 @@ async function loadTrialInfo() {
             const { trials } = await getJSON('trial_info', { trial_ids: ids.slice(i, i + 200).join(',') });
             trials.forEach(t => { S.trialInfo[t.trial_id] = t; });
         }
-    } catch (err) { $('#sat_calib_trials').html(`<span class="text-danger sat-small">${esc(err.message)}</span>`); }
+    } catch (err) { console.warn('trial_info', err); }   // only the species of the step-2 trial is checked with it
     S.trialInfoLoading = false;
     defaultYieldMode();
     if (S.step === 5) renderModel();
 }
 
-/** Without any trial with yield values at the locations, the index (no calibration) is the useful default. */
+/** A trained model when the user has saved one, otherwise the index (no model). */
 function defaultYieldMode() {
-    if (S.yieldMode) return;
-    const any = candidateTrials().some(t => { const i = S.trialInfo[t.id]; return i && sameCrop(i.species) && i.traits.length; });
-    S.yieldMode = any || S.calib.length ? 'calibrated' : 'index';
+    if (S.yieldMode && !S.yieldModeAuto) return;
+    if (S.savedModels === null) {
+        S.savedModels = [];
+        getJSON('models').then(r => {
+            S.savedModels = r.models;
+            if (S.yieldModeAuto && r.models.length) S.yieldMode = 'saved';
+            if (S.step === 5) renderModel();
+        }).catch(() => {});
+    }
+    S.yieldMode = (S.savedModels || []).length ? 'saved' : S.calib.length ? 'calibrated' : 'index';
+    S.yieldModeAuto = true;
 }
 
 const cropSpecies = () => (S.crop === '__other' ? S.cropOther.trim() : S.crop);
 const sameCrop = sp => !!sp && !!cropSpecies() && (sp === cropSpecies() || sp.startsWith(cropSpecies() + ' ') || cropSpecies().startsWith(sp + ' '));
 
-/** A trial as a calibration field: { ok, why, info, value } for the chosen yield trait. */
-function trialStatus(id) {
-    const t = S.trialInfo[id];
-    if (!t) return { ok: false, why: 'loading…' };
-    if (!sameCrop(t.species)) return { ok: false, why: `other crop (${t.species || 'unknown'})`, info: t };
-    if (!t.plots_with_coordinates && !t.drawn_field) return { ok: false, why: 'no field: draw it in step 2 (A trial)', info: t };
-    if (!t.planting) return { ok: false, why: 'no planting date', info: t };
-    const v = S.yieldTrait && t.traits.find(x => x.id === S.yieldTrait.id);
-    if (!v) return { ok: false, why: S.yieldTrait ? 'no value of the yield trait' : 'choose the yield trait', info: t };
-    return { ok: true, info: t, value: v };
-}
-
-function candidateTrials() {
-    const seen = new Set(), out = [];
-    allSites().forEach(st => (st.trials || []).forEach(t => { if (!seen.has(t.id)) { seen.add(t.id); out.push({ ...t, site: st.loc.name }); } }));
-    return out;
-}
-
-function yieldTraits() {
-    const count = {};
-    candidateTrials().forEach(t => {
-        const info = S.trialInfo[t.id];
-        if (!info || !sameCrop(info.species)) return;
-        info.traits.forEach(x => { count[x.id] = count[x.id] || { id: x.id, name: x.name, n: 0 }; count[x.id].n++; });
-    });
-    return Object.values(count).sort((a, b) => (/yield/i.test(b.name) - /yield/i.test(a.name)) || b.n - a.n || a.name.localeCompare(b.name));
-}
 
 /** Convex hull of [lon, lat] points (monotone chain). */
 function hull(pts) {
@@ -1414,10 +1461,15 @@ function siteTargets(st) {
     return auto.filter(t => !seen.has(JSON.stringify(t.ring))).concat(own);
 }
 
+/** Estimate the crop areas found by the crop map too? Off when fields were delimited (unless asked), on otherwise. */
+function mapAreasOn() {
+    if (!S.models.crop_map) return false;
+    if (S.mapAreas !== null) return S.mapAreas;
+    return !allSites().some(st => siteTargets(st).length);
+}
+
 function calibCount() {
-    const drawn = S.calib.filter(c => c.yield !== '' && isFinite(+c.yield) && c.start && c.end && c.start <= c.end).length;
-    const trials = [...S.calibTrials].filter(id => trialStatus(id).ok).length;
-    return { drawn, trials, total: drawn + trials };
+    return S.calib.filter(c => c.yield !== '' && isFinite(+c.yield) && c.start && c.end && c.start <= c.end).length;
 }
 
 /** Everything the run needs, as a checklist: [ { ok, text } ]. */
@@ -1427,12 +1479,15 @@ function readiness() {
     items.push({ ok: any, text: any ? `Models: ${MODEL_NAMES.filter(([k]) => S.models[k]).map(([, l]) => l).join(', ')}` : 'Choose at least one model' });
     const sites = allSites();
     const nHid = sites.reduce((t, st) => t + (st.hidden || []).length, 0);
-    items.push({ ok: !!(S.start && S.end), text: S.start && S.end ? `Images of ${fmtDate(S.start)} – ${fmtDate(S.end)} (step 3), ${S.sites.length} location${S.sites.length === 1 ? '' : 's'}${nHid ? `; ${nHid} image${nHid === 1 ? '' : 's'} you hid in step 4 left out` : ''}` : 'Choose the dates in step 3' });
+    const ad0 = anaDates();
+    const okAna = ad0.start && ad0.end && ad0.start <= ad0.end;
+    items.push({ ok: !!okAna, text: okAna ? `Period analysed: ${fmtDate(ad0.start)} – ${fmtDate(ad0.end)}, ${S.sites.length} location${S.sites.length === 1 ? '' : 's'}${nHid ? `; ${nHid} image${nHid === 1 ? '' : 's'} you hid in step 4 left out` : ''}` : 'Choose the analysis period (step 4, or at the top of this step)' });
     if (S.models.crop_map && mapMethod() === 'standard') {
-        const len = S.start && S.end ? daysBetween(S.start, S.end) : 0;
+        const ad = anaDates();
+        const len = ad.start && ad.end ? daysBetween(ad.start, ad.end) : 0;
         items.push({ ok: len >= 120, text: len >= 120
             ? `Crop map: maize standard over ${Math.round(len)} days of images${len < 300 ? ' (a whole year finds summer and off-season maize)' : ''}`
-            : `Crop map: the maize standard needs the dates of step 3 to cover a whole season, at least 4 months (now ${Math.round(len)} days, ${fmtDate(S.start)} – ${fmtDate(S.end)})`,
+            : `Crop map: the maize standard needs an analysis period covering a whole season, at least 4 months (now ${Math.round(len)} days, ${fmtDate(ad.start)} – ${fmtDate(ad.end)})`,
             go: len >= 120 ? null : 'year', goText: 'Use the last 12 months' });
     } else if (S.models.crop_map) {
         const per = {};
@@ -1446,23 +1501,32 @@ function readiness() {
     if (S.models.yield) {
         const crop = cropSpecies();
         items.push({ ok: !!crop, text: crop ? `Crop: ${cropLabel()}` : 'Choose the crop' });
-        const okSeason = S.season.start && S.season.end && S.season.start <= S.season.end;
-        items.push({ ok: !!okSeason, text: okSeason ? `Season of the crop: ${fmtDate(S.season.start)} – ${fmtDate(S.season.end)}` : 'Give the season of the crop' });
-        if (S.yieldMode === 'index') {
+        if (S.seasonMode === 'dates') {
+            const okSeason = S.season.start && S.season.end && S.season.start <= S.season.end;
+            items.push({ ok: !!okSeason, text: okSeason ? `Season of the crop: ${fmtDate(S.season.start)} – ${fmtDate(S.season.end)}` : 'Give the season of the crop' });
+        } else {
+            items.push({ ok: true, text: `Season: ${{ detected: 'every season found in each field\'s curve (sowing → harvest)', main: 'the main season of each field', second: 'the second crop (safrinha) of each field' }[S.seasonMode]}` });
+        }
+        if (S.yieldMode === 'saved') {
+            const m = (S.savedModels || []).find(x => String(x.id) === String(S.savedModelId));
+            items.push({ ok: !!m, text: m ? `Yield: trained model "${m.name}"` : (S.savedModels || []).length ? 'Choose the trained model' : 'No trained model yet: train one (link above), or use the relative index' });
+            const crop = m && (m.properties || {}).crop;
+            if (m && crop && cropSpecies() && !sameCrop(crop)) items.push({ ok: true, text: `⚠ The model was trained on ${crop}, this analysis is ${cropSpecies()}` });
+        } else if (S.yieldMode === 'index') {
             items.push({ ok: true, text: S.useReference
                 ? 'Yield: relative index scaled to approximate kg/ha by the regional average yield (public statistics; no field of known yield)'
                 : 'Yield: relative index, no known yields (fields compared with each other, 100 = average; no kg/ha)' });
         } else {
             const c = calibCount(), need = +setting('min_fields');
-            items.push({ ok: c.total >= need, go: c.total < need ? 'calib' : null, text: c.total >= need
-                ? `Calibration: ${c.total} fields with a known yield (${c.drawn} drawn, ${c.trials} trial${c.trials === 1 ? '' : 's'})`
-                : `Calibration: ${c.total} of the ${need} fields with a known yield needed (${c.drawn} drawn, ${c.trials} trial${c.trials === 1 ? '' : 's'}). Add them, or choose "No: relative yield index".` });
-            if (S.calibTrials.size) items.push({ ok: !!S.yieldTrait, text: S.yieldTrait ? `Yield trait: ${S.yieldTrait.name}` : 'Choose the yield trait of the trials' });
+            items.push({ ok: c >= need, go: c < need ? 'calib' : null, text: c >= need
+                ? `Calibration: ${c} fields you drew with a known yield`
+                : `Calibration: ${c} of the ${need} drawn fields with a known yield needed. Draw them, use a trained model, or the relative index.` });
         }
         const targets = sites.reduce((t, st) => t + siteTargets(st).length, 0);
         const fromStep2 = sites.reduce((t, st) => t + (st.useStep2 === false ? 0 : step2Targets(st).length), 0);
-        items.push({ ok: targets > 0 || S.models.crop_map, text: targets || S.models.crop_map
-            ? `Fields to estimate: ${targets}${fromStep2 ? ` (${fromStep2} from step 2)` : ''}${S.models.crop_map ? ` + the ${cropLabel()} areas of the crop map` : ''}`
+        const withMap = mapAreasOn();
+        items.push({ ok: targets > 0 || withMap, text: targets || withMap
+            ? `Fields to estimate: ${targets ? `${targets}${fromStep2 ? ` (${fromStep2} from step 2)` : ''}` : 'none delimited'}${withMap ? ` + the ${cropLabel()} areas the crop map finds` : ''}`
             : 'Fields to estimate: none. Delimit the field in step 2 (farm fields or a trial), draw one on the map below, or add the crop map' });
     }
     if (S.models.indices) {
@@ -1493,6 +1557,26 @@ function renderModel() {
     $('#sat_crop_card').toggle(S.models.yield || S.models.crop_map);
     $('#sat_season_box, #sat_season_help').toggle(!!S.models.yield);
     $('#sat_season_start').val(S.season.start || ''); $('#sat_season_end').val(S.season.end || '');
+    const cap = x => x.charAt(0).toUpperCase() + x.slice(1);
+    // named seasons (summer, safrinha…) only for locations of a country with season windows (Brazil)
+    const inCountry = allSites().filter(st => (S.seasonCountries || []).some(c => c.toLowerCase() === String(st.loc.country || '').toLowerCase()));
+    const named = inCountry.length ? S.seasonNames.map(n => [n, cap(n)]) : [];
+    if (!['detected', 'dates'].includes(S.seasonMode) && !named.some(([v]) => v === S.seasonMode)) S.seasonMode = 'detected';
+    segs('#sat_season_mode', [['detected', 'Every season found']].concat(named, [['dates', 'Dates I give']]), S.seasonMode,
+        v => { S.seasonMode = v; renderModel(); });
+    $('#sat_season_dates').toggle(S.seasonMode === 'dates');
+    const ad1 = anaDates();
+    const long = ad1.start && ad1.end && daysBetween(ad1.start, ad1.end) >= 300;
+    $('#sat_season_help').html(({
+        detected: 'Each field\'s seasons are found in its curve: green-up from bare soil, peak, and back to bare soil (harvest). A field with two crops in the period gets one row per season.',
+        dates: 'From sowing / transplanting to harvest of the fields to estimate, the same for every field.',
+        main: 'Only the main season (sown Aug–Dec in the southern hemisphere), found in each field\'s curve.',
+        second: 'Only the second crop / safrinha (sown Jan–Apr), found in each field\'s curve.',
+    }[S.seasonMode] || `Only the ${esc(cap(S.seasonMode))} season of each field, found in its curve (by its sowing window).`)
+        + (S.seasonNames.length && named.length
+            ? ` ${S.seasonNames.map(cap).join(' / ')} apply only to locations in ${(S.seasonCountries || []).join(', ')}${inCountry.length < allSites().length ? ` (here: ${inCountry.map(st => esc(st.loc.name)).join(', ')})` : ''}.`
+                + (long ? ` With ${Math.round(daysBetween(ad1.start, ad1.end))} days, their results are also split by season.` : ' Choose a period of a year or more to also split the map by season.')
+            : S.seasonNames.length ? ` Named seasons (${S.seasonNames.map(cap).join(', ')}) apply only to locations in ${(S.seasonCountries || []).join(', ') || 'the listed countries'}; here the seasons found are only numbered.` : ''));
     // classes
     $('#sat_classes_box').toggle(!!S.models.crop_map);
     const method = mapMethod();
@@ -1539,38 +1623,36 @@ function renderReady() {
     renderFlow();
 }
 
+function renderSavedBox() {
+    if (S.savedModels === null) { S.savedModels = []; getJSON('models').then(r => { S.savedModels = r.models; renderModel(); }).catch(() => {}); }
+    // models of the analysis' crop first; the newest of them chosen by default
+    const ms = (S.savedModels || []).slice().sort((a, b) => sameCrop((b.properties || {}).crop) - sameCrop((a.properties || {}).crop));
+    if (!S.savedModelId && ms.length && sameCrop((ms[0].properties || {}).crop)) S.savedModelId = String(ms[0].id);
+    let h = ms.length
+        ? '<label class="sat-label" for="sat_saved" style="margin-top:0">Trained model</label>' + `<select id="sat_saved" class="form-control input-sm" style="min-width:320px"><option value="">Choose a model</option>`
+            + ms.map(m => `<option value="${m.id}"${String(S.savedModelId) === String(m.id) ? ' selected' : ''}>${esc(m.name)}</option>`).join('') + '</select>'
+        : '<span class="sat-muted sat-small">No trained model yet: <a href="/breeders/satellite/train" target="_blank" rel="noopener">train one</a> (regional statistics or trials), save it, then come back (the list reloads when you choose this option again).</span>';
+    const m = ms.find(x => String(x.id) === String(S.savedModelId));
+    if (m) {
+        const p = m.properties || {}, mt = p.metrics || {};
+        h += `<div class="sat-small" style="margin-top:6px">${esc(p.crop || '')} · ${esc(String(p.trait || '').replace(/\|[^|]*$/, ''))}${p.unit ? ` (${esc(p.unit)})` : ''} · ${esc(YIELD_MODEL_LABELS[p.model] || p.model || '')}`
+            + ` · R² ${fmt(mt.r2, 2)}, error ${fmt(mt.rmse, 1)} on ${mt.n || p.calibration_fields || '?'} fields</div>`;
+    }
+    $('#sat_saved_box').html(h);
+}
+
 function renderYieldSetup() {
     defaultYieldMode();
     options('#sat_yield_mode', S.yieldMode);
+    $('#sat_saved_box').toggle(S.yieldMode === 'saved');
+    if (S.yieldMode === 'saved') renderSavedBox();
     $('.sat-min-fields').text(setting('min_fields'));
-    $('#sat_calib_box').toggle(S.yieldMode !== 'index');
+    $('#sat_calib_box').toggle(S.yieldMode === 'calibrated');
     $('#sat_ref_box').toggle(S.yieldMode === 'index');
     $('#sat_ref_on').prop('checked', S.useReference);
     if (S.yieldMode === 'index') renderReferences();
-    const traits = yieldTraits();
-    if (S.yieldTrait && !traits.some(t => t.id === S.yieldTrait.id)) S.yieldTrait = null;
-    if (!S.yieldTrait && traits.length) S.yieldTrait = { id: traits[0].id, name: traits[0].name };
-    $('#sat_yield_trait').html(traits.length
-        ? traits.map(t => `<option value="${t.id}"${S.yieldTrait && S.yieldTrait.id === t.id ? ' selected' : ''}>${esc(t.name)} (${t.n} trial${t.n === 1 ? '' : 's'})</option>`).join('')
-        : `<option value="">${S.trialInfoLoading ? 'Loading the trials…' : `No ${esc(cropLabel())} trial with values at these locations`}</option>`).prop('disabled', !traits.length);
     $('#sat_yield_unit').val(S.yieldUnit);
     $('#sat_yield_perha').prop('checked', S.perHa);
-    // calibration trials
-    const trials = candidateTrials();
-    let html = '<div class="sat-label" style="margin-top:10px">Breedbase trials at the selected locations</div>';
-    if (!trials.length) html += '<div class="sat-muted sat-small">No trial at the selected locations: use fields you draw below.</div>';
-    else {
-        html += '<div style="max-height:260px;overflow:auto"><table class="sat-mini-table"><thead><tr><th></th><th>Trial</th><th>Location</th><th>Planting</th><th>Field</th><th class="num">Yield</th><th></th></tr></thead><tbody>'
-            + trials.map(t => {
-                const stt = trialStatus(t.id), info = stt.info || {};
-                const on = S.calibTrials.has(t.id) && stt.ok;
-                const fieldTxt = !info.trial_id ? '' : info.plots_with_coordinates ? `${info.plots_with_coordinates} plots` : info.drawn_field ? 'drawn' : 'none';
-                return `<tr><td><input type="checkbox" class="sat-calib-trial" data-id="${t.id}"${on ? ' checked' : ''}${stt.ok ? '' : ' disabled'} aria-label="Use ${esc(t.name)}" /></td>`
-                    + `<td>${esc(t.name)}</td><td class="sat-muted">${esc(t.site)}</td><td>${esc(info.planting || '')}</td><td>${esc(fieldTxt)}</td>`
-                    + `<td class="num">${stt.value ? stt.value.mean.toFixed(1) : ''}</td><td class="sat-muted sat-small">${stt.ok ? '' : esc(stt.why)}</td></tr>`;
-            }).join('') + '</tbody></table></div>';
-    }
-    $('#sat_calib_trials').html(html);
     // drawn calibration fields
     let c = `<div class="sat-label" style="margin-top:10px">Fields you know the yield of <button type="button" class="btn btn-default btn-xs" id="sat_draw_calib" style="margin-left:6px">+ Draw a field</button></div>`;
     if (S.calib.length) {
@@ -1599,7 +1681,12 @@ function renderYieldSetup() {
             `<tr><td><input type="text" class="form-control input-sm sat-target-name" data-i="${i}" value="${esc(f.name)}" maxlength="100" aria-label="Field name" /></td><td class="num sat-muted">${ringHa(f.ring).toFixed(2)} ha</td>`
             + `<td><button type="button" class="btn btn-link btn-xs sat-target-del" data-i="${i}">delete</button></td></tr>`).join('') + '</tbody></table>';
     }
-    t += `<div class="sat-small sat-muted" style="margin-top:4px">${S.models.crop_map ? `Every ${esc(cropLabel())} area of at least ${setting('min_patch_ha')} ha found by the crop map is estimated too.` : 'Add the crop map to also estimate every area of the crop it finds.'}</div>`;
+    if (S.models.crop_map) {
+        t += `<div style="margin-top:6px"><label class="sat-switch sat-small"><input type="checkbox" id="sat_map_areas"${mapAreasOn() ? ' checked' : ''} /><span class="sat-slider"></span>`
+            + `Also estimate the ${esc(cropLabel())} areas the crop map finds in the selected area (at least ${setting('min_patch_ha')} ha)</label></div>`;
+    } else {
+        t += '<div class="sat-small sat-muted" style="margin-top:4px">Only the fields above are estimated.</div>';
+    }
     $('#sat_targets').html(t);
 }
 
@@ -1658,13 +1745,13 @@ function insideArea(ring) {
 
 function finishModelDraw(target, ring) {
     if ((target.startsWith('label:') || target === 'target') && !insideArea(ring)) {
-        alert('Draw it inside the dashed square: only the images of that area are read for this location. (Fields with a known yield can be anywhere.)');
+        alert('Draw it near the location: only the images around it are read. (Fields with a known yield can be anywhere.)');
         return;
     }
     if (target.startsWith('label:')) {
         S.labels = S.labels.concat([{ class: target.slice(6), ring }]);
     } else if (target === 'calib') {
-        S.calib.push({ name: `Calibration ${S.calib.length + 1}`, site: S.loc ? S.loc.name : '', ring, yield: '', start: S.season.start || S.start, end: S.season.end || S.end });
+        S.calib.push({ name: `Calibration ${S.calib.length + 1}`, site: S.loc ? S.loc.name : '', ring, yield: '', start: S.season.start || anaDates().start, end: S.season.end || anaDates().end });
     } else if (target === 'target') {
         const used = new Set(S.targets.map(f => f.name.toLowerCase()));
         let k = S.targets.length + 1;
@@ -1689,7 +1776,7 @@ function renderModelDraw() {
 
 function renderModelHint() {
     $('#sat_model_hint').html(S.draw.active && S.draw.where === 'model' ? 'Click the corners on the map. Esc cancels, Enter finishes.'
-        : 'Dashed square: the area of this location. Click a drawn area to delete it.');
+        : (S.field ? 'Dashed cyan: the fields analysed. Click a drawn area to delete it.' : 'Blue square: the area analysed. Click a drawn area to delete it.'));
 }
 
 function drawModelMap(fit) {
@@ -1739,7 +1826,7 @@ function drawModelMap(fit) {
     const a = area();
     if (a) {
         const b = squareBounds(a);
-        L.rectangle(b, { color: '#22d3ee', weight: 2, fill: false, dashArray: '5 4', interactive: false }).addTo(S.mlayers);
+        if (!S.field) L.rectangle(b, { color: '#22d3ee', weight: 2, fill: false, interactive: false }).addTo(S.mlayers);
         if (fit && !S.draw.active) S.mmap.fitBounds(L.latLngBounds(b).pad(0.15));
     }
 }
@@ -1763,9 +1850,10 @@ function renderAdvanced() {
         if (typeof it[2] === 'boolean') {
             return `<div><label class="sat-switch"><input type="checkbox" class="sat-adv" data-k="${k}"${v ? ' checked' : ''} /><span class="sat-slider"></span>${esc(label)}</label></div>`;
         }
-        if (k === 'yield_model') {
+        if (k === 'yield_model' || k === 'map_model') {
+            const labels = k === 'yield_model' ? YIELD_MODEL_LABELS : MAP_MODEL_LABELS;
             return `<div><label for="sat_adv_${k}">${esc(label)}</label><select id="sat_adv_${k}" class="form-control input-sm sat-adv" data-k="${k}">`
-                + it[3].map(o => `<option value="${o}"${o === v ? ' selected' : ''}>${{ linear: 'Linear regression', lasso: 'Lasso (shrinks weak predictors)', random_forest: 'Random forest' }[o]}</option>`).join('')
+                + it[3].map(o => `<option value="${o}"${o === v ? ' selected' : ''}>${esc(labels[o] || o)}</option>`).join('')
                 + `</select><div class="sat-help">${esc(it[4])}</div></div>`;
         }
         if (k === 'predictors') {
@@ -1781,7 +1869,7 @@ function renderAdvanced() {
 function readAdvanced(el) {
     const k = $(el).data('k');
     if ($(el).is(':checkbox')) { S.settings[k] = $(el).prop('checked'); return; }
-    if (k === 'yield_model') { S.settings[k] = $(el).val(); return; }
+    if (k === 'yield_model' || k === 'map_model') { S.settings[k] = $(el).val(); return; }
     const spec = ADVANCED.flatMap(([, items]) => items).find(it => it[0] === k);
     let v = parseFloat($(el).val());
     if (!isFinite(v)) v = spec[2];
@@ -1797,7 +1885,7 @@ function runPayload() {
     const settings = {};
     ADVANCED.forEach(([, items]) => items.forEach(it => { settings[it[0]] = setting(it[0]); }));
     return {
-        dates: { start: S.start, end: S.end }, crop: cropSpecies(), crop_class: S.models.crop_map ? 'crop' : '',
+        dates: { ...anaDates() }, crop: cropSpecies(), crop_class: S.models.crop_map ? 'crop' : '',
         crop_map_method: S.models.crop_map ? mapMethod() : 'examples',
         models: { ...S.models }, settings,
         classes: S.models.crop_map && mapMethod() === 'examples' ? S.classes.map(k => ({ id: k.id, name: k.name })) : [],
@@ -1807,21 +1895,24 @@ function runPayload() {
                 id: st.loc.id, name: st.loc.name, center: [a.lon, a.lat], size_m: a.sizeM,
                 labels: !S.models.crop_map ? [] : (mapMethod() === 'standard' ? step2Labels(st) : siteLabels(st)).map(l => ({ class: l.class, ring: l.ring })), targets: S.models.yield ? siteTargets(st).map(x => ({ name: x.name, ring: x.ring })) : [],
                 plots_trial_id: S.models.indices && st.field && st.field.kind === 'plots' ? st.trial.id : null,
+                // the selected area: the field(s) of step 2 and those drawn to estimate (none: the whole square)
+                area: step2Targets(st).concat(st.targets || []).map(x => x.ring).filter(r => r && r.length >= 3),
                 exclude_scenes: (st.hidden || []).filter(id => /^[A-Za-z0-9_]+$/.test(id)),
             };
         }),
-        yield: S.models.yield ? { mode: S.yieldMode === 'index' ? 'index' : 'calibrated', reference: S.yieldMode === 'index' && S.useReference, trait_id: S.yieldTrait ? S.yieldTrait.id : null, trait_name: S.yieldTrait ? S.yieldTrait.name : '', unit: S.yieldUnit, per_ha: S.perHa, season: { ...S.season } } : {},
-        calibration: S.models.yield && S.yieldMode !== 'index' ? S.calib.filter(c => c.yield !== '' && isFinite(+c.yield)).map(c => ({ name: c.name, site: c.site, ring: c.ring, yield: +c.yield, start: c.start, end: c.end })) : [],
-        calibration_trials: S.models.yield && S.yieldMode !== 'index' ? [...S.calibTrials].filter(id => trialStatus(id).ok) : [],
+        yield: S.models.yield ? { mode: ['index', 'saved'].includes(S.yieldMode) ? S.yieldMode : 'calibrated', saved_model_id: S.yieldMode === 'saved' ? S.savedModelId : null,
+            reference: S.yieldMode === 'index' && S.useReference, map_areas: mapAreasOn(), season_mode: S.seasonMode, trait_name: S.yieldMode === 'calibrated' ? 'Yield of the fields drawn' : '', unit: S.yieldUnit, per_ha: S.perHa, season: { ...S.season } } : {},
+        calibration: S.models.yield && S.yieldMode === 'calibrated' ? S.calib.filter(c => c.yield !== '' && isFinite(+c.yield)).map(c => ({ name: c.name, site: c.site, ring: c.ring, yield: +c.yield, start: c.start, end: c.end })) : [],
     };
 }
 
 async function startRun() {
     $('#sat_run').prop('disabled', true);
     try {
-        const r = await postJSON('run', { request: JSON.stringify(runPayload()) });
-        S.job = { runId: r.run_id, timer: null, results: null, site: 0, status: 'running', t0: Date.now(), skipped: r.skipped || [], progress: '' };
+        const r = await postJSON('run', { request: JSON.stringify(runPayload()), notify: $('#sat_notify').prop('checked') ? 1 : '' });
+        S.job = { runId: r.run_id, timer: null, results: null, site: 0, status: 'running', t0: Date.now(), skipped: r.skipped || [], progress: '', notify: r.notify || '' };
         try { localStorage.setItem('sat_last_run', r.run_id); } catch (e) { /* private mode */ }
+        S.runsList = null; loadRuns();
         goStep(6);
     } catch (err) {
         alert(err.message);
@@ -1839,13 +1930,22 @@ function renderJob() {
         $('#sat_run_error').empty();
         $('#sat_run_notes').html(j.skipped && j.skipped.length ? `<div class="sat-warn">Calibration trials left out: ${j.skipped.map(esc).join(' ')}</div>` : '');
         $('#sat_run_progress').show();
+        $('#sat_run_info').html('Running on the server: you can close this page or keep working.'
+            + (S.job.notify ? ` An email with the link to the results will be sent to <b>${esc(S.job.notify)}</b>.` : '')
+            + ' It is also listed in your profile (Jobs), and in <i>Earlier analyses</i> on this page.');
+        $('#sat_run_log_box').show();
         pollJob();
     } else if (j.status === 'failed') {
         $('#sat_run_progress').hide();
+        $('#sat_run_info').empty();
+        $('#sat_run_logfile').attr('href', fileUrl('log')).show();
         $('#sat_results').hide();
         $('#sat_run_error').html(`<div class="alert alert-danger" style="white-space:pre-wrap">${esc(j.error || 'The run failed.')}</div>`);
     } else if (j.results) {
         $('#sat_run_progress').hide();
+        $('#sat_run_info').empty();
+        $('#sat_run_log_box').hide();
+        $('#sat_run_logfile').attr('href', fileUrl('log')).attr('title', 'Everything the server did in this run').show();
         renderResults();
     } else if (j.runId) {
         j.status = 'running';
@@ -1865,11 +1965,19 @@ function pollJob() {
         const sec = r.seconds || 0;
         $('#sat_run_elapsed').text(sec < 60 ? `${sec} s` : `${Math.floor(sec / 60)} min ${String(sec % 60).padStart(2, '0')} s`);
         $('#sat_run_text').text(r.progress ? `Working on the server: ${r.progress}` : 'Starting…');
+        if (r.log) {
+            const pre = document.getElementById('sat_run_log');
+            const atEnd = pre && pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 8;
+            $('#sat_run_log').text(r.log.join('\n'));
+            $('#sat_run_log_n').text(`(${r.log_lines || r.log.length} steps)`);
+            if (pre && atEnd) pre.scrollTop = pre.scrollHeight;
+        }
         if (r.status === 'running') { j.timer = setTimeout(tick, 3000); return; }
-        if (r.status === 'failed') { j.status = 'failed'; j.error = r.error; renderJob(); return; }
+        if (r.status === 'failed') { j.status = 'failed'; j.error = r.error; renderJob(); loadRuns(); return; }
         try { j.results = await getJSON('results', { run_id: j.runId }); j.status = 'done'; }
         catch (err) { j.status = 'failed'; j.error = err.message; }
         renderJob();
+        loadRuns();   // the Earlier analyses list showed it as running
     };
     $('#sat_run_text').text('Starting…');
     tick();
@@ -1879,8 +1987,172 @@ const resSite = () => (S.job.results.sites || [])[S.job.site] || {};
 const fmt = (v, d = 1) => (v === null || v === undefined || !isFinite(v) ? '–' : Number(v).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d }));
 const fileUrl = name => `${API}/file?` + new URLSearchParams({ run_id: S.job.runId, name }).toString();
 
+/* ---------- the report: everything about the area and the period ---------- */
+
+const FIELD_COLORS = ['#2563eb', '#d97706', '#9333ea', '#dc2626', '#0891b2', '#65a30d', '#db2777', '#4b5563'];
+
+function reportCalendar(R, s) {
+    const imgs = s.images || [];
+    if (!imgs.length) return '';
+    const t0 = Date.parse(R.dates.start + 'T00:00:00Z'), t1 = Date.parse(R.dates.end + 'T23:59:59Z');
+    const W = 820, H = 70, L0 = 10, R0 = 10;
+    const X = d => L0 + (W - L0 - R0) * (Date.parse(d + 'T12:00:00Z') - t0) / Math.max(1, t1 - t0);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Image calendar">`;
+    svg += `<line x1="${L0}" x2="${W - R0}" y1="${H - 20}" y2="${H - 20}" stroke="#d1d5db" />`;
+    imgs.forEach(e => {
+        const x = X(e.date);
+        const col = { used: '#2f6b3a', cloudy: '#9ca3af', failed: '#dc2626', outside: '#e5e7eb' }[e.status] || '#9ca3af';
+        const h = e.status === 'used' ? 8 + 32 * (e.clear || 0) / 100 : 8;
+        svg += `<rect x="${(x - 2).toFixed(1)}" y="${(H - 20 - h).toFixed(1)}" width="4" height="${h.toFixed(1)}" fill="${col}"><title>${esc(fmtDate(e.date))}: ${esc(e.status)}${e.clear !== undefined ? `, ${e.clear}% of the area clear` : ''}</title></rect>`;
+    });
+    const months = [];
+    for (let d = new Date(t0); d.getTime() <= t1; d.setUTCMonth(d.getUTCMonth() + 1, 1)) months.push(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)));
+    const every = Math.ceil(months.length / 12);
+    months.forEach((m, i) => { if (m.getTime() >= t0 && !(i % every)) svg += `<text x="${X(m.toISOString().slice(0, 10))}" y="${H - 6}" font-size="10" fill="#6b7280">${m.toLocaleDateString(undefined, { month: 'short', year: '2-digit', timeZone: 'UTC' })}</text>`; });
+    return svg + '</svg><div class="sat-report-legend"><span><i style="background:#2f6b3a;height:10px;width:4px"></i>used (taller = clearer)</span><span><i style="background:#9ca3af;height:8px;width:4px"></i>too cloudy</span><span><i style="background:#dc2626;height:8px;width:4px"></i>could not be read</span></div>';
+}
+
+function reportChart(R, s, fields) {
+    const area = s.area_series || [];
+    const t0 = Date.parse(R.dates.start + 'T00:00:00Z'), t1 = Date.parse(R.dates.end + 'T23:59:59Z');
+    const W = 820, H = 260, L0 = 38, R0 = 10, T0 = 10, B0 = 26;
+    const X = d => L0 + (W - L0 - R0) * (Date.parse(d + 'T12:00:00Z') - t0) / Math.max(1, t1 - t0);
+    const Y = v => T0 + (H - T0 - B0) * (1 - (v + 0.1) / 1.1);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="NDVI over the period">`;
+    [0, 0.2, 0.4, 0.6, 0.8, 1].forEach(v => { svg += `<line x1="${L0}" x2="${W - R0}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef0f2" /><text x="${L0 - 5}" y="${Y(v) + 3}" font-size="10" text-anchor="end" fill="#6b7280">${v.toFixed(1)}</text>`; });
+    const months = [];
+    for (let d = new Date(t0); d.getTime() <= t1; d.setUTCMonth(d.getUTCMonth() + 1, 1)) months.push(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)));
+    const every = Math.ceil(months.length / 12);
+    months.forEach((m, i) => { if (m.getTime() >= t0 && !(i % every)) svg += `<text x="${X(m.toISOString().slice(0, 10))}" y="${H - 8}" font-size="10" fill="#6b7280">${m.toLocaleDateString(undefined, { month: 'short', year: '2-digit', timeZone: 'UTC' })}</text>`; });
+    const line = (pts, col, w, dash) => pts.length > 1 ? `<polyline fill="none" stroke="${col}" stroke-width="${w}"${dash ? ` stroke-dasharray="${dash}"` : ''} points="${pts.map(p => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(' ')}" />` : '';
+    const ap = area.filter(e => e.ndvi !== null && e.clear >= 30).map(e => [e.date, e.ndvi]);
+    svg += line(ap, '#9ca3af', 1.5, '4 3');
+    fields.slice(0, FIELD_COLORS.length).forEach((f, i) => {
+        const sr = f.series || { date: [], ndvi: [] };
+        const pts = (sr.date || []).map((d, k) => [d, sr.ndvi[k]]).filter(p => p[1] !== null && p[1] !== undefined);
+        const col = FIELD_COLORS[i];
+        svg += line(pts, col, 2.2);
+        pts.forEach(p => { svg += `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="2.4" fill="${col}"><title>${esc(f.field)}, ${esc(fmtDate(p[0]))}: NDVI ${fmt(p[1], 2)}</title></circle>`; });
+        (f.seasons || []).forEach(z => {
+            const mk = (d, sym, tip) => { if (!d) return; svg += `<text x="${X(d).toFixed(1)}" y="${(H - B0 - 4).toFixed(1)}" font-size="12" text-anchor="middle" fill="${col}"><title>${esc(f.field)}: ${esc(tip)} ${esc(fmtDate(d))}</title>${sym}</text>`; };
+            mk(z.bare_until, '▲', 'bare until (sowing)');
+            if (z.peak_date) svg += `<circle cx="${X(z.peak_date).toFixed(1)}" cy="${Y(z.peak).toFixed(1)}" r="5" fill="none" stroke="${col}" stroke-width="2"><title>${esc(f.field)}: peak ${esc(fmtDate(z.peak_date))} (${fmt(z.peak, 2)})</title></circle>`;
+            if (z.harvested) mk(z.bare_again, z.end_type === 'dry-down' ? '▽' : '▼', z.end_type === 'dry-down' ? 'dried down by' : 'harvested by');
+        });
+    });
+    svg += '</svg>';
+    const leg = `<div class="sat-report-legend"><span><i style="background:#9ca3af"></i>whole area (mean)</span>`
+        + fields.slice(0, FIELD_COLORS.length).map((f, i) => `<span><i style="background:${FIELD_COLORS[i]}"></i>${esc(f.field)}</span>`).join('')
+        + '<span>▲ bare soil until (sowing) · ○ peak · ▼ harvested by · ▽ dried down by</span></div>';
+    return svg + leg;
+}
+
+function renderReport(R, s) {
+    const Y = R.yield, cm = R.crop_map;
+    const crop = cropLabelOf(R);
+    const imgs = s.images || [];
+    const n = k => imgs.filter(e => e.status === k).length;
+    const used = imgs.filter(e => e.status === 'used').map(e => e.date).sort();
+    let gap = 0, gapFrom = null, gapTo = null;
+    for (let i = 1; i < used.length; i++) { const g = daysBetween(used[i - 1], used[i]); if (g > gap) { gap = g; gapFrom = used[i - 1]; gapTo = used[i]; } }
+    const km = s.size_m ? (s.size_m / 1000).toFixed(1) : '?';
+    const [lon, lat] = s.center || [];
+    const p = [];
+    p.push(`<p><b>${esc(s.name)}</b>${lat !== undefined ? ` (${fmt(lat, 4)}, ${fmt(lon, 4)})` : ''}: a ${km} × ${km} km area, from <b>${fmtDate(R.dates.start)}</b> to <b>${fmtDate(R.dates.end)}</b> (${Math.round(daysBetween(R.dates.start, R.dates.end))} days), Sentinel-2 Level-2A images (10 m pixels).</p>`);
+    p.push(`<p><b>Images:</b> ${s.dates_found ?? imgs.length} dates found${s.dates_hidden ? ` (${s.dates_hidden} more hidden by you)` : ''}; <b>${s.dates_used ?? n('used')}</b> clear enough to use, ${n('cloudy')} too cloudy${n('failed') ? `, ${n('failed')} could not be read` : ''}.`
+        + (gap ? ` The longest stretch without a usable image was <b>${Math.round(gap)} days</b> (${fmtDate(gapFrom)} – ${fmtDate(gapTo)}).` : '') + '</p>');
+    if (cm && s.classes) {
+        const total = s.classes.reduce((t, k) => t + k.ha, 0) + (s.uncertain_ha || 0);
+        const c = s.classes.find(k => k.id === R.crop_class);
+        let t = `<p><b>Land cover:</b> ${c ? `<b>${fmt(c.ha)} ha of ${esc(c.name)}</b> (${fmt(total ? 100 * c.ha / total : 0, 0)}% of the area)` : ''}`;
+        if (cm.method !== 'standard') t += `; ${s.classes.filter(k => k.id !== R.crop_class).map(k => `${esc(k.name)} ${fmt(k.ha)} ha`).join(', ')}`;
+        if (s.uncertain_ha) t += `; ${fmt(s.uncertain_ha)} ha uncertain`;
+        t += cm.method === 'standard' ? `, found by the stored ${esc(cm.standard.crop)} season curve (no examples).` : cm.accuracy ? `, from your examples (cross-validated accuracy ${fmt(100 * cm.accuracy.overall, 0)}%).` : ', from your examples.';
+        if (s.sowing) t += ` ${esc(crop)} sowing estimated around <b>${fmtDate(s.sowing.median)}</b> (most between ${fmtDate(s.sowing.q10)} and ${fmtDate(s.sowing.q90)}).`;
+        const chk = (s.check || []).filter(x => x.pixels > 0);
+        if (chk.length) { const px = chk.reduce((a, x) => a + x.pixels, 0), ok = chk.reduce((a, x) => a + x.as_crop, 0); t += ` Check: ${fmt(100 * ok / px, 0)}% of your step-2 field was found as ${esc(crop)}.`; }
+        p.push(t + '</p>');
+    }
+    // fields of this location, one entry per field (all its rows / seasons)
+    const rows = (Y && Y.targets ? Y.targets : []).filter(t => String(t.site_id) === String(s.id));
+    const byField = [];
+    rows.forEach(t => {
+        const key = t.field || t.name;
+        let f = byField.find(x => x.field === key);
+        if (!f) { f = { field: key, area_ha: t.area_ha, source: t.source, series: t.series, seasons: t.seasons || [], rows: [], share: t.map_crop_share }; byField.push(f); }
+        f.rows.push(t);
+    });
+    byField.forEach(f => {
+        let t = `<p><b>${esc(f.field)}</b> (${fmt(f.area_ha, 1)} ha${f.source === 'map' ? `, ${esc(crop)} area found by the map` : ''}${f.share !== undefined && f.share !== null ? `, ${fmt(100 * f.share, 0)}% ${esc(crop)} on the map` : ''}): `;
+        t += f.seasons.length ? `${f.seasons.length === 1 ? 'one season' : `${f.seasons.length} seasons`} — ${f.seasons.map(z => esc(seasonText(z))).join('; ')}.` : 'no crop season (green-up from bare soil) found in the period.';
+        f.rows.filter(r => r.index !== undefined && r.index !== null || r.estimate !== undefined).forEach(r => {
+            const est = r.estimate !== undefined && r.estimate !== null;
+            t += ` ${r.season ? esc(SEASON_LABEL[r.season.label] || 'season') + ': ' : ''}${r.index !== undefined && r.index !== null ? `index <b>${fmt(r.index, 0)}</b>` : ''}${est ? `${r.index !== undefined && r.index !== null ? ', ' : ''}${Y.mode === 'index' ? '≈ ' : ''}<b>${fmt(r.estimate, 0)}</b> ${esc(Y.unit || 'kg/ha')}${r.lower !== undefined ? ` (${fmt(r.lower, 0)} – ${fmt(r.upper, 0)})` : ''}` : ''}.`;
+        });
+        p.push(t + '</p>');
+    });
+    if (Y && Y.mode === 'index' && Y.references && Y.references.length) p.push(`<p><b>Yield reference:</b> ${Y.references.map(r => `${esc(r.source)} ${esc(r.crop)}, ${esc(r.area)}: ${fmt(r.value, 0)} kg/ha (${esc(r.basis)})`).join('; ')}. Approximate: assumes the fields average like the region.</p>`);
+    if (Y && Y.metrics) p.push(`<p><b>Yield model:</b> calibrated on ${Y.metrics.n} fields of known ${esc(Y.trait || 'yield')} — R² ${fmt(Y.metrics.r2, 2)}, error ${fmt(Y.metrics.rmse, 1)} (leave one field out).</p>`);
+    let html = p.join('');
+    // by season (the site's seasons, e.g. summer and safrinha)
+    const sm = s.season_maps || [];
+    const tbs = ((Y && Y.totals_by_season) || []).filter(t => String(t.site_id) === String(s.id));
+    const seasonIds = [...new Set(sm.map(z => z.season).concat(tbs.map(t => t.season)))];
+    if (seasonIds.length) {
+        html += '<h4>By season</h4><table class="sat-mini-table"><thead><tr><th>Season</th><th class="num">' + esc(crop) + ' on the map (ha)</th><th>Sowing (map)</th><th class="num">Fields</th><th class="num">ha</th><th class="num">Mean index</th>'
+            + (tbs.some(t => t.production !== null && t.production !== undefined) ? '<th class="num">≈ kg/ha</th><th class="num">≈ production (t)</th>' : '') + '</tr></thead><tbody>'
+            + seasonIds.map(id => {
+                const z = sm.find(x => x.season === id), t = tbs.find(x => x.season === id);
+                const prod = tbs.some(x => x.production !== null && x.production !== undefined);
+                return `<tr><td>${esc(SEASON_LABEL[id] || id)}</td><td class="num">${z ? fmt(z.crop_ha) : '–'}</td><td>${z && z.sowing ? `~${fmtDate(z.sowing.median)} (${fmtDate(z.sowing.q10)} – ${fmtDate(z.sowing.q90)})` : '–'}</td>`
+                    + `<td class="num">${t ? t.fields : 0}</td><td class="num">${t ? fmt(t.area_ha) : '–'}</td><td class="num">${t && t.mean_index !== null && t.mean_index !== undefined ? fmt(t.mean_index, 0) : '–'}</td>`
+                    + (prod ? `<td class="num">${t && t.mean_yield !== null && t.mean_yield !== undefined ? `≈ ${fmt(t.mean_yield, 0)}` : '–'}</td><td class="num">${t && t.production !== null && t.production !== undefined ? `≈ ${fmt(t.production / 1000, 1)}` : '–'}</td>` : '') + '</tr>';
+            }).join('') + '</tbody></table>';
+        if (cm && cm.split && cm.seasons_source) html += `<div class="sat-small sat-muted" style="margin-top:4px">Season windows (sowing): ${(cm.seasons || []).map(z => `${esc(z.label)} ${esc(z.sow[0])} – ${esc(z.sow[1])}`).join('; ')}. ${esc(cm.seasons_source)}</div>`;
+    }
+    html += '<h4>Images over the period</h4>' + reportCalendar(R, s);
+    html += '<h4>Vegetation (NDVI) over the period</h4>' + reportChart(R, s, byField);
+    if (byField.length) {
+        html += '<h4>Fields and seasons</h4><table class="sat-mini-table"><thead><tr><th>Field</th><th class="num">ha</th><th>Season</th><th>Bare until (sowing)</th><th>Peak</th><th>Harvest</th></tr></thead><tbody>'
+            + byField.map(f => (f.seasons.length ? f.seasons : [null]).map((z, k) => `<tr><td>${k ? '' : esc(f.field)}</td><td class="num">${k ? '' : fmt(f.area_ha, 1)}</td>`
+                + (z ? `<td>${esc(SEASON_LABEL[z.label] || 'season')} ${esc(z.year || '')}</td><td>${z.started_before_period ? `green from ${fmtDate(z.green_from)}` : fmtDate(z.bare_until)}</td><td>${fmtDate(z.peak_date)} (${fmt(z.peak, 2)})</td><td>${!z.harvested ? `still green on ${fmtDate(z.last_green)}` : z.end_type === 'dry-down' ? `no sharp harvest (dried down by ${fmtDate(z.bare_again)})` : `${fmtDate(z.last_green)} – ${fmtDate(z.bare_again)}`}</td>`
+                    : '<td colspan="4" class="sat-muted">no season found</td>') + '</tr>').join('')).join('') + '</tbody></table>';
+    }
+    // method and sources
+    const src = [];
+    src.push('Images: Copernicus Sentinel-2 Level-2A (ESA), 10 m, from the Earth Search catalogue (Element 84 / AWS open data); clouds from the Sentinel-2 scene classification' + (s.dates_hidden ? '; images hidden by hand left out' : '') + '.');
+    if (cm) src.push(cm.method === 'standard' ? `Crop map: each pixel's NDVI season compared with a stored ${esc(cm.standard.crop)} curve (${esc(cm.standard.source || '')}).`
+        : `Crop map: ${esc(cm.model_label || 'random forest')}${cm.comparison && cm.comparison.length > 1 ? ` (chosen among ${cm.comparison.map(z => esc(z.label)).join(', ')} by cross-validation by drawn area)` : ''} on period means of 6 bands + NDVI / NDRE / EVI, trained on your drawn examples.`);
+    if (Y) src.push(Y.mode === 'index' ? 'Yield: relative index = NDVI area under the season curve, 100 = average field of the same kind of season' + (Y.references && Y.references.length ? `; approximate kg/ha from ${Y.references.map(r => esc(r.citation || r.source)).join('; ')}` : '') + '.'
+        : `Yield: ${esc(YIELD_MODEL_LABELS[Y.model] || Y.model)} on ${(Y.predictor_labels || []).map(esc).join(' + ')}${Y.comparison && Y.comparison.length > 1 ? ` (chosen among ${Y.comparison.length} models, ${esc((Y.selection || {}).rule || '')}; validated ${esc((Y.metrics || {}).cv || '')})` : ''}, calibrated on fields of known ${esc(String(Y.trait || 'yield').replace(/\|[^|]*$/, ''))}.`);
+    src.push('Seasons: green-up to NDVI ≥ 0.6 from bare soil (≤ 0.35) and back, from each field\'s curve; a harvest when NDVI falls by 0.2 or more within 30 days, otherwise a slow dry-down.');
+    if (R.software) src.push(`Software: ${esc(R.software.R || 'R')}, terra ${esc(R.software.terra || '')}${R.software.randomForest ? `, randomForest ${esc(R.software.randomForest)}` : ''}, GDAL ${esc(R.software.GDAL || '')}.`);
+    html += '<h4>Method and sources</h4><ul class="sat-small" style="padding-left:18px">' + src.map(x => `<li>${x}</li>`).join('') + '</ul>';
+    html += `<div class="sat-small sat-muted">Breedbase satellite report · run ${esc(R.run_id || '')} · computed ${esc((R.created || '').replace('T', ' '))}</div>`;
+    $('#sat_report_body').html(html);
+}
+
+const cropLabelOf = R => { const c = R.crop || ''; return COMMON[c] || c || 'the crop'; };
+
+/** A standalone copy of the report and results (map as an image), to keep or send. */
+function downloadReport() {
+    const R = S.job.results;
+    const node = document.getElementById('sat_results').cloneNode(true);
+    const live = document.getElementById('sat_results').querySelectorAll('canvas');
+    node.querySelectorAll('canvas').forEach((c, i) => { const img = document.createElement('img'); try { img.src = live[i].toDataURL('image/png'); } catch (e) { /* tainted */ } img.style.width = '100%'; img.style.imageRendering = 'pixelated'; c.replaceWith(img); });
+    node.querySelectorAll('button, .sat-res-tabs, .sat-report-buttons, a.btn').forEach(e => e.remove());
+    const css = [...document.querySelectorAll('style')].map(x => x.textContent).filter(t => t.includes('.sat-')).join('\n');
+    const doc = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(R.name || 'Satellite report')}</title><style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:1000px;margin:20px auto;padding:0 16px;color:#111827}`
+        + 'table{border-collapse:collapse}.row{display:flex;flex-wrap:wrap;gap:16px}.col-sm-5,.col-sm-6,.col-sm-7{flex:1 1 300px}' + css + `</style></head><body class="sat-app"><h2>${esc(R.name || 'Satellite report')}</h2>${node.innerHTML}</body></html>`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([doc], { type: 'text/html' }));
+    a.download = `${R.run_id || 'satellite'}_report.html`;
+    document.body.appendChild(a); a.click(); a.remove();
+}
+
 function renderResults() {
     const R = S.job.results;
+    learnSeasonLabels(R);
     $('#sat_results').show();
     $('#sat_run_meta').text(`${fmtDate(R.dates.start)} – ${fmtDate(R.dates.end)} · computed in ${Math.round(R.seconds)} s`);
     $('#sat_run_notes').html(R.notes && R.notes.length ? `<div class="sat-warn"><b>Notes</b><ul style="margin:4px 0 0 18px;padding:0">${R.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : '');
@@ -1901,6 +2173,7 @@ function renderResults() {
     if (R.yield && R.yield.mode === 'index') { /* no yield value */ } else if (tot && R.yield.per_ha && tot.production !== null) tiles.push([fmt(tot.production, 0), `production (${esc(R.yield.unit || 'yield')} × ha${rough})`]);
     else if (tot && tot.mean_yield !== null) tiles.push([fmt(tot.mean_yield), `mean yield${R.yield.unit ? ` (${esc(R.yield.unit)}${rough})` : rough ? ' (rough)' : ''}`]);
     $('#sat_res_stats').html(tiles.map(([v, l]) => `<div class="sat-stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join(''));
+    renderReport(R, s);
     // map
     $('#sat_res_map_card').toggle(!!R.crop_map);
     if (R.crop_map) renderResultMap(R, s);
@@ -1928,7 +2201,16 @@ function renderResultMap(R, s) {
     const std = cm.method === 'standard';
     classes.forEach((k, i) => { const own = !std && S.classes.find(c => c.id === k.id); colorOf[i + 1] = own ? own.color : std ? (k.id === 'crop' ? '#eab308' : '#475569') : CLASS_COLORS[i % CLASS_COLORS.length]; });
     colorOf[classes.length + 1] = UNCERTAIN_COLOR;
-    const m = s.map;
+    // a map per season (long periods): selector above the map
+    const sm = s.season_maps || [];
+    if (S.job.mapSeason && !sm.some(z => z.season === S.job.mapSeason)) S.job.mapSeason = null;
+    $('#sat_res_season').remove();
+    if (sm.length) {
+        $('#sat_res_canvas').closest('.sat-result-map').before(`<div class="sat-segs" id="sat_res_season" style="margin-bottom:8px"><button type="button" class="sat-seg${!S.job.mapSeason ? ' on' : ''}" data-v="">Whole period</button>`
+            + sm.map(z => `<button type="button" class="sat-seg${S.job.mapSeason === z.season ? ' on' : ''}" data-v="${esc(z.season)}">${esc(z.label)}: ${fmt(z.crop_ha)} ha</button>`).join('') + '</div>');
+    }
+    const sel = sm.find(z => z.season === S.job.mapSeason);
+    const m = sel ? { ...s.map, rle: sel.rle } : s.map;
     const cv = document.getElementById('sat_res_canvas');
     if (m && cv) {
         cv.width = m.ncol; cv.height = m.nrow;
@@ -1952,6 +2234,7 @@ function renderResultMap(R, s) {
     $('#sat_res_areas').html('<table class="sat-mini-table"><thead><tr><th>Class</th><th class="num">ha</th><th class="num">%</th></tr></thead><tbody>'
         + classes.map((k, i) => { const h = ha(k) ? ha(k).ha : 0; return `<tr><td><span class="sat-swatch" style="display:inline-block;vertical-align:middle;background:${colorOf[i + 1]}"></span> ${esc(k.name)}${k.trained ? '' : ' <span class="text-warning">(no example)</span>'}</td><td class="num">${fmt(h)}</td><td class="num">${fmt(total ? 100 * h / total : 0)}</td></tr>`; }).join('')
         + `<tr><td><span class="sat-swatch" style="display:inline-block;vertical-align:middle;background:${UNCERTAIN_COLOR}"></span> ${std ? 'Uncertain (season not seen)' : `Uncertain (below ${fmt(cm.min_confidence, 0)}% of the votes)`}</td><td class="num">${fmt(s.uncertain_ha || 0)}</td><td class="num">${fmt(total ? 100 * (s.uncertain_ha || 0) / total : 0)}</td></tr>`
+        + (sm.length ? sm.map(z => `<tr><td style="padding-left:24px">${esc(z.label)}: ${esc(cm.standard ? cm.standard.crop : 'crop')}${z.sowing ? ` <span class="sat-muted sat-small">(sown ~${fmtDate(z.sowing.median)})</span>` : ''}</td><td class="num">${fmt(z.crop_ha)}</td><td class="num">${fmt(total ? 100 * z.crop_ha / total : 0)}</td></tr>`).join('') : '')
         + '</tbody></table>');
     const a = cm.accuracy;
     let acc = '';
@@ -1967,6 +2250,11 @@ function renderResultMap(R, s) {
             acc += '<div class="sat-muted sat-small" style="margin-top:6px">Accuracy not measured: no field of known maize to check against.</div>';
         }
     } else if (a) {
+        if (cm.comparison && cm.comparison.length > 1) {
+            acc += '<div class="sat-small" style="margin-bottom:6px"><b>Classifiers compared</b> (same folds by drawn area; best kappa used):</div><table class="sat-mini-table" style="margin-bottom:8px"><thead><tr><th>Model</th><th class="num">Accuracy</th><th class="num">Kappa</th><th class="num">s</th></tr></thead><tbody>'
+                + cm.comparison.map(z => z.failed ? `<tr><td>${esc(z.label)}</td><td colspan="3" class="sat-muted sat-small">could not be fitted</td></tr>`
+                    : `<tr${z.chosen ? ' style="background:var(--sat-accent-soft)"' : ''}><td>${z.chosen ? '<b>' : ''}${esc(z.label)}${z.chosen ? '</b> ✓' : ''}</td><td class="num">${fmt(100 * z.overall, 1)}%</td><td class="num">${fmt(z.kappa, 2)}</td><td class="num">${z.seconds}</td></tr>`).join('') + '</tbody></table>';
+        } else if (cm.model_label) acc += `<div class="sat-small" style="margin-bottom:6px"><b>Classifier:</b> ${esc(cm.model_label)}</div>`;
         const names = a.classes.map(id => (classes.find(k => k.id === id) || { name: id }).name);
         acc += `<div><b>Accuracy</b> ${fmt(100 * a.overall)}% · kappa ${fmt(a.kappa, 2)} <span class="sat-muted sat-small">(cross-validation, ${a.folds} folds by drawn area, ${a.pixels} pixels)</span></div>`
             + '<table class="sat-mini-table sat-cm" style="margin-top:6px"><thead><tr><th>drawn \\ mapped</th>' + names.map(n => `<th>${esc(n)}</th>`).join('') + '<th>right</th></tr></thead><tbody>'
@@ -1979,9 +2267,33 @@ function renderResultMap(R, s) {
     $('#sat_res_accuracy').html(acc);
 }
 
+const SEASON_LABEL = { season: 'season', other: "season outside the country's season windows" };
+/** The site's season names (summer, safrinha…) with the labels the run used. */
+function learnSeasonLabels(R) {
+    const Y = R.yield || {};
+    (Y.season_names || []).forEach((n, i) => { SEASON_LABEL[n] = (Y.season_labels || [])[i] || n; });
+    ((R.crop_map || {}).seasons || []).forEach(z => { SEASON_LABEL[z.id] = z.label || z.id; });
+}
+/** "main season 2025/26 · bare until 10 Nov · peak 12 Feb (0.88) · harvested between 2 and 14 Apr" */
+function seasonText(z) {
+    if (!z) return '';
+    const p = [`${SEASON_LABEL[z.label] || 'season'} ${z.year || ''}`];
+    p.push(z.started_before_period ? `green from ${fmtDate(z.green_from)} (sown before the period)` : `bare until ${fmtDate(z.bare_until)}`);
+    p.push(`peak ${fmtDate(z.peak_date)} (${fmt(z.peak, 2)})`);
+    p.push(!z.harvested ? `still green on ${fmtDate(z.last_green)}`
+        : z.end_type === 'dry-down' ? `dried down slowly (no sharp harvest) by ${fmtDate(z.bare_again)}`
+            : `harvested between ${fmtDate(z.last_green)} and ${fmtDate(z.bare_again)}`);
+    return p.join(' · ');
+}
+function seasonsCell(t) {
+    if (t.season) return `<span class="sat-small">${esc(seasonText(t.season))}</span>`;
+    if (t.seasons && t.seasons.length) return `<span class="sat-small sat-muted">${t.seasons.map(z => esc(seasonText(z))).join('<br>')}</span>`;
+    return '';
+}
+
 function renderResultIndex(R, s) {
     const Y = R.yield;
-    let h = `<div class="sat-small sat-muted">Relative yield index (no known yields): ${esc(Y.index_basis || 'season curve')} of each field, 100 = the average of the ${Y.n_indexed || 0} fields with enough clear dates · season ${fmtDate(Y.season.start)} – ${fmtDate(Y.season.end)}</div>`
+    let h = `<div class="sat-small sat-muted">Relative yield index (no known yields): ${esc(Y.index_basis || 'season curve')} of each field, 100 = the average of the fields of the same kind of season · ${Y.season_mode && Y.season_mode !== 'dates' ? `seasons found in each field's curve (${esc({ detected: 'all', main: 'main season', second: 'second crop' }[Y.season_mode])})` : `season ${fmtDate(Y.season.start)} – ${fmtDate(Y.season.end)}`}</div>`
         + (Y.references && Y.references.length
             ? '<div class="sat-warn" style="margin-top:8px"><b>Approximate kg/ha, not a calibration.</b> The regional average yield below is scaled by each field\'s season curve, assuming your fields average like the region. Good, irrigated or trial fields can be far above it; the error cannot be measured without fields of known yield.</div>'
                 + '<table class="sat-mini-table" style="margin:6px 0 10px"><thead><tr><th>Reference</th><th>Area</th><th class="num">kg/ha</th><th>Years</th><th>Used for</th></tr></thead><tbody>'
@@ -1993,9 +2305,11 @@ function renderResultIndex(R, s) {
     if (!ts.length) h += '<div class="sat-muted sat-small">No field to estimate here.</div>';
     else {
         const est = ts.some(t => t.estimate !== undefined && t.estimate !== null);
-        h += `<div style="max-height:380px;overflow:auto"><table class="sat-mini-table"><thead><tr><th class="num">Rank</th><th>Field</th><th>From</th><th class="num">ha</th><th class="num">Clear dates</th><th class="num">NDVI peak</th><th class="num">Index</th>${est ? '<th class="num">≈ kg/ha</th>' : ''}<th></th></tr></thead><tbody>`
-            + ts.map(t => `<tr><td class="num">${t.rank ?? '–'}</td><td>${esc(t.name)}</td><td class="sat-muted">${t.source === 'map' ? 'crop map' : 'drawn'}</td><td class="num">${fmt(t.area_ha, 2)}</td><td class="num">${t.n_dates}</td>`
+        const share = ts.some(t => t.map_crop_share !== undefined && t.map_crop_share !== null);
+        h += `<div style="max-height:420px;overflow:auto"><table class="sat-mini-table"><thead><tr><th class="num">Rank</th><th>Field</th><th>Season</th><th>From</th><th class="num">ha</th><th class="num">Clear dates</th><th class="num">NDVI peak</th><th class="num">Index</th>${share ? `<th class="num">${esc(cropLabel())} on the map</th>` : ''}${est ? '<th class="num">≈ kg/ha</th>' : ''}<th></th></tr></thead><tbody>`
+            + ts.map(t => `<tr><td class="num">${t.rank ?? '–'}</td><td>${esc(t.field || t.name)}</td><td>${seasonsCell(t)}</td><td class="sat-muted">${t.source === 'map' ? 'found by the map' : 'your field'}</td><td class="num">${fmt(t.area_ha, 2)}</td><td class="num">${t.n_dates}</td>`
                 + `<td class="num">${fmt(t.ndvi_max, 2)}</td><td class="num"><b>${t.index !== null && t.index !== undefined ? fmt(t.index, 0) : '–'}</b></td>`
+                + (share ? `<td class="num">${t.map_crop_share !== undefined && t.map_crop_share !== null ? `${fmt(100 * t.map_crop_share, 0)}%` : ''}</td>` : '')
                 + (est ? `<td class="num">${t.estimate !== undefined && t.estimate !== null ? `≈ ${fmt(t.estimate, 0)}` : '–'}</td>` : '')
                 + `<td class="sat-small sat-muted">${esc(t.reason || '')}</td></tr>`).join('')
             + '</tbody></table></div>';
@@ -2018,10 +2332,16 @@ function renderResultIndex(R, s) {
 function renderResultYield(R, s) {
     if (R.yield.mode === 'index') { renderResultIndex(R, s); return; }
     const Y = R.yield, u = Y.unit ? ` (${esc(Y.unit)})` : '';
-    let h = `<div class="sat-small sat-muted">${esc(Y.trait || 'Yield')} · season of the fields estimated ${fmtDate(Y.season.start)} – ${fmtDate(Y.season.end)} · ${esc({ linear: 'linear regression', lasso: 'lasso', random_forest: 'random forest' }[Y.model] || Y.model)} on ${(Y.predictor_labels || []).map(esc).join(' + ')}</div>`;
+    let h = `<div class="sat-small sat-muted">${esc(String(Y.trait || 'Yield').replace(/\|[^|]*$/, ''))} · ${esc(YIELD_MODEL_LABELS[Y.model] || Y.model)} on ${(Y.predictor_labels || []).map(esc).join(' + ')}${Y.metrics && Y.metrics.cv ? ` · validated ${esc(Y.metrics.cv)}` : ''}</div>`;
+    if (Y.comparison && Y.comparison.length > 1) {
+        h += '<details style="margin-top:6px" open><summary class="sat-small"><b>Models compared</b> — ' + esc((Y.selection || {}).rule || '') + '</summary><table class="sat-mini-table" style="margin-top:4px"><thead><tr><th>Model</th><th class="num">R²</th><th class="num">RMSE</th><th class="num">MAE</th><th class="num">Bias</th><th></th></tr></thead><tbody>'
+            + Y.comparison.map(z => z.failed ? `<tr><td>${esc(z.label)}</td><td colspan="5" class="sat-muted sat-small">could not be fitted</td></tr>`
+                : `<tr${z.chosen ? ' style="background:var(--sat-accent-soft)"' : ''}><td>${z.chosen ? '<b>' : ''}${esc(z.label)}${z.chosen ? '</b> ✓' : ''}</td><td class="num">${fmt(z.r2, 2)}</td><td class="num">${fmt(z.rmse, 1)}</td><td class="num">${fmt(z.mae, 1)}</td><td class="num">${fmt(z.bias, 1)}</td><td></td></tr>`).join('')
+            + '</tbody></table></details>';
+    }
     if (Y.metrics) {
         const m = Y.metrics;
-        h += `<div class="sat-stats" style="margin:10px 0"><div class="sat-stat"><div class="v">${fmt(m.r2, 2)}</div><div class="l">R² (leave one field out)</div></div>`
+        h += `<div class="sat-stats" style="margin:10px 0"><div class="sat-stat"><div class="v">${fmt(m.r2, 2)}</div><div class="l">R² (${esc(m.cv || 'cross-validation')})</div></div>`
             + `<div class="sat-stat"><div class="v">${fmt(m.rmse)}</div><div class="l">error RMSE${u}</div></div><div class="sat-stat"><div class="v">${fmt(m.mae)}</div><div class="l">mean abs. error</div></div>`
             + `<div class="sat-stat"><div class="v">${m.n}</div><div class="l">calibration fields</div></div></div>`;
         if (m.r2 < 0.3) h += `<div class="sat-warn">The satellite curve explains little of the yield differences between these calibration fields (R² ${fmt(m.r2, 2)}): treat the estimates as rough.</div>`;
@@ -2038,7 +2358,7 @@ function renderResultYield(R, s) {
     if (!ts.length) h += '<div class="sat-muted sat-small">No field to estimate here.</div>';
     else {
         h += `<div style="max-height:360px;overflow:auto"><table class="sat-mini-table"><thead><tr><th>Field</th><th>From</th><th class="num">ha</th><th class="num">Clear dates</th><th class="num">NDVI peak</th><th class="num">NDVI area</th>${Y.metrics ? `<th class="num">Yield${u}</th><th class="num">${fmt(Y.level * 100, 0)}% interval</th>` : ''}<th></th></tr></thead><tbody>`
-            + ts.map(t => `<tr><td>${esc(t.name)}</td><td class="sat-muted">${t.source === 'map' ? 'crop map' : 'drawn'}</td><td class="num">${fmt(t.area_ha, 2)}</td><td class="num">${t.n_dates}</td><td class="num">${fmt(t.ndvi_max, 2)}</td><td class="num">${fmt(t.ndvi_auc, 0)}</td>`
+            + ts.map(t => `<tr><td>${esc(t.field || t.name)}${t.map_crop_share !== undefined && t.map_crop_share !== null ? `<br><span class="sat-small sat-muted">${fmt(100 * t.map_crop_share, 0)}% ${esc(cropLabel())} on the map</span>` : ''}${t.season || (t.seasons && t.seasons.length) ? `<br>${seasonsCell(t)}` : ''}</td><td class="sat-muted">${t.source === 'map' ? 'found by the map' : 'your field'}</td><td class="num">${fmt(t.area_ha, 2)}</td><td class="num">${t.n_dates}</td><td class="num">${fmt(t.ndvi_max, 2)}</td><td class="num">${fmt(t.ndvi_auc, 0)}</td>`
                 + (Y.metrics ? `<td class="num"><b>${fmt(t.estimate)}</b></td><td class="num sat-muted">${t.lower !== undefined ? `${fmt(t.lower)} – ${fmt(t.upper)}` : ''}</td>` : '')
                 + `<td class="sat-small">${t.extrapolation ? '<span class="text-warning" title="Its season curve is outside the range of the calibration fields">outside calibration</span>' : esc(t.reason || '')}</td></tr>`).join('')
             + '</tbody></table></div>';
@@ -2059,6 +2379,12 @@ function renderResultYield(R, s) {
             + cal.map(c => `<tr><td>${esc(c.name)}</td><td class="sat-muted">${c.source === 'trial' ? 'trial' : 'drawn'}</td><td class="sat-small">${esc(c.start)} – ${esc(c.end)}</td><td class="num">${fmt(c.observed)}</td><td class="num">${c.loo !== null && c.loo !== undefined ? fmt(c.loo) : ''}</td><td class="num">${c.n_dates}</td><td class="sat-small text-warning">${esc(c.reason || '')}</td></tr>`).join('')
             + '</tbody></table></details>';
     }
+    if (R.can_save_model) {
+        h += R.saved_model_entry
+            ? `<div class="sat-small text-success" style="margin-top:10px">Saved as the model "<b>${esc(R.saved_model_entry.name)}</b>": choose it next time with "Use a saved model".</div>`
+            : '<div style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="sat_save_model">Save this trained model</button> <span class="sat-small sat-muted">to estimate other fields later without calibrating again (stored as a Breedbase analysis model).</span></div>';
+    }
+    if (Y.saved_model) h = `<div class="sat-small" style="margin-bottom:6px">Estimated with the saved model "<b>${esc(Y.saved_model.name || '')}</b>" (trained ${esc(String(Y.saved_model.created || '').slice(0, 10))} on ${Y.saved_model.n || '?'} fields).</div>` + h;
     $('#sat_res_yield').html(h);
     $('#sat_res_csv').attr('href', R.fields_file ? fileUrl('fields.csv') : '#').toggle(!!R.fields_file);
     if (Y.metrics) drawYieldPlot(cal.filter(c => c.used && c.loo !== null && c.loo !== undefined), u);
@@ -2116,7 +2442,6 @@ $(async function () {
     $('#sat_draw_box').on('click', '#sat_draw_finish', finishDraw);
     $('#sat_draw_box').on('click', '#sat_draw_cancel', cancelDraw);
     $('#sat_draw_box').on('click', '#sat_draw_undo', () => { S.draw.pts.pop(); renderDrawBox(); drawMap(false); });
-    $('#sat_draw_box').on('click', '#sat_fields_save', saveFarmFields);
     $('#sat_draw_box').on('click', '#sat_trial_save', () => saveTrialField(false));
     $('#sat_draw_box').on('click', '#sat_trial_remove', () => { if (confirm(`Remove the field saved with ${S.trial.name}?`)) saveTrialField(true); });
     $('#sat_draw_box').on('click', '.sat-field-del', function () {
@@ -2145,7 +2470,7 @@ $(async function () {
     });
     window.addEventListener('beforeunload', ev => {
         saveSite();
-        if (S.sites.some(st => st.fieldsDirty || st.trialDirty)) { ev.preventDefault(); ev.returnValue = ''; }
+        if (S.sites.some(st => st.trialDirty)) { ev.preventDefault(); ev.returnValue = ''; }
     });
     $('#sat_stepper').on('click', 'li', function () { goStep(+$(this).data('step')); });
     $('.sat-app').on('click', '.sat-next', function () { goStep(+$(this).data('to')); });
@@ -2168,7 +2493,16 @@ $(async function () {
         if (S.scenes.length && S.step === 4) renderImages();
     });
     $('#sat_trial').on('change', function () { chooseTrial($(this).val()); });
-    $('#sat_start, #sat_end').on('change', () => { S.start = $('#sat_start').val(); S.end = $('#sat_end').val(); S.preset = null; S.datesTouched = true; renderControls(); });
+    $('#sat_start, #sat_end').on('change', () => {
+        S.start = $('#sat_start').val(); S.end = $('#sat_end').val(); S.preset = null; S.datesTouched = true;
+        renderControls();
+        if (S.start && S.end && S.start <= S.end) datesChanged(false);   // loaded by the Load images button
+    });
+    $('#sat_load').on('click', () => {
+        S.start = $('#sat_start').val(); S.end = $('#sat_end').val();
+        if (!S.start || !S.end || S.start > S.end) { alert('Choose a start date before the end date.'); return; }
+        datesChanged(true);
+    });
     $('#sat_go').on('click', () => goStep(4));
     // step 5
     $('#sat_models').on('click', '.sat-option', function (ev) {
@@ -2182,7 +2516,6 @@ $(async function () {
     });
     $('#sat_crop').on('change', function () {
         S.crop = $(this).val();
-        S.calibTrials = new Set([...S.calibTrials].filter(id => trialStatus(id).ok));
         renderModel();
     });
     $('#sat_crop_other').on('input', function () { S.cropOther = $(this).val(); renderModel(); $('#sat_crop_other').focus(); });
@@ -2202,32 +2535,22 @@ $(async function () {
         if (!name || S.classes.some((k, j) => j !== i && k.name.toLowerCase() === name.toLowerCase())) { $(this).val(S.classes[i].name); return; }
         S.classes[i].name = name; renderReady(); drawModelMap(false);
     });
-    $('#sat_yield_box').on('change', '#sat_yield_trait', function () {
-        const t = yieldTraits().find(x => String(x.id) === $(this).val());
-        S.yieldTrait = t ? { id: t.id, name: t.name } : null;
-        const m = S.yieldTrait && /\(([^)]+)\)|\b(kg\/ha|t\/ha|g\/plot|kg\/plot)\b/i.exec(S.yieldTrait.name);
-        if (m && !S.yieldUnit) S.yieldUnit = m[1] || m[2];
-        renderModel();
-    });
     $('#sat_yield_box').on('input', '#sat_yield_unit', function () { S.yieldUnit = $(this).val(); });
     $('#sat_yield_box').on('change', '#sat_yield_unit', () => renderModel());
     $('#sat_yield_box').on('change', '#sat_yield_perha', function () { S.perHa = $(this).prop('checked'); renderModel(); });
-    $('#sat_yield_box').on('change', '.sat-calib-trial', function () {
-        const id = +$(this).data('id');
-        if ($(this).prop('checked')) S.calibTrials.add(id); else S.calibTrials.delete(id);
-        renderModel();
-    });
     $('#sat_yield_box').on('click', '#sat_draw_calib', () => startDraw('calib', 'model'));
+    $('#sat_yield_box').on('change', '#sat_saved', function () { S.savedModelId = $(this).val() || null; renderModel(); });
     $('#sat_yield_box').on('change', '#sat_ref_on', function () { S.useReference = $(this).prop('checked'); renderModel(); });
-    $('#sat_yield_mode').on('click', '.sat-option', function (ev) { ev.preventDefault(); S.yieldMode = $(this).data('v'); renderModel(); drawModelMap(false); });
+    $('#sat_yield_mode').on('click', '.sat-option', function (ev) {
+        ev.preventDefault();
+        S.yieldMode = $(this).data('v');
+        S.yieldModeAuto = false;
+        if (S.yieldMode === 'saved') S.savedModels = null;   // a model may have been trained in another tab
+        renderModel(); drawModelMap(false);
+    });
     $('#sat_ready').on('click', '.sat-go', function (ev) {
         ev.preventDefault();
-        if ($(this).data('go') === 'year') {
-            S.datesTouched = true;
-            setPreset('12m');
-            renderModel();
-            return;
-        }
+        if ($(this).data('go') === 'year') { S.datesTouched = true; setPreset('12m'); datesChanged(false); renderModel(); return; }
         if ($(this).data('go') === 'calib') {
             const el = document.getElementById('sat_calib_anchor');
             if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); $('#sat_calib_box').addClass('sat-flash'); setTimeout(() => $('#sat_calib_box').removeClass('sat-flash'), 1600); }
@@ -2236,6 +2559,7 @@ $(async function () {
     $('#sat_yield_box').on('click', '#sat_draw_target', () => startDraw('target', 'model'));
     $('#sat_map_method').on('click', '.sat-option', function (ev) { ev.preventDefault(); S.mapMethod = $(this).data('v'); if (S.draw.active) endDraw(); renderModel(); drawModelMap(false); });
     $('#sat_classes_box').on('change', '#sat_use_step2_labels', function () { S.useStep2Labels = $(this).prop('checked'); renderModel(); drawModelMap(false); });
+    $('#sat_yield_box').on('change', '#sat_map_areas', function () { S.mapAreas = $(this).prop('checked'); renderModel(); });
     $('#sat_yield_box').on('change', '#sat_use_step2', function () { S.useStep2 = $(this).prop('checked'); renderModel(); drawModelMap(false); });
     $('#sat_yield_box').on('input change', '.sat-calib-in', function () {
         const i = +$(this).data('i'), k = $(this).data('k');
@@ -2262,9 +2586,44 @@ $(async function () {
     });
     $('#sat_adv_reset').on('click', () => { S.settings = {}; renderAdvanced(); renderModel(); });
     $('#sat_run').on('click', startRun);
+    $('#sat_full_report').on('click', () => {
+        // everything that applies to the area: crop map, yield with seasons (calibrated if fields of known yield exist), plot indices
+        const plots = allSites().some(st => st.field && st.field.kind === 'plots');
+        S.models = { crop_map: true, yield: true, indices: plots };
+        if (isMaize()) S.mapMethod = 'standard';
+        S.seasonMode = 'detected';
+        S.yieldMode = calibCount() >= +setting('min_fields') ? 'calibrated' : S.savedModelId ? 'saved' : 'index';
+        S.yieldModeAuto = false;
+        if (S.yieldMode === 'index') S.useReference = true;
+        loadTrialInfo();
+        renderModel(); drawModelMap(false);
+        $('#sat_ready')[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    $('#sat_report_print').on('click', () => window.print());
+    $('#sat_report_html').on('click', downloadReport);
+    $('#sat_ana_start5, #sat_ana_end5').on('change', function () {
+        S.ana = { start: $('#sat_ana_start5').val(), end: $('#sat_ana_end5').val() };
+        S.anaPreset = null;
+        renderAna();
+    });
+    $('.sat-app').on('click', '.sat-run-open', function () { openRun(String($(this).data('id'))); });
+    $('.sat-app').on('click', '.sat-runs-refresh', () => { S.runsList = null; renderRuns(); loadRuns(); });
     // step 6
     $('#sat_results').on('click', '.sat-res-tabs .sat-site', function () { S.job.site = +$(this).data('i'); renderResults(); });
     $('#sat_results').on('click', '.sat-save-ind', function () { saveIndices(+$(this).data('trial'), this); });
+    $('#sat_results').on('click', '#sat_save_model', async function () {
+        const R = S.job.results;
+        const name = (prompt('Name of the model:', `${cropLabelOf(R)} ${String((R.yield || {}).trait || 'yield').replace(/\|[^|]*$/, '')} ${(R.dates || {}).end || ''}`) || '').trim();
+        if (!name) return;
+        $(this).prop('disabled', true).text('Saving…');
+        try {
+            const r = await postJSON('save_model', { run_id: S.job.runId, name, description: '' });
+            R.saved_model_entry = { id: r.model_id, name: r.name };
+            S.savedModels = null;   // reload the list next time
+            renderResults();
+        } catch (err) { alert(err.message); $(this).prop('disabled', false).text('Save this trained model'); }
+    });
+    $('#sat_results').on('click', '#sat_res_season .sat-seg', function () { S.job.mapSeason = String($(this).data('v')) || null; renderResults(); });
     $('#sat_grid').on('click', '.sat-tile', function () { showBig(+$(this).data('i')); });
     $('#sat_grid').on('click', '.sat-hide, .sat-unhide', function (ev) {
         ev.stopPropagation();
@@ -2300,7 +2659,10 @@ $(async function () {
     renderControls();
     getJSON('crops').then(r => {
         S.crops = r.crops || [];
-        if (!S.crop && S.crops.length) S.crop = S.crops[0].species;
+        S.seasonNames = r.seasons || [];
+        S.seasonCountries = r.season_countries || [];
+        // the site's species (sgn.conf preferred_species), else the one with most accessions
+        if (!S.crop) S.crop = r.preferred && S.crops.some(c => c.species === r.preferred) ? r.preferred : (S.crops[0] || {}).species || '';
         if (S.step === 5) renderModel();
     }).catch(() => { /* the crop can still be typed */ });
     // a run to show (link from the jobs list): ?run=sat_...

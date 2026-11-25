@@ -1,0 +1,43 @@
+{
+  "description": "Named crop seasons of the satellite page, PER COUNTRY: a location uses them only when its country (Breedbase location country) is listed here; the names are those of sgn.conf available_seasons. A field's season is named by the window its sowing falls in (month-day, a window may cross the new year); with a period of 300 days or more the maize map of such a location is also made per season. Elsewhere (other countries, the other hemisphere, no country) seasons are found in each field's curve but only numbered, with no calendar assumption. Add a country with its own windows when needed.",
+  "countries": {
+    "Brazil": {
+      "source": "Typical national windows of maize in Brazil after the Conab planting and harvest calendar (Calendario de Plantio e Colheita de Graos no Brasil): 1st crop (summer) sown August-December, harvested January-June; 2nd crop (safrinha) sown January-April after the summer soybean, harvested May-September; 3rd / winter crop sown April-July. State calendars differ by a few weeks.",
+      "seasons": {
+        "summer": {
+          "label": "Summer (1st crop)",
+          "sow": [
+            "08-01",
+            "12-31"
+          ],
+          "harvest": [
+            "01-01",
+            "06-30"
+          ]
+        },
+        "safrinha": {
+          "label": "Safrinha (2nd crop)",
+          "sow": [
+            "01-01",
+            "04-30"
+          ],
+          "harvest": [
+            "05-01",
+            "09-30"
+          ]
+        },
+        "winter": {
+          "label": "Winter (3rd crop)",
+          "sow": [
+            "05-01",
+            "07-31"
+          ],
+          "harvest": [
+            "08-01",
+            "12-31"
+          ]
+        }
+      }
+    }
+  }
+}

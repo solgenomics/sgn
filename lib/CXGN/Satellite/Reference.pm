@@ -171,6 +171,132 @@ sub _sidra {
     return { name => $name, years => \%years };
 }
 
+=head2 brazil_states
+
+[ { code => 31, uf => 'MG', name => 'Minas Gerais' }, ... ]
+
+=cut
+
+my @UF = (
+    [ 11, 'RO', 'Rondonia' ], [ 12, 'AC', 'Acre' ], [ 13, 'AM', 'Amazonas' ], [ 14, 'RR', 'Roraima' ], [ 15, 'PA', 'Para' ], [ 16, 'AP', 'Amapa' ],
+    [ 17, 'TO', 'Tocantins' ], [ 21, 'MA', 'Maranhao' ], [ 22, 'PI', 'Piaui' ], [ 23, 'CE', 'Ceara' ], [ 24, 'RN', 'Rio Grande do Norte' ],
+    [ 25, 'PB', 'Paraiba' ], [ 26, 'PE', 'Pernambuco' ], [ 27, 'AL', 'Alagoas' ], [ 28, 'SE', 'Sergipe' ], [ 29, 'BA', 'Bahia' ],
+    [ 31, 'MG', 'Minas Gerais' ], [ 32, 'ES', 'Espirito Santo' ], [ 33, 'RJ', 'Rio de Janeiro' ], [ 35, 'SP', 'Sao Paulo' ], [ 41, 'PR', 'Parana' ],
+    [ 42, 'SC', 'Santa Catarina' ], [ 43, 'RS', 'Rio Grande do Sul' ], [ 50, 'MS', 'Mato Grosso do Sul' ], [ 51, 'MT', 'Mato Grosso' ],
+    [ 52, 'GO', 'Goias' ], [ 53, 'DF', 'Distrito Federal' ],
+);
+my %UF = map { $_->[0] => $_ } @UF;
+
+sub brazil_states { return [ map { { code => $_->[0], uf => $_->[1], name => $_->[2] } } @UF ] }
+
+# the municipalities of a state (IBGE mesh): { code => GeoJSON geometry }
+sub _municipalities {
+    my ($self, $uf) = @_;
+    my $muns = decode_json($self->_get_cached($self->ibge_mesh_url . "/estados/$uf?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=intermediaria", "br_mun_$uf.json", 365));
+    return { map { $_->{properties}{codarea} => $_->{geometry} } @{ $muns->{features} || [] } };
+}
+
+# area in km2 of the outer rings of a geometry (local plane)
+sub _area_km2 {
+    my $geom = shift;
+    my @polys = $geom->{type} eq 'Polygon' ? ($geom->{coordinates}) : $geom->{type} eq 'MultiPolygon' ? @{ $geom->{coordinates} } : ();
+    my $a = 0;
+    foreach my $poly (@polys) {
+        my $ring = $poly->[0];
+        my $k = cos(($ring->[0][1] // 0) * 3.14159265358979 / 180) * 111.32;
+        my $s = 0;
+        for (my ($i, $j) = (0, $#$ring); $i <= $#$ring; $j = $i++) {
+            $s += ($ring->[$j][0] * $k) * ($ring->[$i][1] * 110.574) - ($ring->[$i][0] * $k) * ($ring->[$j][1] * 110.574);
+        }
+        $a += abs($s) / 2;
+    }
+    return $a;
+}
+
+=head2 regional_yields
+
+Args: { species, uf_codes => [ 31, 52 ], years => [ 2023, 2024 ] }. The IBGE
+PAM yield of every municipality of the states that grew the crop in those
+years: { crop, table, seasons (1 when split by crop season), rows => [ {
+mun_code, name, uf, year, season, planted_ha, yield, area_km2, share } ] }
+(share = planted area / municipality area, the most first) or { error }.
+Maize is split by crop season (table 839: 1st crop = summer, 2nd crop =
+safrinha); other crops have one value per year (table 1612, season 'year').
+
+=cut
+
+sub regional_yields {
+    my ($self, $args) = @_;
+    my $crop = $self->crop($args->{species}) or return { error => 'IBGE has no yield statistics for this crop.' };
+    my @ufs = grep { $UF{$_} } map { $_ + 0 } grep { /^\d+$/ } @{ $args->{uf_codes} || [] };
+    my @years = sort { $a <=> $b } grep { /^(19|20)\d\d$/ } @{ $args->{years} || [] };
+    return { error => 'Choose at least one state.' } if !@ufs;
+    return { error => 'Choose at least one year.' } if !@years;
+    my $maize = $crop->{name} eq 'maize';
+    my ($table, %season) = $maize ? (839, 114253 => 'summer', 114254 => 'safrinha') : (1612, $crop->{ibge} => 'year');
+    my $url = $self->sidra_url . "/t/$table/n6/in%20n3%20" . join(',', sort { $a <=> $b } @ufs) . '/v/109,112/p/' . join(',', @years) . '/c81/' . join(',', sort keys %season);
+    my $name = "sidra_t${table}_" . join('-', sort { $a <=> $b } @ufs) . '_' . join('-', @years) . '_' . join('-', sort keys %season) . '.json';
+    my $data = try { decode_json($self->_get_cached($url, $name, 30)) } catch { return { error => "IBGE SIDRA: $_" } };
+    return $data if ref $data eq 'HASH';
+    my %rows;
+    foreach my $r (@{ $data }[ 1 .. $#$data ]) {
+        my $v = $r->{V} // '';
+        next if $v !~ /^\d+(\.\d+)?$/ || $v == 0;
+        my $k = join('|', $r->{D1C}, $r->{D3N}, $r->{D4C});
+        $rows{$k} //= { mun_code => $r->{D1C} + 0, name => $r->{D1N}, year => $r->{D3N} + 0, season => $season{ $r->{D4C} } // 'year' };
+        $rows{$k}{ $r->{D2C} eq '109' ? 'planted_ha' : 'yield' } = $v + 0;
+    }
+    my %area;
+    foreach my $uf (@ufs) {
+        my $muns = try { $self->_municipalities($uf) } || {};
+        $area{$_} = _area_km2($muns->{$_}) for keys %$muns;
+    }
+    my @out;
+    foreach my $r (values %rows) {
+        next if !$r->{yield} || !$r->{planted_ha};
+        $r->{uf} = $UF{ int($r->{mun_code} / 100000) }[1] // '';
+        $r->{area_km2} = $area{ $r->{mun_code} } // undef;
+        $r->{share} = $r->{area_km2} ? $r->{planted_ha} / ($r->{area_km2} * 100) : undef;
+        $r->{mun_code} = $r->{mun_code} + 0;
+        push @out, $r;
+    }
+    @out = sort { ($b->{share} // 0) <=> ($a->{share} // 0) || $a->{name} cmp $b->{name} || $a->{year} <=> $b->{year} || $a->{season} cmp $b->{season} } @out;
+    return { crop => $crop->{name}, table => $table, seasons => ($maize ? 1 : 0), rows => \@out,
+             url => "https://sidra.ibge.gov.br/tabela/$table",
+             citation => $maize ? 'IBGE - Producao Agricola Municipal (PAM), table 839, maize 1st and 2nd crop, average yield (kg/ha)'
+                                : 'IBGE - Producao Agricola Municipal (PAM), table 1612, average yield (kg/ha)' };
+}
+
+=head2 sample_squares
+
+Args: municipality code, number of squares, square size (m), seed. Centres [
+[ lon, lat ], ... ] of squares lying inside the municipality (centre and
+corners), drawn at random (the same for the same seed); fewer when the
+municipality is too small or too irregular.
+
+=cut
+
+sub sample_squares {
+    my ($self, $mun_code, $n, $size_m, $seed) = @_;
+    my $geom = $self->_municipalities(int($mun_code / 100000))->{$mun_code} or return [];
+    my @polys = $geom->{type} eq 'Polygon' ? ($geom->{coordinates}) : @{ $geom->{coordinates} };
+    my @pts = map { @{ $_->[0] } } @polys;
+    my ($x0, $x1) = (sort { $a <=> $b } map { $_->[0] } @pts)[0, -1];
+    my ($y0, $y1) = (sort { $a <=> $b } map { $_->[1] } @pts)[0, -1];
+    srand($seed // 1);
+    my @out;
+    for (my $try = 0; $try < 400 && @out < $n; $try++) {
+        my ($x, $y) = ($x0 + rand($x1 - $x0), $y0 + rand($y1 - $y0));
+        my $dy = $size_m / 2 / 110574;
+        my $dx = $size_m / 2 / (111320 * cos($y * 3.14159265358979 / 180));
+        next if grep { !_inside($_->[0], $_->[1], $geom) } ([ $x, $y ], [ $x - $dx, $y - $dy ], [ $x + $dx, $y - $dy ], [ $x - $dx, $y + $dy ], [ $x + $dx, $y + $dy ]);
+        # not overlapping a square already drawn
+        next if grep { abs($_->[0] - $x) < 2 * $dx && abs($_->[1] - $y) < 2 * $dy } @out;
+        push @out, [ sprintf('%.6f', $x) + 0, sprintf('%.6f', $y) + 0 ];
+    }
+    return \@out;
+}
+
 =head2 faostat_prepare
 
 Downloads the FAOSTAT bulk file and keeps the yields of the known crops in

@@ -26,6 +26,9 @@ the map when its plots have no GPS coordinates (GeoJSON Polygon).
 
 =item satellite_analysis (job_type): the background job of the page models.
 
+=item satellite_yield_model (protocol_type): a trained yield model saved from a
+run (Breedbase analysis model), used again without calibrating.
+
 =item satellite NDVI, satellite NDRE, satellite EVI: vegetation indices of the
 plots measured from Sentinel-2 images (10 m), repeated over the season
 (trait_repeat_type time_series, one value per image date).
@@ -55,7 +58,7 @@ use Try::Tiny;
 extends 'CXGN::Metadata::Dbpatch';
 
 has '+description' => ( default => <<'' );
-Adds the satellite page terms: location_fields_geo_json (farm fields), trial_field_geo_json (trial field outline), the satellite_analysis job type and the satellite NDVI / NDRE / EVI time-series traits
+Adds the satellite page terms: location_fields_geo_json (farm fields), trial_field_geo_json (trial field outline), the satellite_analysis job type, the satellite_yield_model model type and the satellite NDVI / NDRE / EVI time-series traits
 
 has '+prereq' => ( default => sub { [] } );
 
@@ -77,7 +80,7 @@ sub patch {
 
     my $schema = Bio::Chado::Schema->connect(sub { $self->dbh->clone });
     my $coderef = sub {
-        foreach my $t ([ 'location_fields_geo_json', 'nd_geolocation_property' ], [ 'trial_field_geo_json', 'project_property' ], [ 'satellite_analysis', 'job_type' ]) {
+        foreach my $t ([ 'location_fields_geo_json', 'nd_geolocation_property' ], [ 'trial_field_geo_json', 'project_property' ], [ 'satellite_analysis', 'job_type' ], [ 'satellite_yield_model', 'protocol_type' ]) {
             print STDOUT "\ncvterm $t->[0] ($t->[1])\n";
             $schema->resultset('Cv::Cvterm')->create_with({ name => $t->[0], cv => $t->[1] });
         }

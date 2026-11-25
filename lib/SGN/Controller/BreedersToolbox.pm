@@ -206,6 +206,16 @@ sub satellite :Path('/breeders/satellite') :Args(0) {
     $c->stash->{template} = '/breeders_toolbox/satellite.mas';
 }
 
+sub satellite_train :Path('/breeders/satellite/train') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{template} = '/breeders_toolbox/satellite_train.mas';
+}
+
 sub index :Path('/breeders/meeting') :Args(0) {
   my $self = shift;
   my $c = shift;

@@ -4,7 +4,6 @@
     <li><a href="/breeders/manage_roles/">User Roles</a></li>
     <li><a href="/breeders/manage_programs/">Breeding Programs</a></li>
     <li><a href="/breeders/locations">Locations</a></li>
-    <li><a href="/breeders/satellite">Satellite Images</a></li>
     <li><a href="/tools/report/">Report Factory</a></li>
     <li><a href="/breeders/meeting/">Decision Meetings</a></li>
 

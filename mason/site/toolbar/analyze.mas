@@ -25,6 +25,8 @@
     <li><a href="/tools/boxplotter">BoxPlotter Tool</a></li>
     <li><a href="/tools/solgwas">GWAS</a></li>
     <li><a href="/tools/image_analysis">Image Analysis</a></li>
+    <li><a href="/breeders/satellite/train">Satellite Imagery Training</a></li>
+    <li><a href="/breeders/satellite">Satellite Imagery Analysis</a></li>
 
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Sequence Analysis</li>

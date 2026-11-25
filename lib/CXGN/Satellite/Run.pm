@@ -39,7 +39,7 @@ has 'schema' => (isa => 'Bio::Chado::Schema', is => 'rw', required => 1);
 
 my $NUM = qr/^-?\d+(\.\d+)?([eE][-+]?\d+)?$/;
 my %LIMITS = (
-    sites => 20, labels => 400, targets => 300, calibration => 300, classes => 12, plots => 5000,
+    sites => 20, labels => 400, targets => 300, calibration => 300, classes => 12, plots => 5000, regions => 150,
 );
 # setting => [ default, min, max ] (numbers) or [ default, [ allowed ] ] / bool
 my %SETTINGS = (
@@ -55,9 +55,17 @@ my %SETTINGS = (
     min_fields => [ 8, 5, 100 ],
     level => [ 90, 50, 99 ],
     season_days => [ 150, 60, 365 ],
+    # training: square around a trial's location point when the trial has no field of its own,
+    # NDVI peak below which that square is not a crop field (town, water), regional samples
+    location_field_m => [ 200, 50, 1000 ],
+    location_min_peak => [ 0.6, 0.3, 0.9 ],
+    samples_per_region => [ 3, 1, 10 ],
+    sample_size_m => [ 2000, 500, 5000 ],
+    min_crop_ha => [ 2, 0.5, 100 ],
 );
 my %BOOL = (smooth => 1, balance => 1);
-my @MODELS = qw(linear lasso random_forest);
+my @MODELS = qw(auto linear1 linear ridge pls elastic_net lasso gam mixed mars random_forest svm);
+my @MAP_MODELS = qw(auto random_forest svm nnet tree);
 my @PREDICTORS = qw(ndvi_auc ndvi_max ndre_max peak_day);
 
 =head2 settings
@@ -81,7 +89,8 @@ sub settings {
     foreach my $k (keys %BOOL) {
         $out{$k} = defined $in->{$k} ? ($in->{$k} && $in->{$k} ne 'false' ? JSON::true : JSON::false) : ($BOOL{$k} ? JSON::true : JSON::false);
     }
-    $out{yield_model} = (grep { ($in->{yield_model} // '') eq $_ } @MODELS) ? $in->{yield_model} : 'linear';
+    $out{yield_model} = (grep { ($in->{yield_model} // '') eq $_ } @MODELS) ? $in->{yield_model} : 'auto';
+    $out{map_model} = (grep { ($in->{map_model} // '') eq $_ } @MAP_MODELS) ? $in->{map_model} : 'auto';
     my %p = map { $_ => 1 } grep { defined } (ref $in->{predictors} eq 'ARRAY' ? @{ $in->{predictors} } : ());
     my @pred = grep { $p{$_} } @PREDICTORS;
     $out{predictors} = @pred ? \@pred : [ 'ndvi_auc', 'ndre_max' ];
@@ -215,31 +224,170 @@ sub trial_info {
     return \@out;
 }
 
+=head2 trial_location
+
+Trial id -> { id, name, lat, lon } of its location (lat / lon undef when the
+location has none), or undef.
+
+=cut
+
+sub trial_location {
+    my ($self, $trial_id) = @_;
+    my ($id, $name, $lat, $lon) = $self->_dbh->selectrow_array("SELECT g.nd_geolocation_id, g.description, g.latitude, g.longitude
+        FROM projectprop pp JOIN nd_geolocation g ON (g.nd_geolocation_id::text = pp.value)
+        WHERE pp.project_id = ? AND pp.type_id = ? LIMIT 1", undef, $trial_id, $self->_type_id('project location', 'project_property'));
+    return if !$id;
+    return { id => $id + 0, name => $name, lat => (defined $lat ? $lat + 0 : undef), lon => (defined $lon ? $lon + 0 : undef) };
+}
+
+=head2 field_sources
+
+Trial ids -> [ { trial_id, name, field (plots | drawn | location | none),
+plots, location => { id, name, lat, lon, trials } } ]: where the field of each
+trial comes from. 'location' = the trial has no field of its own and only its
+location's coordinates place it (in many databases those are the town's);
+location trials = how many trials of the database share that location.
+
+=cut
+
+sub field_sources {
+    my ($self, $ids) = @_;
+    my @ids = grep { /^\d+$/ } @{ $ids || [] };
+    return [] if !@ids;
+    my $dbh = $self->_dbh;
+    my $fields = CXGN::Satellite::Fields->new({ schema => $self->schema });
+    my $loc_type = $self->_type_id('project location', 'project_property');
+    my $plots_q = $dbh->prepare("SELECT count(DISTINCT nes.stock_id) FROM nd_experiment_project nep
+        JOIN nd_experiment_stock nes ON (nes.nd_experiment_id = nep.nd_experiment_id)
+        JOIN stockprop sp ON (sp.stock_id = nes.stock_id AND sp.type_id = ?) WHERE nep.project_id = ?");
+    my $shared_q = $dbh->prepare("SELECT count(*) FROM projectprop WHERE type_id = ? AND value = ?");
+    my $plot_type = $self->_type_id('plot_geo_json', 'stock_property');
+    my %shared;
+    my @out;
+    foreach my $id (@ids) {
+        my $p = $self->schema->resultset('Project::Project')->find({ project_id => $id }) or next;
+        $plots_q->execute($plot_type, $id);
+        my ($n) = $plots_q->fetchrow_array;
+        my $loc = $self->trial_location($id);
+        if ($loc) {
+            if (!exists $shared{ $loc->{id} }) { $shared_q->execute($loc_type, $loc->{id}); ($shared{ $loc->{id} }) = $shared_q->fetchrow_array }
+            $loc->{trials} = $shared{ $loc->{id} } + 0;
+        }
+        my $field = $fields->trial_field($id) ? 'drawn' : $n ? 'plots' : ($loc && defined $loc->{lat} && defined $loc->{lon}) ? 'location' : 'none';
+        push @out, { trial_id => $id + 0, name => $p->name, field => $field, plots => $n + 0, location => $loc, validated => $self->validated_traits($id) };
+    }
+    return \@out;
+}
+
+=head2 validated_traits
+
+Trial id -> [ trait names ] validated for it in Phenotype Quality Control
+(projectprop validated_phenotype, "trait|user"); its outliers are then marked
+(phenotypeprop phenotype_outlier).
+
+=cut
+
+sub validated_traits {
+    my ($self, $trial_id) = @_;
+    my $vals = $self->_dbh->selectcol_arrayref("SELECT value FROM projectprop WHERE project_id = ? AND type_id = ?", undef,
+        $trial_id, $self->_type_id('validated_phenotype', 'project_property'));
+    my %seen;
+    return [ grep { !$seen{$_}++ } map { (split /\|/, $_ // '')[0] } @{ $vals || [] } ];
+}
+
+=head2 trait_values
+
+Args: trial id, trait cvterm id. [ { id (phenotype_id), value, outlier (marked
+in Phenotype Quality Control) } ] of the trial's plots.
+
+=cut
+
+sub trait_values {
+    my ($self, $trial_id, $trait_id) = @_;
+    my $rows = $self->_dbh->selectall_arrayref("SELECT ph.phenotype_id, ph.value::numeric,
+            EXISTS (SELECT 1 FROM phenotypeprop pp WHERE pp.phenotype_id = ph.phenotype_id AND pp.type_id = ?)
+        FROM nd_experiment_project nep
+        JOIN nd_experiment_phenotype nph ON (nph.nd_experiment_id = nep.nd_experiment_id)
+        JOIN phenotype ph ON (ph.phenotype_id = nph.phenotype_id)
+        WHERE nep.project_id = ? AND ph.cvalue_id = ? AND ph.value ~ '^-?[0-9]+([.][0-9]+)?([eE][-+]?[0-9]+)?\$'", undef,
+        $self->_type_id('phenotype_outlier', 'phenotype_property'), $trial_id, $trait_id);
+    return [ map { { id => $_->[0] + 0, value => $_->[1] + 0, outlier => ($_->[2] ? 1 : 0) } } @{ $rows || [] } ];
+}
+
+# Tukey fences: values beyond 1.5 interquartile ranges from the quartiles
+sub _tukey_keep {
+    my @v = sort { $a <=> $b } @_;
+    return (-9**9**9, 9**9**9) if @v < 4;
+    my $q = sub { my $p = shift; my $h = ($#v) * $p; my $l = int($h); return $v[$l] + ($h - $l) * (($v[$l + 1] // $v[$l]) - $v[$l]) };
+    my ($q1, $q3) = ($q->(0.25), $q->(0.75));
+    my $iqr = $q3 - $q1;
+    return ($q1 - 1.5 * $iqr, $q3 + 1.5 * $iqr);
+}
+
+# square ring of size_m metres around a point
+sub _square {
+    my ($lon, $lat, $size_m) = @_;
+    my $dy = $size_m / 2 / 110574;
+    my $dx = $size_m / 2 / (111320 * cos($lat * 3.14159265358979 / 180));
+    return [ [ $lon - $dx, $lat - $dy ], [ $lon + $dx, $lat - $dy ], [ $lon + $dx, $lat + $dy ], [ $lon - $dx, $lat + $dy ] ];
+}
+
 =head2 trial_calibration
 
-Args: trial id, trait cvterm id, season days. { id, name, source => 'trial',
-ring, yield, n, start, end } or { error }.
+Args: trial id, trait cvterm id, settings (season_days, location_field_m),
+options { exclude_ids => { phenotype_id => 1 } (outliers stored with the
+dataset), remove_outliers => 1 (Tukey fences within the trial, unless the
+trial is validated for the trait) }. Values marked as outliers in Phenotype
+Quality Control are always left out; the trial's yield is the mean of the rest.
+{ id, name, source => 'trial', field_from (drawn | plots | location), ring,
+yield, n, start, end } or { error }. A trial with no field of its own (no
+drawn field, no plot coordinates) is placed by a square around its location's
+coordinates (field_from 'location', check_field: the run drops it when that
+square shows no crop, e.g. when the coordinates are the town's).
 
 =cut
 
 sub trial_calibration {
-    my ($self, $trial_id, $trait_id, $season_days) = @_;
+    my ($self, $trial_id, $trait_id, $settings, $opt) = @_;
+    $settings = { season_days => $settings } if ref $settings ne 'HASH';
+    $opt ||= {};
+    my $season_days = $settings->{season_days} // 150;
     my $info = $self->trial_info([ $trial_id ])->[0] or return { error => "Trial $trial_id does not exist." };
     my ($t) = grep { $_->{id} == $trait_id } @{ $info->{traits} };
     return { error => "$info->{name}: no value of the yield trait." } if !$t;
     return { error => "$info->{name}: no planting date." } if !$info->{planting};
+    # the trait's values without outliers
+    my $values = $self->trait_values($trial_id, $trait_id);
+    my $trait_short = (split /\|/, $t->{name})[0];
+    my $validated = grep { $_ eq $trait_short } @{ $self->validated_traits($trial_id) };
+    my @keep = grep { !$_->{outlier} && !($opt->{exclude_ids} || {})->{ $_->{id} } } @$values;
+    if ($opt->{remove_outliers} && !$validated) {
+        my ($lo, $hi) = _tukey_keep(map { $_->{value} } @keep);
+        @keep = grep { $_->{value} >= $lo && $_->{value} <= $hi } @keep;
+    }
+    my $removed = @$values - @keep;
+    return { error => "$info->{name}: every value of the trait is an outlier." } if !@keep;
+    my $mean = 0; $mean += $_->{value} for @keep; $mean /= @keep;
+    my $loc = $self->trial_location($trial_id);
     my $ring = CXGN::Satellite::Fields->new({ schema => $self->schema })->trial_field($trial_id);
+    my $from = 'drawn';
     if (!$ring) {
         my @pts = map { @{ $_->{ring} } } @{ $self->trial_plots($trial_id) };
         my $hull = $self->convex_hull(@pts);
-        return { error => "$info->{name}: no field (no plot coordinates and no drawn field)." } if @$hull < 3;
-        $ring = $hull;
+        ($ring, $from) = ($hull, 'plots') if @$hull >= 3;
+    }
+    if (!$ring) {
+        return { error => "$info->{name}: no field (no plot coordinates, no drawn field, and its location has no coordinates)." }
+            if !$loc || !defined $loc->{lat} || !defined $loc->{lon};
+        ($ring, $from) = (_square($loc->{lon}, $loc->{lat}, $settings->{location_field_m} // 200), 'location');
     }
     my @ring = map { [ $_->[0] + 0, $_->[1] + 0 ] } @$ring;
     pop @ring if @ring > 3 && $ring[0][0] == $ring[-1][0] && $ring[0][1] == $ring[-1][1];
     my $end = $info->{harvest} && $info->{harvest} gt $info->{planting} ? $info->{harvest} : _add_days($info->{planting}, $season_days);
-    return { id => "trial_$trial_id", name => $info->{name}, source => 'trial', trial_id => $trial_id + 0, ring => \@ring,
-             yield => $t->{mean}, n => $t->{n}, start => _add_days($info->{planting}, -10), end => $end,
+    # the trial's location: calibration fields are grouped by location and year to validate the models
+    return { id => "trial_$trial_id", name => $info->{name}, source => 'trial', trial_id => $trial_id + 0, ring => \@ring, site => ($loc ? $loc->{name} : ''),
+             field_from => $from, ($from eq 'location' ? (check_field => JSON::true, location => $loc) : ()),
+             yield => $mean, n => scalar(@keep), outliers_removed => $removed, validated => ($validated ? JSON::true : JSON::false), start => _add_days($info->{planting}, -10), end => $end,
              end_from => ($info->{harvest} && $info->{harvest} gt $info->{planting} ? 'harvest date' : "planting + $season_days days") };
 }
 
@@ -312,6 +460,15 @@ sub build_request {
         }
         my $site = { id => $s->{id}, name => $name, country => $country, center => [ $lon + 0, $lat + 0 ], size_m => $size + 0,
                      bbox => [ $lon - $dlon, $lat - $dlat, $lon + $dlon, $lat + $dlat ], labels => [], targets => [] };
+        # the selected area (the delimited fields): clouds, the crop map and its hectares only there
+        my @area;
+        foreach my $r (@{ ref $s->{area} eq 'ARRAY' ? $s->{area} : [] }) {
+            my ($ring, $err) = $self->_ring($r, "$name: the selected area");
+            return (undef, $err) if $err;
+            push @area, $ring;
+        }
+        return (undef, "$name: the selected area has too many fields.") if @area > $LIMITS{targets};
+        $site->{area} = \@area if @area;
         # images hidden by the user in step 4 (still cloudy): left out
         my @hidden = grep { defined $_ && /^[A-Za-z0-9_]{1,100}$/ } @{ ref $s->{exclude_scenes} eq 'ARRAY' ? $s->{exclude_scenes} : [] };
         $site->{exclude_scenes} = [ @hidden[0 .. ($#hidden > 1999 ? 1999 : $#hidden)] ] if @hidden;
@@ -359,14 +516,26 @@ sub build_request {
         my $y = $in->{yield} || {};
         # calibrated: estimates in the unit of the known yields; index: no known yield,
         # a relative index of the season curve (100 = the mean of the fields estimated)
-        my $mode = ($y->{mode} // '') eq 'index' ? 'index' : 'calibrated';
+        my $mode = ($y->{mode} // '') =~ /^(index|saved)$/ ? $1 : 'calibrated';
         $yield = { mode => $mode, trait => substr($y->{trait_name} // '', 0, 200), unit => substr($y->{unit} // '', 0, 40), per_ha => ($y->{per_ha} ? JSON::true : JSON::false) };
         # index: optionally scaled to approximate kg/ha by the public average yield of the region
         $yield = { mode => 'index', per_ha => JSON::false, reference => ($y->{reference} ? JSON::true : JSON::false) } if $mode eq 'index';
+        # a saved trained model: resolved and checked by the controller (owner / public, its file)
+        if ($mode eq 'saved') {
+            my $sm = $y->{saved_model};
+            return (undef, 'Choose a saved model.') if ref $sm ne 'HASH' || !$sm->{file} || !-e $sm->{file};
+            $yield->{saved_model} = { id => $sm->{id}, name => $sm->{name}, file => $sm->{file} };
+        }
         my ($cs, $ce) = map { _date(($y->{season} || {})->{$_}) } qw(start end);
         $yield->{season} = { start => $cs // $start, end => $ce // $end };
+        # also estimate the crop areas found by the crop map (besides the delimited fields)
+        $yield->{map_areas} = $y->{map_areas} ? JSON::true : JSON::false;
+        # season of each field: found in its curve (all, main, second crop) or the dates given
+        # (main / second, or a season of sgn.conf available_seasons, e.g. summer / safrinha)
+        my $sm = $y->{season_mode} // '';
+        $yield->{season_mode} = ($sm =~ /^(detected|dates)$/ || $sm =~ /^[A-Za-z][A-Za-z0-9_-]{0,39}$/) ? $sm : 'dates';
         return (undef, 'The crop season is not valid.') if $yield->{season}{start} gt $yield->{season}{end};
-        return (undef, 'Draw the fields to estimate, or run the crop map so its areas of the crop are estimated.') if !$n_targets && !$models{crop_map};
+        return (undef, 'Delimit the field(s) to estimate (step 2, or draw them in step 5), or add the crop map and estimate the crop areas it finds.') if !$n_targets && !($models{crop_map} && $y->{map_areas});
         if ($mode eq 'calibrated') {
             my $k = 0;
             foreach my $c (@{ $in->{calibration} || [] }) {
@@ -383,7 +552,7 @@ sub build_request {
             if (@trial_ids) {
                 my $trait_id = ($y->{trait_id} // '') =~ /^\d+$/ ? $y->{trait_id} : return (undef, 'Choose the yield trait of the calibration trials.');
                 foreach my $tid (@trial_ids) {
-                    my $tc = $self->trial_calibration($tid, $trait_id, $settings->{season_days});
+                    my $tc = $self->trial_calibration($tid, $trait_id, $settings);
                     if ($tc->{error}) { push @skipped, $tc->{error}; next }
                     push @calib, $tc;
                 }
@@ -404,6 +573,92 @@ sub build_request {
         crop_map_method => $method, ($method eq 'standard' ? (standard => 'maize') : ()),
         models => \%models, settings => $settings, classes => \@classes, sites => \@sites,
         calibration => \@calib, calibration_skipped => \@skipped, yield => $yield,
+    }, undef);
+}
+
+=head2 build_training_request
+
+Training a yield model (the "Train a model" page), apart from any area to
+analyse. Args: the page request { crop, trait_name, unit, per_ha, settings,
+region_rows (resolved by the controller from IBGE: { mun_code, name, year,
+season, yield, planted_ha }), calibration_trials, trait_id }, and a
+CXGN::Satellite::Reference (sample squares inside each municipality).
+( request for bin/satellite_models.pl, undef ) or ( undef, error ).
+
+Each municipality, year and crop season becomes one calibration item of kind
+'region': a few squares drawn at random inside the municipality, where the R
+script finds the crop with its standard curve (maize only) sown in the
+season's window, and whose season features (over the crop's pixels) are
+paired with the municipality's published yield. Trials are calibration
+fields as in build_request (a trial without a field of its own is placed at
+its location's coordinates and checked).
+
+=cut
+
+sub build_training_request {
+    my ($self, $in, $reference) = @_;
+    return (undef, 'The request is not valid.') if ref $in ne 'HASH';
+    my $settings = $self->settings($in->{settings});
+    my $crop = substr($in->{crop} // '', 0, 100);
+    return (undef, 'Choose the crop.') if $crop !~ /\S/;
+    my @rows = @{ ref $in->{region_rows} eq 'ARRAY' ? $in->{region_rows} : [] };
+    my @trial_ids = grep { /^\d+$/ } @{ $in->{calibration_trials} || [] };
+    return (undef, 'Choose the training data: municipalities (regional statistics) and/or a dataset of trials.') if !@rows && !@trial_ids;
+    return (undef, "At most $LIMITS{regions} municipality-seasons.") if @rows > $LIMITS{regions};
+    my (@calib, @skipped);
+    my $today = do { my @t = gmtime(); sprintf('%04d-%02d-%02d', $t[5] + 1900, $t[4] + 1, $t[3]) };
+    if (@rows) {
+        return (undef, 'Regional statistics train on the areas where the crop is found by its stored season curve, which exists only for maize (Zea mays).')
+            if $crop !~ /^Zea mays\b/;
+        return (undef, 'No reference source.') if !$reference;
+        # sowing windows of the Brazilian crop seasons (R/satellite/standards/seasons.json): the PAM year is the harvest year
+        my %sow = (summer => [ -1, '08-01', -1, '12-31' ], safrinha => [ 0, '01-01', 0, '04-30' ]);
+        foreach my $r (@rows) {
+            my $w = $sow{ $r->{season} // '' } or do { push @skipped, "$r->{name} $r->{year}: no sowing window for season $r->{season}."; next };
+            my $sow_a = sprintf('%04d-%s', $r->{year} + $w->[0], $w->[1]);
+            my $sow_b = sprintf('%04d-%s', $r->{year} + $w->[2], $w->[3]);
+            my $start = _add_days($sow_a, -30);
+            my $end = _add_days($sow_b, 200);
+            $end = $today if $end gt $today;
+            if ($start lt '2017-01-01') { push @skipped, "$r->{name} $r->{year} $r->{season}: before the Sentinel-2 images used here (2017)."; next }
+            my $pts = try { $reference->sample_squares($r->{mun_code}, $settings->{samples_per_region}, $settings->{sample_size_m}, $r->{mun_code} + $r->{year}) } || [];
+            if (!@$pts) { push @skipped, "$r->{name}: no sample square fits inside the municipality."; next }
+            push @calib, {
+                id => "ibge_$r->{mun_code}_$r->{year}_$r->{season}", name => "$r->{name} $r->{season} $r->{year}", source => 'ibge', kind => 'region',
+                site => $r->{name}, mun_code => $r->{mun_code} + 0, year => $r->{year} + 0, season => $r->{season},
+                yield => $r->{yield} + 0, planted_ha => ($r->{planted_ha} // 0) + 0, start => $start, end => $end, sow => [ $sow_a, $sow_b ],
+                squares => [ map { { center => $_, size_m => $settings->{sample_size_m} + 0 } } @$pts ],
+            };
+        }
+    }
+    if (@trial_ids) {
+        my $trait_id = ($in->{trait_id} // '') =~ /^\d+$/ ? $in->{trait_id} : return (undef, 'Choose the trait of the trials to train on.');
+        # outliers: the dataset's stored ones and Tukey fences in trials not validated (Phenotype Quality Control)
+        my %opt = (remove_outliers => ($in->{outliers} // '') eq 'remove' ? 1 : 0,
+                   exclude_ids => { map { $_ => 1 } grep { /^\d+$/ } @{ ($in->{outliers} // '') eq 'remove' ? ($in->{dataset_outliers} || []) : [] } });
+        foreach my $tid (@trial_ids) {
+            my $tc = $self->trial_calibration($tid, $trait_id, $settings, \%opt);
+            if ($tc->{error}) { push @skipped, $tc->{error}; next }
+            push @calib, $tc;
+        }
+    }
+    return (undef, "At most $LIMITS{calibration} calibration items.") if @calib > $LIMITS{calibration};
+    if (@calib < $settings->{min_fields}) {
+        return (undef, "Training needs at least $settings->{min_fields} items of known yield; there are " . scalar(@calib) . '.'
+            . (@skipped ? ' Not usable: ' . join(' ', @skipped) : ''));
+    }
+    my ($start) = sort map { $_->{start} } @calib;
+    my ($end) = reverse sort map { $_->{end} } @calib;
+    my $regions = grep { ($_->{kind} // '') eq 'region' } @calib;
+    return ({
+        train => JSON::true, dates => { start => $start, end => $end }, crop => $crop, crop_class => '',
+        crop_map_method => 'none', ($regions ? (standard => 'maize') : ()),
+        models => { crop_map => JSON::false, yield => JSON::true, indices => JSON::false },
+        settings => $settings, classes => [], sites => [],
+        calibration => \@calib, calibration_skipped => \@skipped,
+        yield => { mode => 'calibrated', trait => substr($in->{trait_name} // ($regions ? 'Grain yield (IBGE PAM)' : ''), 0, 200),
+                   unit => substr($in->{unit} // 'kg/ha', 0, 40), per_ha => ($in->{per_ha} // 1) ? JSON::true : JSON::false,
+                   season => { start => $start, end => $end }, season_mode => 'detected', map_areas => JSON::false },
     }, undef);
 }
 

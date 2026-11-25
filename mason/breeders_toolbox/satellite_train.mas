@@ -1,0 +1,121 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/satellite_train.mas - train a satellite yield model (/breeders/satellite/train)
+
+=head1 DESCRIPTION
+
+Training a yield model apart from the analysis of an area: 1 training data
+(IBGE regional statistics by municipality, year and crop season, and / or a
+Breedbase dataset of trials), 2 settings, 3 train (background job) and
+validate (models compared, observed vs predicted, error by place), then save
+it as a Breedbase analysis model, used later on /breeders/satellite. Code:
+js/source/entries/satellite_train.js; endpoints /ajax/satellite/train_*.
+
+=head1 AUTHOR
+
+Chris Simoes
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, classes => ['jquery'], entries => ['satellite_train'] &>
+
+<& /breeders_toolbox/satellite_style.mas &>
+
+<div class="container-fluid sat-app">
+  <div class="sat-hero">
+    <div>
+      <h2>Train a yield model</h2>
+      <p>Teach the satellite page to turn the season curve of a crop (Sentinel-2 NDVI and red-edge) into yield, from yields that are known: public regional statistics or your trials. Several models are compared and validated; the one you save is then used in any analysis on the <a href="/breeders/satellite" style="color:#fff;text-decoration:underline">satellite page</a>.</p>
+    </div>
+    <div><span class="sat-badge"><span class="sat-badge-label">Crop</span><span id="tr_badge">no crop chosen</span></span></div>
+  </div>
+
+  <ol class="sat-stepper" id="tr_stepper">
+    <li data-step="1"><span class="sat-step-num">1</span><span class="sat-step-label">Training data</span></li>
+    <li data-step="2"><span class="sat-step-num">2</span><span class="sat-step-label">Settings</span></li>
+    <li data-step="3"><span class="sat-step-num">3</span><span class="sat-step-label">Train &amp; validate</span></li>
+  </ol>
+
+  <div class="row">
+    <div class="col-md-9">
+
+      <div class="sat-pane" data-step="1">
+        <div class="sat-card">
+          <h3>Crop</h3>
+          <div class="sat-inline-row"><div><label class="sat-label" for="tr_crop">Crop</label><select id="tr_crop" class="form-control input-sm" style="min-width:240px"></select></div></div>
+        </div>
+        <div class="sat-card">
+          <h3>Known yields to learn from</h3>
+          <div class="sat-help">Choose one or both; they are combined in one training.</div>
+          <div class="sat-options sat-checks" id="tr_sources">
+            <label class="sat-option" data-v="ibge"><input type="checkbox" /><span class="sat-option-title">Regional statistics (IBGE, Brazil)</span><span class="sat-option-text" id="tr_ibge_text"></span></label>
+            <label class="sat-option" data-v="dataset"><input type="checkbox" /><span class="sat-option-title">Breedbase trials (a dataset)</span><span class="sat-option-text">Trials of the crop with the trait to learn (e.g. grain yield). Each trial needs its field: plot GPS coordinates, a field drawn for it, or at least correct coordinates on its location.</span></label>
+          </div>
+          <div id="tr_sources_msg"></div>
+        </div>
+        <div class="sat-card" id="tr_ibge_box" style="display:none">
+          <h3>Regional statistics: municipalities</h3>
+          <div class="sat-label">States (up to 6)</div>
+          <div class="sat-segs" id="tr_states" style="flex-wrap:wrap"></div>
+          <div class="sat-label">Harvest years (up to 8)</div>
+          <div class="sat-segs" id="tr_years" style="flex-wrap:wrap"></div>
+          <div style="margin-top:10px"><button type="button" class="btn btn-default btn-sm" id="tr_regions_load">Show the municipalities</button></div>
+          <div id="tr_regions" style="margin-top:8px"></div>
+        </div>
+        <div class="sat-card" id="tr_ds_box" style="display:none"></div>
+        <div class="sat-nav"><span></span><button class="btn btn-primary tr-next" data-to="2">Next: settings &rarr;</button></div>
+      </div>
+
+      <div class="sat-pane" data-step="2" style="display:none">
+        <div class="sat-card">
+          <div class="sat-card-head"><h3>Settings</h3><button type="button" class="btn btn-link btn-xs" id="tr_settings_reset">Back to defaults</button></div>
+          <div class="sat-inline-row"><div><label class="sat-label" for="tr_model">Model</label><select id="tr_model" class="form-control input-sm" style="min-width:280px"></select>
+            <div class="sat-help" style="max-width:520px">Automatic: every model the training data can support is validated by leaving out one location-year at a time; the simplest one whose error is within one standard error of the best is chosen.</div></div></div>
+          <div class="sat-adv-grid" id="tr_settings" style="margin-top:10px"></div>
+        </div>
+        <div class="sat-nav"><button class="btn btn-default tr-next" data-to="1">&larr; Training data</button><button class="btn btn-primary tr-next" data-to="3">Next: train &rarr;</button></div>
+      </div>
+
+      <div class="sat-pane" data-step="3" style="display:none">
+        <div class="sat-card">
+          <h3>Ready?</h3>
+          <ul class="sat-check-list" id="tr_ready"></ul>
+          <div class="sat-inline-row" style="margin-top:8px"><div style="flex:1;max-width:520px"><label class="sat-label" for="tr_name">Model name</label><input type="text" id="tr_name" class="form-control input-sm" maxlength="120" /><div class="sat-help">The training and the model you save from it carry this name; it is how you find the model later in an analysis (Use a trained model).</div></div></div>
+          <div class="sat-help" style="margin-top:6px">Reading a season of images takes about 1–2 minutes per sample square: a training with many municipalities runs for hours. It runs in the background.</div>
+          <div id="tr_run_error" style="margin-top:8px"></div>
+          <div class="sat-nav" style="margin-top:8px"><button class="btn btn-default tr-next" data-to="2">&larr; Settings</button>
+            <span style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end">
+              <label class="sat-switch sat-small"><input type="checkbox" id="tr_notify" checked /><span class="sat-slider"></span>Email me when it is done</label>
+              <button class="btn btn-primary" id="tr_run">Train the model &rarr;</button>
+            </span></div>
+        </div>
+        <div class="sat-card" id="tr_job" style="display:none">
+          <div class="sat-card-head"><h3 id="tr_run_title">Training</h3><span class="sat-small sat-muted"><a id="tr_run_logfile" style="display:none">Log</a></span></div>
+          <div class="sat-progress" id="tr_run_progress" style="display:none"><span class="sat-spin" aria-hidden="true"></span><span id="tr_run_text" role="status"></span><div class="sat-bar indet"><div></div></div><span id="tr_run_elapsed"></span></div>
+          <div id="tr_run_info" class="sat-small" style="margin:4px 0 8px"></div>
+          <details id="tr_run_log_box" style="display:none"><summary class="sat-small"><b>What is happening on the server</b> <span class="sat-muted" id="tr_run_log_n"></span></summary>
+            <pre id="tr_run_log" style="max-height:240px;overflow:auto;font-size:11.5px;background:#f8fafc;border:1px solid var(--sat-border);border-radius:6px;padding:8px;margin-top:6px;white-space:pre-wrap"></pre></details>
+          <div id="tr_run_notes"></div>
+          <div id="tr_results" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="sat-card"><div class="sat-card-head"><h3>Earlier trainings</h3><button type="button" class="btn btn-link btn-xs tr-runs-refresh">refresh</button></div><div class="tr-runs"></div></div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="sat-summary">
+        <h4>How it is used</h4>
+        <ul class="sat-flow">
+          <li>Train here, check the validation and save the model.</li>
+          <li>On the <a href="/breeders/satellite">satellite page</a>, step Model &rarr; Yield &rarr; <i>Use a trained model</i>: every field of the analysis gets a yield estimate.</li>
+          <li>Without a trained model, the analysis gives a relative yield index (optionally scaled by the regional average).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

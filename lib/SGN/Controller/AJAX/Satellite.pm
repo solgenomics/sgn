@@ -21,6 +21,11 @@ public buckets.
   GET /ajax/satellite/results     results of a finished run
   GET /ajax/satellite/file        a file of a run (map GeoTIFF, csv)
   POST /ajax/satellite/save_indices    store a run's plot indices as phenotypes
+  GET /ajax/satellite/runs        the user's earlier model runs
+  GET /ajax/satellite/datasets    datasets to calibrate the yield model on
+  GET /ajax/satellite/dataset_info     trials and traits of a dataset (>= 8 trials, >= 1 trait)
+  GET /ajax/satellite/models      saved trained yield models
+  POST /ajax/satellite/save_model save a run's trained model (Breedbase analysis model)
   GET /ajax/satellite/reference   public average yield of the crop around a point (IBGE PAM / FAOSTAT)
   GET /ajax/satellite/sources     the satellites this server offers (never a key)
   GET /ajax/satellite/scenes      satellite scenes of an area and date range
@@ -51,11 +56,15 @@ use CXGN::Satellite;
 use CXGN::Satellite::Fields;
 use CXGN::Satellite::Run;
 use CXGN::Satellite::Reference;
+use CXGN::Dataset;
+use CXGN::AnalysisModel::SaveModel;
+use CXGN::AnalysisModel::GetModel;
 use CXGN::Job;
 use CXGN::Phenotypes::StorePhenotypes;
 use File::Path qw(make_path);
 use DateTime;
 use File::Slurp qw(read_file write_file);
+use Encode;
 use CXGN::Trial;
 use Try::Tiny;
 use CXGN::BreedersToolbox::Projects;
@@ -350,6 +359,12 @@ sub _work_dir {
     return $dir;
 }
 
+# sgn.conf available_seasons ("summer,safrinha"), as TrialAllocation reads it
+sub _season_names {
+    my $c = shift;
+    return grep { /^[A-Za-z][A-Za-z0-9_-]{0,39}$/ } map { s/^\s+|\s+$//gr } split /,/, ($c->config->{available_seasons} // '');
+}
+
 sub _valid_run { my $r = shift // ''; return $r =~ /^sat_\d+_\d+$/ }
 
 sub _meta {
@@ -403,7 +418,9 @@ sub _start_local {
 
 =head2 crops
 
-{ crops => [ { species, accessions } ] }: the species of the accessions, most first.
+{ crops => [ { species, accessions } ], preferred }: the species of the
+accessions, most first; preferred is the site's species (sgn.conf
+preferred_species), the default crop of the page.
 
 =cut
 
@@ -416,7 +433,13 @@ sub crops :Path('/ajax/satellite/crops') Args(0) {
     $h->execute(_type_id($schema, 'accession', 'stock_type'));
     my @crops;
     while (my ($sp, $n) = $h->fetchrow_array) { push @crops, { species => $sp, accessions => $n + 0 } }
-    $c->stash->{rest} = { crops => \@crops };
+    # the site's species (sgn.conf preferred_species) is the default crop
+    my $preferred = $c->config->{preferred_species} // '';
+    $preferred =~ s/^\s+|\s+$//g;
+    push @crops, { species => $preferred, accessions => 0 } if $preferred ne '' && !grep { $_->{species} eq $preferred } @crops;
+    # named seasons apply only to the countries of R/satellite/standards/seasons.json (Brazil)
+    my $sj = try { decode_json(read_file($c->config->{basepath} . '/R/satellite/standards/seasons.json')) } || {};
+    $c->stash->{rest} = { crops => \@crops, preferred => $preferred, seasons => [ _season_names($c) ], season_countries => [ sort keys %{ $sj->{countries} || {} } ] };
 }
 
 =head2 trial_info
@@ -447,11 +470,50 @@ sub run :Path('/ajax/satellite/run') Args(0) {
     return _fail($c, 'Use POST to start a run.') if $c->req->method ne 'POST';
     my $in = _json_param($c, 'request') or return _fail($c, 'The request is not valid.');
     my $schema = _schema($c);
+    my $y = ref $in->{yield} eq 'HASH' ? $in->{yield} : {};
+    # calibration from a dataset: its trials (>= 8) and the chosen trait (one of its traits)
+    if (($in->{calibration_dataset_id} // '') =~ /^\d+$/ && ($y->{mode} // '') ne 'index' && ($y->{mode} // '') ne 'saved') {
+        my ($ds, $err) = _dataset($c, $in->{calibration_dataset_id});
+        return _fail($c, $err) if $err;
+        my @trials = map { $_->[0] } @{ $ds->retrieve_trials() || [] };
+        my %traits = map { $_->[0] => $_->[1] } @{ $ds->retrieve_traits() || [] };
+        return _fail($c, 'The dataset "' . $ds->name . '" has ' . scalar(@trials) . ' trial(s); calibrating needs at least 8.') if @trials < 8;
+        return _fail($c, 'The dataset "' . $ds->name . '" has no trait.') if !%traits;
+        return _fail($c, 'Choose the trait of the dataset to train on.') if ($y->{trait_id} // '') !~ /^\d+$/ || !$traits{ $y->{trait_id} };
+        $y->{trait_name} //= $traits{ $y->{trait_id} };
+        my %seen;
+        $in->{calibration_trials} = [ grep { !$seen{$_}++ } @trials, grep { /^\d+$/ } @{ $in->{calibration_trials} || [] } ];
+        $in->{calibration_dataset} = { id => $ds->sp_dataset_id, name => $ds->name };
+    }
+    # a saved trained model: the user's own or a public one, and its file
+    if (($y->{mode} // '') eq 'saved') {
+        my $mid = ($y->{saved_model_id} // '') =~ /^\d+$/ ? $y->{saved_model_id} : return _fail($c, 'Choose a saved model.');
+        my $m = _satellite_models($c)->{$mid} or return _fail($c, 'This saved model does not exist or is not yours.');
+        my $file = $m->{model_files}{satellite_yield_model_rds} or return _fail($c, 'The saved model has no model file.');
+        $y->{saved_model} = { id => $mid + 0, name => $m->{model_name}, file => $file };
+        my $p = $m->{model_properties} || {};
+        $y->{trait_name} = $p->{trait} // ''; $y->{unit} = $p->{unit} // ''; $y->{per_ha} = $p->{per_ha} ? 1 : 0;
+    }
+    $in->{yield} = $y if $in->{yield};
     my ($req, $err) = try { CXGN::Satellite::Run->new({ schema => $schema })->build_request($in) } catch { (undef, "$_") };
     return _fail($c, $err) if $err;
     $req->{settings}{cores} = ($c->config->{satellite_cores} // '') =~ /^\d+$/ ? $c->config->{satellite_cores} + 0 : 6;
+    # the site's crop seasons (sgn.conf available_seasons): names of the seasons found, split of long periods
+    $req->{season_names} = [ _season_names($c) ];
     $req->{stac_url} = $c->config->{satellite_stac_url} if $c->config->{satellite_stac_url};
 
+    my @names = map { $_->{name} } @{ $req->{sites} };
+    my $label = join(' + ', grep { $req->{models}{$_} } qw(crop_map yield indices));
+    $label =~ s/crop_map/crop map/; $label =~ s/indices/plot indices/;
+    _launch($c, $req, { model_used => (($req->{yield} || {})->{saved_model} || {})->{name}, name => "Satellite $label: " . join(', ', @names[0 .. ($#names > 2 ? 2 : $#names)]) . (@names > 3 ? ' ...' : ''),
+                        sites => [ map { { id => $_->{id}, name => $_->{name} } } @{ $req->{sites} } ] });
+}
+
+# writes the request, starts bin/satellite_models.pl as a job (Slurm, or here when no node
+# can take it), with the email at the end when asked; { run_id, job_id, skipped, notify }
+sub _launch {
+    my ($c, $req, $extra) = @_;
+    my $schema = _schema($c);
     my $dir = _work_dir($c);
     my $run_id = sprintf('sat_%d_%06d', time(), int(rand(1_000_000)));
     my $base = "$dir/$run_id";
@@ -459,17 +521,26 @@ sub run :Path('/ajax/satellite/run') Args(0) {
     my $basepath = $c->config->{basepath};
     my $cmd = join(' ', 'perl', '-I' . _shell_quote("$basepath/lib"), _shell_quote("$basepath/bin/satellite_models.pl"), _shell_quote($base))
         . ' > ' . _shell_quote("$base.log") . ' 2>&1';
-    my @names = map { $_->{name} } @{ $req->{sites} };
-    my $label = join(' + ', grep { $req->{models}{$_} } qw(crop_map yield indices));
-    $label =~ s/crop_map/crop map/; $label =~ s/indices/plot indices/;
-    my %meta = (sp_person_id => _person_id($c), created => time(), cmd => $cmd, name => "Satellite $label: " . join(', ', @names[0 .. ($#names > 2 ? 2 : $#names)]) . (@names > 3 ? ' ...' : ''),
-                models => $req->{models}, sites => [ map { { id => $_->{id}, name => $_->{name} } } @{ $req->{sites} } ]);
+    # email when the run ends (address from the account, never from the request)
+    my ($notify_email, $site_url);
+    if ($c->req->param('notify')) {
+        my $person = $c->user->get_object;
+        my $email = $person->get_contact_email() || $person->get_private_email();
+        if ($email && $email =~ /^[^\s@]+@[^\s@]+$/) {
+            ($site_url = $c->req->base . '') =~ s{/+$}{};
+            $notify_email = $email;
+            $cmd .= '; perl -I' . _shell_quote("$basepath/lib") . ' ' . _shell_quote("$basepath/bin/satellite_notify.pl") . ' ' . _shell_quote($base)
+                . ' >> ' . _shell_quote("$base.log") . ' 2>&1';
+        }
+    }
+    my %meta = (sp_person_id => _person_id($c), created => time(), cmd => $cmd, models => $req->{models},
+                dates => $req->{dates}, notify_email => $notify_email, site_url => $site_url, kind => ($req->{train} ? 'train' : 'analysis'), %$extra);
     my $job;
     try {
         $job = CXGN::Job->new({ _job_args($c,
             schema => $schema, people_schema => $c->dbic_schema('CXGN::People::Schema', undef, _person_id($c)),
             sp_person_id => _person_id($c), name => $meta{name}, job_type => 'satellite_analysis', cmd => $cmd,
-            results_page => "/breeders/satellite?run=$run_id",
+            results_page => ($req->{train} ? "/breeders/satellite/train?run=$run_id" : "/breeders/satellite?run=$run_id"),
             cxgn_tools_run_config => { backend => $c->config->{backend}, submit_host => $c->config->{cluster_host}, temp_base => $dir,
                                        queue => $c->config->{web_cluster_queue}, do_cleanup => 0, max_cluster_jobs => 1_000_000_000 },
         ) });
@@ -486,7 +557,7 @@ sub run :Path('/ajax/satellite/run') Args(0) {
     return if $c->stash->{rest};
     $meta{job_id} = $job->sp_job_id();
     _write_meta($c, $run_id, \%meta);
-    $c->stash->{rest} = { run_id => $run_id, job_id => $meta{job_id}, skipped => $req->{calibration_skipped} };
+    $c->stash->{rest} = { run_id => $run_id, job_id => $meta{job_id}, skipped => $req->{calibration_skipped}, notify => ($notify_email ? $notify_email =~ s/^(.).*(@.*)$/$1***$2/r : '') };
 }
 
 =head2 status
@@ -500,7 +571,8 @@ sub status :Path('/ajax/satellite/status') Args(0) {
     return if !_login($c);
     my ($run_id, $meta) = _my_run($c) or return;
     my $base = _work_dir($c) . "/$run_id";
-    my @log = -e "$base.log" ? read_file("$base.log") : ();
+    # the log is UTF-8 (R and the runner print place names)
+    my @log = -e "$base.log" ? map { Encode::decode('UTF-8', $_) } read_file("$base.log") : ();
     # still queued and no node can take it: start it here
     if (!@log && !$meta->{started_locally} && $meta->{cmd} && !_slurm_ready($c) && time() - ($meta->{created} // time()) > 5) {
         try {
@@ -511,24 +583,25 @@ sub status :Path('/ajax/satellite/status') Args(0) {
             _write_meta($c, $run_id, $meta);
         } catch { print STDERR "Satellite: could not start run $run_id locally: $_" };
     }
-    my ($progress) = reverse grep { /^\[satellite\]/ } @log;
-    $progress //= @log ? '' : 'Waiting in the job queue';
-    $progress =~ s/^\[satellite\]\s*//; chomp $progress;
+    my @lines = map { my $l = $_; $l =~ s/^\[satellite\]\s*//; chomp $l; $l } grep { /^\[satellite\]/ } @log;
+    my $progress = @lines ? $lines[-1] : (@log ? '' : 'Waiting in the job queue');
+    $progress =~ s/^\d\d:\d\d:\d\d\s+//;
+    my @recent = @lines > 60 ? @lines[-60 .. -1] : @lines;
     my $seconds = time() - ($meta->{created} // time());
     my $exit = -e "$base.exit" ? read_file("$base.exit") : undef;
     if (!defined $exit) {
-        $c->stash->{rest} = { status => 'running', progress => $progress, seconds => $seconds };
+        $c->stash->{rest} = { status => 'running', progress => $progress, seconds => $seconds, log => \@recent, log_lines => scalar @lines, notify => ($meta->{notify_email} ? 1 : 0) };
         return;
     }
     chomp $exit;
     if ($exit eq '0' && -e "$base.results.json") {
-        $c->stash->{rest} = { status => 'done', seconds => $seconds };
+        $c->stash->{rest} = { status => 'done', seconds => $seconds, log => \@recent };
         return;
     }
     my @err = grep { /^Error|error in:|^\s{4}\S|Execution halted|failed/ } @log;
     my $msg = join('', @err[ ($#err > 8 ? $#err - 8 : 0) .. $#err ]) || "The run ended (code $exit) without results.";
     $msg = 'The run was stopped by the system (probably out of memory: try a smaller area or a shorter period).' if $exit =~ /^(137|9)$/;
-    $c->stash->{rest} = { status => 'failed', error => $msg, progress => $progress, seconds => $seconds };
+    $c->stash->{rest} = { status => 'failed', error => $msg, progress => $progress, seconds => $seconds, log => \@recent };
 }
 
 =head2 results
@@ -548,6 +621,8 @@ sub results :Path('/ajax/satellite/results') Args(0) {
     $res->{run_id} = $run_id;
     $res->{name} = $meta->{name};
     $res->{saved_indices} = $meta->{saved_indices} || {};
+    $res->{saved_model_entry} = $meta->{saved_model} if $meta->{saved_model};
+    $res->{can_save_model} = -e _work_dir($c) . "/$run_id.model.rds" ? 1 : 0;
     $c->stash->{rest} = $res;
 }
 
@@ -562,12 +637,14 @@ sub file :Path('/ajax/satellite/file') Args(0) {
     return if !_login($c);
     my ($run_id, $meta) = _my_run($c) or return;
     my $name = $c->req->param('name') // '';
-    return _fail($c, 'Unknown file.') if $name !~ /^(fields\.csv|indices\.csv|site\d{1,2}\.map\.tif)$/;
+    return _fail($c, 'Unknown file.') if $name !~ /^(fields\.csv|indices\.csv|site\d{1,2}\.map\.tif|log)$/;
     my $path = _work_dir($c) . "/$run_id.$name";
     return _fail($c, 'This file does not exist.') if !-e $path;
-    my $type = $name =~ /\.csv$/ ? 'text/csv' : 'image/tiff';
+    my $type = $name =~ /\.csv$/ ? 'text/csv' : $name eq 'log' ? 'text/plain' : 'image/tiff';
+    $name .= '.txt' if $name eq 'log';
     $c->res->content_type($type);
     $c->res->header('Content-Disposition', qq{attachment; filename="$run_id.$name"});
+    $c->res->header('Content-Type', $type);
     $c->res->body(scalar read_file($path, binmode => ':raw'));
     $c->stash->{rest} = undef;
     $c->detach();
@@ -666,6 +743,255 @@ sub reference :Path('/ajax/satellite/reference') Args(0) {
             lon => $lon + 0, lat => $lat + 0, species => scalar $r->param('species'), country => scalar $r->param('country'), year => $year, no_download => 1 })
     } catch { +{ error => "$_" } };
     $c->stash->{rest} = $res;
+}
+
+=head2 runs
+
+The user's earlier model runs, newest first (at most 40): { runs => [ { run_id,
+name, created, status (done / failed / running), dates } ] }.
+
+=cut
+
+sub runs :Path('/ajax/satellite/runs') Args(0) {
+    my ($self, $c) = @_;
+    return if !_login($c);
+    my $me = _person_id($c) // -1;
+    my $dir = _work_dir($c);
+    my @out;
+    opendir(my $dh, $dir) or return _fail($c, 'Cannot read the runs.');
+    my @metas = grep { /^sat_\d+_\d+\.meta\.json$/ } readdir($dh);
+    closedir($dh);
+    foreach my $f (@metas) {
+        my $m = try { decode_json(read_file("$dir/$f")) } or next;
+        next if ($m->{sp_person_id} // -2) != $me;
+        (my $run_id = $f) =~ s/\.meta\.json$//;
+        my $exit = -e "$dir/$run_id.exit" ? read_file("$dir/$run_id.exit") : undef;
+        my $status = !defined $exit ? 'running' : ($exit =~ /^\s*0\s*$/ && -e "$dir/$run_id.results.json") ? 'done' : 'failed';
+        $status = 'failed' if $status eq 'running' && time() - ($m->{created} // 0) > 6 * 3600;    # lost (server restarted)
+        # the trained model of the run: the one it used, or the one saved from it
+        my $used = $m->{model_used};
+        if (!defined $used && -e "$dir/$run_id.request.json") {
+            my $rq = try { decode_json(read_file("$dir/$run_id.request.json")) } || {};
+            $used = (($rq->{yield} || {})->{saved_model} || {})->{name};
+        }
+        push @out, { run_id => $run_id, name => $m->{name}, created => $m->{created}, status => $status, dates => $m->{dates}, kind => ($m->{kind} // 'analysis'),
+                     model_used => $used, model_saved => ($m->{saved_model} ? $m->{saved_model}{name} : undef) };
+    }
+    @out = sort { ($b->{created} // 0) <=> ($a->{created} // 0) } @out;
+    splice(@out, 40) if @out > 40;
+    $c->stash->{rest} = { runs => \@out };
+}
+
+# ---------------------------------------------------------------------------
+# Calibration datasets and saved trained models
+# ---------------------------------------------------------------------------
+
+# a dataset the user may use: own or public
+sub _dataset {
+    my ($c, $id) = @_;
+    my $people = $c->dbic_schema('CXGN::People::Schema', undef, _person_id($c));
+    my $ds = try { CXGN::Dataset->new({ schema => _schema($c), people_schema => $people, sp_dataset_id => $id }) };
+    return (undef, 'This dataset does not exist.') if !$ds;
+    return (undef, 'This dataset is private to another user.') if ($ds->sp_person_id // -1) != (_person_id($c) // -2) && !$ds->is_public;
+    return ($ds, undef);
+}
+
+# the user's saved satellite yield models: { id => { model_name, model_description, model_properties, model_files } }
+sub _satellite_models {
+    my $c = shift;
+    return try { CXGN::AnalysisModel::GetModel::get_models_by_user(_schema($c), _person_id($c), 'satellite_yield_model') } || {};
+}
+
+=head2 datasets
+
+{ datasets => [ { id, name, description, owner, mine, public } ] }: the user's
+datasets and the public ones (to calibrate the yield model).
+
+=cut
+
+sub datasets :Path('/ajax/satellite/datasets') Args(0) {
+    my ($self, $c) = @_;
+    return if !_login($c);
+    my $me = _person_id($c);
+    my $list = try { CXGN::Dataset->get_datasets_by_user($c->dbic_schema('CXGN::People::Schema', undef, $me), $me) } || [];
+    my @out = map { { id => $_->[0] + 0, name => $_->[1], description => $_->[2], owner => $_->[3]{owner_name}, mine => (($_->[3]{owner_id} // -1) == $me ? 1 : 0), public => ($_->[4] ? 1 : 0) } } @$list;
+    @out = sort { $b->{mine} <=> $a->{mine} || lc($a->{name} // '') cmp lc($b->{name} // '') } @out;
+    $c->stash->{rest} = { datasets => \@out };
+}
+
+=head2 dataset_info
+
+Param dataset_id. { id, name, trials => [ { id, name } ], traits => [ { id, name } ],
+ok, problems => [...] }: calibrating needs at least 8 trials and 1 trait.
+
+=cut
+
+sub dataset_info :Path('/ajax/satellite/dataset_info') Args(0) {
+    my ($self, $c) = @_;
+    return if !_login($c);
+    my $id = _id($c->req->param('dataset_id')) // return _fail($c, 'No dataset given.');
+    my ($ds, $err) = _dataset($c, $id);
+    return _fail($c, $err) if $err;
+    my @trials = map { { id => $_->[0] + 0, name => $_->[1] } } @{ (try { $ds->retrieve_trials() }) || [] };
+    my @traits = map { { id => $_->[0] + 0, name => $_->[1] } } @{ (try { $ds->retrieve_traits() }) || [] };
+    my @problems;
+    push @problems, 'it has ' . scalar(@trials) . ' trial(s); at least 8 are needed' if @trials < 8;
+    push @problems, 'it has no trait' if !@traits;
+    # where each trial's field comes from (plots, drawn, or only its location's coordinates)
+    my $fields = $c->req->param('fields') && @trials <= 400
+        ? try { CXGN::Satellite::Run->new({ schema => _schema($c) })->field_sources([ map { $_->{id} } @trials ]) } : undef;
+    $c->stash->{rest} = { id => $id + 0, name => $ds->name, trials => \@trials, traits => \@traits, ok => (@problems ? 0 : 1), problems => \@problems,
+                          outliers => scalar(@{ $ds->outliers() || [] }),
+                          ($fields ? (fields => $fields) : ()) };
+}
+
+=head2 models
+
+{ models => [ { id, name, description, properties } ] }: the user's saved
+satellite yield models.
+
+=cut
+
+sub models :Path('/ajax/satellite/models') Args(0) {
+    my ($self, $c) = @_;
+    return if !_login($c);
+    my $all = _satellite_models($c);
+    my @out = map { { id => $_ + 0, name => $all->{$_}{model_name}, description => $all->{$_}{model_description}, properties => $all->{$_}{model_properties} } } keys %$all;
+    @out = sort { $b->{id} <=> $a->{id} } @out;
+    $c->stash->{rest} = { models => \@out };
+}
+
+# ---------------------------------------------------------------------------
+# Training a yield model (/breeders/satellite/train)
+# ---------------------------------------------------------------------------
+
+=head2 train_regions
+
+Params species, ufs (comma separated IBGE state codes), years (comma
+separated). Without ufs: { states => [ { code, uf, name } ] }. Otherwise the
+IBGE PAM yields of the municipalities of those states (see
+CXGN::Satellite::Reference regional_yields).
+
+=cut
+
+sub train_regions :Path('/ajax/satellite/train_regions') Args(0) {
+    my ($self, $c) = @_;
+    return if !_login($c);
+    my $ref = CXGN::Satellite::Reference->new({ cache_dir => _work_dir($c), timeout => 18 });
+    my @ufs = grep { /^\d+$/ } split /,/, ($c->req->param('ufs') // '');
+    if (!@ufs) { $c->stash->{rest} = { states => $ref->brazil_states }; return }
+    my @years = grep { /^\d{4}$/ } split /,/, ($c->req->param('years') // '');
+    return _fail($c, 'At most 6 states at a time.') if @ufs > 6;
+    return _fail($c, 'At most 8 years.') if @years > 8;
+    my $res = try { $ref->regional_yields({ species => scalar $c->req->param('species'), uf_codes => \@ufs, years => \@years }) } catch { +{ error => "$_" } };
+    $c->stash->{rest} = $res;
+}
+
+=head2 train_run
+
+POST. Param request (JSON): { crop, trait_name, unit, per_ha, settings,
+regions => { ufs, years, keys => [ "mun_code|year|season" ] },
+dataset_id, trait_id }. The municipalities' yields are read again from IBGE
+here (never taken from the page); the dataset gives the trials. Starts the
+training job: { run_id, job_id, skipped, notify }.
+
+=cut
+
+sub train_run :Path('/ajax/satellite/train_run') Args(0) {
+    my ($self, $c) = @_;
+    return if !_login($c);
+    return _fail($c, 'Use POST to start a run.') if $c->req->method ne 'POST';
+    my $in = _json_param($c, 'request') or return _fail($c, 'The request is not valid.');
+    my $ref = CXGN::Satellite::Reference->new({ cache_dir => _work_dir($c), timeout => 18 });
+    my $r = ref $in->{regions} eq 'HASH' ? $in->{regions} : {};
+    my %want = map { $_ => 1 } grep { /^\d+\|\d{4}\|[a-z]+$/ } @{ ref $r->{keys} eq 'ARRAY' ? $r->{keys} : [] };
+    my @rows;
+    if (%want) {
+        my $res = try { $ref->regional_yields({ species => $in->{crop}, uf_codes => $r->{ufs}, years => $r->{years} }) } catch { +{ error => "$_" } };
+        return _fail($c, $res->{error}) if $res->{error};
+        @rows = grep { $want{"$_->{mun_code}|$_->{year}|$_->{season}"} } @{ $res->{rows} };
+        $in->{trait_name} = "Grain yield, IBGE PAM municipal average" if !@{ $in->{calibration_trials} || [] } && !$in->{dataset_id};
+        $in->{unit} = 'kg/ha';
+    }
+    $in->{region_rows} = \@rows;
+    if (($in->{dataset_id} // '') =~ /^\d+$/) {
+        my ($ds, $err) = _dataset($c, $in->{dataset_id});
+        return _fail($c, $err) if $err;
+        my @trials = map { $_->[0] } @{ $ds->retrieve_trials() || [] };
+        my %traits = map { $_->[0] => $_->[1] } @{ $ds->retrieve_traits() || [] };
+        return _fail($c, 'The dataset "' . $ds->name . '" has ' . scalar(@trials) . ' trial(s); training needs at least 8.') if @trials < 8;
+        return _fail($c, 'Choose the trait of the dataset to train on.') if ($in->{trait_id} // '') !~ /^\d+$/ || !$traits{ $in->{trait_id} };
+        $in->{trait_name} = $traits{ $in->{trait_id} } if !@rows;
+        $in->{calibration_trials} = \@trials;
+        # trials not validated for the trait: the page asks to remove outliers or to continue as they are
+        return _fail($c, 'Some trials are not validated for this trait: choose to remove the outliers or to continue with the values as they are.')
+            if ($in->{outliers} // '') !~ /^(remove|keep|validated)$/;
+        $in->{dataset_outliers} = $ds->outliers() || [];
+    }
+    my ($req, $err) = try { CXGN::Satellite::Run->new({ schema => _schema($c) })->build_training_request($in, $ref) } catch { (undef, "$_") };
+    return _fail($c, $err) if $err;
+    $req->{settings}{cores} = ($c->config->{satellite_cores} // '') =~ /^\d+$/ ? $c->config->{satellite_cores} + 0 : 6;
+    $req->{season_names} = [ _season_names($c) ];
+    $req->{stac_url} = $c->config->{satellite_stac_url} if $c->config->{satellite_stac_url};
+    my $n_reg = grep { ($_->{kind} // '') eq 'region' } @{ $req->{calibration} };
+    my $n_tri = @{ $req->{calibration} } - $n_reg;
+    my $name = substr($in->{name} // '', 0, 120);
+    # the model name given on the page (the saved model takes it too)
+    $name = 'Yield model: ' . join(' + ', ($n_reg ? "$n_reg municipality-seasons (IBGE)" : ()), ($n_tri ? "$n_tri trials" : ())) if $name !~ /\S/;
+    _launch($c, $req, { name => $name, sites => [] });
+}
+
+=head2 save_model
+
+POST. Params run_id, name, description. Saves the run's trained yield model
+(<run>.model.rds, with its calibration fields as training data) as a Breedbase
+analysis model of type satellite_yield_model.
+
+=cut
+
+sub save_model :Path('/ajax/satellite/save_model') Args(0) {
+    my ($self, $c) = @_;
+    return if !_login($c);
+    return _fail($c, 'Use POST to save.') if $c->req->method ne 'POST';
+    my ($run_id, $meta) = _my_run($c) or return;
+    my $name = $c->req->param('name') // '';
+    $name =~ s/^\s+|\s+$//g;
+    return _fail($c, 'Give the model a name.') if $name eq '' || length($name) > 200;
+    my $base = _work_dir($c) . "/$run_id";
+    return _fail($c, 'This run has no trained model (it needs a calibrated yield).') if !-e "$base.model.rds";
+    my $res = try { decode_json(read_file("$base.results.json")) } || {};
+    my $y = $res->{yield} || {};
+    # training data: the calibration fields of the run
+    my @cal = grep { $_->{used} } @{ $y->{calibration} || [] };
+    my $csv = "name,source,observed,season_start,season_end,clear_dates,ndvi_auc,ndvi_max,ndre_max,peak_day\n"
+        . join('', map { my $r = $_; join(',', map { my $v = $r->{$_} // ''; $v =~ s/[",\n]/ /g; $v } qw(name source observed start end n_dates ndvi_auc ndvi_max ndre_max peak_day)) . "\n" } @cal);
+    write_file("$base.training.csv", $csv);
+    my $user_id = _person_id($c);
+    my $role = $c->user->check_roles('curator') ? 'curator' : $c->user->check_roles('submitter') ? 'submitter' : 'user';
+    my $schema = _schema($c);
+    my $type = SGN::Model::Cvterm->get_cvterm_row($schema, 'satellite_yield_model', 'protocol_type') or return _fail($c, 'The model type is missing: run the db patch AddSatelliteTerms.');
+    my %props = (crop => $res->{crop}, trait => $y->{trait}, unit => $y->{unit}, per_ha => ($y->{per_ha} ? 1 : 0), model => $y->{model},
+                 predictors => $y->{predictors}, metrics => $y->{metrics}, season_mode => $y->{season_mode}, run_id => $run_id,
+                 dates => $res->{dates}, calibration_fields => scalar @cal, method => 'Sentinel-2 season curve features (Breedbase satellite page)');
+    my $archive = $c->config->{archive_path};
+    my ($metadata, $phenome) = ($c->dbic_schema('CXGN::Metadata::Schema'), $c->dbic_schema('CXGN::Phenome::Schema'));
+    my $saved = try {
+        CXGN::AnalysisModel::SaveModel->new({ bcs_schema => $schema, metadata_schema => $metadata, phenome_schema => $phenome, archive_path => $archive,
+            model_name => $name, model_description => scalar($c->req->param('description')) // '', model_language => 'R',
+            model_type_cvterm_id => $type->cvterm_id, model_properties => \%props, application_name => 'Breedbase satellite', application_version => '1',
+            is_public => 0, user_id => $user_id, user_role => $role })->save_model();
+    } catch { +{ error => "$_" } };
+    return _fail($c, $saved->{error}) if $saved->{error};
+    my $stored = try {
+        CXGN::AnalysisModel::GetModel->new({ bcs_schema => $schema, metadata_schema => $metadata, phenome_schema => $phenome, nd_protocol_id => $saved->{nd_protocol_id} })
+            ->store_analysis_model_files({ archived_model_file_type => 'satellite_yield_model_rds', model_file => "$base.model.rds",
+                archived_training_data_file_type => 'satellite_yield_model_training_data', archived_training_data_file => "$base.training.csv",
+                archived_auxiliary_files => [], archive_path => $archive, user_id => $user_id, user_role => $role });
+    } catch { +{ error => "$_" } };
+    return _fail($c, "The model was created but its files could not be stored: $stored->{error}") if ref $stored eq 'HASH' && $stored->{error};
+    $meta->{saved_model} = { id => $saved->{nd_protocol_id}, name => $name };
+    _write_meta($c, $run_id, $meta);
+    $c->stash->{rest} = { success => 1, model_id => $saved->{nd_protocol_id}, name => $name };
 }
 
 1;

@@ -16,7 +16,8 @@ dates) and of every calibration field (its own season) with CXGN::Satellite,
 writes <run base>.input.json and runs R/satellite/satellite_models.R, which
 writes <run base>.results.json. Calibration fields with the same season that
 lie within 3 km of each other get one search and the same scenes, so the R
-script reads them together. Progress lines start with "[satellite]". The exit
+script reads them together; each sample square of a regional training item
+(municipality, year, crop season) gets its own search. Progress lines start with "[satellite]". The exit
 status of R is written to <run base>.exit.
 
 =head1 AUTHOR
@@ -35,7 +36,8 @@ use CXGN::Satellite::Reference;
 
 my $base = shift or die "usage: satellite_models.pl <run base>\n";
 $| = 1;
-sub say_progress { print "[satellite] ", @_, "\n" }
+binmode STDOUT, ':encoding(UTF-8)';    # names of places (IBGE municipalities) are not ASCII
+sub say_progress { my @t = localtime; printf "[satellite] %02d:%02d:%02d %s\n", @t[2, 1, 0], join('', @_) }
 
 my $req = decode_json(do { local $/; open my $fh, '<', "$base.request.json" or die "Cannot read $base.request.json: $!\n"; <$fh> });
 my %args;
@@ -101,7 +103,19 @@ my $ok = eval {
             say_progress($r->{error} ? "no regional reference for $s->{name}: $r->{error}" : "reference for $s->{name}: $r->{source} $r->{area} $r->{value} kg/ha ($r->{basis})");
         }
     }
-    my $calib = $req->{calibration} || [];
+    # regional items (training): every sample square of a municipality gets its own search
+    my @regions = grep { ($_->{kind} // '') eq 'region' } @{ $req->{calibration} || [] };
+    my $k = 0;
+    foreach my $r (@regions) {
+        $k++;
+        say_progress("searching the images of $r->{name} ($k/" . scalar(@regions) . ", " . scalar(@{ $r->{squares} }) . " sample squares)");
+        foreach my $q (@{ $r->{squares} }) {
+            my ($lon, $lat) = @{ $q->{center} };
+            my $b = pad([ $lon, $lat, $lon, $lat ], $q->{size_m} / 2);
+            $q->{scenes} = sentinel2($b, $r->{start}, $r->{end});
+        }
+    }
+    my $calib = [ grep { ($_->{kind} // '') ne 'region' } @{ $req->{calibration} || [] } ];
     if (@$calib) {
         # group: same season, within 3 km (as the R script)
         my %by_season;
