@@ -7,6 +7,17 @@ $trial_stock_type => undef
 <& /util/import_javascript.mas, classes => [ 'jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
 <style>
 
+/* The row whose Histogram link was clicked last. Kept apart from the
+   DataTables row selection, which feeds "Copy Selected Results to a List". */
+#phenotype_summary_data tbody tr.trait-hist-active:not(.selected) > td {
+  background-color: #fcf8e3;
+}
+/* Marker that stays visible when the active row is also selected, so the
+   yellow never hides the selection colour. */
+#phenotype_summary_data tbody tr.trait-hist-active > td:first-child {
+  box-shadow: inset 4px 0 0 #f0ad4e;
+}
+
 .bar rect {
   fill: steelblue;
   shape-rendering: crispEdges;
@@ -358,6 +369,10 @@ input[type="text"] {
 %  }
         });
         jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
+            // Highlight only the row of the trait now shown in the histogram.
+            jQuery('#phenotype_summary_data tbody tr.trait-hist-active').removeClass('trait-hist-active');
+            jQuery(this).closest('tr').addClass('trait-hist-active');
+
             //console.log("scrolling histo into view");
             var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well').height() - 40;
             var target = jQuery(this.getAttribute('href'));
@@ -445,6 +460,16 @@ input[type="text"] {
         summary_table.on( 'deselect', selection_changed);
         summary_table.on( 'select', selection_changed);
 
+        // Clicks anywhere in the Histogram column (the last one) should not add
+        // the row to the selection used by "Copy Selected Results to a List".
+        // Checking the whole cell, not just the link, matters: a click next to
+        // the small icon would otherwise select the row.
+        summary_table.on( 'user-select', function (e, dt, type, cell, originalEvent) {
+            if (cell.index().column === dt.columns().count() - 1) {
+                e.preventDefault();
+            }
+        });
+
         jQuery('.selectAll-dt').click(function(){
           summary_table.rows().select();
           return false;
@@ -518,6 +543,8 @@ input[type="text"] {
                     traits_assayed_html = traits_assayed_html +"</select>";
                     jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
                     jQuery("#trial_summary_hist_dropdown").change(function(){
+                      // The histogram no longer matches a clicked table row.
+                      jQuery('#phenotype_summary_data tbody tr.trait-hist-active').removeClass('trait-hist-active');
                       trait_summary_hist_change(this.value);
                     });
 
