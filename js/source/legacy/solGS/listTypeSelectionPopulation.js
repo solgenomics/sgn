@@ -344,6 +344,36 @@ solGS.listTypeSelectionPopulation = {
     }
   },
 
+  fetchPredictedSelectionPops: function() {
+    if (!document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
+      return;
+    }
+
+    var modelArgs = solGS.getModelArgs();
+    if (!modelArgs.training_traits_code) {
+      return;
+    }
+
+    var args = {
+      training_pop_id: modelArgs.training_pop_id,
+      training_traits_code: modelArgs.training_traits_code,
+      genotyping_protocol_id: modelArgs.genotyping_protocol_id,
+      data_set_type: modelArgs.data_set_type,
+    };
+
+    jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: { arguments: JSON.stringify(args) },
+      url: "/solgs/predicted/list/dataset/selection/pops",
+    }).done((res) => {
+      (res.selection_pops || []).forEach((predictedPop) => {
+        this.predictedSelectionPops[predictedPop.id] = predictedPop;
+        this.updateAnalysisMenus(predictedPop);
+      });
+    });
+  },
+
   initializePredictedSelectionPops: function(selectionPops) {
     selectionPops.forEach((selectionPop) => {
       if (selectionPop) {
@@ -449,5 +479,7 @@ jQuery(document).ready(function () {
       solGS.listTypeSelectionPopulation.initializePredictedSelectionPops(populations);
     }
   });
+
+  solGS.listTypeSelectionPopulation.fetchPredictedSelectionPops();
 
 });

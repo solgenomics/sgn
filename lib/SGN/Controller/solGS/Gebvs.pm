@@ -247,7 +247,7 @@ sub catalogue_traits_selection {
     my $file = $c->stash->{traits_selection_catalogue_file};
 
     my $traits_selection_id = $self->create_traits_selection_id($traits_ids);
-    my $ids = join(',', @$traits_ids);
+    my $ids = join(',', sort(uniq(@$traits_ids)));
     my $entry = $traits_selection_id . "\t" . $ids;
 
     if (!-s $file) {
@@ -296,7 +296,7 @@ sub create_traits_selection_id {
     my ($self, $traits_ids) = @_;
 
     if ($traits_ids) {
-        return  crc32(join('', sort(uniq(@$traits_ids))));
+        return  crc32(join(',', sort(uniq(@$traits_ids))));
     } else {
         return 0;
     }

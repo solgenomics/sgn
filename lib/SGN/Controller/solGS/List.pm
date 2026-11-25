@@ -80,6 +80,88 @@ sub check_predicted_list_selection :
 
 }
 
+sub predicted_list_dataset_selection_pops :Path('/solgs/predicted/list/dataset/selection/pops') Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
+
+    my $pops = $self->get_predicted_list_dataset_selection_pops($c);
+
+    $c->res->content_type('application/json');
+    $c->res->body( to_json( { selection_pops => $pops } ) );
+
+}
+
+sub get_predicted_list_dataset_selection_pops {
+    my ( $self, $c ) = @_;
+
+    my $training_pop_id     = $c->stash->{training_pop_id};
+    my $traits_selection_id = $c->stash->{training_traits_code};
+
+    if (!$training_pop_id || !$traits_selection_id) {
+        return [];
+    }
+
+    $c->stash->{traits_selection_list} = undef;
+    $c->controller('solGS::Gebvs')->get_traits_selection_list( $c, $traits_selection_id );
+    my $traits_ids = $c->stash->{traits_selection_list};
+
+    if (!$traits_ids || !@$traits_ids) {
+        return [];
+    }
+
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    return [] if !$protocol_id;
+
+    my $candidates = eval {
+        $c->controller('solGS::Files')
+          ->predicted_list_dataset_selection_pops_ids( $c, $training_pop_id, $protocol_id );
+    };
+
+    if ($@) {
+        print STDERR "Error reading predicted list type selection pops: $@";
+        return [];
+    }
+
+    my $user_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
+    my $model   = $c->controller('solGS::Search')->model($c);
+
+    my @pops;
+    foreach my $selection_pop_id (@$candidates) {
+        $c->stash->{training_traits_ids} = $traits_ids;
+        $c->controller('solGS::Gebvs')
+          ->selection_pop_analyzed_traits( $c, $training_pop_id, $selection_pop_id );
+        my $analyzed = $c->stash->{selection_pop_analyzed_traits_ids};
+        next if !$analyzed || scalar(@$analyzed) != scalar(@$traits_ids);
+
+        my ( $data_str, $id ) = split( /_/, $selection_pop_id );
+        my $pop;
+        if ( $data_str eq 'list' ) {
+            $pop = $model->get_list_ownership( $data_str, $id );
+        }
+        else {
+            # dies if the dataset no longer exists
+            $pop = eval { $model->get_dataset_ownership( $data_str, $id ) };
+        }
+
+        next if !$pop;
+
+        my $owner = $pop->{owner};
+        next if !$pop->{is_public} && !( $user_id && $owner && $owner == $user_id );
+
+        push @pops,
+          {
+            id       => $selection_pop_id,
+            name     => $pop->{name},
+            data_str => $data_str,
+            pop_type => 'selection',
+          };
+    }
+
+    return \@pops;
+}
+
 sub get_trial_id : Path('/solgs/get/trial/id') Args(0) {
     my ( $self, $c ) = @_;
 

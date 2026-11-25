@@ -73,15 +73,30 @@ sub population : Path('/solgs/population') Args() {
         $c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
     }
 
-    my $cached = $c->controller('solGS::CachedResult')
-      ->check_single_trial_training_data( $c, $training_pop_id, $protocol_id );
+    my $message;
+    if ( $training_pop_id =~ /^\d+$/ ) {
+        my $eligibility =
+          $self->trial_training_pop_eligibility( $c, $training_pop_id,
+            $c->stash->{genotyping_protocol_id} );
 
-    if ( !$cached ) {
-        $c->stash->{message} =
+        if ( !$eligibility->{traits_count} || !$eligibility->{lines_count} ) {
+            $message = $eligibility->{message};
+        }
+    }
+    elsif (
+        !$c->controller('solGS::CachedResult')
+        ->check_single_trial_training_data( $c, $training_pop_id,
+            $protocol_id )
+      )
+    {
+        $message =
 "Cached output for this training population  does not exist anymore.\n"
           . "Please go to <a href=\"/solgs/search/\">the search page</a>"
           . " and create the training population data.";
+    }
 
+    if ($message) {
+        $c->stash->{message}  = $message;
         $c->stash->{template} = "/generic_message.mas";
     }
     else {
@@ -133,7 +148,12 @@ sub get_markers_count {
               ->genotype_file_name( $c, $training_pop_id, $protocol_id );
             $geno_file = $c->stash->{genotype_file_name};
         }
-    }
+
+        if ( !-s $geno_file ) {
+            return $c->controller('solGS::Search')->model($c)
+              ->protocol_marker_count($protocol_id);
+        }
+    } 
     elsif ( $pop_hash->{selection_pop} ) {
         my $selection_pop_id = $pop_hash->{selection_pop_id};
         $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -171,7 +191,7 @@ sub count_predicted_lines {
         $c->controller('solGS::Files')
           ->rrblup_training_gebvs_file( $c, $training_pop_id, $trait_id );
         $gebvs_file = $c->stash->{rrblup_training_gebvs_file};
-    }
+    } 
     elsif ( $selection_pop_id && $training_pop_id ) {
         $c->controller('solGS::Files')
           ->rrblup_selection_gebvs_file( $c, $training_pop_id,
@@ -195,17 +215,98 @@ sub training_pop_lines_count {
         $c->controller('solGS::Files')
           ->rrblup_training_gebvs_file( $c, $training_pop_id, $trait_id );
         $genotypes_file = $c->stash->{rrblup_training_gebvs_file};
-    }
-    else {
+    } else {
         $c->controller('solGS::Files')
           ->genotype_file_name( $c, $training_pop_id, $protocol_id );
         $genotypes_file = $c->stash->{genotype_file_name};
     }
 
-    my $count =
-      $c->controller('solGS::Utils')->count_data_rows($genotypes_file);
+    my $count;
+    if ( -s $genotypes_file ) {
+        $count =
+          $c->controller('solGS::Utils')->count_data_rows($genotypes_file);
+    } 
+    elsif ( $training_pop_id =~ /^\d+$/ ) {
+        $count = $c->controller('solGS::Search')->model($c)
+          ->count_phenotyped_genotyped_accessions( [$training_pop_id],
+            $protocol_id );
+    }
 
     return $count;
+}
+
+sub min_training_pop_size {
+    return 20;
+}
+
+sub trial_training_pop_eligibility {
+    my ( $self, $c, $trial_id, $protocol_id ) = @_;
+
+    my $min_lines_count = $self->min_training_pop_size;
+
+    $c->controller('solGS::Trait')->save_single_trial_traits( $c, $trial_id );
+    $c->controller('solGS::Trait')->get_all_traits( $c, $trial_id );
+    my $traits = $c->stash->{training_pop_traits_details} || [];
+
+    my $lines_count =
+      $self->training_pop_lines_count( $c, $trial_id, $protocol_id ) || 0;
+
+    my $message;
+    if ( !@$traits ) {
+        $message = 'This trial has no phenotype data to train a model.';
+    } 
+    elsif ( $lines_count < $min_lines_count ) {
+        $message =
+            "This trial has $lines_count accessions with both phenotype data"
+          . " and genotype data from the selected genotyping protocol."
+          . " The minimum required to train a model is $min_lines_count.";
+    }
+
+    return {
+        'eligible'     => $message ? 0 : 1,
+        'message'      => $message,
+        'traits_count' => scalar(@$traits),
+        'lines_count'  => $lines_count,
+    };
+}
+
+sub check_training_pop_eligibility :Path('/solgs/check/training/pop/eligibility') Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $pop_id        = $c->req->param('training_pop_id');
+    my $protocol_id   = $c->req->param('genotyping_protocol_id');
+    my $data_set_type = $c->req->param('data_set_type') || '';
+
+    my $ret = { 'eligible' => 0 };
+
+    if ( $pop_id && $pop_id =~ /^\d+$/ ) {
+        $c->controller('solGS::genotypingProtocol')
+          ->stash_protocol_id( $c, $protocol_id );
+        $protocol_id = $c->stash->{genotyping_protocol_id};
+
+        $c->stash->{training_pop_id} = $pop_id;
+
+        if ( $data_set_type =~ /combined_populations/ ) {
+            $ret = $c->controller('solGS::combinedTrials')
+              ->combined_trials_training_pop_eligibility( $c, $pop_id,
+                $protocol_id );
+        } 
+        else {
+            $ret = $self->trial_training_pop_eligibility( $c, $pop_id,
+                $protocol_id );
+        }
+
+        $ret->{genotyping_protocol_id} = $protocol_id;
+    } 
+    else {
+        $ret->{message} = 'A valid training population id is required.';
+    }
+
+    $ret = to_json($ret);
+
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
 }
 
 sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {

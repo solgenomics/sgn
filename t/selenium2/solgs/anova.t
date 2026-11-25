@@ -33,23 +33,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
-    $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
-    sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test Kasese Tr pop');
-    sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-    sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(180);
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(5);
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
-    sleep(5);
-    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(5);
-    $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
+    $d->find_element_ok('Kasese', 'partial_link_text', 'go to training pop page')->click();
     sleep(15);
 
     my $anova = $d->find_element('ANOVA', 'partial_link_text', 'scroll to anova');

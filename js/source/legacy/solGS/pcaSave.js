@@ -9,7 +9,7 @@ jQuery(document).ready(function () {
   jQuery('body').on("click", ".download_pca_output", function (e) {
     var elemId = e.target.id;
     if(elemId.match(/save_pcs_btn/)) {
-        var pcaArgs = solGS.pca.getPcaAnalysisArgs(elemId);
+        var pcaArgs = solGS.pca.getSelectedPopPcaArgs(elemId);
 
         var savePcaBtnId = `#${elemId}`;
         var pcaFileId = elemId.replace("save_pcs_btn_", '');

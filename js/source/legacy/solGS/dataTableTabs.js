@@ -71,6 +71,14 @@ solGS.dataTableTabs = {
           $table.show();
           options.displayTable(tableId, rows);
           $pane.data("population-table-state", "loaded");
+
+          if (options.afterDisplay) {
+            try {
+              options.afterDisplay(populations, rows, tableId);
+            } catch (afterDisplayError) {
+              console.error(afterDisplayError);
+            }
+          }
         } catch (error) {
           $table.remove();
           $pane.removeData("population-table-state");

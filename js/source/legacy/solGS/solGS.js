@@ -29,7 +29,9 @@ solGS.submitJob = {
       "|kinship/analysis/" +
       "|cluster/analysis/";
 
-    if (page.match(matchItems)) {
+    if (page.match(/^\/?solgs\/(population|populations\/combined)\/\d+(\/|$)/)) {
+      this.checkTrainingPopEligibility(page);
+    } else if (page.match(matchItems)) {
       var multiTraitsUrls = "solgs/traits/all/population/" + "|solgs/models/combined/trials/";
 
       if (page.match(multiTraitsUrls)) {
@@ -44,6 +46,41 @@ solGS.submitJob = {
     } else {
       this.goToPage(page, args);
     }
+  },
+
+  checkTrainingPopEligibility: function (page) {
+    var urlIds = page.match(/solgs\/(?:population|populations\/combined)\/(\d+)(?:\/gp\/(\d+))?/);
+    var dataSetType = page.match(/solgs\/populations\/combined\//)
+      ? "combined_populations"
+      : "single_population";
+
+    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+    jQuery.blockUI({ message: "Checking the training population for phenotype and genotype data..." });
+
+    jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      data: {
+        training_pop_id: urlIds[1],
+        genotyping_protocol_id: urlIds[2],
+        data_set_type: dataSetType,
+      },
+      url: "/solgs/check/training/pop/eligibility",
+      success: function (res) {
+        if (res.eligible) {
+          // not goToPage: for combined trials, it compares the trials'
+          // genotype files, which do not exist before a model is trained
+          window.location = page;
+        } else {
+          jQuery.unblockUI();
+          solGS.alertMessage(res.message);
+        }
+      },
+      error: function () {
+        jQuery.unblockUI();
+        alert("Error occured checking the training population eligibility.");
+      },
+    });
   },
 
   checkCachedResult: function (page, args) {

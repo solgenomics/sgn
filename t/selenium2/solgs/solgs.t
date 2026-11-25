@@ -7,7 +7,6 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
-use Config::Any;
 use File::Path qw(remove_tree);
 
 my $d = SGN::Test::WWW::WebDriver->new();
@@ -19,8 +18,8 @@ my $solgs_data = SGN::Test::solGSData->new({
     'plots_list_subset' => 60,
     'user_id' => 40,
 });
+
 my $cache_dir = $solgs_data->base_analyses_cache_dir();
-print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
 
 
 my $accessions_list =  $solgs_data->load_accessions_list();
@@ -46,13 +45,6 @@ my $plots_dt = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id = 'dataset_' . $plots_dt->{dataset_id};
 
-print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
-print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
-print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
-
-print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
-print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 
 remove_tree($cache_dir, {safe => 1});
@@ -67,30 +59,17 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
-    $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
-    sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test Kasese Tr pop');
-    sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-    sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(5);
-    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
-    sleep(5);
-    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(5);
-    $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
+    $d->find_element_ok('Kasese', 'partial_link_text', 'go to training pop page')->click();
     sleep(15);
- 
-    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');
+
+    $d->find_element_ok('Traits acronyms', 'partial_link_text',  'download traits acronyms');
     sleep(3);
-    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
+    is(scalar(@{$d->driver->find_elements('Genotype data', 'partial_link_text')}), 0,
+        'no genotype data download link before data query');
+    is(scalar(@{$d->driver->find_elements('Phenotype data', 'partial_link_text')}), 0,
+        'no phenotype data download link before data query');
     sleep(3);
-    
+
    # #  #trial type training population: single trait modeling
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
@@ -102,9 +81,14 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(7);
+
+    $d->find_element_ok('Genotype data', 'partial_link_text',  'download training pop genotype data');
+    sleep(3);
+    $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
+    sleep(3);
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(15);

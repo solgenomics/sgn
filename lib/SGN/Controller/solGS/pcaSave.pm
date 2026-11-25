@@ -32,6 +32,12 @@ sub pca_result_details :Path('/solgs/pca/result/details') Args() {
 	my $stored = $c->controller('solGS::AnalysisSave')->check_stored_analysis($c);
 
 	if (!$stored) {
+		$c->controller('solGS::pca')->pca_scores_file($c) if $c->stash->{file_id};
+		if (!$c->stash->{file_id} || !-s $c->stash->{pca_scores_file}) {
+			$c->stash->{rest}{error} = 'No PC scores were found to save for this analysis';
+			return;
+		}
+
 		my $analysis_details;
 
 		eval {
