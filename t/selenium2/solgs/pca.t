@@ -3,7 +3,7 @@ use strict;
 
 use lib 't/lib';
 
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -20,7 +20,7 @@ my $solgs_data = SGN::Test::solGSData->new({
 });
 
 my $cache_dir = $solgs_data->base_analyses_cache_dir();
-my $pca_dir = catdir( $cache_dir, 'pca' );
+my $pca_dir = File::Spec->catdir( $cache_dir, 'pca' );
 
 my $accessions_list = $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
@@ -58,6 +58,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_datasets');
+    $d->filter_datatable('pca_private_dataset_table', $trials_dt_name);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
@@ -74,6 +75,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
     $d->select_datatable_tab('pca_private_datasets');
+    $d->filter_datatable('pca_private_dataset_table', $trials_dt_name);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(2);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca trials dataset (phenotype)')->click();
@@ -95,6 +97,7 @@ $d->while_logged_in_as("submitter", sub {
     remove_tree($cache_dir, {safe => 1});
 
     $d->select_datatable_tab('pca_private_datasets');
+    $d->filter_datatable('pca_private_dataset_table', $trials_dt_name);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
@@ -131,6 +134,7 @@ $d->while_logged_in_as("submitter", sub {
     remove_tree($cache_dir, {safe => 1});
 
     $d->select_datatable_tab('pca_private_lists');
+    $d->filter_datatable('pca_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
@@ -147,6 +151,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
     $d->select_datatable_tab('pca_private_lists');
+    $d->filter_datatable('pca_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca accessions list (genotype)')->click();
@@ -172,6 +177,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_lists');
+    $d->filter_datatable('pca_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
@@ -185,6 +191,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_lists');
+    $d->filter_datatable('pca_private_list_table', $plots_list_name);
     $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(2);
     $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
@@ -198,6 +205,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_lists');
+    $d->filter_datatable('pca_private_list_table', $trials_list_name);
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
@@ -214,6 +222,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_lists');
+    $d->filter_datatable('pca_private_list_table', $trials_list_name);
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
@@ -230,6 +239,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_datasets');
+    $d->filter_datatable('pca_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
@@ -243,6 +253,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_datasets');
+    $d->filter_datatable('pca_private_dataset_table', $plots_dt_name);
     $d->find_element_ok('//tr[@id="' . $plots_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $plots_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
@@ -256,6 +267,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_datasets');
+    $d->filter_datatable('pca_private_dataset_table', $trials_dt_name);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
@@ -269,6 +281,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('pca_private_datasets');
+    $d->filter_datatable('pca_private_dataset_table', $trials_dt_name);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();

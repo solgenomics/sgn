@@ -5,7 +5,7 @@ $trial_stock_type => undef
 </%args>
 
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js' ], entries => [ 'trial_accession_change' ] &>
 
 
 <!-- Load DataTables CSS and JS -->
@@ -69,6 +69,15 @@ $trial_stock_type => undef
 	                        </div>
 	                      </div>
 
+	                      <div class="form-group">
+	                        <div class="col-sm-offset-3 col-sm-9">
+	                          <div class="checkbox">
+	                            <label><input type="checkbox" id="replace_stock_rename_plots" name="replace_stock_rename_plots" /> Update plot names</label>
+	                          </div>
+	                          <p class="help-block" style="white-space: normal">The plot names are kept unless this is checked: then the old name is replaced where it is a whole part of a plot name, or the plot name template of the trial is used, and plants and tissue samples are renamed with their plot. You see what changes before anything is changed.</p>
+	                        </div>
+	                      </div>
+
                     </form>
                 </div>
             </div>
@@ -129,6 +138,7 @@ $trial_stock_type => undef
                 <div class="container-fluid">
 
                     <p3 id="replace_stock_success_message"></p3>
+                    <ul id="replace_stock_success_details"></ul>
 
                 </div>
             </div>
@@ -227,7 +237,7 @@ $trial_stock_type => undef
                 </h4>
                 <dd>- You have to be a <b>curator</b> or a <b>submitter and associated to the breeding program</b> of the trial to use the features of this tool.</dd>
                 <dd>- <b>Input boxes</b> used within the field map tool will automatically (<b>autocomplete</b>) give accession name options from the database when you start typing the accession name.</dd>
-                <dd>- <b>Changes can only be made to the physical layout when phenotypes are not yet upload for the trial.</b></dd>
+                <dd>- <b>Once phenotypes are uploaded for the trial, only curators can change accessions</b>, after a warning, with Change Accessions (a file of what was planted) or the plot form. Change Accessions and Replace Accession show what will change before anything is changed.</dd>
 
                 </div>
             </div>
@@ -557,37 +567,18 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
         replace_stock_in_trial(trial_stock_type)
     });
 
-    function replace_stock_in_trial() {
+    async function replace_stock_in_trial() {
         jQuery('#replace_trial_stocks_dialog').modal("hide");
-        var old_stock_id = jQuery('#trial_stock_table').val();
-        var new_stock = jQuery('#replace_database_stock').val();
-
-        new jQuery.ajax({
-            type: 'POST',
-            url: '/ajax/breeders/trial/<% $trial_id %>/replace_stock',
-            dataType: "json",
-            data: {
-                'old_stock_id': old_stock_id,
-                'new_stock': new_stock,
-                'trial_stock_type': trial_stock_type,
-            },
-            beforeSend: function(){
-                jQuery('#working_modal').modal("show");
-            },
-            success: function (response) {
-                jQuery('#working_modal').modal("hide");
-
-                if (response.error) {
-                    alert("Error Replacing Stock: "+response.error);
-                } else {
-                    jQuery('#replace_stock_dialog_success_message').modal("show");
-                }
-            },
-            error: function() {
-                jQuery('#working_modal').modal("hide");
-                alert('An error occurred replacing stock');
-            }
-        });
+        var summary = await window.jsMod['trial_accession_change'].changeWithPreview('/ajax/breeders/trial/<% $trial_id %>/replace_stock', {
+            'old_stock_id': jQuery('#trial_stock_table').val(),
+            'new_stock': jQuery('#replace_database_stock').val(),
+            'rename_plots': jQuery('#replace_stock_rename_plots').is(':checked') ? 1 : 0,
+        }, { action: "Error Replacing Stock", title: "Replace Accession" });
+        if (summary) {
+            // the success dialog reloads the page when it is closed
+            window.jsMod['trial_accession_change'].showSummary('#replace_stock_success_details', summary, false);
+            jQuery('#replace_stock_dialog_success_message').modal('show');
+        }
     }
 
   jQuery('#close_replace_field_map_dialog').click( function() {
@@ -650,7 +641,7 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
     var subs_success_message = '';
 
     if (trial_stock_type == 'family_name') {
-        edit_dialog_title = 'Replace Trial Family Names Or Substitute Family Names Within A Trial Plots';
+        edit_dialog_title = 'Replace Trial Family Names Or Substitute Family Names Within Trial Plots';
         replace_button_label = 'Replace Family Name';
         substitute_button_label = 'Substitute Family Name';
         replace_dialog_title = 'Replace Trial Family Name in '.concat(trial_name);
@@ -664,7 +655,7 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
         subs_message_title = 'Substitute Plot Family Name';
         subs_success_message = 'Family Name was substituted successfully.';
     } else if (trial_stock_type == 'cross') {
-        edit_dialog_title = 'Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots';
+        edit_dialog_title = 'Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within Trial Plots';
         replace_button_label = 'Replace Cross Unique ID';
         substitute_button_label = 'Substitute Cross Unique ID';
         replace_dialog_title = 'Replace Trial Cross Unique ID in '.concat(trial_name);
@@ -678,7 +669,7 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
         subs_message_title = 'Substitute Cross Unique ID';
         subs_success_message = 'Crosss Unique ID was substituted successfully.';
     } else {
-        edit_dialog_title = 'Replace Trial Accessions Within A Trial Plots';
+        edit_dialog_title = 'Replace Trial Accessions Within Trial Plots';
         replace_button_label = 'Replace Accession';
         // substitute_button_label = 'Substitute Accession';
         replace_dialog_title = 'Replace Trial Accession in '.concat(trial_name);

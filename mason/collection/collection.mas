@@ -337,6 +337,11 @@ jQuery(document).ready(function () {
 var collections_table;
 var files_table;
 
+// Names, descriptions and user names are stored as typed: show them as text.
+function collection_escape_html(s) {
+    return jQuery('<div>').text(s == null ? '' : s).html();
+}
+
 function _load_collection_search_results() {
     collections_table = jQuery('#collections_search_results').DataTable({
         'destroy' : true,
@@ -364,14 +369,14 @@ function _load_collection_search_results() {
         },
         'columns': [
             { 'data': 'name', 'render': function (name, type, row) {
-                return '<a href="/collection/' + row.collection_id + '">' + name + '</a>';
+                return '<a href="/collection/' + row.collection_id + '">' + collection_escape_html(name) + '</a>';
             } },
-            { 'data': 'description', 'defaultContent': '<span class="text-muted">&mdash;</span>' },
-            { 'data': 'username', 'defaultContent': '<span class="text-muted">&mdash;</span>' },
+            { 'data': 'description', 'defaultContent': '<span class="text-muted">&mdash;</span>', 'render': function (d) { return d ? collection_escape_html(d) : '<span class="text-muted">&mdash;</span>'; } },
+            { 'data': 'username', 'defaultContent': '<span class="text-muted">&mdash;</span>', 'render': function (d) { return d ? collection_escape_html(d) : '<span class="text-muted">&mdash;</span>'; } },
             { 'data': 'projects', 'render': function (projects) {
                 if (!projects || !projects.length) { return '<span class="text-muted">&mdash;</span>'; }
                 return projects.map(function (p) {
-                    return '<a href="/breeders/trial/' + p.project_id + '">' + p.name + '</a>';
+                    return '<a href="/breeders/trial/' + p.project_id + '">' + collection_escape_html(p.name) + '</a>';
                 }).join(', ');
             } },
             { 'data': '<% $collection_type %>_count' },

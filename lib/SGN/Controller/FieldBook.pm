@@ -230,21 +230,38 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
 sub delete_file : Path('/fieldbook/delete_file/') Args(1) {
      my $self  =shift;
      my $c = shift;
-     my $json = JSON->new();
      my $file_id = shift;
-     my $decoded;
-     if ($file_id){
-		 $decoded = $json->allow_nonref->utf8->decode($file_id);
-     }
-	#print STDERR Dumper($file_id);
-	print "File ID: $file_id\n";
-     my $dbh = $c->dbc->dbh();
-     my $h_nd_exp_md_files = $dbh->prepare("delete from phenome.nd_experiment_md_files where file_id=?;");
-     $h_nd_exp_md_files->execute($decoded);
 
-     my $h_md_files = $dbh->prepare("delete from metadata.md_files where file_id=?;");
-     $h_md_files->execute($decoded);
-     print STDERR "File successfully deleted.\n";
+     if (!$c->user()) {
+	 $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	 return;
+     }
+     my $dbh = $c->dbc->dbh();
+
+     # Only a Field Book layout or trait file (the files the /fieldbook page
+     # lists with a Delete link), and only by its owner or a curator.
+     my ($owner_id) = defined($file_id) && $file_id =~ /\A[0-9]{1,9}\z/ ? $dbh->selectrow_array(
+	 "SELECT md_metadata.create_person_id FROM metadata.md_files JOIN metadata.md_metadata USING (metadata_id) WHERE md_files.file_id = ? AND md_files.filetype IN ('tablet field layout xls', 'tablet trait file')",
+	 undef, $file_id) : ();
+     my $user_id = $c->user()->get_object()->get_sp_person_id();
+     if (!$owner_id || ($owner_id != $user_id && !$c->user()->check_roles('curator'))) {
+	 $c->res->redirect('/fieldbook');
+	 return;
+     }
+
+     # Both rows or neither.
+     my $own_transaction = $dbh->{AutoCommit};
+     eval {
+	 local $dbh->{RaiseError} = 1;
+	 $dbh->begin_work() if $own_transaction;
+	 $dbh->do("delete from phenome.nd_experiment_md_files where file_id=?", undef, $file_id);
+	 $dbh->do("delete from metadata.md_files where file_id=?", undef, $file_id);
+	 $dbh->commit() if $own_transaction;
+     };
+     if ($@) {
+	 print STDERR "Field Book file $file_id was not deleted: $@\n";
+	 eval { $dbh->rollback() } if $own_transaction;
+     }
 	$c->response->redirect('/fieldbook');
 }
 

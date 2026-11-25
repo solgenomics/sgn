@@ -10,7 +10,7 @@ $default_plant_material_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="reset" class="close" id="upload_transgenic_historical_data_dismiss_button_1" name="upload_transgenic_historical_data_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="uploadTransgenicHistoricalDialog">Upload Transgenic Data</h4>
             </div>
             <div class="modal-body">
@@ -37,7 +37,7 @@ $default_plant_material_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="upload_transgenic_historical_data_dismiss_button_2" name="upload_transgenic_historical_data_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="upload_transgenic_historical_data_submit" id="upload_transgenic_historical_data_submit">Upload</button>
             </div>
         </div>
@@ -108,6 +108,7 @@ $default_plant_material_name => undef
                                 <td>accession_name</td>
                                 <td>vector_construct</td>
                                 <td>batch_number</td>
+                                <td>FEC_batch</td>
                                 <td>is_a_control</td>
                                 <td>existing_accession</td>
                                 <td>number_of_insertions</td>
@@ -124,6 +125,7 @@ $default_plant_material_name => undef
 
                     <b>Optional fields:</b>
                     <ul>
+                        <li>FEC_batch (Batch Number of Friable Embryogenic Calli used in the transformation)</li>
                         <li>is_a_control (if you would like to set any new accession as a control for any batch, please indicate "1" for the "is_a_control" column.)</li>
                         <li>existing_accession (If you previously added/uploaded transgenic accessions without linking to a transformation ID and you would like to link those names to a transformation ID, please indicate "1" for the "existing_accession" column.)</li>
                         <li>number_of_insertions (You can indicate number of transgene insertions during transgenic historical data upload.)</li>
@@ -164,32 +166,31 @@ jQuery(document).ready(function(){
             return;
         }
 
-        jQuery('#upload_transgenic_historical_data_form').attr("action", "/ajax/transformation/upload_transgenic_historical_data");
-
-        jQuery("#upload_transgenic_historical_data_form").submit();
-        jQuery("#upload_transgenic_historical_data_dialog").modal("hide");
-    });
-
-    jQuery('#upload_transgenic_historical_data_form').iframePostForm({
-        json: true,
-        post: function(){
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error) {
-                jQuery("#upload_transgenic_data_error_display tbody").html('');
-                jQuery("#upload_transgenic_data_error_display tbody").append(response.error);
-                jQuery("#upload_transgenic_data_error_display").modal("show");
-                return;
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: "/ajax/transformation/upload_transgenic_historical_data",
+            type: 'POST',
+            data: new FormData(jQuery("#upload_transgenic_historical_data_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    jQuery("#upload_transgenic_data_error_display tbody").html('');
+                    jQuery("#upload_transgenic_data_error_display tbody").append(response.error);
+                    jQuery("#upload_transgenic_data_error_display").modal("show");
+                    return;
+                }
+                if (response.success) {
+                    jQuery('#upload_transgenic_historical_data_dialog').modal('hide');
+                    jQuery('#transgenic_data_saved_dialog_message').modal("show");
+                }
             }
-            if (response.success) {
-                jQuery('#transgenic_data_saved_dialog_message').modal("show");
-            }
-        }
+        });
     });
 
     jQuery("#dismiss_transgenic_data_saved_dialog").click(function(){
+        jQuery('#transgenic_historical_data_file').val('');
         location.reload();
     });
 
@@ -197,6 +198,10 @@ jQuery(document).ready(function(){
         jQuery("#transgenic_data_upload_spreadsheet_info_dialog").modal("show");
     });
 
+    jQuery("[name='upload_transgenic_historical_data_dismiss_button']").click(function() {
+        jQuery('#upload_transgenic_historical_data_dialog').modal('hide');
+        jQuery('#transgenic_historical_data_file').val('');
+    });
 
 });
 

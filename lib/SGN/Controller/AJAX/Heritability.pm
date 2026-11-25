@@ -18,6 +18,7 @@ use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
 use Cwd qw(cwd);
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -166,8 +167,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         # don't block and wait if the cluster looks full
         max_cluster_jobs => 1_000_000_000,
     };
-    my $cmd_str = join(" ",(
-        "Rscript ",
+    # Every argument is quoted: values come from the request or the database, and the job runs the command in bash.
+    my $cmd_str = join(" ", "Rscript", shell_quote(
         $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
         $pheno_filepath,
         $trait_id,

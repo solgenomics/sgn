@@ -18,15 +18,17 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'accession_name', 'vector_construct', 'batch_number'],
-        optional_columns => [ 'is_a_control', 'existing_accession', 'number_of_insertions' ],
+        optional_columns => [ 'is_a_control', 'existing_accession', 'number_of_insertions', 'FEC_batch' ],
         column_aliases => {
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
             'batch_number' => ['batch number'],
+            'FEC_batch' => ['FEC batch', 'FEC BATCH'],
             'is_a_control' => ['is a control'],
             'existing_accession' => ['existing accession'],
             'number_of_insertions' => ['number of insertions'],
-        }
+        },
+        unique_only_columns => [ 'accession_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
@@ -52,7 +54,8 @@ sub _validate_with_plugin {
 
     my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_vector_constructs = $parsed_values->{'vector_construct'};
-    my $is_existing_accessions = $parsed_values->{'existing_accession'};
+    my $existing_accessions = $parsed_values->{'existing_accession'};
+    my $FEC_batches = $parsed_values->{'FEC_batch'};
 
     my $vector_construct_validator = CXGN::List::Validate->new();
     my @vector_constructs_missing = @{$vector_construct_validator->validate($schema,'vector_constructs', $seen_vector_constructs)->{'missing'}};
@@ -64,18 +67,40 @@ sub _validate_with_plugin {
     my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'male_parent', 'stock_relationship')->cvterm_id();
 
-    if ($is_existing_accessions) {
-        if (scalar(@$is_existing_accessions) > 0) {
-            my $accession_validator = CXGN::List::Validate->new();
-            my @accessions_missing = @{$accession_validator->validate($schema,'accessions_and_obsoleted_accessions', $seen_accession_names)->{'missing'}};
-            if (scalar(@accessions_missing) > 0) {
-                push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+    my $have_existing_accessions;
+    my $have_FEC_batches;
+    if ($existing_accessions) {
+        if (scalar @$existing_accessions > 0) {
+            $have_existing_accessions = 1;
+        }
+    }
+
+    if ($FEC_batches) {
+        if (scalar @$FEC_batches > 0) {
+            $have_FEC_batches = 1;
+        }
+    }
+
+    if ($have_existing_accessions) {
+        my $accession_validator = CXGN::List::Validate->new();
+        my @accessions_missing = @{$accession_validator->validate($schema,'accessions_and_obsoleted_accessions', $seen_accession_names)->{'missing'}};
+        if (scalar(@accessions_missing) > 0) {
+            push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+        }
+    }
+
+    my %associated_FEC_batch;
+    if ($have_existing_accessions || $have_FEC_batches) {
+        foreach my $row (@$parsed_data) {
+            my $accession_name = $row->{'accession_name'};
+            my $vector_construct = $row->{'vector_construct'};
+            my $batch_number = $row->{'batch_number'};
+            my $FEC_batch = $row->{'FEC_batch'};
+            if ($FEC_batch) {
+                $associated_FEC_batch{$batch_number}{$vector_construct}{$FEC_batch} = 1;
             }
 
-            foreach my $row (@$parsed_data) {
-                my $accession_name = $row->{'accession_name'};
-                my $vector_construct = $row->{'vector_construct'};
-
+            if ($have_existing_accessions) {
                 my $accession_stock = $schema->resultset("Stock::Stock")->find ({
                     uniquename => $accession_name,
                     type_id => $accession_type_id,
@@ -107,24 +132,29 @@ sub _validate_with_plugin {
                 }
             }
         }
+
+        if ($have_FEC_batches) {
+            foreach my $batch (keys %associated_FEC_batch) {
+                my $batch_info = {};
+                $batch_info = $associated_FEC_batch{$batch};
+                foreach my $vector (keys %$batch_info) {
+                    my @check_FEC_batch = ();
+                    my $vector_info = {};
+                    $vector_info = $associated_FEC_batch{$batch}{$vector};
+                    @check_FEC_batch = keys %$vector_info;
+                    if (scalar @check_FEC_batch > 1) {
+                        push @error_messages, "Vector construct: $vector in Batch Number: $batch is associated with more than one FEC batch!";
+                    }
+                }
+            }
+        }
+
     } else {
         my $rs = $schema->resultset("Stock::Stock")->search({
             'uniquename' => { -in => $seen_accession_names }
         });
         while (my $r=$rs->next){
             push @error_messages, "Accession name already exists in database: ".$r->uniquename;
-        }
-    }
-
-    my %duplicated_accession_names;
-    foreach my $row (@$parsed_data) {
-        my $row_num = $row->{_row};
-        my $accession_name = $row->{'accession_name'};
-
-        if ($duplicated_accession_names{$accession_name}) {
-            push @error_messages, "Cell A$row_num: duplicate accession name: $accession_name. Accession name must be unique.";
-        } else {
-            $duplicated_accession_names{$accession_name}++;
         }
     }
 
@@ -160,8 +190,8 @@ sub _parse_with_plugin {
         } else {
             $accession_type = 'new';
         }
-
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}->{'number_of_insertions'} = $row->{'number_of_insertions'};
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{'FEC_batch'} = $row->{'FEC_batch'};
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{'type'}->{$type}->{$accession_type}->{$row->{'accession_name'}}->{'number_of_insertions'} = $row->{'number_of_insertions'};
     }
 
     $self->_set_parsed_data($transgenic_data);

@@ -599,6 +599,15 @@ sub store_plate_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to store plate orders.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to store plate orders.' };
+        return;
+    }
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $order_info = decode_json $c->req->param("order");

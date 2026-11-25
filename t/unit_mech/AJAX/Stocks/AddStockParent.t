@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use lib 't/lib';
+use Data::Dumper;
 use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
@@ -19,7 +20,7 @@ my $mech = Test::WWW::Mechanize->new;
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
-is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull', "Login successful check");
 
 my $female_parent = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession1' });
 my $male_parent = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession2' });
@@ -34,12 +35,17 @@ my $child = $schema->resultset('Stock::Stock')->create({
 });
 my $child_id = $child->stock_id();
 
+print STDERR "CHILD ID = $child_id\n";
+
 my $add_parent = sub {
     my $parent_name = shift;
     my $parent_type = shift;
-    $mech->get_ok("http://localhost:3010/ajax/stock/add_stock_parent?stock_id=$child_id&parent_name=$parent_name&parent_type=$parent_type&cross_type=biparental", "add $parent_type parent $parent_name");
+    $mech->post_ok("http://localhost:3010/ajax/stock/add_stock_parent?stock_id=$child_id&parent_name=$parent_name&parent_type=$parent_type&cross_type=biparental", "add $parent_type parent $parent_name");
     my $decoded = eval { decode_json $mech->content };
     # show the raw body in the test output when it is not a JSON object (for example null)
+
+    print STDERR "DECODED = ".Dumper($decoded);
+
     return ref($decoded) eq 'HASH' ? $decoded : { body => $mech->content };
 };
 

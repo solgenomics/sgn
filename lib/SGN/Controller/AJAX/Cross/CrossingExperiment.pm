@@ -171,6 +171,16 @@ sub record_target_numbers_using_lists : Path('/ajax/crossing_experiment/record_t
 sub record_target_numbers_using_lists_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to record target numbers.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to record target numbers.' };
+        return;
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $crossing_experiment_id = $c->req->param('crossing_experiment_id');
     my $number_of_seeds = decode_json $c->req->param('number_of_seeds');
