@@ -28,42 +28,29 @@ Chris Simoes
 
 </%doc>
 
+<& /util/app_layout.mas &>
 <& /util/import_javascript.mas, classes => ['jquery', 'moment_min', 'daterangepicker'], entries => ['weather'] &>
 <& /util/import_css.mas, paths => ['leaflet.css'] &>
 
 <style>
-.wx-app { --wx-accent: #1d6fa5; --wx-accent-soft: #e6f1f8; --wx-green: #2b7a4b; --wx-border: #dfe3e8; --wx-muted: #6b7280; --wx-bg: #f7f9fa; margin-bottom: 40px; }
+/* shared look: /util/app_layout.mas (static/css/breedbase_app.css); below only what is specific to this page */
+.wx-app { --wx-accent: var(--bb-accent); --wx-accent-soft: var(--bb-accent-soft); --wx-green: #2b7a4b; --wx-border: var(--bb-border); --wx-muted: var(--bb-muted); --wx-bg: var(--bb-bg); }
 .wx-app h4 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
 .wx-muted { color: var(--wx-muted); }
 .wx-small { font-size: 12px; }
 .wx-alert { margin: 8px 0; border-radius: 8px; }
-.wx-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; margin: 10px 0 18px; border-radius: 10px; background: linear-gradient(120deg, #164e74 0%, #1d6fa5 55%, #3d9a8b 100%); color: #fff; }
-.wx-hero h2 { margin: 0 0 6px; font-weight: 600; color: #fff; }
-.wx-hero p { margin: 0; max-width: 780px; opacity: .92; }
 .wx-hero-src { font-size: 12px; opacity: .85; margin-top: 6px !important; }
-.wx-card { background: #fff; border: 1px solid var(--wx-border); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
-.wx-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-.wx-card-head h4 { margin: 0; }
-.wx-side { position: sticky; top: 70px; }
-.wx-side .wx-card { padding: 12px; }
-.wx-segs { display: flex; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
-.wx-seg { border: 1px solid var(--wx-border); background: #fff; border-radius: 16px; padding: 3px 11px; font-size: 12.5px; color: #374151; cursor: pointer; }
-.wx-seg:hover { border-color: #93c3e0; }
-.wx-seg.on { background: var(--wx-accent); border-color: var(--wx-accent); color: #fff; }
-.wx-seg .wx-count { opacity: .75; margin-left: 3px; }
+.bb-side .bb-card { padding: 12px; }
+.bb-seg .wx-count { opacity: .75; margin-left: 3px; }
 .wx-llist { max-height: calc(100vh - 290px); overflow-y: auto; margin: 0 -4px; }
 .wx-litem { display: block; padding: 9px 10px; margin: 2px 4px; border-radius: 8px; border: 1px solid transparent; color: #111827; text-decoration: none !important; cursor: pointer; }
 .wx-litem:hover { background: var(--wx-bg); }
 .wx-litem.on { background: var(--wx-accent-soft); border-color: #b7d6ea; }
 .wx-litem.off { opacity: .55; }
 .wx-litem-meta { display: block; font-size: 12px; color: var(--wx-muted); }
-.wx-pill { display: inline-block; border-radius: 10px; padding: 0 8px; font-size: 11px; font-weight: 600; white-space: nowrap; vertical-align: 1px; }
-.wx-pill-st { background: var(--wx-accent-soft); color: var(--wx-accent); }
-.wx-pill-none { background: #eef0f3; color: #4b5563; }
-.wx-pill-warn { background: #fef3c7; color: #92400e; }
 .wx-net { background: #eef0f3; color: #374151; display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
 .wx-net-local { background: #1d6fa5; color: #fff; }
-.wx-table tr.wx-sep td { background: #f2f8fc; color: #164e74; font-weight: 600; font-size: 12px; }
+.bb-table tr.wx-sep td { background: #eef6f1; color: #1f5f3a; font-weight: 600; font-size: 12px; }
 .wx-net-airport { background: #e0f2fe; color: #075985; }
 .wx-net-inmet { background: #dcfce7; color: #14532d; }
 .wx-net-ana { background: #ede9fe; color: #5b21b6; }
@@ -74,12 +61,6 @@ Chris Simoes
 .wx-net-dwd { background: #e5e7eb; color: #1f2937; }
 .wx-net-jma { background: #fee2e2; color: #991b1b; }
 .wx-loading { padding: 16px; color: var(--wx-muted); }
-.wx-spin { animation: wx-spin 1s linear infinite; display: inline-block; }
-@keyframes wx-spin { to { transform: rotate(360deg); } }
-.wx-empty-card { text-align: center; padding: 34px 20px; border: 2px dashed var(--wx-border); border-radius: 12px; background: var(--wx-bg); }
-.wx-empty-card > .glyphicon { font-size: 30px; color: #93c3e0; }
-.wx-empty-card h4 { margin-top: 10px; font-size: 17px; }
-.wx-empty-card p { color: #4b5563; max-width: 560px; margin: 0 auto 6px; }
 .wx-head-main { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
 .wx-head-main h3 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
 .wx-head-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: #4b5563; font-size: 13px; }
@@ -104,25 +85,16 @@ Chris Simoes
 .wx-default { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--wx-border); font-size: 12px; color: #374151; }
 .wx-st-temp { margin-top: 8px; font-size: 12px; color: var(--wx-muted); }
 .wx-st-temp select { width: 100%; margin-top: 2px; }
-.wx-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
-.wx-stat { background: #fff; border: 1px solid var(--wx-border); border-radius: 10px; padding: 10px 12px; }
-.wx-stat .v { font-size: 22px; font-weight: 600; color: #111827; line-height: 1.15; }
-.wx-stat .v small { font-size: 13px; color: var(--wx-muted); font-weight: 600; margin-left: 2px; }
-.wx-stat .l { font-size: 11px; color: var(--wx-muted); text-transform: uppercase; letter-spacing: .04em; }
-.wx-stat .s { font-size: 11.5px; color: var(--wx-muted); }
-.wx-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--wx-border); margin-bottom: 16px; flex-wrap: wrap; }
-.wx-tab { background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; padding: 8px 14px; font-weight: 600; color: var(--wx-muted); }
-.wx-tab:hover { color: #111827; }
-.wx-tab.on { color: var(--wx-accent); border-bottom-color: var(--wx-accent); }
+.wx-app .bb-stat .v { color: #111827; line-height: 1.15; } /* values neutral: colour only for good / warn / bad */
+.bb-stat .s { font-size: 11.5px; color: var(--wx-muted); }
 .wx-tunit-switch { margin-left: auto; align-self: center; font-size: 12px; color: var(--wx-muted); display: inline-flex; align-items: center; gap: 6px; }
 .wx-concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
-.wx-concepts .wx-card { margin: 0; }
+.wx-concepts .bb-card { margin: 0; }
 .wx-concepts h4 .glyphicon { color: var(--wx-accent); margin-right: 4px; }
 .wx-concepts p, .wx-concepts li { font-size: 13px; line-height: 1.5; color: #374151; }
 .wx-concepts ul { padding-left: 18px; margin-bottom: 6px; }
 .wx-formula { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; background: var(--wx-bg); border: 1px solid var(--wx-border); border-radius: 6px; padding: 7px 10px; margin: 6px 0 8px; white-space: normal; }
 .wx-concepts .wx-ex { font-size: 12.5px; color: var(--wx-muted); }
-.wx-tab .badge { background: #e5e7eb; color: #374151; font-weight: 600; margin-left: 4px; }
 .wx-map { height: 380px; border-radius: 8px; border: 1px solid var(--wx-border); margin-bottom: 6px; z-index: 0; }
 .wx-map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: #4b5563; margin-bottom: 12px; }
 .wx-map-legend span { display: inline-flex; align-items: center; gap: 5px; }
@@ -131,14 +103,11 @@ Chris Simoes
 .wx-lg-other { background: #64748b; width: 9px; height: 9px; opacity: .8; }
 .wx-lg-ring { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1.5px dashed #1d6fa5; background: rgba(29,111,165,.06); }
 .wx-star-icon { background: none; border: 0; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.45)); }
-.wx-table-wrap { overflow: auto; max-height: 60vh; border: 1px solid var(--wx-border); border-radius: 8px; }
-.wx-table { margin: 0; font-size: 13px; }
-.wx-table thead th { position: sticky; top: 0; background: var(--wx-bg); z-index: 1; white-space: nowrap; border-bottom: 1px solid var(--wx-border) !important; font-size: 12px; color: #374151; }
-.wx-table td { vertical-align: middle !important; }
-.wx-table tr.on td { background: var(--wx-accent-soft); }
-.wx-table tr.on td:first-child { box-shadow: inset 3px 0 0 var(--wx-accent); }
-.wx-table td.n, .wx-table th.n { text-align: right; white-space: nowrap; }
-.wx-table tr.wx-fc td { color: var(--wx-muted); font-style: italic; }
+.wx-app .bb-table-wrap { max-height: 60vh; }
+.bb-table tr.on td { background: var(--wx-accent-soft); }
+.bb-table tr.on td:first-child { box-shadow: inset 3px 0 0 var(--wx-accent); }
+.bb-table td.n, .bb-table th.n { text-align: right; white-space: nowrap; }
+.bb-table tr.wx-fc td { color: var(--wx-muted); font-style: italic; }
 .wx-raw { font-family: Menlo, Consolas, monospace; font-size: 11.5px; color: #374151; word-break: break-all; }
 .wx-chart { position: relative; margin-bottom: 6px; }
 .wx-chart svg { display: block; width: 100%; overflow: visible; }
@@ -184,8 +153,8 @@ Chris Simoes
 .wx-find-warn { background: #fffbeb; } .wx-find-warn .glyphicon { color: #d97706; }
 .wx-find-info { background: var(--wx-bg); } .wx-find-info .glyphicon { color: var(--wx-muted); }
 .wx-find-ok { font-size: 14px; color: #15803d; margin: 6px 0; }
-.wx-table tr.wx-crit td { background: #fffbeb; }
-.wx-table tr.wx-crit td:first-child { box-shadow: inset 3px 0 0 #f59e0b; }
+.bb-table tr.wx-crit td { background: #fffbeb; }
+.bb-table tr.wx-crit td:first-child { box-shadow: inset 3px 0 0 #f59e0b; }
 .wx-neg { color: #b91c1c; } .wx-pos { color: #15803d; } .wx-warn-txt { color: #b45309; }
 .wx-ibar { height: 4px; background: #eef2f7; border-radius: 2px; margin-top: 2px; min-width: 40px; }
 .wx-ibar div { height: 4px; border-radius: 2px; }
@@ -210,9 +179,9 @@ Chris Simoes
 #wx_flash { position: sticky; top: 60px; z-index: 5; }
 </style>
 
-<div id="wx-app" class="wx-app">
+<div id="wx-app" class="bb-app wx-app">
 
-  <div class="wx-hero">
+  <div class="bb-hero">
     <div>
       <h2><span class="glyphicon glyphicon-grain"></span> Weather for breeding</h2>
       <p>Characterize the environment of your trials with the observations of real weather stations: water deficit, heat and frost by crop stage, the environmental covariates of each trial, how the season compares with past years and with your other locations.</p>
@@ -222,17 +191,17 @@ Chris Simoes
 
   <div class="row">
     <div class="col-md-3">
-      <div class="wx-side">
-        <div class="wx-card">
+      <div class="bb-side">
+        <div class="bb-card">
           <h4><span class="glyphicon glyphicon-map-marker"></span> Research stations</h4>
           <input type="search" class="form-control input-sm" id="wx_lsearch" placeholder="Search name, country, program" />
-          <div class="wx-segs">
-            <button class="wx-seg on" data-lfilter="coords">With coordinates<span class="wx-count"></span></button>
-            <button class="wx-seg" data-lfilter="linked">With weather station<span class="wx-count"></span></button>
-            <button class="wx-seg" data-lfilter="all">All<span class="wx-count"></span></button>
+          <div class="bb-segs">
+            <button class="bb-seg on" data-lfilter="coords">With coordinates<span class="wx-count"></span></button>
+            <button class="bb-seg" data-lfilter="linked">With weather station<span class="wx-count"></span></button>
+            <button class="bb-seg" data-lfilter="all">All<span class="wx-count"></span></button>
           </div>
           <select class="form-control input-sm" id="wx_ltype" style="margin-bottom:6px"></select>
-          <div class="wx-llist" id="wx_locations"><div class="wx-loading"><span class="glyphicon glyphicon-refresh wx-spin"></span> Loading...</div></div>
+          <div class="wx-llist" id="wx_locations"><div class="wx-loading"><span class="glyphicon glyphicon-refresh bb-spin"></span> Loading...</div></div>
         </div>
       </div>
     </div>
@@ -240,7 +209,7 @@ Chris Simoes
     <div class="col-md-9">
       <div id="wx_flash"></div>
 
-      <div id="wx_empty" class="wx-empty-card" style="display:none">
+      <div id="wx_empty" class="bb-empty-card" style="display:none">
         <span class="glyphicon glyphicon-map-marker"></span>
         <h4>Choose a research station</h4>
         <p>Pick a location on the left. Its latitude and longitude are used to find the weather stations around it.</p>
@@ -248,7 +217,7 @@ Chris Simoes
       </div>
 
       <div id="wx_workspace" style="display:none">
-        <div class="wx-card" id="wx_head"></div>
+        <div class="bb-card" id="wx_head"></div>
 
         <div class="wx-steps">
           <div class="wx-step" id="wx_step1">
@@ -269,12 +238,12 @@ Chris Simoes
             <div class="wx-row">
               <span class="wx-lab">Period</span>
               <div>
-                <div class="wx-segs" id="wx_presets" style="margin:0 0 5px">
-                  <button class="wx-seg" data-preset="30">30 days</button>
-                  <button class="wx-seg on" data-preset="90">90 days</button>
-                  <button class="wx-seg" data-preset="180">6 months</button>
-                  <button class="wx-seg" data-preset="year">This year</button>
-                  <button class="wx-seg" data-preset="lastyear">Last year</button>
+                <div class="bb-segs" id="wx_presets" style="margin:0 0 5px">
+                  <button class="bb-seg" data-preset="30">30 days</button>
+                  <button class="bb-seg on" data-preset="90">90 days</button>
+                  <button class="bb-seg" data-preset="180">6 months</button>
+                  <button class="bb-seg" data-preset="year">This year</button>
+                  <button class="bb-seg" data-preset="lastyear">Last year</button>
                 </div>
                 <div class="wx-inline">
                   <input type="text" class="form-control input-sm wx-date" id="wx_start" title="Start (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
@@ -299,15 +268,15 @@ Chris Simoes
           </div>
         </div>
 
-        <div class="wx-stats" id="wx_stats" style="display:none"></div>
+        <div class="bb-stats" id="wx_stats" style="display:none"></div>
 
-        <div class="wx-tabs">
-          <button class="wx-tab on" data-tab="season"><span class="glyphicon glyphicon-grain"></span> Season</button>
-          <button class="wx-tab" data-tab="trials"><span class="glyphicon glyphicon-leaf"></span> Trials</button>
-          <button class="wx-tab" data-tab="years"><span class="glyphicon glyphicon-stats"></span> Past years</button>
-          <button class="wx-tab" data-tab="locations"><span class="glyphicon glyphicon-globe"></span> Comparison</button>
-          <button class="wx-tab" data-tab="sources"><span class="glyphicon glyphicon-map-marker"></span> Data sources <span class="badge" id="wx_n_stations"></span></button>
-          <button class="wx-tab" data-tab="concepts"><span class="glyphicon glyphicon-education"></span> Concepts</button>
+        <div class="bb-tabs">
+          <button class="bb-tab on" data-tab="season"><span class="glyphicon glyphicon-grain"></span> Season</button>
+          <button class="bb-tab" data-tab="trials"><span class="glyphicon glyphicon-leaf"></span> Trials</button>
+          <button class="bb-tab" data-tab="years"><span class="glyphicon glyphicon-stats"></span> Past years</button>
+          <button class="bb-tab" data-tab="locations"><span class="glyphicon glyphicon-globe"></span> Comparison</button>
+          <button class="bb-tab" data-tab="sources"><span class="glyphicon glyphicon-map-marker"></span> Data sources <span class="badge" id="wx_n_stations"></span></button>
+          <button class="bb-tab" data-tab="concepts"><span class="glyphicon glyphicon-education"></span> Concepts</button>
           <span class="wx-tunit-switch" title="Temperature unit of the whole page and of the CSV files">Temperature
             <span class="wx-unit" id="wx_tunit"><button type="button" data-tunit="C">&deg;C</button><button type="button" data-tunit="F">&deg;F</button></span></span>
         </div>
@@ -341,7 +310,7 @@ Chris Simoes
           <p class="wx-note" style="margin:0 0 12px"><span class="glyphicon glyphicon-info-sign"></span>How the numbers on this page are calculated. Values in <b>bold</b> are the current settings ("Stress thresholds and degree-days") and follow the &deg;C / &deg;F switch.</p>
           <div class="wx-concepts">
 
-            <div class="wx-card">
+            <div class="bb-card">
               <h4><span class="glyphicon glyphicon-fire"></span> Degree-days (GDD)</h4>
               <p>Plants develop faster when it is warm, so crop development is measured in accumulated heat rather than in days. Each day adds:</p>
               <div class="wx-formula">GDD = (Tmax* + Tmin*) / 2 &minus; Tbase</div>
@@ -354,7 +323,7 @@ Chris Simoes
               <p class="wx-ex">Days without temperature add nothing, so check "Days observed".</p>
             </div>
 
-            <div class="wx-card">
+            <div class="bb-card">
               <h4><span class="glyphicon glyphicon-cloud-upload"></span> ET0 (reference evapotranspiration)</h4>
               <p>The water, in mm per day, that a reference crop (short, well-watered grass) loses through its leaves and from the soil. It is the <b>demand</b> of the atmosphere: it rises with sun, heat, dry air and wind. Typical values: 2&ndash;4 mm a day in cool or cloudy weather, 5&ndash;8 mm in hot, dry, windy weather.</p>
               <ul>
@@ -365,7 +334,7 @@ Chris Simoes
               <p class="wx-ex">A real crop uses Kc &times; ET0: Kc is about 0.3&ndash;0.5 after emergence and 1.0&ndash;1.2 at flowering. The page shows ET0 itself, as a demand that can be compared between environments.</p>
             </div>
 
-            <div class="wx-card">
+            <div class="bb-card">
               <h4><span class="glyphicon glyphicon-tint"></span> Water balance</h4>
               <div class="wx-formula">Water balance = rain &minus; ET0 &nbsp;(mm, over the period or a crop stage)</div>
               <ul>
@@ -376,7 +345,7 @@ Chris Simoes
               <p class="wx-ex">It does not include the water stored in the soil at planting, runoff, irrigation or Kc. Use it to compare environments and seasons (G&times;E), not to schedule irrigation.</p>
             </div>
 
-            <div class="wx-card">
+            <div class="bb-card">
               <h4><span class="glyphicon glyphicon-tasks"></span> Crop stages and stress days</h4>
               <p>Stages are estimated by dividing the degree-days from planting to the end of the period in proportions typical of the crop. For maize, flowering (the critical stage) is 45&ndash;58% of the season's GDD. Without temperature data, days are used instead of GDD. When the trial has real flowering dates, use those.</p>
               <ul>
@@ -387,7 +356,7 @@ Chris Simoes
               </ul>
             </div>
 
-            <div class="wx-card">
+            <div class="bb-card">
               <h4><span class="glyphicon glyphicon-dashboard"></span> Maize relative maturity (RM)</h4>
               <p>Seed companies rate hybrids by RM (or CRM), in days. Behind each rating is the heat the hybrid needs, in GDD &deg;F (base 50 &deg;F, limit 86 &deg;F), from planting to <b>black layer</b> (physiological maturity):</p>
               <div class="wx-formula">GDD &deg;F needed = <span data-c="rm100"></span> + <span data-c="rmday"></span> &times; (RM &minus; 100)</div>
@@ -401,7 +370,7 @@ Chris Simoes
               <p class="wx-ex">Companies rate differently: set the two numbers in the settings to match the ratings you use.</p>
             </div>
 
-            <div class="wx-card">
+            <div class="bb-card">
               <h4><span class="glyphicon glyphicon-check"></span> Days observed and data sources</h4>
               <p>Every value comes from observations of a real station, never from a model or a grid. "Days observed" is the share of days with a complete report.</p>
               <ul>
@@ -415,18 +384,18 @@ Chris Simoes
         </div>
 
         <div class="wx-pane" data-pane="sources" style="display:none">
-          <div class="wx-card">
-            <div class="wx-card-head">
+          <div class="bb-card">
+            <div class="bb-card-head">
               <h4><span class="glyphicon glyphicon-map-marker"></span> Stations within <span id="wx_range_title"></span></h4>
-              <div class="wx-segs" id="wx_netfilter" style="margin:0"></div>
+              <div class="bb-segs" id="wx_netfilter" style="margin:0"></div>
             </div>
             <div id="wx_map" class="wx-map"></div>
             <div class="wx-map-legend" id="wx_map_legend"></div>
             <div id="wx_station_table"></div>
             <p class="wx-note"><span class="glyphicon glyphicon-info-sign"></span> All values are observations of the station itself, never interpolated. The farther and the higher (or lower) the station is from the research station, the more its weather can differ: check distance and elevation.</p>
           </div>
-          <div class="wx-card" id="wx_compare">
-            <div class="wx-card-head">
+          <div class="bb-card" id="wx_compare">
+            <div class="bb-card-head">
               <h4><span class="glyphicon glyphicon-tint"></span> Which rain source to trust? <span class="wx-muted" id="wx_compare_title"></span></h4>
               <span class="wx-inline wx-small">
                 <label class="wx-muted" style="font-weight:normal;margin:0">Nearest
