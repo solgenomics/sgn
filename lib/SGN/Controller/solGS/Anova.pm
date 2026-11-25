@@ -347,6 +347,17 @@ sub prepare_response {
         $c->stash->{rest}{anova_model_file}       = $model_file;
         $c->stash->{rest}{adj_means_file}         = $means_file;
         $c->stash->{rest}{anova_diagnostics_file} = $diagnostics_file;
+
+        # Written by R/solGS/anova.r when phenoAnalysis has compareMeans.
+        $self->means_comparison_files($c);
+        my $comparison_file = $c->stash->{means_comparison_table_file};
+        if ( -s $comparison_file ) {
+            $c->stash->{rest}{means_comparison_file} = $c->controller('solGS::Files')
+              ->copy_to_tempfiles_subdir( $c, $comparison_file, $trial_anova_dir );
+            my $summary_file = $c->stash->{means_comparison_summary_file};
+            $c->stash->{rest}{means_comparison_summary} =
+              read_file( $summary_file, { binmode => ':utf8' } ) if -s $summary_file;
+        }
     }
     else {
         $self->anova_error_file($c);
@@ -566,6 +577,7 @@ sub anova_output_files {
     $self->adj_means_file($c);
     $self->anova_diagnostics_file($c);
     $self->anova_error_file($c);
+    $self->means_comparison_files($c);
 
     my @files = $c->stash->{anova_table_file};
 
@@ -576,6 +588,8 @@ sub anova_output_files {
         $c->stash->{adj_means_file},
         $c->stash->{anova_diagnostics_file},
         $c->stash->{anova_error_file},
+        $c->stash->{means_comparison_table_file},
+        $c->stash->{means_comparison_summary_file},
     );
 
     my $tmp_dir = $self->anova_trial_temp_dir($c, $trial_id);
@@ -694,6 +708,27 @@ sub adj_means_file {
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
+
+}
+
+# The means of the accessions with their standard errors and letter groups,
+# and a line with the LSD of the comparison.
+sub means_comparison_files {
+    my ( $self, $c ) = @_;
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trait_id = $c->stash->{trait_id};
+
+    my $cache_dir = $self->anova_trial_cache_dir($c, $trial_id);
+
+    foreach my $part (qw(table summary)) {
+        $c->controller('solGS::Files')->cache_file( $c, {
+            key       => "means_comparison_${part}_${trial_id}_${trait_id}",
+            file      => "means_comparison_${part}_${trial_id}_${trait_id}",
+            stash_key => "means_comparison_${part}_file",
+            cache_dir => $cache_dir
+        });
+    }
 
 }
 

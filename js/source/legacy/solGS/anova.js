@@ -231,11 +231,30 @@ jQuery(document).ready(function () {
                     fileNameDiagnostics +
                     ">Model diagnostics</a>";
 
+                  var meansComparisonFile = "";
+                  if (analysisRes.means_comparison_file) {
+                    var meansComparisonFileName = analysisRes.means_comparison_file.split("/").pop();
+                    meansComparisonFile =
+                      " | " +
+                      '<a href="' +
+                      analysisRes.means_comparison_file +
+                      '" download=' +
+                      meansComparisonFileName +
+                      ">Means comparison (LSD)</a>";
+                  }
+
+                  var meansSummary = "";
+                  if (analysisRes.means_comparison_summary) {
+                    meansSummary =
+                      "<p>" + jQuery("<div>").text(analysisRes.means_comparison_summary).html() + "</p>";
+                  }
+
                   jQuery(solGS.anova.anovaTableDiv)
                     .prepend(
                       '<div style="margin-top: 20px">' +
                         anovaHtmlTable +
                         "</div>" +
+                        meansSummary +
                         "<br /> <strong>Download:</strong> " +
                         anovaTxtFile +
                         " | " +
@@ -243,7 +262,8 @@ jQuery(document).ready(function () {
                         " | " +
                         diagnosticsFile +
                         " | " +
-                        AdjMeansFile
+                        AdjMeansFile +
+                        meansComparisonFile
                     )
                     .show();
                     jQuery(solGS.anova.clearCacheAnova).removeClass('hidden').show();
