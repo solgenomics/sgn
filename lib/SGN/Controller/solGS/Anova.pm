@@ -274,6 +274,7 @@ sub is_valid_anova_trait_data {
     }
     my %missing = map { $_ => 1 } ('', 'NA', '-', '.', '..', 'NaN');
     my ($numeric_count, $row_number, $categorical) = (0, 1, 0);
+    my ($first_value, $varies);
     while (my $line = <$input>) {
         $row_number++;
         my $row = _split_tsv_line($line);
@@ -287,9 +288,23 @@ sub is_valid_anova_trait_data {
             last;
         }
         $numeric_count++;
+        if (!defined $first_value) {
+            $first_value = 0 + $value;
+        }
+        elsif (0 + $value != $first_value) {
+            $varies = 1;
+        }
     }
     if (!$c->stash->{anova_data_error} && !$numeric_count) {
         $c->stash->{anova_data_error} = 'The trait data has no numeric observations.';
+    }
+    elsif (!$c->stash->{anova_data_error} && !$varies) {
+        # One value in every plot: the model has nothing to compare.
+        my $trait_name = $c->stash->{trait_name};
+        $trait_name = defined $trait_name
+            ? $c->controller('solGS::Utils')->clean_traits($trait_name) : $trait_abbr;
+        $trait_name =~ s/\s+/ /g;
+        $c->stash->{anova_data_error} = "No variation in $trait_name; ANOVA not performed.";
     }
     close $input;
     return $c->stash->{anova_data_error} ? 0 : 1;
