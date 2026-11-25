@@ -1,27 +1,306 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/trial/weather.mas - Weather section of the trial page
+
+=head1 DESCRIPTION
+
+A summary table of the weather of the trial: the user picks a station (the
+station saved for the location, the stations uploaded there, or a station
+found around the location) and an interval (by default the trial's planting
+to harvest dates). Also a link to the Weather page opened on this location
+and this trial's season, and the upload of local station data. With
+weather_rtbbase_link = 1 the location is also looked up on the old
+weather.rtbbase.org site. Data: /ajax/weather/location_summary, /trials,
+/nearby, /daily. Thresholds: the defaults of the Weather page (GDD base 10 C,
+upper limit 30 C, heat from 35 C, frost at or below 0 C).
+
+=cut
+
+</%doc>
+
 <%args>
 $location
+$location_id => undef
+$trial_id => undef
 </%args>
 
-<p id="trial_weather_check">[loading...]</p>
+<%init>
+my $rtbbase = ($c->config->{weather_rtbbase_link} // 0) ? 1 : 0;
+my $url = '/breeders/weather' . ($location_id ? "?location_id=$location_id" . ($trial_id ? "&trial_id=$trial_id" : '') : '');
+</%init>
+
+% if ($location_id) {
+<style>
+#trial_weather .tw-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin: 8px 0; }
+#trial_weather .tw-form label { font-weight: normal; margin: 0; font-size: 12px; color: #555; display: block; }
+#trial_weather .tw-form select { min-width: 260px; max-width: 420px; }
+#trial_weather .tw-form input.tw-date { width: 120px; }
+#trial_weather .tw-table { max-width: 720px; margin-bottom: 6px; }
+#trial_weather .tw-table td.n { text-align: right; white-space: nowrap; }
+#trial_weather .tw-table th.n { text-align: right; }
+</style>
+
+<div id="trial_weather" data-location-id="<% $location_id %>" data-trial-id="<% $trial_id // '' %>">
+  <div id="tw_status" class="small text-muted">[loading...]</div>
+
+  <div class="tw-form" id="tw_form" style="display:none">
+    <div>
+      <label for="tw_station">Weather station</label>
+      <select class="form-control input-sm" id="tw_station"></select>
+    </div>
+    <div>
+      <label for="tw_start">From</label>
+      <input type="text" class="form-control input-sm tw-date" id="tw_start" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" title="Start (YYYY-MM-DD)" />
+    </div>
+    <div>
+      <label for="tw_end">To</label>
+      <input type="text" class="form-control input-sm tw-date" id="tw_end" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" title="End (YYYY-MM-DD)" />
+    </div>
+    <div>
+      <button type="button" class="btn btn-primary btn-sm" id="tw_show"><span class="glyphicon glyphicon-list-alt"></span> Show summary</button>
+    </div>
+  </div>
+  <div class="small text-muted" id="tw_dates_note"></div>
+
+  <div id="tw_result" style="margin-top:8px"></div>
+
+  <div style="margin-top:8px">
+    <a class="btn btn-default btn-sm" href="<% $url %>"><span class="glyphicon glyphicon-cloud"></span> Open in the Weather tool</a>
+    <button type="button" class="btn btn-default btn-sm" id="trial_weather_upload_btn" style="display:none" data-wx-upload-location-id="<% $location_id %>" data-wx-upload-location-name="<% $location |h %>"><span class="glyphicon glyphicon-upload"></span> Upload local station data</button>
+  </div>
+  <p class="small text-muted" style="margin-top:6px">Charts, stress by crop stage, environmental covariates and past years: in the Weather tool.</p>
+</div>
+
+<& /breeders_toolbox/weather/upload_dialog.mas &>
+
+<script type="text/javascript">
+jQuery(function ($) {
+  var P = { base: 10, cap: 30, heat: 35, frost: 0 };   // the defaults of the Weather page
+  var box = $('#trial_weather');
+  var locId = box.data('location-id'), trialId = String(box.data('trial-id') || '');
+  var S = { info: null, stations: [], trial: null, nearbyLoaded: false };
+
+  var esc = function (s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); };
+  var num = function (v) { return (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v); };
+  var f1 = function (v, d) { return v === null || v === undefined ? '–' : Number(v).toFixed(d === undefined ? 1 : d); };
+  var errMsg = function (x) { return (x && x.responseJSON && x.responseJSON.error) || (x && x.statusText) || 'The request failed.'; };
+  var isoDate = function (v) { return /^\d{4}-\d{2}-\d{2}$/.test(v || '') && !isNaN(Date.parse(v)); };
+  // dates typed and shown as YYYY-MM-DD (a native date input follows the browser locale), as on the Weather page
+  function setDate(sel, v) {
+    $(sel).val(v || '');
+    var dp = $(sel).data('daterangepicker');
+    if (dp && isoDate(v)) { dp.setStartDate(v); dp.setEndDate(v); }
+  }
+  if ($.fn.daterangepicker) {
+    $('#tw_start, #tw_end').each(function () {
+      $(this).daterangepicker({ singleDatePicker: true, showDropdowns: true, autoUpdateInput: false, locale: { format: 'YYYY-MM-DD' } })
+        .on('apply.daterangepicker', function (e, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD')); });
+    });
+  }
+  var addDays = function (iso, n) { var d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  var daysBetween = function (a, b) { return Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000) + 1; };
+  var key = function (s) { return s.network + ':' + s.id; };
+  var NET = { local: 'Uploaded', airport: 'Airport', synop: 'National service', cocorahs: 'CoCoRaHS', ideam: 'IDEAM', inmet: 'INMET', ana: 'ANA', cemaden: 'CEMADEN' };
+
+  function stationOptions() {
+    var opts = S.stations.map(function (s) {
+      return '<option value="' + esc(key(s)) + '">' + esc((s.label ? s.label + ': ' : '') + (NET[s.network] || s.network) + ' ' + (s.network === 'local' ? '' : s.id + ' ') + (s.name || '')
+        + (num(s.distance_km) !== null ? ' · ' + f1(s.distance_km) + ' km' : '')) + '</option>';
+    });
+    if (!S.nearbyLoaded && S.info.has_coordinates) opts.push('<option value="_nearby">Other stations around the location...</option>');
+    if (!S.stations.length) opts.unshift('<option value="">Choose a station...</option>');
+    $('#tw_station').html(opts.join(''));
+  }
+
+  function setDates() {
+    var t = S.trial, today = S.info.today, max = S.info.max_days, start, end, note = '';
+    if (t && t.planting) {
+      start = t.planting;
+      end = t.harvest || today;
+      if (end > today) end = today;
+      note = 'Season of the trial: planted ' + t.planting + (t.harvest ? ', harvested ' + t.harvest : ' (no harvest date: until today)') + '.';
+    }
+    else {
+      end = today; start = addDays(today, -89);
+      note = 'This trial has no planting date: showing the last 90 days.';
+    }
+    if (end < start) end = start;
+    if (daysBetween(start, end) > max) { end = addDays(start, max - 1); note += ' Limited to the first ' + max + ' days.'; }
+    setDate('#tw_start', start); setDate('#tw_end', end);
+    $('#tw_dates_note').text(note);
+  }
+
+  function load() {
+    $.getJSON('/ajax/weather/location_summary', { location_id: locId }).done(function (r) {
+      if (r.error) { $('#tw_status').text(r.error); return; }
+      S.info = r;
+      S.stations = [];
+      var st = r.station;
+      if (st) {
+        S.stations.push({ network: st.network, id: st.station_id, name: st.name, lat: st.lat, lon: st.lon, elev: st.elev, distance_km: st.distance_km, label: 'Station of the location',
+          temp: st.temp_station_id ? { network: st.temp_network, id: st.temp_station_id, name: st.temp_name, lat: st.temp_lat, lon: st.temp_lon, elev: st.temp_elev } : null });
+      }
+      (r.local_stations || []).forEach(function (s) {
+        if (!s.days || S.stations.some(function (x) { return key(x) === key(s); })) return;
+        S.stations.push({ network: 'local', id: s.id, name: s.name, lat: s.lat, lon: s.lon, elev: s.elev, label: 'Uploaded', first: s.first, last: s.last });
+      });
+      $('#trial_weather_upload_btn').toggle(!!r.can_upload);
+      var msg = [];
+      if (!r.has_coordinates) msg.push('<span class="text-warning">This location has no latitude and longitude: add them in Manage &rsaquo; Locations to find the weather stations around it.</span>');
+      else if (!S.stations.length) msg.push('No weather station saved or uploaded for this location yet: pick one of the stations around it below, or save one in the Weather tool.');
+      $('#tw_status').html(msg.join('<br>'));
+      if (!r.has_coordinates && !S.stations.length) { $('#tw_form').hide(); return; }
+      $('#tw_form').show();
+      stationOptions();
+      if (S.trial === null) {
+        $.getJSON('/ajax/weather/trials', { location_id: locId }).done(function (t) {
+          S.trial = (t.trials || []).filter(function (x) { return String(x.id) === trialId; })[0] || false;
+          setDates();
+          if (S.stations.length) show();
+        });
+      }
+      else if (S.stations.length) show();
+    }).fail(function (x) { $('#tw_status').text(errMsg(x)); });
+  }
+
+  function loadNearby() {
+    $('#tw_station').prop('disabled', true);
+    $('#tw_result').html('<span class="text-muted"><span class="glyphicon glyphicon-refresh"></span> Looking for the stations within ' + esc(S.info.range + ' ' + (S.info.unit === 'mi' ? 'miles' : 'km')) + ' (this can take about 20 seconds)...</span>');
+    $.getJSON('/ajax/weather/nearby', { location_id: locId, range: S.info.range, unit: S.info.unit }).done(function (r) {
+      if (r.error) { $('#tw_result').html('<div class="alert alert-danger">' + esc(r.error) + '</div>'); return; }
+      (r.stations || []).filter(function (s) { return s.ready; }).forEach(function (s) {
+        if (!S.stations.some(function (x) { return key(x) === key(s); })) S.stations.push(s);
+      });
+      S.nearbyLoaded = true;
+      stationOptions();
+      $('#tw_result').html('<span class="text-muted">' + (r.stations || []).length + ' stations found: choose one and press Show summary.</span>');
+    }).fail(function (x) { $('#tw_result').html('<div class="alert alert-danger">' + esc(errMsg(x)) + '</div>'); })
+      .always(function () { $('#tw_station').prop('disabled', false); });
+  }
+
+  function daily(s, start, end) {
+    return $.getJSON('/ajax/weather/daily', { location_id: locId, network: s.network, station: s.id, start: start, end: end, lat: s.lat, lon: s.lon, elev: s.elev })
+      .then(function (r) { if (r.error) return $.Deferred().reject({ responseJSON: r }); return r; });
+  }
+
+  function show() {
+    var s = S.stations.filter(function (x) { return key(x) === $('#tw_station').val(); })[0];
+    var start = $('#tw_start').val(), end = $('#tw_end').val();
+    if (!s) { $('#tw_result').html('<span class="text-muted">Choose a weather station.</span>'); return; }
+    if (!isoDate(start) || !isoDate(end)) { $('#tw_result').html('<div class="alert alert-warning">Write the dates as YYYY-MM-DD.</div>'); return; }
+    if (start > end) { $('#tw_result').html('<div class="alert alert-warning">Choose a start date before the end date.</div>'); return; }
+    if (end > S.info.today) end = S.info.today;
+    if (daysBetween(start, end) > S.info.max_days) { $('#tw_result').html('<div class="alert alert-warning">The interval is longer than ' + S.info.max_days + ' days.</div>'); return; }
+    $('#tw_show').prop('disabled', true);
+    $('#tw_result').html('<span class="text-muted"><span class="glyphicon glyphicon-refresh"></span> Reading the observations...</span>');
+    var reqs = [daily(s, start, end)];
+    if (s.temp) reqs.push(daily(s.temp, start, end));
+    $.when.apply($, reqs).done(function (r, t) {
+      render(s, start, end, r, s.temp ? t : null);
+    }).fail(function (x) { $('#tw_result').html('<div class="alert alert-danger">' + esc(errMsg(x)) + '</div>'); })
+      .always(function () { $('#tw_show').prop('disabled', false); });
+  }
+
+  // the numbers of the table, from the daily observations (temperatures from the temperature station when the first one is a rain gauge)
+  function render(s, start, end, r, t) {
+    var n = daysBetween(start, end);
+    var by = {};
+    (r.days || []).forEach(function (d) { by[d.date] = { date: d.date, rain: r.rain_reported ? num(d.rain) : null, tmax: num(d.tmax), tmin: num(d.tmin), et0: num(d.et0), rh: num(d.rh), rad: num(d.radiation) }; });
+    if (t) (t.days || []).forEach(function (d) {
+      var o = by[d.date] = by[d.date] || { date: d.date, rain: null };
+      o.tmax = num(d.tmax); o.tmin = num(d.tmin); o.et0 = num(d.et0); o.rh = num(d.rh); o.rad = num(d.radiation);
+    });
+    var days = [];
+    for (var d = start; d <= end; d = addDays(d, 1)) days.push(by[d] || { date: d, rain: null, tmax: null, tmin: null, et0: null, rh: null, rad: null });
+    var has = function (k) { return days.filter(function (x) { return x[k] !== null && x[k] !== undefined; }); };
+    var sum = function (l, k) { return l.reduce(function (a, x) { return a + x[k]; }, 0); };
+    var mean = function (l, k) { return l.length ? sum(l, k) / l.length : null; };
+    var best = function (l, k, hi) { return l.reduce(function (a, x) { return a === null || (hi ? x[k] > a[k] : x[k] < a[k]) ? x : a; }, null); };
+    var cov = function (l) { return l.length + ' / ' + n; };
+    var rows = [];
+    var row = function (label, value, unit, l, note) { rows.push('<tr><td>' + label + (note ? ' <span class="text-muted small">' + note + '</span>' : '') + '</td><td class="n"><b>' + value + '</b> ' + (unit || '') + '</td><td class="n text-muted">' + (l ? cov(l) : '') + '</td></tr>'); };
+
+    var rain = has('rain');
+    if (rain.length) {
+      var wet = rain.filter(function (x) { return x.rain >= 1; });
+      var spell = 0, run = 0;
+      days.forEach(function (x) { if (x.rain !== null && x.rain < 1) { run++; if (run > spell) spell = run; } else run = 0; });
+      var top = best(rain, 'rain', true);
+      row('Total rain', f1(sum(rain, 'rain')), 'mm', rain);
+      row('Rainy days', wet.length, '', rain, '(&ge; 1 mm)');
+      row('Wettest day', f1(top.rain), 'mm &middot; ' + esc(top.date), rain);
+      row('Longest dry spell', spell, 'days', rain, '(&lt; 1 mm, days with data)');
+    }
+    else row('Rain', '–', '', null, r.rain_reported ? 'no rain data for these dates' : 'this station does not report rain amounts');
+
+    var tx = has('tmax'), tn = has('tmin');
+    if (tx.length && tn.length) {
+      var hot = best(tx, 'tmax', true), cold = best(tn, 'tmin', false);
+      var both = days.filter(function (x) { return x.tmax !== null && x.tmin !== null && x.tmax !== undefined && x.tmin !== undefined; });
+      var gdd = both.reduce(function (a, x) {
+        var hi = Math.min(Math.max(x.tmax, P.base), P.cap), lo = Math.min(Math.max(x.tmin, P.base), P.cap);
+        return a + Math.max(0, (hi + lo) / 2 - P.base);
+      }, 0);
+      row('Mean max / min temperature', f1(mean(tx, 'tmax')) + ' / ' + f1(mean(tn, 'tmin')), '&deg;C', tx);
+      row('Highest max temperature', f1(hot.tmax), '&deg;C &middot; ' + esc(hot.date), tx);
+      row('Lowest min temperature', f1(cold.tmin), '&deg;C &middot; ' + esc(cold.date), tn);
+      row('Heat days', tx.filter(function (x) { return x.tmax >= P.heat; }).length, '', tx, '(max &ge; ' + P.heat + ' &deg;C)');
+      row('Frost days', tn.filter(function (x) { return x.tmin <= P.frost; }).length, '', tn, '(min &le; ' + P.frost + ' &deg;C)');
+      row('Growing degree-days', f1(gdd, 0), '&deg;C&middot;day', both, '(base ' + P.base + ', upper ' + P.cap + ' &deg;C)');
+    }
+    else row('Temperature', '–', '', null, 'not measured by this station' + (s.temp ? '' : ' (pair a temperature station in the Weather tool)'));
+
+    var et0 = has('et0');
+    if (et0.length) {
+      row('Reference evapotranspiration (ET0)', f1(sum(et0, 'et0'), 0), 'mm', et0);
+      var wb = days.filter(function (x) { return x.rain !== null && x.et0 !== null && x.et0 !== undefined; });
+      if (wb.length) row('Water balance (rain &minus; ET0)', f1(sum(wb, 'rain') - sum(wb, 'et0'), 0), 'mm', wb, '(days with both)');
+    }
+    var rh = has('rh');
+    if (rh.length) row('Mean relative humidity', f1(mean(rh, 'rh'), 0), '%', rh);
+    var rad = has('rad');
+    if (rad.length) row('Mean solar radiation', f1(mean(rad, 'rad')), 'MJ/m&sup2;/day', rad);
+
+    var low = Math.max(rain.length, tx.length) < 0.8 * n;
+    $('#tw_result').html('<table class="table table-condensed table-bordered tw-table"><thead><tr><th>' + esc(start) + ' to ' + esc(end) + ' (' + n + ' days)</th><th class="n">Value</th><th class="n">Days with data</th></tr></thead><tbody>'
+      + rows.join('') + '</tbody></table>'
+      + (low ? '<div class="small text-warning"><span class="glyphicon glyphicon-warning-sign"></span> The station has data for less than 80% of the days: the totals are incomplete.</div>' : '')
+      + '<div class="small text-muted">Source: ' + esc(r.source || '') + (t ? '; temperature: ' + esc(t.source || '') : '') + '. Observed data only.</div>');
+  }
+
+  $('#tw_station').on('change', function () { if ($(this).val() === '_nearby') loadNearby(); });
+  $('#tw_show').on('click', show);
+  $(document).on('weather:uploaded', load);
+  load();
+});
+</script>
+% } else {
+<p><i>This trial has no location.</i></p>
+% }
+
+% if ($rtbbase) {
+<p id="trial_weather_check" style="margin-top:8px">[loading...]</p>
 
 <script type="text/javascript" defer="defer">
 jQuery(document).ready(function () {
 
   jQuery.getJSON("https://weather.rtbbase.org/rest/locations",function(data){
-    console.log("got data back, here it is: "+data);
-    var trial_location = "<% $location %>";
+    var trial_location = <% JSON::to_json($location // "", { allow_nonref => 1 }) %>;
     var locations = data;
     var location_status;
     for (var i=0; i < locations.length; i++) {
       if (locations[i] == trial_location) {
         location_status = 'found';
-        jQuery('#trial_weather_check').html('<a href="https://weather.rtbbase.org?location='+trial_location+'">Weather for '+trial_location+'</a>')
+        jQuery('#trial_weather_check').html('<a href="https://weather.rtbbase.org?location='+encodeURIComponent(trial_location)+'">Weather for '+jQuery('<div>').text(trial_location).html()+' on RTBbase weather</a>')
       }
     }
     if (location_status != 'found') {
-      jQuery('#trial_weather_check').html('<p><i> No weather data available for location '+trial_location+'</i></p>')
+      jQuery('#trial_weather_check').html('<i>No RTBbase weather data available for this location</i>')
     }
   });
 
 });
 </script>
+% }

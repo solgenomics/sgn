@@ -104,7 +104,14 @@ subtest 'genetic variance keeps its label when locations outnumber genotypes' =>
     unlink $out{'h2.csv'} or die $!;
     ok(run([$rscript, 'R/heritability/h2_blup_rscript.R', $pheno, 'trait.a', @out{qw(h2.json h2.csv error.txt)}],
         '<', \undef, '>', \$stdout, '2>', \$stderr), 'study-labelled fit completes') or diag($stderr);
-    is(scalar(read_file($out{'h2.csv'})), $csv, 'study labels do not absorb the between-location variance');
+    # Compare numerically: the optimizer can stop at slightly different points in
+    # separate R processes (a few parts per million on this badly conditioned fit).
+    my $labelled = read_file($out{'h2.csv'});
+    my @before = $csv =~ /^"\d+","trait a",([\d.]+),([\d.]+),([\d.]+),([\d.]+)$/m;
+    my @after = $labelled =~ /^"\d+","trait a",([\d.]+),([\d.]+),([\d.]+),([\d.]+)$/m;
+    ok(@before == 4 && @after == 4
+        && !grep({ abs($before[$_] - $after[$_]) > 1e-4 * abs($before[$_]) + 1e-3 } 0 .. 3),
+        'study labels do not absorb the between-location variance') or diag($csv, $labelled);
 };
 
 subtest 'h2_rscript.R' => sub {

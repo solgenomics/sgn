@@ -1,0 +1,449 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/weather.mas - Weather page (/breeders/weather)
+
+=head1 DESCRIPTION
+
+Weather for breeding. Research stations (Breedbase locations) on the left;
+for the chosen one: 1 the distance range (km or miles, default from the configuration),
+2 the weather station (real observing stations within the range: airports,
+national weather service (SYNOP) stations, CoCoRaHS, IDEAM, INMET, ANA and
+CEMADEN rain gauges, and the stations of research farms whose data users
+upload as CSV / Excel: /breeders_toolbox/weather/upload_dialog.mas; a rain
+gauge is paired with a station for temperature),
+3 the season (dates, crop, planting date or the season of a trial). Tabs:
+Season (stress by crop stage, stress calendar, aligned charts, tables),
+Trials (environmental covariates of each trial), Past years (was the season
+normal? for maize the RM zone), Comparison (environments of several locations, its own dates) and Data sources
+(map, stations, which rain source to trust). Observed data only.
+Code: js/source/entries/weather.js; endpoints /ajax/weather/*.
+
+=head1 AUTHOR
+
+Chris Simoes
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'moment_min', 'daterangepicker'], entries => ['weather'] &>
+<& /util/import_css.mas, paths => ['leaflet.css'] &>
+
+<style>
+.wx-app { --wx-accent: #1d6fa5; --wx-accent-soft: #e6f1f8; --wx-green: #2b7a4b; --wx-border: #dfe3e8; --wx-muted: #6b7280; --wx-bg: #f7f9fa; margin-bottom: 40px; }
+.wx-app h4 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+.wx-muted { color: var(--wx-muted); }
+.wx-small { font-size: 12px; }
+.wx-alert { margin: 8px 0; border-radius: 8px; }
+.wx-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; margin: 10px 0 18px; border-radius: 10px; background: linear-gradient(120deg, #164e74 0%, #1d6fa5 55%, #3d9a8b 100%); color: #fff; }
+.wx-hero h2 { margin: 0 0 6px; font-weight: 600; color: #fff; }
+.wx-hero p { margin: 0; max-width: 780px; opacity: .92; }
+.wx-hero-src { font-size: 12px; opacity: .85; margin-top: 6px !important; }
+.wx-card { background: #fff; border: 1px solid var(--wx-border); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.wx-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.wx-card-head h4 { margin: 0; }
+.wx-side { position: sticky; top: 70px; }
+.wx-side .wx-card { padding: 12px; }
+.wx-segs { display: flex; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
+.wx-seg { border: 1px solid var(--wx-border); background: #fff; border-radius: 16px; padding: 3px 11px; font-size: 12.5px; color: #374151; cursor: pointer; }
+.wx-seg:hover { border-color: #93c3e0; }
+.wx-seg.on { background: var(--wx-accent); border-color: var(--wx-accent); color: #fff; }
+.wx-seg .wx-count { opacity: .75; margin-left: 3px; }
+.wx-llist { max-height: calc(100vh - 290px); overflow-y: auto; margin: 0 -4px; }
+.wx-litem { display: block; padding: 9px 10px; margin: 2px 4px; border-radius: 8px; border: 1px solid transparent; color: #111827; text-decoration: none !important; cursor: pointer; }
+.wx-litem:hover { background: var(--wx-bg); }
+.wx-litem.on { background: var(--wx-accent-soft); border-color: #b7d6ea; }
+.wx-litem.off { opacity: .55; }
+.wx-litem-meta { display: block; font-size: 12px; color: var(--wx-muted); }
+.wx-pill { display: inline-block; border-radius: 10px; padding: 0 8px; font-size: 11px; font-weight: 600; white-space: nowrap; vertical-align: 1px; }
+.wx-pill-st { background: var(--wx-accent-soft); color: var(--wx-accent); }
+.wx-pill-none { background: #eef0f3; color: #4b5563; }
+.wx-pill-warn { background: #fef3c7; color: #92400e; }
+.wx-net { background: #eef0f3; color: #374151; display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.wx-net-local { background: #1d6fa5; color: #fff; }
+.wx-table tr.wx-sep td { background: #f2f8fc; color: #164e74; font-weight: 600; font-size: 12px; }
+.wx-net-airport { background: #e0f2fe; color: #075985; }
+.wx-net-inmet { background: #dcfce7; color: #14532d; }
+.wx-net-ana { background: #ede9fe; color: #5b21b6; }
+.wx-net-synop { background: #ccfbf1; color: #115e59; }
+.wx-net-cocorahs { background: #fce7f3; color: #9d174d; }
+.wx-net-ideam { background: #fef9c3; color: #854d0e; }
+.wx-net-cemaden { background: #ffedd5; color: #9a3412; }
+.wx-net-dwd { background: #e5e7eb; color: #1f2937; }
+.wx-net-jma { background: #fee2e2; color: #991b1b; }
+.wx-loading { padding: 16px; color: var(--wx-muted); }
+.wx-spin { animation: wx-spin 1s linear infinite; display: inline-block; }
+@keyframes wx-spin { to { transform: rotate(360deg); } }
+.wx-empty-card { text-align: center; padding: 34px 20px; border: 2px dashed var(--wx-border); border-radius: 12px; background: var(--wx-bg); }
+.wx-empty-card > .glyphicon { font-size: 30px; color: #93c3e0; }
+.wx-empty-card h4 { margin-top: 10px; font-size: 17px; }
+.wx-empty-card p { color: #4b5563; max-width: 560px; margin: 0 auto 6px; }
+.wx-head-main { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.wx-head-main h3 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+.wx-head-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: #4b5563; font-size: 13px; }
+.wx-head-meta .glyphicon { color: var(--wx-muted); margin-right: 3px; }
+.wx-steps { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(240px, 1.3fr) minmax(300px, 1.7fr); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 1100px) { .wx-steps { grid-template-columns: 1fr; } }
+.wx-step { background: #fff; border: 1px solid var(--wx-border); border-radius: 10px; padding: 12px 14px; }
+.wx-step.on { border-color: var(--wx-accent); box-shadow: 0 0 0 3px var(--wx-accent-soft); }
+.wx-step-t { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--wx-muted); font-weight: 600; margin-bottom: 8px; }
+.wx-step-t b { display: inline-block; width: 18px; height: 18px; border-radius: 9px; background: var(--wx-accent); color: #fff; text-align: center; line-height: 18px; margin-right: 4px; font-size: 11px; }
+.wx-inline { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.wx-inline .form-control { display: inline-block; width: auto; }
+.wx-inline .form-control.wx-date { width: 105px; }
+.wx-unit { display: inline-flex; border: 1px solid var(--wx-border); border-radius: 6px; overflow: hidden; }
+.wx-unit button { border: 0; background: #fff; padding: 4px 10px; font-size: 12.5px; }
+.wx-unit button.on { background: var(--wx-accent); color: #fff; }
+.wx-row { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; align-items: start; margin-bottom: 8px; }
+.wx-row:last-child { margin-bottom: 0; }
+.wx-lab { font-size: 12px; color: var(--wx-muted); padding-top: 6px; }
+.wx-row > select.form-control { width: 100%; }
+.wx-st-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--wx-muted); }
+.wx-default { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--wx-border); font-size: 12px; color: #374151; }
+.wx-st-temp { margin-top: 8px; font-size: 12px; color: var(--wx-muted); }
+.wx-st-temp select { width: 100%; margin-top: 2px; }
+.wx-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.wx-stat { background: #fff; border: 1px solid var(--wx-border); border-radius: 10px; padding: 10px 12px; }
+.wx-stat .v { font-size: 22px; font-weight: 600; color: #111827; line-height: 1.15; }
+.wx-stat .v small { font-size: 13px; color: var(--wx-muted); font-weight: 600; margin-left: 2px; }
+.wx-stat .l { font-size: 11px; color: var(--wx-muted); text-transform: uppercase; letter-spacing: .04em; }
+.wx-stat .s { font-size: 11.5px; color: var(--wx-muted); }
+.wx-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--wx-border); margin-bottom: 16px; flex-wrap: wrap; }
+.wx-tab { background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; padding: 8px 14px; font-weight: 600; color: var(--wx-muted); }
+.wx-tab:hover { color: #111827; }
+.wx-tab.on { color: var(--wx-accent); border-bottom-color: var(--wx-accent); }
+.wx-tunit-switch { margin-left: auto; align-self: center; font-size: 12px; color: var(--wx-muted); display: inline-flex; align-items: center; gap: 6px; }
+.wx-concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
+.wx-concepts .wx-card { margin: 0; }
+.wx-concepts h4 .glyphicon { color: var(--wx-accent); margin-right: 4px; }
+.wx-concepts p, .wx-concepts li { font-size: 13px; line-height: 1.5; color: #374151; }
+.wx-concepts ul { padding-left: 18px; margin-bottom: 6px; }
+.wx-formula { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; background: var(--wx-bg); border: 1px solid var(--wx-border); border-radius: 6px; padding: 7px 10px; margin: 6px 0 8px; white-space: normal; }
+.wx-concepts .wx-ex { font-size: 12.5px; color: var(--wx-muted); }
+.wx-tab .badge { background: #e5e7eb; color: #374151; font-weight: 600; margin-left: 4px; }
+.wx-map { height: 380px; border-radius: 8px; border: 1px solid var(--wx-border); margin-bottom: 6px; z-index: 0; }
+.wx-map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: #4b5563; margin-bottom: 12px; }
+.wx-map-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.wx-lg-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; }
+.wx-lg-loc { background: #dc2626; width: 13px; height: 13px; }
+.wx-lg-other { background: #64748b; width: 9px; height: 9px; opacity: .8; }
+.wx-lg-ring { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1.5px dashed #1d6fa5; background: rgba(29,111,165,.06); }
+.wx-star-icon { background: none; border: 0; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.45)); }
+.wx-table-wrap { overflow: auto; max-height: 60vh; border: 1px solid var(--wx-border); border-radius: 8px; }
+.wx-table { margin: 0; font-size: 13px; }
+.wx-table thead th { position: sticky; top: 0; background: var(--wx-bg); z-index: 1; white-space: nowrap; border-bottom: 1px solid var(--wx-border) !important; font-size: 12px; color: #374151; }
+.wx-table td { vertical-align: middle !important; }
+.wx-table tr.on td { background: var(--wx-accent-soft); }
+.wx-table tr.on td:first-child { box-shadow: inset 3px 0 0 var(--wx-accent); }
+.wx-table td.n, .wx-table th.n { text-align: right; white-space: nowrap; }
+.wx-table tr.wx-fc td { color: var(--wx-muted); font-style: italic; }
+.wx-raw { font-family: Menlo, Consolas, monospace; font-size: 11.5px; color: #374151; word-break: break-all; }
+.wx-chart { position: relative; margin-bottom: 6px; }
+.wx-chart svg { display: block; width: 100%; overflow: visible; }
+.wx-chart .grid line { stroke: #eef0f3; }
+.wx-chart .axis text { fill: #6b7280; font-size: 10.5px; }
+.wx-chart .zero { stroke: #94a3b8; }
+.wx-tip { position: absolute; pointer-events: none; background: #111827; color: #fff; border-radius: 6px; padding: 6px 9px; font-size: 12px; white-space: nowrap; z-index: 3; display: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+.wx-tip i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+.wx-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: #374151; margin: 2px 0 4px; }
+.wx-legend i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.wx-legend i.bar { height: 10px; width: 10px; }
+.wx-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1100px) { .wx-grid2 { grid-template-columns: 1fr; } }
+.wx-sub { font-size: 14px; font-weight: 600; margin: 4px 0 6px; }
+.wx-params { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; background: var(--wx-bg); border: 1px solid var(--wx-border); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 13px; }
+.wx-params label { margin: 0; font-weight: normal; display: inline-flex; gap: 6px; align-items: center; }
+.wx-params input[type=number] { width: 70px; }
+.wx-note { font-size: 12px; color: var(--wx-muted); margin: 6px 0 0; }
+.wx-find-status { display: none; font-size: 12px; line-height: 1.45; margin-top: 7px; padding: 6px 9px; border-radius: 7px; border-left: 3px solid transparent; }
+.wx-find-status.run { display: block; background: #eff6ff; color: #1e3a8a; border-left-color: #3b82f6; }
+.wx-find-status.done { display: block; background: #ecfdf5; color: #065f46; border-left-color: #10b981; }
+.wx-find-status.empty, .wx-find-status.stale { display: block; background: #fffbeb; color: #92400e; border-left-color: #f59e0b; }
+.wx-find-status.err { display: block; background: #fef2f2; color: #991b1b; border-left-color: #ef4444; }
+.wx-find-status a { font-weight: 600; cursor: pointer; white-space: nowrap; }
+.wx-note .glyphicon { margin-right: 3px; }
+.wx-flags { display: flex; flex-wrap: wrap; gap: 4px; }
+.wx-flag { display: inline-block; border-radius: 8px; padding: 0 7px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.wx-flag-frost { background: #dbeafe; color: #1e40af; }
+.wx-flag-heat { background: #fee2e2; color: #991b1b; }
+.wx-flag-rain { background: #e0f2fe; color: #075985; }
+.wx-flag-spray { background: #dcfce7; color: #14532d; }
+.wx-flag-wind { background: #fef3c7; color: #92400e; }
+.wx-params-box { margin: -8px 0 12px; font-size: 13px; }
+.wx-params-box summary { cursor: pointer; color: var(--wx-muted); }
+.wx-params-box .wx-params { margin-top: 6px; }
+.wx-stat-bad .v { color: #b91c1c; } .wx-stat-warn .v { color: #b45309; } .wx-stat-good .v { color: #15803d; }
+.wx-verdict { border-left: 5px solid #16a34a; }
+.wx-verdict.warn { border-left-color: #f59e0b; } .wx-verdict.bad { border-left-color: #dc2626; }
+.wx-finds { list-style: none; padding: 0; margin: 4px 0; }
+.wx-find { padding: 5px 10px; margin-bottom: 4px; border-radius: 6px; font-size: 13.5px; }
+.wx-find .glyphicon { margin-right: 4px; }
+.wx-find-bad { background: #fef2f2; } .wx-find-bad .glyphicon { color: #dc2626; }
+.wx-find-warn { background: #fffbeb; } .wx-find-warn .glyphicon { color: #d97706; }
+.wx-find-info { background: var(--wx-bg); } .wx-find-info .glyphicon { color: var(--wx-muted); }
+.wx-find-ok { font-size: 14px; color: #15803d; margin: 6px 0; }
+.wx-table tr.wx-crit td { background: #fffbeb; }
+.wx-table tr.wx-crit td:first-child { box-shadow: inset 3px 0 0 #f59e0b; }
+.wx-neg { color: #b91c1c; } .wx-pos { color: #15803d; } .wx-warn-txt { color: #b45309; }
+.wx-ibar { height: 4px; background: #eef2f7; border-radius: 2px; margin-top: 2px; min-width: 40px; }
+.wx-ibar div { height: 4px; border-radius: 2px; }
+.wx-cbars { font-size: 12px; }
+.wx-cbar { display: flex; align-items: center; gap: 6px; height: 20px; }
+.wx-cbar-l { width: 34%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; color: #374151; }
+.wx-cbar.on .wx-cbar-l { font-weight: 600; color: #111827; }
+.wx-cbar-t { position: relative; flex: 1; height: 12px; background: #f8fafc; border-radius: 3px; }
+.wx-cbar-b { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.wx-cbar-ref { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 2px dashed #475569; }
+.wx-cbar-refkey { display: inline-block; width: 0; height: 10px; border-left: 2px dashed #475569; vertical-align: middle; margin: 0 4px; }
+.wx-cbar-v { width: 46px; color: var(--wx-muted); text-align: right; }
+.wx-details { margin-top: 12px; }
+.wx-details summary { cursor: pointer; font-weight: 600; font-size: 13.5px; margin-bottom: 6px; }
+.wx-lpicks { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 10px; }
+.wx-lpick { font-weight: normal; margin: 0; font-size: 13px; }
+.wx-rm-head { font-size: 15px; margin: 4px 0 10px; }
+.wx-big { font-size: 20px; color: #0f8a5f; }
+.wx-zones { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.wx-zone { border: 1px solid var(--wx-border); border-radius: 8px; padding: 8px 10px; background: #fff; font-size: 13px; }
+.wx-zone-h { font-weight: 600; color: #0f8a5f; margin-bottom: 4px; }
+#wx_flash { position: sticky; top: 60px; z-index: 5; }
+</style>
+
+<div id="wx-app" class="wx-app">
+
+  <div class="wx-hero">
+    <div>
+      <h2><span class="glyphicon glyphicon-grain"></span> Weather for breeding</h2>
+      <p>Characterize the environment of your trials with the observations of real weather stations: water deficit, heat and frost by crop stage, the environmental covariates of each trial, how the season compares with past years and with your other locations.</p>
+      <p class="wx-hero-src">Observed data only (no model, no forecast). Free sources: national weather services (WMO SYNOP via OGIMET), airports (Iowa Environmental Mesonet), CoCoRaHS (USA), IDEAM (Colombia), INMET, ANA and CEMADEN (Brazil), plus the data of your own farm stations (upload a CSV / Excel file).</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+      <div class="wx-side">
+        <div class="wx-card">
+          <h4><span class="glyphicon glyphicon-map-marker"></span> Research stations</h4>
+          <input type="search" class="form-control input-sm" id="wx_lsearch" placeholder="Search name, country, program" />
+          <div class="wx-segs">
+            <button class="wx-seg on" data-lfilter="coords">With coordinates<span class="wx-count"></span></button>
+            <button class="wx-seg" data-lfilter="linked">With weather station<span class="wx-count"></span></button>
+            <button class="wx-seg" data-lfilter="all">All<span class="wx-count"></span></button>
+          </div>
+          <select class="form-control input-sm" id="wx_ltype" style="margin-bottom:6px"></select>
+          <div class="wx-llist" id="wx_locations"><div class="wx-loading"><span class="glyphicon glyphicon-refresh wx-spin"></span> Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      <div id="wx_flash"></div>
+
+      <div id="wx_empty" class="wx-empty-card" style="display:none">
+        <span class="glyphicon glyphicon-map-marker"></span>
+        <h4>Choose a research station</h4>
+        <p>Pick a location on the left. Its latitude and longitude are used to find the weather stations around it.</p>
+        <p class="wx-muted wx-small">Locations without coordinates can be completed in Manage &rsaquo; <a href="/breeders/locations">Locations</a>.</p>
+      </div>
+
+      <div id="wx_workspace" style="display:none">
+        <div class="wx-card" id="wx_head"></div>
+
+        <div class="wx-steps">
+          <div class="wx-step" id="wx_step1">
+            <div class="wx-step-t"><b>1</b> Search area</div>
+            <div class="wx-inline">
+              <input type="number" class="form-control input-sm" id="wx_range" min="1" step="1" style="width:80px" />
+              <span class="wx-unit" id="wx_unit"><button type="button" data-unit="km">km</button><button type="button" data-unit="mi">miles</button></span>
+              <button class="btn btn-primary btn-sm" id="wx_find"><span class="glyphicon glyphicon-search"></span> Find stations</button>
+            </div>
+            <div class="wx-find-status" id="wx_find_status" role="status" aria-live="polite"></div>
+          </div>
+          <div class="wx-step" id="wx_step2">
+            <div class="wx-step-t"><b>2</b> Weather station</div>
+            <div id="wx_chosen"><span class="wx-muted wx-small">Find the stations first.</span></div>
+          </div>
+          <div class="wx-step" id="wx_step3">
+            <div class="wx-step-t"><b>3</b> Season and crop</div>
+            <div class="wx-row">
+              <span class="wx-lab">Period</span>
+              <div>
+                <div class="wx-segs" id="wx_presets" style="margin:0 0 5px">
+                  <button class="wx-seg" data-preset="30">30 days</button>
+                  <button class="wx-seg on" data-preset="90">90 days</button>
+                  <button class="wx-seg" data-preset="180">6 months</button>
+                  <button class="wx-seg" data-preset="year">This year</button>
+                  <button class="wx-seg" data-preset="lastyear">Last year</button>
+                </div>
+                <div class="wx-inline">
+                  <input type="text" class="form-control input-sm wx-date" id="wx_start" title="Start (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
+                  <span class="wx-muted">to</span>
+                  <input type="text" class="form-control input-sm wx-date" id="wx_end" title="End (YYYY-MM-DD)" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
+                  <button class="btn btn-primary btn-sm" id="wx_apply">Apply</button>
+                </div>
+              </div>
+            </div>
+            <div class="wx-row">
+              <span class="wx-lab">or trial</span>
+              <select class="form-control input-sm" id="wx_trial"><option value="">Use the season of a trial...</option></select>
+            </div>
+            <div class="wx-row">
+              <span class="wx-lab">Crop</span>
+              <div class="wx-inline">
+                <select class="form-control input-sm" id="wx_crop"></select>
+                <span class="wx-muted wx-small">planted</span>
+                <input type="text" class="form-control input-sm wx-date" id="wx_planting" title="Planting date (YYYY-MM-DD): the crop stages start here" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wx-stats" id="wx_stats" style="display:none"></div>
+
+        <div class="wx-tabs">
+          <button class="wx-tab on" data-tab="season"><span class="glyphicon glyphicon-grain"></span> Season</button>
+          <button class="wx-tab" data-tab="trials"><span class="glyphicon glyphicon-leaf"></span> Trials</button>
+          <button class="wx-tab" data-tab="years"><span class="glyphicon glyphicon-stats"></span> Past years</button>
+          <button class="wx-tab" data-tab="locations"><span class="glyphicon glyphicon-globe"></span> Comparison</button>
+          <button class="wx-tab" data-tab="sources"><span class="glyphicon glyphicon-map-marker"></span> Data sources <span class="badge" id="wx_n_stations"></span></button>
+          <button class="wx-tab" data-tab="concepts"><span class="glyphicon glyphicon-education"></span> Concepts</button>
+          <span class="wx-tunit-switch" title="Temperature unit of the whole page and of the CSV files">Temperature
+            <span class="wx-unit" id="wx_tunit"><button type="button" data-tunit="C">&deg;C</button><button type="button" data-tunit="F">&deg;F</button></span></span>
+        </div>
+
+        <details class="wx-params-box">
+          <summary>Stress thresholds and degree-days</summary>
+          <div class="wx-params">
+            <label>Base temperature <input type="number" class="form-control input-sm" id="wx_base" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
+            <label>Upper limit <input type="number" class="form-control input-sm" id="wx_cap" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
+            <label>Heat stress from <input type="number" class="form-control input-sm" id="wx_heat" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
+            <label>Frost at or below <input type="number" class="form-control input-sm" id="wx_frost" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
+            <label>Dry spell from <input type="number" class="form-control input-sm" id="wx_dry" step="1" min="2" /> days</label>
+            <label>Heavy rain from <input type="number" class="form-control input-sm" id="wx_heavy" step="5" /> mm</label>
+          </div>
+          <div class="wx-params wx-rm-params" style="display:none">
+            <b class="wx-small">Maize RM</b>
+            <label>Killing frost at or below <input type="number" class="form-control input-sm" id="wx_kill" step="0.5" /> <span class="wx-tunit">&deg;C</span></label>
+            <label>RM 100 needs <input type="number" class="form-control input-sm" id="wx_rm100" step="25" style="width:80px" /> GDD &deg;F to black layer</label>
+            <label>plus <input type="number" class="form-control input-sm" id="wx_rmday" step="1" /> GDD &deg;F per RM day</label>
+            <label>Silking at <input type="number" class="form-control input-sm" id="wx_silk" step="1" /> % of it</label>
+            <label>Reference RM (no frost) <input type="number" class="form-control input-sm" id="wx_rmref" step="5" /></label>
+          </div>
+        </details>
+
+        <div class="wx-pane" data-pane="season"><div id="wx_season"></div></div>
+        <div class="wx-pane" data-pane="trials" style="display:none"><div id="wx_trials"></div></div>
+        <div class="wx-pane" data-pane="years" style="display:none"><div id="wx_years"></div></div>
+        <div class="wx-pane" data-pane="locations" style="display:none"><div id="wx_locs"></div></div>
+
+        <div class="wx-pane" data-pane="concepts" style="display:none">
+          <p class="wx-note" style="margin:0 0 12px"><span class="glyphicon glyphicon-info-sign"></span>How the numbers on this page are calculated. Values in <b>bold</b> are the current settings ("Stress thresholds and degree-days") and follow the &deg;C / &deg;F switch.</p>
+          <div class="wx-concepts">
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-fire"></span> Degree-days (GDD)</h4>
+              <p>Plants develop faster when it is warm, so crop development is measured in accumulated heat rather than in days. Each day adds:</p>
+              <div class="wx-formula">GDD = (Tmax* + Tmin*) / 2 &minus; Tbase</div>
+              <ul>
+                <li>Tmax* and Tmin* are the day's maximum and minimum, held between the base temperature (<b data-c="base"></b>) and the upper limit (<b data-c="cap"></b>): below the base the crop does not develop, and above the limit it does not develop faster.</li>
+                <li>A day never adds less than 0. The days are summed from planting.</li>
+                <li>The base and the limit change with the crop chosen in step 3 (maize 10 / 30 &deg;C, wheat 0 / 30 &deg;C, cotton 15.6 / 32 &deg;C...).</li>
+              </ul>
+              <p class="wx-ex">Example: max 32, min 18 &deg;C, base 10, limit 30 &rarr; (30 + 18) / 2 &minus; 10 = 14 &deg;C&middot;d. In &deg;F (base 50, limit 86) the same day is 25.2 &deg;F&middot;d: degree-days in &deg;F are always 1.8 &times; those in &deg;C.</p>
+              <p class="wx-ex">Days without temperature add nothing, so check "Days observed".</p>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-cloud-upload"></span> ET0 (reference evapotranspiration)</h4>
+              <p>The water, in mm per day, that a reference crop (short, well-watered grass) loses through its leaves and from the soil. It is the <b>demand</b> of the atmosphere: it rises with sun, heat, dry air and wind. Typical values: 2&ndash;4 mm a day in cool or cloudy weather, 5&ndash;8 mm in hot, dry, windy weather.</p>
+              <ul>
+                <li><b>Penman-Monteith</b> (FAO-56), when the station measures solar radiation, humidity and wind (e.g. INMET automatic stations). This is the standard method.</li>
+                <li><b>Hargreaves-Samani</b>, from the maximum and minimum temperature and the latitude, for the other stations (airports, national services). It is less precise in humid or windy places.</li>
+                <li>Only days with at least 16 hourly reports get an ET0.</li>
+              </ul>
+              <p class="wx-ex">A real crop uses Kc &times; ET0: Kc is about 0.3&ndash;0.5 after emergence and 1.0&ndash;1.2 at flowering. The page shows ET0 itself, as a demand that can be compared between environments.</p>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-tint"></span> Water balance</h4>
+              <div class="wx-formula">Water balance = rain &minus; ET0 &nbsp;(mm, over the period or a crop stage)</div>
+              <ul>
+                <li>Negative: the atmosphere asked for more water than it rained (deficit). Positive: rain exceeded the demand.</li>
+                <li>A stage is flagged with a <b>water deficit</b> when rain is less than 50% of ET0, and with <b>some water deficit</b> when it is 50&ndash;80%. It is <b>very wet</b> when rain is more than twice ET0 and over 100 mm.</li>
+                <li>It is computed only when rain was measured on at least 80% of the days. A missing day is not a dry day.</li>
+              </ul>
+              <p class="wx-ex">It does not include the water stored in the soil at planting, runoff, irrigation or Kc. Use it to compare environments and seasons (G&times;E), not to schedule irrigation.</p>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-tasks"></span> Crop stages and stress days</h4>
+              <p>Stages are estimated by dividing the degree-days from planting to the end of the period in proportions typical of the crop. For maize, flowering (the critical stage) is 45&ndash;58% of the season's GDD. Without temperature data, days are used instead of GDD. When the trial has real flowering dates, use those.</p>
+              <ul>
+                <li><b>Heat day</b>: maximum &ge; <b data-c="heat"></b>.</li>
+                <li><b>Frost day</b>: minimum &le; <b data-c="frost"></b>.</li>
+                <li><b>Dry spell</b>: at least <b data-c="dry"></b> days in a row with less than 1 mm of rain.</li>
+                <li><b>Heavy rain</b>: at least <b data-c="heavy"></b> in a day (waterlogging, lodging, disease).</li>
+              </ul>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-dashboard"></span> Maize relative maturity (RM)</h4>
+              <p>Seed companies rate hybrids by RM (or CRM), in days. Behind each rating is the heat the hybrid needs, in GDD &deg;F (base 50 &deg;F, limit 86 &deg;F), from planting to <b>black layer</b> (physiological maturity):</p>
+              <div class="wx-formula">GDD &deg;F needed = <span data-c="rm100"></span> + <span data-c="rmday"></span> &times; (RM &minus; 100)</div>
+              <ul>
+                <li>Example: RM 110 needs <b data-c="rm110"></b> GDD &deg;F. Silking happens at about <b data-c="silk"></b> of it.</li>
+                <li>The season runs from planting to the first <b>killing frost</b> (minimum &le; <b data-c="kill"></b>, ignoring the first 3 weeks), or to the end of the period.</li>
+                <li><b>Max RM</b> is the largest RM whose GDD fits in that season. The <b>RM zone</b> (Past years tab) is the RM that matures in at least 8 of 10 years.</li>
+                <li>Where there is no frost (tropics), the maximum RM means nothing. Instead, the page shows how many days a reference RM <b data-c="rmref"></b> hybrid takes to silk and to reach black layer.</li>
+                <li>RM needs temperature on at least 80% of the days. RM is always in GDD &deg;F, the unit used for seed ratings, whatever the &deg;C / &deg;F switch says.</li>
+              </ul>
+              <p class="wx-ex">Companies rate differently: set the two numbers in the settings to match the ratings you use.</p>
+            </div>
+
+            <div class="wx-card">
+              <h4><span class="glyphicon glyphicon-check"></span> Days observed and data sources</h4>
+              <p>Every value comes from observations of a real station, never from a model or a grid. "Days observed" is the share of days with a complete report.</p>
+              <ul>
+                <li>Below 80%, totals (rain, ET0, GDD) are lower than the real ones, the water balance is not computed, and past years are not ranked.</li>
+                <li>Rain varies a lot within a few kilometres. Use the "Which rain source to trust?" comparison in Data sources, and prefer the nearest gauge that agrees with its neighbours.</li>
+                <li>Airports outside the USA report the hours with rain, not millimetres. Pair a rain gauge with a station that has temperature (step 2).</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="wx-pane" data-pane="sources" style="display:none">
+          <div class="wx-card">
+            <div class="wx-card-head">
+              <h4><span class="glyphicon glyphicon-map-marker"></span> Stations within <span id="wx_range_title"></span></h4>
+              <div class="wx-segs" id="wx_netfilter" style="margin:0"></div>
+            </div>
+            <div id="wx_map" class="wx-map"></div>
+            <div class="wx-map-legend" id="wx_map_legend"></div>
+            <div id="wx_station_table"></div>
+            <p class="wx-note"><span class="glyphicon glyphicon-info-sign"></span> All values are observations of the station itself, never interpolated. The farther and the higher (or lower) the station is from the research station, the more its weather can differ: check distance and elevation.</p>
+          </div>
+          <div class="wx-card" id="wx_compare">
+            <div class="wx-card-head">
+              <h4><span class="glyphicon glyphicon-tint"></span> Which rain source to trust? <span class="wx-muted" id="wx_compare_title"></span></h4>
+              <span class="wx-inline wx-small">
+                <label class="wx-muted" style="font-weight:normal;margin:0">Nearest
+                  <select class="form-control input-sm" id="wx_cmp_max"><option>5</option><option selected>8</option><option>12</option><option>20</option></select> rain gauges</label>
+                <label class="checkbox-inline"><input type="checkbox" id="wx_cmp_air" checked /> airports</label>
+              </span>
+            </div>
+            <div id="wx_compare_body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<& /breeders_toolbox/weather/upload_dialog.mas, allow_file_locations => 1 &>
+
+<script>
+  jQuery(function() { window.jsMod['weather'].init(); });
+</script>

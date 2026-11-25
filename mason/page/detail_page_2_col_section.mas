@@ -33,6 +33,7 @@ $main_production_site_url => undef
 $trial_phenotype_files => undef
 $hidap_enabled => undef
 $location_name => undef
+$location_id => undef
 $country_name => undef
 $breeding_program_name => undef
 $breeding_program_id => undef
@@ -285,7 +286,7 @@ $is_dataset_public => 0
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_weather_data'){
-                                <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
+                                <& /breeders_toolbox/trial/weather.mas, location => $location_name, location_id => $location_id, trial_id => $trial_id &>
 % } #End trial_weather_data
 % if ($info_section_id eq 'trial_jbrowse_data'){
                                 <& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
