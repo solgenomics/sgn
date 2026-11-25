@@ -54,6 +54,10 @@ $context->mock(req => sub { $request });
 my $logger = Test::MockObject->new;
 $logger->mock(error => sub { die "Unexpected cache removal error: $_[1]" });
 $context->mock(log => sub { $logger });
+# Clearing the cache requires a signed-in curator or submitter.
+my $user = Test::MockObject->new;
+$user->mock(check_roles => sub { $_[1] eq 'curator' });
+$context->mock(user => sub { $user });
 
 my $raw_file = $anova->trial_phenotype_file($context, $trial_id);
 my $old_content = "unit\tsynthetic_trait\nsynthetic_unit\t1\n";

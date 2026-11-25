@@ -3337,7 +3337,7 @@ sub _update_breeding_stage_stockprop {
 sub _current_stage_prop {
     my ($self, $schema, $stock_id, $program, $saved_program_stage) = @_;
     my $name = $self->_breeding_stage_property_name($program, $saved_program_stage);
-    my $term = SGN::Model::Cvterm->get_cvterm_row($schema, $name, 'stock_property') or return undef;
+    my $term = SGN::Model::Cvterm->get_cvterm_row($schema, $name, 'stock_property') or return;
     my $prop = $schema->resultset('Stock::Stockprop')->search({ stock_id => $stock_id, type_id => $term->cvterm_id() },
         { order_by => { -desc => 'stockprop_id' }, rows => 1 })->first();
     return $prop ? $prop->value() : undef;
