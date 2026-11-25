@@ -754,6 +754,16 @@ sub obsolete_locus_unigene : Path('/ajax/locus/obsolete_locus_unigene') : Action
 
 sub obsolete_locus_unigene_POST :Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to obsolete locus-unigene links.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to obsolete locus-unigene links.' };
+        return;
+    }
+
     my $locus_unigene_id = $c->request->body_parameters->{locus_unigene_id};
     my $locus_id = $c->request->body_parameters->{locus_id};
     my $dbh = $c->dbc->dbh;

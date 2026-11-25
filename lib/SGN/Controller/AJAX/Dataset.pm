@@ -79,6 +79,16 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 sub store_outliers_in_dataset :Path('/ajax/dataset/store_outliers') Args(1) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to store dataset outliers.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to store dataset outliers.' };
+        return;
+    }
+
     my $dataset_id = shift;
     my $string_outliers = $c->req->param('outliers');
     my $string_outlier_cutoffs = $c->req->param('outlier_cutoffs');

@@ -29,7 +29,7 @@ $wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
 
     <div id="lists_datasets_message" class="message" style="display:none;">Retrieving lists and datasets...please wait...it may take minutes.
     </div>
-    <div id="lists_datasets_progress">
+    <div id="lists_datasets_progress" style="display:none;">
     <& /solgs/spinner/spinner.mas &>
     </div>
 

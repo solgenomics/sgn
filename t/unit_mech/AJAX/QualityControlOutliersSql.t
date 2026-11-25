@@ -28,7 +28,7 @@ BAIL_OUT('Refusing a non-fixture database')
     unless defined($database) && $database =~ /\Atest_db_[0-9_]+\z/;
 my $server = $ENV{SGN_TEST_SERVER} || 'http://localhost:3010';
 BAIL_OUT('Refusing HTTP requests outside the disposable fixture')
-    unless URI->new($server)->host =~ /\A(?:localhost|127\.0\.0\.1|test_breedbase)\z/;
+    unless URI->new($server)->host =~ /\A(?:localhost|127\.0\.0\.1|test_breedbase|breedbase)\z/;
 
 # A trait the controller can resolve ("name|DB:accession"), a fixture trial, and the
 # name the controller records as operator for janedoe (a curator in the fixture).
