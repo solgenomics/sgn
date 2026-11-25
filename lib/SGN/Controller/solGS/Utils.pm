@@ -201,9 +201,10 @@ sub abbreviate_term {
 
 
 sub acronymize_traits {
-    my ($self, $traits) = @_;
+    my ($self, $traits, $reserved) = @_;
 
     my $acronym_table = {};
+    my %used = map { $_ => 1 } @{ $reserved || [] };
     my $cnt = 0;
     my $acronymized_traits;
 
@@ -217,12 +218,15 @@ sub acronymize_traits {
         # Suffix repeated acronyms in order: DMC, DMC.2, DMC.3, ...
         my $base = $abbr;
         my $suffix = 1;
-        $abbr = $base . '.' . ++$suffix while $abbr && $acronym_table->{$abbr};
+        $abbr = $base . '.' . ++$suffix while length($abbr) && $used{$abbr};
 
         $acronymized_traits .= $abbr;
         $acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
 
-        $acronym_table->{$abbr} = $trait_name if $abbr;
+        if (length($abbr)) {
+            $used{$abbr} = 1;
+            $acronym_table->{$abbr} = $trait_name;
+        }
     }
 
     my $acronym_data = {

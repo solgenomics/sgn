@@ -62,6 +62,10 @@ my $other_raw_file = $anova->trial_phenotype_file($context, $other_trial_id);
 my $other_content = "unit\tsynthetic_trait\nother_unit\t9\n";
 write_file($other_raw_file, $other_content);
 my $anova_dir = $anova->anova_trial_cache_dir($context, $trial_id);
+my $legacy_output = File::Spec->catfile($context->stash->{anova_dir}, $trial_id, 'cache', 'synthetic_anova_output.txt');
+write_file($legacy_output, 'old unversioned result');
+ok(!-e File::Spec->catfile($anova_dir, 'synthetic_anova_output.txt'),
+    'old results are invisible to the versioned ANOVA cache');
 my $anova_output = File::Spec->catfile($anova_dir, 'synthetic_anova_output.txt');
 write_file($anova_output, 'old ANOVA result');
 my $anova_temp_dir = $anova->anova_trial_temp_dir($context, $trial_id);
@@ -124,6 +128,7 @@ is(scalar read_file($dataset_file), 'unsupported shared-input sentinel',
 $request_args = {analysis_types => 'anova', trials => "$trial_id"};
 $clear->solgs_cache_clear($context);
 is($context->stash->{rest}{success}, 1, 'the existing manual ANOVA clear action succeeds');
+ok(!-e $legacy_output, 'manual clear also removes unversioned results');
 ok(!-e $anova_output, 'requested ANOVA output is removed');
 ok(!-e $anova_temp, 'requested ANOVA temporary input is removed');
 is(scalar read_file($raw_file), $old_content, 'ANOVA clear retains the shared solGS phenotype input');

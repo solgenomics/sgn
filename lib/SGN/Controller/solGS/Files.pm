@@ -231,8 +231,8 @@ sub formatted_phenotype_file {
     my $cache_dir = $self->solgs_cache_dir($c, $pop_id);
 
     my $cache_data = { 
-        key       => 'formatted_phenotype_data_' . $pop_id,
-        file      => 'formatted_phenotype_data_' . $pop_id,
+        key       => 'formatted_phenotype_data_' . $pop_id . '_columns_v3',
+        file      => 'formatted_phenotype_data_' . $pop_id . '_columns_v3',
         stash_key => 'formatted_phenotype_file',
 		cache_dir => $cache_dir
     };
@@ -258,8 +258,8 @@ sub phenotype_file_name {
     } 
 
     my $cache_data = { 
-        key       => 'phenotype_data_' . $pop_id,
-		file      => 'phenotype_data_' . $pop_id,
+        key       => 'phenotype_data_' . $pop_id . '_columns_v3',
+		file      => 'phenotype_data_' . $pop_id . '_columns_v3',
 		stash_key => 'phenotype_file_name',
 		cache_dir => $cache_dir
     };

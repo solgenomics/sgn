@@ -101,8 +101,8 @@ for my $case (
         my $query = Test::MockModule->new('SGN::Controller::solGS::Anova');
         $query->mock(plot_trait_columns => sub {
             return {} if $case->{map_empty};
-            return {'another trait' => 'unrelated'} if $case->{map_missing};
-            return {$clean_trait => $abbr};
+            return {999 => 'unrelated'} if $case->{map_missing};
+            return {201 => $abbr};
         });
         $query->mock(create_anova_phenodata_file => sub {
             write_file($file, {binmode => ':utf8'}, $content) unless $case->{no_data};
@@ -146,6 +146,27 @@ subtest 'a trait name inside another trait name keeps its own column' => sub {
     $seen{ SGN::Controller::solGS::solGS->format_phenotype_dataset_headers(
         join("\t", 'germplasmName', @traits), ['germplasmName']) }++ for 1 .. 40;
     is_deeply([keys %seen], ["germplasmName\tPHAM\tPH"], 'each trait has its own acronym in 40 of 40 headers');
+};
+
+subtest 'every trait column gets its own name' => sub {
+    my $format = sub {
+        return eval { SGN::Controller::solGS::solGS->format_phenotype_dataset_headers(
+            join("\t", 'germplasmName', 'replicate', @_), ['germplasmName', 'replicate']) } // "died: $@";
+    };
+    is($format->('height|CO_321:0000001', 'height|CO_323:0000001', 'yield'), "germplasmName\treplicate\theight\theight.2\tyield",
+        'the same trait name in two ontologies');
+    is($format->('dry weight|CO_321:0000002', 'dry weight|CO_323:0000002'), "germplasmName\treplicate\tDW\tDW.2",
+        'also as the last columns');
+};
+
+subtest 'optional metadata and trailing notes keep their actual positions' => sub {
+    my @metadata = qw(germplasmName replicate plantedSeedlotStockDbId notes);
+    my @columns = ('germplasmName', 'replicate', 'dry matter content percentage|CO_334:0000001',
+        'fresh root weight|CO_334:0000012', 'notes');
+    my $format = SGN::Controller::solGS::solGS->format_phenotype_dataset_headers(
+        join("\t", @columns), \@metadata);
+    is($format, "germplasmName\treplicate\tDMCP\tFRW\tnotes",
+        'the traits survive omitted seedlot metadata and notes keeps its own header');
 };
 
 done_testing();
