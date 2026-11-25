@@ -13,7 +13,7 @@
  * Author: Chris Simoes <ccs263@cornell.edu>
  */
 
-import { participationChart, mostVotedChart } from '../modules/decision_vote_charts.js';
+import { participationChart, mostVotedChart, placesTable, placesChart } from '../modules/decision_vote_charts.js';
 
 let $;
 // list: the candidates in a fixed order (they never move); place: accession => place given (1 = best)
@@ -258,6 +258,9 @@ function resultsHtml(v, w) {
     h += '<p class="dv-muted">' + v.progress.voted + ' vote(s). Each vote gives ' + res.max_points + ' points to the variety in place 1, ' +
         (res.max_points - 1) + ' to the one in place 2 (' + res.max_points + ' candidates), and so on down to 1 point for the last one.</p>';
     h += mostVotedChart(res.candidates, { title: 'Most voted varieties' });
+    h += placesChart(res.candidates, { n: res.max_points, mine: w ? mine : null, title: 'Results per variety: how the voters placed each one' });
+    h += '<details style="margin:-6px 0 12px 0"><summary style="cursor:pointer; color:#2b7a4b">See the numbers per place</summary>' +
+        placesTable(res.candidates, { n: res.max_points }) + '</details>';
     h += '<div class="table-responsive"><table class="table table-bordered table-condensed"><thead><tr><th>Place</th><th>Variety</th><th>Points</th><th>Votes for place 1</th><th>Average place</th>' +
         (w ? '<th>Your place</th>' : '') + '</tr></thead><tbody>';
     h += res.candidates.map(x => '<tr' + (x.place === 1 ? ' class="dv-first"' : '') + '><td><b>' + x.place + '</b></td><td>' + esc(x.accession) + '</td><td>' + x.points + '</td>' +

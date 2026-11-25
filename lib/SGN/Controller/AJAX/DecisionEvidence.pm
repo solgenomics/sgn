@@ -29,7 +29,9 @@ Endpoints (login needed):
   GET  /ajax/decision_evidence/available  pipeline runs of the user and stored analyses to add
   POST /ajax/decision_evidence/link       meeting_id, keys (comma list), action link|unlink
   GET  /ajax/decision_evidence/evidence   meeting_id, key: values per accession of one source
-  POST /ajax/decision_evidence/draft      meeting_id, rows (JSON): decisions not saved yet
+  POST /ajax/decision_evidence/draft      meeting_id, rows (JSON): decisions not saved yet;
+                                          clear_all=1: removes every draft decision of the meeting and
+                                          puts back the stages changed during it (Set stage)
 
 =head1 AUTHOR
 
@@ -307,10 +309,16 @@ sub sources : Path('/ajax/decision_evidence/sources') Args(0) {
         },
         can_link => SGN::Controller::AJAX::ScriptFactory::_can_link_meetings($c),
         can_decide => can_decide($c),
+        # stage of an accession: only the people who can create decision meetings
+        can_set_stage => SGN::Controller::AJAX::DecisionMeeting->_can_create_meeting($c),
+        # variety profiles (/tools/variety_sheet) are made by curators
+        is_curator => ($c->user() && $c->user()->check_roles('curator')) ? 1 : 0,
         sources => \@sources,
         accessions => [ map { +{ accession => $_, sources => $in{$_}, selected_in => $sel{$_} || [] } } sort keys %in ],
         drafts => $m->{saved} ? {} : $drafts,
         n_drafts => $m->{saved} ? 0 : scalar(grep { ($drafts->{$_}->{decision} // '') ne '' } keys %$drafts),
+        # stages changed with Set stage during this meeting, not saved yet (Clear decisions puts them back)
+        n_stage_changes => $m->{saved} ? 0 : scalar(keys %{ ref($d->{draft_stage_changes}) eq 'HASH' ? $d->{draft_stage_changes} : {} }),
         history => [ grep { ref($_) eq 'HASH' } @{ _arr($d->{analyses_history}) } ],
     };
 }
@@ -498,13 +506,17 @@ sub draft : Path('/ajax/decision_evidence/draft') Args(0) {
     my $schema = _schema($c);
     my $m = _meeting($schema, $c->req->param('meeting_id'));
     return _fail($c, 'This decision meeting does not exist.') if !$m;
-    my $err;
+    my ($err, $reverted, $kept);
     try {
         $schema->txn_do(sub {
             my $prop = $schema->resultset('Project::Projectprop')->search({ projectprop_id => $m->{prop}->projectprop_id() }, { for => 'update' })->single();
             my $d = SGN::Controller::AJAX::ScriptFactory::_decode_meeting($prop->value());
             die "The decisions of this meeting are saved and cannot be changed.\n" if SGN::Controller::AJAX::ScriptFactory::_meeting_is_saved($d);
             my $drafts = ref($d->{draft_decisions}) eq 'HASH' ? $d->{draft_decisions} : {};
+            if (($c->req->param('clear_all') // '') eq '1') {
+                $drafts = {};
+                ($reverted, $kept) = _revert_stage_changes($c, $schema, $d);
+            }
             foreach my $r (grep { ref($_) eq 'HASH' } @$rows) {
                 my $k = join("\t", map { my $x = $_ // ''; $x =~ s/^\s+|\s+$//g; substr($x, 0, 255) } @$r{qw(accession breeding_program)});
                 next if $k =~ /^\t|\t$/;
@@ -515,7 +527,60 @@ sub draft : Path('/ajax/decision_evidence/draft') Args(0) {
             $prop->update({ value => JSON->new->canonical(1)->encode($d) });
         });
     } catch { $err = "$_"; $err =~ s/\s+$//; $err =~ s/ at \S+ line \d+\.?$//; };
-    $c->stash->{rest} = $err ? { error => $err } : { success => 1 };
+    $c->stash->{rest} = $err ? { error => $err } : { success => 1, ($reverted ? (stages_reverted => $reverted, stages_kept => $kept) : ()) };
+}
+
+# Set stage during a meeting: a DRAFT of the meeting, written on the accession only when the
+# meeting is saved. meeting_json draft_stage_changes {"stock_id\tprogram": {stock_id, accession,
+# breeding_program, before, after}}; 'before' is the stored value (undef: no stage property).
+# Back to the stored value: the draft is dropped. Returns {saved => 1} for a saved meeting, else
+# {draft => 1|0, before => the original value}.
+sub record_stage_change {
+    my ($schema, $meeting_id, $ch) = @_;
+    my $m = _meeting($schema, $meeting_id) or die "This decision meeting does not exist.\n";
+    my $prop = $schema->resultset('Project::Projectprop')->search({ projectprop_id => $m->{prop}->projectprop_id() }, { for => 'update' })->single();
+    my $d = SGN::Controller::AJAX::ScriptFactory::_decode_meeting($prop->value());
+    return { saved => 1 } if SGN::Controller::AJAX::ScriptFactory::_meeting_is_saved($d);
+    my $all = ref($d->{draft_stage_changes}) eq 'HASH' ? $d->{draft_stage_changes} : {};
+    my $k = "$ch->{stock_id}\t$ch->{breeding_program}";
+    my $old = $all->{$k};
+    # written: a change stored on the accession before drafts existed (its 'before' is the original)
+    my $before = $old ? $old->{before} : $ch->{before};
+    my $draft = 1;
+    if (!($old && $old->{written}) && ($before // "\0") eq ($ch->{after} // '')) { delete $all->{$k}; $draft = 0; }
+    else {
+        my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $ch->{stock_id} });
+        $all->{$k} = { stock_id => $ch->{stock_id}, accession => ($stock ? $stock->uniquename() : ''), breeding_program => $ch->{breeding_program},
+                       before => $before, after => $ch->{after}, ($old && $old->{written} ? (written => 1) : ()),
+                       changed => DateTime->now()->strftime('%Y-%m-%d %H:%M') };
+    }
+    $d->{draft_stage_changes} = $all;
+    $prop->update({ value => JSON->new->canonical(1)->encode($d) });
+    return { draft => $draft, before => $before };
+}
+
+# Clear decisions: the draft stages are dropped (nothing was written). The few written on the
+# accession before drafts existed ('written') get their original value back (or lose the stage
+# property they did not have), unless the stage changed again since.
+# Returns (number dropped or put back, [accessions kept]); empties draft_stage_changes of $d.
+sub _revert_stage_changes {
+    my ($c, $schema, $d) = @_;
+    my $all = ref($d->{draft_stage_changes}) eq 'HASH' ? $d->{draft_stage_changes} : {};
+    my ($n, @kept) = (0);
+    my $dm = 'SGN::Controller::AJAX::DecisionMeeting';
+    foreach my $ch (values %$all) {
+        if (!$ch->{written}) { $n++; next; }
+        my $name = $dm->_breeding_stage_property_name($ch->{breeding_program}, $c->config->{saved_program_stage});
+        my $term = SGN::Model::Cvterm->get_cvterm_row($schema, $name, 'stock_property') or next;
+        my $p = $schema->resultset('Stock::Stockprop')->search({ stock_id => $ch->{stock_id}, type_id => $term->cvterm_id() },
+            { order_by => { -desc => 'stockprop_id' }, rows => 1 })->first();
+        if (!$p || ($p->value() // '') ne ($ch->{after} // '')) { push @kept, $ch->{accession} || $ch->{stock_id}; next; }
+        if (defined $ch->{before}) { $p->update({ value => $ch->{before} }); }
+        else { $p->delete(); }
+        $n++;
+    }
+    $d->{draft_stage_changes} = {};
+    return ($n, \@kept);
 }
 
 1;

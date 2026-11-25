@@ -244,7 +244,8 @@ sub _progress {
 }
 
 # Borda count: with n accessions to vote, rank 1 gives n points and rank n gives 1.
-# candidates: [{accession, stock_id, place, points, n_votes, first, mean_rank, comments, evidence}];
+# candidates: [{accession, stock_id, place, points, n_votes, first, mean_rank, places, comments, evidence}];
+# places: per accession, how many voters gave it place 1, 2, ... n (index 0 = place 1);
 # other_notes: [{accession, stock_id, comments}] of the accessions only for notes that have some
 # (all notes anonymous)
 sub _results {
@@ -255,7 +256,7 @@ sub _results {
            JOIN sgn_people.sp_decision_vote_voter w USING (sp_decision_vote_voter_id)
           WHERE w.sp_decision_vote_id = ? AND w.voted_date IS NOT NULL
           ORDER BY w.voted_date', undef, $v->{vote_id});
-    my %r = map { $_->{accession} => { accession => $_->{accession}, stock_id => $_->{stock_id}, points => 0, n_votes => 0, first => 0, rank_sum => 0, comments => [] } } @{ $v->{accessions} };
+    my %r = map { $_->{accession} => { accession => $_->{accession}, stock_id => $_->{stock_id}, points => 0, n_votes => 0, first => 0, rank_sum => 0, places => [ (0) x $n ], comments => [] } } @{ $v->{accessions} };
     my %o = map { $_->{accession} => { accession => $_->{accession}, stock_id => $_->{stock_id}, comments => [] } } @{ $v->{note_accessions} };
     foreach my $b (@$rows) {
         my ($acc, $rank, $comment) = @$b;
@@ -267,6 +268,7 @@ sub _results {
         $x->{points} += $n - $rank + 1;
         $x->{n_votes}++;
         $x->{first}++ if $rank == 1;
+        $x->{places}->[$rank - 1]++ if $rank >= 1 && $rank <= $n;
         $x->{rank_sum} += $rank;
         push @{ $x->{comments} }, $comment if defined($comment) && $comment ne '';
     }
@@ -383,7 +385,8 @@ sub vote_detail : Path('/ajax/decision_vote/detail') Args(0) {
     my $c = shift;
     return if !_check_manager($c);
     my $v = _vote_param($c) or return _fail($c, 'This vote does not exist.');
-    $c->stash->{rest} = { vote => _manager_vote(_dbh($c), $v, 1) };
+    # is_curator: the page offers to start a variety profile (/tools/variety_sheet, curators only)
+    $c->stash->{rest} = { vote => _manager_vote(_dbh($c), $v, 1), is_curator => ($c->user()->check_roles('curator') ? 1 : 0) };
 }
 
 # POST meeting_id, name, description, start_date, end_date,

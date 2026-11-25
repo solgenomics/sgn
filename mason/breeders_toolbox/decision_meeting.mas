@@ -10,7 +10,7 @@ Meetings on the left; the chosen meeting on the right with three tabs:
 Evidence (the analyses the meeting decides on: Analysis Pipeline runs or
 stored analyses, whose accessions are the accessions of the meeting),
 Decisions (stage and decision per accession and breeding program) and
-Report; under the tabs, always open, the variety votes (vote_section.mas).
+Report (tabs: Evidence, Variety vote (vote_section.mas), Decisions, Report).
 Code: js/source/entries/decision_meeting.js, decision_vote.js;
 endpoints /ajax/decisionmeeting/*, /ajax/decision_evidence/*, /ajax/decision_vote/*.
 
@@ -128,6 +128,36 @@ Chris Simoes <ccs263@cornell.edu>
 .dm-comment { min-width: 160px; }
 .dm-stage-sel { min-width: 110px; }
 .dm-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--dm-bg); border: 1px solid var(--dm-border); border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; font-size: 13px; }
+.dm-need-why { border-color: #d92d20 !important; background: #fff6f5 !important; } .dm-need-why::placeholder { color: #b42318; }
+.dm-stage-edit { visibility: hidden; padding: 0 2px; } tr:hover .dm-stage-edit, .dm-stage-edit:focus { visibility: visible; }
+.dm-stage-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.dm-stage-opt { display: flex; align-items: center; gap: 6px; margin: 0; padding: 6px 8px; border: 1px solid #dfe3e8; border-radius: 6px; cursor: pointer; font-weight: 600; }
+.dm-stage-opt.on { border-color: #2b7a4b; background: #eef6f1; }
+.dm-pipe-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.dm-pipe-head h4 { margin: 0; font-weight: 700; }
+.dm-pipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dm-pipe-wide { grid-column: 1 / -1; }
+.dm-pipe-ctl { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dm-pipe-cell { border: 1px solid var(--dm-border); border-radius: 10px; padding: 10px 12px; background: #fff; min-width: 0; }
+.dm-pipe-cell h5 { margin: 0 0 10px 0; font-weight: 700; color: #111827; } .dm-pipe-cell h5 small { font-weight: 400; color: var(--dm-muted); }
+@media (max-width: 900px) { .dm-pipe-grid { grid-template-columns: 1fr; } }
+.dm-drop-others { color: #b42318 !important; } .dm-drop-others:hover { color: #7a1a10 !important; }
+.dm-stq { display: flex; align-items: center; gap: 8px; margin: 0 0 10px 0; padding: 6px 8px; background: #f7f9fa; border: 1px solid #dfe3e8; border-radius: 8px; flex-wrap: wrap; }
+.dm-stq-count { font-weight: 700; white-space: nowrap; }
+.dm-stq-go { width: auto; max-width: 200px; display: inline-block; height: 28px; padding: 2px 6px; }
+.dm-stq-done { margin-left: auto; font-size: 12px; color: #6b7280; white-space: nowrap; }
+.dm-hero-btns { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.dm-stage-draft { outline: 1px dashed #b45309; outline-offset: 1px; }
+.dm-stage-draftnote { display: inline-block; font-size: 11px; color: #b45309; white-space: nowrap; }
+.dm-offnote { font-size: 12px; color: #374151; background: #f7f9fa; border: 1px solid #dfe3e8; border-radius: 8px; padding: 6px 10px; margin: 0 0 8px 0; }
+.dm-offnote .glyphicon { color: #6b7280; }
+.dm-pager { display: inline-flex; gap: 3px; align-items: center; margin: 0 8px; vertical-align: middle; }
+.dm-pg { min-width: 28px; height: 26px; padding: 0 7px; border: 1px solid var(--dm-border); border-radius: 6px; background: #fff; font-size: 12px; color: #374151; }
+.dm-pg:hover:not([disabled]) { border-color: var(--dm-accent); color: var(--dm-accent); }
+.dm-pg.on { background: var(--dm-accent); border-color: var(--dm-accent); color: #fff; font-weight: 700; }
+.dm-pg[disabled] { opacity: .4; cursor: default; }
+.dm-pg-gap { color: var(--dm-muted); padding: 0 2px; }
+.dm-pg-size { display: inline-block; width: auto; height: 26px; padding: 2px 6px; font-size: 12px; vertical-align: middle; }
 .dm-footbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; }
 .dm-dl dt { float: left; width: 90px; color: var(--dm-muted); font-weight: normal; }
 .dm-dl dd { margin-left: 100px; margin-bottom: 4px; }
@@ -190,7 +220,10 @@ Chris Simoes <ccs263@cornell.edu>
       <h2><span class="glyphicon glyphicon-check"></span> Decision Meeting</h2>
       <p>Bring the analyses, look at the evidence of every accession, decide together what advances, holds or drops, and keep the record. Farmers and field workers can vote on the candidates too.</p>
     </div>
-    <button class="btn btn-default btn-lg" id="create_meeting_dialog"><span class="glyphicon glyphicon-plus"></span> New meeting</button>
+    <span class="dm-hero-btns">
+      <button class="btn btn-default btn-lg" id="dm_clear_cache" disabled title="Clear the draft decisions of the open meeting (asks first) and reload the page. Saved meetings cannot be changed."><span class="glyphicon glyphicon-erase"></span> Clear decisions</button>
+      <button class="btn btn-default btn-lg" id="create_meeting_dialog"><span class="glyphicon glyphicon-plus"></span> New meeting</button>
+    </span>
   </div>
 
   <div class="row">
@@ -224,6 +257,7 @@ Chris Simoes <ccs263@cornell.edu>
 
         <div class="dm-tabs">
           <button class="dm-tab on" data-tab="evidence"><span class="glyphicon glyphicon-stats"></span> Evidence <span class="badge" id="dm_tab_count_evidence"></span></button>
+          <button class="dm-tab" data-tab="vote"><span class="glyphicon glyphicon-thumbs-up"></span> Variety vote <span class="badge" id="dm_tab_count_vote"></span></button>
           <button class="dm-tab" data-tab="decide"><span class="glyphicon glyphicon-check"></span> Decisions <span class="badge" id="dm_tab_count_decide"></span></button>
           <button class="dm-tab" data-tab="report"><span class="glyphicon glyphicon-file"></span> Report</button>
         </div>
@@ -297,11 +331,12 @@ Chris Simoes <ccs263@cornell.edu>
             <div class="alert alert-info dm-alert" id="dm_readonly_note" style="display:none"></div>
             <div class="dm-bulk" id="dm_bulk">
               <span id="dm_bulk_n" class="dm-muted"></span>
-              <button class="btn btn-link btn-xs" id="dm_bulk_selected" title="Check the rows selected by the index of an analysis">check the index-selected</button>
+              <button class="btn btn-link btn-xs" id="dm_bulk_selected" title="Advance the accessions selected by the index of an analysis (rows already decided keep their decision)">advance the index-selected</button>
+              <button class="btn btn-link btn-xs dm-drop-others" id="dm_bulk_drop_others" title="Drop every accession that has no decision yet (Advance, Jump and Hold stay as they are)">drop the others</button>
               <span class="dm-decide">
                 <button type="button" class="dm-dbtn dm-dbtn-drop" data-v="drop">Drop</button><button type="button" class="dm-dbtn dm-dbtn-hold" data-v="hold">Hold</button><button type="button" class="dm-dbtn dm-dbtn-advance" data-v="advance">Advance</button><button type="button" class="dm-dbtn dm-dbtn-jump" data-v="jump">Jump</button>
               </span>
-              <button class="btn btn-link btn-xs" id="dm_bulk_clear">clear decision</button>
+              <button class="btn btn-link btn-xs" id="dm_bulk_clear" title="Undo every decision of this meeting">clear all decisions</button>
             </div>
             <div id="dm_dec_table"></div>
             <div class="dm-small" id="dm_dec_foot" style="margin-top:6px"></div>
@@ -315,17 +350,38 @@ Chris Simoes <ccs263@cornell.edu>
               <button class="btn btn-success" id="dm_save_btn"><span class="glyphicon glyphicon-lock"></span> Review and save decisions</button>
             </div>
           </div>
+          <div class="dm-card dm-pipe" id="dm_pipe" style="display:none">
+            <div class="dm-pipe-head">
+              <h4><span class="glyphicon glyphicon-tasks"></span> Breeding pipeline <small id="dm_pipe_prog_label"></small></h4>
+              <span class="dm-pipe-ctl">
+                <span class="dm-segs dm-pipe-view" style="margin:0" title="The program as it is, or as it will be once the decisions of this meeting are saved">
+                  <button type="button" class="dm-seg" data-pview="now">Now</button><button type="button" class="dm-seg on" data-pview="after">With this meeting's decisions</button>
+                </span>
+                <select class="form-control input-sm" id="dm_pipe_program" style="display:none; width:auto"></select>
+                <button type="button" class="btn btn-link btn-xs" id="dm_pipe_toggle">hide charts</button>
+              </span>
+            </div>
+            <div class="dm-pipe-grid" id="dm_pipe_body">
+              <div class="dm-pipe-cell"><h5>Program by stage <small>active accessions, whole database</small></h5><div id="dm_pipe_donut"></div></div>
+              <div class="dm-pipe-cell"><h5>Program size by stage <small>ON accessions now, inside the funnel of all that reached each stage</small></h5><div id="dm_pipe_funnel"></div></div>
+              <div class="dm-pipe-cell"><h5>This meeting: decisions by stage</h5><div id="dm_pipe_dec"></div></div>
+              <div class="dm-pipe-cell"><h5>This meeting: stages now and after</h5><div id="dm_pipe_shift"></div></div>
+              <div class="dm-pipe-cell dm-pipe-wide"><h5>Dropped per year <small>whole program, by stage at the drop</small></h5><div id="dm_pipe_drops"></div></div>
+            </div>
+          </div>
         </div>
 
+
+        <!-- Variety vote -->
+        <div class="dm-pane" data-pane="vote" style="display:none" id="dm_vote_section">
+          <& /breeders_toolbox/decision_meeting/vote_section.mas &>
+        </div>
 
         <!-- Report -->
         <div class="dm-pane" data-pane="report" style="display:none">
           <div id="dm_report"></div>
         </div>
 
-        <!-- Variety vote: always open, under the tabs -->
-        <div class="dm-section-title" id="dm_vote_section"><span class="glyphicon glyphicon-thumbs-up"></span> Variety vote</div>
-        <& /breeders_toolbox/decision_meeting/vote_section.mas &>
       </div>
     </div>
   </div>

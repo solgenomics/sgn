@@ -11,7 +11,7 @@ without an account): a personal ballot link e-mailed to each one (there is no
 public link), start and end dates, progress (totals only) and anonymous
 results after the end (with the trait values and selection index of the
 candidates, from an analysis of the meeting: a pipeline run or a stored analysis).
-Always open under the tabs of /breeders/meeting.
+The Variety vote tab of /breeders/meeting; the results of a vote open by themselves once it is closed.
 Code: js/source/entries/decision_vote.js, endpoints /ajax/decision_vote/*,
 public pages /decision_vote/*.
 

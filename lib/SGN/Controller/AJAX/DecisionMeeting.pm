@@ -614,7 +614,34 @@ sub _decision_rows_entity {
         }
     }
 
-    return { rows => \@rows };
+    # stages set or fixed during the meeting are drafts until it is saved: they are the
+    # current stage of the rows (stage_before: the stored one; stage_draft: not stored yet)
+    if ($meeting_id) {
+        my $changes = $self->_draft_stage_changes($c, $meeting_id);
+        foreach my $row (@rows) {
+            my $ch = $changes->{ join("\t", $row->{stock_id} // '', $row->{breeding_program} // '') } or next;
+            $row->{stage}        = $ch->{after};
+            $row->{stage_before} = $ch->{before} // '';
+            $row->{stage_draft}  = 1;
+        }
+    }
+
+    # state OFF = commercial checks of other companies: no decision on them (they stay in the
+    # evidence and the statistics of the meeting)
+    my @off = grep { $self->_is_off_stage_value($_->{stage}) } @rows;
+    @rows = grep { !$self->_is_off_stage_value($_->{stage}) } @rows;
+
+    return { rows => \@rows, off_checks => [ map { +{ accession => $_->{accession}, breeding_program => $_->{breeding_program}, stage => $_->{stage} } } @off ] };
+}
+
+# draft_stage_changes of an open (not saved) meeting: {"stock_id\tprogram" => {before, after, ...}}
+sub _draft_stage_changes {
+    my ($self, $c, $meeting_id) = @_;
+    return {} unless ($meeting_id // '') =~ /^\d+$/;
+    require SGN::Controller::AJAX::ScriptFactory;
+    my ($m) = @{ SGN::Controller::AJAX::ScriptFactory::_meetings($c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $meeting_id) };
+    return {} if !$m || $m->{saved};
+    return ref($m->{data}->{draft_stage_changes}) eq 'HASH' ? $m->{data}->{draft_stage_changes} : {};
 }
 
 sub _decision_upload_headers {
@@ -824,6 +851,12 @@ sub _is_drop_stage_value {
     return $value =~ /^DROP(?:-|$)/i ? 1 : 0;
 }
 
+# a stage value whose state is OFF (OFF-25-Y1)
+sub _is_off_stage_value {
+    my ($self, $value) = @_;
+    return (defined($value) && $value =~ /^\s*OFF(?:-|$)/i) ? 1 : 0;
+}
+
 sub _compute_stage_transition_data {
     my ($self, %args) = @_;
 
@@ -871,8 +904,10 @@ sub _compute_stage_transition_data {
         my $idx = $pos{$current_stage_token};
 
         if ($decision eq 'advance') {
-            @allowed_stages = @ordered_stages[($idx + 1) .. $#ordered_stages]
-                if $idx < $#ordered_stages;
+            # the last stage has no next one: advancing repeats it with the new year
+            @allowed_stages = $idx < $#ordered_stages
+                ? @ordered_stages[($idx + 1) .. $#ordered_stages]
+                : ($current_stage_token);
         }
         elsif ($decision eq 'jump') {
             my $start = $idx + 2;
@@ -889,6 +924,15 @@ sub _compute_stage_transition_data {
     );
 
     my $state_for_format = $state;
+    # state of the new stage: Advance and Jump put the accession ON; Hold keeps the state of its
+    # current stage value (OFF-25-Y1 stays OFF), ON when the value has none
+    if ($decision eq 'advance' || $decision eq 'jump') {
+        $state_for_format = 'ON';
+    }
+    elsif ($decision eq 'hold') {
+        my ($prefix) = (defined $current_stage ? $current_stage : '') =~ /^\s*([A-Za-z]+)-/;
+        $state_for_format = ($prefix && $prefix !~ /^DROP$/i) ? uc($prefix) : 'ON';
+    }
 
     if ($decision eq 'advance' || $decision eq 'jump') {
         my %allowed_lookup = map { $_ => 1 } @allowed_stages;
@@ -1013,10 +1057,19 @@ sub _validate_uploaded_decision_rows {
         my $current_stage_value = $target->{stage} || '';
 
         if ($self->_is_drop_stage_value($current_stage_value)) {
-            if ($decision ne '') {
-                push @errors, "Row $row_number: current stage '$current_stage_value' is already a DROP stage, so no further decision can be applied to this accession.";
+            next if $decision eq '';
+            # tested again: advance, jump or hold bring it back, with an explanation
+            if ($decision eq 'drop' || $self->_trim($uploaded->{save_comment}) eq '') {
+                push @errors, $decision eq 'drop'
+                    ? "Row $row_number: current stage '$current_stage_value' is already a DROP stage."
+                    : "Row $row_number: current stage '$current_stage_value' is a DROP stage: a '$decision' decision needs a comment explaining why.";
                 next;
             }
+        }
+        # state OFF (e.g. OFF-25-Y1): advancing or jumping it needs a comment explaining why
+        if ($self->_is_off_stage_value($current_stage_value) && ($decision eq 'advance' || $decision eq 'jump')
+            && $self->_trim($uploaded->{save_comment}) eq '') {
+            push @errors, "Row $row_number: current stage '$current_stage_value' is OFF: a '$decision' decision needs a comment explaining why.";
             next;
         }
 
@@ -1884,6 +1937,11 @@ sub _merge_decisions_into_meeting {
     }
 
     delete $merged{draft_decisions};
+    # stages added or fixed during the meeting are now permanent: kept in its record
+    if (ref($merged{draft_stage_changes}) eq 'HASH' && %{ $merged{draft_stage_changes} }) {
+        $merged{stage_changes} = [ map { $merged{draft_stage_changes}->{$_} } sort keys %{ $merged{draft_stage_changes} } ];
+    }
+    delete $merged{draft_stage_changes};
     $merged{saved}        = JSON::true;
     $merged{saved_at}     = defined($saved_at) ? $saved_at : scalar localtime();
     $merged{saved_status} = 'successfully';
@@ -1950,7 +2008,9 @@ sub _validated_decisions_for_save {
         $current_lookup{$key} = $row if $key ne "\t";
     }
 
-    my (@candidate_rows, @errors, %seen);
+    # accessions whose current stage is already a DROP stage take no further decision: they are
+    # a warning, not an error; with skip_dropped (the user saves again) they are left out
+    my (@candidate_rows, @errors, %seen, @already_dropped);
     foreach my $submitted (@$submitted_rows) {
         unless (ref($submitted) eq 'HASH') {
             push @errors, 'Each accession decision must be an object.';
@@ -1977,6 +2037,20 @@ sub _validated_decisions_for_save {
         }
 
         my $decision = lc($self->_trim($submitted->{decision}));
+        # already dropped: dropping again is ignored; advance, jump or hold (tested again) need a comment
+        if ($decision ne '' && $self->_is_drop_stage_value($target->{stage})
+            && ($decision eq 'drop' || $self->_trim($submitted->{save_comment}) eq '')) {
+            push @already_dropped, { accession => $target->{accession}, breeding_program => $target->{breeding_program}, stage => $target->{stage},
+                                     decision => $decision, reason => ($decision eq 'drop' ? 'already_dropped' : 'needs_comment') };
+            next;
+        }
+        # state OFF: advance or jump needs a comment explaining why (a warning, like the dropped ones)
+        if (($decision eq 'advance' || $decision eq 'jump') && $self->_is_off_stage_value($target->{stage})
+            && $self->_trim($submitted->{save_comment}) eq '') {
+            push @already_dropped, { accession => $target->{accession}, breeding_program => $target->{breeding_program}, stage => $target->{stage},
+                                     decision => $decision, reason => 'off_needs_comment' };
+            next;
+        }
         my $new_stage = $self->_trim($submitted->{new_stage});
         my $notes = defined($submitted->{notes}) && !ref($submitted->{notes})
             ? "$submitted->{notes}"
@@ -1998,6 +2072,9 @@ sub _validated_decisions_for_save {
     }
 
     return (undef, \@errors) if @errors;
+    return (undef, [], \@already_dropped) if @already_dropped && !$payload->{skip_dropped};
+    return (undef, ['There are no accession decisions to save: the accessions with a decision are all already dropped.'])
+        unless @candidate_rows;
 
     my ($validation_errors, $unmatched_rows) = $self->_validate_uploaded_decision_rows(
         c            => $c,
@@ -2042,7 +2119,7 @@ sub _validated_decisions_for_save {
         $row->{new_stage} = $transition->{new_stage} || '';
     }
 
-    return (\@candidate_rows, []);
+    return (\@candidate_rows, [], \@already_dropped);
 }
 
 sub save_all_decisions_POST {
@@ -2123,7 +2200,7 @@ sub save_all_decisions_POST {
         );
     }
 
-    my ($validated_rows, $validation_errors) = $self->_validated_decisions_for_save(
+    my ($validated_rows, $validation_errors, $already_dropped) = $self->_validated_decisions_for_save(
         c            => $c,
         schema       => $schema,
         meeting_data => $meeting_data,
@@ -2131,6 +2208,15 @@ sub save_all_decisions_POST {
     );
     if ($validation_errors && @$validation_errors) {
         return $self->status_bad_request($c, message => join(' ', @$validation_errors));
+    }
+    # not saved: a warning; saving again with skip_dropped leaves these accessions out
+    if (!$validated_rows && $already_dropped && @$already_dropped) {
+        return $self->status_ok($c, entity => {
+            success         => 0,
+            needs_confirm   => 1,
+            already_dropped => $already_dropped,
+            message         => _dropped_message($already_dropped),
+        });
     }
 
     my %decision_data = %$payload;
@@ -2166,6 +2252,19 @@ sub save_all_decisions_POST {
                 if $self->_is_meeting_saved($locked_meeting_data);
 
             $locked_meeting_prop->update({ value => $json_text });
+
+            # the stages set or fixed during the meeting (drafts) are written now, before the
+            # decisions (a decided row then gets its new stage)
+            my $stage_changes = ref($locked_meeting_data->{draft_stage_changes}) eq 'HASH' ? $locked_meeting_data->{draft_stage_changes} : {};
+            foreach my $ch (grep { ref($_) eq 'HASH' && !$_->{written} && $_->{stock_id} && ($_->{after} // '') ne '' } values %$stage_changes) {
+                $self->_update_breeding_stage_stockprop(
+                    schema              => $schema,
+                    stock_id            => $ch->{stock_id},
+                    breeding_program    => $ch->{breeding_program},
+                    new_stage           => $ch->{after},
+                    saved_program_stage => $c->config->{saved_program_stage},
+                );
+            }
 
             my $accessions = $validated_rows;
 
@@ -2625,6 +2724,10 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
     }
 
     my $rows_html = '';
+    # the selected varieties (Advance / Jump), with the link to their commercial profile
+    # (Variety Release Profiles; greyed out where that tool is not installed)
+    my $has_variety_tool = $c->controller('AJAX::VarietySheet') ? 1 : 0;
+    my $selected_html = '';
     foreach my $acc (@$accessions) {
         next unless ref($acc) eq 'HASH';
 
@@ -2642,6 +2745,15 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
             s/</&lt;/g;
             s/>/&gt;/g;
             s/"/&quot;/g;
+        }
+
+        if ($decision eq 'advance' || $decision eq 'jump') {
+            my $sid = ($acc->{stock_id} // '') =~ /^(\d+)$/ ? $1 : '';
+            my $link = $has_variety_tool && $sid
+                ? qq{<a class="vp" href="/tools/variety_sheet?stock_id=$sid" target="_blank">+ Variety profile</a>}
+                : qq{<span class="vp vp-off" title="Variety Release Profiles are not installed on this site">+ Variety profile (not installed)</span>};
+            my $acc_html = $sid ? qq{<a href="/stock/$sid/view" target="_blank">$name</a>} : $name;
+            $selected_html .= qq{<tr><td>$acc_html</td><td>$bp</td><td>$previous &rarr; <b>$new_stage</b></td><td>} . ucfirst($decision) . qq{</td><td>$comment</td><td>$link</td></tr>\n};
         }
 
         $rows_html .= qq{
@@ -2761,6 +2873,8 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
         margin: 10mm;
       }
     }
+    .vp { display: inline-block; padding: 0 8px; border-radius: 10px; font-size: 12px; border: 1px dashed #9cc9ad; color: #1b5e37; text-decoration: none; white-space: nowrap; }
+    .vp-off { border-color: #d1d5db; color: #9ca3af; background: #f6f7f9; }
   </style>
 </head>
 <body>
@@ -2784,6 +2898,10 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
   <div class="notes">$meeting_notes</div>
 
   $analyses_html
+  <h2>Selected varieties</h2>
+  @{[ $selected_html
+      ? qq{<table><thead><tr><th>Accession</th><th>Breeding Program</th><th>Stage</th><th>Decision</th><th>Comment</th><th>Variety profile</th></tr></thead><tbody>$selected_html</tbody></table>}
+      : qq{<p>No accession advanced in this meeting.</p>} ]}
   <h2>Decisions</h2>
   <table>
     <thead>
@@ -2810,6 +2928,14 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
 
     $c->res->content_type('text/html; charset=utf-8');
     $c->res->body($html);
+}
+
+# who may create decision meetings (decision_role); also who may change the stage of an accession
+sub _can_create_meeting {
+    my ($self, $c) = @_;
+    return 0 unless $c->user;
+    my %allowed = map { $_ => 1 } @{ $self->_configured_meeting_roles($c->config->{decision_role}) };
+    return (grep { defined($_) && !ref($_) && $allowed{lc $_} } $c->user->roles) ? 1 : 0;
 }
 
 sub create : Path('create') Args(0) {
@@ -3207,6 +3333,39 @@ sub _update_breeding_stage_stockprop {
     return $stockprop;
 }
 
+# the current value of the stage stock property of an accession in a program (undef: none)
+sub _current_stage_prop {
+    my ($self, $schema, $stock_id, $program, $saved_program_stage) = @_;
+    my $name = $self->_breeding_stage_property_name($program, $saved_program_stage);
+    my $term = SGN::Model::Cvterm->get_cvterm_row($schema, $name, 'stock_property') or return undef;
+    my $prop = $schema->resultset('Stock::Stockprop')->search({ stock_id => $stock_id, type_id => $term->cvterm_id() },
+        { order_by => { -desc => 'stockprop_id' }, rows => 1 })->first();
+    return $prop ? $prop->value() : undef;
+}
+
+# year of a stage value: the 2- or 4-digit part (DROP-23-Y2 -> 2023, ON-2026-T1 -> 2026); '' when none
+sub _stage_value_year {
+    my $value = shift // '';
+    foreach my $part (split /-/, $value) {
+        return $part if $part =~ /^(19|20)\d\d$/;
+        return 2000 + $part if $part =~ /^\d\d$/;
+    }
+    return '';
+}
+
+# the warning of the save about the accessions whose stage is already a DROP stage
+sub _dropped_message {
+    my $rows = shift;
+    my @again = grep { $_->{reason} eq 'already_dropped' } @$rows;
+    my @why   = grep { $_->{reason} eq 'needs_comment' } @$rows;
+    my @off   = grep { $_->{reason} eq 'off_needs_comment' } @$rows;
+    my @m;
+    push @m, scalar(@again) . ' accession(s) are already dropped: dropping them again is ignored.' if @again;
+    push @m, scalar(@why) . ' dropped accession(s) were tested again with Advance or Hold but have no comment: write why in the Comment, or they are ignored.' if @why;
+    push @m, scalar(@off) . ' accession(s) with state OFF are advanced without a comment: write why in the Comment, or they are ignored.' if @off;
+    return join(' ', @m);
+}
+
 sub _trim {
     my ($self, $v) = @_;
     return '' unless defined($v) && !ref($v);
@@ -3471,6 +3630,166 @@ sub people_GET {
     my $rows = $self->_meeting_people_for_roles($dbh, $meeting_roles);
 
     return $self->status_ok($c, entity => $rows);
+}
+
+=head2 set_stage
+
+POST /ajax/decisionmeeting/set_stage (only the people who can create decision meetings): a DRAFT
+of the meeting until it is saved (nothing is written on the accession before that): adds or fixes the breeding stage of an
+accession in a breeding program, for accessions without a stage (or with one the configuration
+does not know). params: meeting_id, stock_id, breeding_program, stage (one of breeding_stages),
+year (optional, 4 digits; default the year of the meeting). The stage is stored like the
+decisions store it (decision_format, e.g. ON-26-Y1), with that year, always with state ON. GET returns the stages of the
+configuration.
+
+=cut
+
+sub set_stage : Path('set_stage') : Args(0) : ActionClass('REST') { }
+
+sub set_stage_GET {
+    my ($self, $c) = @_;
+    my @stages = $self->_config_list($self->_breeding_stages_config($c));
+    # how the stage values write the year (decision_format 'year yy' -> 26, else 2026)
+    my $year_format = ($c->config->{decision_format} || 'state,year yy,stage') =~ /\byear\s*yy\b/i ? 'yy' : 'yyyy';
+    return $self->status_ok($c, entity => { stages => \@stages, year_format => $year_format });
+}
+
+sub set_stage_POST {
+    my ($self, $c) = @_;
+    return $self->status_forbidden($c, message => 'Login required') unless $c->user;
+    # only the people who may create decision meetings (decision_role, as in create)
+    return $self->status_forbidden($c, message => 'Only the people who can create decision meetings can change the stage of an accession.')
+        unless $self->_can_create_meeting($c);
+
+    my $p = $c->req->params;
+    my ($meeting_id, $stock_id) = map { my $x = $p->{$_} // ''; $x =~ /^\d+$/ ? $x : '' } qw(meeting_id stock_id);
+    my $program = $self->_trim($p->{breeding_program});
+    my $token   = $self->_trim($p->{stage});
+    return $self->status_bad_request($c, message => 'meeting_id, stock_id, breeding_program and stage are required.')
+        unless $meeting_id && $stock_id && $program ne '' && $token ne '';
+    my @stages = $self->_config_list($self->_breeding_stages_config($c));
+    return $self->status_bad_request($c, message => "'$token' is not a breeding stage of the configuration (" . join(', ', @stages) . ').')
+        unless grep { $_ eq $token } @stages;
+
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    return $self->status_bad_request($c, message => 'This accession does not exist.')
+        unless $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
+
+    # the year of the stage: chosen in the dialog, else the year of the meeting
+    my $year = $self->_trim($p->{year});
+    my ($this_year) = (localtime)[5] + 1900;
+    if ($year ne '') {
+        return $self->status_bad_request($c, message => "The year must be between 1990 and " . ($this_year + 1) . '.')
+            unless $year =~ /^\d{4}$/ && $year >= 1990 && $year <= $this_year + 1;
+    }
+    else {
+        $year = $self->_meeting_year_from_meeting_id($c, $meeting_id);
+        return $self->status_bad_request($c, message => 'The meeting has no valid date.') unless $year;
+    }
+    # a stage added or fixed here is always ON (the accession is in the program), whatever its state property
+    my $state = 'ON';
+    my $value = $self->_format_decision_stage(
+        decision_format => ($c->config->{decision_format} || 'state,yy,stage'),
+        year            => $year,
+        stage           => $token,
+        state           => $state,
+    );
+    return $self->status_bad_request($c, message => 'Could not build the stage value.') unless defined($value) && $value ne '';
+
+    # a DRAFT of the meeting: nothing is written on the accession until the meeting is saved
+    # (Clear decisions drops it); 'before' is the stored value, kept from the first change
+    my $before = $self->_current_stage_prop($schema, $stock_id, $program, $c->config->{saved_program_stage});
+    my $res = {};
+    eval {
+        $schema->txn_do(sub {
+            $res = SGN::Controller::AJAX::DecisionEvidence::record_stage_change($schema, $meeting_id, {
+                stock_id => $stock_id + 0, breeding_program => $program, before => $before, after => $value,
+            });
+        });
+    };
+    return $self->status_bad_request($c, message => 'The decisions of this meeting are saved: its stages cannot change any more.')
+        if !$@ && $res->{saved};
+    if ($@) {
+        my $err = "$@";
+        $err =~ s/ at \S+ line \d+.*//s;
+        return $self->status_bad_request($c, message => "The stage could not be saved: $err");
+    }
+    return $self->status_ok($c, entity => { success => 1, stage => $value, draft => $res->{draft} ? 1 : 0, stage_before => $res->{before} // '' });
+}
+
+=head2 program_stages
+
+GET /ajax/decisionmeeting/program_stages?programs=A,B : for each breeding program, how many
+accessions are in each breeding stage (latest value of the program's stage stock property),
+active and dropped apart, the active ones with state ON (the funnel), and the dropped ones by
+year of the drop and stage (drops: [{year, stage, n}]). Stages outside the configuration (e.g. 'untested') are listed as they
+are, after the configured ones. For the charts of the Decisions tab.
+
+=cut
+
+sub program_stages : Path('program_stages') : Args(0) : ActionClass('REST') { }
+
+sub program_stages_GET {
+    my ($self, $c) = @_;
+    return $self->status_forbidden($c, message => 'Login required') unless $c->user;
+    my @programs = grep { $_ ne '' } map { $self->_trim($_) } split /,/, ($c->req->param('programs') // '');
+    @programs = @programs[0 .. 9] if @programs > 10;
+    my @config = $self->_config_list($self->_breeding_stages_config($c));
+    my $dbh = $c->dbc->dbh;
+    my @out;
+    foreach my $program (@programs) {
+        my $prop = $self->_breeding_stage_property_name($program, $c->config->{saved_program_stage});
+        my $rows = $dbh->selectall_arrayref(q{
+            SELECT v, count(*) FROM (
+                SELECT DISTINCT ON (sp.stock_id) sp.value AS v
+                  FROM stockprop sp
+                  JOIN cvterm t ON t.cvterm_id = sp.type_id
+                  JOIN cv ON cv.cv_id = t.cv_id AND cv.name = 'stock_property'
+                 WHERE t.name = ?
+                 ORDER BY sp.stock_id, sp.stockprop_id DESC) x
+             GROUP BY v }, undef, $prop);
+        my (%active, %dropped, %on, %drop_year, $n_active, $n_dropped, $n_on);
+        foreach my $r (@$rows) {
+            my ($value, $n) = @$r;
+            $value = $self->_trim($value);
+            my $token = $self->_extract_stage_token($value) || $value || '(empty)';
+            if ($self->_is_drop_stage_value($value)) {
+                $dropped{$token} += $n; $n_dropped += $n;
+                # the year of the drop is in the value (DROP-23-Y2: 2023)
+                my $year = _stage_value_year($value);
+                $drop_year{$year}{$token} += $n;
+            }
+            else {
+                $active{$token} += $n; $n_active += $n;
+                # state ON (e.g. ON-26-Y1): the accessions moving through the pipeline (funnel)
+                if ($value =~ /^ON-/i) { $on{$token} += $n; $n_on += $n; }
+            }
+        }
+        my %in_config = map { $_ => 1 } @config;
+        my @order = ((grep { $active{$_} || $dropped{$_} } @config),
+                     (sort grep { !$in_config{$_} } keys %{ { %active, %dropped } }));
+        push @out, {
+            program   => $program,
+            property  => $prop,
+            active    => $n_active // 0,
+            dropped   => $n_dropped // 0,
+            on        => $n_on // 0,
+            drops     => [ map { my $y = $_; map { +{ year => $y, stage => $_, n => $drop_year{$y}{$_} } } sort keys %{ $drop_year{$y} } } sort keys %drop_year ],
+            stages    => [ map { +{ stage => $_, active => $active{$_} // 0, on => $on{$_} // 0, dropped => $dropped{$_} // 0, configured => $in_config{$_} ? 1 : 0 } } @order ],
+        };
+    }
+    # target share (%) of each stage that moves on to the next one (breeding_stage_rates T1:30,T2:40,...),
+    # for the ideal funnel; none: the page draws a smooth decrease
+    my %rates;
+    my $raw = $c->config->{breeding_stage_rates};
+    $raw = $raw->[0] if ref($raw) eq 'ARRAY';
+    foreach my $pair (split /\s*,\s*/, ($raw // '')) {
+        my ($stage, $pct) = split /\s*:\s*/, $pair, 2;
+        $stage = $self->_trim($stage);
+        $rates{$stage} = $pct + 0 if $stage ne '' && defined($pct) && $pct =~ /^\s*\d+(\.\d+)?\s*$/ && $pct > 0;
+    }
+    return $self->status_ok($c, entity => { programs => \@out, config_stages => \@config, stage_rates => \%rates });
 }
 
 1;

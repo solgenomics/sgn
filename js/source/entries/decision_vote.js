@@ -14,10 +14,11 @@
  * Author: Chris Simoes <ccs263@cornell.edu>
  */
 
-import { participationChart, mostVotedChart } from '../modules/decision_vote_charts.js';
+import { participationChart, mostVotedChart, placesTable, placesChart } from '../modules/decision_vote_charts.js';
+import { profilesReady, profileLink, profilesAvailable } from '../modules/variety_profile_links.js';
 
 let $;
-const S = { showResults: false, picked: {}, meeting: null, votes: [], analyses: null, current: null, detail: null, editing: null, candidates: [], seq: 0 };
+const S = { showResults: {}, picked: {}, meeting: null, votes: [], analyses: null, current: null, detail: null, editing: null, candidates: [], seq: 0 };
 
 function esc(s) {
     return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -102,6 +103,9 @@ function renderVotes() {
         '<button class="btn btn-default btn-xs dvm-delete" data-id="' + v.vote_id + '"><span class="glyphicon glyphicon-trash"></span> Delete</button>' +
         '</div>').join('');
     $('#dvm_votes').html(h);
+    // badge of the Variety vote tab of the meeting page
+    const open = S.votes.filter(v => v.state === 'open').length;
+    $('#dm_tab_count_vote').text(S.votes.length ? (open ? open + ' open' : S.votes.length) : '');
 }
 
 // ---------------------------------------------------------------- detail
@@ -111,7 +115,12 @@ function showDetail(id) {
     $('.dvm-card').removeClass('on').filter('[data-id="' + id + '"]').addClass('on');
     $('#dvm_detail').show().html('<span class="glyphicon glyphicon-refresh"></span> Loading the vote...');
     return call('GET', '/ajax/decision_vote/detail', { vote_id: id })
-        .then(r => { if (S.current === id) { S.detail = r.vote; renderDetail(); } })
+        .then(r => {
+            if (S.current !== id) return;
+            S.detail = r.vote; S.isCurator = !!r.is_curator; renderDetail();
+            // variety profile links in the results, once known
+            if (r.vote.results) profilesReady().then(d => { if (d.available && S.current === id) renderDetail(); });
+        })
         .catch(e => { if (S.current === id) $('#dvm_detail').html(alertHtml('danger', esc(e.message))); });
 }
 
@@ -165,22 +174,30 @@ function renderDetail() {
     } else if (!p.voted) {
         h += '<p><button class="btn btn-default btn-sm" disabled><span class="glyphicon glyphicon-stats"></span> Show results</button> <span class="dvm-muted">Nobody voted.</span></p>';
     } else {
-        h += '<p><button class="btn btn-success btn-sm" id="dvm_show_results"><span class="glyphicon glyphicon-stats"></span> ' + (S.showResults ? 'Hide results' : 'Show results') + '</button></p>' +
-            '<div id="dvm_results_box"' + (S.showResults ? '' : ' style="display:none"') + '>';
+        // the voting period is over: the results open by themselves (the button can hide them)
+        if (S.showResults[v.vote_id] === undefined) S.showResults[v.vote_id] = v.state === 'closed';
+        const open = S.showResults[v.vote_id];
+        h += '<p><button class="btn btn-success btn-sm" id="dvm_show_results"><span class="glyphicon glyphicon-stats"></span> ' + (open ? 'Hide results' : 'Show results') + '</button></p>' +
+            '<div id="dvm_results_box"' + (open ? '' : ' style="display:none"') + '>';
         const ev = v.evidence;
         const traits = ev ? (ev.traits || []) : [];
         const rows = (ev && ev.rows) || {};
         h += '<p class="dvm-muted">Borda count: with ' + res.max_points + ' candidates to vote, place 1 gets ' + res.max_points + ' points and the last place 1 point.' +
             (ev ? ' Trait values: ' + esc(ev.value_label || '') + ' of the analysis ' + esc(ev.analysis_name || '') + ' (rank among its accessions in brackets).' : '') + '</p>';
         h += mostVotedChart(res.candidates, { title: 'Most voted' + (v.state !== 'closed' ? ' so far' : '') });
+        h += placesChart(res.candidates, { n: res.max_points, links: true, title: 'Results per accession: how the voters placed each one' });
+        h += '<details style="margin:-6px 0 12px 0"><summary style="cursor:pointer; color:#2b7a4b">See the numbers per place</summary>' +
+            placesTable(res.candidates, { n: res.max_points, links: true }) + '</details>';
         h += '<div class="table-responsive"><table id="dvm_results" class="table table-condensed table-bordered"><thead><tr><th>Place</th><th>Accession</th><th>Points</th><th>1st places</th><th>Average place</th>' +
-            traits.map(t => '<th>' + esc(t.label || t.trait) + '</th>').join('') + (ev && ev.index ? '<th>Index</th><th>Index rank</th>' : '') + '</tr></thead><tbody>' +
+            traits.map(t => '<th>' + esc(t.label || t.trait) + '</th>').join('') + (ev && ev.index ? '<th>Index</th><th>Index rank</th>' : '') +
+            (profilesAvailable() ? '<th>Variety profile</th>' : '') + '</tr></thead><tbody>' +
             res.candidates.map(x => {
                 const e = rows[x.accession] || {};
                 return '<tr' + (x.place === 1 ? ' class="success"' : '') + '><td><b>' + x.place + '</b></td><td>' + (x.stock_id ? '<a target="_blank" href="/stock/' + x.stock_id + '/view">' + esc(x.accession) + '</a>' : esc(x.accession)) + '</td>' +
                     '<td>' + x.points + '</td><td>' + x.first + '</td><td>' + (x.mean_rank === null ? '' : x.mean_rank) + '</td>' +
                     traits.map(t => '<td>' + fmt((e.values || {})[t.trait]) + ((e.ranks || {})[t.trait] ? ' <span class="dvm-muted">(' + e.ranks[t.trait] + ')</span>' : '') + '</td>').join('') +
-                    (ev && ev.index ? '<td>' + fmt(e.index) + '</td><td>' + (e.index_rank || '') + '</td>' : '') + '</tr>';
+                    (ev && ev.index ? '<td>' + fmt(e.index) + '</td><td>' + (e.index_rank || '') + '</td>' : '') +
+                    (profilesAvailable() ? '<td>' + (profileLink(x.stock_id, { canCreate: S.isCurator }) || '<span class="dvm-muted">&ndash;</span>') + '</td>' : '') + '</tr>';
             }).join('') + '</tbody></table></div>';
         h += '<button class="btn btn-default btn-xs" id="dvm_csv"><span class="glyphicon glyphicon-download-alt"></span> Results CSV</button>';
         const cm = res.candidates.filter(x => (x.comments || []).length);
@@ -397,14 +414,16 @@ function downloadCsv() {
     const traits = ev ? (ev.traits || []).map(t => t.trait) : [];
     const rows = (ev && ev.rows) || {};
     const q = x => { const s = x === null || x === undefined ? '' : String(x); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-    const head = ['place', 'accession', 'points', 'first_places', 'n_votes', 'average_place'].concat(traits).concat(ev && ev.index ? ['index', 'index_rank'] : []).concat(['notes']);
+    const n = v.results.max_points || 0;
+    const placeCols = Array.from({ length: n }, (_, i) => 'votes_place_' + (i + 1));
+    const head = ['place', 'accession', 'points', 'first_places', 'n_votes', 'average_place'].concat(placeCols).concat(traits).concat(ev && ev.index ? ['index', 'index_rank'] : []).concat(['notes']);
     const lines = [head.map(q).join(',')].concat(v.results.candidates.map(x => {
         const e = rows[x.accession] || {};
-        return [x.place, x.accession, x.points, x.first, x.n_votes, x.mean_rank].concat(traits.map(t => (e.values || {})[t]))
+        return [x.place, x.accession, x.points, x.first, x.n_votes, x.mean_rank].concat(placeCols.map((_, i) => (x.places || [])[i] || 0)).concat(traits.map(t => (e.values || {})[t]))
             .concat(ev && ev.index ? [e.index, e.index_rank] : []).concat([(x.comments || []).join(' | ')]).map(q).join(',');
     }));
     (v.results.other_notes || []).forEach(x => {
-        lines.push(['', x.accession, '', '', '', ''].concat(traits.map(() => '')).concat(ev && ev.index ? ['', ''] : []).concat(['(only for notes) ' + x.comments.join(' | ')]).map(q).join(','));
+        lines.push(['', x.accession, '', '', '', ''].concat(placeCols.map(() => '')).concat(traits.map(() => '')).concat(ev && ev.index ? ['', ''] : []).concat(['(only for notes) ' + x.comments.join(' | ')]).map(q).join(','));
     });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([lines.join('\n') + '\n'], { type: 'text/csv' }));
@@ -612,9 +631,10 @@ export function init() {
     });
     $('#dvm_detail').on('click', '#dvm_csv', downloadCsv);
     $('#dvm_detail').on('click', '#dvm_show_results', function() {
-        S.showResults = !S.showResults;
-        $('#dvm_results_box').toggle(S.showResults);
-        $(this).html('<span class="glyphicon glyphicon-stats"></span> ' + (S.showResults ? 'Hide results' : 'Show results'));
+        const id = S.detail.vote_id;
+        S.showResults[id] = !S.showResults[id];
+        $('#dvm_results_box').toggle(S.showResults[id]);
+        $(this).html('<span class="glyphicon glyphicon-stats"></span> ' + (S.showResults[id] ? 'Hide results' : 'Show results'));
     });
     $('#dvm_detail').on('click', '.dvm-invite-go', function() { sendInvites(String($(this).data('send')) === '1'); });
     $('#dvm_detail').on('click', '#dvm_send_pending', sendPending);
