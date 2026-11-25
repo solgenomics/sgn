@@ -967,7 +967,6 @@ sub create_tempfile {
 
 }
 
-
 sub copy_file {
     my ($self, $file, $dir) = @_;
 
@@ -979,21 +978,37 @@ sub copy_file {
     return File::Spec->catfile($dir, basename($file));
 }
 
-
 sub grep_file {
     my ($self, $dir, $exp) = @_;
+
+    my ($file) = $self->grep_files($dir, qr/^$exp/);
+
+    return $file;
+}
+
+sub grep_files {
+    my ($self, $dir, $pattern) = @_;
 
     opendir my $dh, $dir
         or die "can't open $dir: $!\n";
 
-    my ($file)  = grep { /^$exp/ && -f "$dir/$_" }  readdir($dh);
-    close $dh;
+    my @files = grep { $_ =~ $pattern && -f File::Spec->catfile($dir, $_) } readdir($dh);
+    closedir $dh;
 
-    if ($file) {
-        $file = File::Spec->catfile($dir, $file);
-    }
+    return map { File::Spec->catfile($dir, $_) } @files;
+}
 
-    return $file;
+sub predicted_list_dataset_selection_pops_ids {
+    my ($self, $c, $training_pop_id, $protocol_id) = @_;
+
+    my $cache_dir = $self->solgs_cache_dir($c, $training_pop_id);
+
+    my $pattern = qr/^rrblup_selection_gebvs_\Q$training_pop_id\E-((?:list|dataset)_\d+)-.+-GP-\Q$protocol_id\E(?:\.txt)?$/;
+
+    my %ids = map { basename($_) =~ $pattern ? ($1 => 1) : () }
+        $self->grep_files($cache_dir, $pattern);
+
+    return [ sort keys %ids ];
 }
 
 sub solgs_cache_dir {
