@@ -419,7 +419,7 @@ function renderQuickRun() {
     $('#sf_quick_run_btn')
         .toggleClass('btn-success', s !== 'done').toggleClass('btn-primary', s === 'done')
         .html(s === 'done' ? '<span class="glyphicon glyphicon-ok-circle"></span> Completed: view results'
-            : s === 'running' ? '<span class="glyphicon glyphicon-refresh sf-spin"></span> Running...'
+            : s === 'running' ? '<span class="glyphicon glyphicon-refresh bb-spin"></span> Running...'
             : '<span class="glyphicon glyphicon-play"></span> Run whole script')
         .prop('disabled', s === 'running' || (s !== 'done' && problems.length > 0));
     box.show();
@@ -462,7 +462,7 @@ function goTo(step) {
 }
 
 function refreshOptionCards() {
-    $('.sf-option').each(function() {
+    $('.bb-option').each(function() {
         $(this).toggleClass('on', $(this).find('input').is(':checked'));
     });
 }
@@ -533,7 +533,7 @@ function loadDataset(opts) {
         $('#sf_dataset_message').html(alertBox('warning', 'Please select only one dataset.'));
         return;
     }
-    $('#sf_dataset_message').html('<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh sf-spin"></span> ' +
+    $('#sf_dataset_message').html('<div class="bb-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh bb-spin"></span> ' +
         (fromDatabase ? 'Reading the phenotypes from the database...'
                       : 'Retrieving phenotypes. Large datasets can take a minute...') + '</div>');
     $('#sf_cache_reload').prop('disabled', true);
@@ -639,7 +639,7 @@ function applyPendingExclusions(handOnly) {
 function updateStep1Next() {
     const b = $('#sf_step1_next');
     const ready = !!state.dataset && !state.datasetLoading && state.traits.length > 0;
-    const text = state.datasetLoading ? '<span class="glyphicon glyphicon-refresh sf-spin"></span> Loading the dataset...'
+    const text = state.datasetLoading ? '<span class="glyphicon glyphicon-refresh bb-spin"></span> Loading the dataset...'
         : !state.dataset ? 'Select a dataset'
         : !state.traits.length ? 'Select at least one trait'
         : 'Next: Quality control <span class="glyphicon glyphicon-chevron-right"></span>';
@@ -709,13 +709,13 @@ function cacheNote(r) {
 }
 
 function cacheUpdatingText() {
-    return '<span class="glyphicon glyphicon-refresh sf-spin"></span> The search cache is being updated. This page will tell you when it is done.';
+    return '<span class="glyphicon glyphicon-refresh bb-spin"></span> The search cache is being updated. This page will tell you when it is done.';
 }
 
 // starts an update of the phenotype search cache, then follows it
 function updateCache() {
     $('#sf_cache_update').prop('disabled', true);
-    $('#sf_cache_update_status').html('<span class="glyphicon glyphicon-refresh sf-spin"></span> Starting the update...');
+    $('#sf_cache_update_status').html('<span class="glyphicon glyphicon-refresh bb-spin"></span> Starting the update...');
     post('/ajax/script_factory/cache/update', {})
         .then(r => {
             if (r.message) $('#sf_cache_update_status').html(esc(r.message));
@@ -750,7 +750,7 @@ function pollCache(started) {
 
 function renderDatasetOverview() {
     const r = state.dataset;
-    const stat = (v, l) => '<div class="sf-stat"><div class="v">' + esc(v) + '</div><div class="l">' + esc(l) + '</div></div>';
+    const stat = (v, l) => '<div class="bb-stat"><div class="v">' + esc(v) + '</div><div class="l">' + esc(l) + '</div></div>';
     $('#sf_dataset_stats').html(
         stat(r.trials.length, 'Trials') + stat(r.n_locations, 'Locations') + stat(r.n_years, 'Years') +
         stat(r.n_accessions, 'Accessions') + stat(r.n_plots, 'Plots') + stat(r.traits.length, 'Numeric traits'));
@@ -770,7 +770,7 @@ function renderDatasetOverview() {
     $('#sf_trials_table').html(h);
     const rpt = (r.repeated || []).filter(x => x.n_repeated_units > 0);
     // a plain note (not an alert box): site themes color alerts differently
-    $("#sf_repeated_note").html(rpt.length ? '<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-repeat"></span> Measured more than once per plot: ' +
+    $("#sf_repeated_note").html(rpt.length ? '<div class="bb-help" style="margin-top:12px"><span class="glyphicon glyphicon-repeat"></span> Measured more than once per plot: ' +
         rpt.map(x => esc(x.short) + ' <small class="sf-muted">(up to ' + x.max_n + ' values' + (x.n_dates > 1 ? ', ' + x.n_dates + ' dates' : '') + ')</small>').join(', ') +
         '. The table shows plot means; you choose how to use them in step 3.</div>' + repeatedStaleNote(rpt) : '');
     renderTraits();
@@ -842,7 +842,7 @@ function staleRepeatedFlag(x) {
 function repeatedStaleNote(list) {
     const st = list.filter(x => x.n_stale_units > 0);
     if (!st.length) return '';
-    return '<div class="sf-help sf-warn-text" style="margin-top:6px"><span class="glyphicon glyphicon-warning-sign"></span> The repeated measurements of ' +
+    return '<div class="bb-help sf-warn-text" style="margin-top:6px"><span class="glyphicon glyphicon-warning-sign"></span> The repeated measurements of ' +
         st.map(x => esc(x.short)).join(', ') + ' are read from the database, but the plot values come from the search cache, which is not up to date for some of their trials. ' +
         'They may differ until you use <b>Reload from database</b>.</div>';
 }
@@ -1222,7 +1222,7 @@ function renderExplorer() {
     if (cur && state.traits.indexOf(cur) >= 0) sel.val(cur);
     // first view of a trait: the list starts with that trait only (ticks kept while it stays shown)
     if (sel.val() && state.outlierFocus !== sel.val()) focusOutlierList(sel.val());
-    $('#sf_explorer_plot').html('<div class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Loading observations...</div>');
+    $('#sf_explorer_plot').html('<div class="bb-help"><span class="glyphicon glyphicon-refresh bb-spin"></span> Loading observations...</div>');
     ensurePlotData()
         .then(() => drawExplorer())
         .catch(e => $('#sf_explorer_plot').html(alertBox('danger', esc(e.message))));
@@ -1323,7 +1323,7 @@ function drawExplorer() {
     msg += '.';
     if (nExcl || nMark) msg += ' <span class="sf-muted"><span class="glyphicon glyphicon-eye-close"></span> Not shown: <b>' + nExcl + '</b> removed by you' + (nMark ? ', <b>' + nMark + '</b> marked as outliers in Breedbase' : '') +
         '. They are left out of the analysis; restore them in the list below.</span>';
-    $('#sf_explorer_summary').html('<p class="sf-help">' + msg + '</p>');
+    $('#sf_explorer_summary').html('<p class="bb-help">' + msg + '</p>');
     renderExclusions();   // the full outlier list follows the rule and the exclusions
     renderRepeated();     // step 3 reminds how the outliers of repeated traits were found
 }
@@ -1509,7 +1509,7 @@ function markOutliers(items, action, msgBox) {
     if (!items.length || !state.dataset) return Promise.resolve();
     if (action === 'database' && !confirm('Mark ' + items.length + ' value(s) as outliers in the database?\n\nThey will be excluded for ALL users, in every dataset, analysis and tool that excludes outliers.\n\nNote: when a dataset excludes database outliers, Breedbase leaves out the WHOLE plot (all its traits), not only the marked value. To drop only the value, use dataset outliers instead.\n\nOnly a curator or a breeder can remove the mark later.')) return Promise.resolve();
     if (action === 'unmark_database' && !confirm('Remove the database outlier mark from ' + items.length + ' value(s)? They will be used again by all tools.')) return Promise.resolve();
-    $(msgBox).html('<p class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Saving...</p>');
+    $(msgBox).html('<p class="bb-help"><span class="glyphicon glyphicon-refresh bb-spin"></span> Saving...</p>');
     return post('/ajax/script_factory/outliers/mark', { dataset_id: state.dataset.dataset_id, action: action, items: JSON.stringify(items.map(o => ({ unit: o.unit, trait: o.trait }))) })
         .then(r => {
             const keys = items.map(o => o.key || (o.unit + '|' + o.trait));
@@ -1543,7 +1543,7 @@ function exclusionsPayload() {
 
 function previewMadr() {
     const btn = $('#sf_preview_madr');
-    btn.prop('disabled', true).html('<span class="glyphicon glyphicon-refresh sf-spin"></span> Fitting models...');
+    btn.prop('disabled', true).html('<span class="glyphicon glyphicon-refresh bb-spin"></span> Fitting models...');
     const recipe = buildRecipe();
     recipe.zones.enabled = false;
     recipe.index.enabled = false;
@@ -1588,7 +1588,7 @@ function trialModel(t) {
 function renderDesignTable() {
     const f90 = stage1Engine() === 'blupf90';
     const sp = $('input[name=sf_stage1_model][value=spats]').closest('label');
-    sp.toggleClass('dis', false).find('.sf-option-text').html(f90
+    sp.toggleClass('dis', false).find('.bb-option-text').html(f90
         ? 'With BLUPF90+: a SpATS-like 2D P-spline surface (one smoothing variance instead of separate row and column smoothing) plus linear trends and row and column effects. Its results agree closely with SpATS.'
         : '2D P-spline surface (Rodr&iacute;guez-&Aacute;lvarez et al., 2018) plus row and column effects.');
     if (!state.dataset) return;
@@ -1597,11 +1597,11 @@ function renderDesignTable() {
     const spatialAll = trials.length && trials.every(t => trialModel(t).spats);
     let h = '';
     if (s1 === 'design') {
-        h += '<p class="sf-help"><span class="glyphicon glyphicon-info-sign"></span> The design sets which effects enter each trial\'s model, but only the effects the trial\'s data can support are used (replicates, blocks, rows and columns that were recorded and can be estimated). Designs that need effects a trial does not have give the same model; effects left out are listed under the model.</p>';
+        h += '<p class="bb-help"><span class="glyphicon glyphicon-info-sign"></span> The design sets which effects enter each trial\'s model, but only the effects the trial\'s data can support are used (replicates, blocks, rows and columns that were recorded and can be estimated). Designs that need effects a trial does not have give the same model; effects left out are listed under the model.</p>';
     } else if (spatialAll) {
-        h += '<p class="sf-help"><span class="glyphicon glyphicon-info-sign"></span> All trials have rows and columns, so the spatial model is used and the design is not needed. Choose <b>Design model</b> above to set the design of each trial.</p>';
+        h += '<p class="bb-help"><span class="glyphicon glyphicon-info-sign"></span> All trials have rows and columns, so the spatial model is used and the design is not needed. Choose <b>Design model</b> above to set the design of each trial.</p>';
     } else if (trials.some(t => trialModel(t).spats)) {
-        h += '<p class="sf-help"><span class="glyphicon glyphicon-info-sign"></span> Trials with rows and columns use the spatial model, so their design cannot be changed here. The design applies to the trials without rows and columns; choose <b>Design model</b> above to set it for all trials.</p>';
+        h += '<p class="bb-help"><span class="glyphicon glyphicon-info-sign"></span> Trials with rows and columns use the spatial model, so their design cannot be changed here. The design applies to the trials without rows and columns; choose <b>Design model</b> above to set it for all trials.</p>';
     }
     h += '<table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Stage 1 model</th></tr></thead><tbody>';
     trials.forEach(t => {
@@ -2063,7 +2063,7 @@ function structuresHtml(vs) {
             '<div class="table-responsive"><table class="table table-condensed sf-mt-cor"><thead><tr><th></th><th>&sigma;&sup2;<sub>G</sub></th>' + L.map(l => '<th>' + esc(lab(l)) + '</th>').join('') + '</tr></thead><tbody>' +
             C.map((row, i) => '<tr><th>' + esc(lab(L[i] || '')) + '</th><td>' + fmt(arr(G[i])[i]) + '</td>' + arr(row).map(cell).join('') + '</tr>').join('') + '</tbody></table></div>';
     });
-    return h + '<p class="sf-help">Genetic variance of each trial (or time term) and the genetic correlations between them: a high correlation means the accessions rank alike in both, a low or negative one means crossover genotype &times; environment interaction.</p>';
+    return h + '<p class="bb-help">Genetic variance of each trial (or time term) and the genetic correlations between them: a high correlation means the accessions rank alike in both, a low or negative one means crossover genotype &times; environment interaction.</p>';
 }
 
 const GENOMIC_MODELS = ['genomic', 'single_step'];
@@ -2274,7 +2274,7 @@ function currentChoice(key) {
 
 function renderSuggestion() {
     const S = suggestion();
-    $('.sf-option-title .sf-suggested').remove();
+    $('.bb-option-title .sf-suggested').remove();
     if (!S) { $('#sf_suggest').html('<span class="sf-muted">Load a dataset to get a suggestion.</span>'); return; }
     let h = '<div class="table-responsive"><table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Based on</th><th>Layout</th></tr></thead><tbody>';
     S.trials.forEach(x => {
@@ -2292,9 +2292,9 @@ function renderSuggestion() {
     $('#sf_suggest').html(h);
     // mark the suggested options
     const mark = '<span class="sf-suggested">suggested</span>';
-    $('input[name=sf_strategy][value=' + S.strategy + ']').closest('label').find('.sf-option-title').append(mark);
-    if (S.stage1) $('input[name=sf_stage1_model][value=' + S.stage1 + ']').closest('label').find('.sf-option-title').append(mark);
-    $('input[name=sf_engine][value=' + S.engine + ']').closest('label').find('.sf-option-title').append(mark);
+    $('input[name=sf_strategy][value=' + S.strategy + ']').closest('label').find('.bb-option-title').append(mark);
+    if (S.stage1) $('input[name=sf_stage1_model][value=' + S.stage1 + ']').closest('label').find('.bb-option-title').append(mark);
+    $('input[name=sf_engine][value=' + S.engine + ']').closest('label').find('.bb-option-title').append(mark);
     ['#sf_gen_model', '#sf_check', '#sf_stage2_genotype', '#sf_single_genotype'].forEach(id => {
         const want = { '#sf_gen_model': S.genetic, '#sf_check': S.check }[id] || S.genotype;
         $(id + ' option').each(function() {
@@ -2858,7 +2858,7 @@ function updateRunButton() {
     const problems = validateRecipe(buildRecipe());
     const look = {
         ready: ['btn-success', 'play', 'Run analysis'],
-        running: ['btn-default', 'refresh sf-spin', 'Running...'],
+        running: ['btn-default', 'refresh bb-spin', 'Running...'],
         done: ['sf-run-done', 'ok-circle', 'Analysis completed'],
         changed: ['btn-warning', 'repeat', 'Re-run with changes'],
         failed: ['btn-danger', 'repeat', 'Retry analysis']
@@ -3052,9 +3052,9 @@ function renderReview() {
     box.show();
     const items = rv.findings.concat(rv.after);
     const icon = l => l === 'look' ? 'eye-open' : 'info-sign';
-    let h = '<p class="sf-help">Your analysis runs exactly as you set it up. Meanwhile, here is a friendly second look at the model, the kind of thing a colleague might point out. ' +
+    let h = '<p class="bb-help">Your analysis runs exactly as you set it up. Meanwhile, here is a friendly second look at the model, the kind of thing a colleague might point out. ' +
         'None of it means something is wrong: you know your trials best, and you decide what to keep.</p>';
-    if (rv.loading) h += '<p class="sf-muted"><span class="glyphicon glyphicon-refresh sf-spin"></span> Looking at the model...</p>';
+    if (rv.loading) h += '<p class="sf-muted"><span class="glyphicon glyphicon-refresh bb-spin"></span> Looking at the model...</p>';
     else if (!items.length) {
         h += '<div class="sf-review-ok"><span class="glyphicon glyphicon-thumbs-up"></span> Nothing to point out' + (rv.main ? ' in the model or in the results' : ' so far') +
             ': no field effect adjusted twice, and every term has data to support it.' + (rv.main ? '' : ' The results will get a quick look too when they are ready.') + '</div>';
@@ -3079,7 +3079,7 @@ function renderReviewRuns(rv) {
             'It runs next to yours, and you can compare both and keep the one you prefer. Your run is not touched.</p>' +
             '<button class="btn btn-default btn-sm" id="sf_run_suggested"><span class="glyphicon glyphicon-play"></span> Also run the suggested model</button></div>';
     }
-    if (rv.alt.job) return h + '<p><span class="glyphicon glyphicon-refresh sf-spin"></span> The suggested model is running' + (rv.main ? '' : ', next to yours') + '...</p></div>';
+    if (rv.alt.job) return h + '<p><span class="glyphicon glyphicon-refresh bb-spin"></span> The suggested model is running' + (rv.main ? '' : ', next to yours') + '...</p></div>';
     if (rv.alt.error) return h + alertBox('warning', 'The suggested model could not be run: ' + esc(rv.alt.error) + ' Your results are not affected.') + '</div>';
     if (!rv.main) return h + '<p><span class="glyphicon glyphicon-ok"></span> The suggested model is done. The comparison appears as soon as your run finishes.</p></div>';
 
@@ -3096,7 +3096,7 @@ function renderReviewRuns(rv) {
             '<td>' + agree(x.r) + '</td><td>' + (x.top ? x.top.same + ' of ' + x.top.n : '&ndash;') + '</td></tr>').join('') +
         (ia !== null || ib !== null ? '<tr class="sf-review-index-row"><td><b>Selection index</b></td><td></td><td>' + accuracyBadge(ia) + '</td><td></td><td></td><td></td><td>' + accuracyBadge(ib) + '</td><td></td><td></td><td></td><td></td></tr>' : '') +
         '</tbody></table></div>';
-    h += '<p class="sf-help">How to read it: when both models agree (agreement close to 1, the same top accessions), the simpler one is the safer choice, since it gives the same answer with less to estimate. ' +
+    h += '<p class="bb-help">How to read it: when both models agree (agreement close to 1, the same top accessions), the simpler one is the safer choice, since it gives the same answer with less to estimate. ' +
         'When they disagree, the heritability alone does not decide it: a higher H&sup2; can come from fitting noise. Choose the model whose terms you can explain from how the trials were laid out.</p>';
     const btn = (w, label) => rv.chosen === w
         ? '<span class="sf-review-chosen"><span class="glyphicon glyphicon-ok"></span> ' + label + ': shown in the results</span>'
@@ -3140,18 +3140,18 @@ function multiTraitHtml(mt) {
             '<div class="table-responsive"><table class="table table-condensed sf-mt-cor"><thead><tr><th></th>' + L.map(l => '<th>' + esc(l.replace(/ occasion /, ' #')) + '</th>').join('') + '</tr></thead><tbody>' +
             C.map((row, i) => '<tr><th>' + esc(String(L[i] || '').replace(/ occasion /, ' #')) + '</th>' + arr(row).map(cell).join('') + '</tr>').join('') + '</tbody></table></div>';
     });
-    return h + '<p class="sf-help">Genetic correlations from the multi-trait model (G<sub>0</sub>): how similarly the accessions rank on two dates. High correlations between consecutive dates are expected; a low one means the ranking changes during the season.</p>';
+    return h + '<p class="bb-help">Genetic correlations from the multi-trait model (G<sub>0</sub>): how similarly the accessions rank on two dates. High correlations between consecutive dates are expected; a low one means the ranking changes during the season.</p>';
 }
 
 // software and packages the run used, with versions and references to cite
 function softwareHtml(sw) {
     sw = arr(sw);
     if (!sw.length) return '';
-    return '<div class="sf-card sf-software-card"><h4><span class="glyphicon glyphicon-wrench"></span> Software used in this analysis</h4>' +
+    return '<div class="bb-card sf-software-card"><h4><span class="glyphicon glyphicon-wrench"></span> Software used in this analysis</h4>' +
         '<div class="table-responsive"><table class="table table-condensed sf-software"><thead><tr><th>Software</th><th>Version</th><th>Used for</th><th>Reference</th></tr></thead><tbody>' +
         sw.map(x => '<tr><td><b>' + esc(x.name) + '</b></td><td>' + (x.version ? esc(x.version) : '<span class="sf-muted">&ndash;</span>') + '</td><td>' + esc(x.used_for) + '</td>' +
             '<td><small>' + (x.reference ? esc(x.reference) : '<span class="sf-muted">&ndash;</span>') + '</small></td></tr>').join('') +
-        '</tbody></table></div><p class="sf-help">Please cite the software you used when you publish these results, together with Breedbase.' +
+        '</tbody></table></div><p class="bb-help">Please cite the software you used when you publish these results, together with Breedbase.' +
         (sw.some(x => x.name === 'BLUPF90+') ? ' BLUPF90+ is free for research and academic use; commercial use needs a licence.' : '') + '</p></div>';
 }
 
@@ -3177,8 +3177,8 @@ function renderResults() {
     $('#sf_save_list').prop('disabled', !res.index);
 
     // overview
-    const stat = (v, l) => '<div class="sf-stat"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
-    let ov = '<div class="sf-stats">' + stat(s.n_trials, 'Trials') + stat(s.n_environments, 'Environments') + stat(s.n_accessions, 'Accessions') +
+    const stat = (v, l) => '<div class="bb-stat"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
+    let ov = '<div class="bb-stats">' + stat(s.n_trials, 'Trials') + stat(s.n_environments, 'Environments') + stat(s.n_accessions, 'Accessions') +
         stat(s.n_plots, 'Plots') + stat(arr(res.outliers).length, 'Values removed') + stat(label + 's', 'Genotype values') + '</div>';
     ov += '<h4>Heritability and variance components</h4>' + simpleTable(res.stage2, [
         { k: 'trait', l: 'Trait' }, { k: 'n_trials', l: 'Trials' }, { k: 'n_accessions', l: 'Accessions' }, { k: 'mean', l: 'Mean' },
@@ -3218,7 +3218,7 @@ function renderResults() {
         { k: 'trait', l: 'Trait' }, { k: 'model', l: 'Model', f: v => '<code style="font-size:11px">' + esc(v) + '</code>' },
         { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' }, { k: 'var_ge', l: '&sigma;&sup2;<sub>GE</sub>' }, { k: 'var_e', l: '&sigma;&sup2;<sub>e</sub>' },
         { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status', f: (v, r) => esc(v) + (r.dropped_terms ? '<br/><small class="sf-muted" title="Terms the data could not support">left out: ' + esc(r.dropped_terms) + '</small>' : '') }
-    ]) + '<p class="sf-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
+    ]) + '<p class="bb-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
     $('#sf_tab_model').append(multiTraitHtml(res.multi_trait));
     $('#sf_tab_model').append(structuresHtml(res.variance_structures));
     // ANOVA by experimental design: only when the run had it
@@ -3229,7 +3229,7 @@ function renderResults() {
     const gv = arr(res.genotype_values);
     const pedCols = gv.length ? ['mother', 'father'].filter(k => k in gv[0]) : [];
     const traitCols = gv.length ? Object.keys(gv[0]).filter(k => k !== 'accession' && pedCols.indexOf(k) < 0) : [];
-    $('#sf_tab_values').html('<p class="sf-help">' + label + 's of each accession for each trait.</p>' + simpleTable(gv,
+    $('#sf_tab_values').html('<p class="bb-help">' + label + 's of each accession for each trait.</p>' + simpleTable(gv,
         [{ k: 'accession', l: 'Accession', f: v => '<a href="/stock/' + encodeURIComponent(v) + '/view" target="_blank">' + esc(v) + '</a>' }]
             .concat(pedCols.map(k => ({ k: k, l: k === 'mother' ? 'Mother' : 'Father', f: v => v ? esc(v) : '<span class="sf-muted">&ndash;</span>' })))
             .concat(traitCols.map(t => ({ k: t, l: esc(t) }))),
@@ -3280,7 +3280,7 @@ function renderAnovaResults(A, trait, view) {
         { k: 'label', l: 'Source' }, { k: 'df', l: 'df', f: v => v }, { k: 'sum_sq', l: 'Sum of squares' }, { k: 'mean_sq', l: 'Mean square' },
         { k: 'f_value', l: 'F', f: v => (v === null || v === undefined ? '' : fmt(v, 2)) },
         { k: 'p_value', l: 'p-value', f: v => (v !== null && v !== undefined && v < A.alpha ? '<b style="color:#166534">' + anovaPval(v) + '</b>' : anovaPval(v)) }
-    ]) + '<p class="sf-help">All effects fixed; sequential (type I) sums of squares, design terms first; F-tests against the residual.</p>';
+    ]) + '<p class="bb-help">All effects fixed; sequential (type I) sums of squares, design terms first; F-tests against the residual.</p>';
     arr(t.comparisons).forEach(c => {
         const g = arr(c.groups);
         h += '<h4>' + esc(c.factor) + (c.by ? ' within ' + esc(c.by.toLowerCase()) : '') + ' <small>' + esc(c.test) + ', &alpha; = ' + c.alpha + '</small></h4>';
@@ -3299,8 +3299,8 @@ function renderAnovaResults(A, trait, view) {
     if (arr(t.by_trial).length > 1) h += '<h4>Each trial: summary</h4>' + simpleTable(t.by_trial, [
         { k: 'trial', l: 'Trial' }, { k: 'design', l: 'Design' }, { k: 'n', l: 'Plots', f: v => v }, { k: 'mean', l: 'Mean' }, { k: 'cv', l: 'CV %', f: v => fmt(v, 1) },
         { k: 'df_error', l: 'Residual df', f: v => (v === null || v === undefined ? 'none' : v) }, { k: 'f_accession', l: 'F accession', f: v => fmt(v, 2) }, { k: 'p_accession', l: 'p-value', f: v => anovaPval(v) }]);
-    if (arr(t.notes).length) h += '<p class="sf-help">' + arr(t.notes).map(esc).join('<br/>') + '</p>';
-    h += '<p class="sf-help">Q-Q and residual plots and all comparison groups: ANOVA section of the results dashboard.</p>';
+    if (arr(t.notes).length) h += '<p class="bb-help">' + arr(t.notes).map(esc).join('<br/>') + '</p>';
+    h += '<p class="bb-help">Q-Q and residual plots and all comparison groups: ANOVA section of the results dashboard.</p>';
     $('#sf_tab_anova').html(h);
     $('#sf_anova_trait').on('change', function() { renderAnovaResults(A, $(this).val(), 0); });
     $('#sf_anova_view').on('change', function() { renderAnovaResults(A, T.trait, $(this).val()); });
@@ -3323,14 +3323,14 @@ function accuracyBadge(v) {
 
 function accuracyStat(ix) {
     if (ix.accuracy === null || ix.accuracy === undefined) {
-        return '<div class="sf-stat sf-stat-acc" title="The accuracy comes from the genetic variance, which is only estimated when the genotype is a random effect (BLUPs). ' +
+        return '<div class="bb-stat sf-stat-acc" title="The accuracy comes from the genetic variance, which is only estimated when the genotype is a random effect (BLUPs). ' +
             'With the genotype as a fixed effect (BLUEs), choose Random under Genotype in step 3 to see it.">' +
             '<div class="v sf-muted">n/a</div><div class="l">Selection accuracy</div></div>';
     }
     const a = Number(ix.accuracy);
     const word = a >= 0.8 ? 'high' : a >= 0.6 ? 'moderate' : 'low';
     const per = arr(ix.gains).filter(g => g.in_index && g.accuracy !== null && g.accuracy !== undefined).map(g => g.trait + ': ' + Number(g.accuracy).toFixed(3)).join(', ');
-    return '<div class="sf-stat sf-stat-acc sf-acc-' + word + '" title="Selection accuracy of the index: mean accuracy of its traits, weighted by their index weights (' + esc(per) + '). ' +
+    return '<div class="bb-stat sf-stat-acc sf-acc-' + word + '" title="Selection accuracy of the index: mean accuracy of its traits, weighted by their index weights (' + esc(per) + '). ' +
         'It says how closely the ranking follows the true genetic values: 1 would be perfect.">' +
         '<div class="v">' + a.toFixed(3) + ' <small>' + word + '</small></div><div class="l">Selection accuracy</div></div>';
 }
@@ -3338,12 +3338,12 @@ function accuracyStat(ix) {
 function renderIndexResults(ix, label) {
     const table = arr(ix.table);
     const traitCols = table.length ? Object.keys(table[0]).filter(k => ['accession', 'index', 'rank', 'selected'].indexOf(k) < 0) : [];
-    let h = '<div class="sf-stats">' +
-        '<div class="sf-stat"><div class="v">' + ix.n_selected + ' / ' + ix.n_ranked + '</div><div class="l">Selected accessions</div></div>' +
-        '<div class="sf-stat"><div class="v">' + ix.selection_pct + '%</div><div class="l">Selection intensity</div></div>' +
-        '<div class="sf-stat"><div class="v">' + (ix.method === 'rank_sum' ? 'Rank sum' : 'Z-score') + '</div><div class="l">Method</div></div>' +
+    let h = '<div class="bb-stats">' +
+        '<div class="bb-stat"><div class="v">' + ix.n_selected + ' / ' + ix.n_ranked + '</div><div class="l">Selected accessions</div></div>' +
+        '<div class="bb-stat"><div class="v">' + ix.selection_pct + '%</div><div class="l">Selection intensity</div></div>' +
+        '<div class="bb-stat"><div class="v">' + (ix.method === 'rank_sum' ? 'Rank sum' : 'Z-score') + '</div><div class="l">Method</div></div>' +
         accuracyStat(ix) + '</div>';
-    h += '<p class="sf-help">The index was computed on the <b>' + esc(label) + 's</b> of the model (genotype values), not on raw or ANOVA means.</p>';
+    h += '<p class="bb-help">The index was computed on the <b>' + esc(label) + 's</b> of the model (genotype values), not on raw or ANOVA means.</p>';
     h += '<h4>Expected response to selection</h4>' + simpleTable(ix.gains, [
         { k: 'trait', l: 'Trait' }, { k: 'in_index', l: 'In index', f: v => v ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '' },
         { k: 'weight', l: 'Weight', f: (v, r) => r.in_index ? fmt(v, 2) + (r.direction === 'decrease' ? ' &darr;' : ' &uarr;') : '' },
@@ -3352,7 +3352,7 @@ function renderIndexResults(ix, label) {
         { k: 'selection_differential_pct', l: 'S %', f: v => '<b style="color:' + (Number(v) >= 0 ? '#2b7a4b' : '#dc2626') + '">' + fmt(v, 1) + '%</b>' },
         { k: 'expected_gain', l: 'Expected gain' },
         { k: 'accuracy', l: 'Accuracy', f: v => accuracyBadge(v) }
-    ]) + '<p class="sf-help">' + esc(ix.note) + ' Accuracy: how closely the genotype values follow the true genetic values (0 to 1), from their standard errors ' +
+    ]) + '<p class="bb-help">' + esc(ix.note) + ' Accuracy: how closely the genotype values follow the true genetic values (0 to 1), from their standard errors ' +
         '(&radic;(1 &minus; PEV / &sigma;&sup2;<sub>G</sub>)), or &radic;H&sup2; when the genotype is a fixed effect.</p>';
     h += '<h4>Top accessions</h4><div id="sf_index_chart" class="sf-plot"></div>';
     h += '<h4>Ranking</h4>' + simpleTable(table, [
@@ -3410,9 +3410,9 @@ function renderZoneResults(zones) {
         zoneNames.forEach(zn => {
             const envs = arr(z.membership).filter(m => m.zone === zn);
             const top = arr(z.top).filter(t => t.zone === zn);
-            h += '<div class="col-md-6"><div class="sf-card" style="border-top:4px solid ' + color(zn) + '">' +
+            h += '<div class="col-md-6"><div class="bb-card" style="border-top:4px solid ' + color(zn) + '">' +
                 '<h4 style="margin-top:0"><span class="sf-zone-chip" style="background:' + color(zn) + '">' + esc(zn) + '</span> ' + envs.length + ' environment(s)</h4>' +
-                '<p class="sf-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
+                '<p class="bb-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
                 simpleTable(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions' }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: Number(z.min_env) > 1 ? 'No accession tested in at least ' + Number(z.min_env) + ' environment(s) of this zone.' : 'No accession with values in this zone.' }) +
                 '</div></div>';
         });
@@ -3498,7 +3498,7 @@ function createList() {
 
 function openLibrary() {
     $('#sf_library_modal').modal('show');
-    $('#sf_library_list').html('<p class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Loading...</p>');
+    $('#sf_library_list').html('<p class="bb-help"><span class="glyphicon glyphicon-refresh bb-spin"></span> Loading...</p>');
     post('/ajax/script_factory/recipes', {})
         .then(r => {
             const list = arr(r.recipes);

@@ -34,17 +34,15 @@ my $license_json = JSON::XS->new->ascii->allow_nonref->encode($blupf90_license_c
 $license_json =~ s/</\\u003c/g;
 </%init>
 
+<& /util/app_layout.mas &>
 <& /util/import_javascript.mas, classes => ['jquery', 'jquery.dataTables', 'CXGN.Login', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['script_factory'] &>
 
 
-<div id="sf-app" class="sf-app">
+<div id="sf-app" class="bb-app sf-app">
 
   <!-- ===================== header ===================== -->
-  <div class="sf-hero">
-    <div class="sf-hero-text">
-      <h2><span class="glyphicon glyphicon-wrench"></span> Analysis Pipeline</h2>
-      <p>Build your phenotypic analysis step by step: clean the data, fit single or two-stage models, combine traits in a selection index and find environmental zones. Run it, store the results, and save the script to reuse on another dataset or year.</p>
-    </div>
+  <&| /util/app_hero.mas, title => 'Analysis Pipeline', icon => 'glyphicon-wrench',
+      text => 'Build your phenotypic analysis step by step: clean the data, fit single or two-stage models, combine traits in a selection index and find environmental zones. Run it, store the results, and save the script to reuse on another dataset or year.' &>
     <div class="sf-hero-actions">
       <div class="sf-script-badge" id="sf_script_badge">
         <span class="sf-badge-label">Script</span>
@@ -56,29 +54,22 @@ $license_json =~ s/</\\u003c/g;
         <button class="btn btn-primary" id="sf_open_save_script" title="Save this script to reuse it later"><span class="glyphicon glyphicon-floppy-disk"></span> Save script</button>
       </div>
     </div>
-  </div>
+  </&>
 
   <!-- pipeline of a stored analysis or of a run, when opened from one -->
   <div id="sf_pipeline_banner"></div>
 
   <!-- ===================== stepper ===================== -->
-  <ol class="sf-stepper" id="sf_stepper">
-    <li data-step="1" class="active"><span class="sf-step-num">1</span><span class="sf-step-label">Data</span></li>
-    <li data-step="2"><span class="sf-step-num">2</span><span class="sf-step-label">Quality control</span></li>
-    <li data-step="3"><span class="sf-step-num">3</span><span class="sf-step-label">Model</span></li>
-    <li data-step="4"><span class="sf-step-num">4</span><span class="sf-step-label">Selection index</span></li>
-    <li data-step="5"><span class="sf-step-num">5</span><span class="sf-step-label">Environmental zones</span></li>
-    <li data-step="6"><span class="sf-step-num">6</span><span class="sf-step-label">Run &amp; results</span></li>
-  </ol>
+  <& /util/app_stepper.mas, id => 'sf_stepper', first => 1, steps => ['Data', 'Quality control', 'Model', 'Selection index', 'Environmental zones', 'Run & results'] &>
 
   <div class="row">
     <div class="col-md-9 sf-main">
 
       <!-- ===================== step 1 ===================== -->
       <section class="sf-step" data-step="1">
-        <div class="sf-card">
+        <div class="bb-card">
           <h3>Choose a dataset</h3>
-          <p class="sf-help">Tick one dataset: it loads right away. It should contain trials, accessions and at least one numeric trait. Plot-level observations are used.</p>
+          <p class="bb-help">Tick one dataset: it loads right away. It should contain trials, accessions and at least one numeric trait. Plot-level observations are used.</p>
           <div id="sf_dataset_select"></div>
           <div class="sf-inline-row">
             <button class="btn btn-primary" id="sf_load_dataset" style="display:none"><span class="glyphicon glyphicon-download-alt"></span> Load dataset</button>
@@ -86,12 +77,12 @@ $license_json =~ s/</\\u003c/g;
           <div id="sf_dataset_message"></div>
         </div>
 
-        <div class="sf-card sf-quickrun" id="sf_quick_run" style="display:none">
+        <div class="bb-card sf-quickrun" id="sf_quick_run" style="display:none">
           <div class="sf-quickrun-head">
             <div>
               <div class="sf-quickrun-kicker"><span class="glyphicon glyphicon-flash"></span> Ready to run</div>
               <h3 id="sf_quick_run_title"></h3>
-              <p class="sf-help" id="sf_quick_run_text"></p>
+              <p class="bb-help" id="sf_quick_run_text"></p>
             </div>
             <div class="sf-quickrun-actions">
               <button class="btn btn-default" id="sf_quick_review"><span class="glyphicon glyphicon-list-alt"></span> Review steps</button>
@@ -103,18 +94,18 @@ $license_json =~ s/</\\u003c/g;
         </div>
 
         <div id="sf_dataset_overview" style="display:none">
-          <div class="sf-stats" id="sf_dataset_stats"></div>
+          <div class="bb-stats" id="sf_dataset_stats"></div>
           <div id="sf_cache_note"></div>
 
-          <div class="sf-card">
+          <div class="bb-card">
             <h3>Trials and designs</h3>
-            <p class="sf-help">Designs are detected from the trial metadata and the field layout. You can change them in the <b>Model</b> step.</p>
+            <p class="bb-help">Designs are detected from the trial metadata and the field layout. You can change them in the <b>Model</b> step.</p>
             <div id="sf_repeated_note"></div>
             <div class="table-responsive" id="sf_trials_table"></div>
           </div>
 
-          <div class="sf-card">
-            <div class="sf-card-head">
+          <div class="bb-card">
+            <div class="bb-card-head">
               <h3>Traits to analyse</h3>
               <div>
                 <button class="btn btn-link btn-sm" id="sf_traits_all">Select all</button>
@@ -125,24 +116,24 @@ $license_json =~ s/</\\u003c/g;
             <div class="sf-trait-grid" id="sf_traits"></div>
           </div>
         </div>
-        <div class="sf-nav"><span></span><button class="btn btn-primary sf-next" data-goto="2" id="sf_step1_next" disabled>Select a dataset</button></div>
+        <div class="bb-nav"><span></span><button class="btn btn-primary sf-next" data-goto="2" id="sf_step1_next" disabled>Select a dataset</button></div>
       </section>
 
       <!-- ===================== step 2 ===================== -->
       <section class="sf-step" data-step="2" style="display:none">
-        <div class="sf-card">
+        <div class="bb-card">
           <h3>Outlier removal</h3>
-          <p class="sf-help">Choose a rule that is applied automatically (it is saved with the script), and optionally exclude individual observations in the explorer below (these exclusions apply to this dataset only).</p>
-          <div class="sf-options" data-name="outlier_method">
-            <label class="sf-option"><input type="radio" name="sf_outlier_method" value="none" checked />
-              <span class="sf-option-title">No automatic rule</span>
-              <span class="sf-option-text">Keep all observations, except those you exclude individually.</span></label>
-            <label class="sf-option"><input type="radio" name="sf_outlier_method" value="iqr" />
-              <span class="sf-option-title">IQR by group</span>
-              <span class="sf-option-text">Remove values outside [Q1 &minus; k&middot;IQR, Q3 + k&middot;IQR] within each group (e.g. trial).</span></label>
-            <label class="sf-option"><input type="radio" name="sf_outlier_method" value="madr" />
-              <span class="sf-option-title">BH-MADR on residuals</span>
-              <span class="sf-option-text">Bonferroni-Holm test on residuals rescaled by the median absolute deviation (Bernal-Vasquez et al., 2016).</span></label>
+          <p class="bb-help">Choose a rule that is applied automatically (it is saved with the script), and optionally exclude individual observations in the explorer below (these exclusions apply to this dataset only).</p>
+          <div class="bb-options" data-name="outlier_method">
+            <label class="bb-option"><input type="radio" name="sf_outlier_method" value="none" checked />
+              <span class="bb-option-title">No automatic rule</span>
+              <span class="bb-option-text">Keep all observations, except those you exclude individually.</span></label>
+            <label class="bb-option"><input type="radio" name="sf_outlier_method" value="iqr" />
+              <span class="bb-option-title">IQR by group</span>
+              <span class="bb-option-text">Remove values outside [Q1 &minus; k&middot;IQR, Q3 + k&middot;IQR] within each group (e.g. trial).</span></label>
+            <label class="bb-option"><input type="radio" name="sf_outlier_method" value="madr" />
+              <span class="bb-option-title">BH-MADR on residuals</span>
+              <span class="bb-option-text">Bonferroni-Holm test on residuals rescaled by the median absolute deviation (Bernal-Vasquez et al., 2016).</span></label>
           </div>
 
           <div class="sf-subopts" id="sf_iqr_opts" style="display:none">
@@ -158,7 +149,7 @@ $license_json =~ s/</\\u003c/g;
                   <option value="all">Whole dataset</option>
                 </select>
               </label>
-              <span class="sf-help">k = 1.5 is the usual rule; k = 3 removes only extreme values.</span>
+              <span class="bb-help">k = 1.5 is the usual rule; k = 3 removes only extreme values.</span>
             </div>
           </div>
           <div class="sf-subopts" id="sf_madr_opts" style="display:none">
@@ -166,13 +157,13 @@ $license_json =~ s/</\\u003c/g;
               <label>Significance level
                 <input type="number" class="form-control input-sm" id="sf_madr_alpha" value="0.05" min="0.001" max="0.2" step="0.01" />
               </label>
-              <span class="sf-help">Residuals come from a per-trial model with accession and replicate effects.</span>
+              <span class="bb-help">Residuals come from a per-trial model with accession and replicate effects.</span>
             </div>
           </div>
         </div>
 
-        <div class="sf-card">
-          <div class="sf-card-head">
+        <div class="bb-card">
+          <div class="bb-card-head">
             <h3>Outlier explorer</h3>
             <div class="form-inline">
               <select class="form-control input-sm" id="sf_explorer_trait"></select>
@@ -193,17 +184,17 @@ $license_json =~ s/</\\u003c/g;
               <button class="btn btn-default btn-sm" id="sf_preview_madr" style="display:none"><span class="glyphicon glyphicon-flash"></span> Flag with BH-MADR</button>
             </div>
           </div>
-          <p class="sf-help">Each box shows one trial. <span class="sf-dot sf-dot-flag"></span> flagged by the rule. Click a point to remove it: removed values (and values marked as outliers in Breedbase) leave the plot, and the boxes are redrawn without them. Bring them back from the list below.</p>
+          <p class="bb-help">Each box shows one trial. <span class="sf-dot sf-dot-flag"></span> flagged by the rule. Click a point to remove it: removed values (and values marked as outliers in Breedbase) leave the plot, and the boxes are redrawn without them. Bring them back from the list below.</p>
           <div id="sf_explorer_plot" class="sf-plot"></div>
           <div id="sf_explorer_summary"></div>
         </div>
 
-        <div class="sf-card">
-          <div class="sf-card-head">
+        <div class="bb-card">
+          <div class="bb-card-head">
             <h3>All outliers <span class="badge" id="sf_outlier_count">0</span></h3>
           </div>
           <div class="sf-outlier-traits" id="sf_outlier_traits"></div>
-          <p class="sf-help" id="sf_outlier_breakdown"></p>
+          <p class="bb-help" id="sf_outlier_breakdown"></p>
           <div class="sf-outlier-toolbar">
             <span class="sf-muted" id="sf_outlier_selected">0 selected</span>
             <button class="btn btn-default btn-sm sf-mark" data-action="dataset" id="sf_mark_dataset"><span class="glyphicon glyphicon-flag"></span> Mark as dataset outliers</button>
@@ -219,12 +210,12 @@ $license_json =~ s/</\\u003c/g;
           <p class="sf-muted" id="sf_outlier_permissions" style="margin:4px 0 0"></p>
           <div id="sf_outlier_message"></div>
           <div class="sf-outlier-table" id="sf_outlier_table"></div>
-          <p class="sf-help" style="margin-top:8px">
+          <p class="bb-help" style="margin-top:8px">
             <span class="label sf-badge-ds">dataset</span> only the marked values are hidden, whenever this dataset is used with <i>exclude outliers</i> (dataset owner only).
             <span class="label sf-badge-db">database</span> hidden for everyone, in every tool that excludes outliers; Breedbase then leaves out the <b>whole plot</b>, all traits (curators and breeders only).
           </p>
         </div>
-        <div class="sf-nav">
+        <div class="bb-nav">
           <button class="btn btn-default sf-next" data-goto="1"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
           <button class="btn btn-primary sf-next" data-goto="3">Next: Model <span class="glyphicon glyphicon-chevron-right"></span></button>
         </div>
@@ -232,36 +223,36 @@ $license_json =~ s/</\\u003c/g;
 
       <!-- ===================== step 3 ===================== -->
       <section class="sf-step" data-step="3" style="display:none">
-        <div class="sf-card sf-suggest-card" id="sf_suggest_card">
-          <div class="sf-card-head">
+        <div class="bb-card sf-suggest-card" id="sf_suggest_card">
+          <div class="bb-card-head">
             <h3><span class="glyphicon glyphicon-flash"></span> Breedbase suggestion</h3>
             <button class="btn btn-success btn-sm" id="sf_apply_suggestion"><span class="glyphicon glyphicon-ok"></span> Apply suggestion</button>
           </div>
-          <p class="sf-help">Based on the design stored in Breedbase for each trial, its field layout (replicates, blocks, rows and columns), the checks and the pedigree of the accessions. It is only a suggestion: every choice below can be changed.</p>
+          <p class="bb-help">Based on the design stored in Breedbase for each trial, its field layout (replicates, blocks, rows and columns), the checks and the pedigree of the accessions. It is only a suggestion: every choice below can be changed.</p>
           <div id="sf_suggest"><span class="sf-muted">Load a dataset to get a suggestion.</span></div>
         </div>
 
-        <div class="sf-card">
+        <div class="bb-card">
           <h3>Analysis strategy</h3>
-          <div class="sf-options sf-options-2">
-            <label class="sf-option"><input type="radio" name="sf_strategy" value="two_stage" checked />
-              <span class="sf-option-title">Two stages</span>
-              <span class="sf-option-text"><b>Stage 1:</b> each trial is analysed on its own (SpATS spatial model or a model specific to its design), giving adjusted means and standard errors.<br/><b>Stage 2:</b> the means are combined across trials with a weighted mixed model.</span></label>
-            <label class="sf-option"><input type="radio" name="sf_strategy" value="single_stage" />
-              <span class="sf-option-title">Single stage</span>
-              <span class="sf-option-text">One mixed model on all plots. Choose each term (environment, design effects nested in trials, field trend, G&times;E, covariates) or write your own lme4 formula.</span></label>
+          <div class="bb-options sf-options-2">
+            <label class="bb-option"><input type="radio" name="sf_strategy" value="two_stage" checked />
+              <span class="bb-option-title">Two stages</span>
+              <span class="bb-option-text"><b>Stage 1:</b> each trial is analysed on its own (SpATS spatial model or a model specific to its design), giving adjusted means and standard errors.<br/><b>Stage 2:</b> the means are combined across trials with a weighted mixed model.</span></label>
+            <label class="bb-option"><input type="radio" name="sf_strategy" value="single_stage" />
+              <span class="bb-option-title">Single stage</span>
+              <span class="bb-option-text">One mixed model on all plots. Choose each term (environment, design effects nested in trials, field trend, G&times;E, covariates) or write your own lme4 formula.</span></label>
           </div>
         </div>
 
-        <div class="sf-card" id="sf_engine_card">
+        <div class="bb-card" id="sf_engine_card">
           <h3>Model engine</h3>
-          <div class="sf-options sf-options-2">
-            <label class="sf-option sf-option-sm"><input type="radio" name="sf_engine" value="lme4" checked />
-              <span class="sf-option-title">R <small>(lme4, SpATS, glmmTMB, AGHmatrix)</small></span>
-              <span class="sf-option-text">The whole analysis in R, with free and open-source packages, when BLUPF90+ cannot be used: mixed models with lme4, spatial models with SpATS, multi-trait models of repeated measurements with glmmTMB, and pedigree (A), genomic (G) and single-step (H) relationship matrices with AGHmatrix. Required for custom formulas with random slopes.</span></label>
-            <label class="sf-option sf-option-sm" id="sf_engine_f90"><input type="radio" name="sf_engine" value="blupf90" />
-              <span class="sf-option-title">BLUPF90+</span>
-              <span class="sf-option-text">The whole analysis runs without R: Breedbase (Perl) writes the models for BLUPF90+ (Fortran, sparse AI/EM-REML; Misztal et al.) and fits the models of all trials and traits in parallel. Much faster on large multi-environment datasets and pedigrees; needed for pedigree (A matrix) models. Row &times; column trials get row / column effects and linear trends instead of SpATS (R only); custom formulas take random intercepts only. Parameter and data files are downloadable with the results.</span></label>
+          <div class="bb-options sf-options-2">
+            <label class="bb-option sf-option-sm"><input type="radio" name="sf_engine" value="lme4" checked />
+              <span class="bb-option-title">R <small>(lme4, SpATS, glmmTMB, AGHmatrix)</small></span>
+              <span class="bb-option-text">The whole analysis in R, with free and open-source packages, when BLUPF90+ cannot be used: mixed models with lme4, spatial models with SpATS, multi-trait models of repeated measurements with glmmTMB, and pedigree (A), genomic (G) and single-step (H) relationship matrices with AGHmatrix. Required for custom formulas with random slopes.</span></label>
+            <label class="bb-option sf-option-sm" id="sf_engine_f90"><input type="radio" name="sf_engine" value="blupf90" />
+              <span class="bb-option-title">BLUPF90+</span>
+              <span class="bb-option-text">The whole analysis runs without R: Breedbase (Perl) writes the models for BLUPF90+ (Fortran, sparse AI/EM-REML; Misztal et al.) and fits the models of all trials and traits in parallel. Much faster on large multi-environment datasets and pedigrees; needed for pedigree (A matrix) models. Row &times; column trials get row / column effects and linear trends instead of SpATS (R only); custom formulas take random intercepts only. Parameter and data files are downloadable with the results.</span></label>
           </div>
           <div id="sf_engine_note"></div>
           <div class="sf-adv-row">
@@ -270,24 +261,24 @@ $license_json =~ s/</\\u003c/g;
           </div>
         </div>
 
-        <div class="sf-card" id="sf_stage1_card">
+        <div class="bb-card" id="sf_stage1_card">
           <h3><span class="sf-pill">Stage 1</span> Within-trial model</h3>
-          <div class="sf-options sf-options-3">
-            <label class="sf-option sf-option-sm"><input type="radio" name="sf_stage1_model" value="auto" checked />
-              <span class="sf-option-title">Automatic</span>
-              <span class="sf-option-text">SpATS when rows and columns are available, otherwise the design model.</span></label>
-            <label class="sf-option sf-option-sm"><input type="radio" name="sf_stage1_model" value="spats" />
-              <span class="sf-option-title">SpATS spatial</span>
-              <span class="sf-option-text">2D P-spline surface (Rodr&iacute;guez-&Aacute;lvarez et al., 2018) plus row and column effects.</span></label>
-            <label class="sf-option sf-option-sm"><input type="radio" name="sf_stage1_model" value="design" />
-              <span class="sf-option-title">Design model</span>
-              <span class="sf-option-text">Mixed model following each trial's design (RCBD, alpha-lattice, row-column, augmented...).</span></label>
+          <div class="bb-options sf-options-3">
+            <label class="bb-option sf-option-sm"><input type="radio" name="sf_stage1_model" value="auto" checked />
+              <span class="bb-option-title">Automatic</span>
+              <span class="bb-option-text">SpATS when rows and columns are available, otherwise the design model.</span></label>
+            <label class="bb-option sf-option-sm"><input type="radio" name="sf_stage1_model" value="spats" />
+              <span class="bb-option-title">SpATS spatial</span>
+              <span class="bb-option-text">2D P-spline surface (Rodr&iacute;guez-&Aacute;lvarez et al., 2018) plus row and column effects.</span></label>
+            <label class="bb-option sf-option-sm"><input type="radio" name="sf_stage1_model" value="design" />
+              <span class="bb-option-title">Design model</span>
+              <span class="bb-option-text">Mixed model following each trial's design (RCBD, alpha-lattice, row-column, augmented...).</span></label>
           </div>
           <h4>Model per trial</h4>
           <div class="table-responsive" id="sf_design_table"></div>
         </div>
 
-        <div class="sf-card" id="sf_stage2_card">
+        <div class="bb-card" id="sf_stage2_card">
           <h3><span class="sf-pill">Stage 2</span> Across-trial model</h3>
           <div class="row">
             <div class="col-sm-6">
@@ -307,8 +298,8 @@ $license_json =~ s/</\\u003c/g;
           </div>
         </div>
 
-        <div class="sf-card" id="sf_single_card" style="display:none">
-          <div class="sf-card-head">
+        <div class="bb-card" id="sf_single_card" style="display:none">
+          <div class="bb-card-head">
             <h3>Single-stage model</h3>
             <div class="btn-group btn-group-sm sf-mode-toggle">
               <label class="btn btn-default active"><input type="radio" name="sf_single_mode" value="builder" checked /> <span class="glyphicon glyphicon-th-list"></span> Build term by term</label>
@@ -317,7 +308,7 @@ $license_json =~ s/</\\u003c/g;
           </div>
 
           <div id="sf_single_builder">
-            <p class="sf-help">Choose every effect of the model. <b>Automatic</b> follows the design of the trials; any other choice is applied as you set it. Terms the data cannot support (for example a row effect when no trial has row numbers) are left out and reported in the results.</p>
+            <p class="bb-help">Choose every effect of the model. <b>Automatic</b> follows the design of the trials; any other choice is applied as you set it. Terms the data cannot support (for example a row effect when no trial has row numbers) are left out and reported in the results.</p>
             <table class="table sf-terms">
               <tbody>
                 <tr><th>Genotype <code>accession</code></th>
@@ -367,7 +358,7 @@ $license_json =~ s/</\\u003c/g;
           </div>
 
           <div id="sf_single_custom" style="display:none">
-            <p class="sf-help">Write the right-hand side of an <a href="https://cran.r-project.org/package=lme4" target="_blank">lme4</a> formula. Use <code>(1|term)</code> for random effects and <code>a:b</code> for nesting / interactions. The response is the trait; the genotype must appear once, as <code>accession</code> (fixed, BLUEs) or <code>(1|accession)</code> (random, BLUPs).</p>
+            <p class="bb-help">Write the right-hand side of an <a href="https://cran.r-project.org/package=lme4" target="_blank">lme4</a> formula. Use <code>(1|term)</code> for random effects and <code>a:b</code> for nesting / interactions. The response is the trait; the genotype must appear once, as <code>accession</code> (fixed, BLUEs) or <code>(1|accession)</code> (random, BLUPs).</p>
             <div class="input-group">
               <span class="input-group-addon"><code>y ~</code></span>
               <textarea class="form-control sf-mono" id="sf_single_formula" rows="2" spellcheck="false" placeholder="(1|accession) + trial + (1|trial:rep) + (1|accession:trial)"></textarea>
@@ -381,16 +372,16 @@ $license_json =~ s/</\\u003c/g;
           </div>
         </div>
 
-        <div class="sf-card" id="sf_treatments_card" style="display:none">
+        <div class="bb-card" id="sf_treatments_card" style="display:none">
           <h3>Treatments</h3>
-          <p class="sf-help">Treatments recorded on the trials (management factors such as fertilizer, and treatment variables). They are not traits:
+          <p class="bb-help">Treatments recorded on the trials (management factors such as fertilizer, and treatment variables). They are not traits:
             they can enter the models as factors. Management factors of one type are merged into one factor, plots without it are level <i>none</i>.</p>
           <div id="sf_treatments"></div>
         </div>
 
-        <div class="sf-card" id="sf_repeated_card" style="display:none">
+        <div class="bb-card" id="sf_repeated_card" style="display:none">
           <h3>Repeated measurements</h3>
-          <p class="sf-help">Traits measured more than once on the same plot (repeat type <i>multiple</i> or <i>time series</i> in Breedbase, or several values stored for one plot), for example plant height or NDVI through the season, or disease scores taken on several dates.
+          <p class="bb-help">Traits measured more than once on the same plot (repeat type <i>multiple</i> or <i>time series</i> in Breedbase, or several values stored for one plot), for example plant height or NDVI through the season, or disease scores taken on several dates.
             Breedbase gives the analysis the <b>mean</b> of each plot. Choose another value per plot (the area under the curve is the AUDPC of disease scores), or model <b>all measurements</b>.</p>
           <div id="sf_repeated"></div>
           <div id="sf_repeated_model" style="display:none">
@@ -413,14 +404,14 @@ $license_json =~ s/</\\u003c/g;
           </div>
         </div>
 
-        <div class="sf-card" id="sf_cov_card">
+        <div class="bb-card" id="sf_cov_card">
           <h3>Covariates</h3>
-          <p class="sf-help">Fixed linear effect of another trait measured on the same plots (e.g. stand count, or NDVI). <b>Two stages:</b> in the stage 1 model of every trial where the covariate varies (SpATS or design model), so the trial means are adjusted before stage 2.
+          <p class="bb-help">Fixed linear effect of another trait measured on the same plots (e.g. stand count, or NDVI). <b>Two stages:</b> in the stage 1 model of every trial where the covariate varies (SpATS or design model), so the trial means are adjusted before stage 2.
             <b>Single stage:</b> in the model (in a written formula a selected covariate is available by the name shown in brackets). A trait measured several times per plot enters with the value per plot chosen under <i>Repeated measurements</i>. A trait is never used as a covariate of itself. Each covariate adjusts all analysed traits unless you choose some of them (the link next to it).</p>
           <div id="sf_single_covariates" class="sf-cov-list"></div>
         </div>
 
-        <div class="sf-card" id="sf_genetic_card">
+        <div class="bb-card" id="sf_genetic_card">
           <h3>Genetic model and entries</h3>
           <div class="row">
             <div class="col-sm-6">
@@ -432,7 +423,7 @@ $license_json =~ s/</\\u003c/g;
                 <option value="genomic">Genomic relationship (G matrix, GBLUP) &rarr; GEBVs</option>
                 <option value="single_step">Single-step (H matrix: pedigree + genomic, ssGBLUP) &rarr; GEBVs</option>
               </select>
-              <div id="sf_pedigree_info" class="sf-help"></div>
+              <div id="sf_pedigree_info" class="bb-help"></div>
               <div id="sf_geno_block" class="sf-geno-block" style="display:none">
                 <label class="sf-label">Genotyping protocol <span class="text-danger">*</span></label>
                 <select class="form-control input-sm" id="sf_geno_protocol"></select>
@@ -442,7 +433,7 @@ $license_json =~ s/</\\u003c/g;
                   <div class="col-xs-6"><label class="sf-label-sm">Minimum call rate</label>
                     <input type="number" class="form-control input-sm" id="sf_geno_callrate" min="0" max="1" step="0.05" value="0.90" /></div>
                 </div>
-                <div id="sf_geno_info" class="sf-help"></div>
+                <div id="sf_geno_info" class="bb-help"></div>
               </div>
             </div>
             <div class="col-sm-6">
@@ -452,28 +443,28 @@ $license_json =~ s/</\\u003c/g;
                 <option value="fixed">Always a fixed check effect</option>
                 <option value="none">Not in the model: checks are treated like the other entries</option>
               </select>
-              <div id="sf_check_info" class="sf-help"></div>
+              <div id="sf_check_info" class="bb-help"></div>
             </div>
           </div>
           <small class="sf-muted">Used by stage 2 and by the single-stage model, with the genotype as random effect. Mother / father: random effects of the parents recorded in Breedbase; the genetic value of an accession is the sum of its parents' and its own effect. Pedigree: the accession effect follows the additive relationship of all known ancestors, with the inbreeding of every individual (inbred lines), giving breeding values (EBVs) for the accessions and for their ancestors. Genomic (G): relationships from the markers of a genotyping protocol (VanRaden G after quality control: minor allele frequency, call rate, monomorphic markers), giving genomic breeding values (GEBVs); accessions without genotypes are treated as unrelated. Single-step (H): pedigree and genomic relationships together, so accessions without genotypes borrow information through their genotyped relatives. Pedigree, G and H models are fitted by both engines: with R, the relationship matrices are built with AGHmatrix and enter lme4 / glmmTMB; with BLUPF90+, its own programs build them, and it is much faster with large pedigrees or many genotyped accessions. Checks: a fixed check / test effect, so test entries are not shrunk toward the mean of the checks.</small>
         </div>
 
-        <div class="sf-card" id="sf_anova_card">
+        <div class="bb-card" id="sf_anova_card">
           <label class="sf-check"><input type="checkbox" id="sf_anova_enabled" /> <b>ANOVA by experimental design</b>
             <small class="sf-muted">F-tests of the fixed effects, comparisons of means and model checks, in a model that follows the design of each trial (breedtools)</small></label>
           <div class="sf-adv-row" id="sf_anova_opts" style="display:none">
             <button class="btn btn-default btn-sm" id="sf_anova_btn"><span class="glyphicon glyphicon-cog"></span> ANOVA settings</button>
             <small class="sf-muted" id="sf_anova_summary"></small>
           </div>
-          <div id="sf_anova_note" class="sf-help"></div>
+          <div id="sf_anova_note" class="bb-help"></div>
         </div>
 
-        <div class="sf-card sf-formula-card">
+        <div class="bb-card sf-formula-card">
           <h4>Model preview</h4>
           <div id="sf_model_preview"></div>
         </div>
 
-        <div class="sf-nav">
+        <div class="bb-nav">
           <button class="btn btn-default sf-next" data-goto="2"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
           <button class="btn btn-primary sf-next" data-goto="4">Next: Selection index <span class="glyphicon glyphicon-chevron-right"></span></button>
         </div>
@@ -481,21 +472,21 @@ $license_json =~ s/</\\u003c/g;
 
       <!-- ===================== step 4 ===================== -->
       <section class="sf-step" data-step="4" style="display:none">
-        <div class="sf-card">
-          <div class="sf-card-head">
+        <div class="bb-card">
+          <div class="bb-card-head">
             <h3>Selection index</h3>
             <label class="sf-switch"><input type="checkbox" id="sf_index_enabled" /><span class="sf-slider"></span> Build an index</label>
           </div>
-          <p class="sf-help">Combine the genotype values of several traits into a single score to rank accessions.</p>
+          <p class="bb-help">Combine the genotype values of several traits into a single score to rank accessions.</p>
           <div class="alert alert-info sf-index-basis" id="sf_index_basis"></div>
           <div id="sf_index_body" class="sf-disabled">
-            <div class="sf-options sf-options-2">
-              <label class="sf-option sf-option-sm"><input type="radio" name="sf_index_method" value="zscore" checked />
-                <span class="sf-option-title">Weighted Z-score (base index)</span>
-                <span class="sf-option-text">I = &Sigma; w<sub>t</sub> &middot; d<sub>t</sub> &middot; (x<sub>t</sub> &minus; mean) / SD. Weights are relative economic values.</span></label>
-              <label class="sf-option sf-option-sm"><input type="radio" name="sf_index_method" value="rank_sum" />
-                <span class="sf-option-title">Rank sum (Mulamba &amp; Mock)</span>
-                <span class="sf-option-text">Accessions are ranked for each trait in the desired direction; ranks are summed with weights. Robust to scale and outliers.</span></label>
+            <div class="bb-options sf-options-2">
+              <label class="bb-option sf-option-sm"><input type="radio" name="sf_index_method" value="zscore" checked />
+                <span class="bb-option-title">Weighted Z-score (base index)</span>
+                <span class="bb-option-text">I = &Sigma; w<sub>t</sub> &middot; d<sub>t</sub> &middot; (x<sub>t</sub> &minus; mean) / SD. Weights are relative economic values.</span></label>
+              <label class="bb-option sf-option-sm"><input type="radio" name="sf_index_method" value="rank_sum" />
+                <span class="bb-option-title">Rank sum (Mulamba &amp; Mock)</span>
+                <span class="bb-option-text">Accessions are ranked for each trait in the desired direction; ranks are summed with weights. Robust to scale and outliers.</span></label>
             </div>
             <table class="table table-condensed sf-index-table">
               <thead><tr><th>Trait</th><th>Weight</th><th>Desired direction</th></tr></thead>
@@ -508,7 +499,7 @@ $license_json =~ s/</\\u003c/g;
             <div class="sf-formula" id="sf_index_formula"></div>
           </div>
         </div>
-        <div class="sf-nav">
+        <div class="bb-nav">
           <button class="btn btn-default sf-next" data-goto="3"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
           <button class="btn btn-primary sf-next" data-goto="5">Next: Environmental zones <span class="glyphicon glyphicon-chevron-right"></span></button>
         </div>
@@ -516,12 +507,12 @@ $license_json =~ s/</\\u003c/g;
 
       <!-- ===================== step 5 ===================== -->
       <section class="sf-step" data-step="5" style="display:none">
-        <div class="sf-card">
-          <div class="sf-card-head">
+        <div class="bb-card">
+          <div class="bb-card-head">
             <h3>Environmental zones</h3>
             <label class="sf-switch"><input type="checkbox" id="sf_zones_enabled" /><span class="sf-slider"></span> Group environments</label>
           </div>
-          <p class="sf-help">Group environments in which genotypes rank similarly (small crossover G&times;E) to define target zones, and find the best accessions in each zone.</p>
+          <p class="bb-help">Group environments in which genotypes rank similarly (small crossover G&times;E) to define target zones, and find the best accessions in each zone.</p>
           <div id="sf_zones_body" class="sf-disabled">
             <div class="row">
               <div class="col-sm-6">
@@ -542,14 +533,14 @@ $license_json =~ s/</\\u003c/g;
                 <div id="sf_zones_list_wrap" style="display:none;margin-top:6px">
                   <select class="form-control input-sm" id="sf_zones_list"></select>
                 </div>
-                <p class="sf-help" id="sf_zones_acc_help" style="margin:4px 0 0">The zones are built from the genotype means of these accessions. The best accessions of each zone are always ranked among all accessions.</p>
+                <p class="bb-help" id="sf_zones_acc_help" style="margin:4px 0 0">The zones are built from the genotype means of these accessions. The best accessions of each zone are always ranked among all accessions.</p>
               </div>
             </div>
             <div class="row" style="margin-top:10px">
               <div class="col-sm-6">
                 <label class="sf-label">Number of top accessions to list per zone</label>
                 <input type="number" class="form-control" id="sf_zones_top" value="10" min="1" max="100" />
-                <p class="sf-help" style="margin:4px 0 0">Only the length of the &ldquo;best accessions&rdquo; table. It does not change which accessions are analysed.</p>
+                <p class="bb-help" style="margin:4px 0 0">Only the length of the &ldquo;best accessions&rdquo; table. It does not change which accessions are analysed.</p>
               </div>
               <div class="col-sm-6">
                 <label class="sf-label">Rank only accessions tested in at least</label>
@@ -557,16 +548,16 @@ $license_json =~ s/</\\u003c/g;
                   <input type="number" class="form-control" id="sf_zones_min_env" value="2" min="1" max="50" />
                   <span class="input-group-addon">environment(s) of the zone</span>
                 </div>
-                <p class="sf-help" style="margin:4px 0 0">Keeps a line seen in a single environment from topping a zone. Zones with fewer environments use all of theirs.</p>
+                <p class="bb-help" style="margin:4px 0 0">Keeps a line seen in a single environment from topping a zone. Zones with fewer environments use all of theirs.</p>
               </div>
             </div>
-            <div class="sf-options sf-options-2" style="margin-top:12px">
-              <label class="sf-option sf-option-sm"><input type="radio" name="sf_zones_method" value="correlation" checked />
-                <span class="sf-option-title">Genetic correlation clustering</span>
-                <span class="sf-option-text">Hierarchical clustering of environments on 1 &minus; r between genotype means. Works for traits and for the index.</span></label>
-              <label class="sf-option sf-option-sm"><input type="radio" name="sf_zones_method" value="lin" />
-                <span class="sf-option-title">Lin (1982) G&times;E test</span>
-                <span class="sf-option-text">Environments are joined while their G&times;E is not significant. Uses plot data (traits only; the index falls back to correlation).</span></label>
+            <div class="bb-options sf-options-2" style="margin-top:12px">
+              <label class="bb-option sf-option-sm"><input type="radio" name="sf_zones_method" value="correlation" checked />
+                <span class="bb-option-title">Genetic correlation clustering</span>
+                <span class="bb-option-text">Hierarchical clustering of environments on 1 &minus; r between genotype means. Works for traits and for the index.</span></label>
+              <label class="bb-option sf-option-sm"><input type="radio" name="sf_zones_method" value="lin" />
+                <span class="bb-option-title">Lin (1982) G&times;E test</span>
+                <span class="bb-option-text">Environments are joined while their G&times;E is not significant. Uses plot data (traits only; the index falls back to correlation).</span></label>
             </div>
             <div class="sf-subopts form-inline">
               <label id="sf_zones_threshold_wrap">Minimum correlation inside a zone
@@ -580,7 +571,7 @@ $license_json =~ s/</\\u003c/g;
             <div class="sf-trait-grid" id="sf_zones_targets"></div>
           </div>
         </div>
-        <div class="sf-nav">
+        <div class="bb-nav">
           <button class="btn btn-default sf-next" data-goto="4"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
           <button class="btn btn-primary sf-next" data-goto="6">Next: Run <span class="glyphicon glyphicon-chevron-right"></span></button>
         </div>
@@ -588,8 +579,8 @@ $license_json =~ s/</\\u003c/g;
 
       <!-- ===================== step 6 ===================== -->
       <section class="sf-step" data-step="6" style="display:none">
-        <div class="sf-card sf-run-card">
-          <div class="sf-card-head">
+        <div class="bb-card sf-run-card">
+          <div class="bb-card-head">
             <h3>Run the analysis</h3>
             <div class="sf-run-actions">
               <span class="sf-run-note" id="sf_run_note"></span>
@@ -604,17 +595,17 @@ $license_json =~ s/</\\u003c/g;
           </div>
           <div id="sf_run_status" style="display:none">
             <div class="progress progress-striped active"><div class="progress-bar progress-bar-success" style="width:100%"></div></div>
-            <div class="sf-run-progress"><span class="glyphicon glyphicon-cog sf-spin"></span> <span id="sf_run_progress_text">Submitting...</span> <span class="sf-muted" id="sf_run_elapsed"></span></div>
+            <div class="sf-run-progress"><span class="glyphicon glyphicon-cog bb-spin"></span> <span id="sf_run_progress_text">Submitting...</span> <span class="sf-muted" id="sf_run_elapsed"></span></div>
           </div>
         </div>
 
-        <div class="sf-card sf-review-card" id="sf_model_review" style="display:none">
-          <div class="sf-card-head"><h3><span class="glyphicon glyphicon-education"></span> A second look at your model</h3></div>
+        <div class="bb-card sf-review-card" id="sf_model_review" style="display:none">
+          <div class="bb-card-head"><h3><span class="glyphicon glyphicon-education"></span> A second look at your model</h3></div>
           <div id="sf_model_review_body"></div>
         </div>
 
         <div id="sf_results" style="display:none">
-          <div class="sf-card sf-actions-card">
+          <div class="bb-card sf-actions-card">
             <h3>Results</h3>
             <div class="sf-actions">
               <a class="btn btn-success" id="sf_open_dashboard" href="#" target="_blank"><span class="glyphicon glyphicon-dashboard"></span> Open decision dashboard</a>
@@ -660,7 +651,7 @@ $license_json =~ s/</\\u003c/g;
           </div>
         </div>
 
-        <div class="sf-nav">
+        <div class="bb-nav">
           <button class="btn btn-default sf-next" data-goto="5"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
           <span></span>
         </div>
@@ -686,7 +677,7 @@ $license_json =~ s/</\\u003c/g;
         <h4 class="modal-title"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Saved scripts</h4>
       </div>
       <div class="modal-body">
-        <p class="sf-help">Load a script to apply the same analysis to another dataset or year. Traits are matched by name.</p>
+        <p class="bb-help">Load a script to apply the same analysis to another dataset or year. Traits are matched by name.</p>
         <div id="sf_library_list"></div>
         <hr/>
         <label class="btn btn-default btn-sm"><span class="glyphicon glyphicon-upload"></span> Import a script file (.json)
@@ -705,7 +696,7 @@ $license_json =~ s/</\\u003c/g;
         <h4 class="modal-title"><span class="glyphicon glyphicon-floppy-disk"></span>&nbsp; Save script</h4>
       </div>
       <div class="modal-body">
-        <p class="sf-help">The script stores every choice you made (traits, outlier rule, models, index weights and zoning), but not the dataset or individual exclusions, so it can be applied to new data.</p>
+        <p class="bb-help">The script stores every choice you made (traits, outlier rule, models, index weights and zoning), but not the dataset or individual exclusions, so it can be applied to new data.</p>
         <div class="form-group sf-save-which" id="sf_save_which" style="display:none">
           <label>Which model?</label>
           <div>
@@ -747,10 +738,10 @@ $license_json =~ s/</\\u003c/g;
         <h4 class="modal-title"><span class="glyphicon glyphicon-random"></span>&nbsp; Traits adjusted for <span id="sf_cov_modal_name"></span></h4>
       </div>
       <div class="modal-body">
-        <p class="sf-help">The covariate enters the models of the traits checked here (stage 1 in two stages, the single-stage model otherwise). The other traits are analysed without it. A trait is never adjusted for itself.</p>
+        <p class="bb-help">The covariate enters the models of the traits checked here (stage 1 in two stages, the single-stage model otherwise). The other traits are analysed without it. A trait is never adjusted for itself.</p>
         <p><a href="#" id="sf_cov_all">Check all</a> &middot; <a href="#" id="sf_cov_none">Uncheck all</a></p>
         <div id="sf_cov_traits" class="sf-cov-traits"></div>
-        <p class="sf-help" id="sf_cov_formula_note" style="display:none">A written single-stage formula uses the covariates it names for every trait; this choice applies to the builder and to two-stage analyses.</p>
+        <p class="bb-help" id="sf_cov_formula_note" style="display:none">A written single-stage formula uses the covariates it names for every trait; this choice applies to the builder and to two-stage analyses.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -768,7 +759,7 @@ $license_json =~ s/</\\u003c/g;
         <h4 class="modal-title"><span class="glyphicon glyphicon-cog"></span>&nbsp; Advanced model settings <small id="sf_adv_engine_label"></small></h4>
       </div>
       <div class="modal-body sf-adv">
-        <p class="sf-help">Every setting starts at the default used by the basic analysis. Settings the chosen engine or strategy cannot fit are disabled and say why. Settings the data cannot support (for example a single trial) fall back to the default, with a note in the analysis log.</p>
+        <p class="bb-help">Every setting starts at the default used by the basic analysis. Settings the chosen engine or strategy cannot fit are disabled and say why. Settings the data cannot support (for example a single trial) fall back to the default, with a note in the analysis log.</p>
 
         <h4>Genotype &times; environment covariance <small>accession &times; trial</small></h4>
         <select class="form-control input-sm sf-adv-opt" id="sf_adv_gxe">
@@ -777,14 +768,14 @@ $license_json =~ s/</\\u003c/g;
           <option value="diag">Diagonal: one genetic variance per trial, trials uncorrelated</option>
           <option value="us">Unstructured: a genetic variance per trial and a genetic covariance for every pair of trials</option>
         </select>
-        <div class="sf-help" id="sf_adv_gxe_help"></div>
+        <div class="bb-help" id="sf_adv_gxe_help"></div>
 
         <h4>Residual variance</h4>
         <select class="form-control input-sm sf-adv-opt" id="sf_adv_residual">
           <option value="homogeneous">Homogeneous (default): one residual variance</option>
           <option value="trial">Heterogeneous: one residual variance per trial</option>
         </select>
-        <div class="sf-help" id="sf_adv_residual_help"></div>
+        <div class="bb-help" id="sf_adv_residual_help"></div>
 
         <h4>Repeated measurements / time series <small>traits set to <i>all measurements</i></small></h4>
         <div class="row">
@@ -806,7 +797,7 @@ $license_json =~ s/</\\u003c/g;
             </select>
           </div>
         </div>
-        <div class="sf-help" id="sf_adv_time_help"></div>
+        <div class="bb-help" id="sf_adv_time_help"></div>
 
         <h4>Interactions <small>between factors of the model</small></h4>
         <div id="sf_ix_list"></div>
@@ -823,7 +814,7 @@ $license_json =~ s/</\\u003c/g;
           </div>
         </div>
         <div id="sf_ix_suggest"></div>
-        <div class="sf-help">Interactions with the accession are random (genotype &times; factor); with a covariate they are fixed slopes, one per level of the other factors. The analysis checks each one on the data and leaves out, with the reason, those the data cannot support. In two stages, stage 2 fits the genotype &times; location / year / whole-trial treatment interactions; the others need the single-stage model.</div>
+        <div class="bb-help">Interactions with the accession are random (genotype &times; factor); with a covariate they are fixed slopes, one per level of the other factors. The analysis checks each one on the data and leaves out, with the reason, those the data cannot support. In two stages, stage 2 fits the genotype &times; location / year / whole-trial treatment interactions; the others need the single-stage model.</div>
 
         <h4>Model fitting</h4>
         <div class="row" id="sf_adv_fit_r">
@@ -868,7 +859,7 @@ $license_json =~ s/</\\u003c/g;
             </select>
           </div>
         </div>
-        <div class="sf-help" id="sf_adv_fit_help"></div>
+        <div class="bb-help" id="sf_adv_fit_help"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-link pull-left" id="sf_adv_reset"><span class="glyphicon glyphicon-repeat"></span> Reset to defaults</button>
@@ -888,7 +879,7 @@ $license_json =~ s/</\\u003c/g;
         <h4 class="modal-title"><span class="glyphicon glyphicon-cog"></span>&nbsp; ANOVA settings</h4>
       </div>
       <div class="modal-body sf-adv">
-        <p class="sf-help">A fixed-effects analysis of variance that follows the design of each trial (replicates, blocks within replicates, rows and columns, as detected by breedtools). It is reported next to the mixed-model results and does not change the genotype values, the selection index or the zones.</p>
+        <p class="bb-help">A fixed-effects analysis of variance that follows the design of each trial (replicates, blocks within replicates, rows and columns, as detected by breedtools). It is reported next to the mixed-model results and does not change the genotype values, the selection index or the zones.</p>
 
         <h4>Analysis</h4>
         <label class="sf-check"><input type="radio" name="sf_anova_scope" value="joint" /> <b>Joint analysis</b> across trials
@@ -903,7 +894,7 @@ $license_json =~ s/</\\u003c/g;
           <small class="sf-muted">controls the error rate over all pairs of means (conservative; recommended when many means are compared)</small></label>
         <label class="sf-check"><input type="radio" name="sf_anova_test" value="lsd" /> <b>Fisher LSD</b>
           <small class="sf-muted">t-test of each pair (more pairs declared different; use for a few planned comparisons)</small></label>
-        <p class="sf-help">Means are compared for significant factors (treatments, accessions) with up to 50 levels; when a factor interacts significantly with another one, within each level of the other factor. Means sharing a letter do not differ.</p>
+        <p class="bb-help">Means are compared for significant factors (treatments, accessions) with up to 50 levels; when a factor interacts significantly with another one, within each level of the other factor. Means sharing a letter do not differ.</p>
 
         <h4>Significance level (&alpha;)</h4>
         <select class="form-control input-sm" id="sf_anova_alpha" style="width:auto">
@@ -934,7 +925,7 @@ $license_json =~ s/</\\u003c/g;
           <label for="sf_list_name">List name</label>
           <input class="form-control" id="sf_list_name" />
         </div>
-        <p id="sf_list_info" class="sf-help"></p>
+        <p id="sf_list_info" class="bb-help"></p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -982,51 +973,24 @@ jQuery(document).ready(function() {
 .sf-suggest-list .st-ok { color: var(--sf-accent); white-space: nowrap; }
 .sf-suggest-list .st-diff { color: #b45309; white-space: nowrap; }
 .sf-suggested { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 8px; font-size: 10px; font-weight: 600; background: var(--sf-accent-soft); color: var(--sf-accent); text-transform: uppercase; letter-spacing: .03em; vertical-align: middle; }
-.sf-option.disabled { opacity: .55; cursor: not-allowed; }
-.sf-option.dis { opacity: .6; }
-.sf-app { --sf-accent: #2b7a4b; --sf-accent-soft: #e8f4ec; --sf-border: #dfe3e8; --sf-muted: #6b7280; --sf-bg: #f7f9fa; margin-bottom: 40px; }
+.bb-option.dis { opacity: .6; }
+/* shared look: /util/app_layout.mas (static/css/breedbase_app.css); below only what is specific to the pipeline */
+.sf-app { --sf-accent: var(--bb-accent); --sf-accent-soft: var(--bb-accent-soft); --sf-border: var(--bb-border); --sf-muted: var(--bb-muted); --sf-bg: var(--bb-bg); }
 .sf-app h3 { font-size: 18px; margin: 0 0 6px 0; font-weight: 600; }
 .sf-app h4 { font-size: 15px; font-weight: 600; margin-top: 16px; }
-.sf-help { color: var(--sf-muted); font-size: 13px; }
 .sf-muted { color: var(--sf-muted); }
-.sf-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 20px 24px; margin: 10px 0 18px; border-radius: 10px; background: linear-gradient(120deg, #1f5f3a 0%, #2b7a4b 55%, #4c9a6a 100%); color: #fff; }
-.sf-hero h2 { margin: 0 0 6px; font-weight: 600; color: #fff; }
-.sf-hero p { margin: 0; max-width: 720px; opacity: .92; }
+.bb-hero { align-items: flex-end; }
 .sf-hero-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .sf-script-badge { background: rgba(255,255,255,.15); border-radius: 16px; padding: 3px 12px; font-size: 13px; }
 .sf-badge-label { text-transform: uppercase; font-size: 10px; letter-spacing: .08em; opacity: .8; margin-right: 6px; }
-.sf-stepper { display: flex; list-style: none; padding: 0; margin: 0 0 18px; counter-reset: step; }
-.sf-stepper li { flex: 1; position: relative; text-align: center; cursor: pointer; padding-top: 4px; color: var(--sf-muted); font-size: 13px; }
-.sf-stepper li:before { content: ''; position: absolute; top: 19px; left: -50%; width: 100%; height: 3px; background: var(--sf-border); z-index: 0; }
-.sf-stepper li:first-child:before { display: none; }
-.sf-stepper li.done:before, .sf-stepper li.active:before { background: var(--sf-accent); }
-.sf-step-num { position: relative; z-index: 1; display: block; margin: 0 auto 6px; width: 32px; height: 32px; line-height: 28px; border-radius: 50%; border: 2px solid var(--sf-border); background: #fff; font-weight: 600; }
-.sf-stepper li.active .sf-step-num { background: var(--sf-accent); border-color: var(--sf-accent); color: #fff; box-shadow: 0 0 0 4px var(--sf-accent-soft); }
-.sf-stepper li.done .sf-step-num { border-color: var(--sf-accent); color: var(--sf-accent); }
-.sf-stepper li.active .sf-step-label { color: #111; font-weight: 600; }
-.sf-stepper li.off { opacity: .5; }
-.sf-card { background: #fff; border: 1px solid var(--sf-border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
-.sf-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
 .sf-inline-row { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
 .sf-check { font-weight: normal; cursor: pointer; }
 .sf-label { display: block; font-weight: 600; font-size: 13px; margin: 10px 0 4px; }
-.sf-nav { display: flex; justify-content: space-between; margin: 6px 0 24px; }
-.sf-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.sf-stat { background: #fff; border: 1px solid var(--sf-border); border-radius: 10px; padding: 12px 14px; }
-.sf-stat .v { font-size: 24px; font-weight: 600; color: var(--sf-accent); line-height: 1.1; }
-.sf-stat .l { font-size: 12px; color: var(--sf-muted); text-transform: uppercase; letter-spacing: .04em; }
 .sf-trait-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
 .sf-trait { display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--sf-border); border-radius: 8px; padding: 8px 10px; cursor: pointer; font-weight: normal; margin: 0; }
 .sf-trait:hover { border-color: var(--sf-accent); }
 .sf-trait.on { border-color: var(--sf-accent); background: var(--sf-accent-soft); }
 .sf-trait small { display: block; color: var(--sf-muted); }
-.sf-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 10px 0; }
-.sf-option { position: relative; display: block; border: 2px solid var(--sf-border); border-radius: 10px; padding: 12px 14px 12px 38px; cursor: pointer; font-weight: normal; margin: 0; transition: border-color .15s, background .15s; }
-.sf-option input { position: absolute; left: 14px; top: 15px; }
-.sf-option:hover { border-color: #9cc9ac; }
-.sf-option.on { border-color: var(--sf-accent); background: var(--sf-accent-soft); }
-.sf-option-title { display: block; font-weight: 600; margin-bottom: 3px; }
-.sf-option-text { display: block; font-size: 12.5px; color: #4b5563; }
 .sf-subopts { background: var(--sf-bg); border-radius: 8px; padding: 10px 14px; margin-top: 6px; }
 .sf-subopts label { font-weight: 600; font-size: 13px; margin-right: 18px; }
 .sf-subopts input, .sf-subopts select { margin-left: 6px; }
@@ -1066,13 +1030,11 @@ jQuery(document).ready(function() {
 .sf-adv-row { margin-top: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .sf-adv h4 { margin-top: 18px; font-size: 15px; }
 .sf-adv h4:first-of-type { margin-top: 6px; }
-.sf-adv .sf-help { margin-top: 4px; }
+.sf-adv .bb-help { margin-top: 4px; }
 .sf-adv select option:disabled { color: #aaa; }
 .sf-trait-check { margin: 6px 0 0; padding-left: 20px; }
 .sf-apply-all-msg { font-size: 12px; color: #2b7a4b; margin-left: 4px; }
 .sf-run-progress { font-size: 14px; }
-.sf-spin { animation: sf-spin 1.2s linear infinite; }
-@keyframes sf-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .sf-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .sf-tab-content { background: #fff; border: 1px solid #ddd; border-top: 0; padding: 16px; border-radius: 0 0 10px 10px; margin-bottom: 16px; }
 .sf-review { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
@@ -1135,7 +1097,7 @@ table.dataTable.sf-dt tbody tr.sf-selected { background: #ecfdf3 !important; }
 .sf-quickrun-steps span { background: #fff; border: 1px solid var(--sf-border); border-radius: 14px; padding: 3px 10px; font-size: 12px; }
 .sf-quickrun-steps span.off { color: var(--sf-muted); text-decoration: line-through; }
 .sf-quickrun-steps b { color: var(--sf-accent); margin-right: 4px; }
-@media (max-width: 991px) { .sf-summary { position: static; margin-top: 16px; } .sf-step-label { display: none; } }
+@media (max-width: 991px) { .sf-summary { position: static; margin-top: 16px; } .bb-step-label { display: none; } }
 
 .sf-terms th { width: 30%; font-weight: 600; vertical-align: middle !important; }
 .sf-terms th code { font-size: 11px; font-weight: normal; display: inline-block; margin-top: 2px; }

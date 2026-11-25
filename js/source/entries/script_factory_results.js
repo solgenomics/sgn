@@ -144,7 +144,7 @@ function accLink(a) {
     const on = isShort(a);
     return '<span class="sfd-acc' + (on ? ' on' : '') + '" data-acc="' + esc(a) + '" title="Click to ' + (on ? 'remove from' : 'add to') + ' the shortlist">' +
         (on ? '<span class="glyphicon glyphicon-star"></span> ' : '') + esc(a) + '</span>' +
-        ' <a href="/stock/' + encodeURIComponent(a) + '/view" target="_blank" title="Accession page" class="sfd-help"><span class="glyphicon glyphicon-new-window" style="font-size:9px"></span></a>';
+        ' <a href="/stock/' + encodeURIComponent(a) + '/view" target="_blank" title="Accession page" class="bb-help"><span class="glyphicon glyphicon-new-window" style="font-size:9px"></span></a>';
 }
 
 function dataTable(sel, opts) {
@@ -156,7 +156,7 @@ function dataTable(sel, opts) {
 function table(rows, cols, opts) {
     opts = opts || {};
     rows = arr(rows);
-    if (!rows.length) return '<p class="sfd-help">' + (opts.empty || 'Nothing to show.') + '</p>';
+    if (!rows.length) return '<p class="bb-help">' + (opts.empty || 'Nothing to show.') + '</p>';
     let h = '<div class="table-responsive"><table class="table table-condensed table-hover"' + (opts.id ? ' id="' + opts.id + '"' : '') + ' style="width:100%"><thead><tr>' +
         cols.map(c => '<th' + (c.title ? ' title="' + esc(c.title) + '"' : '') + '>' + c.l + '</th>').join('') + '</tr></thead><tbody>';
     rows.forEach(r => {
@@ -240,7 +240,7 @@ function renderShortlist() {
     rankRows().forEach(r => { rk[r.accession] = r.rank; });
     $('#sfd_short_list').html(S.shortlist.length ? S.shortlist.map(a =>
         '<li><span><span class="rk">' + (rk[a] ? '#' + rk[a] : '') + '</span>' + esc(a) + '</span><button class="x" data-acc="' + esc(a) + '" title="Remove">&times;</button></li>').join('') :
-        '<li class="sfd-help">No accession yet.</li>');
+        '<li class="bb-help">No accession yet.</li>');
 }
 
 function renderShortDependent() {
@@ -424,7 +424,7 @@ function renderSoftware() {
     if (!sw.length) return;
     $('#sfd_software').html('<div class="table-responsive"><table class="table table-condensed sfd-software"><thead><tr><th>Software</th><th>Version</th><th>What it did in this analysis</th><th>Reference</th></tr></thead><tbody>' +
         sw.map(x => '<tr><td><b>' + esc(x.name) + '</b></td><td>' + (x.version ? esc(x.version) : '&ndash;') + '</td><td>' + esc(x.used_for) + '</td><td><small>' + (x.reference ? esc(x.reference) : '&ndash;') + '</small></td></tr>').join('') +
-        '</tbody></table></div><p class="sfd-help">Please cite the software you used when you publish these results, together with Breedbase.' +
+        '</tbody></table></div><p class="bb-help">Please cite the software you used when you publish these results, together with Breedbase.' +
         (sw.some(x => x.name === 'BLUPF90+') ? ' BLUPF90+ is free for research and academic use; commercial use needs a licence.' : '') + '</p>');
 }
 
@@ -433,7 +433,7 @@ function renderOverview() {
     const nObs = arr(R.outlier_summary).reduce((a, r) => a + (Number(r.n_observations) || 0), 0);
     const nOut = arr(R.outliers).length;
     const h2s = D.traits.map(t => num((D.s2[t] || {}).h2)).filter(x => x !== null);
-    const stat = (v, l, title) => '<div class="sfd-stat"' + (title ? ' title="' + esc(title) + '"' : '') + '><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
+    const stat = (v, l, title) => '<div class="bb-stat"' + (title ? ' title="' + esc(title) + '"' : '') + '><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
     $('#sfd_stats').html(
         stat(s.n_trials, 'Trials') + stat(Object.keys(D.locations).length, 'Locations') + stat(s.n_environments, 'Environments (' + esc(String(s.environment_unit || 'trial').replace('_', ' &times; ')) + ')') +
         stat(s.n_accessions, 'Accessions') + stat(s.n_plots, 'Plots') +
@@ -453,11 +453,11 @@ function renderOverview() {
         const vals = D.accessions.map(a => D.gv[a][t]).filter(x => x !== null);
         return { trait: t, mean: num(m.mean), gmin: Math.min.apply(null, vals), gmax: Math.max.apply(null, vals), var_g: num(m.var_g), var_ge: num(m.var_ge), var_e: num(m.var_e), h2: num(m.h2), pct: num((outBy[t] || {}).pct_removed), message: m.message, dropped: m.dropped_terms };
     });
-    const verdict = h => h === null ? '<span class="sfd-help">no heritability (genotype fixed)</span>' :
+    const verdict = h => h === null ? '<span class="bb-help">no heritability (genotype fixed)</span>' :
         h >= 0.6 ? '<span style="color:#2b7a4b">reliable for selection</span>' :
             h >= 0.3 ? '<span style="color:#b45309">moderate: weigh with care</span>' : '<span style="color:#dc2626">low: selection is risky</span>';
     $('#sfd_trait_summary').html(table(rows, [
-        { k: 'trait', l: 'Trait', f: (v) => '<a href="#" class="sfd-set-trait" data-trait="' + esc(v) + '">' + esc(v) + '</a>' + (traitDir(v) === 'decrease' ? ' <span class="sfd-help" title="lower is better">&darr;</span>' : '') },
+        { k: 'trait', l: 'Trait', f: (v) => '<a href="#" class="sfd-set-trait" data-trait="' + esc(v) + '">' + esc(v) + '</a>' + (traitDir(v) === 'decrease' ? ' <span class="bb-help" title="lower is better">&darr;</span>' : '') },
         { k: 'mean', l: 'Mean' },
         { k: 'gmin', l: D.label + ' range', f: (v, r) => fmt(r.gmin) + ' &ndash; ' + fmt(r.gmax) },
         { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' },
@@ -482,7 +482,7 @@ function compColor(c, i) {
 function renderVarComp() {
     const b = box('sfd_varcomp');
     const vc = arr(R.variance_components);
-    if (!vc.length) { b.innerHTML = '<p class="sfd-help">No variance components (genotype fitted as a fixed effect without other random terms).</p>'; return; }
+    if (!vc.length) { b.innerHTML = '<p class="bb-help">No variance components (genotype fitted as a fixed effect without other random terms).</p>'; return; }
     const traits = D.traits.filter(t => vc.some(r => r.trait === t));
     const comps = [];
     vc.forEach(r => { if (comps.indexOf(r.component) < 0) comps.push(r.component); });
@@ -511,7 +511,7 @@ function renderVarComp() {
         });
     });
     const lg = document.createElement('div');
-    lg.className = 'sfd-help';
+    lg.className = 'bb-help';
     lg.style.paddingLeft = M.l + 'px';
     lg.innerHTML = comps.map(c => '<span style="display:inline-block;margin-right:12px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + colors[c] + ';margin-right:4px"></span>' + esc(prettyComp(c)) + '</span>').join('');
     b.appendChild(lg);
@@ -578,7 +578,7 @@ function weatherLink(name, trial) {
     const icon = '<span class="glyphicon glyphicon-cloud"></span> Weather';
     return WEATHER ? '<a href="/breeders/weather?location_id=' + encodeURIComponent(id) + (tid ? '&trial_id=' + encodeURIComponent(tid) : '') + '" target="_blank" title="' +
             (tid ? 'Weather of ' + esc(trial) + ' (season of the trial, stations, crop stages)' : 'Weather of this location (stations, season, crop stages)') + '">' + icon + '</a>'
-        : '<span class="sfd-help" style="cursor:not-allowed" title="The weather page is not installed on this site yet">' + icon + '</span>';
+        : '<span class="bb-help" style="cursor:not-allowed" title="The weather page is not installed on this site yet">' + icon + '</span>';
 }
 
 function renderMap() {
@@ -592,7 +592,7 @@ function renderMap() {
     // colour of each location
     let colorOf, legend = '';
     if (S.mapColor === 'zone') {
-        if (!D.zones.length) { colorOf = () => '#9ca3af'; legend = '<span class="sfd-help">No zones in this analysis</span>'; }
+        if (!D.zones.length) { colorOf = () => '#9ca3af'; legend = '<span class="bb-help">No zones in this analysis</span>'; }
         else {
             colorOf = n => vals[n].zones.length ? zoneColor(vals[n].zones[0]) : '#9ca3af';
             const zt = D.zones.find(x => x.target === S.zoneTarget) || D.zones[0];
@@ -605,13 +605,13 @@ function renderMap() {
         const lim = v.length ? Math.max.apply(null, v.map(Math.abs)) : 1;
         const sign = traitDir(t) === 'decrease' ? -1 : 1;
         colorOf = n => vals[n].accDev === null ? '#d1d5db' : divColor(sign * vals[n].accDev, lim);
-        legend = S.mapAccession ? legendBar(DIV_GOOD, 'worse', 'better', S.mapAccession + ' vs trial mean') + '<div class="sfd-help">grey: not tested</div>' : '<span class="sfd-help">Type an accession name</span>';
+        legend = S.mapAccession ? legendBar(DIV_GOOD, 'worse', 'better', S.mapAccession + ' vs trial mean') + '<div class="bb-help">grey: not tested</div>' : '<span class="bb-help">Type an accession name</span>';
     } else {
         const key = S.mapColor === 'h2' ? 'h2' : 'mean';
         const v = names.map(n => vals[n][key]).filter(x => x !== null);
         const lo = key === 'h2' ? 0 : Math.min.apply(null, v), hi = key === 'h2' ? 1 : Math.max.apply(null, v);
         colorOf = n => vals[n][key] === null ? '#d1d5db' : seqColor(vals[n][key], lo, hi);
-        legend = v.length ? legendBar(SEQ, fmt(lo), fmt(hi), key === 'h2' ? 'Heritability of ' + t : 'Mean of ' + t) : '<span class="sfd-help">' + (key === 'h2' ? 'Trial heritabilities exist only for two-stage analyses' : 'No values') + '</span>';
+        legend = v.length ? legendBar(SEQ, fmt(lo), fmt(hi), key === 'h2' ? 'Heritability of ' + t : 'Mean of ' + t) : '<span class="bb-help">' + (key === 'h2' ? 'Trial heritabilities exist only for two-stage analyses' : 'No values') + '</span>';
     }
     $('#sfd_map_legend').html(legend);
 
@@ -620,11 +620,11 @@ function renderMap() {
         const L0 = D.locations[n], v = vals[n];
         const wl = weatherLink(n);
         let h = '<b style="font-size:14px">' + esc(n) + '</b>' + (wl ? ' <small style="margin-left:6px">' + wl + '</small>' : '') + '<table>' +
-            L0.trials.map(x => '<tr><td>' + esc(x.trial) + '</td><td class="sfd-help">' + esc(x.year) + ' &middot; ' + esc(x.design) + ' &middot; ' + esc(x.n_plots) + ' plots</td><td><small>' + weatherLink(n, x.trial) + '</small></td></tr>').join('') + '</table>' +
+            L0.trials.map(x => '<tr><td>' + esc(x.trial) + '</td><td class="bb-help">' + esc(x.year) + ' &middot; ' + esc(x.design) + ' &middot; ' + esc(x.n_plots) + ' plots</td><td><small>' + weatherLink(n, x.trial) + '</small></td></tr>').join('') + '</table>' +
             '<div style="margin-top:4px">' + esc(t) + ': mean <b>' + fmt(v.mean) + '</b>' + (v.cv !== null ? ', CV ' + fmt(v.cv, 1) + '%' : '') + (v.h2 !== null ? ', H&sup2; ' + h2Badge(v.h2) : '') + '</div>';
         if (v.zones.length) h += '<div>Zone: ' + v.zones.map(z => '<span class="sfd-zone-chip" style="background:' + zoneColor(z) + '">' + esc(z) + '</span>').join(' ') + '</div>';
         if (S.mapAccession && S.mapColor === 'accession') h += '<div>' + esc(S.mapAccession) + ': ' + (v.accDev === null ? 'not tested here' : (v.accDev >= 0 ? '+' : '') + fmt(v.accDev) + ' vs trial mean') + '</div>';
-        if (v.top.length) h += '<div style="margin-top:4px"><b>Best here</b> (vs trial mean):<ol style="padding-left:18px;margin:2px 0">' + v.top.map(x => '<li>' + accLink(x.a) + ' <span class="sfd-help">' + (x.v >= 0 ? '+' : '') + fmt(x.v) + '</span></li>').join('') + '</ol></div>';
+        if (v.top.length) h += '<div style="margin-top:4px"><b>Best here</b> (vs trial mean):<ol style="padding-left:18px;margin:2px 0">' + v.top.map(x => '<li>' + accLink(x.a) + ' <span class="bb-help">' + (x.v >= 0 ? '+' : '') + fmt(x.v) + '</span></li>').join('') + '</ol></div>';
         return h;
     };
 
@@ -680,7 +680,7 @@ function renderField() {
     const tr = S.fieldTrial;
     const plots = arr(D.plotsByTrial[tr]);
     const t = S.trait;
-    if (!plots.length) { b.innerHTML = '<p class="sfd-help">No plots.</p>'; return; }
+    if (!plots.length) { b.innerHTML = '<p class="bb-help">No plots.</p>'; return; }
     const layer = S.fieldLayer;
     const key = layer === 'resid' ? 'resid:' + t : t;
     const withRC = plots.filter(p => num(p.row) !== null && num(p.col) !== null).length >= 0.8 * plots.length;
@@ -723,7 +723,7 @@ function renderField() {
     }
 
     const head = document.createElement('div');
-    head.className = 'sfd-help';
+    head.className = 'bb-help';
     head.style.marginBottom = '6px';
     // removed values of this trial (red X) and the weather of its location
     const nOut = plots.filter(p => D.outlierSet[p.unit + '|' + t]).length;
@@ -760,7 +760,7 @@ function renderTrialQuality() {
         const cv = s1 && num(s1.cv) !== null ? num(s1.cv) : vals.length > 1 ? 100 * sd(vals) / Math.abs(mean(vals)) : null;
         return { trial: tr.trial, h2: s1 ? num(s1.h2) : null, cv: cv, n: vals.length, mean: vals.length ? mean(vals) : null, model: s1 ? s1.model : '', design: tr.design };
     }).filter(r => r.n > 0);
-    if (!rows.length) { b.innerHTML = '<p class="sfd-help">No data for this trait.</p>'; return; }
+    if (!rows.length) { b.innerHTML = '<p class="bb-help">No data for this trait.</p>'; return; }
     const hasH2 = rows.some(r => r.h2 !== null);
     const W = 820, bh = 22, M = { l: 200, t: 22, b: 30 }, half = hasH2 ? (W - M.l - 40) / 2 : W - M.l - 20;
     const H = M.t + rows.length * bh + M.b;
@@ -797,7 +797,7 @@ function renderDistributions() {
         if (!vals.length) return;
         const wrap = document.createElement('div');
         const m = D.s2[t] || {};
-        wrap.innerHTML = '<h5>' + esc(t) + ' ' + (traitDir(t) === 'decrease' ? '<span class="sfd-help">&darr; lower is better</span> ' : '') + '<span style="float:right">' + h2Badge(m.h2) + '</span></h5>';
+        wrap.innerHTML = '<h5>' + esc(t) + ' ' + (traitDir(t) === 'decrease' ? '<span class="bb-help">&darr; lower is better</span> ' : '') + '<span style="float:right">' + h2Badge(m.h2) + '</span></h5>';
         b.appendChild(wrap);
         const W = 280, H = 140, M = { l: 30, r: 8, t: 6, b: 34 };
         const lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
@@ -829,7 +829,7 @@ function renderDistributions() {
 
 function renderCorrelations() {
     const traits = D.traits;
-    if (traits.length < 2) { $('#sfd_correlations').html('<p class="sfd-help">Only one trait.</p>'); return; }
+    if (traits.length < 2) { $('#sfd_correlations').html('<p class="bb-help">Only one trait.</p>'); return; }
     const col = t => D.accessions.map(a => D.gv[a][t]);
     let h = '<table class="sfd-heat"><thead><tr><th></th>' + traits.map(t => '<th title="' + esc(t) + '">' + esc(t.length > 10 ? t.slice(0, 9) + '…' : t) + '</th>').join('') + '</tr></thead><tbody>';
     traits.forEach(a => {
@@ -849,7 +849,7 @@ function renderScatter() {
     const tx = S.scatterX, ty = S.scatterY;
     if (!tx || !ty) return;
     const pts = D.accessions.map(a => ({ a: a, x: D.gv[a][tx], y: D.gv[a][ty] })).filter(p => p.x !== null && p.y !== null);
-    if (!pts.length) { b.innerHTML = '<p class="sfd-help">No accession has both values.</p>'; return; }
+    if (!pts.length) { b.innerHTML = '<p class="bb-help">No accession has both values.</p>'; return; }
     const sel = {};
     rankRows().forEach(r => { if (r.selected) sel[r.accession] = true; });
     const W = 560, H = 380, M = { l: 62, r: 14, t: 10, b: 46 };
@@ -911,13 +911,13 @@ function renderSelection() {
     });
     renderAccuracyBox(inIndex);
     $('#sfd_gains').html(table(gains, [
-        { k: 'trait', l: 'Trait', f: (v, r) => esc(v) + (r.used ? ' <span class="label label-success">ranked on</span>' : '') + (traitDir(v) === 'decrease' ? ' <span class="sfd-help">&darr;</span>' : '') },
+        { k: 'trait', l: 'Trait', f: (v, r) => esc(v) + (r.used ? ' <span class="label label-success">ranked on</span>' : '') + (traitDir(v) === 'decrease' ? ' <span class="bb-help">&darr;</span>' : '') },
         { k: 'pm', l: 'Population mean' }, { k: 'sm', l: 'Selected mean' }, { k: 'S', l: 'Selection differential' },
         { k: 'Spct', l: 'S %', f: (v, r) => v === null ? '&ndash;' : '<b style="color:' + (r.good ? '#2b7a4b' : '#dc2626') + '">' + (v >= 0 ? '+' : '') + fmt(v, 1) + '%</b>' },
         { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) },
         { k: 'gain', l: 'Expected gain', f: (v, r) => v === null ? '&ndash;' : '<b style="color:' + (r.good ? '#2b7a4b' : '#dc2626') + '">' + (v >= 0 ? '+' : '') + fmt(v) + '</b>' },
         { k: 'acc', l: 'Accuracy', f: v => accuracyBadge(v) }
-    ]) + '<p class="sfd-help">' + (D.random ? 'Values are BLUPs (already shrunk by heritability): the expected gain equals the selection differential.' : 'Expected gain = H&sup2; &times; selection differential on BLUEs.') +
+    ]) + '<p class="bb-help">' + (D.random ? 'Values are BLUPs (already shrunk by heritability): the expected gain equals the selection differential.' : 'Expected gain = H&sup2; &times; selection differential on BLUEs.') +
         ' Red figures move the trait in the unwanted direction. Accuracy: how closely the genotype values follow the true genetic values (0 to 1), &radic;(1 &minus; PEV / &sigma;&sup2;<sub>G</sub>) from their standard errors.</p>');
     renderRankChart();
     renderRankTable();
@@ -1083,7 +1083,7 @@ function renderStability() {
     const sorter = (p, q) => (dec ? p.mean - q.mean : q.mean - p.mean);
     const quad = (title, desc, f, color) => {
         const list = st.rows.filter(f).sort(sorter).slice(0, 8);
-        return '<div style="border-top:3px solid ' + color + '"><b>' + title + '</b><span class="sfd-help">' + desc + '</span><ol>' + (list.map(r => '<li>' + accLink(r.accession) + ' <span class="sfd-help">b ' + r.b.toFixed(2) + '</span></li>').join('') || '<li class="sfd-help">none</li>') + '</ol></div>';
+        return '<div style="border-top:3px solid ' + color + '"><b>' + title + '</b><span class="bb-help">' + desc + '</span><ol>' + (list.map(r => '<li>' + accLink(r.accession) + ' <span class="bb-help">b ' + r.b.toFixed(2) + '</span></li>').join('') || '<li class="bb-help">none</li>') + '</ol></div>';
     };
     $('#sfd_quadrants').html(
         quad('Superior and stable', 'broad adaptation', r => better(r) && r.b <= 1, '#2b7a4b') +
@@ -1096,9 +1096,9 @@ function renderReaction() {
     const b = box('sfd_reaction');
     const t = S.trait;
     const m = envMatrix(t);
-    if (m.envs.length < 2) { b.innerHTML = '<p class="sfd-help">Reaction norms need at least two environments.</p>'; return; }
+    if (m.envs.length < 2) { b.innerHTML = '<p class="bb-help">Reaction norms need at least two environments.</p>'; return; }
     const accs = S.shortlist.filter(a => m.envs.some(e => m.get(a, e) !== null)).slice(0, 12);
-    if (!accs.length) { b.innerHTML = '<p class="sfd-help">Add accessions to the shortlist to compare them across environments.</p>'; return; }
+    if (!accs.length) { b.innerHTML = '<p class="bb-help">Add accessions to the shortlist to compare them across environments.</p>'; return; }
     const W = 820, H = 360, M = { l: 56, r: 170, t: 12, b: 70 };
     const vals = [];
     accs.forEach(a => m.envs.forEach(e => { const v = m.get(a, e); if (v !== null) vals.push(v); }));
@@ -1127,7 +1127,7 @@ function renderReaction() {
 function renderGxeHeat() {
     const t = S.trait;
     const m = envMatrix(t);
-    if (m.envs.length < 2) { $('#sfd_gxe_heat').html('<p class="sfd-help">Needs at least two environments.</p>'); return; }
+    if (m.envs.length < 2) { $('#sfd_gxe_heat').html('<p class="bb-help">Needs at least two environments.</p>'); return; }
     const dec = traitDir(t) === 'decrease';
     const mode = $('#sfd_gxe_rows').val();
     const scale = $('#sfd_gxe_scale').val();
@@ -1135,7 +1135,7 @@ function renderGxeHeat() {
     accs.sort((a, b) => { const x = D.gv[a][t], y = D.gv[b][t]; return (y === null) - (x === null) || (dec ? x - y : y - x); });
     if (mode === 'top') accs = accs.slice(0, 30);
     else if (mode === 'shortlist') accs = accs.filter(isShort);
-    if (!accs.length) { $('#sfd_gxe_heat').html('<p class="sfd-help">No accession to show' + (mode === 'shortlist' ? ': the shortlist is empty.' : '.') + '</p>'); return; }
+    if (!accs.length) { $('#sfd_gxe_heat').html('<p class="bb-help">No accession to show' + (mode === 'shortlist' ? ': the shortlist is empty.' : '.') + '</p>'); return; }
     const all = [];
     accs.forEach(a => m.envs.forEach(e => { const v = m.get(a, e); if (v !== null) all.push(scale === 'dev' ? v - m.envMean[e] : v); }));
     const lim = all.length ? Math.max.apply(null, all.map(Math.abs)) : 1;
@@ -1152,7 +1152,7 @@ function renderGxeHeat() {
             return '<td style="background:' + bg + ';color:' + textOn(bg) + '" data-tip="' + esc(tip) + '">' + (x === null ? '' : fmt(x)) + '</td>';
         }).join('') + '</tr>';
     });
-    h += '</tbody></table><p class="sfd-help" style="margin-top:6px">Environments ordered from the poorest to the best mean. ' + (scale === 'dev' ? 'Green: better than the environment mean; orange: worse.' : '') + '</p>';
+    h += '</tbody></table><p class="bb-help" style="margin-top:6px">Environments ordered from the poorest to the best mean. ' + (scale === 'dev' ? 'Green: better than the environment mean; orange: worse.' : '') + '</p>';
     $('#sfd_gxe_heat').html(h);
 }
 
@@ -1279,14 +1279,14 @@ function renderZoneMap(z) {
 function renderZoneAccession(z) {
     const acc = S.zoneAccession;
     const gz = genotypeZones(z)[acc];
-    if (!acc || !gz) { $('#sfd_zone_acc_info').html('<p class="sfd-help">Choose a genotype to see its rank in every zone.</p>'); return; }
+    if (!acc || !gz) { $('#sfd_zone_acc_info').html('<p class="bb-help">Choose a genotype to see its rank in every zone.</p>'); return; }
     const rows = zoneNames(z).map(zn => Object.assign({ zone: zn }, gz[zn] || { rank: null }));
     const tested = rows.filter(r => r.rank !== null);
     const best = tested.slice().sort((a, b) => a.rank / a.n_ranked - b.rank / b.n_ranked)[0];
     let h = best ? '<p><b>' + accLink(acc) + '</b> does best in <span class="sfd-zone-chip" style="background:' + zoneColor(best.zone) + '">' + esc(best.zone) + '</span> (rank ' + best.rank + ' of ' + best.n_ranked + ').</p>' : '';
     h += table(rows, [
         { k: 'zone', l: 'Zone', f: v => '<span class="sfd-zone-chip" style="background:' + zoneColor(v) + '">' + esc(v) + '</span>' + (best && v === best.zone ? ' <span class="glyphicon glyphicon-star" style="color:#d97706" title="best zone"></span>' : '') },
-        { k: 'rank', l: 'Rank', f: (v, r) => v === null ? '<span class="sfd-help">not tested</span>' : '<b>' + v + '</b> <span class="sfd-help">of ' + r.n_ranked + '</span>' },
+        { k: 'rank', l: 'Rank', f: (v, r) => v === null ? '<span class="bb-help">not tested</span>' : '<b>' + v + '</b> <span class="bb-help">of ' + r.n_ranked + '</span>' },
         { k: 'value', l: 'Mean ' + esc(z.target) },
         { k: 'n_env', l: 'Envs', f: v => v === undefined ? '' : v },
         { k: 'zone', l: 'Altitude', f: v => esc(zoneGeo(z, v).alt) }]);
@@ -1303,9 +1303,9 @@ function zoneMatrix(z) {
             .forEach(a => { if (pick.indexOf(a) < 0) pick.push(a); });
     });
     if (!pick.length) return '';
-    let h = '<h4>Best genotypes by zone</h4><p class="sfd-help">The top 3 of each zone and their rank in every other zone (1 = best). Green: among the best of the zone. Click a genotype to see it on the map.</p>' +
+    let h = '<h4>Best genotypes by zone</h4><p class="bb-help">The top 3 of each zone and their rank in every other zone (1 = best). Green: among the best of the zone. Click a genotype to see it on the map.</p>' +
         '<div class="sfd-scroll"><table class="sfd-heat sfd-zmat"><thead><tr><th></th>' +
-        zn.map(k => '<th style="border-bottom:3px solid ' + zoneColor(k) + '">' + esc(k) + '<br/><small class="sfd-help">' + esc(zoneGeo(z, k).alt) + '</small></th>').join('') + '</tr></thead><tbody>';
+        zn.map(k => '<th style="border-bottom:3px solid ' + zoneColor(k) + '">' + esc(k) + '<br/><small class="bb-help">' + esc(zoneGeo(z, k).alt) + '</small></th>').join('') + '</tr></thead><tbody>';
     pick.forEach(a => {
         h += '<tr><th class="r"><a href="#" class="sfd-zone-pick" data-a="' + esc(a) + '">' + esc(a) + '</a></th>' + zn.map(k => {
             const r = gz[a][k];
@@ -1328,15 +1328,15 @@ function renderZones() {
     let h = '<p><b>' + esc(z.target) + '</b>: <b>' + z.n_zones + '</b> zone(s) by ' + (z.method === 'lin' ? 'the Lin (1982) G&times;E test' : 'genetic correlation clustering') +
         (z.accessions_used ? ' on ' + esc(z.accessions_used) + (z.n_accessions_used ? ' (' + z.n_accessions_used + ')' : '') : '') + '.' +
         (Number(z.min_env) > 1 ? ' Ranked: accessions tested in at least ' + Number(z.min_env) + ' environment(s) of the zone.' : '') + '</p>' +
-        '<div class="row"><div class="col-md-8"><div id="sfd_zone_map" style="height:460px;border-radius:8px;border:1px solid #e5e7eb;z-index:1"></div><div class="sfd-help" id="sfd_zone_map_note"></div>' +
-        '<div class="sfd-help" style="margin-top:4px">Each marker is an environment, coloured by its zone; shaded areas join the locations of a zone. ' +
+        '<div class="row"><div class="col-md-8"><div id="sfd_zone_map" style="height:460px;border-radius:8px;border:1px solid #e5e7eb;z-index:1"></div><div class="bb-help" id="sfd_zone_map_note"></div>' +
+        '<div class="bb-help" style="margin-top:4px">Each marker is an environment, coloured by its zone; shaded areas join the locations of a zone. ' +
         (hasGz ? 'With a genotype chosen, the markers show its rank in that zone and the zones where it ranks best are shaded darker.' : '') + '</div></div>' +
-        '<div class="col-md-4"><div class="sfd-card">' +
-        (hasGz ? '<label class="sfd-help" for="sfd_zone_acc">Where does this genotype do best?</label>' +
+        '<div class="col-md-4"><div class="bb-card">' +
+        (hasGz ? '<label class="bb-help" for="sfd_zone_acc">Where does this genotype do best?</label>' +
             '<select class="form-control input-sm" id="sfd_zone_acc"><option value="">&ndash; choose a genotype &ndash;</option>' +
             accs.map(a => '<option value="' + esc(a) + '"' + (a === S.zoneAccession ? ' selected' : '') + '>' + esc(a) + '</option>').join('') + '</select>' +
             '<div id="sfd_zone_acc_info" style="margin-top:8px"></div>'
-            : '<p class="sfd-help">Run the analysis again to see the rank of every genotype in every zone.</p>') +
+            : '<p class="bb-help">Run the analysis again to see the rank of every genotype in every zone.</p>') +
         '</div></div></div>';
     if (hasGz) h += zoneMatrix(z);
     h += '<div class="row">';
@@ -1344,9 +1344,9 @@ function renderZones() {
         const envs = arr(z.membership).filter(m => m.zone === zn);
         const top = arr(z.top).filter(x => x.zone === zn);
         const geo = zoneGeo(z, zn);
-        h += '<div class="col-lg-6"><div class="sfd-card" style="border-top:4px solid ' + zoneColor(zn) + '"><h4 style="margin-top:0"><span class="sfd-zone-chip" style="background:' + zoneColor(zn) + '">' + esc(zn) + '</span> ' + envs.length + ' environment(s)</h4>' +
-            (geo.n ? '<p class="sfd-help"><span class="glyphicon glyphicon-map-marker"></span> Altitude ' + (esc(geo.alt) || 'unknown') + ' &middot; latitude ' + esc(geo.lat) + '</p>' : '') +
-            '<p class="sfd-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
+        h += '<div class="col-lg-6"><div class="bb-card" style="border-top:4px solid ' + zoneColor(zn) + '"><h4 style="margin-top:0"><span class="sfd-zone-chip" style="background:' + zoneColor(zn) + '">' + esc(zn) + '</span> ' + envs.length + ' environment(s)</h4>' +
+            (geo.n ? '<p class="bb-help"><span class="glyphicon glyphicon-map-marker"></span> Altitude ' + (esc(geo.alt) || 'unknown') + ' &middot; latitude ' + esc(geo.lat) + '</p>' : '') +
+            '<p class="bb-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
             table(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions', f: v => accLink(v) }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: Number(z.min_env) > 1 ? 'No accession tested in at least ' + Number(z.min_env) + ' environment(s) of this zone.' : 'No accession with values in this zone.' }) + '</div></div>';
     });
     h += '</div>';
@@ -1413,7 +1413,7 @@ function renderModel() {
         { k: 'trait', l: 'Trait' }, { k: 'model', l: 'Model', f: code },
         { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' }, { k: 'var_ge', l: '&sigma;&sup2;<sub>GE</sub>' }, { k: 'var_e', l: '&sigma;&sup2;<sub>e</sub>' },
         { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) },
-        { k: 'message', l: 'Status', f: (v, r) => esc(v) + (r.dropped_terms ? '<br/><small class="sfd-help">left out: ' + esc(r.dropped_terms) + '</small>' : '') }
+        { k: 'message', l: 'Status', f: (v, r) => esc(v) + (r.dropped_terms ? '<br/><small class="bb-help">left out: ' + esc(r.dropped_terms) + '</small>' : '') }
     ]);
     if (arr(R.variance_components).length) {
         h += '<h4>Variance components</h4>' + table(R.variance_components, [{ k: 'trait', l: 'Trait' }, { k: 'component', l: 'Component', f: v => esc(prettyComp(v)) }, { k: 'variance', l: 'Variance' }], { id: 'sfd_dt_vc' });
@@ -1426,7 +1426,7 @@ function renderModel() {
             { k: 'n_repeated_plots', l: 'Plots with several values', f: v => v }, { k: 'n_measurements', l: 'Measurements', f: v => v }, { k: 'n_dates', l: 'Dates', f: v => v }
         ]);
         if (arr(rp.traits).some(x => x.summary === 'all')) {
-            h += '<p class="sfd-help">All measurements: one record per measurement, ' + (rp.time === 'linear' ? 'a linear trend in days' : 'a date effect') + ' within trial, a random plot effect' +
+            h += '<p class="bb-help">All measurements: one record per measurement, ' + (rp.time === 'linear' ? 'a linear trend in days' : 'a date effect') + ' within trial, a random plot effect' +
                 (rp.gxtime ? ' and a random genotype &times; date effect' : '') + '; the genotype value is the mean over the dates.</p>';
         }
     }
@@ -1440,7 +1440,7 @@ function renderModel() {
             (q.n_snps_used !== undefined ? '; <b>' + n(q.n_snps_used) + '</b> markers used after quality control (removed: ' + n(q.removed_maf) + ' with allele frequency &lt; ' + gi.minfreq +
                 ', ' + n(q.removed_callrate) + ' with call rate &lt; ' + gi.callrate + ', ' + n(q.removed_monomorphic) + ' monomorphic' + (q.mendelian_conflicts ? ', ' + n(q.mendelian_conflicts) + ' parent-progeny conflicts' : '') + ')' : '') +
             (q.removed_animals ? '; ' + n(q.removed_animals) + ' accession(s) removed for low call rate' : '') + '.</p>' +
-            '<p class="sfd-help">G (VanRaden) is built, tuned to the pedigree relationships of the genotyped accessions and blended (0.95 G + 0.05 A22) by BLUPF90+. ' +
+            '<p class="bb-help">G (VanRaden) is built, tuned to the pedigree relationships of the genotyped accessions and blended (0.95 G + 0.05 A22) by BLUPF90+. ' +
             (gi.matrix === 'H' ? 'Single-step: accessions without genotypes are related to the others through the pedigree.' : 'Accessions without genotypes are treated as unrelated.') + ' Values are genomic breeding values (GEBVs).</p>';
     }
     const covOnly = R.covariate_traits || {};
@@ -1494,9 +1494,9 @@ function renderAnova() {
     $('#sfd_anova_section, #sfd_nav_anova').toggle(!!A);
     if (!A) return;
     $('#sfd_anova_help').text('Focus trait; all effects fixed, F-tests against the residual');
-    if (A.message) { $('#sfd_anova').html('<p class="sfd-help">' + esc(A.message) + '</p>'); return; }
+    if (A.message) { $('#sfd_anova').html('<p class="bb-help">' + esc(A.message) + '</p>'); return; }
     const T = arr(A.traits).find(x => x.trait === S.trait);
-    if (!T) { $('#sfd_anova').html('<p class="sfd-help">No analysis of variance for this trait.</p>'); return; }
+    if (!T) { $('#sfd_anova').html('<p class="bb-help">No analysis of variance for this trait.</p>'); return; }
     // views: the joint analysis (or, with each trial only, the summary of the trials) and each trial
     const views = [];
     if (T.table || T.message || !arr(T.trials).length) views.push({ label: 'Joint analysis (all trials)', t: T });
@@ -1507,12 +1507,12 @@ function renderAnova() {
     const t = views[vi].t;
     let h = views.length > 1 ? '<select class="form-control input-sm" id="sfd_anova_view" style="width:auto;margin-bottom:8px">' +
         views.map((x, i) => '<option value="' + i + '"' + (i === vi ? ' selected' : '') + '>' + esc(x.label) + '</option>').join('') + '</select>' : '';
-    if (t.model) h += '<p><code>' + esc(t.model) + '</code><br/><span class="sfd-help">' + t.n + ' plots' + (t.n_trials > 1 ? ' in ' + t.n_trials + ' trials' : '') +
+    if (t.model) h += '<p><code>' + esc(t.model) + '</code><br/><span class="bb-help">' + t.n + ' plots' + (t.n_trials > 1 ? ' in ' + t.n_trials + ' trials' : '') +
         (num(t.mean) !== null ? ' &middot; mean ' + fmt(t.mean) : '') + (num(t.cv) !== null ? ' &middot; CV ' + fmt(t.cv, 1) + '%' : '') + (num(t.r2) !== null ? ' &middot; R&sup2; ' + fmt(t.r2, 3) : '') + '</span></p>';
     if (t.message) h += '<div class="alert alert-warning">' + esc(t.message) + '</div>';
     const designs = {};
     arr(t.designs).forEach(d => { (designs[d.design] = designs[d.design] || []).push(d.trial); });
-    if (Object.keys(designs).length) h += '<p class="sfd-help">Design (breedtools): ' + Object.keys(designs).map(k => '<b>' + esc(k) + '</b>' + (t.n_trials > 1 ? ' (' + designs[k].length + ' trial' + (designs[k].length > 1 ? 's' : '') + ')' : '')).join(', ') + '</p>';
+    if (Object.keys(designs).length) h += '<p class="bb-help">Design (breedtools): ' + Object.keys(designs).map(k => '<b>' + esc(k) + '</b>' + (t.n_trials > 1 ? ' (' + designs[k].length + ' trial' + (designs[k].length > 1 ? 's' : '') + ')' : '')).join(', ') + '</p>';
 
     // ANOVA table
     if (arr(t.table).length) {
@@ -1522,14 +1522,14 @@ function renderAnova() {
                 return '<tr><td>' + esc(r.label) + '</td><td>' + r.df + '</td><td>' + fmt(r.sum_sq) + '</td><td>' + fmt(r.mean_sq) + '</td><td>' + (num(r.f_value) !== null ? fmt(r.f_value, 2) : '') +
                     '</td><td' + (sig ? ' class="sig"' : '') + '>' + pval(r.p_value) + '</td><td>' + stars(r.p_value) + '</td></tr>';
             }).join('') + '</tbody></table></div>' +
-            '<p class="sfd-help">Sequential (type I) sums of squares in the order shown: design terms first, so treatments and accessions are adjusted for them. Significance: *** 0.001, ** 0.01, * 0.05, . 0.1.</p>';
+            '<p class="bb-help">Sequential (type I) sums of squares in the order shown: design terms first, so treatments and accessions are adjusted for them. Significance: *** 0.001, ** 0.01, * 0.05, . 0.1.</p>';
     }
 
     // means comparisons
     arr(t.comparisons).forEach((c, ci) => {
         const groups = arr(c.groups);
         h += '<h4>' + esc(c.factor) + (c.by ? ' within ' + esc(c.by.toLowerCase()) : '') + ' <small>' + esc(c.test) + ', &alpha; = ' + c.alpha + '</small></h4>';
-        if (c.by) h += '<p class="sfd-help">The interaction with ' + esc(c.by.toLowerCase()) + ' is significant, so ' + esc(c.factor.toLowerCase()) + ' is compared within each level.</p>';
+        if (c.by) h += '<p class="bb-help">The interaction with ' + esc(c.by.toLowerCase()) + ' is significant, so ' + esc(c.factor.toLowerCase()) + ' is compared within each level.</p>';
         if (groups.length > 1) h += '<select class="form-control input-sm sfd-anova-by" data-c="' + ci + '" style="width:auto;display:inline-block;margin-bottom:6px">' +
             groups.map((g, gi) => '<option value="' + gi + '">' + esc(c.by) + ': ' + esc(g.group) + '</option>').join('') + '</select>';
         h += '<div id="sfd_anova_cmp_' + ci + '"></div>';
@@ -1560,7 +1560,7 @@ function renderAnova() {
                 { k: 'df_error', l: 'Residual df', f: v => (v === null ? 'none (unreplicated)' : v) }, { k: 'ms_error', l: 'Residual MS' },
                 { k: 'f_accession', l: 'F accession', f: v => fmt(v, 2) }, { k: 'p_accession', l: 'p-value', f: v => pval(v) + ' ' + stars(v) }], { id: 'sfd_dt_anova_trials' }) + '</div>';
     }
-    if (arr(t.notes).length) h += '<p class="sfd-help">' + arr(t.notes).map(esc).join('<br/>') + '</p>';
+    if (arr(t.notes).length) h += '<p class="bb-help">' + arr(t.notes).map(esc).join('<br/>') + '</p>';
     $('#sfd_anova').html(h);
 
     const showGroup = (ci, gi) => {
@@ -1568,7 +1568,7 @@ function renderAnova() {
         $('#sfd_anova_cmp_' + ci).html(table(g.means, [
             { k: 'level', l: esc(c.factor), f: v => c.term === 'accession' ? accLink(v) : esc(v), order: v => v },
             { k: 'mean', l: 'Mean' }, { k: 'se', l: 'SE' }, { k: 'group', l: 'Group', f: v => v ? '<span class="sfd-anova-group">' + esc(v) + '</span>' : '' }
-        ]) + '<p class="sfd-help">Means sharing a letter do not differ (' + esc(c.test) + ', &alpha; = ' + c.alpha + '); ' + g.n_signif + ' of ' + g.n_pairs + ' pairs differ. ' +
+        ]) + '<p class="bb-help">Means sharing a letter do not differ (' + esc(c.test) + ', &alpha; = ' + c.alpha + '); ' + g.n_signif + ' of ' + g.n_pairs + ' pairs differ. ' +
             (c.test === 'Fisher LSD' ? 'LSD' : 'HSD') + ' &asymp; ' + fmt(g.msd) + '.</p>');
     };
     arr(t.comparisons).forEach((c, ci) => showGroup(ci, 0));
@@ -1760,13 +1760,13 @@ function renderMeetings() {
         }
         let h = r.can_link ? '' : '<div class="alert alert-warning">Your account cannot add analyses to meetings (decision meeting roles of the site configuration).</div>';
         h += '<table class="table table-condensed table-hover"><thead><tr><th>Meeting</th><th>Date</th><th>Programs</th><th>Location</th><th>Status</th><th></th></tr></thead><tbody>' +
-            list.map(m => '<tr><td><b>' + esc(m.name) + '</b><br/><small class="sfd-help">' + (m.n_accessions ? m.n_accessions + ' accessions, ' : '') + m.n_analyses + ' analysis(es)</small></td>' +
+            list.map(m => '<tr><td><b>' + esc(m.name) + '</b><br/><small class="bb-help">' + (m.n_accessions ? m.n_accessions + ' accessions, ' : '') + m.n_analyses + ' analysis(es)</small></td>' +
                 '<td>' + esc(m.date || '') + '</td><td>' + esc((m.programs || []).join(', ')) + '</td><td>' + esc(m.location || '') + '</td>' +
                 '<td>' + (m.saved ? '<span class="label label-default" title="Decisions saved: the meeting is closed">decisions saved</span>' : '<span class="label label-success">open</span>') + (m.linked ? ' <span class="label label-primary">uses this analysis</span>' : '') + '</td>' +
-                '<td>' + (m.saved ? '<span class="sfd-help" title="The decisions are saved: this evidence is a permanent record"><span class="glyphicon glyphicon-lock"></span> permanent record</span>' : !r.can_link ? '' : '<button class="btn btn-xs ' + (m.linked ? 'btn-default' : 'btn-success') + ' sfd-meeting-link" data-id="' + esc(m.meeting_id) + '" data-action="' + (m.linked ? 'unlink' : 'link') + '">' +
+                '<td>' + (m.saved ? '<span class="bb-help" title="The decisions are saved: this evidence is a permanent record"><span class="glyphicon glyphicon-lock"></span> permanent record</span>' : !r.can_link ? '' : '<button class="btn btn-xs ' + (m.linked ? 'btn-default' : 'btn-success') + ' sfd-meeting-link" data-id="' + esc(m.meeting_id) + '" data-action="' + (m.linked ? 'unlink' : 'link') + '">' +
                     (m.linked ? '<span class="glyphicon glyphicon-remove"></span> Remove' : '<span class="glyphicon glyphicon-link"></span> Add') + '</button>') + '</td></tr>').join('') + '</tbody></table>';
         const nClosed = all.filter(m => m.saved && !m.linked).length;
-        if (nClosed) h += '<p class="sfd-help">' + nClosed + ' meeting(s) with saved decisions are not listed: a closed meeting takes no new analysis.</p>';
+        if (nClosed) h += '<p class="bb-help">' + nClosed + ' meeting(s) with saved decisions are not listed: a closed meeting takes no new analysis.</p>';
         body.html(h);
     }).fail(() => body.html('<div class="alert alert-danger">The meetings could not be loaded.</div>'));
 }
