@@ -1383,6 +1383,12 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
 
 sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->res->redirect( '/user/login' );
+        $c->detach();
+    }
+
     my $filename = $c->req->param('tempfile');
 
     my @contents = read_file($filename);
