@@ -326,7 +326,8 @@ sub get_crossing_experiments_from_field_trial {
         JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id IN (?,?,?,?)
         JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
         JOIN project ON (nd_experiment_project.project_id = project.project_id)
-        $where_clause;";
+        $where_clause
+        ORDER BY project.project_id;";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($female_plot_of_type_id, $male_plot_of_type_id, $female_plot_of_type_id, $male_plant_of_type_id, $cross_experiment_type_id);
