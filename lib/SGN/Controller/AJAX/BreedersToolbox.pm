@@ -48,8 +48,9 @@ sub store_breeding_program :Path('/breeders/program/store') Args(0) {
     my $name = $c->req->param("name");
     my $desc = $c->req->param("desc");
 
-    if (!($c->user() || $c->user()->check_roles('submitter'))) {
+    if (!($c->user() && ($c->user()->check_roles('submitter') || $c->user()->check_roles('curator')))) {
         $c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add or edit a breeding program.' };
+        return;
     }
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -276,6 +277,16 @@ sub get_accession_plots_plants :Path('/ajax/breeders/get_accession_plots_plants'
 sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/') Args(1) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to delete phenotype files.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error => 'You must be a curator or submitter to delete phenotype files.' };
+        return;
+    }
+
     my $file_id = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);

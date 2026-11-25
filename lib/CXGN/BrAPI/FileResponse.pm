@@ -61,7 +61,7 @@ sub csv {
 		foreach my $cols (@$data_array){
 			my $step = 1;
 			for(my $i=0; $i<$num_col; $i++) {
-				if ($cols->[$i]) {
+				if (defined $cols->[$i]) {
 					print $fh "\"$cols->[$i]\"";
 				} else {
 					print $fh "\"\"";
@@ -89,7 +89,7 @@ sub tsv {
 		foreach my $cols (@$data_array){
 			my $step = 1;
 			for(my $i=0; $i<$num_col; $i++) {
-				if ($cols->[$i]) {
+				if (defined $cols->[$i]) {
 					print $fh $cols->[$i];
 				} else {
 					print $fh "";

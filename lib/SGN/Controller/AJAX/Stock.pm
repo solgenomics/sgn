@@ -1431,6 +1431,13 @@ sub remove_stock_parent : Local : ActionClass('REST') { }
 sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     my ($self, $c) = @_;
 
+    # A state change must not happen on a GET (it can be triggered from another
+    # site through a logged-in user's browser); require POST.
+    if ($c->req->method ne 'POST') {
+        $c->stash->{rest} = { error => "This action requires a POST request." };
+        return;
+    }
+
     my $stock_id = $c->req->param("stock_id");
     my $parent_id = $c->req->param("parent_id");
 
@@ -1472,7 +1479,7 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
 
 sub add_stock_parent : Local : ActionClass('REST') { }
 
-sub add_stock_parent_GET :Args(0) {
+sub add_stock_parent_POST :Args(0) {
     my ($self, $c) = @_;
     if (!$c->user()) {
 	print STDERR "User not logged in... not associating stocks.\n";
@@ -2632,6 +2639,15 @@ sub set_display_image : Path('/ajax/stock/set_display_image') : ActionClass('RES
 
 sub set_display_image_POST : Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error_string => 'You must be logged in to set the display image.' };
+        return;
+    }
+    if (!$c->user()->check_roles('curator') && !$c->user()->check_roles('submitter')) {
+        $c->stash->{rest} = { error_string => 'You must be a curator or submitter to set the display image.' };
+        return;
+    }
 
     my $stock_id = $c->req->param('stock_id');
     my $image_id = $c->req->param('image_id');

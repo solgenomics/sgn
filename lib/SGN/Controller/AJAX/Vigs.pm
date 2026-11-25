@@ -10,8 +10,9 @@ use File::Spec;
 use Bio::SeqIO;
 use Bio::BLAST2::Database;
 use Data::Dumper;
-use File::Temp qw | tempfile |; 
+use File::Temp qw | tempfile |;
 use CXGN::Graphics::VigsGraph;
+use CXGN::Tools::ShellQuote qw(shell_quote);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -105,7 +106,10 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		push (@errors, "n-mer size must be lower or equal to sequence length.\n");
     }
 
-    if (!$fragment_size ||$fragment_size < 18 || $fragment_size > 24 ) { 
+    if (defined $fragment_size && $fragment_size !~ /^\d+$/) {
+	push (@errors, "n-mer size must be a whole number.\n");
+    }
+    if (!$fragment_size ||$fragment_size < 18 || $fragment_size > 24 ) {
 		push (@errors, "n-mer size ($fragment_size) value must be between 18-24 bp.\n");
     }
     if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
@@ -179,10 +183,17 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 	
     # print STDERR "Bowtie2 COMMAND: ".(join " ",@command)."\n";
     # my $err = system(@command);
-	 
+
 	# bowtie command allowing 2 missmatch
-	my $err = system("$bowtie2_path/bowtie  --all -v 2 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out");
-   
+	my $err = system(join(" ",
+		shell_quote("$bowtie2_path/bowtie"),
+		"--all", "-v", "2", "--threads", "1",
+		"--seedlen", shell_quote($fragment_size),
+		"--sam", "--sam-nohead",
+		shell_quote($database_fullpath),
+		"-f", shell_quote("$query_file.fragments"), shell_quote("$query_file.bt2.out"),
+	));
+
 
 	if ($err) {
 		$c->stash->{rest} = {error => "Bowtie execution failed"};

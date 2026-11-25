@@ -261,6 +261,28 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
 
+sub manage_images : Path("/breeders/images") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+
+    #redirect to login page
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+    # Any logged-in user may create collections (the AJAX create endpoint
+    # only requires login); editing an existing collection is re-checked
+    # server-side per collection as creator-or-curator.
+    $c->stash->{user_can_modify} = 1;
+
+    $c->stash->{template} = '/breeders_toolbox/manage_images.mas';
+
+}
+
 sub manage_nurseries : Path("/breeders/nurseries") Args(0) {
     my $self = shift;
     my $c = shift;

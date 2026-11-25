@@ -49,7 +49,7 @@ $training_pop_id   => undef,
     <div id="anova_message"  class="message"></div>
     <& /solgs/spinner/spinner.mas &>
     <div id="anova_table" style="display:none;"> </div>
-    <input type="hidden" id="trial_id" value="<% $trial_id %>" />
+    <input type="hidden" id="trial_id" value="<% $trial_id || $training_pop_id %>" />
 
   </div>
 

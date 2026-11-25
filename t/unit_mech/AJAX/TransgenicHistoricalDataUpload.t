@@ -109,19 +109,22 @@ my $transformation1_stock_id = $transformations->[0]->[0];
 push @all_new_stocks, $transformation1_stock_id;
 my $transformation1_name = $transformations->[0]->[1];
 my $transformation1_is_a_control = $transformations->[0]->[7];
-my $transformation1_control_name = $transformations->[0]->[9];
+my $transformation1_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation1_stock_id});
+my $transformation1_controls = $transformation1_obj->get_transformation_controls();
+my $transformation1_control_name = $transformation1_controls->[0]->[1];
 
 my $transformation2_stock_id = $transformations->[1]->[0];
 push @all_new_stocks, $transformation2_stock_id;
 my $transformation2_name = $transformations->[1]->[1];
 my $transformation2_is_a_control = $transformations->[1]->[7];
-my $transformation2_control_name = $transformations->[1]->[9];
 
 my $transformation3_stock_id = $transformations->[2]->[0];
 push @all_new_stocks, $transformation3_stock_id;
 my $transformation3_name = $transformations->[2]->[1];
 my $transformation3_is_a_control = $transformations->[2]->[7];
-my $transformation3_control_name = $transformations->[2]->[9];
+my $transformation3_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation3_stock_id});
+my $transformation3_controls = $transformation3_obj->get_transformation_controls();
+my $transformation3_control_name = $transformation3_controls->[0]->[1];
 
 my $transformation4_stock_id = $transformations->[3]->[0];
 push @all_new_stocks, $transformation4_stock_id;

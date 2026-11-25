@@ -3102,12 +3102,14 @@ sub get_traits_assayed {
 
     my $traits_assayed_h = $dbh->prepare($q);
     my $component_h = $dbh->prepare($component_q);
+    # DBD::Pg returns SQL-generated JSON as characters, not UTF-8 octets.
+    my $component_json = JSON->new;
 
     $traits_assayed_h->execute($self->get_trial_id());
     while (my ($trait_name, $trait_id, $imaging_project_id, $imaging_project_name, $count) = $traits_assayed_h->fetchrow_array()) {
         $component_h->execute($contains_relationship_cvterm_id, $trait_id);
         my ($component_terms) = $component_h->fetchrow_array();
-        $component_terms = decode_json $component_terms;
+        $component_terms = $component_json->decode($component_terms);
         if ($contains_composable_cv_type) {
             my $has_composable_cv_type = 0;
             foreach (@$component_terms) {

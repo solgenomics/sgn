@@ -52,7 +52,9 @@ sub get_trial_related_stock {
             INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
             INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
             WHERE stock_relationship.subject_id = ? AND (stock_relationship.type_id = ?
-            OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? ) ";
+            OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? )
+
+            ORDER BY stock_id ";
 
     my $h = $schema->storage->dbh()->prepare($q);
 

@@ -214,8 +214,11 @@ sub search {
     my @where_clause;
     my $where;
     my @or_clause;
-    
-    my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_vcf_genotyping_cvterm_id($schema, {'protocol_id' => $protocol_id_list->[0]});
+
+    # Variants are stored per genotyping protocol (variant set). Without one
+    # there is nothing to search: answer with no variants.
+    return ([], 0) unless $protocol_id_list && scalar(@$protocol_id_list) > 0;
+
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
     my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();

@@ -150,16 +150,28 @@ sub search {
 
     #For performance reasons the number of joins to stock can be reduced if a trial is given.
 
-    my $from_clause = " FROM stock as observationunit
+    my $from_start = " FROM stock as observationunit";
+    my $experiment_joins = "
+        JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
+        JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+        JOIN project USING(project_id)";
+    if ($self->trial_list && @{$self->trial_list}) {
+        # Keep the study in the first join group; default join_collapse_limit is 8.
+        $from_start = " FROM project
+        JOIN nd_experiment_project USING(project_id)
+        JOIN nd_experiment_stock ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id)
+        JOIN stock as observationunit ON (observationunit.stock_id=nd_experiment_stock.stock_id)";
+        $experiment_joins = "";
+    }
+
+    my $from_clause = "$from_start
         JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id <> $intercrop_rel_type_id
         JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
         JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id)
         JOIN cvterm as germplasm_type ON (germplasm_type.cvterm_id = germplasm.type_id)
         LEFT JOIN stock_relationship AS isr ON (observationunit.stock_id=isr.subject_id) AND isr.type_id = $intercrop_rel_type_id
         LEFT JOIN stock AS istock ON (isr.object_id = istock.stock_id)
-        JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
-        JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-        JOIN project USING(project_id)
+        $experiment_joins
         LEFT JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id AND project_relationship.type_id = $breeding_program_rel_type_id)
         LEFT JOIN project as breeding_program ON (breeding_program.project_id=project_relationship.object_project_id)
         LEFT JOIN project_relationship folder_rel ON (project.project_id = folder_rel.subject_project_id AND folder_rel.type_id = $folder_rel_type_id)
@@ -182,7 +194,13 @@ sub search {
 
     my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, min(additional_info.value) as additional_info, min(plot_geo_json.value) as plot_geo_json, array_agg(distinct stock_image.image_id) as image_ids, STRING_AGG(DISTINCT(istock.stock_id::text), '|'), STRING_AGG(DISTINCT(istock.uniquename), ',') ";
 
-    my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
+    my $order = $self->order_by || 'project.name, observationunit.uniquename';
+    # Keep page boundaries stable when the primary sort keys tie. A unit can
+    # appear more than once when it has multiple related rows.
+    my $order_clause = " ORDER BY $order, project.project_id, observationunit.stock_id,
+        germplasm.stock_id, breeding_program.project_id, folder.project_id, seedlot.stock_id,
+        rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value,
+        col_number.value, plant_number.value, location.value";
 
     my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename ";
 

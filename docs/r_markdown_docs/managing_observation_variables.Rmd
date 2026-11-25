@@ -45,3 +45,8 @@ knitr::include_graphics('assets/images/trait_design_page.png')
 The final input box allows you to choose the parent term for the new term. The trait format dropdown allows you to specify numeric traits, categorical traits, or a new ontology. New ontologies allow you to organize your traits into hierarchies. For example, an 'Agronomic trait' sub-ontology could be made to include all agronomic trait measurements in the same group. Note that once a new term has been designated as numeric or categorical, it cannot have more child terms - it is the end of the hierarchy.
 
 Once a new trait has been submitted, the page will refresh and the trait will be available for use in the composition tool.
+
+In an editable ontology, curators can remove a parent from the **Relationships**
+section of a term's detail page. The term must keep at least one parent. After
+removing a parent, rebuild the ontology's cvterm paths in the trait or treatment
+designer so searches that use those paths reflect the change.
