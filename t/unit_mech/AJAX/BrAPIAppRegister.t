@@ -19,6 +19,10 @@ my $dbh = $f->dbh();
 my $server = 'http://localhost:3010';
 my $m = Test::WWW::Mechanize->new(autocheck => 0);
 
+# Registering accounts requires a signed-in user.
+$m->post_ok("$server/brapi/v1/token", [ username => 'janedoe', password => 'secretpw', grant_type => 'password' ],
+    'log in before registering');
+
 sub reg {
     my %p = @_;
     $m->post("$server/brapiapp/register", { %p });
