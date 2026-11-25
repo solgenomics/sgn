@@ -58,7 +58,8 @@ sub get_field_trial_sources_of_crossing_experiment {
             FROM nd_experiment_stock
             JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
             JOIN project ON (nd_experiment_project.project_id = project.project_id)
-            $where_clause";
+            $where_clause
+            ORDER BY project.project_id";
 
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($nd_experiment_type_id);
@@ -113,7 +114,8 @@ sub get_field_trials_for_evaluating_crosses {
             JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
             JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
             JOIN project ON (nd_experiment_project.project_id = project.project_id)
-           $where_clause";
+           $where_clause
+            ORDER BY project.project_id";
 
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($plot_of_type_id, $nd_experiment_type_id);
