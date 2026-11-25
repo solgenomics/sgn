@@ -38,6 +38,7 @@ use Math::Round::Var;
 use CXGN::Genotype::Search;
 use CXGN::Trial;
 use CXGN::Dataset;
+use CXGN::List;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use Data::Dumper;
 
@@ -452,6 +453,61 @@ sub has_genotype {
 
     return $has_genotype;
 
+}
+
+sub get_list_ownership {
+    my ($self, $data_str, $id) = @_;
+    
+    $id =~ s/\w+_//;
+    $data_str =~ s/_\d+//;
+
+    if ($data_str ne 'list') {
+        return;
+    }
+        
+    my $list = CXGN::List->new({ 
+        dbh => $self->schema->storage->dbh, 
+        list_id => $id 
+    });
+        
+    if (!$list->name) {
+        return;
+    }
+
+    return { 
+        name => $list->name, 
+        owner => $list->owner, 
+        is_public => $list->check_if_public 
+    };
+    
+}
+
+sub get_dataset_ownership {
+    my ($self, $data_str, $id) = @_;
+
+    $id =~ s/\w+_//;
+    $data_str =~ s/_\d+//;
+
+    if ($data_str ne 'dataset') {
+        return;
+    }
+    
+    my $dataset =  CXGN::Dataset->new({
+        schema        => $self->schema,
+        people_schema => $self->people_schema,
+        sp_dataset_id => $id,
+    });
+
+    
+    if (!$dataset) {
+        return;
+    }
+
+    return { 
+        name => $dataset->name, 
+        owner => $dataset->sp_person_id, 
+        is_public => $dataset->is_public 
+    };
 }
 
 sub count_phenotyped_genotyped_accessions {
