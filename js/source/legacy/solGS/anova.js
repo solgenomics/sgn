@@ -158,13 +158,13 @@ jQuery(document).ready(function () {
               }
             })
             .fail(function () {
-              solGS.anova.showMessage("Error occured listing anova traits.");
+              solGS.anova.showMessage("Error occurred listing anova traits.");
               jQuery(runDiv).hide();
             });
         }
       })
       .fail(function () {
-        solGS.anova.showMessage("Error occured running the ANOVA.");
+        solGS.anova.showMessage("Error occurred running the ANOVA.");
         jQuery(runDiv).show();
       });
   }
@@ -276,7 +276,7 @@ jQuery(document).ready(function () {
             })
             .fail(function () {
               jQuery(`${canvas} .multi-spinner-container`).hide();
-              solGS.anova.showMessage("Error occured running the anova analysis.");
+              solGS.anova.showMessage("Error occurred running the anova analysis.");
               jQuery(runDiv).show();
             });
         }
