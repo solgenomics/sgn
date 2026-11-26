@@ -194,10 +194,11 @@ input[type="text"] {
     // The Histogram links in the summary table call this function from their
     // onclick attribute, which only sees global names.
     globalThis.trait_summary_hist_change = trait_summary_hist_change;
+    // also read by trait_summary_hist_change, outside the ready function
+    var trial_id = "<% $trial_id %>";
 
     jQuery(document).ready(function () {
         var type = "<% $trial_stock_type %>";
-        var trial_id = "<% $trial_id %>";
 
         var observation_levels = ['plot', 'plant', 'subplot', 'tissue_sample'];
     	for (let observation_level of observation_levels) {

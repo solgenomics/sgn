@@ -47,6 +47,10 @@ foreach my $tz ('UTC', 'Europe/Kyiv', 'America/Los_Angeles', 'Pacific/Kiritimati
     like($r->{summary_table_url}, qr/&start_date=2030-08-17&end_date=2030-08-18&/, "$tz: summary table is requested for the selected days");
 }
 
+my $with_dates = run_page('UTC', { trial_id => 139, start_date => '2030-08-16 00:00:00', end_date => '2030-08-20 23:30:00' });
+is($with_dates->{histogram_error}, undef, 'a Histogram link works on a page without a global trial_id');
+like($with_dates->{histogram_url} // '', qr{^/ajax/breeders/trial/139/trait_phenotypes/\?trait=70741&}, 'a Histogram link requests the values of its trait in this trial');
+
 my $r = run_page('Europe/Kyiv', { trial_id => 1, start_date => undef, end_date => undef });
 is_deeply($r->{initial_dates}, ['', ''], 'no date filters for a trial without collect dates');
 
@@ -152,12 +156,12 @@ function moment(day) {
 }
 
 const document = {};
-// other components of the trial page define trial_id as a global
-vm.runInNewContext(script, {
-    trial_id: collect_date_range.trial_id,
+// no global trial_id: the Manage Phenotyping page shows this summary without one
+const page = {
     jQuery: jQuery, document: document, d3v4: {}, stackedObservationPhenotypeHistogram: {},
     addToListMenu: function () {}, alert: function () {}, console: console,
-});
+};
+vm.runInNewContext(script, page);
 
 ready();
 ajax_calls.find(request => /\/collect_date_range$/.test(request.url)).done_handler(collect_date_range);
@@ -178,6 +182,14 @@ if (slider.slider_options) {
 
     result.dates_after_slide = [start_date.val(), end_date.val()];
     result.summary_table_url = summary_table_urls[summary_table_urls.length - 1];
+}
+
+// click a Histogram link of the summary table
+try {
+    page.trait_summary_hist_change(70741);
+    result.histogram_url = ajax_calls[ajax_calls.length - 1].url;
+} catch (error) {
+    result.histogram_error = String(error);
 }
 
 console.log(JSON.stringify(result));
