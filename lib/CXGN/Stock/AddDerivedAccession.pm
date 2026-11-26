@@ -13,6 +13,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Location::LocationLookup;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 use Data::Dumper;
 use CXGN::Stock;
 
@@ -87,6 +88,7 @@ sub add_derived_accession {
     }
 
     my $coderef = sub {
+        CXGN::Pedigree::Parentage->lock($schema);
         my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
         my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
@@ -162,6 +164,7 @@ sub add_derived_accession {
             }
         }
 
+        CXGN::Pedigree::Parentage->assert_acyclic($schema, [$derived_accession_stock_id]);
     };
 
     my $transaction_error;

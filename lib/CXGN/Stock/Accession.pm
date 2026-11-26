@@ -29,6 +29,7 @@ extends 'CXGN::Stock';
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 
 has 'owner_sp_person' => (
     isa => 'ArrayRef',
@@ -413,6 +414,30 @@ sub _retrieve_number_of_insertions {
 
 sub store {
     my $self = shift;
+    my $has_mother = defined($self->mother_accession) && length($self->mother_accession);
+    my $has_father = defined($self->father_accession) && length($self->father_accession);
+    return $self->_store_accession unless $has_mother || $has_father;
+    return $self->schema->txn_do(sub {
+        CXGN::Pedigree::Parentage->lock($self->schema);
+        my $v = CXGN::Pedigree::Parentage->vocabulary($self->schema);
+        my @names = grep {defined($_) && length($_)} ($self->mother_accession, $self->father_accession);
+        my $matches = CXGN::Pedigree::Parentage->resolve_names($self->schema, \@names, $v);
+        my %parents;
+        $parents{female} = CXGN::Pedigree::Parentage->choose($matches, $self->mother_accession,
+            [qw(accession cross population vector_construct)], $v) if $has_mother;
+        $parents{male} = CXGN::Pedigree::Parentage->choose($matches, $self->father_accession,
+            [qw(accession cross population vector_construct)], $v) if $has_father;
+        my $id = $self->_store_accession(\%parents);
+        CXGN::Pedigree::Parentage->assert_acyclic($self->schema, [$id], $v);
+        return $id;
+    });
+}
+
+# Kept inside store's transaction when parent fields are present. Omitted BrAPI
+# roles retain the existing API's update semantics; no missing parent is inferred.
+sub _store_accession {
+    my $self = shift;
+    my $parents = shift || {};
 
     print STDERR "storing: UNIQUENAME=".$self->uniquename()."\n";
 
@@ -467,15 +492,15 @@ sub store {
             $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }
     }
-    if ($self->mother_accession) {
+    if (defined($self->mother_accession) && length($self->mother_accession)) {
         $self->_remove_parent_relationship('female_parent');
-        my $return = $self->_store_parent_relationship('female_parent', $self->mother_accession, 'biparental');
-        # TODO: delete accession if error and return error
+        my $return = $self->_store_parent_relationship('female_parent', $self->mother_accession, 'biparental', $parents->{female});
+        die $return if $return;
     }
-    if ($self->father_accession) {
+    if (defined($self->father_accession) && length($self->father_accession)) {
         $self->_remove_parent_relationship('male_parent');
-        my $return = $self->_store_parent_relationship('male_parent', $self->father_accession, 'biparental');
-        # TODO: delete accession if error and return error
+        my $return = $self->_store_parent_relationship('male_parent', $self->father_accession, 'biparental', $parents->{male});
+        die $return if $return;
     }
     if ($self->additional_info) {
         $self->_update_stockprop_raw('stock_additional_info', encode_json $self->additional_info);
