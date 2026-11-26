@@ -62,7 +62,8 @@ module.exports = {
     optimization: {
         minimize: true,
 	chunkIds: "deterministic",
-        minimizer: [new TerserPlugin({})],
+        // ascii_only: bundles are served without a charset, so keep them pure ASCII
+        minimizer: [new TerserPlugin({ terserOptions: { format: { ascii_only: true } } })],
 	runtimeChunk: {
             name: 'runtime'
         },

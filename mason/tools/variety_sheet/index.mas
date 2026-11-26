@@ -1,0 +1,28 @@
+<%args>
+$stock_id => undef
+$sheet_id => undef
+</%args>
+
+<& /util/import_css.mas, paths => ['leaflet.css'] &>
+<& /util/app_layout.mas &>
+<& /util/import_javascript.mas, classes => ['jquery', 'jqueryui', 'CXGN.Login'], entries => ['variety_sheet'] &>
+<& /tools/variety_sheet/sheet_css.mas &>
+
+<div class="bb-app">
+  <&| /util/app_hero.mas, title => 'Variety Release Profile', icon => 'glyphicon-tag',
+      text => 'Turn a selected accession into a commercial variety profile built from the data already in the database: testing history, head-to-head results against checks, disease reactions and photos. Save it in Breedbase for the curators, and print it or save it as a one-page PDF to send.' &>
+    <a class="btn btn-default btn-lg" href="/breeders/meeting"><span class="glyphicon glyphicon-check"></span> Decision meetings</a>
+    <a class="btn btn-default btn-lg" href="/variety_sheets"><span class="glyphicon glyphicon-th-large"></span> All profiles</a>
+  </&>
+
+  <div id="variety_sheet_editor"></div>
+</div>
+
+<script>
+  jQuery(function () {
+    window.jsMod['variety_sheet'].initEditor('#variety_sheet_editor', {
+      stock_id: <% $stock_id ? int($stock_id) : 'null' %>,
+      sheet_id: <% $sheet_id ? int($sheet_id) : 'null' %>
+    });
+  });
+</script>
