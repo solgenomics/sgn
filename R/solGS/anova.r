@@ -83,7 +83,7 @@ for (trait in traits) {
         cat(anovaOut, file=errorFile)
     } else if (is.null(anovaOut)) {
         
-        cat('Error occured fitting anova model to this trait data.
+        cat('Error occurred fitting anova model to this trait data.
              Please check the trait data and design factors.',
             file=errorFile)
         
@@ -123,6 +123,53 @@ for (trait in traits) {
         sink(modelSummFile)
         print(anovaOut)
         sink()
+
+        # Which accessions differ: Fisher's LSD, standard errors and letter
+        # groups (#6527). phenoAnalysis has compareMeans from version 0.3.9.
+        meansComparisonFile <- grep("means_comparison_table", outputFiles, value = TRUE)
+        meansSummaryFile    <- grep("means_comparison_summary", outputFiles, value = TRUE)
+
+        # A comparison of an earlier fit must not stay beside this one.
+        unlink(c(meansComparisonFile, meansSummaryFile))
+
+        if (length(meansComparisonFile) == 1 &&
+            'compareMeans' %in% getNamespaceExports('phenoAnalysis')) {
+
+            comparison <- tryCatch(compareMeans(anovaOut, factor = 'germplasmName'),
+                                   error = function(e) {
+                                       message('Means comparison failed: ', conditionMessage(e))
+                                       NULL
+                                   })
+
+            if (!is.null(comparison)) {
+                meansTable      <- comparison$means
+                meansTable$mean <- signif(meansTable$mean, 6)
+                meansTable$SE   <- signif(meansTable$SE, 4)
+                names(meansTable)[names(meansTable) == 'mean'] <- paste0(trait, '_mean')
+
+                fwrite(meansTable,
+                       file  = meansComparisonFile,
+                       sep   = "\t",
+                       quote = FALSE,
+                       na    = "")
+
+                lsd <- comparison$lsd
+                lsdText <- signif(lsd[['mean']], 4)
+                if (signif(lsd[['min']], 4) != signif(lsd[['max']], 4)) {
+                    lsdText <- paste0(lsdText, ' on average, ', signif(lsd[['min']], 4),
+                                      ' to ', signif(lsd[['max']], 4), ' by pair')
+                }
+
+                meansSummary <- paste0("Fisher's LSD (", comparison$alpha, "): ", lsdText,
+                                       ", df = ", signif(comparison$df, 4),
+                                       ", F test p = ", format.pval(comparison$pValue, digits = 3), ".")
+                if (!is.null(comparison$note)) {
+                    meansSummary <- paste(meansSummary, comparison$note)
+                }
+
+                cat(meansSummary, file = meansSummaryFile)
+            }
+        }
     }
   
 }
