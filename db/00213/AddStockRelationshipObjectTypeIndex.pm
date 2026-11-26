@@ -80,7 +80,7 @@ WHERE idx.indexrelid = to_regclass('public.stock_relationship_object_id_type_id_
   AND idx.indrelid = 'public.stock_relationship'::regclass
   AND am.amname = 'btree'
   AND idx.indisvalid AND idx.indisready AND NOT idx.indisunique
-  AND idx.indnatts = 2 AND idx.indpred IS NULL
+  AND idx.indnatts = 2 AND idx.indnkeyatts = 2 AND idx.indpred IS NULL
   AND pg_get_indexdef(idx.indexrelid, 1, true) = 'object_id'
   AND pg_get_indexdef(idx.indexrelid, 2, true) = 'type_id'
 SQL

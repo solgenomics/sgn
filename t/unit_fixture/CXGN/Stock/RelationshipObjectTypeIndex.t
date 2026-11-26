@@ -7,7 +7,7 @@ use SGN::Test::Fixture;
 use Test::More;
 
 # Parent lookups filter stock_relationship by object_id and type_id together.
-# Database patch 00211 adds the index that serves them.
+# Database patch 00213 adds the index that serves them.
 
 my $fixture = SGN::Test::Fixture->new();
 my $dbh = $fixture->dbh();
