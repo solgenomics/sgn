@@ -14,40 +14,50 @@ CXGN::Pedigree::Upload - standard authorization and input checks for pedigree up
 
 =cut
 
-=head2 authorize($context)
+=head2 authorize($context, %options)
 
-Authorize the actual session as a curator or submitter before parsing files or
-JSON. The existing sgn_session_id transport is supported and expired sessions
-are rejected. Client-supplied user IDs are never an authority or audit identity.
+Require a curator or submitter before parsing files or JSON: the signed-in
+user, or the owner of a current sgn_session_id token. When both are given they
+must be the same person. With require_user => 1 a token alone is not enough.
+Nobody may upload while logins are not allowed.
 
 =cut
 
 sub authorize {
-    my ($class, $c) = @_;
+    my ($class, $c, %options) = @_;
     if ($c->req->method ne 'POST') {
         $c->stash->{rest} = {error => 'Use POST to upload pedigree information.'};
         return;
     }
-    my ($id, $name, $role);
+    my $denied = sub {
+        $c->stash->{rest} = {error => 'Log in as a submitter or curator to upload pedigree information.'};
+        return;
+    };
+    # the conditions of CXGN::Login::login_allowed
+    my $config = $c->config;
+    return $denied->() if $config->{disable_login} || $config->{is_mirror}
+        || ( ( $config->{dbname} // '' ) =~ /sandbox/ && $config->{production_server} );
+    return $denied->() if $options{require_user} && !$c->user;
+    my ($token_id, $token_role);
     my $session = $c->req->param('sgn_session_id');
     if (defined($session) && length($session)) {
         my ($user, $type, undef, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($session);
-        if ($user && !$expired && ($type eq 'curator' || $type eq 'submitter')) {
-            ($id, $role) = ($user, $type);
-            $name = CXGN::People::Person->new($c->dbc->dbh, $id)->get_username;
-        }
-    } elsif ($c->user) {
-        my @roles = $c->user->roles;
-        $role = grep({$_ eq 'curator'} @roles) ? 'curator' : grep({$_ eq 'submitter'} @roles) ? 'submitter' : undef;
-        if ($role) {
-            $id = $c->user->get_object->get_sp_person_id;
-            $name = $c->user->get_object->get_username;
-        }
+        return $denied->() if !$user || $expired;
+        ($token_id, $token_role) = ($user, $type // '');
     }
-    if (!$id || !$role) {
-        $c->stash->{rest} = {error => 'Log in as a submitter or curator to upload pedigree information.'};
-        return;
+    my ($id, $name, $role);
+    if (my $user = $c->user) {
+        $role = $user->check_roles('curator') ? 'curator' : $user->check_roles('submitter') ? 'submitter' : undef;
+        my $person = $user->get_object;
+        $id = $person->get_sp_person_id;
+        $name = $person->get_username;
+        return $denied->() if defined($token_id) && $token_id != $id;
+    } elsif (defined $token_id) {
+        $role = $token_role if $token_role eq 'curator' || $token_role eq 'submitter';
+        $id = $token_id;
+        $name = CXGN::People::Person->new($c->dbc->dbh, $id)->get_username if $role;
     }
+    return $denied->() if !$id || !$role;
     return {id => $id, name => $name, role => $role};
 }
 

@@ -113,7 +113,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
 sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0) {
     my ($self, $c) = @_;
-    my $actor = CXGN::Pedigree::Upload->authorize($c);
+    my $actor = CXGN::Pedigree::Upload->authorize($c, require_user => 1);
     return unless $actor;
     my $error;
     eval {

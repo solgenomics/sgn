@@ -1246,7 +1246,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
 
 sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_progenies') Args(0) {
     my ($self, $c) = @_;
-    my $actor = CXGN::Pedigree::Upload->authorize($c);
+    my $actor = CXGN::Pedigree::Upload->authorize($c, require_user => 1);
     return unless $actor;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $actor->{id});
     my $error;

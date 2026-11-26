@@ -417,7 +417,7 @@ sub store_crosses { #crosses must belong to same experiment
         });
 
         #add the crosses
-        $cross_add->add_crosses();
+        $cross_add->add_crosses() or die "Error adding crosses.\n";
     };
 
     if ($@) {
