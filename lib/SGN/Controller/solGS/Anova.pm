@@ -24,6 +24,7 @@ use File::Copy;
 use File::Slurp qw /write_file read_file/;
 use File::Spec;
 use File::Path qw /make_path/;
+use HTML::Entities qw /encode_entities/;
 use JSON;
 use List::Util qw/first/;
 use POSIX qw/isfinite/;
@@ -304,6 +305,8 @@ sub is_valid_anova_trait_data {
         $trait_name = defined $trait_name
             ? $c->controller('solGS::Utils')->clean_traits($trait_name) : $trait_abbr;
         $trait_name =~ s/\s+/ /g;
+        # the page shows the message as HTML
+        $trait_name = encode_entities($trait_name);
         $c->stash->{anova_data_error} = "No variation in $trait_name; ANOVA not performed.";
     }
     close $input;

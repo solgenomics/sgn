@@ -53,6 +53,7 @@ for my $case (
     {name => 'one value written in several ways', values => ['2', '2.0', '+2', '2e0'], error => qr/^No variation in height cm; ANOVA not performed\.$/},
     {name => 'a single observation', values => ['5', 'NA', ''], error => qr/^No variation in height cm; ANOVA not performed\.$/},
     {name => 'no variation in a composed trait', trait => 'plant height|CO_334:0000001||day 43|TIME:0000043', last => 1, values => ['0', '0'], error => qr/^No variation in plant height day 43; ANOVA not performed\.$/},
+    {name => 'markup in the trait name is escaped', trait => 'height <b>cm', values => ['3', '3'], error => qr/^No variation in height &lt;b&gt;cm; ANOVA not performed\.$/},
     {name => 'small variation is kept', values => ['0.25', '0.25', '0.2500001']},
 ) {
     subtest $case->{name} => sub {
