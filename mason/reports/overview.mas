@@ -1,21 +1,18 @@
 
 
 <%args>
-
+$stats => {}
 </%args>
 
 <& /page/page_title.mas, title => 'Database Overview Report' &>
 
-<table id="overview_report_table">
-  <tr>
-    <thead>
-      Data Type
-    </thead>
-    <thead>
-      Total Count
-    </thead>
-    <thead>
-  </tr>
+<table id="overview_report_table" class="table">
+  <thead>
+    <tr><th>Data Type</th><th>Total Count</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Accessions</td><td><% $stats->{accession_count} %></td></tr>
+  </tbody>
 </table>
 
 
