@@ -61,7 +61,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
     if (@data) {
       print STDERR "Validating dataref ids\n";
-      for (my $i=0; $i<@data; $i++) { # ensure dataref arguements (ids) are numeric
+      for (my $i=0; $i<@data; $i++) { # ensure dataref arguments (ids) are numeric
         if (m/\D/) {
           $error = "Valid values for dataref are numeric ids";
           $c->stash->{rest} = { error => $error };
@@ -180,6 +180,11 @@ sub get_genotyping_protocol_chromosomes : Path('/ajax/breeder/search/genotyping_
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
   my $self = shift;
   my $c = shift;
+  if (!$c->user()) {
+    # Without a login check anyone can start one refresh after another and keep the database busy.
+    $c->stash->{rest} = { error => 'You must be logged in to refresh the search views.' };
+    return;
+  }
   my $matviews = $c->req->param('matviews') || 'fullview'; #can be "fullview" or "stockprop"
 
   print STDERR "dbname=" . $c->config->{dbname} ."\n";
