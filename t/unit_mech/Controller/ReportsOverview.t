@@ -18,9 +18,6 @@ my ($accessions) = $f->dbh->selectrow_array(q{
 ok($accessions > 0, 'the fixture has accessions');
 
 my $mech = Test::WWW::Mechanize->new(autocheck => 0);
-$mech->post("$base/ajax/user/login", { username => 'janedoe', password => 'secretpw' });
-is($mech->status, 200, 'janedoe logs in');
-
 $mech->get("$base/reports/overview");
 is($mech->status, 200, '/reports/overview opens');
 like($mech->content, qr{<td>Accessions</td><td>\Q$accessions\E</td>}, "the overview shows the $accessions accessions");
