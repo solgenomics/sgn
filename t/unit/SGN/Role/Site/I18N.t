@@ -91,12 +91,16 @@ subtest 'a wrong setup stops the application' => sub {
     eval { Local::App->setup_finalize };
     like( $@, qr{no gettext catalog \Q$dir\E/es/LC_MESSAGES/sgn\.mo}, 'a missing catalog is reported' );
 
-    make_path("$dir/es/LC_MESSAGES");
-    open( my $not_a_catalog, '>', "$dir/es/LC_MESSAGES/sgn.mo" ) or die "Can't write the file: $!";
+    # another directory: gettext remembers that it found no catalog in the first one
+    my $other = tempdir( CLEANUP => 1 );
+    make_path( "$other/uk/LC_MESSAGES", "$other/es/LC_MESSAGES" );
+    is( system( 'msgfmt', '-o', "$other/uk/LC_MESSAGES/sgn.mo", 't/data/i18n/uk.po' ), 0, 'second test catalog compiled' );
+    open( my $not_a_catalog, '>', "$other/es/LC_MESSAGES/sgn.mo" ) or die "Can't write the file: $!";
     print {$not_a_catalog} "not a gettext catalog\n";
     close $not_a_catalog;
+    %config = ( i18n_languages => 'uk, es', i18n_locale_dir => $other );
     eval { Local::App->setup_finalize };
-    like( $@, qr{no gettext catalog \Q$dir\E/es/LC_MESSAGES/sgn\.mo}, 'a file that is not a catalog is reported' );
+    like( $@, qr{no gettext catalog \Q$other\E/es/LC_MESSAGES/sgn\.mo}, 'a file that is not a catalog is reported' );
 
     %config = ( i18n_languages => 'xx', i18n_locale_dir => $dir );
     eval { Local::App->setup_finalize };
