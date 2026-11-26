@@ -14,7 +14,7 @@ my $f = SGN::Test::Fixture->new();
 my $base = $ENV{SGN_TEST_SERVER} || 'http://localhost:3010';
 my ($accessions) = $f->dbh->selectrow_array(q{
     SELECT count(*) FROM stock JOIN cvterm ON cvterm.cvterm_id = stock.type_id
-      JOIN cv USING (cv_id) WHERE cvterm.name = 'accession' AND cv.name = 'stock_type'});
+      JOIN cv USING (cv_id) WHERE cvterm.name = 'accession' AND cv.name = 'stock_type' AND NOT stock.is_obsolete});
 ok($accessions > 0, 'the fixture has accessions');
 
 my $mech = Test::WWW::Mechanize->new(autocheck => 0);
