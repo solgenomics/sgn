@@ -149,6 +149,8 @@ sleep(2);
 # cleanup for next test :-)
 unlink($mm->tempfile() . ".adjustedBLUEs");
 unlink($mm->tempfile() . ".BLUEs");
+unlink($mm->tempfile() . ".meansGroups");
+unlink($mm->tempfile() . ".meansComparison");
 
 $ds->delete();
 
