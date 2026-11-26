@@ -440,10 +440,16 @@ accession identifiers in the first column, with the remaining columns being the
 adjusted BLUEs, BLUEs, adjusted BLUPs or BLUPs for all the initially selected
 traits.
 
+For BLUEs from lme4, when phenoAnalysis has compareMeans (0.3.9 and later), two
+more files compare the means with Fisher's LSD: .meansGroups has the letter
+groups of the accessions for each trait, and .meansComparison has for each
+trait the alpha, the mean, smallest and largest LSD of the pairs, its degrees
+of freedom, the p value of the F test of the accessions and a note.
+
 The files from the dataset will contain trait names that are incompatible with R. These names are converted using the clean_file subroutine. The conversion takes place and is saved in a file with a .clean extension. Then, the .clean file is moved to the previous file name, such that there is not difference in file naming.
 
 
-The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The inital result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete. 
+The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The initial result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete. 
   
 
 
@@ -513,6 +519,10 @@ sub run_model {
 	close($F);
 
 	
+	# the results of an earlier run with the same tempfile must not be
+	# shown for this one: the run action takes BLUPs before BLUEs
+	unlink(map { $self->tempfile().$_ } qw | .adjustedBLUPs .BLUPs .BLUEs .adjustedBLUEs .anova .varcomp .meansGroups .meansComparison |);
+
 	# clean phenotype file so that trait names are R compatible
 	#
 	my $clean_tempfile = $self->clean_file($self->tempfile());
@@ -571,6 +581,8 @@ sub run_model {
 	    $self->tempfile().".adjustedBLUEs",
 	    $self->tempfile().".anova",
 	    $self->tempfile().".varcomp",
+	    $self->tempfile().".meansGroups",
+	    $self->tempfile().".meansComparison",
 	    ) {
 	    
 	    my $conversion_matrix = $self->read_conversion_matrix($self->tempfile().".traits");

@@ -32,6 +32,10 @@ library(effects)
 library(stringr)
 library(dplyr)
 
+# Fisher's LSD of the BLUEs needs compareMeans of phenoAnalysis 0.3.9 or later.
+compareMeansAvailable = requireNamespace("phenoAnalysis", quietly=TRUE) &&
+    "compareMeans" %in% getNamespaceExports("phenoAnalysis")
+
 pd = read.csv(datafile, sep="\t")
 
 source(paramfile)  # should give us dependent_variable and the model
@@ -49,6 +53,10 @@ adjustedBLUE = BLUE
 
 BLUP = BLUE
 adjusted_means = BLUE
+
+# letter groups of the BLUEs, and per trait the LSD and its F test
+meansGroups = BLUE
+meansComparison = data.frame(statistic = c("alpha", "LSD", "LSD_min", "LSD_max", "df", "F_test_p", "note"))
 
 for(i in 1:length(trait)){
 
@@ -135,6 +143,23 @@ for(i in 1:length(trait)){
 
         BLUE = merge(x = BLUE, y = fixedeff, by="germplasmName", all=TRUE)
 
+        if (compareMeansAvailable) {
+            comparison = tryCatch(phenoAnalysis::compareMeans(mixmodel, factor="germplasmName"),
+                                  error = function(e) e)
+            if (inherits(comparison, "error")) {
+                meansComparison[[trait[i]]] = c(rep(NA, 6), conditionMessage(comparison))
+            } else {
+                groups = comparison$means[c("germplasmName", "group")]
+                colnames(groups)[2] = trait[i]
+                meansGroups = merge(x = meansGroups, y = groups, by="germplasmName", all=TRUE)
+                meansComparison[[trait[i]]] = c(comparison$alpha,
+                                                signif(comparison$lsd, 4),
+                                                signif(comparison$df, 4),
+                                                format.pval(comparison$pValue, digits=3),
+                                                ifelse(is.null(comparison$note), NA, comparison$note))
+            }
+        }
+
         
     }
 }
@@ -163,4 +188,9 @@ if (genotypeEffectType=="random") {
     sink(outfile_adjblues)
     write.table(adjustedBLUE, quote=F , sep='\t', row.names=FALSE)
     sink();
+
+    if (compareMeansAvailable) {
+        write.table(meansGroups, paste(datafile, ".meansGroups", sep=""), quote=F, sep='\t', row.names=FALSE)
+        write.table(meansComparison, paste(datafile, ".meansComparison", sep=""), quote=F, sep='\t', row.names=FALSE)
+    }
 }

@@ -141,14 +141,16 @@ sleep(2);
 
  SKIP: { 
      skip "Skip if run under git", 2 unless $SYSTEM_MODE ne "GITACTION"; 
-     ok( -e $mm->tempfile() . ".adjustedBLUPs", "check existence of adjustedBLUEs result file");
-     ok( -e $mm->tempfile() . ".BLUPs", "check existence of BLUEs result file");
+     ok( -e $mm->tempfile() . ".adjustedBLUEs", "check existence of adjustedBLUEs result file");
+     ok( -e $mm->tempfile() . ".BLUEs", "check existence of BLUEs result file");
      #    is(scalar(my @a = read_file($mm->tempfile() . ".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
 };
 
 # cleanup for next test :-)
 unlink($mm->tempfile() . ".adjustedBLUEs");
 unlink($mm->tempfile() . ".BLUEs");
+unlink($mm->tempfile() . ".meansGroups");
+unlink($mm->tempfile() . ".meansComparison");
 
 $ds->delete();
 

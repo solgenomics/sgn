@@ -353,6 +353,11 @@ export function init(main_div) {
 			$('#adjusted_blues_tab_link').removeClass('active');
 			$('#adjusted_blues_tab_link').hide();
 			$('#blues_tab_link').hide();
+
+			$('#means_comparison_tab_link').hide();
+			$('#mixed_models_means_comparison_results_div').html('');
+			$('#mixed_models_means_groups_results_div').html('');
+			$('#adjusted_blups_tab_link').tab('show');
 		    }
 		    else {
 	 		$('#mixed_models_adjusted_blues_results_div').html(r.adjusted_blues_html);
@@ -367,6 +372,17 @@ export function init(main_div) {
 			$('#adjusted_blues_tab_link').tab('show');
 			$('#adjusted_blues_tab_link').addClass('active');
 			$('#blues_tab_link').show();
+
+			if (r.means_comparison_html) {
+			    $('#mixed_models_means_comparison_results_div').html(r.means_comparison_html);
+			    $('#mixed_models_means_groups_results_div').html(r.means_groups_html || '');
+			    $('#means_comparison_tab_link').show();
+			}
+			else {
+			    $('#means_comparison_tab_link').hide();
+			    $('#mixed_models_means_comparison_results_div').html('');
+			    $('#mixed_models_means_groups_results_div').html('');
+			}
 		    }
 
 		    accession_names = JSON.stringify(r.accession_names);
