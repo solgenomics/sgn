@@ -9,6 +9,7 @@ use File::Spec;
 use JSON::Any;
 use File::Basename qw | basename |;
 use DateTime;
+use HTML::Entities qw | encode_entities |;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
 use CXGN::MixedModels;
@@ -231,6 +232,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $adjusted_blues_file = $temppath.".adjustedBLUEs";
     my $anovafile = $temppath.".anova";
     my $varcompfile = $temppath.".varcomp";
+    my $means_groups_file = $temppath.".meansGroups";
+    my $means_comparison_file = $temppath.".meansComparison";
     my $lines;
 
     my $accession_names;
@@ -287,6 +290,15 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
         return;
     }
 
+    # Fisher's LSD of the BLUEs, when the R job wrote it
+    #
+    my $means_comparison_html;
+    my $means_groups_html;
+    if ($method eq "fixed" && -s $means_comparison_file) {
+	$means_comparison_html = $self->means_comparison_html($means_comparison_file);
+	$means_groups_html = $self->means_groups_html($means_groups_file) if -s $means_groups_file;
+    }
+
     my $response = {
 	error => $error,
 	accession_names => $accession_names,
@@ -298,12 +310,72 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	blups_html => $blups_html,
 	blues_data => $blues_data,
 	blues_html => $blues_html,
+	means_comparison_html => $means_comparison_html,
+	means_groups_html => $means_groups_html,
 	method => $method,
 	input_file => $temppath,
 	traits => $traits
     };
 
     $c->stash->{rest} = $response;
+}
+
+# The .meansComparison file has one column per trait; the table has one row
+# per trait.
+sub means_comparison_html {
+    my $self = shift;
+    my $file = shift;
+
+    my @lines = read_file($file, { binmode => ':utf8' });
+    chomp(@lines);
+    my (undef, @traits) = split /\t/, shift(@lines);
+
+    my %values;
+    foreach my $line (@lines) {
+	my ($statistic, @row) = split /\t/, $line, -1;
+	$values{$statistic} = \@row;
+    }
+
+    my @columns = (
+	[ LSD => 'LSD (mean of the pairs)' ],
+	[ LSD_min => 'smallest LSD' ],
+	[ LSD_max => 'largest LSD' ],
+	[ df => 'df' ],
+	[ F_test_p => 'F test p' ],
+	[ alpha => 'alpha' ],
+	[ note => 'note' ],
+	);
+
+    my $html = qq|<table class="table table-bordered"><tr><th>trait</th>|;
+    $html .= join("", map { "<th>".encode_entities($_->[1])."</th>" } @columns)."</tr>";
+    for (my $i = 0; $i < @traits; $i++) {
+	$html .= "<tr><td>".encode_entities($traits[$i])."</td>";
+	$html .= join("", map { "<td>".encode_entities($values{$_->[0]}->[$i] // "")."</td>" } @columns)."</tr>";
+    }
+    $html .= "</table>";
+
+    return $html;
+}
+
+# The .meansGroups file: the letter groups of the accessions, one column per
+# trait.
+sub means_groups_html {
+    my $self = shift;
+    my $file = shift;
+
+    my @lines = read_file($file, { binmode => ':utf8' });
+    chomp(@lines);
+    my (undef, @traits) = split /\t/, shift(@lines);
+
+    my $html = qq|<table class="table table-bordered"><tr><th>accession name</th>|;
+    $html .= join("", map { "<th>".encode_entities($_)."</th>" } @traits)."</tr>";
+    foreach my $line (@lines) {
+	my @row = split /\t/, $line, -1;
+	$html .= "<tr>".join("", map { "<td>".encode_entities($_ // "")."</td>" } @row[0 .. scalar(@traits)])."</tr>";
+    }
+    $html .= "</table>";
+
+    return $html;
 }
 
 sub result_file_to_hash {

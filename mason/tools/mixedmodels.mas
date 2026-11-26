@@ -207,6 +207,7 @@
       <li><a data-toggle="tab" id="blups_tab_link" href="#blups_tab">BLUPs</a></li>
       <li><a data-toggle="tab" id="adjusted_blues_tab_link" href="#adjusted_blues_tab">Adjusted means (BLUEs)</a></li>
       <li><a data-toggle="tab" id="blues_tab_link" href="#blues_tab">BLUEs</a></li>
+      <li><a data-toggle="tab" id="means_comparison_tab_link" href="#means_comparison_tab" style="display:none">Means comparison (LSD)</a></li>
     </ul>
     <div class="tab-content">
       <div id="adjusted_blups_tab" class="tab-pane fade in active">
@@ -236,6 +237,13 @@
 	<button id="open_store_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues">Save BLUEs</button>
 
 	<div id="mixed_models_blues_results_div">[loading...]</div>
+      </div>
+
+      <div id="means_comparison_tab" class="tab-pane fade">
+	<br />
+	<p>Fisher's LSD of the adjusted means (BLUEs). Two accessions differ when their means differ by more than the LSD of the pair. Accessions that share a letter do not differ. The letters are given when the F test of the accessions is significant, for up to 100 accessions.</p>
+	<div id="mixed_models_means_comparison_results_div">[not available]</div>
+	<div id="mixed_models_means_groups_results_div"></div>
       </div>
     </div> <!-- results_tab div -->
   </div>
