@@ -12,6 +12,15 @@ use Moose::Meta::Class;
 use Moose::Util qw( apply_all_roles );
 use POSIX qw( setlocale LC_MESSAGES );
 
+# The enabled cases need msgfmt and the Ukrainian and Spanish system locales.
+{
+    my $msgfmt  = grep { -x "$_/msgfmt" } split /:/, $ENV{PATH} // '';
+    my @missing = grep { !setlocale( LC_MESSAGES, "$_.UTF-8" ) } qw( uk_UA es_ES );
+    setlocale( LC_MESSAGES, 'C' );
+    plan skip_all => 'msgfmt is not installed' if !$msgfmt;
+    plan skip_all => "no system locale for @missing" if @missing;
+}
+
 # A request and a response with only what the role reads and writes.
 sub Local::Cookie::value     { return $_[0]{value} }
 sub Local::Request::param    { return $_[0]{param}{ $_[1] } }
