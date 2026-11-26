@@ -1,3 +1,6 @@
+use strict;
+use warnings;
+
 use lib 'lib';
 use SGN::Build;
 
@@ -121,6 +124,7 @@ my $build = SGN::Build->new(
         'List::AllUtils'                           => 0,
 	'List::Compare'                            => 0,
         'List::Util'                               => 0,
+        'Locale::TextDomain'                       => 0,
         'LWP::UserAgent'                           => 0,
         'Mail::Sendmail'                           => 0,
 	'Math::Base36'                             => 0,

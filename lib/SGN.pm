@@ -48,6 +48,7 @@ use Catalyst qw/
      +SGN::Role::Site::DBIC
      +SGN::Role::Site::Exceptions
      +SGN::Role::Site::Files
+     +SGN::Role::Site::I18N
      +SGN::Role::Site::Mason
      +SGN::Role::Site::SiteFeatures
      +SGN::Role::Site::TestMode
