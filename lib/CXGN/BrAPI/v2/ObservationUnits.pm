@@ -419,7 +419,7 @@ sub _apply_observation_unit_updates {
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
     my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property');
     my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property');
-    my $plant_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant number', 'stock_property');
+    my $plant_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_index_number', 'stock_property');
     my $block_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property');
     my $is_a_control_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property');
     my $rep_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property');
