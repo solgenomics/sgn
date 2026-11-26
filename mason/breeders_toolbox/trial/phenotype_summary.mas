@@ -662,7 +662,7 @@ input[type="text"] {
         });
     }
 
-//end of immediately inoked function
+//end of immediately invoked function
 })();
 
 </script>
