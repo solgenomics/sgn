@@ -329,7 +329,7 @@ sub get_crossing_experiments_from_field_trial {
         $where_clause;";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($female_plot_of_type_id, $male_plot_of_type_id, $female_plot_of_type_id, $male_plant_of_type_id, $cross_experiment_type_id);
+    $h->execute($female_plot_of_type_id, $male_plot_of_type_id, $female_plant_of_type_id, $male_plant_of_type_id, $cross_experiment_type_id);
 
     my @crossing_experiments = ();
     while(my($experiment_id, $experiment_name) = $h->fetchrow_array()){
