@@ -293,17 +293,7 @@ sub BUILD {
     my $people_schema = $args->{people_schema};
 
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
-        my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
-        my $cv_id = $cv_rs->cv_id();
-        my $cvterm_row = $bcs_schema->resultset("Cv::Cvterm")->find({name => $self->job_type(), cv_id => $cv_id});
-        if ($cvterm_row) {
-            $self->type_id($cvterm_row->cvterm_id());
-        } else {
-            $bcs_schema->resultset("Cv::Cvterm")->create_with({
-                name => $self->job_type(),
-                cv_id => $cv_id
-            });
-        }
+        $self->type_id(scalar(_job_type_id($bcs_schema, $self->job_type())));
         $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
         if (!$self->has_cxgn_tools_run_config()) {
             $self->cxgn_tools_run_config($self->get_default_cxgn_tools_run_config());
@@ -318,6 +308,10 @@ sub BUILD {
         if ($row->type_id()) {
             $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({cvterm_id => $row->type_id()});
             $self->job_type($cvterm_row->name());
+        } elsif ($job_args && $job_args->{job_type}) {
+            # a job stored without its type id: the type name is in its args
+            $self->job_type($job_args->{job_type});
+            $self->type_id(scalar(_job_type_id($self->schema(), $job_args->{job_type})));
         }
         $self->create_timestamp($row->create_timestamp());
         $self->finish_timestamp($row->finish_timestamp());
@@ -331,6 +325,31 @@ sub BUILD {
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
     }
+}
+
+# cvterm_id of a job type (cv 'job_type'), created when missing. Before this
+# was fixed, a missing type was created with create_with({ cv_id => ... }),
+# which ignores cv_id and puts the term in the 'null' cv: the job got no type
+# id and the term was never found again. Such a term is moved to 'job_type'.
+sub _job_type_id {
+    my ($schema, $job_type) = @_;
+    return if !$schema || !defined($job_type) || $job_type eq '';
+    my $cv = $schema->resultset("Cv::Cv")->find_or_create({ name => 'job_type' });
+    my $cvterm_rs = $schema->resultset("Cv::Cvterm");
+    my $cvterm = $cvterm_rs->find({ name => $job_type, cv_id => $cv->cv_id(), is_obsolete => 0 });
+    if (!$cvterm) {
+        my $misplaced = $cvterm_rs->search(
+            { 'me.name' => $job_type, 'cv.name' => 'null', 'dbxref.accession' => "autocreated:$job_type" },
+            { join => [ 'cv', 'dbxref' ] }
+        )->first();
+        if ($misplaced) {
+            $misplaced->update({ cv_id => $cv->cv_id() });
+            $cvterm = $misplaced;
+        } else {
+            $cvterm = $cvterm_rs->create_with({ name => $job_type, cv => $cv });
+        }
+    }
+    return $cvterm->cvterm_id();
 }
 
 =head2 check_status()
@@ -350,7 +369,7 @@ sub check_status {
 
     my $finish_timestamp = $self->finish_timestamp();
     if ($finish_timestamp) {
-        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out") { #if theres a timestamp and the job doesn't already have and end state, then mark it as done
+        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out") { #if there's a timestamp and the job doesn't already have and end state, then mark it as done
             $self->status("finished");
             $self->store();
         } 
@@ -370,7 +389,7 @@ sub check_status {
                 if ($age > 1) {
                     $self->status("timed_out");
                     $self->store();
-                } else { # no backend, no create timestamp, no finish timestamp, but hasnt been running long
+                } else { # no backend, no create timestamp, no finish timestamp, but hasn't been running long
                     $self->status("submitted");
                     $self->store();
                 }
@@ -488,7 +507,7 @@ sub submit {
         $status = 'submitted';
     } catch {
         $self->update_status('failed');
-        die "An error occured trying to submit a background job.\n$_\n";
+        die "An error occurred trying to submit a background job.\n$_\n";
     } ;
 
     $self->backend_id($backend_id);
@@ -529,11 +548,7 @@ sub store {
             $row->type_id($self->type_id());
             $row->update();
         } else {
-            my $cvterm_row = $self->schema->resultset('Cv::Cvterm')->find({ name => $self->job_type() });
-            my $cvterm_id;
-            if ($cvterm_row) {
-                $cvterm_id = $cvterm_row->cvterm_id();
-            } 
+            my $cvterm_id = $self->type_id() || _job_type_id($self->schema(), $self->job_type());
             my $row = $self->people_schema()->resultset("SpJob")->create({
                 backend_id => $self->backend_id(),
                 args => JSON::Any->encode({
