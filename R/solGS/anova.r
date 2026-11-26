@@ -129,6 +129,9 @@ for (trait in traits) {
         meansComparisonFile <- grep("means_comparison_table", outputFiles, value = TRUE)
         meansSummaryFile    <- grep("means_comparison_summary", outputFiles, value = TRUE)
 
+        # A comparison of an earlier fit must not stay beside this one.
+        unlink(c(meansComparisonFile, meansSummaryFile))
+
         if (length(meansComparisonFile) == 1 &&
             'compareMeans' %in% getNamespaceExports('phenoAnalysis')) {
 
