@@ -926,7 +926,9 @@ class Editor {
         p.on('click', '.vs-src-tab', e => { this.accSourceChosen = true; this.showSource($(e.currentTarget).data('src')); });
         p.on('click', '.vs-open-sheet', e => { e.preventDefault(); this.openSheet($(e.currentTarget).data('id')); });
         p.on('click', '.vs-new-sheet', e => { e.preventDefault(); this.startNewSheet(); });
-        p.on('click', '.vs-auto-build', e => { e.preventDefault(); this.autoBuild(); });
+        p.on('click', '.vs-auto-build', e => { e.preventDefault(); this.askBuildName(); });
+        p.on('submit', '.vs-build-name', e => { e.preventDefault(); this.buildWithName(); });
+        p.on('click', '.vs-build-name-cancel', e => { e.preventDefault(); this.root.find('#vs_acc_info').html(this.accessionCard()); });
         p.on('click', '.vs-del-sheet', e => { e.preventDefault(); this.deleteSheet($(e.currentTarget).data('id')); });
         this.loadSheetList();
         this.loadMeetings();
@@ -1194,7 +1196,39 @@ class Editor {
 
     /* ---------------------------------- build the whole profile from the data */
 
-    async autoBuild() {
+    // "Build the profile for me" first asks the commercial name (the experimental name is
+    // never shown on a profile), then builds everything with it
+    askBuildName() {
+        const a = this.acc;
+        const name = (this.sheet && this.sheet.stock_id == a.stock_id && this.sheet.commercial_name) || (a.released_variety_name || [])[0] || '';
+        this.root.find('.vs-build-cta').html(`<form class="vs-build-name">
+            <label for="vs_build_name">Commercial name</label>
+            <div class="input-group input-group-lg">
+              <input type="text" class="form-control" id="vs_build_name" maxlength="100" value="${esc(name)}" placeholder="The name the variety will be sold under" autocomplete="off">
+              <span class="input-group-btn"><button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-flash"></span> Build</button></span>
+            </div>
+            <span class="bb-help">The profile and all its texts use this name only: the experimental name is never shown. <a href="#" class="vs-build-name-cancel">Cancel</a></span>
+            <div class="vs-build-name-msg"></div></form>`);
+        this.root.find('#vs_build_name').trigger('focus').trigger('select');
+    }
+
+    async buildWithName() {
+        const a = this.acc, msg = this.root.find('.vs-build-name-msg');
+        const name = (this.root.find('#vs_build_name').val() || '').trim();
+        if (!name) { msg.html('<span class="text-danger">Type the commercial name first.</span>'); return; }
+        let r;
+        try { r = await ajax('/ajax/variety_sheet/check_name', { data: { name, stock_id: a.stock_id } }); }
+        catch (err) { msg.html(`<span class="text-danger">${esc(err.message)}</span>`); return; }
+        if (r.already_name) { msg.html('<span class="text-danger">That is the experimental name: choose the commercial name.</span>'); return; }
+        if (r.conflicts.length) {
+            msg.html(`<span class="text-danger"><span class="glyphicon glyphicon-warning-sign"></span> Already used by ${r.conflicts.map(c => `<a href="/stock/${c.stock_id}/view" target="_blank">${esc(c.name)}</a> (${esc(c.as)})`).join(', ')}. Choose another name.</span>`);
+            return;
+        }
+        this.nameCheck = r;
+        await this.autoBuild(name);
+    }
+
+    async autoBuild(commercialName) {
         const a = this.acc;
         if (this.sheet && this.dirty && !confirm('Replace the current profile with one built from the data? Unsaved changes are lost.')) return;
         const box = this.root.find('#vs_acc_info');
@@ -1205,6 +1239,7 @@ class Editor {
         const keepId = this.sheet && this.sheet.stock_id == a.stock_id ? this.sheetId : null;
         const keepStatus = keepId ? this.status : 'draft';
         const s = newSheet(a);
+        if (commercialName) s.commercial_name = commercialName;
         const info = { built: today(), headline: null, performance: [], diseases: [], characteristics: [], gauges: [], skipped: [], notes: [] };
         try {
             // 1. which traits matter, from the data
@@ -1298,7 +1333,6 @@ class Editor {
             s.text.disease = autoDisease(s);
             s.text.recommendations = autoRecommendations(s);
             s.tagline = autoTagline(s);
-            if (!s.commercial_name) info.notes.push('No commercial name yet: choose one in step 2 (required to save; the experimental name is never shown on the profile).');
             info.notes.push('Market features are not in the database: write them yourself.');
         } catch (err) {
             show(STEPS_B.length - 1, err.message);
@@ -1449,6 +1483,10 @@ class Editor {
             const r = await ajax('/ajax/variety_sheet/check_name', { data: { name, stock_id: this.sheet.stock_id } });
             if (name !== (this.sheet.commercial_name || '').trim()) return;
             this.nameCheck = r;
+            if (r.already_name) {
+                el.html('<span class="text-danger"><span class="glyphicon glyphicon-warning-sign"></span> That is the experimental name: a profile needs the commercial name.</span>');
+                return;
+            }
             if (r.conflicts.length) {
                 el.html(`<span class="text-danger"><span class="glyphicon glyphicon-warning-sign"></span> Already used by ${r.conflicts.map(c => `<a href="/stock/${c.stock_id}/view" target="_blank">${esc(c.name)}</a> (${esc(c.as)})`).join(', ')}. It can only stay on the profile.</span>`);
                 this.root.find('#vs_opt_released, #vs_opt_synonym').prop({ checked: false, disabled: true });
@@ -2022,6 +2060,9 @@ class Editor {
         const s = this.sheet;
         if (!s) return;
         if (!this.acc.public_profiles) status = 'draft';
+        if (this.nameCheck && this.nameCheck.already_name && this.nameCheck.name === (s.commercial_name || '').trim()) {
+            this.message('The commercial name cannot be the experimental name (step 2).', 'warning'); this.go(1); return;
+        }
         if (!(s.commercial_name || '').trim()) {
             this.message('Choose a commercial name before saving (step 2): a variety profile never shows the experimental name.', 'warning'); this.go(1); return;
         }

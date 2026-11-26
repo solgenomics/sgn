@@ -371,6 +371,7 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     my ($accession_name) = $schema->storage->dbh->selectrow_array(
         "SELECT uniquename FROM stock WHERE stock_id=? AND type_id=? AND is_obsolete='f'", undef, $stock_id, $accession_type);
     $self->_fail($c, "Accession $stock_id not found.") unless $accession_name;
+    $self->_fail($c, 'The commercial name cannot be the experimental name.') if lc($name) eq lc($accession_name);
 
     my $pid = $self->_person_id($c);
     if ($sheet_id) {
