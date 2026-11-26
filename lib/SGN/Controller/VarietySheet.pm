@@ -58,6 +58,7 @@ sub view :Path('/variety_sheet') :Args(1) {
     }
     $row->{can_edit} = $curator ? 1 : 0;
     $row->{public_profiles} = $public;
+    CXGN::VarietySheet->refresh_check_names($c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $row);
     CXGN::VarietySheet->strip_hidden($row) unless $row->{can_edit};
     # embedded in a <script> block: escape characters that could close it
     my $json = JSON::XS->new->ascii->canonical->encode($row);
@@ -65,7 +66,7 @@ sub view :Path('/variety_sheet') :Args(1) {
     $json =~ s/>/\\u003e/g;
     $json =~ s/&/\\u0026/g;
     $c->stash->{sheet_json} = $json;
-    $c->stash->{title} = $row->{commercial_name} || $row->{accession_name};
+    $c->stash->{title} = $row->{commercial_name} || 'Variety profile';
     $c->stash->{template} = '/tools/variety_sheet/view.mas';
 }
 

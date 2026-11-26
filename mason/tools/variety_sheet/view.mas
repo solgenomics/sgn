@@ -17,7 +17,7 @@ $title => ''
 <script>
   jQuery(function () {
     var row = <% $sheet_json %>;
-    document.title = (row.commercial_name || row.accession_name) + ' – variety sheet';
+    document.title = (row.commercial_name || 'Variety profile') + ' – variety sheet';
     if (row.can_edit) {
       jQuery('#vs_edit_link').html('<a class="btn btn-default btn-sm" href="/tools/variety_sheet?sheet_id=' + row.variety_sheet_id + '"><span class="glyphicon glyphicon-pencil"></span> Edit' + (row.public_profiles && row.status !== 'published' ? ' (draft)' : '') + '</a>');
     }

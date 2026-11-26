@@ -119,7 +119,10 @@ sub find_accession : Path('/ajax/variety_sheet/find_accession') Args(0) {
         undef, $accession, $name, $accession, $name);
     $self->_fail($c, "No accession named '$name' was found.") unless @$rows;
     my %seen;
-    $c->stash->{rest} = { matches => [ grep { !$seen{$_->{stock_id}}++ } map { { stock_id => $_->[0] + 0, name => $_->[1], matched_as => $_->[2] } } @$rows ] };
+    my @m = grep { !$seen{$_->{stock_id}}++ } map { { stock_id => $_->[0] + 0, name => $_->[1], matched_as => $_->[2] } } @$rows;
+    my $public = CXGN::VarietySheet->public_names($schema->storage->dbh, map { $_->{stock_id} } @m);
+    $_->{public_name} = $public->{ $_->{stock_id} } for @m;
+    $c->stash->{rest} = { matches => \@m };
 }
 
 =head2 /ajax/variety_sheet/accession_summary?stock_id=
@@ -307,6 +310,8 @@ sub list : Path('/ajax/variety_sheet/list') Args(0) {
     my $rows = CXGN::VarietySheet->list_sheets($self->_schema($c), $f);
     my $pid = $self->_person_id($c) // -1;
     $_->{can_edit} = $self->_is_curator($c) for @$rows;
+    # the experimental name is confidential: only curators see it
+    if (!$self->_is_curator($c)) { delete $_->{accession_name} for @$rows; }
     $c->stash->{rest} = { sheets => $rows, public_profiles => $self->_public($c) };
 }
 
@@ -325,6 +330,7 @@ sub get_sheet : Path('/ajax/variety_sheet/get') Args(0) {
     $self->_fail($c, 'Only curators can open this variety profile.')
         unless ($row->{status} eq 'published' && $self->_public($c)) || $own || $self->_is_curator($c);
     $row->{can_edit} = $self->_is_curator($c);
+    CXGN::VarietySheet->refresh_check_names($self->_schema($c), $row);
     CXGN::VarietySheet->strip_hidden($row) unless $row->{can_edit};
     $c->stash->{rest} = $row;
 }
@@ -351,7 +357,8 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     my $status = (($d->{status} // '') eq 'published' && $self->_public($c)) ? 'published' : 'draft';
     my $name = $sheet->{commercial_name} // '';
     $name =~ s/^\s+|\s+$//g;
-    # no commercial name yet: the profile is saved under the accession name
+    # the experimental name is confidential: a profile always carries a commercial name
+    $self->_fail($c, 'Choose a commercial name: a variety profile never shows the experimental name.') unless length $name;
     $self->_fail($c, 'The commercial name is too long (max 100 characters).') if length($name) > 100;
     $sheet->{commercial_name} = $name;
     $self->_fail($c, 'Link this profile to at least one decision meeting before publishing it.')
@@ -404,9 +411,10 @@ sub save : Path('/ajax/variety_sheet/save') Args(0) {
     }
 
     $sheet->{stock_id} = $stock_id + 0;
-    $sheet->{accession_name} = $accession_name;
+    # the profile never stores the experimental name (the accession is kept by stock_id)
+    delete @{$sheet}{qw(accession_name former_names)};
     my $id = CXGN::VarietySheet->save_sheet($schema, {
-        sheet_id => $sheet_id, stock_id => $stock_id, sp_person_id => $pid, commercial_name => (length $name ? $name : $accession_name), status => $status, sheet => $sheet });
+        sheet_id => $sheet_id, stock_id => $stock_id, sp_person_id => $pid, commercial_name => $name, status => $status, sheet => $sheet });
 
     $c->stash->{rest} = { success => 1, sheet_id => $id + 0, status => $status, url => "/variety_sheet/$id", messages => \@name_messages, public_profiles => $self->_public($c) };
 }

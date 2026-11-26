@@ -44,6 +44,31 @@ sub _in_list {
     return @ids ? join(',', @ids) : 'NULL';
 }
 
+# Names that may appear on a profile: the released variety name when the
+# accession has one, else its accession name. Experimental names of released
+# checks are confidential and never go on a sheet.
+sub public_names {
+    my ($class, $dbh, @ids) = @_;
+    my $in = _in_list(@ids);
+    my %n = map { $_->[0] => $_->[1] } @{ $dbh->selectall_arrayref("SELECT stock_id, uniquename FROM stock WHERE stock_id IN ($in)") };
+    my $rel = $class->released_names($dbh, @ids);
+    $n{$_} = $rel->{$_} for keys %$rel;
+    return \%n;
+}
+
+# stock_id => released variety name, only for accessions that have one
+# (the only names the profile's descriptions may use)
+sub released_names {
+    my ($class, $dbh, @ids) = @_;
+    my $in = _in_list(@ids);
+    my $rows = $dbh->selectall_arrayref(
+        "SELECT sp.stock_id, sp.value FROM stockprop sp JOIN cvterm c ON c.cvterm_id=sp.type_id
+          WHERE c.name='released_variety_name' AND sp.stock_id IN ($in) AND sp.value <> '' ORDER BY sp.rank DESC");
+    my %r;
+    $r{$_->[0]} = $_->[1] for @$rows;    # lowest rank wins
+    return \%r;
+}
+
 # Stock types whose phenotypes count as field testing.
 sub _field_unit_type_ids {
     my $schema = shift;
@@ -311,6 +336,10 @@ sub pedigree {
         $ped->{$k}{female} = $gp->{female} if $gp->{female};
         $ped->{$k}{male} = $gp->{male} if $gp->{male};
     }
+    # released variety names: the only parent names a profile's text may use
+    my @nodes = grep { $_ } map { ($_, $_ ? ($_->{female}, $_->{male}) : ()) } ($ped->{female}, $ped->{male});
+    my $rel = $class->released_names($dbh, map { $_->{stock_id} } @nodes);
+    $_->{released_name} = $rel->{ $_->{stock_id} } for grep { $rel->{ $_->{stock_id} } } @nodes;
     return $ped;
 }
 
@@ -718,7 +747,8 @@ sub trial_performance {
         $trial_loc{$trial} = $loc;
     }
 
-    my %names = map { $_->[0] => $_->[1] } @{ $dbh->selectall_arrayref("SELECT stock_id, uniquename FROM stock WHERE stock_id IN ($acc_in)") };
+    my %names = %{ $class->public_names($dbh, @acc) };
+    my $released = $class->released_names($dbh, @acc);
     my %out;
     for my $trait (@$traits) {
         my $tr = $d{$trait} || {};
@@ -752,7 +782,7 @@ sub trial_performance {
                 push @{ $by_year{$y}{c} }, $c[$i];
             }
             push @{ $t{checks} }, {
-                stock_id => $check + 0, name => $names{$check},
+                stock_id => $check + 0, name => $names{$check}, released => $released->{$check} ? 1 : 0,
                 shared_trials => scalar(@shared),
                 shared_locations => scalar(keys %{{ map { ($trial_loc{$_} || 0) => 1 } @shared }}),
                 variety_mean => _r($vm), check_mean => _r($cm),
@@ -798,8 +828,8 @@ sub analysis_performance {
         $names{$r->[1]} = $r->[2];
     }
     my ($aname) = $dbh->selectrow_array("SELECT name FROM project WHERE project_id=?", undef, $analysis_id);
-    my $ids = _in_list(@$checks);
-    $names{$_->[0]} //= $_->[1] for @{ $dbh->selectall_arrayref("SELECT stock_id, uniquename FROM stock WHERE stock_id IN ($ids)") };
+    %names = (%names, %{ $class->public_names($dbh, @$checks) });
+    my $released = $class->released_names($dbh, @$checks);
     my @out;
     for my $trait (@$traits) {
         my $vals = $v{$trait} || {};
@@ -815,7 +845,7 @@ sub analysis_performance {
             all_mean => _r($all),
             pct_of_mean => ($all && defined $vm) ? _r(100 * $vm / $all, 1) : undef,
             checks => [ map { my $cm = $vals->{$_};
-                              { stock_id => $_ + 0, name => $names{$_}, check_mean => _r($cm), variety_mean => _r($vm), rank => $rank{$_},
+                              { stock_id => $_ + 0, name => $names{$_}, released => $released->{$_} ? 1 : 0, check_mean => _r($cm), variety_mean => _r($vm), rank => $rank{$_},
                                 difference => (defined $vm && defined $cm) ? _r($vm - $cm) : undef,
                                 pct_of_check => ($cm && defined $vm) ? _r(100 * $vm / $cm, 1) : undef } }
                         grep { /^\d+$/ && $_ != $stock_id } @$checks ],
@@ -851,11 +881,47 @@ sub strip_hidden {
     my ($class, $row) = @_;
     my $s = $row && $row->{sheet};
     return $row unless ref $s eq 'HASH' && ref $s->{options} eq 'HASH';
+    # the pedigree data holds the parents' accession names; the sheet shows only the pedigree text
+    delete $s->{pedigree};
     if (exists $s->{options}{show_pedigree} && !$s->{options}{show_pedigree}) {
-        delete $s->{pedigree};
         $s->{text}{pedigree} = '' if ref $s->{text} eq 'HASH';
     }
     delete $s->{decisions} if exists $s->{options}{show_decisions} && !$s->{options}{show_decisions};
+    # the experimental name is confidential: only editors get it
+    delete @{$s}{qw(accession_name former_names)};
+    delete $row->{accession_name};
+    return $row;
+}
+
+=head2 refresh_check_names($schema, $row)
+
+Puts the current public name (released variety name, else accession name) on
+every check of a saved profile, so a check released after the profile was
+saved, or a profile saved before checks were named this way, never shows the
+check's experimental name.
+
+=cut
+
+sub refresh_check_names {
+    my ($class, $schema, $row) = @_;
+    my $s = $row && $row->{sheet};
+    return $row unless ref $s eq 'HASH';
+    my @lists;
+    my $perf = ref $s->{performance} eq 'HASH' ? $s->{performance} : {};
+    push @lists, $perf->{checks} if ref $perf->{checks} eq 'ARRAY';
+    for my $res ($perf->{results}, (ref $s->{ratings} eq 'HASH' ? $s->{ratings}{results} : undef)) {
+        next unless ref $res eq 'HASH' && ref $res->{traits} eq 'ARRAY';
+        push @lists, map { $_->{checks} } grep { ref $_ eq 'HASH' && ref $_->{checks} eq 'ARRAY' } @{ $res->{traits} };
+    }
+    my @items = grep { ref $_ eq 'HASH' && ($_->{stock_id} // '') =~ /^\d+$/ } map { @$_ } @lists;
+    return $row unless @items;
+    my @ids = map { $_->{stock_id} } @items;
+    my $names = $class->public_names($schema->storage->dbh(), @ids);
+    my $released = $class->released_names($schema->storage->dbh(), @ids);
+    for (@items) {
+        $_->{name} = $names->{ $_->{stock_id} } if defined $names->{ $_->{stock_id} };
+        $_->{released} = $released->{ $_->{stock_id} } ? 1 : 0;
+    }
     return $row;
 }
 

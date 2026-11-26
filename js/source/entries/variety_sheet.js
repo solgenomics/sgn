@@ -113,20 +113,18 @@ function newSheet(acc) {
     const s = {
         version: VERSION,
         stock_id: acc.stock_id,
-        accession_name: acc.accession_name,
         species: acc.species || '',
         commercial_name: (acc.released_variety_name || [])[0] || '',
         tagline: '',
         market_class: '',
         release_year: String(new Date().getFullYear()),
         developed_by: (acc.evidence.programs || []).join(', '),
-        former_names: [acc.accession_name].concat(acc.synonyms || []),
-        pedigree: acc.pedigree || {},
+        pedigree: publicPedigree(acc.pedigree),
         evidence: acc.evidence,
         evidence_as_of: today(),
         performance: {
             source: 'trials', analysis_id: null, analysis_name: null,
-            checks: checks.map(c => ({ stock_id: c.stock_id, name: c.name })),
+            checks: checks.map(c => ({ stock_id: c.stock_id, name: checkName(c) })),
             primary_check_id: checks.length ? checks[0].stock_id : null,
             traits: traits.map(t => traitConfig(t)),
             year_min: '', year_max: '', results: null,
@@ -161,23 +159,57 @@ function guessUnit(name) {
 
 /* ------------------------------------------------------ automatic narrative */
 
+// the experimental name is confidential: a profile only ever shows the commercial name
 function sheetName(s) {
-    return s.commercial_name || s.accession_name || 'This variety';
+    return s.commercial_name || 'This variety';
+}
+
+// a check is shown by its released variety name when it has one, never by its experimental name
+function checkName(c) {
+    return c.public_name || c.released_variety_name || c.name;
+}
+
+// the descriptions (tagline and texts) use commercial names only: a check without a
+// released variety name is "the check" (results carry released: 1 for the others)
+function checkText(s, c, fallback) {
+    const id = c && c.stock_id;
+    const hit = [(s.performance || {}).results, (s.ratings || {}).results]
+        .flatMap(res => (res && res.traits || []).flatMap(t => t.checks || []))
+        .find(x => x.stock_id == id && x.released);
+    return hit ? hit.name : (fallback || 'the check');
+}
+
+// the pedigree the profile keeps: parents and grandparents by released variety name only
+function publicPedigree(p) {
+    p = p || {};
+    const node = n => n ? Object.assign({ stock_id: n.stock_id, released_name: n.released_name || '' },
+        n.female ? { female: node(n.female) } : {}, n.male ? { male: node(n.male) } : {}) : undefined;
+    const out = {};
+    if (p.female) out.female = node(p.female);
+    if (p.male) out.male = node(p.male);
+    if (p.cross_type) out.cross_type = p.cross_type;
+    return out;
 }
 
 function autoPedigree(s) {
+    // released variety names only: experimental names of the variety and its parents are confidential,
+    // so a parent without a released name is just "mother" / "father"
     const p = s.pedigree || {};
     const name = sheetName(s);
+    const pub = n => (n && n.released_name) || '';
     const out = [];
-    if (p.female || p.male) {
-        out.push(`${name} comes from the cross ${p.female ? p.female.name : 'unknown'} \u00d7 ${p.male ? p.male.name : 'unknown'}${p.cross_type ? ' (' + p.cross_type + ')' : ''}.`);
-        const gp = [];
-        ['female', 'male'].forEach(k => { if (p[k]) ['female', 'male'].forEach(j => { if (p[k][j]) gp.push(p[k][j].name); }); });
-        const uniq = gp.filter((g, i) => gp.indexOf(g) === i);
-        if (uniq.length) out.push(`Grandparents are ${listText(uniq)}.`);
-    }
-    const former = (s.former_names || []).filter(n => n && n !== s.commercial_name);
-    if (former.length) out.push(`${name} was evaluated as ${listText(former)}.`);
+    const f = pub(p.female), m = pub(p.male);
+    const cross = p.cross_type ? `${p.cross_type} ` : '';
+    if (f && m) out.push(`${name} comes from the ${cross}cross ${f} (mother) \u00d7 ${m} (father).`);
+    else if (f) out.push(`${name} comes from a ${cross}cross with ${f} as its mother.`);
+    else if (m) out.push(`${name} comes from a ${cross}cross with ${m} as its father.`);
+    else if (p.female || p.male) out.push(`${name} comes from a ${cross}cross made by the breeding program.`);
+    const side = (k, who) => {
+        const gp = p[k] ? ['female', 'male'].map(j => pub(p[k][j])).filter((g, i, a) => g && a.indexOf(g) === i) : [];
+        return gp.length ? `${listText(gp)} on the ${who}'s side` : '';
+    };
+    const sides = [side('female', 'mother'), side('male', 'father')].filter(Boolean);
+    if (sides.length) out.push(`Its pedigree includes ${sides.join(' and ')}.`);
     return out.join(' ');
 }
 
@@ -208,7 +240,7 @@ function autoProduction(s) {
         const ch = pc ? r.checks.find(c => c.stock_id == pc.stock_id) : null;
         if (ch && ch.shared_trials && ch.pct_of_check !== null) {
             const winPct = Math.round(100 * ch.wins / ch.shared_trials);
-            out.push(`${capital(label)} averaged ${num(ch.pct_of_check, 0)}% of ${ch.name} in ${plural(ch.shared_trials, 'head-to-head trial')} and was better in ${winPct}% of them${t.direction === 'lower' ? ' (lower is better)' : ''}.`);
+            out.push(`${capital(label)} averaged ${num(ch.pct_of_check, 0)}% of ${checkText(s, ch)} in ${plural(ch.shared_trials, 'head-to-head trial')} and was better in ${winPct}% of them${t.direction === 'lower' ? ' (lower is better)' : ''}.`);
         } else if (r.variety.mean !== null) {
             out.push(`${capital(label)} averaged ${num(r.variety.mean, t.decimals)}${t.unit ? ' ' + t.unit : ''} across ${plural(r.variety.trials, 'trial')}.`);
         }
@@ -367,21 +399,21 @@ function compareTrait(s, t) {
     return { r, ch, pc, d, lower, similar, better, worse, sig, years, yearsBetter, strength };
 }
 
-function cmpPhrase(t, c, withValues) {
+function cmpPhrase(s, t, c, withValues) {
     const label = lowerFirst(t.label || t.name);
     const vals = withValues ? ` (${withUnit(num(c.ch.variety_mean, t.decimals), t)} vs ${num(c.ch.check_mean, t.decimals)}${c.better || c.worse ? `; better in ${c.ch.wins} of ${plural(c.ch.shared_trials, 'trial')}` : ''})` : '';
-    if (c.similar) return `${label} similar to ${c.pc.name}${vals}`;
-    return `${num(Math.abs(c.d), 0)}% ${c.d > 0 ? 'higher' : 'lower'} ${label} than ${c.pc.name}${vals}`;
+    if (c.similar) return `${label} similar to ${checkText(s, c.pc)}${vals}`;
+    return `${num(Math.abs(c.d), 0)}% ${c.d > 0 ? 'higher' : 'lower'} ${label} than ${checkText(s, c.pc)}${vals}`;
 }
 
 function autoTagline(s) {
     const perf = s.performance || {}, parts = [];
     const cmp = (perf.traits || []).map(t => ({ t, c: compareTrait(s, t) })).filter(x => x.c);
     const head = cmp.find(x => x.t.trait_id == ((perf.traits || [])[0] || {}).trait_id);
-    if (head && head.c.better) parts.push(cmpPhrase(head.t, head.c));
-    else if (head && head.c.similar) parts.push(`${lowerFirst(head.t.label || head.t.name)} on par with ${head.c.pc.name}`);
+    if (head && head.c.better) parts.push(cmpPhrase(s, head.t, head.c));
+    else if (head && head.c.similar) parts.push(`${lowerFirst(head.t.label || head.t.name)} on par with ${checkText(s, head.c.pc)}`);
     const extra = cmp.filter(x => x !== head && x.c.better && x.c.sig).sort((a, b) => b.c.strength - a.c.strength)[0];
-    if (extra) parts.push(cmpPhrase(extra.t, extra.c));
+    if (extra) parts.push(cmpPhrase(s, extra.t, extra.c));
     const res = (s.ratings.traits || []).filter(t => /resistant/i.test(t.rating || '') && !/moderately/i.test(t.rating || ''))
         .map(t => lowerFirst((t.label || t.name).replace(/ severity| incidence| score| rating/ig, '')));
     if (res.length) parts.push(`resistant to ${listText(res.slice(0, 3))}`);
@@ -400,16 +432,17 @@ function autoProductionText(s) {
         const pc = withC[0].c.pc;
         // strengths first, then similar, then weaker traits
         const order = withC.slice().sort((a, b) => (b.c.better - a.c.better) || (a.c.worse - b.c.worse));
-        out.push(`Compared with ${pc.name} in the same trials, ${name} had ${listText(order.map(x => cmpPhrase(x.t, x.c, true)))}.`);
+        out.push(`Compared with ${checkText(s, pc)} in the same trials, ${name} had ${listText(order.map(x => cmpPhrase(s, x.t, x.c, true)))}.`);
         const head = withC[0];
         if (head.c.better && head.c.sig) out.push(`The ${lowerFirst(head.t.label || head.t.name)} advantage is statistically significant (paired t-test, p ${head.c.ch.p_value < 0.001 ? '< 0.001' : '= ' + num(head.c.ch.p_value, 3)}).`);
         if (head.c.years.length >= 2) {
             const ys = head.c.years.map(y => y.year);
             const span = ys.length > 1 ? `${ys[0]}–${ys[ys.length - 1]}` : ys[0];
-            if (head.c.yearsBetter === head.c.years.length) out.push(`It was ahead of ${pc.name} for ${lowerFirst(head.t.label || head.t.name)} in every year tested (${span}).`);
-            else if (head.c.yearsBetter > 0) out.push(`It was ahead of ${pc.name} for ${lowerFirst(head.t.label || head.t.name)} in ${head.c.yearsBetter} of ${head.c.years.length} years (${span}).`);
+            if (head.c.yearsBetter === head.c.years.length) out.push(`It was ahead of ${checkText(s, pc)} for ${lowerFirst(head.t.label || head.t.name)} in every year tested (${span}).`);
+            else if (head.c.yearsBetter > 0) out.push(`It was ahead of ${checkText(s, pc)} for ${lowerFirst(head.t.label || head.t.name)} in ${head.c.yearsBetter} of ${head.c.years.length} years (${span}).`);
         }
-        const others = head.c.r.checks.filter(c => c.stock_id != pc.stock_id && c.pct_of_check !== null && c.pct_of_check !== undefined);
+        // other checks are named only when they have a commercial name
+        const others = head.c.r.checks.filter(c => c.stock_id != pc.stock_id && c.released && c.pct_of_check !== null && c.pct_of_check !== undefined);
         if (others.length) out.push(`For ${lowerFirst(head.t.label || head.t.name)} it also reached ${listText(others.map(c => `${num(c.pct_of_check, 0)}% of ${c.name}`))}.`);
     }
     cmp.filter(x => !x.c).forEach(x => {
@@ -426,7 +459,7 @@ function autoRecommendations(s) {
     const weak = (s.ratings.traits || []).filter(t => /susceptible/i.test(t.rating || '')).map(t => lowerFirst((t.label || t.name).replace(/ severity| incidence| score| rating/ig, '')));
     if (weak.length) out.push(`Monitor for ${listText(weak)}, to which it is ${weak.length > 1 ? 'not resistant' : (s.ratings.traits.find(t => /susceptible/i.test(t.rating || '')).rating || 'susceptible').toLowerCase()}.`);
     const worse = (perf.traits || []).map(t => ({ t, c: compareTrait(s, t) })).filter(x => x.c && x.c.worse && x.c.sig);
-    if (worse.length) out.push(`Take into account its ${listText(worse.map(x => cmpPhrase(x.t, x.c)))}.`);
+    if (worse.length) out.push(`Take into account its ${listText(worse.map(x => cmpPhrase(s, x.t, x.c)))}.`);
     return out.join(' ');
 }
 
@@ -484,7 +517,6 @@ function renderSheet(s, opts) {
     const sub = [];
     if (s.species) sub.push(`<em>${esc(s.species)}</em>`);
     if (s.market_class) sub.push(esc(s.market_class));
-    if (s.commercial_name && s.accession_name && s.commercial_name !== s.accession_name) sub.push('Experimental name ' + esc(s.accession_name));
     if (s.release_year) sub.push('Released ' + esc(s.release_year));
     h += `<div class="vs-sub">${sub.join(' \u00b7 ')}</div></div>`;
     if (s.developed_by) h += `<div class="vs-dev"><span>Developed by</span>${esc(s.developed_by)}</div>`;
@@ -851,7 +883,7 @@ class Editor {
     }
 
     preview() {
-        this.root.find('.vs-side-name').text(this.sheet ? (this.sheet.commercial_name || this.sheet.accession_name || '') : '');
+        this.root.find('.vs-side-name').text(this.sheet ? (this.sheet.commercial_name || '') : '');
         if (!this.sheet) { this.root.find('.vs-preview').html('<div class="text-muted vs-empty">The profile appears here as you build it.</div>'); return; }
         if (STEPS[this.step].key === 'publish') {
             const el = this.root.find('.vs-full-preview');
@@ -1119,7 +1151,7 @@ class Editor {
             // keep the testing summary current while editing
             this.sheet.evidence = this.acc.evidence;
             this.sheet.evidence_as_of = today();
-            this.sheet.pedigree = this.acc.pedigree;
+            this.sheet.pedigree = publicPedigree(this.acc.pedigree);
         }
         if (!this.acc.can_edit) this.message('You can look at variety profiles, but only curators can save them.', 'warning');
         if (!keepSheet && !this.acc.sheets.length && this.acc.can_edit) this.startNewSheet(true);
@@ -1252,7 +1284,7 @@ class Editor {
                 const unit = f.t.unit || guessUnit(f.t.name);
                 const ch = main ? (r.checks || []).find(c => c.stock_id == main.stock_id && c.shared_trials) : null;
                 s.characteristics.push({ label: niceLabel(f.t),
-                    value: `${unitText(num(r.variety.mean), unit)} (mean of ${plural(r.variety.trials, 'trial')}${ch && ch.check_mean !== null && ch.check_mean !== undefined ? `; ${main.name} ${num(ch.check_mean)} in the same trials` : ''})` });
+                    value: `${unitText(num(r.variety.mean), unit)} (mean of ${plural(r.variety.trials, 'trial')}${ch && ch.check_mean !== null && ch.check_mean !== undefined ? `; ${ch.released ? ch.name : 'the check'} ${num(ch.check_mean)} in the same trials` : ''})` });
                 info.characteristics.push({ name: niceLabel(f.t), why: f.x.reasons });
             });
             // photos: the accession's own pictures first, newest first, then plot / plant pictures
@@ -1266,7 +1298,7 @@ class Editor {
             s.text.disease = autoDisease(s);
             s.text.recommendations = autoRecommendations(s);
             s.tagline = autoTagline(s);
-            if (!s.commercial_name) info.notes.push('No commercial name yet: the profile uses the accession name until you choose one.');
+            if (!s.commercial_name) info.notes.push('No commercial name yet: choose one in step 2 (required to save; the experimental name is never shown on the profile).');
             info.notes.push('Market features are not in the database: write them yourself.');
         } catch (err) {
             show(STEPS_B.length - 1, err.message);
@@ -1530,13 +1562,13 @@ class Editor {
     renderChecks() {
         const perf = this.sheet.performance;
         const sugg = (this.acc.suggested_checks || []).slice();
-        perf.checks.forEach(c => { if (!sugg.find(x => x.stock_id == c.stock_id)) sugg.unshift({ stock_id: c.stock_id, name: c.name, shared_trials: null }); });
+        perf.checks.forEach(c => { if (!sugg.find(x => x.stock_id == c.stock_id)) sugg.unshift({ stock_id: c.stock_id, name: c.name, public_name: c.name, shared_trials: null }); });
         const el = this.root.find('#vs_checks');
         if (!sugg.length) { el.html('<p class="text-muted">No accessions were tested alongside this one. Add a check by name.</p>'); return; }
         el.html(`<div class="vs-check-list">` + sugg.map(c => {
             const on = perf.checks.some(x => x.stock_id == c.stock_id);
             const primary = perf.primary_check_id == c.stock_id;
-            return `<label class="vs-check ${on ? 'on' : ''} ${primary ? 'main' : ''}"><input type="checkbox" data-id="${c.stock_id}" data-name="${esc(c.name)}" ${on ? 'checked' : ''}>
+            return `<label class="vs-check ${on ? 'on' : ''} ${primary ? 'main' : ''}"><input type="checkbox" data-id="${c.stock_id}" data-name="${esc(checkName(c))}" ${on ? 'checked' : ''}>
                 <span class="vs-check-body">
                   <span class="vs-check-name">${esc(c.name)}${c.released_variety_name ? ` <small>(${esc(c.released_variety_name)})</small>` : ''}</span>
                   <span class="vs-check-tags">${c.control_plots ? '<span class="vs-tag vs-tag-ctl" title="Used as a check plot in the trials">check in trials</span>' : ''}${c.released_variety_name ? '<span class="vs-tag vs-tag-rel" title="Has a released variety name">released</span>' : ''}<span class="vs-check-n" title="Trials where this check and the variety were both tested">${c.shared_trials !== null && c.shared_trials !== undefined ? plural(c.shared_trials, 'shared trial') : ''}</span></span>
@@ -1560,7 +1592,7 @@ class Editor {
             if (!perf.checks.some(c => c.stock_id == id)) {
                 if (perf.checks.length >= 4) return;
                 const c = sugg.find(x => x.stock_id == id);
-                perf.checks.push({ stock_id: id, name: c.name });
+                perf.checks.push({ stock_id: id, name: checkName(c) });
                 this.flagStale();
             }
             perf.primary_check_id = id;
@@ -1578,7 +1610,7 @@ class Editor {
             if (m.stock_id == this.sheet.stock_id) { this.message('That is the variety itself.', 'warning'); return; }
             if (!perf.checks.some(c => c.stock_id == m.stock_id)) {
                 if (perf.checks.length >= 4) { this.message('Up to 4 checks keep the profile readable.', 'warning'); return; }
-                perf.checks.push({ stock_id: m.stock_id, name: m.name });
+                perf.checks.push({ stock_id: m.stock_id, name: checkName(m) });
                 if (!perf.primary_check_id) perf.primary_check_id = m.stock_id;
             }
             this.root.find('#vs_add_check').val('');
@@ -1942,13 +1974,13 @@ class Editor {
     step_publish(p) {
         const s = this.sheet, o = s.options;
         const missing = [];
-        if (!s.commercial_name) missing.push('commercial name (step 2; until then the accession name is used)');
+        if (!s.commercial_name) missing.push('<b>commercial name (step 2; required to save)</b>');
         if (!s.performance.results) missing.push('performance numbers (step 3)');
         if (!s.images.length && o.show_photos !== false) missing.push('photos (step 5)');
         const chk = (k, label) => `<label class="checkbox-inline"><input type="checkbox" class="vs-bind-opt" data-k="${k}" ${o[k] !== false ? 'checked' : ''}> ${label}</label>`;
         p.html(`
           <div class="bb-card-head vs-step-head"><h3><span class="vs-step-badge">6</span> Preview and publish</h3></div>
-          ${missing.length ? `<div class="alert alert-warning">Not filled yet: ${missing.join(', ')}. You can save anyway.</div>` : ''}
+          ${missing.length ? `<div class="alert alert-warning">Not filled yet: ${missing.join(', ')}. ${s.commercial_name ? 'You can save anyway.' : ''}</div>` : ''}
           <div class="row">
             <div class="col-md-8">
               <div class="form-group vs-layout"><label>Layout</label>
@@ -1990,6 +2022,9 @@ class Editor {
         const s = this.sheet;
         if (!s) return;
         if (!this.acc.public_profiles) status = 'draft';
+        if (!(s.commercial_name || '').trim()) {
+            this.message('Choose a commercial name before saving (step 2): a variety profile never shows the experimental name.', 'warning'); this.go(1); return;
+        }
         if (status === 'published' && this.acc.require_meeting && !(s.decisions || []).some(d => d && d.meeting_id)) {
             this.message('Link this profile to at least one decision meeting before publishing it (step 2).', 'warning'); this.go(1); return;
         }
@@ -2006,7 +2041,7 @@ class Editor {
             this.root.find('.vs-save-state').text(`Saved ${new Date().toLocaleTimeString()} \u00b7 profile #${r.sheet_id} (${state})`);
             const msgs = (r.messages || []).map(esc);
             if (r.status === 'published') msgs.unshift(`Saved as a public page: <a href="${r.url}" target="_blank">${esc(location.origin + r.url)}</a>`);
-            else msgs.unshift(`Saved in Breedbase as profile #${r.sheet_id}. Only curators can open it${s.commercial_name ? '' : ' (no commercial name yet: it is listed under the accession name)'}.`);
+            else msgs.unshift(`Saved in Breedbase as profile #${r.sheet_id}. Only curators can open it.`);
             this.message(msgs.join('<br>'), 'success');
             if ((r.messages || []).length) { this.acc.released_variety_name.push(s.commercial_name); this.nameCheck = null; }
             if (STEPS[this.step].key === 'publish') this.go(this.step);
