@@ -468,7 +468,7 @@ function traitFamily(t) {
     const n = String(t.name || '').toLowerCase().replace(/\|.*$/, '').trim();
     return /^[a-z0-9]+_/.test(n) ? n.split('_')[0] : String(t.label || n).toLowerCase();
 }
-function perArea(t) { return /\/(ha|ac|a)\b|kgha|tha\b|_bua|cwt/i.test(`${t.unit || ''} ${t.name}`) ? 1 : 0; }
+function perArea(t) { return /\/(ha|ac|a)\b|kgha|[t]ha\b|_bua|cwt/i.test(`${t.unit || ''} ${t.name}`) ? 1 : 0; }
 
 // editable parts of the profile (step 6): text parts are edited in place, the others open their step
 const EDIT_PARTS = {

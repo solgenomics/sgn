@@ -485,7 +485,7 @@ sub _suggest_unit {
 }
 
 my $LOWER_IS_BETTER = qr/sev|disease|incid|lodg|scab|rot|blight|rust|spot|damage|virus|mildew|wilt|shatter|moisture|moist|gmoi|defect|days to|maturity date|dtm|aflatox|mycotox|pest|insect|nematode|lesion|infect/;
-my $HIGHER_IS_BETTER = qr/yield|\byld\b|^yld|_yld|^gy_|marketable|production|kg\/ha|t\/ha|bu\/a|cwt|dry matter|starch|protein|oil content|brix|resist|toleran|survival|vigou?r|germination/;
+my $HIGHER_IS_BETTER = qr/yield|\byld\b|^yld|_yld|^gy_|marketable|production|kg\/ha|t\/ha|b[u]\/a|cwt|dry matter|starch|protein|oil content|brix|resist|toleran|survival|vigou?r|germination/;
 
 sub _suggest_direction {
     my $t = lc(join ' ', grep { defined } @_);
@@ -579,7 +579,7 @@ sub trait_importance {
     }
     my $n_analyses = scalar @$analyses;
 
-    my $YIELD = qr/yield|\byld\b|^yld|_yld|production|marketable|kg\/ha|t\/ha|bu\/a|cwt|grain weight|fresh root weight|tuber weight|biomass/i;
+    my $YIELD = qr/yield|\byld\b|^yld|_yld|production|marketable|kg\/ha|t\/ha|b[u]\/a|cwt|grain weight|fresh root weight|tuber weight|biomass/i;
     my $HOUSE = qr/plot (length|width|size|area)|\bplot\b|stand count|(^|_)p?stand(_|$)|plant count|number of plants|plants per plot|row|replicate|\bblock\b|planting date|harvest date|sowing date|\bdate\b|notes?\b|comment|emergence count|plant stand|plot_?(id|number)/i;
 
     my @out;
