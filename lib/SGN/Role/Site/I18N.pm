@@ -82,7 +82,8 @@ sub _reset_language { setlocale( LC_MESSAGES, 'C' ) if shift->i18n_languages; re
 before prepare => \&_reset_language;
 around handle_request => sub {
     my ( $orig, $class, @arguments ) = @_;
-    return try { $class->$orig(@arguments) } finally { $class->_reset_language };
+    # without the catch block, try would swallow the error
+    return try { $class->$orig(@arguments) } catch { die $_ } finally { $class->_reset_language };
 };
 
 1;

@@ -36,6 +36,7 @@ sub Local::App::dispatch       { my $c = shift; return $c->stash->{page} = join 
 our %seen;
 sub Local::App::handle_request {
     my ( $class, %args ) = @_;
+    die "engine failed\n" if $args{die_in_engine};
     eval {
         $class->prepare;
         my $c = $class->new( req => bless( { param => { lang => $args{lang} }, cookie => { lang => $args{cookie} }, header => { 'Accept-Language' => $args{accept} } }, 'Local::Request' ) );
@@ -129,6 +130,10 @@ subtest 'nothing leaks between requests' => sub {
     is( ( request( accept => 'de' ) )[0], $english, 'next request is English' );
     request( accept => 'uk', die_in_finalize => 1 );
     is( setlocale(LC_MESSAGES), 'C', 'reset also when the request dies in finalize' );
+    setlocale( LC_MESSAGES, 'uk_UA.UTF-8' );
+    ok( !eval { Local::App->handle_request( die_in_engine => 1 ); 1 }, 'an error of the request handler is passed on' );
+    is( $@, "engine failed\n", 'with its message' );
+    is( setlocale(LC_MESSAGES), 'C', 'reset also when the request handler dies' );
     is( $ENV{LANGUAGE}, undef, 'LANGUAGE does not override the locale' );
 
     # A request that dies before finalize must not decide the language of the next one.
