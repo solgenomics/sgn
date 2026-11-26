@@ -16,9 +16,8 @@ see the perldoc of parent class for more details.
 
 This patch adds an index on stock_relationship (object_id, type_id).
 Lookups of the parents of an accession join stock_relationship by object_id
-and type_id. With only the single-column object_id index, each lookup reads
-every link that points to the accession (all its plots, plants and tissue
-samples) and discards them.
+and type_id. In the measured query plan, the single-column object_id index
+reads the links that point to the accession and filters them by type_id.
 
 On a large database the index can be built beforehand without blocking writes:
 CREATE INDEX CONCURRENTLY stock_relationship_object_id_type_id_idx
