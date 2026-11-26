@@ -20,7 +20,7 @@ for my $case (
     {name => 'numeric nonfinal column', values => ['0', '-2.5', '+3', '.25']},
     {name => 'numeric final column', last => 1, values => ['0', '2', '3.5']},
     {name => 'scientific notation', values => ['1e-3', '-2.5E+2', '0']},
-    {name => 'R missing markers', values => ['1', 'NA', '.', '..', '-', ' ', '', 'NaN']},
+    {name => 'R missing markers', values => ['1', 'NA', '.', '..', '-', ' ', '', 'NaN', '2']},
     {name => 'actual text', values => ['1', 'red', '3'], error => qr/not all numeric/, row => 3},
     {name => 'numeric prefix is not a number', values => ['1', '12cm', '3'], error => qr/not all numeric/, row => 3},
     {name => 'first of several nonnumeric values', values => ['1', 'red', '3', 'blue'], error => qr/not all numeric/, row => 3},
@@ -49,6 +49,12 @@ for my $case (
     {name => 'query without data', fresh => 1, no_data => 1, values => ['1', '2'], error => qr/no phenotype data/},
     {name => 'missing cached trait mapping', values => ['1', '2'], map_missing => 1, error => qr/^The selected trait is not present in the phenotype data\.$/},
     {name => 'empty cached trait mapping', values => ['1', '2'], map_empty => 1, error => qr/^The selected trait is not present in the phenotype data\.$/},
+    {name => 'one value in every plot', values => ['3', 'NA', '3', '3'], error => qr/^No variation in height cm; ANOVA not performed\.$/},
+    {name => 'one value written in several ways', values => ['2', '2.0', '+2', '2e0'], error => qr/^No variation in height cm; ANOVA not performed\.$/},
+    {name => 'a single observation', values => ['5', 'NA', ''], error => qr/^No variation in height cm; ANOVA not performed\.$/},
+    {name => 'no variation in a composed trait', trait => 'plant height|CO_334:0000001||day 43|TIME:0000043', last => 1, values => ['0', '0'], error => qr/^No variation in plant height day 43; ANOVA not performed\.$/},
+    {name => 'markup in the trait name is escaped', trait => 'height <b>cm', values => ['3', '3'], error => qr/^No variation in height &lt;b&gt;cm; ANOVA not performed\.$/},
+    {name => 'small variation is kept', values => ['0.25', '0.25', '0.2500001']},
 ) {
     subtest $case->{name} => sub {
         my $trait = $case->{trait} || 'height cm';
