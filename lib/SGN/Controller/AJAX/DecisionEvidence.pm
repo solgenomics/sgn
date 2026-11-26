@@ -20,8 +20,9 @@ The sources are kept in the meeting's meeting_json, related_analyses:
 [{source, analysis_id | run_id, name, kind, accessions, selected, linked_by,
 linked_at, after_save}] (older entries have only analysis_id and name). The
 accessions of the meeting are the accessions of its sources. Once the
-decisions are saved, sources can still be added but not removed, and a linked
-analysis cannot be deleted (ScriptFactory::meetings_using_analysis).
+decisions are saved the meeting is closed: no source can be added or removed
+(sources added after saving by earlier versions keep their after_save flag),
+and a linked analysis cannot be deleted (ScriptFactory::meetings_using_analysis).
 
 Endpoints (login needed):
 
@@ -387,6 +388,8 @@ sub link_sources : Path('/ajax/decision_evidence/link') Args(0) {
     my $schema = _schema($c);
     my $m = _meeting($schema, $meeting_id);
     return _fail($c, 'This decision meeting does not exist.') if !$m;
+    return _fail($c, 'The decisions of this meeting are saved: the meeting is closed and no analysis can be added.')
+        if $action eq 'link' && $m->{saved};
 
     # what is added: read before the transaction (reading results can take a while)
     my (%entry, %snap, @notes);
@@ -441,6 +444,7 @@ sub link_sources : Path('/ajax/decision_evidence/link') Args(0) {
             my $prop = $schema->resultset('Project::Projectprop')->search({ projectprop_id => $m->{prop}->projectprop_id() }, { for => 'update' })->single();
             my $d = SGN::Controller::AJAX::ScriptFactory::_decode_meeting($prop->value());
             my $saved = SGN::Controller::AJAX::ScriptFactory::_meeting_is_saved($d);
+            die "The decisions of this meeting are saved: the meeting is closed and no analysis can be added.\n" if $saved && $action eq 'link';
             my @list = grep { ref($_) eq 'HASH' } @{ _arr($d->{related_analyses}) };
             my %have = map { (source_key($_) // '') => $_ } @list;
             my @history = grep { ref($_) eq 'HASH' } @{ _arr($d->{analyses_history}) };
@@ -449,7 +453,7 @@ sub link_sources : Path('/ajax/decision_evidence/link') Args(0) {
                 my $item;
                 if ($action eq 'link') {
                     next if $have{$key};
-                    $item = { %{ $entry{$key} }, linked_by => $who, linked_at => $today, ($saved ? (after_save => 1) : ()) };
+                    $item = { %{ $entry{$key} }, linked_by => $who, linked_at => $today };
                     push @list, $item;
                     if ($snap{$key} && !_snapshot($schema, $m->{meeting_id}, $snap{$key}->{run_id})) {
                         my ($rank) = $schema->storage->dbh()->selectrow_array('SELECT coalesce(max(rank), -1) + 1 FROM projectprop WHERE project_id = ? AND type_id = ?',
@@ -468,7 +472,7 @@ sub link_sources : Path('/ajax/decision_evidence/link') Args(0) {
                 }
                 push @history, { action => ($action eq 'link' ? 'added' : 'removed'), name => $item->{name},
                                  ($item->{run_id} ? (run_id => $item->{run_id}) : (analysis_id => $item->{analysis_id} + 0)),
-                                 by => $who, on => $today, ($saved ? (after_save => 1) : ()) };
+                                 by => $who, on => $today };
                 $n++;
             }
             return if !$n;

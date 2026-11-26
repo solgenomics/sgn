@@ -25,11 +25,12 @@ $run_id => ''
 </%args>
 
 <& /util/import_css.mas, paths => ['leaflet.css'] &>
+<& /util/app_layout.mas &>
 <& /util/import_javascript.mas, classes => ['jquery', 'jquery.dataTables', 'CXGN.Login', 'CXGN.List'], entries => ['script_factory_results'] &>
 
-<div id="sfd" class="sfd">
+<div id="sfd" class="bb-app sfd">
 
-  <div class="sfd-hero">
+  <div class="bb-hero sfd-hero">
     <div>
       <div class="sfd-kicker"><a href="/tools/script_factory"><span class="glyphicon glyphicon-wrench"></span> Analysis Pipeline</a> &rsaquo; Decision dashboard</div>
       <h2 id="sfd_title">Loading analysis&hellip;</h2>
@@ -64,6 +65,7 @@ $run_id => ''
         <li class="sfd-zones-only"><a href="#sfd_zones_section">Zones</a></li>
         <li><a href="#sfd_outliers_section">Outliers</a></li>
         <li><a href="#sfd_model_section">Model</a></li>
+        <li id="sfd_nav_anova" style="display:none"><a href="#sfd_anova_section">ANOVA</a></li>
         <li id="sfd_nav_software" style="display:none"><a href="#sfd_software_section">Software</a></li>
         <li><a href="#sfd_log_section">Analysis log</a></li>
       </ul>
@@ -78,22 +80,22 @@ $run_id => ''
 
         <!-- overview -->
         <section class="sfd-section" id="sfd_overview">
-          <div class="sfd-stats" id="sfd_stats"></div>
+          <div class="bb-stats" id="sfd_stats"></div>
           <div id="sfd_warnings"></div>
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Traits at a glance</h3><span class="sfd-help">Is each trait reliable enough to select on?</span></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Traits at a glance</h3><span class="bb-help">Is each trait reliable enough to select on?</span></div>
             <div id="sfd_trait_summary"></div>
           </div>
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Variance components</h3><span class="sfd-help">Share of the variance due to genotypes, G&times;E, design and residual error</span></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Variance components</h3><span class="bb-help">Share of the variance due to genotypes, G&times;E, design and residual error</span></div>
             <div id="sfd_varcomp" class="sfd-plot"></div>
           </div>
         </section>
 
         <!-- map -->
         <section class="sfd-section" id="sfd_map_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head">
+          <div class="bb-card">
+            <div class="bb-card-head">
               <h3><span class="glyphicon glyphicon-map-marker"></span> Trial locations</h3>
               <div class="sfd-controls">
                 <label>Colour by</label>
@@ -111,15 +113,15 @@ $run_id => ''
               <div id="sfd_map"></div>
               <div id="sfd_map_legend" class="sfd-legend"></div>
             </div>
-            <div id="sfd_map_note" class="sfd-help"></div>
+            <div id="sfd_map_note" class="bb-help"></div>
             <div id="sfd_location_table"></div>
           </div>
         </section>
 
         <!-- field -->
         <section class="sfd-section" id="sfd_field_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head">
+          <div class="bb-card">
+            <div class="bb-card-head">
               <h3><span class="glyphicon glyphicon-th"></span> Field layout</h3>
               <div class="sfd-controls">
                 <select class="form-control input-sm" id="sfd_field_trial"></select>
@@ -131,32 +133,32 @@ $run_id => ''
                 </select>
               </div>
             </div>
-            <p class="sfd-help">Each cell is a plot at its row and column. Spatial patterns in the residuals point to field trends the model did not capture. <b>&times;</b> marks values removed as outliers; outlined plots hold shortlisted accessions. Click a plot to add its accession to the shortlist.</p>
+            <p class="bb-help">Each cell is a plot at its row and column. Spatial patterns in the residuals point to field trends the model did not capture. <b>&times;</b> marks values removed as outliers; outlined plots hold shortlisted accessions. Click a plot to add its accession to the shortlist.</p>
             <div id="sfd_field" class="sfd-plot sfd-scroll"></div>
           </div>
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Trial quality</h3><span class="sfd-help">Heritability and coefficient of variation of the focus trait in each trial</span></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Trial quality</h3><span class="bb-help">Heritability and coefficient of variation of the focus trait in each trial</span></div>
             <div id="sfd_trial_quality" class="sfd-plot"></div>
           </div>
         </section>
 
         <!-- traits -->
         <section class="sfd-section" id="sfd_traits_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Distribution of genotype values</h3><span class="sfd-help" id="sfd_dist_help"></span></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Distribution of genotype values</h3><span class="bb-help" id="sfd_dist_help"></span></div>
             <div id="sfd_distributions" class="sfd-small-multiples"></div>
           </div>
           <div class="row">
             <div class="col-lg-5">
-              <div class="sfd-card">
-                <div class="sfd-card-head"><h3>Trait correlations</h3></div>
-                <p class="sfd-help">Pearson correlation between the genotype values. Click a cell to plot the pair.</p>
+              <div class="bb-card">
+                <div class="bb-card-head"><h3>Trait correlations</h3></div>
+                <p class="bb-help">Pearson correlation between the genotype values. Click a cell to plot the pair.</p>
                 <div id="sfd_correlations" class="sfd-scroll"></div>
               </div>
             </div>
             <div class="col-lg-7">
-              <div class="sfd-card">
-                <div class="sfd-card-head">
+              <div class="bb-card">
+                <div class="bb-card-head">
                   <h3>Trait vs trait</h3>
                   <div class="sfd-controls">
                     <select class="form-control input-sm" id="sfd_scatter_x"></select>
@@ -172,8 +174,8 @@ $run_id => ''
 
         <!-- selection -->
         <section class="sfd-section" id="sfd_selection_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head">
+          <div class="bb-card">
+            <div class="bb-card-head">
               <h3><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Selection</h3>
               <div class="sfd-controls">
                 <label>Rank by</label>
@@ -184,6 +186,7 @@ $run_id => ''
                 </div>
               </div>
             </div>
+            <p class="bb-help" id="sfd_sel_basis"></p>
             <div class="sfd-sel-top">
             <div class="sfd-slider">
               <label for="sfd_sel_pct">Select the top <b id="sfd_sel_pct_label">10</b>% &rarr; <b id="sfd_sel_n">0</b> accession(s)</label>
@@ -208,9 +211,9 @@ $run_id => ''
 
         <!-- G x E / stability -->
         <section class="sfd-section" id="sfd_gxe_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Performance and stability</h3><span class="sfd-help">Finlay &amp; Wilkinson (1963) regression on the environment index, focus trait</span></div>
-            <div id="sfd_stability_note" class="sfd-help"></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Performance and stability</h3><span class="bb-help">Finlay &amp; Wilkinson (1963) regression on the environment index, focus trait</span></div>
+            <div id="sfd_stability_note" class="bb-help"></div>
             <div class="row">
               <div class="col-lg-7"><div id="sfd_stability" class="sfd-plot"></div></div>
               <div class="col-lg-5">
@@ -218,12 +221,12 @@ $run_id => ''
               </div>
             </div>
           </div>
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Reaction norms</h3><span class="sfd-help">Shortlisted accessions across environments ordered from poorest to best</span></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Reaction norms</h3><span class="bb-help">Shortlisted accessions across environments ordered from poorest to best</span></div>
             <div id="sfd_reaction" class="sfd-plot"></div>
           </div>
-          <div class="sfd-card">
-            <div class="sfd-card-head">
+          <div class="bb-card">
+            <div class="bb-card-head">
               <h3>Accession &times; environment</h3>
               <div class="sfd-controls">
                 <select class="form-control input-sm" id="sfd_gxe_rows">
@@ -243,8 +246,8 @@ $run_id => ''
 
         <!-- zones -->
         <section class="sfd-section sfd-zones-only" id="sfd_zones_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3><span class="glyphicon glyphicon-globe"></span> Environmental zones</h3>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3><span class="glyphicon glyphicon-globe"></span> Environmental zones</h3>
               <div class="sfd-controls"><select class="form-control input-sm" id="sfd_zone_target"></select></div></div>
             <div id="sfd_zones"></div>
           </div>
@@ -252,8 +255,8 @@ $run_id => ''
 
         <!-- outliers -->
         <section class="sfd-section" id="sfd_outliers_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Quality control</h3><span class="sfd-help">Values removed before modelling</span></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Quality control</h3><span class="bb-help">Values removed before modelling</span></div>
             <div id="sfd_outlier_chart" class="sfd-plot"></div>
             <div id="sfd_outlier_table"></div>
           </div>
@@ -261,23 +264,31 @@ $run_id => ''
 
         <!-- model -->
         <section class="sfd-section" id="sfd_model_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Model details</h3></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Model details</h3></div>
             <div id="sfd_model"></div>
+          </div>
+        </section>
+
+        <!-- ANOVA by experimental design (optional step) -->
+        <section class="sfd-section" id="sfd_anova_section" style="display:none">
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>ANOVA by experimental design</h3><span class="bb-help" id="sfd_anova_help"></span></div>
+            <div id="sfd_anova"></div>
           </div>
         </section>
 
         <!-- analysis log -->
         <section class="sfd-section" id="sfd_software_section" style="display:none">
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3><span class="glyphicon glyphicon-wrench"></span> Software used in this analysis</h3><span class="sfd-help">What each program did in this run</span></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3><span class="glyphicon glyphicon-wrench"></span> Software used in this analysis</h3><span class="bb-help">What each program did in this run</span></div>
             <div id="sfd_software"></div>
           </div>
         </section>
 
         <section class="sfd-section" id="sfd_log_section">
-          <div class="sfd-card">
-            <div class="sfd-card-head"><h3>Analysis log</h3><span class="sfd-help">Notes from the run, grouped by kind</span></div>
+          <div class="bb-card">
+            <div class="bb-card-head"><h3>Analysis log</h3><span class="bb-help">Notes from the run, grouped by kind</span></div>
             <div id="sfd_log"></div>
           </div>
         </section>
@@ -286,8 +297,8 @@ $run_id => ''
       <!-- shortlist -->
       <div class="col-md-3">
         <div class="sfd-shortlist" id="sfd_shortlist_panel">
-          <div class="sfd-card-head"><h4><span class="glyphicon glyphicon-star"></span> Shortlist <span class="badge" id="sfd_short_n">0</span></h4></div>
-          <p class="sfd-help">Your candidates. They start as the selected accessions; click any accession in a chart or table to add or remove it. Kept in this browser.</p>
+          <div class="bb-card-head"><h4><span class="glyphicon glyphicon-star"></span> Shortlist <span class="badge" id="sfd_short_n">0</span></h4></div>
+          <p class="bb-help">Your candidates. They start as the selected accessions; click any accession in a chart or table to add or remove it. Kept in this browser.</p>
           <div class="sfd-short-add">
             <input class="form-control input-sm" id="sfd_short_input" list="sfd_accession_options" placeholder="Add an accession&hellip;" />
           </div>
@@ -320,10 +331,10 @@ jQuery(document).ready(function() {
 </script>
 
 <style>
-.sfd { --a: #2b7a4b; --a-soft: #e8f4ec; --b: #dfe3e8; --m: #6b7280; --bg: #f7f9fa; margin-bottom: 40px; }
+/* shared look: /util/app_layout.mas (static/css/breedbase_app.css); below only what is specific to the results page */
+.sfd { --a: var(--bb-accent); --a-soft: var(--bb-accent-soft); --b: var(--bb-border); --m: var(--bb-muted); --bg: var(--bb-bg); }
 .sfd h3 { font-size: 17px; margin: 0; font-weight: 600; }
 .sfd h4 { font-size: 14px; font-weight: 600; margin: 14px 0 8px; }
-.sfd-help { color: var(--m); font-size: 12.5px; }
 .sfd-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 14px; padding: 18px 22px; margin: 10px 0 14px; border-radius: 10px; background: linear-gradient(120deg, #1f5f3a 0%, #2b7a4b 55%, #4c9a6a 100%); color: #fff; }
 .sfd-hero h2 { margin: 2px 0 4px; font-weight: 600; color: #fff; font-size: 24px; }
 .sfd-kicker a, .sfd-kicker { color: #d7eadf; font-size: 13px; }
@@ -338,13 +349,11 @@ jQuery(document).ready(function() {
 .sfd-bar-controls label, .sfd-controls label { margin: 0; font-weight: 600; font-size: 12.5px; color: #374151; }
 .sfd-bar-controls select { min-width: 200px; }
 .sfd-section { scroll-margin-top: 110px; }
-.sfd-card { background: #fff; border: 1px solid var(--b); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
-.sfd-card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
-.sfd-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
-.sfd-stat { background: #fff; border: 1px solid var(--b); border-radius: 10px; padding: 10px 14px; }
-.sfd-stat .v { font-size: 22px; font-weight: 600; color: #111827; line-height: 1.2; }
-.sfd-stat .l { font-size: 12px; color: var(--m); }
 .sfd-plot { width: 100%; overflow-x: auto; }
+.sfd-anova-table td.sig { font-weight: 600; color: #166534; }
+.sfd-anova-plots { display: flex; flex-wrap: wrap; gap: 12px; }
+.sfd-anova-plots > div { flex: 1 1 300px; min-width: 0; }
+.sfd-anova-group { display: inline-block; min-width: 1.6em; padding: 0 5px; border-radius: 3px; background: #ecfdf5; color: #166534; font-weight: 600; font-family: monospace; }
 .sfd-plot svg, .sfd-scroll svg { display: block; max-width: 100%; height: auto; }
 .sfd-scroll { overflow: auto; max-height: 640px; }
 .sfd-map-wrap { position: relative; }
@@ -405,7 +414,6 @@ jQuery(document).ready(function() {
 @media (max-width: 991px) { .sfd-shortlist { position: static; max-height: none; margin-top: 14px; } .sfd-bar { position: static; } }
 @media print {
   .sfd-bar, .sfd-hero-actions, .sfd-shortlist .sfd-short-actions, .sfd-short-add, .navbar, footer { display: none !important; }
-  .sfd-card { break-inside: avoid; box-shadow: none; }
   .sfd-hero { background: none; color: #111; border: 1px solid #ccc; }
   .sfd-hero h2, .sfd-kicker, .sfd-kicker a { color: #111; }
 }
@@ -419,7 +427,7 @@ jQuery(document).ready(function() {
         <h4 class="modal-title"><span class="glyphicon glyphicon-briefcase"></span> Use this analysis in a decision meeting</h4>
       </div>
       <div class="modal-body">
-        <p class="sfd-help">The results of this analysis (genotype values and ranks per trait, selection index, zones) are shown next to the decisions of the meetings you add it to, on the <a href="/breeders/meeting" target="_blank">Decision Meeting</a> page, and listed in the meeting report. A meeting keeps a permanent record, so only stored analyses can be added. Analyses can still be added after the decisions are saved (a late addition is flagged), but once the decisions are saved the analyses used as evidence cannot be removed, and an analysis linked to a meeting cannot be deleted. Every change is kept in the meeting's history.</p>
+        <p class="bb-help">The results of this analysis (genotype values and ranks per trait, selection index, zones) are shown next to the decisions of the meetings you add it to, on the <a href="/breeders/meeting" target="_blank">Decision Meeting</a> page, and listed in the meeting report. A meeting keeps a permanent record, so only stored analyses can be added. Once the decisions are saved the meeting is closed: no analysis can be added or removed, and an analysis linked to a meeting cannot be deleted. Every change is kept in the meeting's history.</p>
         <div id="sfd_meeting_body"></div>
       </div>
       <div class="modal-footer">

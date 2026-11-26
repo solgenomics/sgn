@@ -426,7 +426,7 @@ Chris Simoes <ccs263@cornell.edu>
           <div id="dm_save_summary"></div>
           <label for="dm_save_notes" style="margin-top:10px">Meeting notes</label>
           <textarea class="form-control" id="dm_save_notes" rows="3" placeholder="What was discussed, who agreed, next steps"></textarea>
-          <p class="dm-muted dm-small" style="margin-top:8px"><span class="glyphicon glyphicon-info-sign"></span> Saving is final: the new stages are written on the accessions and the meeting becomes a permanent record. Analyses can still be added later, not removed.</p>
+          <p class="dm-muted dm-small" style="margin-top:8px"><span class="glyphicon glyphicon-info-sign"></span> Saving is final: the new stages are written on the accessions and the meeting becomes a permanent record. It is closed: no analysis can be added or removed.</p>
           <div id="dm_save_msg"></div>
         </div>
         <div class="modal-footer">

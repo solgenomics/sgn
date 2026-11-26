@@ -147,7 +147,10 @@ export function reviewModel(recipe, ctx) {
     // 5. covariates that nearly repeat the trait
     const covs = arr(recipe.covariates);
     const close = [];
+    // only the trait / covariate pairs the model uses (covariate dialog)
+    const covOnly = recipe.covariate_traits || {};
     arr(recipe.traits).forEach(t => covs.forEach(c => {
+        if (covOnly[c] && arr(covOnly[c]).indexOf(t) < 0) return;
         const r = ctx.corr && ctx.corr[t] && ctx.corr[t][c];
         if (c !== t && r !== undefined && r !== null && Math.abs(r) >= 0.9) close.push({ t: t, c: c, r: r });
     }));
@@ -159,7 +162,11 @@ export function reviewModel(recipe, ctx) {
             text: close.map(x => short(x.c) + ' and ' + short(x.t) + ' (r = ' + x.r.toFixed(2) + ')').join('; ') + ' move together on almost every plot. ' +
                 'Used as a covariate, it can explain away part of the genetic differences you want to measure, not only the plot-to-plot noise.',
             fix: 'Leave ' + drop.map(short).join(', ') + ' out as covariate.',
-            apply: r => { r.covariates = arr(r.covariates).filter(c => drop.indexOf(c) < 0); if (r.single) r.single.covariates = arr(r.single.covariates).filter(c => drop.indexOf(c) < 0); }
+            apply: r => {
+                r.covariates = arr(r.covariates).filter(c => drop.indexOf(c) < 0);
+                if (r.single) r.single.covariates = arr(r.single.covariates).filter(c => drop.indexOf(c) < 0);
+                if (r.covariate_traits) { drop.forEach(c => { delete r.covariate_traits[c]; }); if (!Object.keys(r.covariate_traits).length) delete r.covariate_traits; }
+            }
         });
     }
 
@@ -217,9 +224,10 @@ export function suggestedRecipe(recipe, findings) {
 // ---------------------------------------------------------------------------
 
 // res: results of a run; recipe: the recipe that ran; hasRowcol: some trial
-// has rows and columns. Returns findings, with a fix when a lighter model is
-// worth comparing.
-export function reviewResults(res, recipe, hasRowcol) {
+// has rows and columns; avail: { blupf90, glmmtmb } engines / packages of the
+// site. Returns findings, with a fix when a lighter model is worth comparing,
+// or when another setup fits an advanced setting this run could not use.
+export function reviewResults(res, recipe, hasRowcol, avail) {
     const f = [];
     const s2 = arr(res && res.stage2);
     const two = recipe && recipe.strategy === 'two_stage';
@@ -288,7 +296,7 @@ export function reviewResults(res, recipe, hasRowcol) {
         });
     }
 
-    const approx = arr(res && res.warnings).map(String).filter(m => /still changing after a refit with/.test(m));
+    const approx = arr(res && res.warnings).map(String).filter(m => /still changing after/.test(m));
     if (approx.length) {
         f.push({
             id: 'convergence_approx', level: 'note',
@@ -297,6 +305,69 @@ export function reviewResults(res, recipe, hasRowcol) {
                 'This usually means a replicate, block or row effect is close to zero in those trials; the genotype values are then little affected, only that variance is imprecise. ' +
                 'The details are under Convergence notes in the analysis log.',
             fix: '', apply: null
+        });
+    }
+
+    // stage 1 with more field terms than the trials can separate: many trial /
+    // trait fits whose REML needed refits or did not settle (BLUPF90+), or
+    // whose spatial model could not be used (SpATS failed or gave implausible
+    // means, R engine)
+    const s1fits = s1.filter(x => x.model).length;
+    const hard = {};
+    arr(res && res.warnings).map(String).forEach(m => {
+        const mm = m.match(/^Stage 1, (.+?): .*(did not settle|still changing|diverged)/) || m.match(/^SpATS could not be fitted for (.+?) \(/);
+        if (mm) hard[mm[1]] = true;
+    });
+    const hardKeys = Object.keys(hard);
+    if (two && s1fits && hardKeys.length >= 3 && hardKeys.length / s1fits >= 0.1) {
+        f.push({
+            id: 'stage1_overparam', level: 'look',
+            title: 'The stage-1 model may be over-parameterized for some trials',
+            text: 'In ' + hardKeys.length + ' of ' + s1fits + ' trial / trait fits of stage 1 (for example ' + hardKeys.slice(0, 3).join(', ') + (hardKeys.length > 3 ? '...' : '') + ') ' +
+                'the variance estimates needed extra refits to settle, or the spatial model could not be used. This usually means the model has more field terms than these trials can tell apart: ' +
+                'row and column effects and the spatial surface describe the same variation. The genotype values are usually little affected, but the run takes longer and some variances (and H²) are less stable.',
+            fix: canLighten ? 'Compare with the design model in stage 1 (no spatial surface) and check the rankings.' : '',
+            apply: canLighten ? lighter : null
+        });
+    }
+
+    // advanced settings this run could not use, which Breedbase fits with
+    // another engine, strategy or genotype setting
+    const unused = advancedSuggestions(res, recipe, avail || {});
+    if (unused.length) {
+        f.push({
+            id: 'advanced_unused', level: 'look',
+            title: 'Some advanced settings were not used, but Breedbase can fit them',
+            text: unused.map(u => u.label + ' was not used (' + u.why + '). ' + u.how).join(' ') + ' Run the suggested model to compare it with this one.',
+            fix: unused.map(u => u.how).filter((x, i, a) => a.indexOf(x) === i).join(' '),
+            apply: r => unused.forEach(u => u.apply(r))
+        });
+    }
+
+    // genotype interactions with nearly the same levels (the analysis warns):
+    // the suggested model leaves out the interaction the user added
+    const near = arr(res && res.warnings).map(String).map(m => /(\(1\|[^)]*\)) and (\(1\|[^)]*\)) have nearly the same levels/.exec(m)).filter(Boolean);
+    const baseTerm = ix => {
+        const f = arr(ix && ix.factors).map(String);
+        return f.every(x => ['accession', 'trial', 'location', 'year'].indexOf(x) >= 0) && f.indexOf('accession') >= 0 ? '(1|' + f.join(':') + ')' : null;
+    };
+    const userIx = arr(recipe && recipe.interactions);
+    const drop = {};
+    near.forEach(m => {
+        const mine = [m[1], m[2]].map(t => userIx.findIndex(ix => baseTerm(ix) === t)).filter(i => i >= 0);
+        // one of them added by the user: leave it out; both: the one with more factors
+        if (mine.length === 1) drop[mine[0]] = 1;
+        else if (mine.length === 2) drop[userIx[mine[0]].factors.length >= userIx[mine[1]].factors.length ? mine[0] : mine[1]] = 1;
+    });
+    if (near.length) {
+        const gone = Object.keys(drop).map(Number);
+        f.push({
+            id: 'interactions_near', level: 'look',
+            title: 'Some genotype interactions nearly repeat each other',
+            text: near.map(m => m[1] + ' and ' + m[2]).filter((x, i, a) => a.indexOf(x) === i).join('; ') + ' have nearly the same levels, so the data hardly tell their variances apart: ' +
+                'their split is uncertain (and can differ between engines), their sum is not. Keeping one of them gives a clearer model.',
+            fix: gone.length ? 'Leave out the interaction ' + gone.map(i => userIx[i].factors.join(' x ')).join(', ') + '.' : '',
+            apply: gone.length ? r => { r.interactions = arr(r.interactions).filter((ix, i) => !drop[i]); } : null
         });
     }
 
@@ -310,6 +381,59 @@ export function reviewResults(res, recipe, hasRowcol) {
         });
     }
     return f;
+}
+
+const ADV_NAMES = {
+    gxe: { cs_het: 'The heterogeneous compound symmetry (genotype x trial)', diag: 'The diagonal genotype x trial covariance', us: 'The unstructured genotype x trial covariance' },
+    residual: { trial: 'One residual variance per trial' },
+    time_within: { ar1: 'The AR(1) correlation within plots', exp: 'The exponential correlation within plots', us: 'The unstructured covariance within plots' },
+    time_genotype: { slope: 'The random regression of the genotype in time', us: 'The unstructured genetic covariance among occasions' },
+    method: { ML: 'Maximum likelihood (ML)' },
+    optimizer: {}
+};
+
+// the recipe changes that let Breedbase fit the advanced settings a run could
+// not use (results.advanced_unused: { setting, value, why, try }), when the
+// site has what they need; one entry per setting
+function advancedSuggestions(res, recipe, avail) {
+    const out = [];
+    const seen = {};
+    arr(avail.dropped).concat(arr(res && res.advanced_unused)).forEach(u => {
+        const t = u && u.try;
+        if (!t || typeof t !== 'object') return;
+        const key = u.setting + ':' + String(u.value).toLowerCase();    // the page and the analysis may both report it
+        if (seen[key]) return;
+        let how = '', apply = null;
+        if (t.engine === 'blupf90' && avail.blupf90 && recipe.engine !== 'blupf90') {
+            how = 'The BLUPF90+ engine fits it (choose BLUPF90+ under Model engine).';
+            apply = r => { r.engine = 'blupf90'; };
+        }
+        else if (t.engine === 'lme4' && recipe.engine === 'blupf90') {
+            how = 'The R engine fits it (choose R under Model engine).';
+            apply = r => { r.engine = 'lme4'; };
+        }
+        else if (t.strategy === 'single_stage' && recipe.strategy !== 'single_stage') {
+            how = 'The single-stage model fits it (choose Single stage under Strategy).';
+            apply = r => { r.strategy = 'single_stage'; };
+        }
+        else if (t.stage2_genotype === 'random') {
+            how = 'It needs the genotype as random effect in stage 2.';
+            apply = r => { r.stage2 = Object.assign({}, r.stage2, { genotype: 'random' }); };
+        }
+        else if (t.single_genotype === 'random') {
+            how = 'It needs the genotype as random effect.';
+            apply = r => { r.single = Object.assign({}, r.single, { genotype: 'random' }); };
+        }
+        else if (t.single_mode === 'builder') {
+            how = 'It is fitted with the model built from the choices on the page, not with a written formula.';
+            apply = r => { r.single = Object.assign({}, r.single, { mode: 'builder' }); };
+        }
+        if (!apply) return;
+        seen[key] = 1;
+        const label = u.setting === 'interaction' ? 'The interaction ' + u.value : (ADV_NAMES[u.setting] || {})[u.value] || ('The setting ' + u.setting + ' = ' + u.value);
+        out.push({ label: label, why: String(u.why || ''), how: how, apply: apply });
+    });
+    return out;
 }
 
 // ---------------------------------------------------------------------------

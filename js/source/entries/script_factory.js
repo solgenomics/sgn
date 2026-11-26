@@ -33,9 +33,12 @@ let $;
 let cfg = {};
 const state = {
     step: 1,
+    advanced: {},           // advanced settings changed from their defaults (dialog of the model engine card)
+    anova: { scope: 'joint', test: 'tukey', alpha: 0.05 },  // ANOVA settings (dialog of the ANOVA card)
+    interactions: [],       // interactions built by the user: [{ factors: [ids], effect: 'fixed' | 'random' }] (recipe.interactions)
     dataset: null,          // response of /prepare
     traits: [],             // selected full trait names
-    plotRaw: null,          // response of /plot_data (plot means and every repeated measurement)
+    plotRaw: null,          // response of /plot_data (plot means; value per plot of repeated traits for each summary)
     plotData: null,         // plotRaw with each repeated trait as its value per plot (refreshPlotView)
     plotDataKey: '',
     outlierView: {},        // trait -> value per plot the outlier rules judge (repeated traits): sum | first | last (default mean)
@@ -53,6 +56,8 @@ const state = {
     zoneLists: null,        // {own, pub} accession lists, read once
     designOverrides: {},    // trial -> design
     singleCov: {},          // full trait -> true, covariates (stage 1 models and single-stage model)
+    covTraits: {},          // covariate -> [traits it adjusts]; none = every analysed trait (covariate dialog)
+    covEditing: null,       // covariate open in the covariate dialog
     repeated: {},           // full trait -> value per plot of a trait measured several times per plot (mean | first | last | max | min | sum | auc | slope | all)
     trt: null,              // {use: {name: true}, gxt: {name: true}} treatments in the models; null = defaults of the dataset
     pendingRecipe: null,    // recipe loaded before a dataset
@@ -99,6 +104,13 @@ function shortTrait(t) {
 
 function alertBox(type, html) {
     return '<div class="alert alert-' + type + '" style="margin-top:12px">' + html + '</div>';
+}
+
+// date and time of a run in the user's clock (YYYY-MM-DD-HH:MM): the name of a
+// run of a saved script in the user's jobs list is the script's name + this
+function localStamp() {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
 function post(url, data) {
@@ -177,6 +189,16 @@ function setRadio(name, value) {
 }
 
 function buildRecipe() {
+    const r = buildBaseRecipe();
+    const adv = advRecipe();
+    if (adv) r.advanced = adv;
+    if (state.interactions.length) r.interactions = JSON.parse(JSON.stringify(state.interactions));
+    // ANOVA by experimental design: written only when on (older scripts stay unchanged)
+    if ($('#sf_anova_enabled').is(':checked')) r.anova = { enabled: true, scope: state.anova.scope, test: state.anova.test, alpha: state.anova.alpha };
+    return r;
+}
+
+function buildBaseRecipe() {
     const index = { enabled: $('#sf_index_enabled').is(':checked'), method: radio('sf_index_method'), selection_pct: Number($('#sf_selection_pct').val()), traits: {} };
     state.traits.forEach(t => {
         const c = state.indexCfg[t] || { weight: 0, direction: 'increase' };
@@ -207,6 +229,7 @@ function buildRecipe() {
         stage2: { genotype: $('#sf_stage2_genotype').val(), weighting: $('#sf_stage2_weighting').val() },
         single: singleRecipe(),
         covariates: Object.keys(state.singleCov),
+        ...(covTraitsRecipe() ? { covariate_traits: covTraitsRecipe() } : {}),
         repeated: repeatedRecipe(),
         treatments: treatmentRecipe(),
         index: index,
@@ -278,13 +301,20 @@ function applyRecipe(r) {
     if (s2.genotype) $('#sf_stage2_genotype').val(s2.genotype);
     if (s2.weighting) $('#sf_stage2_weighting').val(s2.weighting);
     applySingle(r.single || {});
+    state.advanced = cleanAdvanced(r.advanced);
+    state.interactions = ixClean(r.interactions);
     // covariates: shared by both strategies since version 1.7 (single.covariates before)
+    state.covTraits = {};
+    Object.keys(r.covariate_traits || {}).forEach(c => { state.covTraits[matchTrait(c) || c] = arr(r.covariate_traits[c]).map(t => matchTrait(t) || t); });
     if (r.covariates) {
         state.singleCov = {};
         arr(r.covariates).forEach(t => { const m = matchTrait(t) || t; state.singleCov[m] = true; });
         renderSingleCovariates();
     }
     applyRepeated(r.repeated || {});
+    const an = r.anova || {};
+    $('#sf_anova_enabled').prop('checked', !!an.enabled);
+    state.anova = anovaClean(an);
     const tr = r.treatments;
     state.trt = tr ? { use: toSet(tr.use), gxt: toSet(tr.gxt) } : null;
     renderTreatments();
@@ -389,7 +419,7 @@ function renderQuickRun() {
     $('#sf_quick_run_btn')
         .toggleClass('btn-success', s !== 'done').toggleClass('btn-primary', s === 'done')
         .html(s === 'done' ? '<span class="glyphicon glyphicon-ok-circle"></span> Completed: view results'
-            : s === 'running' ? '<span class="glyphicon glyphicon-refresh sf-spin"></span> Running...'
+            : s === 'running' ? '<span class="glyphicon glyphicon-refresh bb-spin"></span> Running...'
             : '<span class="glyphicon glyphicon-play"></span> Run whole script')
         .prop('disabled', s === 'running' || (s !== 'done' && problems.length > 0));
     box.show();
@@ -432,7 +462,7 @@ function goTo(step) {
 }
 
 function refreshOptionCards() {
-    $('.sf-option').each(function() {
+    $('.bb-option').each(function() {
         $(this).toggleClass('on', $(this).find('input').is(':checked'));
     });
 }
@@ -451,6 +481,9 @@ function refreshToggles() {
     $('#sf_single_custom').toggle(custom);
     $('input[name=sf_single_mode]').each(function() { $(this).closest('label').toggleClass('active', $(this).is(':checked')); });
 
+    $('#sf_anova_opts').toggle($('#sf_anova_enabled').is(':checked'));
+    $('#sf_anova_summary').html(anovaLabel(state.anova));
+    $('#sf_anova_note').html(cfg.breedtools_available ? '' : '<span class="text-warning">The R package <code>breedtools</code> is not installed on this server: ask the site administrator to install it to run the ANOVA.</span>');
     $('#sf_index_body').toggleClass('sf-disabled', !$('#sf_index_enabled').is(':checked'));
     $('#sf_zones_body').toggleClass('sf-disabled', !$('#sf_zones_enabled').is(':checked'));
     const lin = radio('sf_zones_method') === 'lin';
@@ -486,7 +519,11 @@ function selectedDatasetId() {
     return checked.length ? checked.first().val() : null;
 }
 
-function loadDataset() {
+// opts.fromDatabase: read the phenotypes from the database tables instead of
+// the search cache (offered when the cache is stale).
+// loadDataset is also a click handler, so opts may be an event.
+function loadDataset(opts) {
+    const fromDatabase = !!(opts && opts.fromDatabase === true);
     const id = selectedDatasetId();
     if (!id) {
         $('#sf_dataset_message').html(alertBox('warning', 'Please tick one dataset in the table above.'));
@@ -496,14 +533,27 @@ function loadDataset() {
         $('#sf_dataset_message').html(alertBox('warning', 'Please select only one dataset.'));
         return;
     }
-    $('#sf_dataset_message').html('<div class="sf-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh sf-spin"></span> Retrieving phenotypes. Large datasets can take a minute...</div>');
+    $('#sf_dataset_message').html('<div class="bb-help" style="margin-top:12px"><span class="glyphicon glyphicon-refresh bb-spin"></span> ' +
+        (fromDatabase ? 'Reading the phenotypes from the database...'
+                      : 'Retrieving phenotypes. Large datasets can take a minute...') + '</div>');
+    $('#sf_cache_reload').prop('disabled', true);
     $('#sf_load_dataset').prop('disabled', true);
     // the dataset loads as soon as it is ticked: only the latest choice counts
     const seq = state.loadSeq = (state.loadSeq || 0) + 1;
     state.datasetLoading = true;
     updateStep1Next();
 
-    post('/ajax/script_factory/prepare', { dataset_id: id })
+    const params = { dataset_id: id };
+    if (fromDatabase) params.source = 'database';
+    // reloading the same dataset from the tables keeps the values excluded by
+    // hand (they come back through applyPendingExclusions). The values marked
+    // in Breedbase are read again with the dataset.
+    if (fromDatabase && state.dataset && String(state.dataset.dataset_id) === String(id) && !state.pendingExclusions) {
+        const hand = Object.keys(state.exclusions).filter(k => !state.exclusions[k].marked)
+            .map(k => ({ unit: state.exclusions[k].unit, trait: state.exclusions[k].trait }));
+        if (hand.length) { state.pendingExclusions = hand; state.pendingHandReload = true; }
+    }
+    post('/ajax/script_factory/prepare', params)
         .then(r => {
             if (seq !== state.loadSeq) return;
             const keepTraits = state.dataset ? state.traits.map(shortTrait) : null;
@@ -519,7 +569,9 @@ function loadDataset() {
             state.outlierFocus = null;
             state.outlierStatus = {};
             excludeMarked(true);
-            const nRestored = applyPendingExclusions();
+            const handReload = state.pendingHandReload;
+            state.pendingHandReload = false;
+            const nRestored = applyPendingExclusions(handReload);
             state.results = null;
             state.lastRun = null;
             state.runFailed = false;
@@ -542,15 +594,21 @@ function loadDataset() {
             const nMarked = arr(r.marked_outliers).length;
             $('#sf_dataset_message').html(r.traits.length ? (nMarked ? alertBox('info', '<span class="glyphicon glyphicon-flag"></span> <b>' + nMarked + '</b> value(s) of this dataset are marked as outliers in Breedbase. ' +
                 'They are excluded in step 2 (only those values, not the whole plots); you can bring them back there.') : '') : alertBox('warning', 'No numeric trait was found in this dataset.'));
-            if (nRestored) $('#sf_dataset_message').append(alertBox('info', '<span class="glyphicon glyphicon-scissors"></span> <b>' + nRestored + '</b> value(s) removed by hand in that analysis are excluded again (step 2), so a new run uses the same data.'));
+            if (nRestored) $('#sf_dataset_message').append(alertBox('info', '<span class="glyphicon glyphicon-scissors"></span> <b>' + nRestored + '</b> value(s) ' +
+                (handReload ? 'you removed by hand are still excluded (step 2).' : 'removed by hand in that analysis are excluded again (step 2), so a new run uses the same data.')));
             renderDatasetOverview();
             renderExclusions();
             renderPipeline();
             renderQuickRun();
         })
-        .catch(e => { if (seq === state.loadSeq) $('#sf_dataset_message').html(alertBox('danger', esc(e.message))); })
+        .catch(e => {
+            // a failed reload leaves the loaded dataset and its exclusions as they were
+            if (state.pendingHandReload) { state.pendingExclusions = null; state.pendingHandReload = false; }
+            if (seq === state.loadSeq) $('#sf_dataset_message').html(alertBox('danger', esc(e.message)));
+        })
         .finally(() => {
             $('#sf_load_dataset').prop('disabled', false);
+            $('#sf_cache_reload').prop('disabled', false);
             if (seq === state.loadSeq) { state.datasetLoading = false; updateStep1Next(); }
         });
 }
@@ -558,13 +616,15 @@ function loadDataset() {
 // exclusions of a reopened run or stored analysis: the values it removed by
 // hand come back as exclusions, and of the values marked in Breedbase only
 // those it excluded stay excluded (a re-run uses the same data)
-function applyPendingExclusions() {
+// handOnly: only the values removed by hand (reload of the same dataset from
+// the database); the values marked in Breedbase stay as excludeMarked set them
+function applyPendingExclusions(handOnly) {
     const pend = state.pendingExclusions;
     state.pendingExclusions = null;
     if (!pend) return 0;
     const keep = {};
     pend.forEach(e => { const t = matchTrait(e.trait) || e.trait; keep[e.unit + '|' + t] = { unit: e.unit, trait: t, source: e.source }; });
-    Object.keys(state.exclusions).forEach(k => { if (state.exclusions[k].marked && !keep[k]) delete state.exclusions[k]; });
+    if (!handOnly) Object.keys(state.exclusions).forEach(k => { if (state.exclusions[k].marked && !keep[k]) delete state.exclusions[k]; });
     let n = 0;
     Object.keys(keep).forEach(k => {
         if (state.exclusions[k]) return;
@@ -579,7 +639,7 @@ function applyPendingExclusions() {
 function updateStep1Next() {
     const b = $('#sf_step1_next');
     const ready = !!state.dataset && !state.datasetLoading && state.traits.length > 0;
-    const text = state.datasetLoading ? '<span class="glyphicon glyphicon-refresh sf-spin"></span> Loading the dataset...'
+    const text = state.datasetLoading ? '<span class="glyphicon glyphicon-refresh bb-spin"></span> Loading the dataset...'
         : !state.dataset ? 'Select a dataset'
         : !state.traits.length ? 'Select at least one trait'
         : 'Next: Quality control <span class="glyphicon glyphicon-chevron-right"></span>';
@@ -624,16 +684,78 @@ function factorCell(t, f, n) {
     return '<td>' + (shown ? '<span class="sf-warn-text" title="Not used as a model factor: ' + esc(s.why) + '"><s>' + n + '</s> <span class="glyphicon glyphicon-ban-circle"></span></span>' : n) + '</td>';
 }
 
+// Where the phenotypes came from. Read from the search cache while it differs
+// from the database for some trials: warn, with a button to reload the
+// dataset from the database tables.
+function cacheNote(r) {
+    const detail = arr(r.stale_detail).length ? arr(r.stale_detail)
+                 : arr(r.stale_trials).map(t => ({ trial: t }));
+    if (!detail.length) return '';
+    const trials = detail.map(d => esc(d.trial) + (d.n_database !== undefined
+        ? ' <small class="sf-muted">(' + esc(d.n_cache) + ' of ' + esc(d.n_database) + ' values in the cache)</small>' : '')).join(', ');
+    // read from the database tables: every value is there, nothing to report
+    if (r.phenotype_source === 'database') return '';
+    const cache = r.cache || {};
+    return alertBox('warning', '<span class="glyphicon glyphicon-warning-sign"></span> ' +
+        "Breedbase's phenotype search cache is not up to date for " + detail.length + ' trial(s) of this dataset (' + trials +
+        '). The summary and the analysis use the cached values, so recent uploads or changes may be missing until the cache is refreshed.' +
+        (cache.last_refresh ? ' <small class="sf-muted">Cache last updated ' + esc(cache.last_refresh) + '.</small>' : '') +
+        '<div style="margin-top:8px"><button class="btn btn-default btn-sm" id="sf_cache_reload"><span class="glyphicon glyphicon-refresh"></span> Reload from database</button>' +
+        ' <small class="sf-muted">Reads every value of these trials from the database tables.</small></div>' +
+        (cache.can_update ? '<div style="margin-top:6px"><button class="btn btn-default btn-sm" id="sf_cache_update"' + (cache.refreshing ? ' disabled' : '') +
+            '><span class="glyphicon glyphicon-cloud-upload"></span> Update cache</button>' +
+            ' <small class="sf-muted" id="sf_cache_update_status">' + (cache.refreshing ? cacheUpdatingText() : 'Updates the search cache of the whole database, for every tool. On a large database this can take a long time; you can keep working meanwhile.') + '</small></div>'
+            : (cache.refreshing ? '<div style="margin-top:6px"><small class="sf-muted">' + cacheUpdatingText() + '</small></div>' : '')));
+}
+
+function cacheUpdatingText() {
+    return '<span class="glyphicon glyphicon-refresh bb-spin"></span> The search cache is being updated. This page will tell you when it is done.';
+}
+
+// starts an update of the phenotype search cache, then follows it
+function updateCache() {
+    $('#sf_cache_update').prop('disabled', true);
+    $('#sf_cache_update_status').html('<span class="glyphicon glyphicon-refresh bb-spin"></span> Starting the update...');
+    post('/ajax/script_factory/cache/update', {})
+        .then(r => {
+            if (r.message) $('#sf_cache_update_status').html(esc(r.message));
+            else $('#sf_cache_update_status').html(cacheUpdatingText());
+            pollCache(true);
+        })
+        .catch(e => {
+            $('#sf_cache_update').prop('disabled', false);
+            $('#sf_cache_update_status').html('<span class="sf-warn-text">' + esc(e.message) + '</span>');
+        });
+}
+
+// polls the cache status while an update runs; when it ends, offers to load
+// the dataset again from the updated cache
+function pollCache(started) {
+    clearTimeout(state.cachePoll);
+    state.cachePoll = setTimeout(() => {
+        post('/ajax/script_factory/cache/status', {})
+            .then(r => {
+                if (state.dataset) state.dataset.cache = r;
+                if (r.refreshing) { $('#sf_cache_update_status').html(cacheUpdatingText()); pollCache(true); return; }
+                if (!started) return;
+                $('#sf_cache_update').prop('disabled', false);
+                $('#sf_cache_note').append(alertBox('success', '<span class="glyphicon glyphicon-ok"></span> The search cache was updated' +
+                    (r.last_refresh ? ' (' + esc(r.last_refresh) + ')' : '') + '. ' +
+                    '<button class="btn btn-default btn-sm" id="sf_cache_reload_updated"><span class="glyphicon glyphicon-refresh"></span> Load the dataset again</button>'));
+                $('#sf_cache_update_status').html('');
+            })
+            .catch(() => pollCache(started));
+    }, 15000);
+}
+
 function renderDatasetOverview() {
     const r = state.dataset;
-    const stat = (v, l) => '<div class="sf-stat"><div class="v">' + esc(v) + '</div><div class="l">' + esc(l) + '</div></div>';
+    const stat = (v, l) => '<div class="bb-stat"><div class="v">' + esc(v) + '</div><div class="l">' + esc(l) + '</div></div>';
     $('#sf_dataset_stats').html(
         stat(r.trials.length, 'Trials') + stat(r.n_locations, 'Locations') + stat(r.n_years, 'Years') +
         stat(r.n_accessions, 'Accessions') + stat(r.n_plots, 'Plots') + stat(r.traits.length, 'Numeric traits'));
-    const stale = r.stale_trials || [];
-    $('#sf_cache_note').html(r.phenotype_source === 'database' ? alertBox('info', '<span class="glyphicon glyphicon-refresh"></span> ' +
-        "Breedbase's phenotype search cache is not up to date for " + stale.length + ' trial(s) of this dataset (' + stale.map(esc).join(', ') +
-        '), so the data were read directly from the database: the summary and the analysis use every value. Loading may take a little longer until the cache is refreshed.') : '');
+    $('#sf_cache_note').html(cacheNote(r));
+    if (r.cache && r.cache.refreshing) pollCache(true);
 
     let h = '<table class="table table-condensed table-hover"><thead><tr><th>Trial</th><th>Location</th><th>Year</th><th>Design</th><th>Plots</th><th>Accessions</th><th>Reps</th><th>Blocks</th><th>Layout</th></tr></thead><tbody>';
     r.trials.forEach(t => {
@@ -647,9 +769,10 @@ function renderDatasetOverview() {
     h += '</tbody></table>';
     $('#sf_trials_table').html(h);
     const rpt = (r.repeated || []).filter(x => x.n_repeated_units > 0);
-    $("#sf_repeated_note").html(rpt.length ? alertBox('warning', '<span class="glyphicon glyphicon-repeat"></span> <b>Repeated measurements:</b> ' +
-        rpt.map(x => "<b>" + esc(x.short) + '</b> (up to ' + x.max_n + ' values on ' + x.n_repeated_units + ' of ' + x.n_units + ' plots' + (x.n_dates > 1 ? ', ' + x.n_dates + ' dates' : ', same date') + ')').join(', ') +
-        '. The table below shows their plot means; choose how each is used (mean, last, area under the curve, every measurement...) under <i>Repeated measurements</i> in step 3, where Breedbase suggests a choice.') : '');
+    // a plain note (not an alert box): site themes color alerts differently
+    $("#sf_repeated_note").html(rpt.length ? '<div class="bb-help" style="margin-top:12px"><span class="glyphicon glyphicon-repeat"></span> Measured more than once per plot: ' +
+        rpt.map(x => esc(x.short) + ' <small class="sf-muted">(up to ' + x.max_n + ' values' + (x.n_dates > 1 ? ', ' + x.n_dates + ' dates' : '') + ')</small>').join(', ') +
+        '. The table shows plot means; you choose how to use them in step 3.</div>' + repeatedStaleNote(rpt) : '');
     renderTraits();
     renderTreatments();
     // covariates of a script loaded before the dataset: match them by name
@@ -709,6 +832,21 @@ function applyRepeated(rp) {
     renderRepeated();
 }
 
+// The repeated measurements are always read from the database tables, the plot
+// values from the search cache unless reloaded: on trials whose cache is stale
+// the two can differ (n_stale_units: plots with several values in those trials)
+function staleRepeatedFlag(x) {
+    return x.n_stale_units > 0 ? ' <span class="glyphicon glyphicon-warning-sign sf-warn-text" title="' + x.n_stale_units +
+        ' of these plots are in trials whose search cache is not up to date: their repeated measurements are read from the database and may differ from the plot values. Reload from database in step 1 to use the same data."></span>' : '';
+}
+function repeatedStaleNote(list) {
+    const st = list.filter(x => x.n_stale_units > 0);
+    if (!st.length) return '';
+    return '<div class="bb-help sf-warn-text" style="margin-top:6px"><span class="glyphicon glyphicon-warning-sign"></span> The repeated measurements of ' +
+        st.map(x => esc(x.short)).join(', ') + ' are read from the database, but the plot values come from the search cache, which is not up to date for some of their trials. ' +
+        'They may differ until you use <b>Reload from database</b>.</div>';
+}
+
 // traits modelled measurement by measurement among the selected ones
 function repeatedAllTraits() { return state.traits.filter(t => repeatedChoice(t) === 'all'); }
 
@@ -737,7 +875,7 @@ function renderRepeated() {
         }).join('');
         const used = [state.traits.indexOf(x.trait) >= 0 ? '<span class="label label-primary">analysed</span>' : '', state.singleCov[x.trait] ? '<span class="label label-info">covariate' + (cur === 'all' ? ' (plot mean)' : '') + '</span>' : ''].filter(Boolean).join(' ') || '<span class="sf-muted">not selected</span>';
         h += '<tr><td title="' + esc(x.trait) + '"><b>' + esc(x.short) + '</b></td><td>' + esc(x.repeat_type === 'single' ? 'single (but several values stored)' : x.repeat_type.replace('_', ' ')) + '</td>' +
-            '<td>' + x.n_repeated_units + ' of ' + x.n_units + '</td><td>' + x.max_n + '</td><td>' + range(x) + '</td>' +
+            '<td>' + x.n_repeated_units + ' of ' + x.n_units + staleRepeatedFlag(x) + '</td><td>' + x.max_n + '</td><td>' + range(x) + '</td>' +
             '<td><select class="form-control input-sm sf-rep-summary" data-trait="' + esc(x.trait) + '">' + opts + '</select>' + outlierReminder(x.trait) + '</td><td>' + used + '</td></tr>';
     });
     h += '</tbody></table></div>';
@@ -931,16 +1069,9 @@ function ensurePlotData() {
 
 // Value per plot of a trait measured several times per plot that the outlier
 // rules judge (step 2), chosen apart from the value the model uses (step 3):
-// e.g. outliers found on the last measurement, model on the mean. vals are in
-// date order.
-const PLOT_SUMMARY = {
-    mean: v => v.reduce((a, b) => a + b, 0) / v.length,
-    sum: v => v.reduce((a, b) => a + b, 0),
-    first: v => v[0],
-    last: v => v[v.length - 1],
-    max: v => Math.max.apply(null, v),
-    min: v => Math.min.apply(null, v)
-};
+// e.g. outliers found on the last measurement, model on the mean. The server
+// computes each summary per plot (/plot_data repeated, in repeated_stats order).
+const PLOT_SUMMARY = { mean: 1, sum: 1, first: 1, last: 1, max: 1, min: 1 };
 const EXPLORER_REP = [['mean', 'Average'], ['sum', 'Sum'], ['first', 'First value'], ['last', 'Last value']];
 
 // value per plot judged by the outlier rules for a repeated trait
@@ -961,14 +1092,15 @@ function refreshPlotView() {
     const raw = state.plotRaw;
     if (!raw) { state.plotData = null; return; }
     const rep = raw.repeated || {};
-    const traits = Object.keys(rep).filter(t => raw.columns.indexOf(t) >= 0 && explorerHow(t) !== 'mean');
+    const stats = arr(raw.repeated_stats);
+    const traits = Object.keys(rep).filter(t => raw.columns.indexOf(t) >= 0 && explorerHow(t) !== 'mean' && stats.indexOf(explorerHow(t)) >= 0);
     if (!traits.length) { state.plotData = raw; }
     else {
-        const cols = traits.map(t => [raw.columns.indexOf(t), rep[t], PLOT_SUMMARY[explorerHow(t)]]);
+        const cols = traits.map(t => [raw.columns.indexOf(t), rep[t], stats.indexOf(explorerHow(t))]);
         state.plotData = Object.assign({}, raw, {
             rows: raw.rows.map(r => {
                 const c = r.slice();
-                cols.forEach(([i, units, f]) => { const v = units[r[0]]; if (v && v.length) c[i] = f(v); });
+                cols.forEach(([i, units, k]) => { const v = units[r[0]]; if (v && v[k] !== null && v[k] !== undefined) c[i] = v[k]; });
                 return c;
             })
         });
@@ -1090,7 +1222,7 @@ function renderExplorer() {
     if (cur && state.traits.indexOf(cur) >= 0) sel.val(cur);
     // first view of a trait: the list starts with that trait only (ticks kept while it stays shown)
     if (sel.val() && state.outlierFocus !== sel.val()) focusOutlierList(sel.val());
-    $('#sf_explorer_plot').html('<div class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Loading observations...</div>');
+    $('#sf_explorer_plot').html('<div class="bb-help"><span class="glyphicon glyphicon-refresh bb-spin"></span> Loading observations...</div>');
     ensurePlotData()
         .then(() => drawExplorer())
         .catch(e => $('#sf_explorer_plot').html(alertBox('danger', esc(e.message))));
@@ -1191,7 +1323,7 @@ function drawExplorer() {
     msg += '.';
     if (nExcl || nMark) msg += ' <span class="sf-muted"><span class="glyphicon glyphicon-eye-close"></span> Not shown: <b>' + nExcl + '</b> removed by you' + (nMark ? ', <b>' + nMark + '</b> marked as outliers in Breedbase' : '') +
         '. They are left out of the analysis; restore them in the list below.</span>';
-    $('#sf_explorer_summary').html('<p class="sf-help">' + msg + '</p>');
+    $('#sf_explorer_summary').html('<p class="bb-help">' + msg + '</p>');
     renderExclusions();   // the full outlier list follows the rule and the exclusions
     renderRepeated();     // step 3 reminds how the outliers of repeated traits were found
 }
@@ -1377,7 +1509,7 @@ function markOutliers(items, action, msgBox) {
     if (!items.length || !state.dataset) return Promise.resolve();
     if (action === 'database' && !confirm('Mark ' + items.length + ' value(s) as outliers in the database?\n\nThey will be excluded for ALL users, in every dataset, analysis and tool that excludes outliers.\n\nNote: when a dataset excludes database outliers, Breedbase leaves out the WHOLE plot (all its traits), not only the marked value. To drop only the value, use dataset outliers instead.\n\nOnly a curator or a breeder can remove the mark later.')) return Promise.resolve();
     if (action === 'unmark_database' && !confirm('Remove the database outlier mark from ' + items.length + ' value(s)? They will be used again by all tools.')) return Promise.resolve();
-    $(msgBox).html('<p class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Saving...</p>');
+    $(msgBox).html('<p class="bb-help"><span class="glyphicon glyphicon-refresh bb-spin"></span> Saving...</p>');
     return post('/ajax/script_factory/outliers/mark', { dataset_id: state.dataset.dataset_id, action: action, items: JSON.stringify(items.map(o => ({ unit: o.unit, trait: o.trait }))) })
         .then(r => {
             const keys = items.map(o => o.key || (o.unit + '|' + o.trait));
@@ -1411,7 +1543,7 @@ function exclusionsPayload() {
 
 function previewMadr() {
     const btn = $('#sf_preview_madr');
-    btn.prop('disabled', true).html('<span class="glyphicon glyphicon-refresh sf-spin"></span> Fitting models...');
+    btn.prop('disabled', true).html('<span class="glyphicon glyphicon-refresh bb-spin"></span> Fitting models...');
     const recipe = buildRecipe();
     recipe.zones.enabled = false;
     recipe.index.enabled = false;
@@ -1456,12 +1588,23 @@ function trialModel(t) {
 function renderDesignTable() {
     const f90 = stage1Engine() === 'blupf90';
     const sp = $('input[name=sf_stage1_model][value=spats]').closest('label');
-    sp.toggleClass('dis', false).find('.sf-option-text').html(f90
+    sp.toggleClass('dis', false).find('.bb-option-text').html(f90
         ? 'With BLUPF90+: a SpATS-like 2D P-spline surface (one smoothing variance instead of separate row and column smoothing) plus linear trends and row and column effects. Its results agree closely with SpATS.'
         : '2D P-spline surface (Rodr&iacute;guez-&Aacute;lvarez et al., 2018) plus row and column effects.');
     if (!state.dataset) return;
-    let h = '<table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Stage 1 model</th></tr></thead><tbody>';
-    state.dataset.trials.forEach(t => {
+    const s1 = radio('sf_stage1_model');
+    const trials = state.dataset.trials;
+    const spatialAll = trials.length && trials.every(t => trialModel(t).spats);
+    let h = '';
+    if (s1 === 'design') {
+        h += '<p class="bb-help"><span class="glyphicon glyphicon-info-sign"></span> The design sets which effects enter each trial\'s model, but only the effects the trial\'s data can support are used (replicates, blocks, rows and columns that were recorded and can be estimated). Designs that need effects a trial does not have give the same model; effects left out are listed under the model.</p>';
+    } else if (spatialAll) {
+        h += '<p class="bb-help"><span class="glyphicon glyphicon-info-sign"></span> All trials have rows and columns, so the spatial model is used and the design is not needed. Choose <b>Design model</b> above to set the design of each trial.</p>';
+    } else if (trials.some(t => trialModel(t).spats)) {
+        h += '<p class="bb-help"><span class="glyphicon glyphicon-info-sign"></span> Trials with rows and columns use the spatial model, so their design cannot be changed here. The design applies to the trials without rows and columns; choose <b>Design model</b> above to set it for all trials.</p>';
+    }
+    h += '<table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Stage 1 model</th></tr></thead><tbody>';
+    trials.forEach(t => {
         const m = trialModel(t);
         const det = detectDesign(t);
         let opts = '';
@@ -1470,7 +1613,8 @@ function renderDesignTable() {
             opts += '<option value="' + k + '"' + ((state.designOverrides[t.trial] || 'auto') === k ? ' selected' : '') + '>' + label + '</option>';
         });
         h += '<tr><td>' + esc(t.trial) + '<br/><small class="sf-muted">' + esc(t.location) + ' ' + esc(t.year) + '</small></td>' +
-            '<td><select class="form-control input-sm sf-design-override" data-trial="' + esc(t.trial) + '">' + opts + '</select></td>' +
+            '<td><select class="form-control input-sm sf-design-override" data-trial="' + esc(t.trial) + '"' + (m.spats ? ' disabled title="Not used: the spatial model fits the field trend of this trial"' : '') + '>' + opts + '</select>' +
+            (m.spats ? '<small class="sf-muted">not used by the spatial model</small>' : '') + '</td>' +
             '<td><code>' + esc(m.text) + '</code>' + (m.spats ? ' <span class="label label-success">spatial</span>' : '') +
             (m.warn ? ' <span class="label label-warning">unreplicated</span>' : '') + (m.note ? ' <small class="sf-muted">' + esc(m.note) + '</small>' : '') +
             (m.off && m.off.length ? '<br/><small class="sf-warn-text"><span class="glyphicon glyphicon-ban-circle"></span> not used: ' + esc(m.off.join('; ')) + '</small>' : '') + '</td></tr>';
@@ -1499,13 +1643,14 @@ function renderModelPreview() {
     if (two) {
         const random = $('#sf_stage2_genotype').val() === 'random';
         const w = $('#sf_stage2_weighting').val() === 'inverse_se2';
-        const covs = Object.keys(state.singleCov).map(covName);
+        const covs = Object.keys(state.singleCov).map(c => covName(c) + covOnlyText(c));
         const repAll = repeatedAllTraits();
         txt = '# Stage 1 (per trial, per trait)\n' +
             (state.dataset ? state.dataset.trials.map(t => '  ' + t.trial + ':  ' + trialModel(t).text).join('\n') : '') +
             (covs.length ? '\n  covariates in every stage 1 model (where they vary): + ' + covs.join(' + ') : '') +
             (repAll.length ? '\n  ' + repAll.map(shortTrait).join(', ') + ' (all measurements, design model): + ' + repeatedTerms(false).join(' + ') : '') +
-            '\n\n# Stage 2 (across trials)\n  BLUE_ij ~ trial_j + ' + (random ? '(1|accession_i)' : 'accession_i') + stage2Extra(random) + ' + e_ij' + (w ? ',  weights = 1 / SE_ij^2' : '') +
+            '\n\n# Stage 2 (across trials)\n  BLUE_ij ~ trial_j + ' + (random ? '(1|accession_i)' : 'accession_i') + stage2Extra(random) +
+            (w ? ' + (1|accession_i:trial_j) + e_ij,  Var(e_ij) = SE_ij^2 (known stage-1 error)' : ' + e_ij') +
             '\n  -> ' + valueText(random);
     } else {
         renderSingleHints();
@@ -1526,11 +1671,399 @@ function renderModelPreview() {
     if (g.model === 'genomic') txt += '\n# accession ~ N(0, G s2g): G = genomic relationship (VanRaden) from ' + (g.protocol_name || 'the genotyping protocol') + ' (MAF > ' + g.minfreq + ', call rate > ' + g.callrate + ')';
     if (g.model === 'single_step') txt += '\n# accession ~ N(0, H s2g): H = pedigree A + genomic G from ' + (g.protocol_name || 'the genotyping protocol') + ' (single-step)';
     const eng = effectiveEngine();
-    txt += '\n# engine: ' + (eng === 'blupf90' ? 'BLUPF90+ without R (Breedbase CXGN::BLUPF90, blupf90+ AI-REML; independent models in parallel)' + (two ? '; row x column trials get a SpATS-like P-spline surface' : '')
+    txt += '\n# engine: ' + (eng === 'blupf90' ? 'BLUPF90+ without R (Breedbase CXGN::BLUPF90, blupf90+ AI/EM-REML; independent models in parallel)' + (two ? '; row x column trials get a SpATS-like P-spline surface' : '')
         : 'R (lme4' + (two ? ' / SpATS' : '') + (['pedigree', 'genomic', 'single_step'].indexOf(g.model) >= 0 ? '; relationship matrix with AGHmatrix' : '') + ')');
+    const advTxt = advPreview();
+    if (advTxt) txt += '\n# advanced settings: ' + advTxt;
     $('#sf_model_preview').html('<div class="sf-formula">' + esc(txt) + '</div>');
+    renderAdvSummary();
     renderGeneticInfo();
     renderSuggestion();
+}
+
+// ---------------------------------------------------------------------------
+// Advanced settings (dialog of the model engine card). Only settings changed
+// from their default and usable by the chosen engine and strategy go into
+// the recipe (recipe.advanced); with none, the recipe is the basic one.
+// ---------------------------------------------------------------------------
+const ADV_DEFAULTS = { gxe: 'cs', residual: 'homogeneous', time_within: 'cs', time_genotype: 'default', method: 'REML', optimizer: 'default', max_iter: '',
+    f90_maxrounds: '', f90_conv: '' };
+const ADV_KEYS = { lme4: ['gxe', 'residual', 'time_within', 'time_genotype', 'method', 'optimizer', 'max_iter'], blupf90: ['gxe', 'residual', 'time_within', 'time_genotype', 'f90_maxrounds', 'f90_conv'] };
+const ADV_NUMERIC = ['max_iter', 'f90_maxrounds'];
+const ADV_LABEL = {
+    gxe: { cs_het: 'G×E heterogeneous compound symmetry', diag: 'G×E diagonal', us: 'G×E unstructured' },
+    residual: { trial: 'one residual variance per trial' },
+    time_within: { ar1: 'AR(1) within plots', exp: 'exponential time correlation within plots', us: 'unstructured covariance within plots' },
+    time_genotype: { slope: 'random regression of the genotype in time', us: 'unstructured genetic covariance among occasions' },
+    method: { ML: 'ML' }, optimizer: { bobyqa: 'optimizer bobyqa', Nelder_Mead: 'optimizer Nelder-Mead', nlminbwrap: 'optimizer nlminb' },
+};
+const REL_MODELS = ['pedigree', 'genomic', 'single_step'];
+
+function cleanAdvanced(a) {
+    const out = {};
+    if (!a || typeof a !== 'object') return out;
+    Object.keys(ADV_DEFAULTS).forEach(k => {
+        if (a[k] === undefined || a[k] === null || a[k] === '' || String(a[k]) === String(ADV_DEFAULTS[k])) return;
+        out[k] = ADV_NUMERIC.indexOf(k) >= 0 ? Number(a[k]) : String(a[k]);
+    });
+    return out;
+}
+
+// why an option cannot be used with the current engine / strategy / model
+// ('' when it can); the server applies the same rules (and falls back with a
+// warning when the data cannot support a choice)
+function advBlocked(key, value) {
+    if (value === ADV_DEFAULTS[key]) return '';
+    const eng = effectiveEngine(), two = radio('sf_strategy') === 'two_stage';
+    const custom = !two && radio('sf_single_mode') === 'custom';
+    const rel = REL_MODELS.indexOf(geneticRecipe().model) >= 0;
+    const random = two ? $('#sf_stage2_genotype').val() === 'random' : (custom ? true : $('#sf_single_genotype').val() === 'random');
+    // repeated measurements: only for traits set to "All measurements" in a
+    // dataset that has them (not checked before a dataset is loaded, so the
+    // settings of a saved script are kept)
+    if ((key === 'time_within' || key === 'time_genotype') && state.dataset) {
+        if (!datasetRepeated().some(x => x.n_repeated_units > 0)) return 'this dataset has no trait measured more than once per plot';
+        if (!repeatedAllTraits().length) return 'no trait is set to All measurements under Repeated measurements (step 3)';
+    }
+    const tmb = key === 'gxe' || key === 'residual' || key === 'time_within' || key === 'time_genotype';
+    if (eng === 'lme4' && tmb && !cfg.glmmtmb_available) return 'needs the R package glmmTMB, not installed on this server';
+    if (key === 'gxe') {
+        if (!random) return 'needs the genotype as random effect';
+        if (custom) return 'not with a written formula';
+        // with A, G or H the R engine fits heterogeneous compound symmetry and
+        // diagonal (A kron Sigma); unstructured is slow and often on the boundary
+        if (rel && eng === 'lme4' && value === 'us') return 'R engine: with unrelated accessions only (genetic model: identity); heterogeneous compound symmetry and diagonal work with this genetic model' + (cfg.blupf90_available ? '; the BLUPF90+ engine fits it' : '');
+    }
+    // residual per trial: glmmTMB fits it with the relationship matrices too
+    // (fit_tmb replaces Z by Z L), so no rule beyond glmmTMB being installed
+    if (key === 'time_genotype') {
+        if (two) return 'single stage only';
+        if (custom) return 'not with a written formula';
+        if (!random) return 'needs the genotype as random effect';
+        if (rel && eng === 'lme4') return 'R engine: with unrelated accessions only (genetic model: identity)' + (cfg.blupf90_available ? '; the BLUPF90+ engine fits it' : '');
+    }
+    return '';
+}
+
+// settings of state.advanced the run will use
+function advRecipe() {
+    const a = state.advanced || {};
+    const eng = effectiveEngine();
+    const out = {};
+    ADV_KEYS[eng].forEach(k => {
+        if (a[k] === undefined || advBlocked(k, String(a[k]))) return;
+        out[k] = a[k];
+    });
+    return Object.keys(out).length ? out : null;
+}
+
+function advDescribe(a) {
+    const parts = [];
+    Object.keys(a || {}).forEach(k => {
+        const v = a[k];
+        if (ADV_LABEL[k] && ADV_LABEL[k][v]) parts.push(ADV_LABEL[k][v]);
+        else if (k === 'max_iter') parts.push('max. ' + v + ' iterations');
+        else if (k === 'f90_maxrounds') parts.push('max. ' + v + ' rounds');
+        else if (k === 'f90_conv') parts.push('convergence ' + v);
+    });
+    return parts.join(', ');
+}
+
+function advPreview() { return advDescribe(advRecipe()); }
+
+// advanced settings chosen in the dialog that a run leaves out (the engine,
+// strategy or model cannot fit them), with the recipe change that lets
+// Breedbase fit them: the model review suggests it after the run, together
+// with what the analysis itself could not use (results.advanced_unused)
+function advDropped() {
+    const a = state.advanced || {};
+    const used = advRecipe() || {};
+    const out = [];
+    ['gxe', 'residual', 'time_within', 'time_genotype', 'method'].forEach(k => {
+        if (a[k] === undefined || used[k] !== undefined) return;
+        const v = String(a[k]);
+        const why = advBlocked(k, v) || 'not fitted by the ' + (effectiveEngine() === 'blupf90' ? 'BLUPF90+' : 'R') + ' engine';
+        let t = null;
+        if (/BLUPF90\+ engine fits it|glmmTMB/.test(why)) t = { engine: 'blupf90' };
+        else if (/not fitted by the BLUPF90\+ engine/.test(why)) t = { engine: 'lme4' };
+        else if (/single stage only/.test(why)) t = { strategy: 'single_stage' };
+        else if (/genotype as random/.test(why)) t = radio('sf_strategy') === 'two_stage' ? { stage2_genotype: 'random' } : { single_genotype: 'random' };
+        else if (/written formula/.test(why)) t = { single_mode: 'builder' };
+        out.push({ setting: k, value: v, why: why, try: t });
+    });
+    state.interactions.forEach(ix => {
+        const why = ixBlocked(ix);
+        if (!why) return;
+        const t = /single stage only/.test(why) ? { strategy: 'single_stage' } : /written formula/.test(why) ? { single_mode: 'builder' } : null;
+        out.push({ setting: 'interaction', value: ixLabel(ix), why: why, try: t });
+    });
+    return out;
+}
+
+// ---------------------------------------------------------------------------
+// Interactions built by the user (recipe.interactions): two or more factors,
+// fixed or random; Breedbase suggests the ones the dataset can support. The
+// pipelines check each one on the data (and leave out, with the reason, those
+// it cannot support).
+// ---------------------------------------------------------------------------
+const IX_BASE = [
+    { id: 'accession', label: 'Accession' }, { id: 'trial', label: 'Trial' },
+    { id: 'location', label: 'Location' }, { id: 'year', label: 'Year' }
+];
+function ixFactors() {
+    return IX_BASE.concat(
+        datasetTreatments().map(f => ({ id: 'trt:' + f.name, label: f.name, kind: 'treatment', variable: f.variable, whole: !f.varies_within_trials })),
+        Object.keys(state.singleCov).map(t => ({ id: 'cov:' + t, label: shortTrait(t), kind: 'covariate', variable: covName(t), cov: true })));
+}
+function ixFactor(id) {
+    const f = ixFactors().find(x => x.id === id);
+    if (f) return f;
+    const m = /^(trt|cov):(.*)$/.exec(id);
+    return m ? { id: id, label: m[1] === 'cov' ? shortTrait(m[2]) : m[2], kind: m[1] === 'cov' ? 'covariate' : 'treatment', cov: m[1] === 'cov', missing: true } : { id: id, label: id };
+}
+// valid, distinct interactions (the order of the factors does not matter)
+function ixClean(list) {
+    const out = [];
+    const seen = {};
+    arr(list).forEach(x => {
+        if (!x || typeof x !== 'object') return;
+        const f = arr(x.factors).map(String).filter((v, i, a) => v && a.indexOf(v) === i);
+        if (f.length < 2) return;
+        const k = f.slice().sort().join('|');
+        if (seen[k]) return;
+        seen[k] = 1;
+        out.push({ factors: f, effect: x.effect === 'random' ? 'random' : 'fixed' });
+    });
+    return out;
+}
+function ixEffect(ix) {
+    const fs = ix.factors.map(ixFactor);
+    return fs.some(f => f.cov) ? 'fixed' : ix.factors.indexOf('accession') >= 0 ? 'random' : ix.effect;
+}
+function ixLabel(ix) { return ix.factors.map(id => ixFactor(id).label).join(' x ') + ' (' + ixEffect(ix) + ')'; }
+// the model term (variables of the written formula)
+function ixTerm(ix) {
+    const fs = ix.factors.map(ixFactor);
+    const vars = fs.filter(f => !f.cov).map(f => f.variable || f.id);
+    const cov = fs.filter(f => f.cov).map(f => f.variable || f.id);
+    return ixEffect(ix) === 'random' ? '(1|' + vars.join(':') + ')' : vars.concat(cov).join(':');
+}
+// why the model on the page cannot use an interaction ('' when it can)
+function ixBlocked(ix) {
+    const fs = ix.factors.map(ixFactor);
+    const covs = fs.filter(f => f.cov);
+    const g = ix.factors.indexOf('accession') >= 0;
+    const missing = fs.filter(f => f.missing);
+    if (missing.length && state.dataset) return missing.map(f => f.label).join(', ') + ' not in this dataset' + (missing.some(f => f.cov) ? ' or not selected under Covariates' : '');
+    if (covs.length > 1) return 'one covariate per interaction';
+    if (covs.length && g) return 'a covariate slope per accession is not supported';
+    const two = radio('sf_strategy') === 'two_stage';
+    if (!two && radio('sf_single_mode') === 'custom') return 'not with a written formula (write it in the formula: ' + ixTerm(ix) + ')';
+    if (two) {
+        const others = fs.filter(f => f.id !== 'accession');
+        const wholeTrial = others.length > 0 && others.every(f => f.id === 'location' || f.id === 'year' || (f.kind === 'treatment' && f.whole));
+        if (!(g && !covs.length && wholeTrial)) return 'single stage only (stage 2 fits genotype x location / year / whole-trial treatment)';
+    }
+    return '';
+}
+// interactions worth a look for the loaded dataset
+function ixSuggestions() {
+    const D = state.dataset;
+    if (!D) return [];
+    const tr = arr(D.trials);
+    const out = [];
+    const ly = {}, locYears = {};
+    tr.forEach(t => {
+        ly[(t.location || '') + '\t' + (t.year || '')] = 1;
+        (locYears[t.location || ''] = locYears[t.location || ''] || {})[t.year || ''] = 1;
+    });
+    const nLoc = Object.keys(locYears).length;
+    const nYear = Object.keys(tr.reduce((o, t) => { o[t.year || ''] = 1; return o; }, {})).length;
+    const crossed = nLoc > 1 && nYear > 1 && Object.keys(locYears).some(l => Object.keys(locYears[l]).length > 1);
+    // clearly fewer location-years than trials (else it is nearly genotype x trial)
+    if (crossed && 1.25 * Object.keys(ly).length < tr.length) {
+        out.push({ factors: ['accession', 'location', 'year'], effect: 'random',
+                   why: 'several trials share a location-year: genotypes may rank differently in particular location-years, beyond genotype x trial' });
+        if (singleRecipe().env !== 'fixed')
+            out.push({ factors: ['location', 'year'], effect: 'fixed', why: 'locations tested in several years: the location effect may change from year to year' });
+    }
+    const within = datasetTreatments().filter(f => f.varies_within_trials && f.levels.length > 1);
+    within.forEach(f => {
+        out.push({ factors: ['accession', 'trt:' + f.name], effect: 'random', why: f.name + ' is applied within trials: do the genotypes respond differently to it?' });
+        if (tr.length > 1) out.push({ factors: ['trt:' + f.name, 'trial'], effect: 'fixed', why: 'the effect of ' + f.name + ' may differ between trials' });
+    });
+    for (let i = 0; i < within.length; i++) {
+        for (let j = i + 1; j < within.length; j++) {
+            out.push({ factors: ['trt:' + within[i].name, 'trt:' + within[j].name], effect: 'fixed', why: within[i].name + ' and ' + within[j].name + ' may not act independently' });
+        }
+    }
+    if (tr.length > 1) {
+        Object.keys(state.singleCov).forEach(t => {
+            out.push({ factors: ['cov:' + t, 'trial'], effect: 'fixed', why: 'one slope per trial: ' + shortTrait(t) + ' may adjust the trait differently in each trial' });
+        });
+    }
+    return out;
+}
+
+// dialog: the interactions being edited (applied with the other settings)
+let advIx = [];
+let advIxSug = [];
+function ixKey(ix) { return ix.factors.slice().sort().join('|'); }
+function ixRender() {
+    $('#sf_ix_list').html(advIx.length
+        ? '<ul class="sf-ix-list">' + advIx.map((ix, i) => {
+            const why = ixBlocked(ix);
+            return '<li><b>' + esc(ixLabel(ix)) + '</b> <code>' + esc(ixTerm(ix)) + '</code>' + (why ? ' <span class="sf-warn-text">[' + esc(why) + ']</span>' : '') +
+                ' <a href="#" class="sf-ix-del" data-i="' + i + '"><span class="glyphicon glyphicon-remove"></span> remove</a></li>';
+        }).join('') + '</ul>'
+        : '<p class="sf-muted">No interaction added: the model has the interactions chosen in the model builder only.</p>');
+    $('#sf_ix_factors').html(ixFactors().map(f => '<label class="sf-check sf-check-inline"><input type="checkbox" class="sf-ix-f" value="' + esc(f.id) + '" /> ' + esc(f.label) +
+        (f.kind ? ' <small class="sf-muted">' + f.kind + '</small>' : '') + '</label>').join(' '));
+    const have = {};
+    advIx.forEach(ix => { have[ixKey(ix)] = 1; });
+    advIxSug = ixSuggestions().filter(x => !have[ixKey(x)]);
+    $('#sf_ix_suggest').html(!state.dataset ? '<p class="sf-muted">Load a dataset to get suggested interactions.</p>'
+        : advIxSug.length ? '<p><span class="glyphicon glyphicon-star"></span> <b>Suggested for this dataset</b></p><ul class="sf-ix-list">' + advIxSug.map((x, i) => {
+            const why = ixBlocked(x);
+            return '<li>' + esc(ixLabel(x)) + ': ' + esc(x.why) + (why ? ' <small class="sf-muted">[' + esc(why) + ']</small>' : '') +
+                ' <a href="#" class="sf-ix-sug" data-i="' + i + '"><span class="glyphicon glyphicon-plus"></span> add</a></li>';
+        }).join('') + '</ul>'
+        : '<p class="sf-muted">No other interaction to suggest for this dataset.</p>');
+    $('#sf_ix_msg').text('');
+}
+function ixAdd(ix) {
+    const c = ixClean([ix]);
+    if (!c.length) { $('#sf_ix_msg').text('Tick two or more factors.'); return; }
+    if (advIx.some(x => ixKey(x) === ixKey(c[0]))) { $('#sf_ix_msg').text('This interaction is already in the list.'); return; }
+    advIx.push(c[0]);
+    ixRender();
+}
+
+function renderAdvSummary() {
+    const used = advRecipe();
+    const all = Object.keys(state.advanced || {}).length;
+    const n = used ? Object.keys(used).length : 0;
+    $('#sf_adv_badge').toggle(n > 0).text(n ? n + ' changed' : '');
+    let txt = n ? '<b>Using:</b> ' + esc(advDescribe(used)) + '.' : 'Variance structures (G&times;E, residuals, repeated measurements) and model fitting. Defaults are used unless you change them.';
+    if (all > n) txt += ' <span class="sf-warn-text">' + (all - n) + ' setting(s) not used with this engine / strategy (open the dialog to see why).</span>';
+    const ix = state.interactions;
+    if (ix.length) {
+        const off = ix.filter(x => ixBlocked(x));
+        txt += ' <b>Interactions:</b> ' + esc(ix.map(ixLabel).join('; ')) + '.' + (off.length ? ' <span class="sf-warn-text">' + off.length + ' not used with this strategy / model (open the dialog to see why).</span>' : '');
+        $('#sf_adv_badge').show().text((n ? n + ' changed, ' : '') + ix.length + ' interaction' + (ix.length > 1 ? 's' : ''));
+    }
+    $('#sf_adv_summary').html(txt);
+}
+
+// dialog: controls <-> settings, options the engine cannot fit disabled
+function advFillDialog(a) {
+    Object.keys(ADV_DEFAULTS).forEach(k => $('#sf_adv_' + k).val(a[k] !== undefined ? String(a[k]) : ADV_DEFAULTS[k]));
+    advRefreshDialog();
+}
+
+// structured G x E with a relationship matrix on the R engine: glmmTMB fits
+// A kron Sigma through the Cholesky factor of A (dense), so large datasets
+// are slow; BLUPF90+ uses the sparse inverse and is much faster
+const REL_GXE_BIG = { accessions: 500, cells: 3000 };
+function relGxeNote(gxe, eng) {
+    const g = geneticRecipe();
+    if (gxe === 'cs' || eng !== 'lme4' || REL_MODELS.indexOf(g.model) < 0) return '';
+    const ds = state.dataset;
+    const nA = ds ? ds.n_accessions : 0, nT = ds ? ds.trials.length : 0;
+    const name = { pedigree: 'A', genomic: 'G', single_step: 'H' }[g.model];
+    let h = ' <br/>With the ' + name + ' matrix the trial effects of an accession follow ' + name + ' &otimes; &Sigma; (glmmTMB, through the Cholesky factor of ' + name + ').';
+    if (ds && (nA > REL_GXE_BIG.accessions || nA * nT > REL_GXE_BIG.cells)) {
+        h += ' <span class="sf-warn-text"><span class="glyphicon glyphicon-warning-sign"></span> ' + nA.toLocaleString('en-US') + ' accessions in ' + nT + ' trials: this is slow in R';
+        h += cfg.blupf90_available
+            ? '; the <b>BLUPF90+</b> engine fits it much faster. BLUPF90+ is free for research and academic use; companies and other commercial users need a licence: please contact ' + linkify(cfg.blupf90_license_contact || 'the BLUPF90 team at the University of Georgia') + '.'
+            : '; BLUPF90+ (not installed on this server) fits it much faster.';
+        h += '</span>';
+    }
+    return h;
+}
+
+function advRefreshDialog() {
+    const eng = effectiveEngine();
+    $('#sf_adv_engine_label').text(eng === 'blupf90' ? 'BLUPF90+ engine' : 'R engine');
+    ['gxe', 'residual', 'time_within', 'time_genotype'].forEach(k => {
+        const sel = $('#sf_adv_' + k);
+        sel.find('option').each(function() {
+            const why = advBlocked(k, $(this).val());
+            $(this).prop('disabled', !!why);
+            const base = $(this).data('label') || $(this).text();
+            $(this).data('label', base).text(why ? base + '  [' + why + ']' : base);
+        });
+        if (sel.find('option:selected').prop('disabled')) sel.val(ADV_DEFAULTS[k]);
+    });
+    $('#sf_adv_fit_r').toggle(eng === 'lme4');
+    $('#sf_adv_fit_f90').toggle(eng === 'blupf90');
+    const gxe = $('#sf_adv_gxe').val();
+    const two = radio('sf_strategy') === 'two_stage';
+    $('#sf_adv_gxe_help').html(
+        (gxe === 'cs' ? 'The basic model: <code>(1|accession) + (1|accession:trial)</code>. ' :
+            'The accession effect becomes one effect per trial, <code>' + (gxe === 'cs_het' ? 'cs' : gxe) + '(0 + trial | accession)</code>' + (eng === 'blupf90' ? ' (BLUPF90+: random regression on the trial indicators' + (gxe === 'cs_het' ? '; the common correlation is fitted by EM-REML around blupf90+, with the matrix held fixed in each run, so it takes several runs' : '') + ')' : ' (glmmTMB)') +
+            '; the value of an accession is its mean over the trials (also predicted for trials where it was not tested, through the genetic covariances); H&sup2; is the mean reliability. ' +
+            (two ? 'In stage 2 the stage-1 standard errors are used as known residual variances' + (eng === 'blupf90' ? ' (BLUPF90+: weights 1/SE&sup2; with the residual held at 1, <code>OPTION constant_var</code>). ' : '. ') : 'It replaces the genotype &times; trial term of the builder. ') +
+            (gxe === 'us' ? 'An unstructured matrix of K trials has K(K+1)/2 parameters: with many trials prefer diagonal or heterogeneous compound symmetry. ' : '') +
+            'The results show the genetic variance of every trial and the genetic correlations between trials.' + relGxeNote(gxe, eng)));
+    $('#sf_adv_residual_help').html($('#sf_adv_residual').val() !== 'trial' ? '' : two
+        ? 'Stage 2: the residual of a stage-1 mean is its genotype &times; trial deviation plus its stage-1 error. Each trial gets its own genotype &times; trial variance, <code>diag(0 + trial | accession:trial)</code>, and the stage-1 errors are known residual variances (SE&sup2;) (' +
+          (eng === 'blupf90' ? 'BLUPF90+: weights 1/SE&sup2; with the residual held at 1, <code>OPTION constant_var</code>' : 'glmmTMB <code>dispformula = ~ 0 + offset(log(SE))</code>') + '). Not added with a structured genotype &times; environment covariance, which already gives every trial its own genetic variance.'
+        : 'Trials differ in precision: each gets its own residual variance (' +
+          (eng === 'blupf90' ? 'BLUPF90+: log-linear residual model on the trial dummies, <code>hetres_pos / hetres_pol</code>, AI-REML started from the fit with one residual' : 'glmmTMB <code>dispformula = ~ 0 + trial</code>') + ').');
+    // the whole section is unavailable when no trait can use it
+    const timeWhy = advBlocked('time_within', 'ar1').match(/^(this dataset has no|no trait is set)/) ? advBlocked('time_within', 'ar1') : '';
+    $('#sf_adv_time_within, #sf_adv_time_genotype').prop('disabled', !!timeWhy);
+    const tw = $('#sf_adv_time_within').val(), tg = $('#sf_adv_time_genotype').val();
+    if (timeWhy) {
+        $('#sf_adv_time_help').html('<span class="glyphicon glyphicon-ban-circle"></span> Not available: ' + esc(timeWhy) + '.');
+    }
+    else $('#sf_adv_time_help').html('Traits measured several times per plot and set to <i>all measurements</i> under <b>Repeated measurements</b> (other traits are not affected). ' +
+        (tw === 'ar1' ? 'AR(1): <code>ar1(0 + occasion | plot)</code> replaces the plot effect; the occasion is the k-th measurement date of the trial' +
+            (eng === 'blupf90' ? ' (BLUPF90+: the correlation &rho; is chosen on the REML likelihood over a grid of values, refined around the best). ' : '. ') : '') +
+        (tw === 'exp' ? 'Exponential: <code>exp(0 + days | plot)</code>, correlation &rho;<sup>&Delta;days</sup>, for dates at uneven intervals' +
+            (eng === 'blupf90' ? ' (BLUPF90+: &rho; per median interval chosen over a grid). ' : '. ') : '') +
+        (tw === 'us' ? 'Unstructured: <code>us(0 + occasion | plot)</code>' + (eng === 'blupf90' ? ' (BLUPF90+: random regression of the plot on the occasions). ' : ' (it holds the residual). ') : '') +
+        (tw !== 'cs' ? 'Used in stage 1 (two stages) and in the single-stage model. ' : '') +
+        (tg === 'slope' ? 'Random regression: <code>us(1 + time | accession)</code>, time scaled 0-1 over the season; the value of an accession is its predicted value at the mean measurement time. ' : '') +
+        (tg === 'us' ? 'Unstructured over occasions: <code>us(0 + occasion | accession)</code>; the value is the mean over the occasions (for a full multi-trait model choose <i>multi-trait</i> under Repeated measurements). ' : ''));
+    $('#sf_adv_fit_help').html(eng === 'blupf90'
+        ? 'Applies to every BLUPF90+ fit of the run. The REML algorithm is chosen per model: AI-REML (fast); EM-REML for stage 2 with the stage-1 errors as known residuals, where AI-REML oscillates; a fit whose AI-REML does not settle is refitted with EM-REML first, then with EM-REML only.'
+        : 'Applies to the stage-2 / single-stage model. ML estimates are needed to compare models with different fixed effects (likelihood ratio tests); REML gives unbiased variance components. The optimizer and iterations help when a model does not converge.');
+}
+
+function advReadDialog() {
+    const a = {};
+    Object.keys(ADV_DEFAULTS).forEach(k => {
+        let v = $('#sf_adv_' + k).val();
+        if (v === null || v === undefined) v = '';
+        v = String(v).trim();
+        if (ADV_NUMERIC.indexOf(k) >= 0 && v !== '' && !(Number(v) >= 1)) v = '';
+        a[k] = v;
+    });
+    return cleanAdvanced(a);
+}
+
+// estimated covariance matrices of structured genotype x trial (or genotype
+// in time) models
+function structuresHtml(vs) {
+    if (!vs || !Object.keys(vs).length) return '';
+    const kindLabel = { us: 'unstructured', diag: 'diagonal', cs_het: 'heterogeneous compound symmetry', slope: 'random regression in time', occasion: 'unstructured over the measurement occasions' };
+    let h = '<h4>Variance structures: genetic variances and correlations</h4>';
+    Object.keys(vs).forEach(t => {
+        const m = vs[t], L = arr(m.labels).map(String), G = arr(m.G), C = arr(m.correlations);
+        const lab = l => m.structure === 'occasion' ? 'occasion ' + l : l;
+        const cell = v => {
+            if (v === null || v === undefined) return '<td>&ndash;</td>';
+            const a = Math.min(1, Math.abs(v));
+            return '<td style="background:' + (v >= 0 ? 'rgba(43,122,75,' : 'rgba(220,38,38,') + (0.12 + 0.55 * a).toFixed(2) + ')">' + Number(v).toFixed(2) + '</td>';
+        };
+        h += '<p><b>' + esc(t) + '</b>: ' + esc(kindLabel[m.structure] || m.structure) + ' &middot; variance of the reported value ' + fmt(m.var_value) +
+            (m.mean_reliability !== null && m.mean_reliability !== undefined ? ' &middot; mean reliability ' + fmt(m.mean_reliability) : '') + '</p>' +
+            '<div class="table-responsive"><table class="table table-condensed sf-mt-cor"><thead><tr><th></th><th>&sigma;&sup2;<sub>G</sub></th>' + L.map(l => '<th>' + esc(lab(l)) + '</th>').join('') + '</tr></thead><tbody>' +
+            C.map((row, i) => '<tr><th>' + esc(lab(L[i] || '')) + '</th><td>' + fmt(arr(G[i])[i]) + '</td>' + arr(row).map(cell).join('') + '</tr>').join('') + '</tbody></table></div>';
+    });
+    return h + '<p class="bb-help">Genetic variance of each trial (or time term) and the genetic correlations between them: a high correlation means the accessions rank alike in both, a low or negative one means crossover genotype &times; environment interaction.</p>';
 }
 
 const GENOMIC_MODELS = ['genomic', 'single_step'];
@@ -1605,6 +2138,18 @@ function stage2Extra(random) {
     return t;
 }
 
+// what the check setting does with the current strategy, genotype effect and data
+function checkInfo(choice, nPlots) {
+    const two = radio('sf_strategy') === 'two_stage';
+    if (!two && radio('sf_single_mode') === 'custom') return '<span class="sf-muted">Written formula: add <code>check</code> to the formula to use it.</span>';
+    const random = two ? $('#sf_stage2_genotype').val() === 'random' : $('#sf_single_genotype').val() !== 'fixed';
+    const marked = nPlots + ' plot(s) of entries marked as check (entry type <i>check</i> in Breedbase)';
+    if (!random) return '<span class="sf-muted"><b>Not used</b>: with the genotype as fixed effect (BLUEs) every entry, check or test, already has its own mean.</span>';
+    if (choice === 'none') return '<b>Not in the model</b>: checks are random accessions like the test entries' + (nPlots ? ' (' + marked + ')' : '') + '.';
+    if (!nPlots) return '<b>Not in the model</b>: no entry of this dataset is marked as check (entry type <i>check</i> in Breedbase)' + (choice === 'fixed' ? ', so the term would have a single level.' : '.');
+    return '<b>In the model</b>: ' + marked + '. Checks and test entries get separate fixed means, so the test entries are not shrunk toward the mean of the checks (usually well-known, higher-yielding varieties).';
+}
+
 function renderGeneticInfo() {
     const ds = state.dataset;
     if (!ds) { $('#sf_pedigree_info, #sf_check_info').html(''); return; }
@@ -1623,7 +2168,7 @@ function renderGeneticInfo() {
     $('#sf_pedigree_info').html(h);
     renderGenoBlock();
     const D = singleData();
-    $('#sf_check_info').html(D.n_check_plots ? D.n_check_plots + ' plot(s) of entries marked as check.' : '<span class="sf-muted">No entry is marked as check in this dataset.</span>');
+    $('#sf_check_info').html(checkInfo(g.check, D.n_check_plots || 0));
 }
 
 // ---------------------------------------------------------------------------
@@ -1720,7 +2265,7 @@ function currentChoice(key) {
         case 'genotype': return two ? $('#sf_stage2_genotype').val() : $('#sf_single_genotype').val();
         case 'genetic': return $('#sf_gen_model').val();
         case 'check': return $('#sf_check').val();
-        case 'covariates': return Object.keys(state.singleCov).sort().join('|');
+        case 'covariates': return Object.keys(state.singleCov).sort().map(c => c + (covTraitsRecipe() && covTraitsRecipe()[c] ? '>' + covTraitsRecipe()[c].slice().sort().join(',') : '')).join('|');
         case 'repeated': { const o = {}; datasetRepeated().filter(x => x.n_repeated_units > 0).forEach(x => { o[x.trait] = { how: repeatedChoice(x.trait) }; }); return repeatedKey(o); }
         case 'treatments': { const t = treatmentRecipe(); return [t.use.slice().sort().join('|'), t.gxt.slice().sort().join('|')].join(';'); }
     }
@@ -1729,7 +2274,7 @@ function currentChoice(key) {
 
 function renderSuggestion() {
     const S = suggestion();
-    $('.sf-option-title .sf-suggested').remove();
+    $('.bb-option-title .sf-suggested').remove();
     if (!S) { $('#sf_suggest').html('<span class="sf-muted">Load a dataset to get a suggestion.</span>'); return; }
     let h = '<div class="table-responsive"><table class="table table-condensed"><thead><tr><th>Trial</th><th>Design</th><th>Based on</th><th>Layout</th></tr></thead><tbody>';
     S.trials.forEach(x => {
@@ -1747,9 +2292,9 @@ function renderSuggestion() {
     $('#sf_suggest').html(h);
     // mark the suggested options
     const mark = '<span class="sf-suggested">suggested</span>';
-    $('input[name=sf_strategy][value=' + S.strategy + ']').closest('label').find('.sf-option-title').append(mark);
-    if (S.stage1) $('input[name=sf_stage1_model][value=' + S.stage1 + ']').closest('label').find('.sf-option-title').append(mark);
-    $('input[name=sf_engine][value=' + S.engine + ']').closest('label').find('.sf-option-title').append(mark);
+    $('input[name=sf_strategy][value=' + S.strategy + ']').closest('label').find('.bb-option-title').append(mark);
+    if (S.stage1) $('input[name=sf_stage1_model][value=' + S.stage1 + ']').closest('label').find('.bb-option-title').append(mark);
+    $('input[name=sf_engine][value=' + S.engine + ']').closest('label').find('.bb-option-title').append(mark);
     ['#sf_gen_model', '#sf_check', '#sf_stage2_genotype', '#sf_single_genotype'].forEach(id => {
         const want = { '#sf_gen_model': S.genetic, '#sf_check': S.check }[id] || S.genotype;
         $(id + ' option').each(function() {
@@ -1888,7 +2433,7 @@ function singleBuilderFormula() {
         }
         add('(1|accession:' + g + ')', n > 1, 'accession x ' + g + ' (one ' + g + ')');
     });
-    r.covariates.forEach(t => terms.push(covName(t)));
+    r.covariates.forEach(t => terms.push(covName(t) + covOnlyText(t)));
     const tr = treatmentRecipe();
     datasetTreatments().forEach(f => {
         const nLv = f.levels.length;
@@ -1898,6 +2443,11 @@ function singleBuilderFormula() {
             else terms.push(f.variable);
         }
         if (tr.gxt.indexOf(f.name) >= 0) add('(1|accession:' + f.variable + ')', nLv > 1, 'accession x ' + f.name + ' (one level)');
+    });
+    state.interactions.forEach(ix => {
+        const why = ixBlocked(ix);
+        if (why) dropped.push('interaction ' + ixLabel(ix) + ' (' + why + ')');
+        else if (terms.indexOf(ixTerm(ix)) < 0) terms.push(ixTerm(ix));
     });
     const g = geneticRecipe();
     if (r.genotype !== 'fixed') {
@@ -1982,13 +2532,47 @@ function renderSingleHints() {
     hint('gxe', D.n_trials + ' trial(s), ' + D.n_locations + ' location(s), ' + D.n_years + ' year(s)');
 }
 
+// traits a covariate adjusts: those chosen in the covariate dialog among the
+// analysed traits, or null for every analysed trait (the default)
+function covTargets(c) {
+    const all = state.traits.filter(t => t !== c);
+    const sel = state.covTraits[c];
+    if (!sel) return null;
+    const keep = all.filter(t => sel.indexOf(t) >= 0);
+    return keep.length === all.length ? null : keep;
+}
+function covTargetsText(c) {
+    const k = covTargets(c);
+    return '&rarr; ' + (!k ? 'all traits' : k.length ? k.map(t => esc(shortTrait(t))).join(', ') : 'no trait');
+}
+function covOnlyText(c) {
+    const k = covTargets(c);
+    return !k ? '' : ' (only for ' + (k.length ? k.map(shortTrait).join(', ') : 'no trait') + ')';
+}
+// recipe.covariate_traits: only the covariates limited to some traits
+function covTraitsRecipe() {
+    const out = {};
+    Object.keys(state.singleCov).forEach(c => { const k = covTargets(c); if (k) out[c] = k; });
+    return Object.keys(out).length ? out : null;
+}
+function openCovDialog(c) {
+    state.covEditing = c;
+    const k = covTargets(c);
+    const traits = state.traits.filter(t => t !== c);
+    $('#sf_cov_modal_name').text(shortTrait(c));
+    $('#sf_cov_traits').html(traits.length ? traits.map(t => '<label title="' + esc(t) + '"><input type="checkbox" value="' + esc(t) + '"' + (!k || k.indexOf(t) >= 0 ? ' checked' : '') + ' /> ' + esc(shortTrait(t)) + '</label>').join('')
+        : '<p class="sf-muted">Choose the traits to analyse first (step 1); until then the covariate adjusts every analysed trait.</p>');
+    $('#sf_cov_formula_note').toggle(radio('sf_strategy') !== 'two_stage' && radio('sf_single_mode') === 'custom');
+    $('#sf_cov_modal').modal('show');
+}
+
 function renderSingleCovariates() {
     if (!state.dataset) { $('#sf_single_covariates').html('<span class="sf-muted">load a dataset</span>'); return; }
     $('#sf_single_covariates').html(state.dataset.traits.map(t => {
         const on = !!state.singleCov[t.name];
         return '<label class="' + (on ? 'on' : '') + '" title="' + esc(t.name) + '"><input type="checkbox" value="' + esc(t.name) + '"' + (on ? ' checked' : '') + ' />' +
             (on ? '<span class="glyphicon glyphicon-ok"></span> ' : '') + esc(t.short) +
-            (repeatedInfo(t.name) ? ' <small>(' + esc(repeatedChoice(t.name) === 'all' ? 'plot mean' : REP_SHORT[repeatedChoice(t.name)]) + ')</small>' : '') + (on ? ' <code>' + esc(covName(t.name)) + '</code>' : '') +
+            (repeatedInfo(t.name) ? ' <small>(' + esc(repeatedChoice(t.name) === 'all' ? 'plot mean' : REP_SHORT[repeatedChoice(t.name)]) + ')</small>' : '') + (on ? ' <code>' + esc(covName(t.name)) + '</code> <a href="#" class="sf-cov-edit" data-cov="' + esc(t.name) + '" title="Choose the traits this covariate adjusts">' + covTargetsText(t.name) + '</a>' : '') +
             (COV_HINT.test(t.short) ? '<span class="sf-suggested">suggested</span>' : '') + '</label>';
     }).join(''));
 }
@@ -2111,10 +2695,60 @@ function geneticChip(r) {
             : m === 'single_step' ? ', single-step (H' + (r.genetic.protocol_name ? ': ' + esc(r.genetic.protocol_name) : '') + ')' : m === 'parents' ? ', mother + father' : '');
 }
 
+// genotype values the model gives (and the selection index uses)
+function valueKind(r) {
+    let random;
+    if (r.strategy === 'two_stage') random = r.stage2.genotype === 'random';
+    else if (r.single.mode === 'custom') { const chk = checkFormula(r.single.formula); random = !!chk.random; }
+    else random = r.single.genotype !== 'fixed';
+    if (!random) return { label: 'BLUEs', text: 'best linear unbiased estimates: the genotype is a fixed effect' };
+    if (r.genetic.model === 'pedigree') return { label: 'EBVs', text: 'BLUPs of breeding values from the pedigree relationship (A)' };
+    if (r.genetic.model === 'genomic' || r.genetic.model === 'single_step') return { label: 'GEBVs', text: 'BLUPs of genomic breeding values (' + (r.genetic.model === 'genomic' ? 'G' : 'H') + ' matrix)' };
+    return { label: 'BLUPs', text: 'best linear unbiased predictions: the genotype is a random effect, so values are shrunk toward the mean by the heritability' };
+}
+
+// ANOVA settings: defaults for anything missing or unknown
+function anovaClean(a) {
+    a = a || {};
+    return {
+        scope: ['joint', 'per_trial', 'both'].indexOf(a.scope) >= 0 ? a.scope : 'joint',
+        test: a.test === 'lsd' ? 'lsd' : 'tukey',
+        alpha: [0.01, 0.1].indexOf(Number(a.alpha)) >= 0 ? Number(a.alpha) : 0.05
+    };
+}
+function anovaLabel(a) {
+    return { joint: 'Joint analysis across trials', per_trial: 'Each trial on its own', both: 'Joint analysis and each trial' }[a.scope || 'joint'] +
+        ', ' + (a.test === 'lsd' ? 'Fisher LSD' : 'Tukey HSD') + ' (&alpha; = ' + a.alpha + ')';
+}
+function anovaFillDialog(a) {
+    setRadio('sf_anova_scope', a.scope);
+    setRadio('sf_anova_test', a.test);
+    $('#sf_anova_alpha').val(String(a.alpha));
+}
+
+// how stage 2 uses the stage-1 errors (same choice as the engines): with
+// several trials, a genotype x trial variance next to the stage-1 SE^2 as
+// known residual variances (default with 1/SE^2, and always with a G x E
+// covariance or one residual per trial); a single trial is weighted by 1/SE^2
+function stage2ResidualText(r) {
+    const a = r.advanced || {};
+    const multi = !state.dataset || state.dataset.trials.length > 1;
+    if (multi && a.gxe && a.gxe !== 'cs') return ', ' + ADV_LABEL.gxe[a.gxe] + ', stage-1 SE&sup2; as known residuals';
+    if (multi && a.residual === 'trial') return ', G&times;trial variance per trial, stage-1 SE&sup2; as known residuals';
+    if (r.stage2.weighting !== 'inverse_se2') return ', unweighted';
+    return multi ? ', G&times;trial variance, stage-1 SE&sup2; as known residuals' : ', weighted 1/SE&sup2;';
+}
+
 function renderPipeline() {
     updateStep1Next();
     const r = buildRecipe();
     const items = [];
+    // what the selection index is computed on (step 4)
+    const vk = valueKind(r);
+    $('#sf_index_basis').html('<span class="glyphicon glyphicon-info-sign"></span> The index is computed on the <b>' + vk.label + '</b> of the model chosen in step 3 (' + esc(vk.text) +
+        '), not on the raw means or on the ANOVA means. To use other values, change the genotype effect or the genetic model in step 3.');
+    // the model steps only show their settings as active once there is data to analyse
+    const noData = !state.dataset;
     items.push({ t: 'Data', d: state.dataset ? esc(state.dataset.dataset_name) + '<br/>' + state.traits.length + ' trait(s), ' + state.dataset.trials.length + ' trial(s)' : 'no dataset loaded', off: !state.dataset });
     const o = r.outliers;
     const exKeys = Object.keys(state.exclusions).filter(k => state.traits.indexOf(state.exclusions[k].trait) >= 0);
@@ -2124,8 +2758,8 @@ function renderPipeline() {
         (nEx ? '<br/>' + nEx + ' individual exclusion(s)' : '') + (nMk ? '<br/>' + nMk + ' value(s) marked as outliers in Breedbase' : ''), off: o.method === 'none' && !nEx && !nMk });
     if (r.strategy === 'two_stage') {
         items.push({ t: 'Stage 1', d: { auto: 'SpATS when possible, else design model', spats: 'SpATS spatial', design: 'design model' }[r.stage1.model] + trtChip(r.treatments.use, 'adjusted for ') +
-            (r.covariates.length ? '<br/>covariate' + (r.covariates.length > 1 ? 's ' : ' ') + r.covariates.map(t => esc(shortTrait(t))).join(', ') : '') + repeatedChip(r) });
-        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + (r.stage2.weighting === 'inverse_se2' ? ', weighted 1/SE&sup2;' : ', unweighted') + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r) });
+            (r.covariates.length ? '<br/>covariate' + (r.covariates.length > 1 ? 's ' : ' ') + r.covariates.map(t => esc(shortTrait(t))).join(', ') : '') + repeatedChip(r), off: noData });
+        items.push({ t: 'Stage 2', d: (r.stage2.genotype === 'random' ? (r.genetic.model === 'pedigree' ? 'EBVs' : 'BLUPs') : 'BLUEs') + stage2ResidualText(r) + trtChip(r.treatments.gxt, 'G&times;') + geneticChip(r), off: noData });
     } else {
         let d;
         if (r.single.mode === 'custom') {
@@ -2137,8 +2771,12 @@ function renderPipeline() {
                 (r.single.trend === 'linear' ? ', linear trend' : '') + (r.covariates.length ? ', ' + r.covariates.length + ' covariate(s)' : '');
         }
         if (r.single.mode !== 'custom') d += trtChip(r.treatments.use, 'adjusted for ') + trtChip(r.treatments.gxt, 'G&times;');
-        items.push({ t: 'Single stage', d: d + repeatedChip(r) + geneticChip(r) });
+        items.push({ t: 'Single stage', d: d + repeatedChip(r) + geneticChip(r), off: noData });
     }
+    // always listed, so the option is visible; off unless ticked in step 3
+    items.push({ t: 'ANOVA by design', off: noData || !r.anova,
+        d: r.anova ? anovaLabel(r.anova) + ', model checks<br/><small>ANOVA tab in the results</small>'
+            : 'off' });
     const nIdx = Object.keys(r.index.traits).length;
     items.push({ t: 'Selection index', d: r.index.enabled ? (r.index.method === 'rank_sum' ? 'rank sum' : 'weighted Z-score') + ', ' + nIdx + ' trait(s), top ' + r.index.selection_pct + '%' : 'off', off: !r.index.enabled });
     items.push({ t: 'Environmental zones', d: r.zones.enabled ? (r.zones.method === 'lin' ? 'Lin G&times;E test' : 'correlation clustering') + ' by ' + r.zones.unit.replace('_', ' &times; ') + (r.zones.accessions.set === 'checks' ? ', on the checks' : r.zones.accessions.set === 'list' ? ', on list ' + esc(r.zones.accessions.list_name || '') : '') + '<br/>' + r.zones.targets.map(x => x === 'index' ? 'index' : esc(shortTrait(x))).join(', ') : 'off', off: !r.zones.enabled });
@@ -2173,6 +2811,7 @@ function validateRecipe(r) {
         if (!rnd) problems.push('Genomic models need the genotype as random effect (step 3).');
     }
     missingRPackages(r).forEach(pk => problems.push('With the R engine this analysis needs the R package ' + pk + ', which is not installed on this server' + (cfg.blupf90_available ? ' (or choose the BLUPF90+ engine)' : '') + ' (step 3).'));
+    if (r.anova && !cfg.breedtools_available) problems.push('The ANOVA by experimental design needs the R package breedtools, which is not installed on this server (step 3).');
     if (r.zones.enabled && !r.zones.targets.length) problems.push('Choose what to group environments on (step 5).');
     if (r.zones.enabled && r.zones.targets.indexOf('index') >= 0 && !r.index.enabled) problems.push('Zoning on the index requires the selection index (step 4).');
     if (r.zones.enabled && state.dataset && state.dataset.trials.length < 2) problems.push('Environmental zoning needs at least two trials.');
@@ -2191,6 +2830,7 @@ function renderRunReview() {
         cell('Outliers', r.outliers.method === 'none' ? 'none' : r.outliers.method.toUpperCase()) +
         cell('Model', (r.strategy === 'two_stage' ? 'Two stages' : 'Single stage' + (r.single.mode === 'custom' ? ' (custom formula)' : '')) +
             ' &middot; ' + (effectiveEngine() === 'blupf90' ? 'BLUPF90+' : 'R') + ({ pedigree: ' &middot; pedigree (A)', genomic: ' &middot; genomic (G)', single_step: ' &middot; single-step (H)', parents: ' &middot; mother + father' }[r.genetic.model] || '')) +
+        cell('ANOVA', r.anova ? anovaLabel(r.anova) : 'off') +
         cell('Index', r.index.enabled ? 'on' : 'off') +
         cell('Zones', r.zones.enabled ? 'on' : 'off') + '</div>';
     if (problems.length) h += alertBox('warning', problems.map(esc).join('<br/>'));
@@ -2218,7 +2858,7 @@ function updateRunButton() {
     const problems = validateRecipe(buildRecipe());
     const look = {
         ready: ['btn-success', 'play', 'Run analysis'],
-        running: ['btn-default', 'refresh sf-spin', 'Running...'],
+        running: ['btn-default', 'refresh bb-spin', 'Running...'],
         done: ['sf-run-done', 'ok-circle', 'Analysis completed'],
         changed: ['btn-warning', 'repeat', 'Re-run with changes'],
         failed: ['btn-danger', 'repeat', 'Retry analysis']
@@ -2276,7 +2916,7 @@ function runAnalysis() {
     startReview(recipe);
 
     const notify = $('#sf_notify').is(':checked') && !!cfg.user_email;
-    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full', dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: notify ? 1 : 0 })
+    post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(recipe), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full', dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: notify ? 1 : 0, stamp: localStamp() })
         .then(job => {
             state.job = job;
             $('#sf_run_progress_text').text('Queued. The analysis runs in the background; you can follow it in your jobs list too.' +
@@ -2333,32 +2973,18 @@ function reviewContext(corr) {
     };
 }
 
-// plot-level correlation of each analysed trait with each covariate
+// plot-level correlation of each analysed trait with each covariate (computed
+// on the server: { trait: { covariate: r } })
 function traitCovariateCorr(recipe) {
     const covs = arr(recipe.covariates);
     if (!covs.length || !state.dataset) return Promise.resolve({});
-    const cols = recipe.traits.concat(covs).filter((v, i, a) => a.indexOf(v) === i);
-    return post('/ajax/script_factory/plot_data', { token: state.dataset.token, traits: JSON.stringify(cols) }).then(pd => {
-        const out = {};
-        recipe.traits.forEach(t => {
-            const i = pd.columns.indexOf(t);
-            covs.forEach(c => {
-                const j = pd.columns.indexOf(c);
-                if (i < 0 || j < 0 || c === t) return;
-                const xy = pd.rows.filter(r => r[i] !== null && r[j] !== null && r[i] !== undefined && r[j] !== undefined).map(r => [r[i], r[j]]);
-                if (xy.length < 10) return;
-                const n = xy.length, mx = xy.reduce((a, p) => a + p[0], 0) / n, my = xy.reduce((a, p) => a + p[1], 0) / n;
-                let sxy = 0, sxx = 0, syy = 0;
-                xy.forEach(p => { sxy += (p[0] - mx) * (p[1] - my); sxx += (p[0] - mx) ** 2; syy += (p[1] - my) ** 2; });
-                if (sxx > 0 && syy > 0) (out[t] = out[t] || {})[c] = sxy / Math.sqrt(sxx * syy);
-            });
-        });
-        return out;
-    }).catch(() => ({}));
+    return post('/ajax/script_factory/correlations', { token: state.dataset.token, traits: JSON.stringify(arr(recipe.traits)), covariates: JSON.stringify(covs) })
+        .then(r => r.corr || {})
+        .catch(() => ({}));
 }
 
 function startReview(recipe) {
-    const rv = state.review = { recipe: recipe, findings: [], after: [], suggested: null, main: null, alt: null, chosen: 'main', loading: true };
+    const rv = state.review = { recipe: recipe, findings: [], after: [], suggested: null, main: null, alt: null, chosen: 'main', loading: true, dropped: advDropped() };
     renderReview();
     traitCovariateCorr(recipe).then(corr => {
         if (state.review !== rv) return;
@@ -2380,7 +3006,7 @@ function reviewMainDone(res, recipe) {
     const rv = state.review;
     if (!rv || rv.recipe !== recipe) return;
     rv.main = { results: res, recipe: recipe, key: state.lastRun.key };
-    rv.after = reviewResults(res, recipe, arr(state.dataset && state.dataset.trials).some(t => t.has_rowcol));
+    rv.after = reviewResults(res, recipe, arr(state.dataset && state.dataset.trials).some(t => t.has_rowcol), { blupf90: !!cfg.blupf90_available, glmmtmb: !!cfg.glmmtmb_available, dropped: rv.dropped });
     updateSuggested(rv);
     renderReview();
 }
@@ -2396,7 +3022,7 @@ function runSuggested() {
     rv.alt = { job: { pending: true }, recipe: rv.suggested, results: null, error: null };
     renderReview();
     post('/ajax/script_factory/run', { token: state.dataset.token, recipe: JSON.stringify(rv.suggested), exclusions: JSON.stringify(exclusionsPayload()), mode: 'full',
-        dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: 0, label: 'suggested model' })
+        dataset_id: state.dataset.dataset_id, dataset_name: state.dataset.dataset_name, notify: 0, label: 'suggested model', stamp: localStamp() })
         .then(job => { rv.alt.job = job; renderReview(); return pollJob(job, null); })
         .then(res => { res.run_id = rv.alt.job.run_id; rv.alt.results = res; })
         .catch(e => { rv.alt.error = e.message; })
@@ -2426,9 +3052,9 @@ function renderReview() {
     box.show();
     const items = rv.findings.concat(rv.after);
     const icon = l => l === 'look' ? 'eye-open' : 'info-sign';
-    let h = '<p class="sf-help">Your analysis runs exactly as you set it up. Meanwhile, here is a friendly second look at the model, the kind of thing a colleague might point out. ' +
+    let h = '<p class="bb-help">Your analysis runs exactly as you set it up. Meanwhile, here is a friendly second look at the model, the kind of thing a colleague might point out. ' +
         'None of it means something is wrong: you know your trials best, and you decide what to keep.</p>';
-    if (rv.loading) h += '<p class="sf-muted"><span class="glyphicon glyphicon-refresh sf-spin"></span> Looking at the model...</p>';
+    if (rv.loading) h += '<p class="sf-muted"><span class="glyphicon glyphicon-refresh bb-spin"></span> Looking at the model...</p>';
     else if (!items.length) {
         h += '<div class="sf-review-ok"><span class="glyphicon glyphicon-thumbs-up"></span> Nothing to point out' + (rv.main ? ' in the model or in the results' : ' so far') +
             ': no field effect adjusted twice, and every term has data to support it.' + (rv.main ? '' : ' The results will get a quick look too when they are ready.') + '</div>';
@@ -2453,7 +3079,7 @@ function renderReviewRuns(rv) {
             'It runs next to yours, and you can compare both and keep the one you prefer. Your run is not touched.</p>' +
             '<button class="btn btn-default btn-sm" id="sf_run_suggested"><span class="glyphicon glyphicon-play"></span> Also run the suggested model</button></div>';
     }
-    if (rv.alt.job) return h + '<p><span class="glyphicon glyphicon-refresh sf-spin"></span> The suggested model is running' + (rv.main ? '' : ', next to yours') + '...</p></div>';
+    if (rv.alt.job) return h + '<p><span class="glyphicon glyphicon-refresh bb-spin"></span> The suggested model is running' + (rv.main ? '' : ', next to yours') + '...</p></div>';
     if (rv.alt.error) return h + alertBox('warning', 'The suggested model could not be run: ' + esc(rv.alt.error) + ' Your results are not affected.') + '</div>';
     if (!rv.main) return h + '<p><span class="glyphicon glyphicon-ok"></span> The suggested model is done. The comparison appears as soon as your run finishes.</p></div>';
 
@@ -2470,7 +3096,7 @@ function renderReviewRuns(rv) {
             '<td>' + agree(x.r) + '</td><td>' + (x.top ? x.top.same + ' of ' + x.top.n : '&ndash;') + '</td></tr>').join('') +
         (ia !== null || ib !== null ? '<tr class="sf-review-index-row"><td><b>Selection index</b></td><td></td><td>' + accuracyBadge(ia) + '</td><td></td><td></td><td></td><td>' + accuracyBadge(ib) + '</td><td></td><td></td><td></td><td></td></tr>' : '') +
         '</tbody></table></div>';
-    h += '<p class="sf-help">How to read it: when both models agree (agreement close to 1, the same top accessions), the simpler one is the safer choice, since it gives the same answer with less to estimate. ' +
+    h += '<p class="bb-help">How to read it: when both models agree (agreement close to 1, the same top accessions), the simpler one is the safer choice, since it gives the same answer with less to estimate. ' +
         'When they disagree, the heritability alone does not decide it: a higher H&sup2; can come from fitting noise. Choose the model whose terms you can explain from how the trials were laid out.</p>';
     const btn = (w, label) => rv.chosen === w
         ? '<span class="sf-review-chosen"><span class="glyphicon glyphicon-ok"></span> ' + label + ': shown in the results</span>'
@@ -2514,18 +3140,18 @@ function multiTraitHtml(mt) {
             '<div class="table-responsive"><table class="table table-condensed sf-mt-cor"><thead><tr><th></th>' + L.map(l => '<th>' + esc(l.replace(/ occasion /, ' #')) + '</th>').join('') + '</tr></thead><tbody>' +
             C.map((row, i) => '<tr><th>' + esc(String(L[i] || '').replace(/ occasion /, ' #')) + '</th>' + arr(row).map(cell).join('') + '</tr>').join('') + '</tbody></table></div>';
     });
-    return h + '<p class="sf-help">Genetic correlations from the multi-trait model (G<sub>0</sub>): how similarly the accessions rank on two dates. High correlations between consecutive dates are expected; a low one means the ranking changes during the season.</p>';
+    return h + '<p class="bb-help">Genetic correlations from the multi-trait model (G<sub>0</sub>): how similarly the accessions rank on two dates. High correlations between consecutive dates are expected; a low one means the ranking changes during the season.</p>';
 }
 
 // software and packages the run used, with versions and references to cite
 function softwareHtml(sw) {
     sw = arr(sw);
     if (!sw.length) return '';
-    return '<div class="sf-card sf-software-card"><h4><span class="glyphicon glyphicon-wrench"></span> Software used in this analysis</h4>' +
+    return '<div class="bb-card sf-software-card"><h4><span class="glyphicon glyphicon-wrench"></span> Software used in this analysis</h4>' +
         '<div class="table-responsive"><table class="table table-condensed sf-software"><thead><tr><th>Software</th><th>Version</th><th>Used for</th><th>Reference</th></tr></thead><tbody>' +
         sw.map(x => '<tr><td><b>' + esc(x.name) + '</b></td><td>' + (x.version ? esc(x.version) : '<span class="sf-muted">&ndash;</span>') + '</td><td>' + esc(x.used_for) + '</td>' +
             '<td><small>' + (x.reference ? esc(x.reference) : '<span class="sf-muted">&ndash;</span>') + '</small></td></tr>').join('') +
-        '</tbody></table></div><p class="sf-help">Please cite the software you used when you publish these results, together with Breedbase.' +
+        '</tbody></table></div><p class="bb-help">Please cite the software you used when you publish these results, together with Breedbase.' +
         (sw.some(x => x.name === 'BLUPF90+') ? ' BLUPF90+ is free for research and academic use; commercial use needs a licence.' : '') + '</p></div>';
 }
 
@@ -2551,8 +3177,8 @@ function renderResults() {
     $('#sf_save_list').prop('disabled', !res.index);
 
     // overview
-    const stat = (v, l) => '<div class="sf-stat"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
-    let ov = '<div class="sf-stats">' + stat(s.n_trials, 'Trials') + stat(s.n_environments, 'Environments') + stat(s.n_accessions, 'Accessions') +
+    const stat = (v, l) => '<div class="bb-stat"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
+    let ov = '<div class="bb-stats">' + stat(s.n_trials, 'Trials') + stat(s.n_environments, 'Environments') + stat(s.n_accessions, 'Accessions') +
         stat(s.n_plots, 'Plots') + stat(arr(res.outliers).length, 'Values removed') + stat(label + 's', 'Genotype values') + '</div>';
     ov += '<h4>Heritability and variance components</h4>' + simpleTable(res.stage2, [
         { k: 'trait', l: 'Trait' }, { k: 'n_trials', l: 'Trials' }, { k: 'n_accessions', l: 'Accessions' }, { k: 'mean', l: 'Mean' },
@@ -2592,14 +3218,18 @@ function renderResults() {
         { k: 'trait', l: 'Trait' }, { k: 'model', l: 'Model', f: v => '<code style="font-size:11px">' + esc(v) + '</code>' },
         { k: 'var_g', l: '&sigma;&sup2;<sub>G</sub>' }, { k: 'var_ge', l: '&sigma;&sup2;<sub>GE</sub>' }, { k: 'var_e', l: '&sigma;&sup2;<sub>e</sub>' },
         { k: 'h2', l: 'H&sup2;', f: v => h2Badge(v) }, { k: 'message', l: 'Status', f: (v, r) => esc(v) + (r.dropped_terms ? '<br/><small class="sf-muted" title="Terms the data could not support">left out: ' + esc(r.dropped_terms) + '</small>' : '') }
-    ]) + '<p class="sf-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
+    ]) + '<p class="bb-help">Heritability is computed on an entry-mean basis (Cullis-type approximations using the harmonic mean number of replicates and environments).</p>');
     $('#sf_tab_model').append(multiTraitHtml(res.multi_trait));
+    $('#sf_tab_model').append(structuresHtml(res.variance_structures));
+    // ANOVA by experimental design: only when the run had it
+    $('#sf_tab_anova_li').toggle(!!res.anova);
+    if (res.anova) renderAnovaResults(res.anova);
 
     // genotype values
     const gv = arr(res.genotype_values);
     const pedCols = gv.length ? ['mother', 'father'].filter(k => k in gv[0]) : [];
     const traitCols = gv.length ? Object.keys(gv[0]).filter(k => k !== 'accession' && pedCols.indexOf(k) < 0) : [];
-    $('#sf_tab_values').html('<p class="sf-help">' + label + 's of each accession for each trait.</p>' + simpleTable(gv,
+    $('#sf_tab_values').html('<p class="bb-help">' + label + 's of each accession for each trait.</p>' + simpleTable(gv,
         [{ k: 'accession', l: 'Accession', f: v => '<a href="/stock/' + encodeURIComponent(v) + '/view" target="_blank">' + esc(v) + '</a>' }]
             .concat(pedCols.map(k => ({ k: k, l: k === 'mother' ? 'Mother' : 'Father', f: v => v ? esc(v) : '<span class="sf-muted">&ndash;</span>' })))
             .concat(traitCols.map(t => ({ k: t, l: esc(t) }))),
@@ -2615,6 +3245,65 @@ function renderResults() {
 
     $('#sf_result_tabs a[href="#sf_tab_overview"]').tab('show');
     $('html, body').animate({ scrollTop: $('#sf_results').offset().top - 70 }, 300);
+}
+
+// ANOVA by experimental design (optional step): one trait at a time
+function anovaPval(p) {
+    if (p === null || p === undefined || !isFinite(Number(p))) return '';
+    const x = Number(p);
+    return (x < 0.0001 ? '&lt; 0.0001' : x.toFixed(4)) + ' ' + (x < 0.001 ? '***' : x < 0.01 ? '**' : x < 0.05 ? '*' : x < 0.1 ? '.' : '');
+}
+// views of one trait: the joint analysis (or, with each trial only, the
+// summary of the trials) and the analysis of each trial
+function anovaViews(T) {
+    const v = [];
+    if (T.table || T.message || !arr(T.trials).length) v.push({ label: 'Joint analysis (all trials)', t: T });
+    else if (arr(T.by_trial).length > 1) v.push({ label: 'Summary of the trials', t: { by_trial: T.by_trial, homogeneity: T.homogeneity, n: T.n, n_trials: T.n_trials } });
+    arr(T.trials).forEach(x => v.push({ label: 'Trial ' + x.trial, t: x }));
+    return v;
+}
+function renderAnovaResults(A, trait, view) {
+    if (A.message) { $('#sf_tab_anova').html('<p class="sf-muted">' + esc(A.message) + '</p>'); return; }
+    const traits = arr(A.traits);
+    const T = traits.find(x => x.trait === trait) || traits[0];
+    if (!T) { $('#sf_tab_anova').html('<p class="sf-muted">No analysis of variance.</p>'); return; }
+    const views = anovaViews(T);
+    const vi = Math.min(Number(view) || 0, views.length - 1);
+    const t = views[vi].t;
+    const sel = (id, opts) => '<select class="form-control input-sm" id="' + id + '" style="width:auto;display:inline-block;margin:0 6px 8px 0">' + opts + '</select>';
+    let h = (traits.length > 1 ? sel('sf_anova_trait', traits.map(x => '<option value="' + esc(x.trait) + '"' + (x === T ? ' selected' : '') + '>' + esc(x.trait) + '</option>').join('')) : '') +
+        (views.length > 1 ? sel('sf_anova_view', views.map((x, i) => '<option value="' + i + '"' + (i === vi ? ' selected' : '') + '>' + esc(x.label) + '</option>').join('')) : '');
+    if (t.model) h += '<p><code style="font-size:11px">' + esc(t.model) + '</code><br/><span class="sf-muted">' + t.n + ' plots' + (t.n_trials > 1 ? ' in ' + t.n_trials + ' trials' : '') +
+        (t.cv !== null && t.cv !== undefined ? ' &middot; CV ' + fmt(t.cv, 1) + '%' : '') + (t.r2 !== null && t.r2 !== undefined ? ' &middot; R&sup2; ' + fmt(t.r2, 3) : '') + '</span></p>';
+    if (t.message) h += '<div class="alert alert-warning">' + esc(t.message) + '</div>';
+    h += simpleTable(t.table, [
+        { k: 'label', l: 'Source' }, { k: 'df', l: 'df', f: v => v }, { k: 'sum_sq', l: 'Sum of squares' }, { k: 'mean_sq', l: 'Mean square' },
+        { k: 'f_value', l: 'F', f: v => (v === null || v === undefined ? '' : fmt(v, 2)) },
+        { k: 'p_value', l: 'p-value', f: v => (v !== null && v !== undefined && v < A.alpha ? '<b style="color:#166534">' + anovaPval(v) + '</b>' : anovaPval(v)) }
+    ]) + '<p class="bb-help">All effects fixed; sequential (type I) sums of squares, design terms first; F-tests against the residual.</p>';
+    arr(t.comparisons).forEach(c => {
+        const g = arr(c.groups);
+        h += '<h4>' + esc(c.factor) + (c.by ? ' within ' + esc(c.by.toLowerCase()) : '') + ' <small>' + esc(c.test) + ', &alpha; = ' + c.alpha + '</small></h4>';
+        g.slice(0, 3).forEach(x => {
+            h += (x.group ? '<b>' + esc(c.by) + ': ' + esc(x.group) + '</b> ' : '') + arr(x.means).map(m => esc(m.level) + ' ' + fmt(m.mean) + ' <b>' + esc(m.group || '') + '</b>').join(' &middot; ') + '<br/>';
+        });
+        if (g.length > 3) h += '<span class="sf-muted">' + (g.length - 3) + ' more groups in the dashboard.</span><br/>';
+    });
+    const dg = t.diagnostics || {}, hg = t.homogeneity;
+    const checks = [];
+    if (dg.shapiro) checks.push('Shapiro-Wilk W = ' + fmt(dg.shapiro.w, 3) + ', p = ' + anovaPval(dg.shapiro.p_value));
+    if (hg) checks.push('Hartley Fmax = ' + fmt(hg.fmax, 2) + ' (critical ' + fmt(hg.critical, 2) + '): ' + (hg.homogeneous ? 'homogeneous' : 'not homogeneous') + ' residual variances across trials');
+    arr(dg.levene).forEach(l => checks.push('Brown-Forsythe (' + esc(l.factor) + '): p = ' + anovaPval(l.p_value)));
+    if (dg.n_large) checks.push(dg.n_large + ' plot(s) with a standardized residual beyond &plusmn;3');
+    if (checks.length) h += '<h4>Model checks</h4><ul><li>' + checks.join('</li><li>') + '</li></ul>';
+    if (arr(t.by_trial).length > 1) h += '<h4>Each trial: summary</h4>' + simpleTable(t.by_trial, [
+        { k: 'trial', l: 'Trial' }, { k: 'design', l: 'Design' }, { k: 'n', l: 'Plots', f: v => v }, { k: 'mean', l: 'Mean' }, { k: 'cv', l: 'CV %', f: v => fmt(v, 1) },
+        { k: 'df_error', l: 'Residual df', f: v => (v === null || v === undefined ? 'none' : v) }, { k: 'f_accession', l: 'F accession', f: v => fmt(v, 2) }, { k: 'p_accession', l: 'p-value', f: v => anovaPval(v) }]);
+    if (arr(t.notes).length) h += '<p class="bb-help">' + arr(t.notes).map(esc).join('<br/>') + '</p>';
+    h += '<p class="bb-help">Q-Q and residual plots and all comparison groups: ANOVA section of the results dashboard.</p>';
+    $('#sf_tab_anova').html(h);
+    $('#sf_anova_trait').on('change', function() { renderAnovaResults(A, $(this).val(), 0); });
+    $('#sf_anova_view').on('change', function() { renderAnovaResults(A, T.trait, $(this).val()); });
 }
 
 function h2Badge(v) {
@@ -2634,14 +3323,14 @@ function accuracyBadge(v) {
 
 function accuracyStat(ix) {
     if (ix.accuracy === null || ix.accuracy === undefined) {
-        return '<div class="sf-stat sf-stat-acc" title="The accuracy comes from the genetic variance, which is only estimated when the genotype is a random effect (BLUPs). ' +
+        return '<div class="bb-stat sf-stat-acc" title="The accuracy comes from the genetic variance, which is only estimated when the genotype is a random effect (BLUPs). ' +
             'With the genotype as a fixed effect (BLUEs), choose Random under Genotype in step 3 to see it.">' +
             '<div class="v sf-muted">n/a</div><div class="l">Selection accuracy</div></div>';
     }
     const a = Number(ix.accuracy);
     const word = a >= 0.8 ? 'high' : a >= 0.6 ? 'moderate' : 'low';
     const per = arr(ix.gains).filter(g => g.in_index && g.accuracy !== null && g.accuracy !== undefined).map(g => g.trait + ': ' + Number(g.accuracy).toFixed(3)).join(', ');
-    return '<div class="sf-stat sf-stat-acc sf-acc-' + word + '" title="Selection accuracy of the index: mean accuracy of its traits, weighted by their index weights (' + esc(per) + '). ' +
+    return '<div class="bb-stat sf-stat-acc sf-acc-' + word + '" title="Selection accuracy of the index: mean accuracy of its traits, weighted by their index weights (' + esc(per) + '). ' +
         'It says how closely the ranking follows the true genetic values: 1 would be perfect.">' +
         '<div class="v">' + a.toFixed(3) + ' <small>' + word + '</small></div><div class="l">Selection accuracy</div></div>';
 }
@@ -2649,11 +3338,12 @@ function accuracyStat(ix) {
 function renderIndexResults(ix, label) {
     const table = arr(ix.table);
     const traitCols = table.length ? Object.keys(table[0]).filter(k => ['accession', 'index', 'rank', 'selected'].indexOf(k) < 0) : [];
-    let h = '<div class="sf-stats">' +
-        '<div class="sf-stat"><div class="v">' + ix.n_selected + ' / ' + ix.n_ranked + '</div><div class="l">Selected accessions</div></div>' +
-        '<div class="sf-stat"><div class="v">' + ix.selection_pct + '%</div><div class="l">Selection intensity</div></div>' +
-        '<div class="sf-stat"><div class="v">' + (ix.method === 'rank_sum' ? 'Rank sum' : 'Z-score') + '</div><div class="l">Method</div></div>' +
+    let h = '<div class="bb-stats">' +
+        '<div class="bb-stat"><div class="v">' + ix.n_selected + ' / ' + ix.n_ranked + '</div><div class="l">Selected accessions</div></div>' +
+        '<div class="bb-stat"><div class="v">' + ix.selection_pct + '%</div><div class="l">Selection intensity</div></div>' +
+        '<div class="bb-stat"><div class="v">' + (ix.method === 'rank_sum' ? 'Rank sum' : 'Z-score') + '</div><div class="l">Method</div></div>' +
         accuracyStat(ix) + '</div>';
+    h += '<p class="bb-help">The index was computed on the <b>' + esc(label) + 's</b> of the model (genotype values), not on raw or ANOVA means.</p>';
     h += '<h4>Expected response to selection</h4>' + simpleTable(ix.gains, [
         { k: 'trait', l: 'Trait' }, { k: 'in_index', l: 'In index', f: v => v ? '<span class="glyphicon glyphicon-ok" style="color:#2b7a4b"></span>' : '' },
         { k: 'weight', l: 'Weight', f: (v, r) => r.in_index ? fmt(v, 2) + (r.direction === 'decrease' ? ' &darr;' : ' &uarr;') : '' },
@@ -2662,7 +3352,7 @@ function renderIndexResults(ix, label) {
         { k: 'selection_differential_pct', l: 'S %', f: v => '<b style="color:' + (Number(v) >= 0 ? '#2b7a4b' : '#dc2626') + '">' + fmt(v, 1) + '%</b>' },
         { k: 'expected_gain', l: 'Expected gain' },
         { k: 'accuracy', l: 'Accuracy', f: v => accuracyBadge(v) }
-    ]) + '<p class="sf-help">' + esc(ix.note) + ' Accuracy: how closely the genotype values follow the true genetic values (0 to 1), from their standard errors ' +
+    ]) + '<p class="bb-help">' + esc(ix.note) + ' Accuracy: how closely the genotype values follow the true genetic values (0 to 1), from their standard errors ' +
         '(&radic;(1 &minus; PEV / &sigma;&sup2;<sub>G</sub>)), or &radic;H&sup2; when the genotype is a fixed effect.</p>';
     h += '<h4>Top accessions</h4><div id="sf_index_chart" class="sf-plot"></div>';
     h += '<h4>Ranking</h4>' + simpleTable(table, [
@@ -2720,9 +3410,9 @@ function renderZoneResults(zones) {
         zoneNames.forEach(zn => {
             const envs = arr(z.membership).filter(m => m.zone === zn);
             const top = arr(z.top).filter(t => t.zone === zn);
-            h += '<div class="col-md-6"><div class="sf-card" style="border-top:4px solid ' + color(zn) + '">' +
+            h += '<div class="col-md-6"><div class="bb-card" style="border-top:4px solid ' + color(zn) + '">' +
                 '<h4 style="margin-top:0"><span class="sf-zone-chip" style="background:' + color(zn) + '">' + esc(zn) + '</span> ' + envs.length + ' environment(s)</h4>' +
-                '<p class="sf-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
+                '<p class="bb-help">' + envs.map(e => esc(e.env) + (e.location && e.location !== e.env ? ' <small>(' + esc(e.location) + ')</small>' : '')).join(', ') + '</p>' +
                 simpleTable(top, [{ k: 'rank', l: '#', f: v => v }, { k: 'accession', l: 'Best accessions' }, { k: 'value', l: 'Mean' }, { k: 'n_env', l: 'Envs', f: v => v }], { empty: Number(z.min_env) > 1 ? 'No accession tested in at least ' + Number(z.min_env) + ' environment(s) of this zone.' : 'No accession with values in this zone.' }) +
                 '</div></div>';
         });
@@ -2808,7 +3498,7 @@ function createList() {
 
 function openLibrary() {
     $('#sf_library_modal').modal('show');
-    $('#sf_library_list').html('<p class="sf-help"><span class="glyphicon glyphicon-refresh sf-spin"></span> Loading...</p>');
+    $('#sf_library_list').html('<p class="bb-help"><span class="glyphicon glyphicon-refresh bb-spin"></span> Loading...</p>');
     post('/ajax/script_factory/recipes', {})
         .then(r => {
             const list = arr(r.recipes);
@@ -2832,6 +3522,8 @@ function openPipeline(p) {
     state.scriptLoaded = true;
     // the values that run excluded in step 2: put back when its dataset loads
     state.pendingExclusions = arr(p.exclusions);
+    // read the dataset from where that run read it (database tables or search cache)
+    state.pendingFromDatabase = p.phenotype_source === 'database';
     applyRecipe(p.recipe);
     setScriptName();
     const links = [
@@ -3016,7 +3708,9 @@ export function init(options) {
                 return;
             }
             box.prop('checked', true);
-            loadDataset();
+            const fromDatabase = !!(p && state.pendingFromDatabase);
+            state.pendingFromDatabase = false;
+            loadDataset({ fromDatabase: fromDatabase });
         })
     });
 
@@ -3026,6 +3720,9 @@ export function init(options) {
 
     // step 1
     $('#sf_load_dataset').on('click', loadDataset);
+    $('#sf_cache_note').on('click', '#sf_cache_reload', () => loadDataset({ fromDatabase: true }));
+    $('#sf_cache_note').on('click', '#sf_cache_update', updateCache);
+    $('#sf_cache_note').on('click', '#sf_cache_reload_updated', () => loadDataset());
     // ticking a dataset loads it (one dataset at a time)
     $('#sf_dataset_select').on('change', 'input[name=sf_dataset_checkbox]', function() {
         if (!$(this).is(':checked')) return;
@@ -3125,7 +3822,32 @@ export function init(options) {
         state.genoProtocol = p ? { id: String(p.protocol_id), name: p.name } : null;
         renderModelPreview(); renderPipeline(); renderQuickRun();
     });
+    $('#sf_anova_enabled').on('change', () => { refreshToggles(); renderPipeline(); });
+    $('#sf_anova_btn').on('click', e => { e.preventDefault(); anovaFillDialog(state.anova); $('#sf_anova_modal').modal('show'); });
+    $('#sf_anova_reset').on('click', e => { e.preventDefault(); anovaFillDialog(anovaClean({})); });
+    $('#sf_anova_apply').on('click', e => {
+        e.preventDefault();
+        state.anova = anovaClean({ scope: radio('sf_anova_scope'), test: radio('sf_anova_test'), alpha: $('#sf_anova_alpha').val() });
+        $('#sf_anova_modal').modal('hide');
+        refreshToggles(); renderPipeline();
+    });
     $('#sf_apply_suggestion').on('click', e => { e.preventDefault(); applySuggestion(); });
+    $('#sf_adv_btn').on('click', e => { e.preventDefault(); advFillDialog(state.advanced || {}); advIx = ixClean(state.interactions); ixRender(); $('#sf_adv_modal').modal('show'); });
+    $('#sf_adv_modal').on('click', '.sf-ix-del', function(e) { e.preventDefault(); advIx.splice(Number($(this).data('i')), 1); ixRender(); });
+    $('#sf_adv_modal').on('click', '.sf-ix-sug', function(e) { e.preventDefault(); const x = advIxSug[Number($(this).data('i'))]; if (x) ixAdd(x); });
+    $('#sf_ix_add').on('click', e => {
+        e.preventDefault();
+        ixAdd({ factors: $('.sf-ix-f:checked').map(function() { return $(this).val(); }).get(), effect: $('#sf_ix_effect').val() });
+    });
+    $('#sf_adv_modal').on('change', '.sf-adv-opt', advRefreshDialog);
+    $('#sf_adv_reset').on('click', e => { e.preventDefault(); advFillDialog({}); advIx = []; ixRender(); });
+    $('#sf_adv_apply').on('click', e => {
+        e.preventDefault();
+        state.advanced = advReadDialog();
+        state.interactions = ixClean(advIx);
+        $('#sf_adv_modal').modal('hide');
+        renderModelPreview(); renderPipeline(); renderQuickRun();
+    });
     if (cfg.user_email) {
         $('#sf_notify_to').text('at ' + cfg.user_email);
     } else {
@@ -3159,13 +3881,29 @@ export function init(options) {
         ta.focus(); ta.selectionStart = ta.selectionEnd = a + v.length;
         $(ta).trigger('input');
     });
+    $('#sf_single_covariates').on('click', '.sf-cov-edit', function(e) { e.preventDefault(); e.stopPropagation(); openCovDialog($(this).data('cov')); });
+    $('#sf_cov_all, #sf_cov_none').on('click', function(e) { e.preventDefault(); $('#sf_cov_traits input').prop('checked', this.id === 'sf_cov_all'); });
+    $('#sf_cov_save').on('click', () => {
+        const c = state.covEditing;
+        if (c && $('#sf_cov_traits input').length) {
+            const keep = $('#sf_cov_traits input:checked').map(function() { return $(this).val(); }).get();
+            if (keep.length === $('#sf_cov_traits input').length) delete state.covTraits[c]; else state.covTraits[c] = keep;
+        }
+        $('#sf_cov_modal').modal('hide');
+        renderSingleCovariates();
+        renderPipeline();
+        renderModelPreview();
+    });
     $('#sf_single_covariates').on('change', 'input', function() {
         const t = $(this).val();
-        if ($(this).is(':checked')) state.singleCov[t] = true; else delete state.singleCov[t];
+        const on = $(this).is(':checked');
+        if (on) state.singleCov[t] = true; else { delete state.singleCov[t]; delete state.covTraits[t]; }
         renderSingleCovariates();
         renderRepeated();
         renderPipeline();
         renderModelPreview();
+        // a new covariate: choose the traits it adjusts (Cancel keeps all)
+        if (on && state.traits.filter(x => x !== t).length > 1) openCovDialog(t);
     });
     $('#sf_repeated').on('change', '.sf-rep-summary', function() {
         state.repeated[$(this).data('trait')] = $(this).val();

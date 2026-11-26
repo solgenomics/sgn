@@ -252,7 +252,8 @@ function renderEvidence() {
         h += '<div class="dm-empty-card"><span class="glyphicon glyphicon-stats"></span><h4>Which analyses will this meeting decide on?</h4>' +
             '<p>Add one or more analyses: their accessions become the accessions of the meeting. ' +
             'Runs of the <b>Analysis Pipeline</b> are suggested: they bring genotype values, ranks and the selection index.</p>' +
-            (r.can_link ? '<button class="btn btn-success dm-add-open"><span class="glyphicon glyphicon-plus"></span> Add analyses</button>' : '<p class="dm-muted">Only the meeting roles can add analyses.</p>') + '</div>';
+            (closed ? '<p class="dm-muted">The decisions are saved: the meeting is closed.</p>'
+                : r.can_link ? '<button class="btn btn-success dm-add-open"><span class="glyphicon glyphicon-plus"></span> Add analyses</button>' : '<p class="dm-muted">Only the meeting roles can add analyses.</p>') + '</div>';
     } else {
         h += '<div class="dm-sources">' + list.map(s =>
             '<div class="dm-source' + (s.key === S.viewKey ? ' on' : '') + (s.error ? ' err' : '') + '" data-key="' + esc(s.key) + '">' +
@@ -266,7 +267,7 @@ function renderEvidence() {
             (r.can_link && !closed ? '<button class="btn btn-link btn-xs dm-unlink" data-key="' + esc(s.key) + '" title="Remove from this meeting"><span class="glyphicon glyphicon-trash"></span></button>'
                 : closed ? '<span class="dm-muted" title="The decisions are saved: this evidence is a permanent record"><span class="glyphicon glyphicon-lock"></span></span>' : '') +
             '</span></div></div>').join('') +
-            (r.can_link ? '<button class="dm-source dm-source-add dm-add-open"><span class="glyphicon glyphicon-plus"></span><br/>Add analyses</button>' : '') + '</div>';
+            (r.can_link && !closed ? '<button class="dm-source dm-source-add dm-add-open"><span class="glyphicon glyphicon-plus"></span><br/>Add analyses</button>' : '') + '</div>';
         if (list.some(s => s.source === 'run')) {
             h += '<p class="dm-muted dm-small"><span class="glyphicon glyphicon-info-sign"></span> Pipeline runs are temporary: a copy of their results is kept with the meeting. Store a run as an analysis to keep its full results page.</p>';
         }

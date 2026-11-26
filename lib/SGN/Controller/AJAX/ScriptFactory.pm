@@ -8,7 +8,11 @@ SGN::Controller::AJAX::ScriptFactory - AJAX backend for the Analysis Pipeline
 Endpoints used by /tools/script_factory:
 
   /ajax/script_factory/prepare        write the dataset phenotype file, describe traits and trials
+                                      (source=database: read from the tables, not the search cache)
   /ajax/script_factory/plot_data      plot level values of selected traits (outlier explorer)
+  /ajax/script_factory/correlations   plot level correlation of each trait with each covariate
+  /ajax/script_factory/cache/status   is the phenotype search cache being updated, when it was last updated
+  /ajax/script_factory/cache/update   start an update of the phenotype search cache (curators, breeders)
   /ajax/script_factory/outliers/mark  check / mark / unmark outliers as dataset or database outliers
   /ajax/script_factory/run            submit the R pipeline as a background job
   /ajax/script_factory/status         poll a submitted job, return the results when done
@@ -42,13 +46,20 @@ use DateTime;
 use Try::Tiny;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
-use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Calendar;
+use CXGN::BreedersToolbox::Projects;
+use List::Util;
+use CXGN::Tools::Run;
+use Time::HiRes;
 use CXGN::Job;
 use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
 use CXGN::JSONUtils qw(decode_stored_json);
+
+# summaries of a repeated trait per plot sent to the outlier explorer (_repeated_plot_values)
+our @REPEATED_STATS = qw| mean sum first last max min |;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -62,6 +73,8 @@ my $TMP_SUBDIR = 'script_factory_files';
 my $PIPELINE = 'R/script_factory/script_factory_pipeline.R';
 # BLUPF90+ engine: the same pipeline without R (CXGN::BLUPF90::Pipeline)
 my $F90_PIPELINE = 'bin/script_factory_blupf90.pl';
+# optional last step of a run, after either engine: ANOVA by experimental design
+my $ANOVA_STEP = 'R/script_factory/script_factory_anova.R';
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -165,8 +178,11 @@ sub blupf90_dir {
     my $c = shift;
     # the site must allow BLUPF90+ (free for research only; sgn.conf allow_blupf90)
     return if !$c->config->{allow_blupf90};
+    # the key may be given more than once (a list): the first folder that holds it
     my $conf = $c->config->{blupf90_bin_dir};
-    return $conf if $conf && -x "$conf/blupf90+";
+    foreach my $dir (grep { defined && $_ ne '' } (ref($conf) eq 'ARRAY' ? @$conf : ($conf))) {
+        return $dir if -x "$dir/blupf90+";
+    }
     # the program mounted into Breedbase's own bin folder (docker: a file bind
     # mount to <basepath>/bin/blupf90+; it is git-ignored)
     my $own = File::Spec->catdir($c->config->{basepath} // '', 'bin');
@@ -196,6 +212,14 @@ sub r_package_available {
 }
 sub glmmtmb_available { return r_package_available('glmmTMB'); }
 sub aghmatrix_available { return r_package_available('AGHmatrix'); }
+# breedtools: design of each trial for the ANOVA step
+sub breedtools_available { return r_package_available('breedtools'); }
+
+# does the recipe ask for the ANOVA by experimental design?
+sub _anova_enabled {
+    my $recipe = shift;
+    return ref($recipe->{anova}) eq 'HASH' && $recipe->{anova}->{enabled} ? 1 : 0;
+}
 
 # contact shown to commercial users of BLUPF90+ (free for research only)
 sub blupf90_license_contact {
@@ -212,7 +236,13 @@ sub blupf90_license_contact {
 # are stored (storing renames the job to the analysis name, _rename_job).
 # label: e.g. 'suggested model' for the model review's second run.
 sub _job_name {
-    my ($recipe, $mode, $dataset_name, $label) = @_;
+    my ($recipe, $mode, $dataset_name, $label, $stamp) = @_;
+    $label = '' if !defined($label) || $label !~ /^[\w .()-]{1,40}$/;
+    # a run of a saved script: the script's name and the date and time of the run
+    if ($mode ne 'preview' && defined($recipe->{name}) && $recipe->{name} ne '') {
+        my $name = $recipe->{name} . ' ' . ($stamp // _run_stamp()) . ($label ne '' ? " - $label" : '');
+        return length($name) > 200 ? substr($name, 0, 197) . '...' : $name;
+    }
     my $base = $mode eq 'preview' ? 'Analysis Pipeline outlier preview' : 'Analysis Pipeline';
     my $what = $recipe->{name};
     if (!defined($what) || $what eq '') {
@@ -220,9 +250,19 @@ sub _job_name {
         my $traits = @t > 3 ? join(', ', @t[0 .. 2]) . ' +' . (@t - 3) : join(', ', @t);
         $what = join(' ', grep { $_ ne '' } ($dataset_name // ''), ($traits ne '' ? "($traits)" : ''));
     }
-    $label = '' if !defined($label) || $label !~ /^[\w .()-]{1,40}$/;
     my $name = $base . ($what ne '' ? ": $what" : ' run') . ($label ne '' ? " - $label" : '');
     return length($name) > 200 ? substr($name, 0, 197) . '...' : $name;
+}
+
+# date and time of a run (YYYY-MM-DD-HH:MM, server local time) from its
+# creation time (ISO 8601, UTC); now when there is none
+sub _run_stamp {
+    my $iso = shift;
+    my $dt = (defined($iso) && $iso =~ /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/)
+        ? eval { DateTime->new(year => $1, month => $2, day => $3, hour => $4, minute => $5, time_zone => 'UTC') } : undef;
+    $dt ||= DateTime->now();
+    eval { $dt->set_time_zone('local') };
+    return $dt->strftime('%Y-%m-%d-%H:%M');
 }
 
 sub _run_engine {
@@ -405,23 +445,30 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     return if $c->stash->{rest};
 
     # Breedbase reads datasets from the phenotype search cache (materialized
-    # views), which on a large database can be hours behind new uploads. When
-    # the cache does not hold every value of the dataset's trials, the dataset
-    # is read from the database tables instead, so the summary and the
-    # analysis always use all of its data.
+    # views), which on a large database can be hours behind new uploads. The
+    # dataset is read from the cache (fast) and the trials whose values differ
+    # from the database tables are reported, so the user can reload it from
+    # the tables (source=database, _write_native_phenotypes). The tables are
+    # also read when the cache holds no phenotypes of the dataset at all.
     my $cache = try { _phenotype_cache_check($schema, $ds, $traits_in_ds) }
                 catch { print STDERR "Analysis Pipeline: phenotype cache of dataset $dataset_id not checked: $_\n"; undef };
-    my $source = ($cache && @{$cache->{stale}}) ? 'database' : 'cache';
+    my $source = (($c->req->param('source') // '') eq 'database') ? 'database' : 'cache';
     try {
-        if ($source eq 'database') {
-            _write_native_phenotypes($schema, $ds, $traits_in_ds, $pheno_file);
-        } else {
+        if ($source eq 'cache') {
             $ds->retrieve_phenotypes($pheno_file);
+            # the file has a header line even without phenotypes
+            my $n_lines = 0;
+            if (open(my $F, '<', $pheno_file)) { $n_lines++ while <$F>; close($F); }
+            $source = 'database' if $n_lines < 2 && $cache && @{$cache->{stale}};
         }
+        _write_native_phenotypes($schema, $ds, $traits_in_ds, $pheno_file) if $source eq 'database';
     } catch {
         $c->stash->{rest} = { error => "Could not retrieve the dataset phenotypes: $_" };
     };
     return if $c->stash->{rest};
+    # the source goes with the runs of this token (a reopened run reads its
+    # dataset from the same source)
+    write_file("$tempfile.source", $source);
 
     if (!-s $pheno_file) {
         $c->stash->{rest} = { error => 'The dataset has no phenotypes. Please choose a dataset with trials and traits.' };
@@ -447,6 +494,26 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
     my $level_i = $idx->{observationLevel};
     my @plot_rows = grep { !defined($level_i) || !defined($_->[$level_i]) || $_->[$level_i] eq '' || lc($_->[$level_i]) eq 'plot' } @$rows;
     my $treatments = _treatment_factors($c, $keys, $idx, \@plot_rows, \@legacy_trt_cols, [ grep { $is_treatment{$_} } @$keys ]);
+
+    my %unit_info;    # plot -> [trial, accession]
+    my $obs_unit_i = $idx->{observationUnitName};
+    foreach my $r (@plot_rows) {
+        my $unit = defined($obs_unit_i) ? $r->[$obs_unit_i] : undef;
+        $unit_info{$unit} = [ $r->[$idx->{studyName} // -1], $r->[$idx->{germplasmName} // -1] ] if defined $unit;
+    }
+
+    # traits measured more than once per plot (all measurements to <token>.repeated.txt).
+    # They are always read from the tables: with the cache as source, the plots of
+    # stale trials are counted (n_stale_units) so the page can say they may differ.
+    my %stale_trial = ($source eq 'cache' && $cache) ? (map { $_ => 1 } @{ $cache->{stale} }) : ();
+    my $repeated = try { _repeated_measurements($schema, $ds, \@trait_cols, \%unit_info, "$tempfile.repeated.txt", \%stale_trial) }
+                   catch { print STDERR "Analysis Pipeline: repeated measurements of dataset $dataset_id not read: $_\n"; [] };
+    # Breedbase leaves values marked as database outliers out of the plot mean
+    # of repeated measurements (a plot with all of them marked gets no value),
+    # so those plots would never reach step 2, where they can be used again or
+    # unmarked: the plot value of these traits is the mean of every measurement
+    try { _fill_repeated_means($pheno_file, "$tempfile.repeated.txt", $keys, $idx, $rows) }
+    catch { print STDERR "Analysis Pipeline: plot means of repeated measurements of dataset $dataset_id not written: $_\n"; };
 
     my @traits;
     foreach my $t (@trait_cols) {
@@ -533,19 +600,14 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
 
     # values marked as outliers in Breedbase: step 2 starts with them excluded
     # (only the marked value, never the whole plot)
-    my %unit_info;
-    foreach my $r (@plot_rows) {
-        my $unit = $col->($r, 'observationUnitName');
-        $unit_info{$unit} = [ $col->($r, 'studyName'), $col->($r, 'germplasmName') ] if defined $unit;
-    }
     my $marked = try { _marked_outliers($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info) }
                  catch { print STDERR "Analysis Pipeline: marked outliers of dataset $dataset_id not read: $_\n"; [] };
     # genotyping protocols with genotypes of the dataset's accessions (G and H models)
     my $genotyping = try { _genotyping_protocols($schema, [ map { $_->[0] } @{ $ds->retrieve_accessions() || [] } ]) }
                      catch { print STDERR "Analysis Pipeline: genotyping protocols of dataset $dataset_id not read: $_\n"; [] };
-    # traits measured more than once per plot (all measurements to <token>.repeated.txt)
-    my $repeated = try { _repeated_measurements($schema, $ds, [ map { $_->{name} } @traits ], \%unit_info, "$tempfile.repeated.txt") }
-                   catch { print STDERR "Analysis Pipeline: repeated measurements of dataset $dataset_id not read: $_\n"; [] };
+    # only the traits with values in the dataset
+    my %has_values = map { $_->{name} => 1 } @traits;
+    $repeated = [ grep { $has_values{ $_->{trait} } } @$repeated ];
 
     $c->stash->{rest} = {
         token => $token,
@@ -563,10 +625,14 @@ sub prepare : Path('/ajax/script_factory/prepare') Args(0) {
         n_accessions => scalar(keys %accessions),
         n_locations => scalar(keys %locations),
         n_years => scalar(keys %years),
-        # where the phenotypes were read from: 'cache' (search cache, up to date)
-        # or 'database' (tables, because the cache missed values of stale_trials)
+        # where the phenotypes were read from: 'cache' (search cache) or
+        # 'database' (tables: asked for, or the cache had none of the dataset).
+        # stale_trials: trials whose values in the cache differ from the tables
+        # ([{trial, n_database, n_cache}] in stale_detail)
         phenotype_source => $source,
         stale_trials => $cache ? $cache->{stale} : [],
+        stale_detail => $cache ? $cache->{detail} : [],
+        cache => _cache_status($schema->storage->dbh(), $c),
         pedigree => $pedigree,
         treatments => $treatments,
         treatment_types => _treatment_types($c),
@@ -609,29 +675,86 @@ sub plot_data : Path('/ajax/script_factory/plot_data') Args(0) {
         push @out, \@rec if $has_value;
     }
 
-    # every measurement of the traits measured more than once per plot (the
-    # dataset file has their plot mean), in date order: the page shows them as
-    # the value per plot chosen for the model (mean, sum, first, last...)
-    my %repeated;
-    my %wanted = map { $_ => 1 } @traits;
-    my $rep_file = _work_dir($c) . "/$token.repeated.txt";
-    if (-e $rep_file) {
-        open(my $fh, '<', $rep_file) or die "Cannot read $rep_file: $!";
-        while (my $line = <$fh>) {
-            chomp $line;
-            my ($unit, $trait, $value) = split /\t/, $line;
-            next if !defined($trait) || !$wanted{$trait} || !_is_number($value);
-            push @{ $repeated{$trait}->{$unit} }, $value + 0;
-        }
-        close($fh);
-    }
-
     $c->stash->{rest} = {
         columns => [ qw | unit trial accession rep block row col |, @traits ],
         traits => \@traits,
         rows => \@out,
-        repeated => \%repeated,
+        # traits measured more than once per plot: the value per plot of each
+        # summary (the dataset file has their plot mean), not every measurement
+        repeated_stats => [ @REPEATED_STATS ],
+        repeated => _repeated_plot_values(_work_dir($c) . "/$token.repeated.txt", \@traits),
     };
+}
+
+# Value per plot of the traits measured more than once per plot, for each way
+# the outlier explorer can show them (same order as @REPEATED_STATS). Read from
+# <token>.repeated.txt (unit, trait, value, date; in date order).
+# Returns { trait => { unit => [mean, sum, first, last, max, min] } }.
+sub _repeated_plot_values {
+    my ($file, $traits) = @_;
+    my %wanted = map { $_ => 1 } @$traits;
+    my %values;
+    return {} if !-e $file;
+    open(my $fh, '<', $file) or die "Cannot read $file: $!";
+    while (my $line = <$fh>) {
+        chomp $line;
+        my ($unit, $trait, $value) = split /\t/, $line;
+        next if !defined($trait) || !$wanted{$trait} || !_is_number($value);
+        push @{ $values{$trait}->{$unit} }, $value + 0;
+    }
+    close($fh);
+    my %out;
+    foreach my $t (keys %values) {
+        foreach my $u (keys %{ $values{$t} }) {
+            my @v = @{ $values{$t}->{$u} };
+            my ($sum, $max, $min) = (0, $v[0], $v[0]);
+            foreach my $x (@v) { $sum += $x; $max = $x if $x > $max; $min = $x if $x < $min; }
+            $out{$t}->{$u} = [ $sum / @v, $sum, $v[0], $v[-1], $max, $min ];
+        }
+    }
+    return \%out;
+}
+
+# Plot level Pearson correlation of each trait with each covariate (step 4
+# review: a covariate strongly correlated with a trait is worth a note).
+# Plots with both values; pairs with fewer than 10 such plots are left out.
+# Returns { corr => { trait => { covariate => r } } }.
+sub correlations : Path('/ajax/script_factory/correlations') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+
+    my $token = $c->req->param('token');
+    my $file = _valid_token($token) ? _work_dir($c) . "/$token.phenotype.txt" : undef;
+    if (!$file || !-e $file) {
+        $c->stash->{rest} = { error => 'The dataset file has expired; please select the dataset again.' };
+        return;
+    }
+    my $decode = sub { my $p = $c->req->param($_[0]); my $v = $p ? (try { decode_json($p) } catch { [] }) : []; return ref($v) eq 'ARRAY' ? $v : [] };
+    my ($traits, $covs) = ($decode->('traits'), $decode->('covariates'));
+
+    my ($keys, $idx, $rows) = _read_pheno_file($file);
+    my $level_i = $idx->{observationLevel};
+    my @plots = grep { !defined($level_i) || !defined($_->[$level_i]) || $_->[$level_i] eq '' || lc($_->[$level_i]) eq 'plot' } @$rows;
+
+    my %corr;
+    foreach my $t (grep { exists $idx->{$_} } @$traits) {
+        foreach my $cv (grep { exists($idx->{$_}) && $_ ne $t } @$covs) {
+            my ($i, $j) = ($idx->{$t}, $idx->{$cv});
+            my @xy = map { [ $_->[$i] + 0, $_->[$j] + 0 ] } grep { _is_number($_->[$i]) && _is_number($_->[$j]) } @plots;
+            next if @xy < 10;
+            my ($mx, $mean_y) = (0, 0);
+            foreach my $p (@xy) { $mx += $p->[0]; $mean_y += $p->[1]; }
+            $mx /= @xy; $mean_y /= @xy;
+            my ($sxy, $sxx, $syy) = (0, 0, 0);
+            foreach my $p (@xy) {
+                my ($dx, $dy) = ($p->[0] - $mx, $p->[1] - $mean_y);
+                $sxy += $dx * $dy; $sxx += $dx * $dx; $syy += $dy * $dy;
+            }
+            $corr{$t}->{$cv} = $sxy / sqrt($sxx * $syy) if $sxx > 0 && $syy > 0;
+        }
+    }
+    $c->stash->{rest} = { corr => \%corr };
 }
 
 # ---------------------------------------------------------------------------
@@ -781,16 +904,84 @@ sub _resolve_phenotypes {
     return (\%ids, \%in_db, $outlier_type_id);
 }
 
+# Phenotype search cache (materialized views) update: bin/refresh_matviews.pl
+# -m phenotypes -c refreshes materialized_phenoview and
+# materialized_phenotype_jsonb_table concurrently (searches keep working
+# meanwhile). The script holds advisory lock 67895 while it runs, whatever
+# the mode, so the lock tells whether an update is in progress.
+sub _cache_refreshing {
+    my $dbh = shift;
+    my ($running) = $dbh->selectrow_array(
+        "SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory' AND classid = 0 AND objid = 67895 AND objsubid = 1)");
+    return $running ? 1 : 0;
+}
+
+sub _can_update_cache { return _can_mark_database(shift) }
+
+# { refreshing, last_refresh (of the phenotype cache, if recorded), can_update }
+sub _cache_status {
+    my ($dbh, $c) = @_;
+    my ($last) = try { $dbh->selectrow_array(
+        "SELECT to_char(last_refresh, 'YYYY-MM-DD HH24:MI') FROM public.matviews WHERE mv_name = 'materialized_phenotype_jsonb_table'") } catch { undef };
+    return { refreshing => _cache_refreshing($dbh), last_refresh => $last, can_update => _can_update_cache($c) };
+}
+
+sub cache_status : Path('/ajax/script_factory/cache/status') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+    my ($schema) = _schemas($c);
+    $c->stash->{rest} = _cache_status($schema->storage->dbh(), $c);
+}
+
+sub cache_update : Path('/ajax/script_factory/cache/update') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    return if !_require_login($c);
+    if (!_can_update_cache($c)) {
+        $c->stash->{rest} = { error => 'Only curators and breeders can update the phenotype search cache.' };
+        return;
+    }
+    my ($schema) = _schemas($c);
+    my $dbh = $schema->storage->dbh();
+    if (_cache_refreshing($dbh)) {
+        $c->stash->{rest} = { started => 0, refreshing => 1, message => 'An update of the search cache is already in progress.' };
+        return;
+    }
+    my $basepath = $c->config->{basepath};
+    my $run = CXGN::Tools::Run->new();
+    try {
+        $run->run_async('perl', "$basepath/bin/refresh_matviews.pl", '-H', $c->config->{dbhost}, '-D', $c->config->{dbname},
+                        '-U', $c->config->{dbuser}, '-P', $c->config->{dbpass}, '-m', 'phenotypes', '-c');
+    } catch {
+        $c->stash->{rest} = { error => "The search cache update could not be started: $_" };
+    };
+    return if $c->stash->{rest};
+    # wait (up to ~5 s) until the script holds its lock, so the page shows the
+    # update as running from the first status poll on
+    for (1 .. 25) {
+        last if _cache_refreshing($dbh) || !$run->alive();
+        Time::HiRes::sleep(0.2);
+    }
+    my $refreshing = _cache_refreshing($dbh);
+    if (!$refreshing && !$run->alive()) {
+        my $err = try { $run->err() } catch { '' };
+        print STDERR "Analysis Pipeline: search cache update ended at once: $err\n" if $err;
+    }
+    $c->stash->{rest} = { started => 1, refreshing => $refreshing };
+}
+
 # Compares, for each trial of the dataset, the plot values of its traits in the
 # database tables with those in the phenotype search cache
 # (materialized_phenotype_jsonb_table), counting distinct phenotype ids on both
 # sides. Only the dataset's trials are read, so it stays fast on a large
-# database. Returns { stale => [trial names whose counts differ] }.
+# database. Returns { stale => [trial names whose counts differ],
+# detail => [{trial, n_database, n_cache}] of those trials }.
 sub _phenotype_cache_check {
     my ($schema, $ds, $traits) = @_;
     my %trial_name = map { ref($_) ? ($_->[0] => $_->[1]) : ($_ => $_) } @{ $ds->retrieve_trials() || [] };
     my @trial_ids = grep { defined && /^\d+$/ } keys %trial_name;
-    return { stale => [] } if !@trial_ids;
+    return { stale => [], detail => [] } if !@trial_ids;
     # no traits in the dataset: all traits, as the dataset search does
     my @trait_ids = grep { defined && /^\d+$/ } map { ref($_) ? $_->[0] : $_ } @{ $traits || [] };
     my $dbh = $schema->storage->dbh();
@@ -817,30 +1008,210 @@ sub _phenotype_cache_check {
 
     my %n_tables = map { $_->[0] => $_->[1] } @$tables;
     my %n_cached = map { $_->[0] => $_->[1] } @$cached;
-    my @stale = sort map { $trial_name{$_} } grep { ($n_tables{$_} // 0) != ($n_cached{$_} // 0) } @trial_ids;
-    return { stale => \@stale };
+    my @detail = sort { $a->{trial} cmp $b->{trial} }
+                 map { { trial => $trial_name{$_}, n_database => ($n_tables{$_} // 0) + 0, n_cache => ($n_cached{$_} // 0) + 0 } }
+                 grep { ($n_tables{$_} // 0) != ($n_cached{$_} // 0) } @trial_ids;
+    return { stale => [ map { $_->{trial} } @detail ], detail => \@detail };
 }
 
 # Writes the dataset's phenotype file as CXGN::Dataset::File does (tab
-# separated, no quotes), but read with the Native search, from the database
-# tables instead of the search cache. Same filters as
-# CXGN::Dataset::retrieve_phenotypes; outliers are kept (step 2 handles them).
+# separated, no quotes, same columns as the search cache file), read with
+# direct SQL from the database tables instead of the search cache. Only the
+# dataset's trials are read, so it stays fast on a large database (the Native
+# PhenotypeMatrix search took ~10 minutes for two trials). Same rows and
+# values as CXGN::Dataset::retrieve_phenotypes: observation units of the
+# dataset's level with an accession (or cross, family name), units without a
+# value of the dataset's traits left out, several values of one trait on a
+# unit averaged (values marked as outliers left out of the average, as
+# PhenotypeMatrix does). Outliers are kept (step 2 handles them). The planted
+# seedlot columns are left empty (the pipeline does not use them).
 sub _write_native_phenotypes {
     my ($schema, $ds, $traits, $file) = @_;
-    my $ids = sub { [ grep { defined } map { ref($_) ? $_->[0] : $_ } @{ $_[0] || [] } ] };
-    my $matrix = CXGN::Phenotypes::PhenotypeMatrix->new(
-        search_type => 'Native',
-        bcs_schema => $schema,
-        data_level => $ds->data_level(),
-        trait_list => $ids->($traits),
-        trial_list => $ids->($ds->retrieve_trials()),
-        accession_list => $ids->($ds->retrieve_accessions()),
-        exclude_phenotype_outlier => 0,
-    );
-    my @rows = $matrix->get_phenotype_matrix();
+    my $ids = sub { [ grep { defined && /^\d+$/ } map { ref($_) ? $_->[0] : $_ } @{ $_[0] || [] } ] };
+    my $trial_ids = $ids->($ds->retrieve_trials());
+    my $trait_ids = $ids->($traits);
+    my $accession_ids = $ids->($ds->retrieve_accessions());
+    my $dbh = $schema->storage->dbh();
+    my $type_ids = sub {
+        my $cv = shift;
+        return [ map { $_->cvterm_id() } grep { defined } map { SGN::Model::Cvterm->get_cvterm_row($schema, $_, $cv) } @_ ];
+    };
+    my $type_id = sub { my $r = SGN::Model::Cvterm->get_cvterm_row($schema, $_[0], $_[1]); return $r ? $r->cvterm_id() : -1 };
+
+    my @meta_headers = qw| studyYear programDbId programName programDescription studyDbId studyName studyDescription studyDesign
+        plotWidth plotLength fieldSize fieldTrialIsPlannedToBeGenotyped fieldTrialIsPlannedToCross plantingDate harvestDate
+        locationDbId locationName germplasmDbId germplasmName germplasmSynonyms observationLevel observationUnitDbId
+        observationUnitName replicate blockNumber plotNumber rowNumber colNumber entryType plantNumber
+        plantedSeedlotStockDbId plantedSeedlotStockUniquename plantedSeedlotCurrentCount plantedSeedlotCurrentWeightGram
+        plantedSeedlotBoxName plantedSeedlotTransactionCount plantedSeedlotTransactionWeight
+        plantedSeedlotTransactionDescription availableGermplasmSeedlotUniquenames |;
+
+    # selected traits always get a column (as in PhenotypeMatrix)
+    my %trait_name;
+    if (@$trait_ids) {
+        my $r = $dbh->selectall_arrayref(
+            "SELECT cvterm.cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession
+               FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id = ANY(?)", undef, $trait_ids);
+        $trait_name{$_->[0]} = $_->[1] for @$r;
+    }
+    if (!@$trial_ids) {
+        write_file($file, join("\t", @meta_headers, (sort values %trait_name), 'notes') . "\n");
+        return 0;
+    }
+
+    # observation units of the trials, at the dataset's level, with their germplasm
+    my $level = $ds->data_level() // 'plot';
+    my $unit_types = $type_ids->('stock_type', $level eq 'all' ? qw| plot plant subplot tissue_sample analysis_instance | : $level);
+    my $units = $dbh->selectall_arrayref(
+        "SELECT DISTINCT u.stock_id, u.uniquename, ut.name, g.stock_id, g.uniquename, nepr.project_id
+           FROM nd_experiment_project nepr
+           JOIN nd_experiment e ON e.nd_experiment_id = nepr.nd_experiment_id AND e.type_id = ANY(?)
+           JOIN nd_experiment_stock nes ON nes.nd_experiment_id = e.nd_experiment_id
+           JOIN stock u ON u.stock_id = nes.stock_id AND u.type_id = ANY(?)
+           JOIN cvterm ut ON ut.cvterm_id = u.type_id
+           JOIN stock_relationship sr ON sr.subject_id = u.stock_id AND sr.type_id = ANY(?)
+           JOIN stock g ON g.stock_id = sr.object_id AND g.type_id = ANY(?)
+          WHERE nepr.project_id = ANY(?)" . (@$accession_ids ? " AND g.stock_id = ANY(?)" : ''), undef,
+        $type_ids->('experiment_type', qw| field_layout genotyping_layout phenotyping_experiment analysis_experiment |),
+        $unit_types,
+        $type_ids->('stock_relationship', qw| plot_of plant_of subplot_of analysis_of |),
+        $type_ids->('stock_type', qw| accession cross family_name |),
+        $trial_ids, (@$accession_ids ? ($accession_ids) : ()));
+    my %unit;
+    foreach my $u (@$units) {
+        $unit{"$u->[0]|$u->[5]"} ||= { id => $u->[0], name => $u->[1], level => $u->[2], germplasm_id => $u->[3], germplasm => $u->[4], trial_id => $u->[5] };
+    }
+    return _write_phenotype_rows($file, \@meta_headers, \%trait_name, []) if !%unit;
+    my @unit_ids = do { my %seen; grep { !$seen{$_}++ } map { $_->{id} } values %unit };
+
+    # values of the units in the trials (several per trait are averaged below);
+    # filtered to the units in Perl: a unit id list in the query makes it slow
+    my $outlier_type_id = $type_id->('phenotype_outlier', 'phenotype_property');
+    my $values = $dbh->selectall_arrayref(
+        "SELECT nes.stock_id, nepr.project_id, ph.cvalue_id, ph.value, pp.value
+           FROM nd_experiment_project nepr
+           JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nepr.nd_experiment_id
+           JOIN nd_experiment_phenotype nep ON nep.nd_experiment_id = nepr.nd_experiment_id
+           JOIN phenotype ph ON ph.phenotype_id = nep.phenotype_id
+           LEFT JOIN phenotypeprop pp ON pp.phenotype_id = ph.phenotype_id AND pp.type_id = ?
+          WHERE nepr.project_id = ANY(?) AND ph.value IS NOT NULL" .
+          (@$trait_ids ? " AND ph.cvalue_id = ANY(?)" : '') .
+          " ORDER BY ph.phenotype_id", undef,
+        $outlier_type_id, $trial_ids, (@$trait_ids ? ($trait_ids) : ()));
+    my (%obs, %seen_trait);
+    foreach my $v (@$values) {
+        my ($stock_id, $trial_id, $trait_id, $value, $outlier) = @$v;
+        my $u = $unit{"$stock_id|$trial_id"} or next;
+        push @{ $u->{obs}->{$trait_id} }, [ $value, $outlier ];
+        $seen_trait{$trait_id} = 1;
+    }
+    my @missing = grep { !exists $trait_name{$_} } keys %seen_trait;
+    if (@missing) {
+        my $r = $dbh->selectall_arrayref(
+            "SELECT cvterm.cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession
+               FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id = ANY(?)", undef, \@missing);
+        $trait_name{$_->[0]} = $_->[1] for @$r;
+    }
+    # units without a value of the traits are not in the file (as with the cache)
+    my @rows = grep { $_->{obs} || !@$trait_ids } values %unit;
+    return _write_phenotype_rows($file, \@meta_headers, \%trait_name, []) if !@rows;
+
+    # unit properties (design layout)
+    my %prop_of = map { $type_id->($_->[0], 'stock_property') => $_->[1] }
+        (['replicate', 'rep'], ['block', 'block'], ['plot number', 'plot_number'], ['row_number', 'row'], ['col_number', 'col'],
+         ['plant_index_number', 'plant'], ['is a control', 'control'], ['notes', 'notes']);
+    my $props = $dbh->selectall_arrayref(
+        "SELECT stock_id, type_id, value, rank FROM stockprop WHERE stock_id = ANY(?) AND type_id = ANY(?) ORDER BY stock_id, rank, stockprop_id",
+        undef, \@unit_ids, [ grep { $_ > 0 } keys %prop_of ]);
+    my %unit_prop;
+    foreach my $p (@$props) {
+        my ($stock_id, $t, $value, $rank) = @$p;
+        my $k = $prop_of{$t};
+        if ($k eq 'notes') { push @{ $unit_prop{$stock_id}->{notes} }, $value if defined $value; next; }
+        next if ($k eq 'row' || $k eq 'col') && ($rank // 0) != 0;
+        $unit_prop{$stock_id}->{$k} //= $value;
+    }
+
+    # trial properties, breeding program, location names
+    my %trial_prop_of = map { $type_id->($_->[0], 'project_property') => $_->[1] }
+        (['project year', 'year'], ['design', 'design'], ['project location', 'location_id'], ['project_planting_date', 'planting_date'],
+         ['project_harvest_date', 'harvest_date'], ['plot_width', 'plot_width'], ['plot_length', 'plot_length'], ['field_size', 'field_size'],
+         ['field_trial_is_planned_to_be_genotyped', 'genotyped'], ['field_trial_is_planned_to_cross', 'cross']);
+    my %trial;
+    my $tr = $dbh->selectall_arrayref("SELECT project_id, name, description FROM project WHERE project_id = ANY(?)", undef, $trial_ids);
+    $trial{$_->[0]} = { name => $_->[1], description => $_->[2] } for @$tr;
+    my $tp = $dbh->selectall_arrayref(
+        "SELECT project_id, type_id, value FROM projectprop WHERE project_id = ANY(?) AND type_id = ANY(?) ORDER BY rank, projectprop_id",
+        undef, $trial_ids, [ grep { $_ > 0 } keys %trial_prop_of ]);
+    $trial{$_->[0]}->{ $trial_prop_of{$_->[1]} } //= $_->[2] for @$tp;
+    my $bp = $dbh->selectall_arrayref(
+        "SELECT pr.subject_project_id, bp.project_id, bp.name, bp.description FROM project_relationship pr
+           JOIN project bp ON bp.project_id = pr.object_project_id
+          WHERE pr.subject_project_id = ANY(?) AND pr.type_id = ?", undef,
+        $trial_ids, $type_id->('breeding_program_trial_relationship', 'project_relationship'));
+    @{ $trial{$_->[0]} }{qw| program_id program program_description |} = @$_[1..3] for @$bp;
+    my @loc_ids = grep { defined && /^\d+$/ } map { $_->{location_id} } values %trial;
+    my %location = @loc_ids ? map { @$_ } @{ $dbh->selectall_arrayref(
+        "SELECT nd_geolocation_id, description FROM nd_geolocation WHERE nd_geolocation_id = ANY(?)", undef, \@loc_ids) } : ();
+    my $calendar = CXGN::Calendar->new({});
+
+    # germplasm synonyms (accessions)
+    my %synonyms;
+    my $syn = $dbh->selectall_arrayref(
+        "SELECT stock_id, value FROM stockprop WHERE stock_id = ANY(?) AND type_id = ? ORDER BY value", undef,
+        [ do { my %s; grep { !$s{$_}++ } map { $_->{germplasm_id} } @rows } ], $type_id->('stock_synonym', 'stock_property'));
+    push @{ $synonyms{$_->[0]} }, $_->[1] for @$syn;
+
+    my @lines;
     no warnings 'uninitialized';
-    write_file($file, map { my $s = join("\t", @$_); $s =~ s/[\r\n]//g; "$s\n" } @rows);
-    return scalar(@rows);
+    foreach my $u (sort { $trial{$a->{trial_id}}->{name} cmp $trial{$b->{trial_id}}->{name} || $a->{name} cmp $b->{name} } @rows) {
+        my $t = $trial{ $u->{trial_id} } || {};
+        my $p = $unit_prop{ $u->{id} } || {};
+        (my $trial_name = $t->{name}) =~ s/\s+$//;
+        (my $trial_desc = $t->{description}) =~ s/\s+$//;
+        my %value;
+        foreach my $trait_id (keys %{ $u->{obs} || {} }) {
+            my @o = @{ $u->{obs}->{$trait_id} };
+            if (@o == 1) { $value{$trait_id} = $o[0]->[0]; next; }
+            # several values: the average of those not marked as outliers
+            my @v = map { $_->[0] } grep { !$_->[1] && _is_number($_->[0]) } @o;
+            $value{$trait_id} = @v ? List::Util::sum(@v) / @v : undef;
+        }
+        push @lines, {
+            unit => $u->{id},
+            meta => [ $t->{year}, $t->{program_id}, $t->{program}, $t->{program_description}, $u->{trial_id}, $trial_name, $trial_desc,
+                      $t->{design}, $t->{plot_width}, $t->{plot_length}, $t->{field_size}, $t->{genotyped}, $t->{cross},
+                      scalar($calendar->display_start_date($t->{planting_date})), scalar($calendar->display_start_date($t->{harvest_date})),
+                      $t->{location_id}, ($t->{location_id} ? $location{ $t->{location_id} } : ''),
+                      $u->{germplasm_id}, $u->{germplasm}, join(',', @{ $synonyms{ $u->{germplasm_id} } || [] }),
+                      $u->{level}, $u->{id}, $u->{name}, $p->{rep}, $p->{block}, $p->{plot_number}, $p->{row}, $p->{col},
+                      ($p->{control} ? 'check' : 'test'), $p->{plant}, ('') x 9 ],
+            values => \%value,
+            notes => join(', ', do { my %s; sort grep { !$s{$_}++ } @{ $p->{notes} || [] } }),
+        };
+    }
+    return _write_phenotype_rows($file, \@meta_headers, \%trait_name, \@lines, $schema, $trial_ids);
+}
+
+# Writes the phenotype file: header (metadata, traits sorted by name, notes,
+# treatments) and one line per observation unit.
+sub _write_phenotype_rows {
+    my ($file, $meta_headers, $trait_name, $lines, $schema, $trial_ids) = @_;
+    my @traits = sort { $trait_name->{$a} cmp $trait_name->{$b} } keys %$trait_name;
+    my $treatments = { treatment_names => [], treatment_details => {} };
+    if (@$lines) {
+        my %seen = map { $_->{unit} => 1 } @$lines;
+        $treatments = CXGN::BreedersToolbox::Projects->new({ schema => $schema })->get_related_treatments($trial_ids, \%seen);
+    }
+    my @names = @{ $treatments->{treatment_names} || [] };
+    my @out = ([ @$meta_headers, (map { $trait_name->{$_} } @traits), 'notes', @names ]);
+    foreach my $l (@$lines) {
+        my $trt = $treatments->{treatment_details}->{ $l->{unit} } || {};
+        push @out, [ @{ $l->{meta} }, (map { $l->{values}->{$_} } @traits), $l->{notes}, (map { $trt->{$_} } @names) ];
+    }
+    no warnings 'uninitialized';
+    write_file($file, map { my $s = join("\t", @$_); $s =~ s/[\r\n]//g; "$s\n" } @out);
+    return scalar(@out);
 }
 
 # Values of the dataset (plots of its trials, its traits) marked as outliers:
@@ -893,11 +1264,15 @@ sub _marked_outliers {
 # averages them), so every measurement of these traits is written to
 # $file (unit, trait, value, date; one line per measurement) for the
 # pipeline, which can summarise them differently or model all of them.
-# Returns [{trait, short, repeat_type, n_units, n_repeated_units, max_n,
+# $stale_trial: {trial name => 1} of trials whose search cache is stale while the
+# plot values come from the cache; their plots with several values are counted
+# in n_stale_units (these measurements may differ from the plot values).
+# Returns [{trait, short, repeat_type, n_units, n_repeated_units, n_stale_units, max_n,
 # n_dates, first_date, last_date}], one entry per trait with a repeat type
 # other than 'single' or with repeated values in the dataset.
 sub _repeated_measurements {
-    my ($schema, $ds, $trait_names, $unit_info, $file) = @_;
+    my ($schema, $ds, $trait_names, $unit_info, $file, $stale_trial) = @_;
+    $stale_trial ||= {};
     my $trials = [ map { ref($_) ? $_->[0] : $_ } @{ $ds->retrieve_trials() || [] } ];
     return [] if !@$trials || !@$trait_names || !%$unit_info;
 
@@ -955,6 +1330,7 @@ sub _repeated_measurements {
         push @summary, {
             trait => $t, short => _short_trait($t), repeat_type => $type,
             n_units => scalar(keys %$units) + 0, n_repeated_units => scalar(@rep_units) + 0, max_n => $max_n + 0,
+            n_stale_units => scalar(grep { $stale_trial->{ $unit_info->{$_}->[0] // '' } } @rep_units) + 0,
             n_dates => scalar(@d) + 0, first_date => $d[0], last_date => $d[-1],
         };
     }
@@ -964,6 +1340,48 @@ sub _repeated_measurements {
         close($F);
     }
     return \@summary;
+}
+
+# Plot value of the traits measured more than once per plot = the mean of
+# every measurement in $rep_file (written by _repeated_measurements),
+# including the values marked as outliers, which Breedbase leaves out of the
+# mean (PhenotypeMatrix::average_observations): marked values are handled in
+# step 2 like any other (excluded, used again or unmarked there). Updates
+# $rows in place and rewrites $pheno_file when a value changes.
+sub _fill_repeated_means {
+    my ($pheno_file, $rep_file, $keys, $idx, $rows) = @_;
+    return 0 if !-s $rep_file;
+    my $unit_i = $idx->{observationUnitName};
+    return 0 if !defined $unit_i;
+    my (%sum, %n);
+    open(my $R, '<', $rep_file) or die "Cannot read the repeated measurements file\n";
+    <$R>;
+    while (my $line = <$R>) {
+        $line =~ s/\r?\n$//;
+        my ($unit, $trait, $value) = split /\t/, $line, -1;
+        next if !defined($trait) || !exists($idx->{$trait}) || !_is_number($value);
+        $sum{$trait}->{$unit} += $value;
+        $n{$trait}->{$unit}++;
+    }
+    close($R);
+    my $changed = 0;
+    foreach my $r (@$rows) {
+        my $unit = $r->[$unit_i];
+        next if !defined $unit;
+        foreach my $trait (keys %n) {
+            my $k = $n{$trait}->{$unit} or next;
+            my $mean = $sum{$trait}->{$unit} / $k;
+            my $i = $idx->{$trait};
+            next if _is_number($r->[$i]) && abs($r->[$i] - $mean) <= 1e-9 * (abs($mean) || 1);
+            $r->[$i] = $mean;
+            $changed++;
+        }
+    }
+    if ($changed) {
+        no warnings 'uninitialized';
+        write_file($pheno_file, join("\t", @$keys) . "\n", map { join("\t", @$_) . "\n" } @$rows);
+    }
+    return $changed;
 }
 
 # Genotyping protocols with genotypes of the given accessions (directly or
@@ -1187,10 +1605,15 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
         sp_person_id => $sp_person_id,
         mode => $mode,
         created => DateTime->now()->iso8601(),
+        # date and time of the run in the user's clock (YYYY-MM-DD-HH:MM, sent
+        # by the page): names the run of a saved script in the jobs list
+        stamp => ((scalar($c->req->param('stamp')) // '') =~ /^(\d{4}-\d\d-\d\d-\d\d:\d\d)$/ ? $1 : undef),
         script_name => $recipe->{name} // '',
         dataset_id => (defined($dataset_id) && $dataset_id =~ /^\d+$/) ? $dataset_id : undef,
         dataset_name => scalar($c->req->param('dataset_name')) // '',
         token => $token,    # input files of the run (archived when the analysis is stored)
+        # where the dataset was read from (prepare): a reopened run reads it from there again
+        phenotype_source => _token_source($dir, $token),
     );
     # email when the run ends (address from the account, never from the request)
     if ($mode ne 'preview' && $c->req->param('notify')) {
@@ -1210,10 +1633,14 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     $recipe->{engine} = $engine;
     delete $recipe->{engine_reason};
     $meta{engine} = $engine;
+    # with the ANOVA step the engine writes its results to a first file, the
+    # step adds the ANOVA and writes the results file (the run is finished
+    # when the results file appears)
+    my $anova = $mode ne 'preview' && _anova_enabled($recipe);
     my @args = (
         "$dir/$token.phenotype.txt",
         "$run_base.recipe.json",
-        "$run_base.results.json",
+        ($anova ? "$run_base.model_results.json" : "$run_base.results.json"),
         "$run_base.exclusions.json",
         $run_base,
         (-s $pedigree_file ? ("--pedigree=$pedigree_file") : ()),
@@ -1242,6 +1669,18 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
     $cmd .= " > " . _shell_quote("$run_base.log") . " 2>&1";
     # genotypes first (its messages start the log)
     $cmd = "$geno_cmd > " . _shell_quote("$run_base.log") . " 2>&1; " . ($cmd =~ s/ > (\S+) 2>&1$/ >> $1 2>&1/r) if $geno_cmd;
+    # exit status of the engine (a process killed by the system, e.g. out of
+    # memory, prints no error: 128 + signal)
+    $cmd .= "; rc=\$?";
+    if ($anova) {
+        # the results are kept when the step fails
+        my ($in, $out) = map { _shell_quote($_) } ("$run_base.model_results.json", "$run_base.results.json");
+        $cmd .= "; if [ -s $in ]; then Rscript " . _shell_quote("$basepath/$ANOVA_STEP") . " $in $out >> " . _shell_quote("$run_base.log")
+            . " 2>&1 || cp $in $out; rm -f $in; fi";
+    }
+    # the analysis has ended (with or without results): /status and the
+    # email read it, so a run that died is not shown as running
+    $cmd .= "; echo \$rc > " . _shell_quote("$run_base.exit");
     write_file("$run_base.recipe.json", encode_json($recipe));
     if ($meta{notify_email}) {
         $cmd .= "; perl -I" . _shell_quote("$basepath/lib") . " " . _shell_quote("$basepath/bin/script_factory_notify.pl")
@@ -1254,7 +1693,7 @@ sub run : Path('/ajax/script_factory/run') Args(0) {
             schema => $schema,
             people_schema => $people_schema,
             sp_person_id => $sp_person_id,
-            name => _job_name($recipe, $mode, $meta{dataset_name}, scalar($c->req->param('label'))),
+            name => _job_name($recipe, $mode, $meta{dataset_name}, scalar($c->req->param('label')), $meta{stamp} // _run_stamp($meta{created})),
             job_type => 'script_factory_analysis',
             cmd => $cmd,
             results_page => ($mode eq 'preview' ? '/tools/script_factory' : "/tools/script_factory/results/$run_id"),
@@ -1501,6 +1940,14 @@ sub _write_run_meta {
     write_file(_work_dir($c) . "/$run_id.meta.json", encode_json($meta));
 }
 
+# 'database' or 'cache': where prepare read the phenotypes of a token
+sub _token_source {
+    my ($dir, $token) = @_;
+    my $file = "$dir/$token.source";
+    my $s = -e $file ? (try { read_file($file) } catch { '' }) : '';
+    return ($s // '') =~ /^database/ ? 'database' : 'cache';
+}
+
 # owner and context of a run, written when it is submitted
 sub _run_meta {
     my ($c, $run_id) = @_;
@@ -1547,14 +1994,24 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
     my %names = map { ($_->{location} // '') => 1 } @{ $results->{trials} || [] };
     delete $names{''};
     my %coords;
+    my %location_ids;    # every location, with or without coordinates (links to the weather page)
     if (%names) {
         my ($schema) = _schemas($c);
         my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search({ description => { -in => [ keys %names ] } });
         while (my $loc = $rs->next()) {
+            $location_ids{$loc->description()} = $loc->nd_geolocation_id();
             my ($lat, $lon) = ($loc->latitude(), $loc->longitude());
             next if !defined($lat) || !defined($lon) || ($lat == 0 && $lon == 0);
             $coords{$loc->description()} = { latitude => $lat + 0, longitude => $lon + 0, altitude => $loc->altitude(), location_id => $loc->nd_geolocation_id() };
         }
+    }
+    # trial ids: the weather page opens on the season (planting -> harvest) of a trial
+    my %trial_ids;
+    my @trial_names = grep { defined && $_ ne '' } map { $_->{trial} } @{ $results->{trials} || [] };
+    if (@trial_names) {
+        my ($schema) = _schemas($c);
+        my $rs = $schema->resultset("Project::Project")->search({ name => { -in => \@trial_names } });
+        while (my $p = $rs->next()) { $trial_ids{$p->name()} = $p->project_id(); }
     }
 
     $c->stash->{rest} = {
@@ -1568,8 +2025,31 @@ sub results : Path('/ajax/script_factory/results') Args(0) {
             is_owner => (($meta->{sp_person_id} // -1) == $sp_person_id) ? 1 : 0,
         },
         locations => \%coords,
+        location_ids => \%location_ids,
+        trial_ids => \%trial_ids,
+        # the weather page (/breeders/weather) when this site has it
+        weather_page => SGN::Controller::BreedersToolbox->can('weather') ? 1 : 0,
         results => $results,
     };
+}
+
+# exit status of the engine written by the job command (<run>.exit), undef
+# while the analysis runs (or for runs submitted before the file existed)
+sub _run_exit_code {
+    my $run_base = shift;
+    return if !-e "$run_base.exit";
+    my $s = try { read_file("$run_base.exit") } catch { '' };
+    return ($s // '') =~ /(\d+)/ ? $1 + 0 : -1;
+}
+
+# explanation of an engine stopped by the system (exit status 128 + signal)
+sub _killed_text {
+    my $code = shift;
+    return '' if !defined($code) || $code < 128;
+    my $sig = $code - 128;
+    my %name = (9 => 'SIGKILL', 15 => 'SIGTERM', 6 => 'SIGABRT', 11 => 'SIGSEGV');
+    return "The analysis process was stopped by the system (signal " . ($name{$sig} // $sig) . ") without an error message"
+        . ($sig == 9 ? ": most often because it ran out of memory. Try fewer traits or trials, a simpler variance structure, or ask the site administrator for more memory." : '.');
 }
 
 sub status : Path('/ajax/script_factory/status') Args(0) {
@@ -1624,7 +2104,13 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
         ($progress = $lines[-1] // '') =~ s/^\[script_factory\]\s*//;
         chomp($progress);
         $halted = grep { /^Execution halted/ } @log;
+        # runs submitted before <run>.exit existed: the email step ran, so the analysis had ended
+        $halted ||= grep { /^Analysis Pipeline: notification for / } @log;
     }
+    # the job command writes the exit status of the engine when the analysis
+    # ends, also when the engine died without an error message
+    my $exit_code = _run_exit_code($run_base);
+    $halted ||= defined($exit_code);
 
     my $done = ($halted || $status eq 'finished' || $status eq 'failed' || $status eq 'timed_out' || $status eq 'canceled');
     if (!$done && !-e $results_file) {
@@ -1645,7 +2131,10 @@ sub status : Path('/ajax/script_factory/status') Args(0) {
     if (!-e $results_file) {
         my $log = -e $log_file ? read_file($log_file) : '';
         my @err = grep { /Error|error|stop|Execution halted/ } split /\n/, $log;
-        my $msg = join("\n", @err[ ($#err > 5 ? $#err - 5 : 0) .. $#err ]) || "The analysis job ended with status '$status' without producing results.";
+        my $msg = join("\n", @err[ ($#err > 5 ? $#err - 5 : 0) .. $#err ]);
+        my $killed = _killed_text($exit_code);
+        $msg = $msg ? "$killed\n\n$msg" : $killed if $killed;
+        $msg ||= "The analysis job ended with status '$status' without producing results.";
         # say where it stopped (last progress line of the pipeline) before the R details
         $msg = "The analysis stopped at: $progress\n\nDetails:\n$msg" if $progress;
         unlink("$run_base.dbconf.json") if -e "$run_base.dbconf.json";
@@ -1725,6 +2214,12 @@ RECIPE_JSON <- r"---($pretty)---"
 
 HEADER
 
+    # the ANOVA by experimental design (breedtools) runs on the results at the end
+    if (_anova_enabled($recipe)) {
+        my $step = read_file($c->config->{basepath} . "/$ANOVA_STEP");
+        $pipeline .= "\n\n# ANOVA by experimental design (needs the R package breedtools)\nSF_ANOVA_EMBEDDED <- TRUE\n$step\n"
+            . "tryCatch(sf_anova_run(output_file, output_file), error = function(e) message(\"ANOVA step failed: \", conditionMessage(e)))\n";
+    }
     return ("$file_name.R", $script . $pipeline);
 }
 
@@ -1736,6 +2231,9 @@ sub _blupf90_script {
     delete $recipe->{stop_after};
     my $pretty = JSON->new->canonical(1)->pretty(1)->encode($recipe);
     my $date = DateTime->now()->ymd();
+    # ANOVA by experimental design (R, breedtools) on the results
+    my $anova_line = _anova_enabled($recipe)
+        ? "[ \$STATUS -eq 0 ] && Rscript \"\$SGN/$ANOVA_STEP\" \"\$OUT\" \"\$OUT\"\n" : '';
     return <<"SCRIPT";
 #!/bin/bash
 # =============================================================================
@@ -1758,7 +2256,7 @@ PHENO=\$1; OUT=\$2; shift 2
 perl -I"\$SGN/lib" "\$SGN/bin/script_factory_blupf90.pl" "\$PHENO" "\$RECIPE" "\$OUT" "" "\${OUT%.json}" "\$@"
 STATUS=\$?
 rm -f "\$RECIPE"
-exit \$STATUS
+${anova_line}exit \$STATUS
 SCRIPT
 }
 
@@ -1862,6 +2360,7 @@ sub store : Path('/ajax/script_factory/store') Args(0) {
         heritability => \%h2,
         statistical_terms => $terms,
         run_id => $run_id,
+        phenotype_source => $meta->{phenotype_source} // 'cache',
     };
 
     # files of the run, with readable names in the archive
@@ -2065,6 +2564,7 @@ sub _stored_analysis {
         dataset_id => (try { $analysis->metadata()->dataset_id() } catch { undef }) // $props->{dataset_id},
         files => $model->{model_files} || {},
         run_id => $summary->{run_id},
+        phenotype_source => $summary->{phenotype_source},
     };
 }
 
@@ -2160,6 +2660,7 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
             dataset_id => $info->{dataset_id},
             is_owner => $info->{is_owner},
             exclusions => _read_exclusions($info->{files}->{script_factory_exclusions}),
+            phenotype_source => $info->{phenotype_source} // 'cache',
             results_url => '/tools/script_factory/analysis/' . $info->{analysis_id},
         };
         return;
@@ -2188,6 +2689,7 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
         dataset_id => $meta->{dataset_id},
         is_owner => 1,
         exclusions => _read_exclusions("$dir/$run_id.exclusions.json"),
+        phenotype_source => $meta->{phenotype_source} // 'cache',
         analysis_id => $meta->{stored} ? $meta->{stored}->{analysis_id} : undef,
         results_url => "/tools/script_factory/results/$run_id",
     };
@@ -2202,10 +2704,10 @@ sub pipeline : Path('/ajax/script_factory/pipeline') Args(0) {
 # ---------------------------------------------------------------------------
 # A link is kept in the meeting's meeting_json project property, as
 # related_analyses: [{analysis_id, name, linked_by, linked_at}]. Saving the
-# meeting's decisions keeps it (it merges into the stored JSON). Analyses can
-# be added after the decisions are saved (flagged after_save), but once they are
-# saved no analysis can be removed: the evidence of a decision is a permanent
-# record. An analysis linked to a meeting cannot be deleted (see
+# meeting's decisions keeps it (it merges into the stored JSON). Once the
+# decisions are saved the meeting is closed: no analysis can be added or
+# removed, the evidence of a decision is a permanent record (links added after
+# saving by earlier versions keep their after_save flag). An analysis linked to a meeting cannot be deleted (see
 # meetings_using_analysis). Every change is kept in analyses_history
 # [{action, analysis_id, name, by, on}].
 
@@ -2315,9 +2817,8 @@ sub meetings : Path('/ajax/script_factory/meetings') Args(0) {
 }
 
 # POST meeting_id, analysis_id (one id or a comma separated list), action (link | unlink).
-# Links can change after the decisions are saved: the decisions stay as they
-# were, analyses added later are flagged (after_save) and every change is kept
-# in analyses_history.
+# Only open meetings change (every change is kept in analyses_history); a
+# meeting whose decisions are saved is closed.
 sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2365,6 +2866,7 @@ sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
             my $prop = $schema->resultset('Project::Projectprop')->search({ projectprop_id => $m->{prop}->projectprop_id() }, { for => 'update' })->single();
             my $d = _decode_meeting($prop->value());
             $m->{saved} = _meeting_is_saved($d);
+            die "The decisions of this meeting are saved: the meeting is closed and no analysis can be added.\n" if $m->{saved} && $action eq 'link';
             # every source is kept (pipeline runs of the decision meeting page too)
             my @list = grep { ref($_) eq 'HASH' } @{ ref($d->{related_analyses}) eq 'ARRAY' ? $d->{related_analyses} : [] };
             my %have = map { $_->{analysis_id} => $_ } grep { ($_->{analysis_id} // '') =~ /^\d+$/ } @list;
@@ -2373,14 +2875,14 @@ sub link_meeting : Path('/ajax/script_factory/meetings/link') Args(0) {
                 if ($action eq 'link') {
                     next if $have{$id};
                     push @list, { source => 'analysis', analysis_id => $id + 0, kind => 'pipeline', name => $info{$id}->{name}, %{ $acc{$id} || {} },
-                                  linked_by => $who, linked_at => $today, ($m->{saved} ? (after_save => 1) : ()) };
+                                  linked_by => $who, linked_at => $today };
                 } else {
                     next if !$have{$id};
                     die "The decisions of this meeting are saved: the analyses it used as evidence are a permanent record and cannot be removed.\n" if $m->{saved};
                     @list = grep { ($_->{analysis_id} // '') ne $id } @list;
                 }
                 push @history, { action => ($action eq 'link' ? 'added' : 'removed'), analysis_id => $id + 0, name => ($info{$id} ? $info{$id}->{name} : $have{$id}->{name}),
-                                 by => $who, on => $today, ($m->{saved} ? (after_save => 1) : ()) };
+                                 by => $who, on => $today };
                 $n++;
             }
             return if !$n;
@@ -2655,7 +3157,7 @@ sub save_recipe : Path('/ajax/script_factory/recipe/save') Args(0) {
         if ($meta && ($meta->{sp_person_id} // -1) == _user_id($c) && !$meta->{stored}) {
             my ($schema, $people_schema) = _schemas($c);
             my $label = ($c->req->param('label') // '') =~ /^[\w .()-]{1,40}$/ ? $c->req->param('label') : '';
-            _rename_job($people_schema, $meta->{job_id}, _user_id($c), "Analysis Pipeline: $name" . ($label ne '' ? " - $label" : ''));
+            _rename_job($people_schema, $meta->{job_id}, _user_id($c), _job_name({ name => $name }, $meta->{mode} // 'run', undef, $label, $meta->{stamp} // _run_stamp($meta->{created})));
             $meta->{script_name} = $name;
             _write_run_meta($c, $run_id, $meta);
         }
