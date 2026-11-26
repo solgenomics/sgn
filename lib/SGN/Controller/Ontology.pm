@@ -66,7 +66,7 @@ sub compose_trait : Path('/tools/compose_trait') :Args(0) {
         #print STDERR "cv_type = $cv_type\n";
 
 
-        my @root_nodes = $onto->get_root_nodes($cv_type);
+        my @root_nodes = $onto->get_root_nodes([$cv_type]);
         #print STDERR Dumper \@root_nodes;
         if (scalar @root_nodes > 1) {
             #create simple selectbox of root_nodes
@@ -153,7 +153,7 @@ sub compose_treatment : Path('/tools/compose_treatment') :Args(0) {
         #print STDERR "cv_type = $cv_type\n";
 
 
-        my @root_nodes = $onto->get_root_nodes($cv_type);
+        my @root_nodes = $onto->get_root_nodes([$cv_type]);
         #print STDERR Dumper \@root_nodes;
         if (scalar @root_nodes > 1) {
             #create simple selectbox of root_nodes

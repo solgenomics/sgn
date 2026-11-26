@@ -159,5 +159,25 @@ sub parse {
   return;
 }
 
+# Splits a trait or treatment cell into its value and optional collection timestamp.
+# Cells are either "value" or "value,YYYY-MM-DD HH:MM:SS-0000", as in phenotype spreadsheet uploads.
+# Returns ($value, $timestamp, $error); $timestamp is '' when the cell has none, so the value is stored without a collection date.
+sub split_value_timestamp {
+    my $self = shift;
+    my $cell = shift;
+    return ($cell, '', undef) if !defined $cell;
+
+    # Only a trailing part that starts like a date is treated as a timestamp, so other values containing commas are kept whole
+    if ($cell =~ m/^(.*),\s*(\d{4}-\d{2}-\d{2}.*)$/) {
+        my ($value, $timestamp) = ($1, $2);
+        $timestamp =~ s/\s+$//;
+        if ($timestamp !~ m/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}$/) {
+            return ($value, '', "Bad timestamp '$timestamp'. Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000");
+        }
+        return ($value, $timestamp, undef);
+    }
+    return ($cell, '', undef);
+}
+
 
 1;

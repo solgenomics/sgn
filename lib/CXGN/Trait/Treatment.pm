@@ -89,7 +89,7 @@ sub store {
     my $ontology_obj = CXGN::Onto->new({
         schema => $schema
     });
-    my @root_nodes = $ontology_obj->get_root_nodes('experiment_treatment_ontology'); # each entry is [ cv_id, "DB:accession Term name" ]
+    my @root_nodes = $ontology_obj->get_root_nodes(['experiment_treatment_ontology']); # each entry is [ cv_id, "DB:accession Term name" ]
 
     my ($root_node) = grep { $_->[1] =~ m/^\Q$db_name\E:/ } @root_nodes;
 

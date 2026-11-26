@@ -84,15 +84,9 @@ sub _validate_with_plugin {
 
     my $validate = $trait_validator->validate($schema, "traits", $treatments);
 
-    foreach my $treatment (@{$treatments}) {
-        if ($treatment !~ m/_TREATMENT:/) {
-            push @error_messages, "Column $treatment is not formatted like a treatment. Use only full, valid treatment names.\n";
-        }
-    }
-
     if (@{$validate->{missing}}>0) {
         foreach my $missing (@{$validate->{missing}}) {
-            push @error_messages, "Treatment $missing does not exist in the database.\n";
+            push @error_messages, "Trait/treatment term $missing does not exist in the database.\n";
         }
     }
 
@@ -233,14 +227,19 @@ sub _validate_with_plugin {
                 bcs_schema => $schema,
                 cvterm_id => $treatment_id
             });
-            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
+            # Cells may hold "value,timestamp"; the value alone is checked against the term's limits
+            my ($value, undef, $timestamp_error) = $self->split_value_timestamp($data->{$treatment});
+            if ($timestamp_error) {
+                push @error_messages, "Row $row: $timestamp_error in column $treatment.";
+            }
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($value) && $value < $treatment_obj->minimum()) {
                 push @error_messages, "Row $row: value for $treatment is lower than the allowed minimum for that treatment.";
             }
-            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->maximum()) && defined($data->{$treatment}) && $data->{$treatment} > $treatment_obj->maximum()) {
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->maximum()) && defined($value) && $value > $treatment_obj->maximum()) {
                 push @error_messages, "Row $row: value for $treatment is higher than the allowed maximum for that treatment.";
             }
-            if ($treatment_obj->format() eq "qualitative" && defined($treatment_obj->categories()) && defined($data->{$treatment})) {
-                my $qual_value = $data->{$treatment};
+            if ($treatment_obj->format() eq "qualitative" && defined($treatment_obj->categories()) && defined($value)) {
+                my $qual_value = $value;
                 my $categories = $treatment_obj->categories();
                 if ( $categories !~ m/$qual_value/) {
                     push @error_messages, "Row $row: value for $treatment is not in the valid categories for that treatment.";
@@ -615,12 +614,12 @@ sub _validate_with_plugin {
             }
         }
 
-        # check assigments by entry number
+        # check assignments by entry number
         foreach my $en (keys %{$seen_entry_numbers{$tk}{'by_num'}} ) {
-            my @ans = uniq @{$seen_entry_numbers{$tk}{'by_num'}{$en}};
-            my $count = scalar(@ans);
-            if ( scalar(@ans) > 1 ) {
-                push @error_messages, "Entry Number mismatch: Entry number <strong>$en</strong> has multiple accessions (" . join(', ', @ans) . ") assigned to it in trial <strong>$tk</strong>.";
+            my @assignments = uniq @{$seen_entry_numbers{$tk}{'by_num'}{$en}};
+            my $count = scalar(@assignments);
+            if ( scalar(@assignments) > 1 ) {
+                push @error_messages, "Entry Number mismatch: Entry number <strong>$en</strong> has multiple accessions (" . join(', ', @assignments) . ") assigned to it in trial <strong>$tk</strong>.";
             }
         }
 
@@ -821,7 +820,9 @@ sub _parse_with_plugin {
         }
         foreach my $treatment (@{$treatments}) {
             if (defined($row->{$treatment})) {
-                $design_details{'treatments'}->{$plot_name}->{$treatment} = [$row->{$treatment}];
+                # Stored as [ value, timestamp ]; the timestamp is '' when the cell has none
+                my ($value, $timestamp) = $self->split_value_timestamp($row->{$treatment});
+                $design_details{'treatments'}->{$plot_name}->{$treatment} = [ $value, $timestamp ];
             }
         }
     }

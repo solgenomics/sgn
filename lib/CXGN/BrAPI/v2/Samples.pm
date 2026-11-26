@@ -8,6 +8,7 @@ use CXGN::Stock::TissueSample::Search;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::People::Person;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -172,10 +173,18 @@ sub store {
     my $tissue_names = $params->{tissueType} ? $params->{tissueType} : undef;
     my $trial_id = $params->{studyDbId} ? $params->{studyDbId} : undef;
 
-    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+    my $trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        metadata_schema => $self->metadata_schema,
+        phenome_schema => $self->phenome_schema,
+        trial_id => $trial_id
+    });
     my $inherits_plot_treatments = 1;
+    my $use_tissue_numbers = 1;
+    my $user_name = CXGN::People::Person->new($dbh, $user_id)->get_username();
+    my $phenotype_store_config = $self->phenotype_store_config($c, $user_id, $user_name);
 
-    if ($trial->create_tissue_samples($tissue_names, $inherits_plot_treatments, $user_id)) {
+    if ($trial->create_tissue_samples($tissue_names, $inherits_plot_treatments, $use_tissue_numbers, $user_id, $user_name, $phenotype_store_config)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

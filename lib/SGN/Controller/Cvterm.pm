@@ -57,7 +57,7 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
      my $ontology_obj = CXGN::Onto->new({
         schema => $schema
     });
-    my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
+    my @root_nodes = $ontology_obj->get_root_nodes(['trait_ontology']);
     my $first_root_db = $root_nodes[0]->[1] =~ s/:.*//r;
 
     if ($editable_ontologies_str == 1 && $curator && $db_name eq $first_root_db) { #just give the first hit
